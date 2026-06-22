@@ -3,6 +3,7 @@
 use std::io::Write;
 
 use super::WriteError;
+use super::buffer::step_id_cache::StepIdCache;
 use super::entity::{HeaderEntity, WriterBody, WriterEntity};
 use super::lexical::{format_enum, format_real, format_ref, format_string};
 use crate::ir::StepModel;
@@ -20,28 +21,18 @@ pub(super) struct Ed3Sections {
 }
 
 impl Ed3Sections {
-    pub(super) fn build(model: &StepModel, external_ref_step_ids: &[u64]) -> Self {
+    pub(super) fn build(model: &StepModel, step_ids: &StepIdCache) -> Self {
         let reference_lines = model
+            .metadata
             .external_references
             .iter_with_ids()
-            .map(|(id, ext)| {
-                format!(
-                    "{}={};",
-                    format_ref(external_ref_step_ids[id.0 as usize]),
-                    ext.anchor
-                )
-            })
+            .map(|(id, ext)| format!("{}={};", format_ref(step_ids.get(id)), ext.anchor))
             .collect();
         let anchor_lines = model
+            .metadata
             .anchors
             .iter()
-            .map(|a| {
-                format!(
-                    "{}={};",
-                    a.name,
-                    format_ref(external_ref_step_ids[a.target.0 as usize])
-                )
-            })
+            .map(|a| format!("{}={};", a.name, format_ref(step_ids.get(a.target))))
             .collect();
         Self {
             anchor_lines,

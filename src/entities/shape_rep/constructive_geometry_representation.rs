@@ -12,12 +12,11 @@
 //! `emit_constructive_geometry_representations` writes into the
 //! `representation_step_ids` slot by `RepresentationId`.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::visualization::styled_item::resolve_representation_item_ref;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{ConstructiveGeometryRepr, Representation};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::shape_rep::ConstructiveGeometryRepr;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -33,50 +32,17 @@ impl SimpleEntityHandler for ConstructiveGeometryRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        let context = ctx.resolve_repr_context(ctx_ref);
-        if let Some(crate::ir::shape_rep::RepresentationContextRef::Unitful(ctx_id)) = context {
-            ctx.repr_context_map.insert(entity_id, ctx_id);
-        }
-        let items: Vec<_> = item_refs
-            .iter()
-            .filter_map(|&r| resolve_representation_item_ref(ctx, r))
-            .collect();
-        if items.is_empty() {
-            return Ok(());
-        }
-        let repr_id = ctx
-            .representations
-            .push(Representation::ConstructiveGeometry(
-                ConstructiveGeometryRepr {
-                    name,
-                    items,
-                    context,
-                },
-            ));
-        ctx.repr_id_map.insert(entity_id, repr_id);
+        let early = bind::bind_constructive_geometry_representation(entity_id, attrs)?;
+        lower::lower_constructive_geometry_representation(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, cgr: ConstructiveGeometryRepr) -> Result<u64, WriteError> {
-        let mut item_refs = Vec::with_capacity(cgr.items.len());
-        for item in cgr.items {
-            let step = buf.emit_representation_item_ref(item)?;
-            item_refs.push(Attribute::EntityRef(step));
-        }
-        let ctx_attr = buf.repr_context_attr(cgr.context);
-        Ok(buf.push_simple(
-            "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
-            vec![
-                Attribute::String(cgr.name),
-                Attribute::List(item_refs),
-                ctx_attr,
-            ],
+        let early = lift::lift_constructive_geometry_representation(buf, cgr)?;
+        Ok(serialize::serialize_constructive_geometry_representation(
+            buf, &early,
         ))
     }
 }

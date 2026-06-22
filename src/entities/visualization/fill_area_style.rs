@@ -2,16 +2,15 @@
 //! `FILL_AREA_STYLE_COLOUR` entries into a named fill-area style. Pushes
 //! into the shared `founded_item` arena as the `FillAreaStyle` variant.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{FillAreaStyle, FoundedItem, VisualizationPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::visualization::FillAreaStyle;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::fill_area_style_colour::FillAreaStyleColourHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct FillAreaStyleHandler;
@@ -24,40 +23,20 @@ impl SimpleEntityHandler for FillAreaStyleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "FILL_AREA_STYLE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "fill_styles")?;
-        let mut fill_styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(fasc) = ctx.viz_fasc_map.get(&r).cloned() {
-                fill_styles.push(fasc);
-            }
-        }
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
-            .founded_items
-            .push(FoundedItem::FillAreaStyle(FillAreaStyle {
-                name,
-                fill_styles,
-            }));
-        ctx.viz_fas_id_map.insert(entity_id, id);
+        // 2-layer path: bind → L1, then lower → L2. `lower` resolves the
+        // fill_styles via viz_fasc_map and registers the typed
+        // `EarlyFillAreaStyleId` key (replaces viz_fas_id_map).
+        let early = bind::bind_fill_area_style(entity_id, attrs)?;
+        lower::lower_fill_area_style(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, fas: FillAreaStyle) -> Result<u64, WriteError> {
-        let mut style_refs = Vec::with_capacity(fas.fill_styles.len());
-        for fasc in fas.fill_styles {
-            style_refs.push(Attribute::EntityRef(FillAreaStyleColourHandler::write(
-                buf, fasc,
-            )?));
-        }
-        Ok(buf.push_simple(
-            "FILL_AREA_STYLE",
-            vec![Attribute::String(fas.name), Attribute::List(style_refs)],
-        ))
+        // 2-layer write path: lift L2 → L1 (emitting the inlined colours), then
+        // serialize L1 → Part21 text.
+        let early = lift::lift_fill_area_style(buf, &fas)?;
+        Ok(serialize::serialize_fill_area_style(buf, &early))
     }
 }

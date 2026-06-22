@@ -11,18 +11,21 @@
 //! leak past the reader, and the writer always re-emits the standard form
 //! (round-trip symmetric).
 //!
-//! This module is **documentation only** (no code). It is the single place
-//! that answers, for every lenient path: *which CAD produced what
-//! non-standard form, which schema rule it broke, and how the reader accepts
-//! it.* Each catalogued case has a stable slug `NS-<slug>`; the corresponding
-//! handler code carries a `// [NS-<slug>] …` anchor comment. To audit
-//! coverage, compare the slugs:
+//! This module holds the [`NsCase`] marker (below) plus the knowledge index:
+//! for every lenient path, *which CAD produced what non-standard form, which
+//! schema rule it broke, and how the reader accepts it.* Each catalogued case
+//! has a stable slug `NS-<slug>` and a matching [`NsCase`] variant. Every NORM
+//! recording goes through `ReaderContext::ns_record` / `ns_push`, which take an
+//! [`NsCase`], so to find every lenient path in the code:
 //!
 //! ```text
-//! grep -rn "\[NS-" src/        # every anchor in the code
+//! rg "NsCase::" src/           # every recording site + reference
 //! ```
 //!
-//! against the `### NS-<slug>` sections below — the two slug sets must match.
+//! The `ns_case_slugs_match_catalogue` test asserts the [`NsCase`] variants and
+//! the `### NS-<slug>` sections below stay in sync; the
+//! `nonstandard_input_only_via_funnel` test asserts no code constructs a NORM
+//! warning outside the funnel — so a forgotten marker is impossible.
 //!
 //! # Why the normalization code is not a separate module
 //!
@@ -36,18 +39,16 @@
 //! `HashSet` across entities; post-pass cases depend on a fully-built arena.
 //! Physically relocating the code would buy little cohesion for real
 //! regression risk — so the *knowledge* is centralised here while the code
-//! stays where it runs, joined by the `NS-` anchors.
+//! stays where it runs, joined by the typed [`NsCase`] marker.
 //!
 //! # Two recording mechanisms (note — call convention is inconsistent)
 //!
-//! Most sites push `ConvertError::NonStandardInput { count: 1, .. }`
-//! immediately; the surface-style sites instead call
-//! [`ReaderContext::record_nonstandard`](crate::reader::ReaderContext) which
-//! aggregates into a per-file tally flushed once at the end of `convert`. The
-//! GISU post-pass pushes a single aggregated `count`. Unifying every site on
-//! the aggregating path would change the emitted warning `count`s (and thus
-//! byte output), so it is intentionally **out of scope** for this catalogue —
-//! tracked as a possible follow-up.
+//! Most sites record immediately via `ns_push` (count per occurrence); the
+//! surface-style sites instead call `ns_record`, which aggregates into a
+//! per-file tally flushed once at the end of `convert`. The GISU post-pass
+//! pushes a single aggregated `count`. Unifying every site on the aggregating
+//! path would change the emitted warning `count`s (and thus byte output), so it
+//! is intentionally **out of scope** — tracked as a possible follow-up.
 //!
 //! ----------------------------------------------------------------------
 //!
@@ -57,8 +58,9 @@
 //! - **Source**: C3D kernel.
 //! - **Schema rule broken**: `SHAPE_ASPECT.of_shape` must reference a
 //!   `PRODUCT_DEFINITION_SHAPE`; C3D references a `PRODUCT_DEFINITION` directly.
-//! - **Acceptance**: lookup chain falls through `pdef_shape_to_pdef` to
-//!   `pdef_to_product`, resolving to the product; the PDS link is reconstructed.
+//! - **Acceptance**: the typed `product_of_pds` probe misses; the fallback
+//!   `product_of_pdef` probe resolves to the product, and the PDS link is
+//!   reconstructed.
 //! - **Writer symmetry**: emits the standard `of_shape = PRODUCT_DEFINITION_SHAPE`
 //!   form (via the product's `product_def_shape_ids`).
 //! - **Code**: `entities/shape_rep/shape_aspect.rs`.
@@ -189,7 +191,7 @@
 //!   (recover) — two sites, one slug.
 //! - **Fixtures**: work-holding.
 //!
-//! # ⑤ Aggregated (`record_nonstandard`) cases
+//! # ⑤ Aggregated (`ns_record`) cases
 //!
 //! ### NS-surface-style-rendering-method
 //! - **Source**: exporters that omit or mis-spell the shading method.
@@ -197,7 +199,7 @@
 //!   .rendering_method` is a required enum; some files write `$` or an
 //!   unrecognized value.
 //! - **Acceptance**: normalize to `NORMAL_SHADING`; aggregated via
-//!   `record_nonstandard`.
+//!   `ns_record`.
 //! - **Writer symmetry**: emits `NORMAL_SHADING`.
 //! - **Code**: `entities/visualization/surface_style_rendering.rs`
 //!   (`read_rendering_method`).
@@ -208,7 +210,7 @@
 //!   .surface_colour` is required in EXPRESS; some files write `$`.
 //! - **Acceptance**: normalize to a bare `COLOUR()` (`Colour::Itself`, the
 //!   schema's unspecified-colour placeholder) rather than fabricating a
-//!   specific colour; aggregated via `record_nonstandard`.
+//!   specific colour; aggregated via `ns_record`.
 //! - **Writer symmetry**: emits `COLOUR()`.
 //! - **Code**: `entities/visualization/surface_style_rendering.rs`
 //!   (`read_surface_colour`).
@@ -219,23 +221,28 @@
 //!   (`presentation_style_select`) member is written as a bare `.NULL.` enum
 //!   instead of the typed `NULL_STYLE(.NULL.)` placeholder.
 //! - **Acceptance**: accept the bare enum as `PsaStyle::Null`; aggregated via
-//!   `record_nonstandard`.
+//!   `ns_record`.
 //! - **Writer symmetry**: emits the standard typed `NULL_STYLE(.NULL.)`.
 //! - **Code**: `entities/visualization/presentation_style_assignment.rs`
-//!   (`parse_psa_styles`).
+//!   (`normalize_psa_styles_attr`).
 //!
-//! ### NS-repr-context-unset
-//! - **Source**: C3D kernel (input-shaft / shaft-238).
-//! - **Schema rule broken**: `representation.context_of_items` is required in
-//!   EXPRESS; the descriptive `REPRESENTATION` bound to a property is emitted
-//!   with `$` (Unset).
-//! - **Acceptance**: accept as no context (the descriptive representation
-//!   carries no geometry context) rather than dropping the whole
-//!   `REPRESENTATION` (and cascading its `PROPERTY_DEFINITION_REPRESENTATION`);
-//!   aggregated via `record_nonstandard`.
-//! - **Writer symmetry**: the descriptive REPRESENTATION is emitted by the PDR
-//!   writer; a `None` context re-emits `$`.
-//! - **Code**: `entities/property/property_definition_representation.rs`.
+//! ### NS-required-field-unset
+//! - **General rule**: a **required** field left `$` (Unset) is a source EXPRESS
+//!   violation, so strict `bind` rejects it (`ConvertError::unset_required_field`).
+//!   When no defined normalization fixed the input first, the entity is dropped
+//!   and its dependents cascade — recorded as a NORM (LOSS-exempt), not a defect.
+//! - **Dispatched entities**: handled generically in `dispatch::record_drop_or_warn`
+//!   (mirrors the dangling / non-standard-enum NORM arms).
+//! - **Graph-walked consumers**: applied at the call site (e.g. the descriptive
+//!   `REPRESENTATION` bound to a property via the PDR walk — C3D kernel
+//!   input-shaft / shaft-238 emit `representation.context_of_items = $`; the
+//!   `REPRESENTATION` + its `PROPERTY_DEFINITION_REPRESENTATION` drop).
+//! - **`shape_aspect.of_shape = $`** (NIST ctc_05): a `DATUM_REFERENCE_ELEMENT` /
+//!   `DATUM_REFERENCE_COMPARTMENT` with the mandatory `of_shape` ref `$` is
+//!   dropped by the dispatch arm; a `COMMON_DATUM_LIST` compartment whose member
+//!   was so dropped cascades (the lower checks `nonstandard_dropped_refs`).
+//! - **Code**: `ir/error.rs` (`unset_required_field`), `reader/dispatch.rs`,
+//!   `early/lower/property.rs`, `early/lower/pmi.rs` (general_datum_reference cascade).
 //!
 //! ### NS-ratio-unit-dimensions-unset
 //! - **Source**: C3D kernel (input-shaft / shaft-238).
@@ -244,7 +251,7 @@
 //!   standalone simple `RATIO_UNIT` entity is emitted with `$` (Unset).
 //! - **Acceptance**: accept as no explicit dimensions — the `ratio_unit` WHERE
 //!   clause fixes every exponent to zero regardless — rather than dropping the
-//!   unit; aggregated via `record_nonstandard`.
+//!   unit; aggregated via `ns_record`.
 //! - **Writer symmetry**: a `None` `dim_exp` on the simple form re-emits `$`.
 //! - **Code**: `entities/units/ratio_unit.rs` (`RatioUnitSimpleHandler`).
 //!
@@ -261,17 +268,18 @@
 //!   the 2D handlers, which cannot model the 3D geometry, so the `PCURVE` (and
 //!   its orphaned `DEFINITIONAL_REPRESENTATION` / `CIRCLE` / `TRIMMED_CURVE` /
 //!   `AXIS2_PLACEMENT_3D` subtree) is dropped. The drop is classified per
-//!   dropped type via `record_nonstandard` (`"dropped …"`), gated on
+//!   dropped type via `ns_record` (`"dropped …"`), gated on
 //!   `is_geometry_registered` so genuine survivors (`CARTESIAN_POINT` /
 //!   `DIRECTION` / `VECTOR`, and curves shared from outside the subtree) are not
 //!   counted. The 3D `SURFACE_CURVE` that owns the pcurve survives on its 3D
 //!   `curve_3d`.
-//! - **All-wr3 wrapper**: when *every* `associated_geometry` member of a
+//! - **All-wr3 surface curve**: when *every* `associated_geometry` member of a
 //!   `SURFACE_CURVE` / `SEAM_CURVE` is a wr3-dropped PCURVE (MicroRallyCar: 4
-//!   wrappers), the wrapper has no resolvable geometry and is not stored in
-//!   `surface_curve_map`. `collect_surface_curve` records this as the cascade
-//!   (`record_nonstandard("SURFACE_CURVE" / "SEAM_CURVE", "dropped … pcurve.wr3
-//!   cascade")`), gated on `wr3_dropped == member_refs.len()` so wrappers with a
+//!   curves), the body has no resolvable geometry and no arena node is pushed
+//!   (the edge falls back to the `curve_3d` alias). `lower_surface_curve_data`
+//!   records this as the cascade
+//!   (`ns_record("SURFACE_CURVE" / "SEAM_CURVE", "dropped … pcurve.wr3
+//!   cascade")`), gated on `wr3_dropped == member_refs.len()` so curves with a
 //!   surviving 2D member (or a non-wr3 failure) keep their defect warning. The
 //!   owned 3D `curve_3d` still survives, so the referencing `EDGE_CURVE` is not
 //!   affected.
@@ -289,7 +297,7 @@
 //!   PSA is still built and re-emits `()` (merkle-stable). Same spirit as the
 //!   sibling NS-psa-bare-null-style.
 //! - **Code**: `entities/visualization/presentation_style_assignment.rs`
-//!   (`parse_psa_styles`).
+//!   (`normalize_psa_styles_attr`).
 //!
 //! ### NS-orsi-over-ridden-unset
 //! - **Source**: NIST ctc_05.
@@ -300,14 +308,234 @@
 //!   No cascade (nothing references the dropped ORSI).
 //! - **Code**: `entities/visualization/over_riding_styled_item.rs`.
 //!
-//! ### NS-general-datum-reference-of-shape-unset
-//! - **Source**: NIST ctc_05.
-//! - **Schema rule broken**: `shape_aspect.of_shape : product_definition_shape`
-//!   is mandatory (and `UNIQUE id, of_shape`); a `DATUM_REFERENCE_ELEMENT` /
-//!   `DATUM_REFERENCE_COMPARTMENT` (general_datum_reference subtype) emits `$`.
-//! - **Acceptance**: the entity has no resolvable owning product → drop as a
-//!   `NonStandardInput` (not an AttributeType defect). A `COMMON_DATUM_LIST`
-//!   compartment whose member dropped for this reason cascades and is recorded
-//!   too (gated on the member's own of_shape=$ so an unrelated drop stays a
-//!   plain drop, not a normalization).
-//! - **Code**: `entities/pmi.rs` (`read_general_datum_reference_data`).
+//! ### NS-tagless-parameter-value
+//! - **Source**: abc (various exporters).
+//! - **Schema rule broken**: `trimming_select`'s `parameter_value` (a defined
+//!   REAL type) must be tagged `PARAMETER_VALUE(x)` inside the select; emitted as
+//!   a bare real `( 0.0 )`.
+//! - **Acceptance**: the handler normalizes bare `Real`/`Integer` in the trim
+//!   slots to `PARAMETER_VALUE(value)` *before* the strict generated bind
+//!   (`ir::attr::normalize_tagless_select`), so the IR holds the standard form and
+//!   the writer re-emits `PARAMETER_VALUE`. Recorded as `NonStandardInput`.
+//! - **Code**: `entities/geometry/trimmed_curve.rs`.
+//!
+//! ### NS-non-standard-enum-value
+//! - **Source**: any exporter writing an enum token outside the EXPRESS
+//!   enumeration (latent — not seen in the corpus).
+//! - **Schema rule broken**: an ENUM field carries a token that is not one of
+//!   the EXPRESS members (e.g. `surface_side`, `transition_code`,
+//!   `trimming_preference`, `marker_type`).
+//! - **Acceptance**: the generated `bind` is strict (no `default`/`catch_all`) —
+//!   it neither guesses a default nor preserves the raw token. A required-field
+//!   enum returns `ConvertError::NonStandardEnumValue`, which the dispatcher
+//!   (`record_drop_or_warn`) reclassifies as a `NonStandardInput` drop (NORM);
+//!   an OPTIONAL SELECT member (`marker_type`) binds to `None` so the entity's
+//!   `bind` returns `Ok(None)` and the handler records the drop. Rejecting a
+//!   non-standard value is correct behaviour, so it is **NORM, not LOSS**.
+//! - **Writer symmetry**: absent on re-read (the entity was dropped).
+//! - **Code**: `reader/dispatch.rs` (`record_drop_or_warn`) for required-field
+//!   enums; `entities/visualization/point_style.rs` for the `marker_type`
+//!   SELECT member. Strict bind: `early/generated/bind.rs`.
+//!
+//! ----------------------------------------------------------------------
+//!
+//! # gen-early (2-layer) normalization — principle & residual generated-bind leniencies
+//!
+//! **Principle**: the `bind` layer gen-early generates (L1) is a *strict* parser
+//! matching the EXPRESS schema exactly. Non-standard-input tolerance lives only
+//! in the hand-written layer:
+//!
+//! | case | where | how |
+//! |---|---|---|
+//! | value-form deviation (bare→TAG, typo token, empty→`$`[optional]) | handler (pre-bind) | normalize attrs → strict bind, `NonStandardInput` |
+//! | resolution-dependent / post-parse | `lower` (has ctx) | decide + `NonStandardInput` |
+//! | known unrecoverable | handler / lower / dispatcher | drop + `NonStandardInput("dropped")` → NORM |
+//! | non-standard enum token | strict `bind` `Err`(`NonStandardEnumValue`) / SELECT `None` | dispatcher / handler reclassifies as a `NonStandardInput` drop → NORM (rejecting a non-standard value is correct, not LOSS — see `NS-non-standard-enum-value`) |
+//! | unknown / malformed syntax (step-io gap) | strict `bind` `Err` | dispatcher pushes a defect warning + drops → LOSS (automatic) |
+//! | entity not strict-bindable at all | — | hold back (stay hand-written) |
+//!
+//! `NS-tagless-parameter-value` above is the first instance (value-form, handler).
+//!
+//! **Residual uniform leniency still baked into the generated `bind`** (NOT a
+//! `### NS-` slug, no per-instance anchor):
+//! - **`Integer`→`Real` coercion** (`read_real`): e.g. `PARAMETER_VALUE(5)` accepted
+//!   as a real. A lexical (number-format) tolerance — lossless, no guess — not an
+//!   entity-level non-standard recovery. Universal Part21 practice, kept.
+//!
+//! (The former enum `default` guess and `marker_type` `catch_all` were removed —
+//! both are now strict; a non-standard enum token is dropped as a NORM
+//! normalization. See `NS-non-standard-enum-value`.)
+
+// ---------------------------------------------------------------------------
+// Typed non-standard case marker
+// ---------------------------------------------------------------------------
+
+/// A non-standard input case. Every NORM recording goes through
+/// [`ReaderContext::ns_record`](crate::reader::ReaderContext) /
+/// [`ns_push`](crate::reader::ReaderContext), both of which take one of these,
+/// so `rg "NsCase::"` locates every lenient path and the compiler rejects an
+/// unknown / mistyped case. Each variant maps 1:1 to one catalogue section
+/// above; the `ns_case_slugs_match_catalogue` test enforces the correspondence.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub(crate) enum NsCase {
+    ShapeAspectOfShapePd,
+    CbuAngleFactor,
+    CbuMassFactor,
+    FilenameUnset,
+    EmptyInvisibility,
+    EmptyPrrpc,
+    EmptyPrrpcCascade,
+    DanglingReferenceDrop,
+    DanglingReferenceOrphan,
+    GisuUnsetUsedRep,
+    SurfaceStyleRenderingMethod,
+    SurfaceStyleSurfaceColour,
+    PsaBareNullStyle,
+    RequiredFieldUnset,
+    RatioUnitDimensionsUnset,
+    Pcurve3dInPspace,
+    PsaStylesUnset,
+    OrsiOverRiddenUnset,
+    TaglessParameterValue,
+    NonStandardEnumValue,
+}
+
+// `ALL` and `slug` exist only to drive the `ns_case_slugs_match_catalogue`
+// drift test; the marker itself is the constructed variant at each call site.
+#[cfg(test)]
+impl NsCase {
+    /// All cases — kept in sync with the catalogue sections by the
+    /// `ns_case_slugs_match_catalogue` test.
+    pub(crate) const ALL: &'static [NsCase] = &[
+        NsCase::ShapeAspectOfShapePd,
+        NsCase::CbuAngleFactor,
+        NsCase::CbuMassFactor,
+        NsCase::FilenameUnset,
+        NsCase::EmptyInvisibility,
+        NsCase::EmptyPrrpc,
+        NsCase::EmptyPrrpcCascade,
+        NsCase::DanglingReferenceDrop,
+        NsCase::DanglingReferenceOrphan,
+        NsCase::GisuUnsetUsedRep,
+        NsCase::SurfaceStyleRenderingMethod,
+        NsCase::SurfaceStyleSurfaceColour,
+        NsCase::PsaBareNullStyle,
+        NsCase::RequiredFieldUnset,
+        NsCase::RatioUnitDimensionsUnset,
+        NsCase::Pcurve3dInPspace,
+        NsCase::PsaStylesUnset,
+        NsCase::OrsiOverRiddenUnset,
+        NsCase::TaglessParameterValue,
+        NsCase::NonStandardEnumValue,
+    ];
+
+    /// The stable `NS-<slug>` identifying this case's catalogue section.
+    pub(crate) fn slug(self) -> &'static str {
+        match self {
+            NsCase::ShapeAspectOfShapePd => "NS-shape-aspect-of-shape-pd",
+            NsCase::CbuAngleFactor => "NS-cbu-angle-factor",
+            NsCase::CbuMassFactor => "NS-cbu-mass-factor",
+            NsCase::FilenameUnset => "NS-filename-unset",
+            NsCase::EmptyInvisibility => "NS-empty-invisibility",
+            NsCase::EmptyPrrpc => "NS-empty-prrpc",
+            NsCase::EmptyPrrpcCascade => "NS-empty-prrpc-cascade",
+            NsCase::DanglingReferenceDrop => "NS-dangling-reference-drop",
+            NsCase::DanglingReferenceOrphan => "NS-dangling-reference-orphan",
+            NsCase::GisuUnsetUsedRep => "NS-gisu-unset-used-rep",
+            NsCase::SurfaceStyleRenderingMethod => "NS-surface-style-rendering-method",
+            NsCase::SurfaceStyleSurfaceColour => "NS-surface-style-surface-colour",
+            NsCase::PsaBareNullStyle => "NS-psa-bare-null-style",
+            NsCase::RequiredFieldUnset => "NS-required-field-unset",
+            NsCase::RatioUnitDimensionsUnset => "NS-ratio-unit-dimensions-unset",
+            NsCase::Pcurve3dInPspace => "NS-pcurve-3d-in-pspace",
+            NsCase::PsaStylesUnset => "NS-psa-styles-unset",
+            NsCase::OrsiOverRiddenUnset => "NS-orsi-over-ridden-unset",
+            NsCase::TaglessParameterValue => "NS-tagless-parameter-value",
+            NsCase::NonStandardEnumValue => "NS-non-standard-enum-value",
+        }
+    }
+}
+
+#[cfg(test)]
+mod ns_marker_tests {
+    use super::NsCase;
+    use std::collections::BTreeSet;
+
+    /// Every `NsCase` variant must have a matching `NS-<slug>` catalogue section
+    /// and vice versa — keeps the typed marker and the knowledge catalogue from
+    /// drifting apart.
+    #[test]
+    fn ns_case_slugs_match_catalogue() {
+        let src = include_str!("nonstandard.rs");
+        let mut sections: BTreeSet<&str> = BTreeSet::new();
+        for line in src.lines() {
+            let t = line.trim_start_matches("//!").trim();
+            if let Some(rest) = t.strip_prefix("### ") {
+                let slug = rest.trim();
+                if slug.starts_with("NS-") {
+                    sections.insert(slug);
+                }
+            }
+        }
+        let variants: BTreeSet<&str> = NsCase::ALL.iter().map(|c| c.slug()).collect();
+        assert_eq!(
+            variants, sections,
+            "NsCase variants and the NS- catalogue sections drifted apart"
+        );
+    }
+
+    /// `ConvertError::NonStandardInput` may only be *constructed* in the funnel
+    /// (`reader/mod.rs`) and defined in `ir/error.rs`; every other NORM
+    /// recording must go through `ReaderContext::ns_record` / `ns_push` (which
+    /// take an `NsCase`), so a forgotten marker is structurally impossible.
+    /// Scans `src`, skipping comment lines (catalogue prose is harmless) and
+    /// test files (which only pattern-match the variant).
+    #[test]
+    fn nonstandard_input_only_via_funnel() {
+        // Assembled at runtime so this test's own source does not self-match.
+        let needle = format!("{}{}", "NonStandardInput ", "{");
+        let allow = ["ir/error.rs", "reader/mod.rs"];
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+        let mut offenders = Vec::new();
+        visit(&root, &needle, &allow, &mut offenders);
+        assert!(
+            offenders.is_empty(),
+            "NonStandardInput constructed outside the funnel: {offenders:?}"
+        );
+    }
+
+    fn visit(dir: &std::path::Path, needle: &str, allow: &[&str], out: &mut Vec<String>) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                visit(&path, needle, allow, out);
+                continue;
+            }
+            if path.extension().and_then(|e| e.to_str()) != Some("rs") {
+                continue;
+            }
+            let rel = path.to_string_lossy().replace('\\', "/");
+            // Skip the variant definition / funnel home and any test file
+            // (tests only pattern-match the variant, never gate production NORM).
+            if allow.iter().any(|a| rel.ends_with(a)) || rel.contains("tests") {
+                continue;
+            }
+            let Ok(text) = std::fs::read_to_string(&path) else {
+                continue;
+            };
+            for line in text.lines() {
+                let code = line.trim_start();
+                if code.starts_with("//") || code.starts_with('*') || code.starts_with("/*") {
+                    continue;
+                }
+                if line.contains(needle) {
+                    out.push(rel.clone());
+                    break;
+                }
+            }
+        }
+    }
+}

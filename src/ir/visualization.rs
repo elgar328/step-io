@@ -14,6 +14,7 @@ use super::id::{
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
+use step_io_macros::StepSelect;
 
 /// Top-level container for visualization data extracted from
 /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (MDGPR)
@@ -148,7 +149,7 @@ pub struct PresentationLayerAssignment {
 /// One element of [`PresentationLayerAssignment::assigned_items`].
 /// Scoped to `STYLED_ITEM` today; future kernel adapters that produce
 /// direct-geometry layered items can grow this enum.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum PresentationLayerAssignmentItem {
     StyledItem(StyledItemId),
 }
@@ -208,7 +209,10 @@ pub struct SurfaceStyleBoundary {
 
 /// `curve_or_render` SELECT — picks between a `curve_style` and a
 /// `curve_style_rendering` (a `SurfaceStyleRendering` variant). Phase ssb.
-#[derive(Debug, Clone, Copy, PartialEq)]
+///
+/// Simple SELECT (all variants `Variant(XId)`) — `StepSelect` generates the
+/// reader `resolve_select` / writer `emit_select`.
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum CurveOrRender {
     CurveStyle(CurveStyleId),
     SurfaceStyleRendering(SurfaceStyleRenderingId),
@@ -238,8 +242,8 @@ pub enum Marker {
 }
 
 /// `marker_type` ENUMERATION OF (dot, x, plus, asterisk, ring, square,
-/// triangle). `Other` preserves any unmodelled token verbatim for
-/// round-trip safety.
+/// triangle) — the exhaustive AP242 set. A non-standard token is rejected by
+/// the strict bind; the `POINT_STYLE` handler drops it as a NORM normalization.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MarkerType {
     Dot,
@@ -249,7 +253,6 @@ pub enum MarkerType {
     Ring,
     Square,
     Triangle,
-    Other(String),
 }
 
 /// `size_select` SELECT — typed primitives or a `MeasureWithUnit`
@@ -597,6 +600,10 @@ pub struct SurfaceSideStyle {
 /// style entry types here; this scope covers `SURFACE_STYLE_FILL_AREA`
 /// (color fill) and the `SURFACE_STYLE_RENDERING` arena
 /// (color + transparency / other rendering hints).
+// Read via the 2-layer (`EarlyModel`) path: `FillArea` is disambiguated by the
+// typed `EarlySurfaceStyleFillAreaId` cache bucket and `Rendering` by
+// `SurfaceStyleRenderingId` (both `id_cache.get`), so the former TypeId-value
+// collision that blocked `StepSelect` is gone. See `crate::early`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceSideStyleEntry {
     FillArea(FoundedItemId),
@@ -818,7 +825,7 @@ pub struct TextStyleWithBoxCharacteristics {
 /// `text_style_for_defined_font` member; the two glyph-style members
 /// (`character_glyph_style_stroke`, `character_glyph_style_outline`) are
 /// not modelled and are silently dropped on read (`ApprovalItem` precedent).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum CharacterStyle {
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
 }
@@ -856,7 +863,7 @@ pub enum PresentationRepresentation {
 pub struct PresentationReprData {
     pub name: String,
     pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
-    pub context: Option<crate::ir::shape_rep::RepresentationContextRef>,
+    pub context: crate::ir::shape_rep::RepresentationContextRef,
 }
 
 /// `PRESENTATION_SET` — has no direct attributes in the schema (only an
@@ -981,6 +988,8 @@ pub struct TextLiteral {
 
 /// `axis2_placement` SELECT — either a 2D or 3D axis placement.
 /// Unresolved refs drop the carrier instance, symmetric on re-read.
+// Not `StepSelect`: `D3` resolves via the `placement_map` named field
+// (TypeId-collision with `id_cache`), not `id_cache.get`. See `ir::select`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Axis2Placement {
     D2(Placement2dId),
@@ -991,20 +1000,20 @@ pub enum Axis2Placement {
 /// `draughting_pre_defined_text_font` member; the
 /// `externally_defined_text_font` member is silently dropped on read
 /// (`ApprovalItem` precedent, `feedback_partial_select_enum`).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum FontSelect {
     DraughtingPreDefined(DraughtingPreDefinedTextFontId),
 }
 
-/// `text_path` ENUMERATION OF (left, right, up, down). `Other` preserves
-/// any extension token verbatim for round-trip safety.
-#[derive(Debug, Clone, PartialEq)]
+/// `text_path` ENUMERATION OF (left, right, up, down). Strict — a non-standard
+/// token is rejected on read (`NonStandardEnumValue` → drop + NORM), matching the
+/// other strict enums (`marker_type`, `transition_code`).
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TextPath {
     Left,
     Right,
     Up,
     Down,
-    Other(String),
 }
 
 /// `COMPOSITE_TEXT(name, collected_text)` — phase text-literal. Groups
@@ -1019,7 +1028,7 @@ pub struct CompositeText {
 /// `annotation_text_character` / `composite_text` / `character_glyph` are
 /// not modelled in step-io (`feedback_partial_select_enum`); element
 /// references to those types are silently dropped on read.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum TextOrCharacter {
     TextLiteral(TextLiteralId),
 }

@@ -1,12 +1,11 @@
-//! `APPROVAL_DATE_TIME` handler plm. Depends on
-//! the `APPROVAL` handler (`dated_approval` ref) and the `DATE_AND_TIME`
-//! handler (`date_time` SELECT).
+//! `APPROVAL_DATE_TIME` handler — plm (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{ApprovalDateTime, ApprovalDateTimeSelect, PlmPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::ApprovalDateTime;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,40 +21,17 @@ impl SimpleEntityHandler for ApprovalDateTimeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "APPROVAL_DATE_TIME")?;
-        let dt_ref = read_entity_ref(attrs, 0, entity_id, "date_time")?;
-        let approval_ref = read_entity_ref(attrs, 1, entity_id, "dated_approval")?;
-        let Some(&dt_id) = ctx.plm_date_and_time_id_map.get(&dt_ref) else {
-            // Unsupported SELECT variant (direct CALENDAR_DATE / LOCAL_TIME).
-            return Ok(());
-        };
-        let Some(&dated_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {
-            return Ok(());
-        };
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.approval_date_times.push(ApprovalDateTime {
-            date_time: ApprovalDateTimeSelect::DateAndTime(dt_id),
-            dated_approval,
-        });
-        ctx.plm_approval_date_time_id_map.insert(entity_id, id);
+        let early = bind::bind_approval_date_time(entity_id, attrs)?;
+        lower::lower_approval_date_time(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, a: ApprovalDateTime) -> Result<u64, WriteError> {
-        let dt_step = match a.date_time {
-            ApprovalDateTimeSelect::DateAndTime(id) => {
-                buf.plm_date_and_time_step_ids[id.0 as usize]
-            }
-        };
-        let approval_step = buf.plm_approval_step_ids[a.dated_approval.0 as usize];
-        Ok(buf.push_simple(
-            "APPROVAL_DATE_TIME",
-            vec![
-                Attribute::EntityRef(dt_step),
-                Attribute::EntityRef(approval_step),
-            ],
-        ))
+        let dt_step = a.date_time.emit_select(buf);
+        let approval_step = buf.step_id(a.dated_approval);
+        let early = lift::lift_approval_date_time(dt_step, approval_step);
+        Ok(serialize::serialize_approval_date_time(buf, &early))
     }
 }

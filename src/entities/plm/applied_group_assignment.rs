@@ -1,17 +1,14 @@
-//! `APPLIED_GROUP_ASSIGNMENT` handler plm Group linker.
-//! STEP positional shape `(assigned_group, items)` per `AP214e3` schema
-//! (`group_assignment` supertype lines 5795–5802 + own `items`).
+//! `APPLIED_GROUP_ASSIGNMENT` handler — plm (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{AppliedGroupAssignment, GroupItem, PlmPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::{AppliedGroupAssignment, GroupItem};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-
-use super::resolve_date_time_item;
 use step_io_macros::step_entity;
 
 pub(crate) struct AppliedGroupAssignmentHandler;
@@ -24,41 +21,23 @@ impl SimpleEntityHandler for AppliedGroupAssignmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "APPLIED_GROUP_ASSIGNMENT")?;
-        let group_ref = read_entity_ref(attrs, 0, entity_id, "assigned_group")?;
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let Some(&assigned_group) = ctx.plm_group_id_map.get(&group_ref) else {
-            return Ok(());
-        };
-        let mut items = Vec::with_capacity(item_refs.len());
-        for r in item_refs {
-            if let Some(pid) = resolve_date_time_item(ctx, r) {
-                items.push(GroupItem::Product(pid));
-            }
-        }
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.group_assignments.push(AppliedGroupAssignment {
-            assigned_group,
-            items,
-        });
-        ctx.plm_ga_id_map.insert(entity_id, id);
+        let early = bind::bind_applied_group_assignment(entity_id, attrs)?;
+        lower::lower_applied_group_assignment(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, a: AppliedGroupAssignment) -> Result<u64, WriteError> {
-        let group_step = buf.plm_group_step_ids[a.assigned_group.0 as usize];
-        let mut item_refs = Vec::with_capacity(a.items.len());
-        for item in a.items {
-            let step_id = match item {
+        let assigned_group_step = buf.step_id(a.assigned_group);
+        let items: Vec<u64> = a
+            .items
+            .into_iter()
+            .map(|item| match item {
                 GroupItem::Product(pid) => buf.product_def_ids[&pid],
-            };
-            item_refs.push(Attribute::EntityRef(step_id));
-        }
-        Ok(buf.push_simple(
-            "APPLIED_GROUP_ASSIGNMENT",
-            vec![Attribute::EntityRef(group_step), Attribute::List(item_refs)],
-        ))
+            })
+            .collect();
+        let early = lift::lift_applied_group_assignment(assigned_group_step, items);
+        Ok(serialize::serialize_applied_group_assignment(buf, &early))
     }
 }

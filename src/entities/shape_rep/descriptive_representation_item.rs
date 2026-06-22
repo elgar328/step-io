@@ -1,18 +1,11 @@
-//! `DESCRIPTIVE_REPRESENTATION_ITEM` handler (property-1).
-//!
-//! AP214: `DESCRIPTIVE_REPRESENTATION_ITEM SUBTYPE OF (representation_item)`
-//! with own field `description: text`. STEP positional inherits the parent
-//! `representation_item.name`, so the line is `(name, description)`.
-//!
-//! Reader stores the resolved [`DescriptiveItem`] keyed by STEP entity id;
-//! the PDR pass collects these into the parent `Property.items` alongside
-//! `MEASURE_REPRESENTATION_ITEM` entries.
+//! `DESCRIPTIVE_REPRESENTATION_ITEM` handler (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::DescriptiveItem;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -28,23 +21,17 @@ impl SimpleEntityHandler for DescriptiveRepresentationItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "DESCRIPTIVE_REPRESENTATION_ITEM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        ctx.descriptive_item_map
-            .insert(entity_id, DescriptiveItem { name, description });
+        let early = bind::bind_descriptive_representation_item(entity_id, attrs)?;
+        lower::lower_descriptive_representation_item(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, item: DescriptiveItem) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "DESCRIPTIVE_REPRESENTATION_ITEM",
-            vec![
-                Attribute::String(item.name),
-                Attribute::String(item.description),
-            ],
+        let early = lift::lift_descriptive_representation_item(item.name, item.description);
+        Ok(serialize::serialize_descriptive_representation_item(
+            buf, &early,
         ))
     }
 }

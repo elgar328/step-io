@@ -1,18 +1,15 @@
-//! `PROPERTY_DEFINITION_REPRESENTATION` handler.
-//!
-//! Reader walks the bound `REPRESENTATION` directly off the graph because
-//! `REPRESENTATION` is a generic entity name shared with MDGPR / SR — a
-//! per-pass map would conflate them. Writer emits the two-attr form
-//! binding a `PROPERTY_DEFINITION` to a `REPRESENTATION`.
+//! `PROPERTY_DEFINITION_REPRESENTATION` handler — 2-layer path. `read` =
+//! generated `bind` (two refs) then hand `lower_property_definition_representation`
+//! (which takes the `graph`: the bound `REPRESENTATION` is walked directly — a
+//! generic name shared with MDGPR / SR — and builds the `Property` bundle). The
+//! orchestrator (`buffer/property.rs::emit_property`) resolves the PD/REPR step
+//! ids and emits the wrapping `REPRESENTATION`; `write` lifts + generated-
+//! serializes the two-attr PDR line.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{
-    check_count, read_entity_ref, read_entity_ref_list, read_optional_entity_ref,
-    read_string_or_unset,
-};
 use crate::ir::error::ConvertError;
-use crate::ir::property::{Property, PropertyDefinitionRef, PropertyItem, PropertyPool};
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -33,149 +30,19 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        eg: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PROPERTY_DEFINITION_REPRESENTATION")?;
-        let pd_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
-        let repr_ref = read_entity_ref(attrs, 1, entity_id, "used_representation")?;
-
-        let pd_entry = ctx.property_def_map.get(&pd_ref).cloned();
-        // A NAUO-owned-PDS PD is deferred (not yet in `property_def_map`); its
-        // descriptive Property is stashed below and pushed by
-        // `materialize_nauo_owned_pds` once the PD arena entry exists.
-        let is_deferred_nauo = ctx.nauo_pds_pd_refs.contains(&pd_ref);
-        // `definition` is a `represented_definition` SELECT: usually a
-        // PROPERTY_DEFINITION, but the c3d kernel also binds a GENERAL_PROPERTY
-        // directly (the two SELECT members step-io models). The maps are
-        // disjoint, so a GP target means `pd_entry` is None.
-        let gp_id = ctx.general_property_id_map.get(&pd_ref).copied();
-        if pd_entry.is_none() && !is_deferred_nauo && gp_id.is_none() {
-            return Ok(()); // silently skipped (unresolved / unsupported target)
-        }
-
-        // Walk the graph for the bound REPRESENTATION. Direct read — REPR
-        // is shared with MDGPR / SR so a generic map would conflate them.
-        let Some(RawEntity::Simple {
-            name: repr_name_step,
-            attributes: repr_attrs,
-            ..
-        }) = graph.get(repr_ref)
-        else {
-            return Ok(());
-        };
-        if repr_name_step != "REPRESENTATION" {
-            // `used_representation` is a modelled representation subtype (e.g.
-            // SHAPE_REPRESENTATION) rather than a generic descriptive-property
-            // REPRESENTATION. Record a PD↔representation link for the writer to
-            // reference the existing representation; resolve_pdr_links filters
-            // by `property_def_step_to_id` / `repr_id_map`. (PD already gated
-            // resolved above.)
-            if ctx.repr_id_map.contains_key(&repr_ref) {
-                ctx.pdr_link_refs.push((pd_ref, repr_ref));
-            }
-            return Ok(());
-        }
-        let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();
-        let item_refs = read_entity_ref_list(repr_attrs, 1, repr_ref, "items")?;
-        // [NS-repr-context-unset] c3d: REPRESENTATION.context_of_items is
-        // required by EXPRESS but emitted `$` (Unset) → accept as no context
-        // rather than dropping the whole REPRESENTATION. See reader::nonstandard.
-        let context = if let Some(ctx_ref) =
-            read_optional_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?
-        {
-            ctx.resolve_repr_context(ctx_ref)
-        } else {
-            ctx.record_nonstandard(
-                "REPRESENTATION.context_of_items (Unset)".into(),
-                "no context",
-            );
-            None
-        };
-
-        let items: Vec<PropertyItem> = item_refs
-            .into_iter()
-            .filter_map(|r| {
-                // MEASURE_REPRESENTATION_ITEM lives in the representation_item
-                // arena — reference it so the writer emits it once. Guard on the
-                // variant: repr_item_id_map also holds QRI / VRI.
-                if let Some(&id) = ctx.repr_item_id_map.get(&r) {
-                    if matches!(
-                        ctx.representation_items[id],
-                        crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(_)
-                    ) {
-                        return Some(PropertyItem::MeasureItem(id));
-                    }
-                }
-                ctx.descriptive_item_map
-                    .get(&r)
-                    .cloned()
-                    .map(PropertyItem::Descriptive)
-            })
-            .collect();
-
-        if let Some(gp_id) = gp_id {
-            // GENERAL_PROPERTY-bound property: `definition` is the GP itself,
-            // not a PROPERTY_DEFINITION. The GP carries its own name/description
-            // (emitted via the general_properties arena), so the Property's
-            // name/description fields are unused here — `emit_property` only
-            // reads `definition`, `items`, `context`, `representation_name`.
-            ctx.properties
-                .get_or_insert_with(PropertyPool::default)
-                .properties
-                .push(Property {
-                    name: String::new(),
-                    description: None,
-                    definition: PropertyDefinitionRef::GeneralProperty(gp_id),
-                    representation_name,
-                    context,
-                    items,
-                });
-            return Ok(());
-        }
-
-        if is_deferred_nauo {
-            // PD arena entry doesn't exist yet — stash the resolved descriptive
-            // payload for `materialize_nauo_owned_pds` to push as a Property.
-            ctx.deferred_nauo_property
-                .push((pd_ref, representation_name, items, context));
-            return Ok(());
-        }
-        let (pd_name, pd_desc) = pd_entry.expect("non-deferred PD resolved in property_def_map");
-
-        // Resolve the source PD step ref to the new PropertyDefinition
-        // arena id so the writer can fetch the cached PD step id during
-        // PDR emit (no longer re-emits PD inline). PD handler always
-        // pushes when its target resolves to a Product, matching the
-        // gate above, so this lookup never misses in practice — but stay
-        // defensive on kernel-built IR.
-        let Some(&definition) = ctx.property_def_step_to_id.get(&pd_ref) else {
-            return Ok(());
-        };
-        let prop_id = ctx
-            .properties
-            .get_or_insert_with(PropertyPool::default)
-            .properties
-            .push(Property {
-                name: pd_name,
-                description: pd_desc,
-                definition: PropertyDefinitionRef::PropertyDefinition(definition),
-                representation_name,
-                context,
-                items,
-            });
-        // Record PD `#N → PropertyId` so the GPA reader can resolve a
-        // `derived_definition` pointing at this PROPERTY_DEFINITION.
-        ctx.property_step_to_id.insert(pd_ref, prop_id);
-        Ok(())
+        let early = bind::bind_property_definition_representation(entity_id, attrs)?;
+        lower::lower_property_definition_representation(ctx, entity_id, early, eg)
     }
 
     fn write(
         buf: &mut WriteBuffer,
         PropertyDefinitionRepresentationWriteInput { pd, repr }: PropertyDefinitionRepresentationWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "PROPERTY_DEFINITION_REPRESENTATION",
-            vec![Attribute::EntityRef(pd), Attribute::EntityRef(repr)],
+        let early = lift::lift_property_definition_representation(pd, repr);
+        Ok(serialize::serialize_property_definition_representation(
+            buf, &early,
         ))
     }
 }

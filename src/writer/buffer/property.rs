@@ -26,22 +26,10 @@ impl WriteBuffer<'_> {
         };
         for link in pool.shape_definition_representations.iter() {
             let def_step = match link.definition {
-                crate::ir::property::SdrDefinition::PropertyDefinition(id) => self
-                    .property_definition_step_ids
-                    .get(id.0 as usize)
-                    .copied()
-                    .unwrap_or(0),
-                crate::ir::property::SdrDefinition::ShapeAspect(id) => self
-                    .shape_aspect_step_ids
-                    .get(id.0 as usize)
-                    .copied()
-                    .unwrap_or(0),
+                crate::ir::property::SdrDefinition::PropertyDefinition(id) => self.step_id(id),
+                crate::ir::property::SdrDefinition::ShapeAspect(id) => self.step_id(id),
             };
-            let sr_step = self
-                .representation_step_ids
-                .get(link.used_representation.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let sr_step = self.step_id(link.used_representation);
             if def_step == 0 || sr_step == 0 {
                 continue;
             }
@@ -59,16 +47,8 @@ impl WriteBuffer<'_> {
             return;
         };
         for link in pool.property_definition_representations.iter() {
-            let pd = self
-                .property_definition_step_ids
-                .get(link.definition.0 as usize)
-                .copied()
-                .unwrap_or(0);
-            let repr = self
-                .representation_step_ids
-                .get(link.used_representation.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let pd = self.step_id(link.definition);
+            let repr = self.step_id(link.used_representation);
             if pd == 0 || repr == 0 {
                 continue;
             }
@@ -83,10 +63,9 @@ impl WriteBuffer<'_> {
         let Some(pool) = self.model.properties.clone() else {
             return;
         };
-        self.property_step_ids = vec![0; pool.properties.len()];
         for (id, prop) in pool.properties.iter_with_ids() {
             let pd = self.emit_property(prop);
-            self.property_step_ids[id.0 as usize] = pd;
+            self.set_step_id(id, pd);
         }
         self.emit_name_attributes(&pool);
         self.emit_description_attributes(&pool);
@@ -120,11 +99,10 @@ impl WriteBuffer<'_> {
         pool: &crate::ir::PropertyPool,
     ) {
         use crate::entities::property::general_property::GeneralPropertyHandler;
-        self.general_property_step_ids = vec![0; pool.general_properties.len()];
         for (id, gp) in pool.general_properties.iter_with_ids() {
             let step = GeneralPropertyHandler::write(self, gp.clone())
                 .expect("GENERAL_PROPERTY write only pushes one simple entity");
-            self.general_property_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
     }
 
@@ -138,13 +116,9 @@ impl WriteBuffer<'_> {
         };
         use crate::ir::DerivedDefinitionItem;
         for gpa in pool.general_property_associations.iter() {
-            let base_step = self.general_property_step_ids[gpa.base_definition.0 as usize];
+            let base_step = self.step_id(gpa.base_definition);
             let derived_step = match gpa.derived_definition {
-                DerivedDefinitionItem::PropertyDefinition(pd_id) => self
-                    .property_definition_step_ids
-                    .get(pd_id.0 as usize)
-                    .copied()
-                    .unwrap_or(0),
+                DerivedDefinitionItem::PropertyDefinition(pd_id) => self.step_id(pd_id),
             };
             if base_step == 0 || derived_step == 0 {
                 continue;
@@ -174,26 +148,24 @@ impl WriteBuffer<'_> {
                     step
                 }
                 IdAttributeItem::PropertyDefinition(pd_id) => {
-                    let step = self
-                        .property_definition_step_ids
-                        .get(pd_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let step = self.step_id(pd_id);
                     if step == 0 {
                         continue;
                     }
                     step
                 }
                 IdAttributeItem::Group(g_id) => {
-                    let Some(&step) = self.plm_group_step_ids.get(g_id.0 as usize) else {
+                    let step = self.step_id(g_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
                 IdAttributeItem::Address(a_id) => {
-                    let Some(&step) = self.plm_address_step_ids.get(a_id.0 as usize) else {
+                    let step = self.step_id(a_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
                 IdAttributeItem::ApplicationContext(ac_id) => {
@@ -227,12 +199,7 @@ impl WriteBuffer<'_> {
                     };
                     step
                 }
-                NameAttributeItem::DerivedUnit(du_id) => {
-                    let Some(&step) = self.derived_unit_step_ids.get(du_id.0 as usize) else {
-                        continue;
-                    };
-                    step
-                }
+                NameAttributeItem::DerivedUnit(du_id) => self.step_id(du_id),
             };
             let _ = NameAttributeHandler::write(
                 self,
@@ -253,15 +220,17 @@ impl WriteBuffer<'_> {
         for attr in pool.description_attributes.iter() {
             let item_step = match attr.described_item {
                 DescriptionAttributeItem::PersonAndOrganization(pao_id) => {
-                    let Some(&step) = self.plm_p_and_o_step_ids.get(pao_id.0 as usize) else {
+                    let step = self.step_id(pao_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
                 DescriptionAttributeItem::Representation(repr_id) => {
-                    let Some(&step) = self.representation_step_ids.get(repr_id.0 as usize) else {
+                    let step = self.step_id(repr_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
             };
@@ -287,16 +256,8 @@ impl WriteBuffer<'_> {
         // the PD's product chain wasn't emitted (defensive for kernel-built
         // IR); the GPA emitter skips 0 slots downstream.
         let pd = match prop.definition {
-            PropertyDefinitionRef::PropertyDefinition(id) => self
-                .property_definition_step_ids
-                .get(id.0 as usize)
-                .copied()
-                .unwrap_or(0),
-            PropertyDefinitionRef::GeneralProperty(id) => self
-                .general_property_step_ids
-                .get(id.0 as usize)
-                .copied()
-                .unwrap_or(0),
+            PropertyDefinitionRef::PropertyDefinition(id) => self.step_id(id),
+            PropertyDefinitionRef::GeneralProperty(id) => self.step_id(id),
         };
         if pd == 0 {
             return 0;
@@ -308,19 +269,22 @@ impl WriteBuffer<'_> {
             .iter()
             .map(|item| match item {
                 PropertyItem::Descriptive(d) => self.emit_descriptive_item(d.clone()),
-                PropertyItem::MeasureItem(id) => self.representation_item_step_ids[id.0 as usize],
+                PropertyItem::MeasureItem(id) => self.step_id(id),
             })
             .collect();
 
-        // 2. REPRESENTATION wrapping the items.
-        let ctx_attr = self.repr_context_attr(prop.context);
-        let repr = self.push_simple(
-            "REPRESENTATION",
-            vec![
-                Attribute::String(prop.representation_name.clone()),
-                Attribute::List(item_refs.into_iter().map(Attribute::EntityRef).collect()),
-                ctx_attr,
-            ],
+        // 2. REPRESENTATION wrapping the items. `lower` drops any property whose
+        // context did not resolve, so the context is always an EntityRef here.
+        let Attribute::EntityRef(ctx_id) = self.repr_context_attr(prop.context) else {
+            unreachable!("property REPRESENTATION context resolved by lower → EntityRef")
+        };
+        let repr = crate::early::serialize::serialize_representation(
+            self,
+            &crate::early::lift::lift_representation(
+                prop.representation_name.clone(),
+                item_refs,
+                ctx_id,
+            ),
         );
 
         // 3. PROPERTY_DEFINITION_REPRESENTATION binding the (already
@@ -360,7 +324,6 @@ impl WriteBuffer<'_> {
                 return;
             }
         };
-        self.property_definition_step_ids = vec![0; pool.property_definitions.len()];
         for (idx, pd) in pool.property_definitions.iter_with_ids() {
             let PropertyDefinition::ProductDefinitionShape(pds) = pd else {
                 continue;
@@ -386,15 +349,13 @@ impl WriteBuffer<'_> {
             let Some(&pdef_step) = self.product_def_ids.get(&product_id) else {
                 continue;
             };
-            let step = self.push_simple(
-                "PRODUCT_DEFINITION_SHAPE",
-                vec![
-                    Attribute::String(data.name.clone()),
-                    Attribute::String(data.description.clone()),
-                    Attribute::EntityRef(pdef_step),
-                ],
+            let early = crate::early::lift::lift_product_definition_shape(
+                data.name.clone(),
+                Some(data.description.clone()),
+                pdef_step,
             );
-            self.property_definition_step_ids[idx.0 as usize] = step;
+            let step = crate::early::serialize::serialize_product_definition_shape(self, &early);
+            self.set_step_id(idx, step);
             self.product_def_shape_ids.insert(product_id, step);
         }
     }
@@ -412,10 +373,6 @@ impl WriteBuffer<'_> {
         };
         if pool.property_definitions.is_empty() {
             return;
-        }
-        if self.property_definition_step_ids.len() != pool.property_definitions.len() {
-            self.property_definition_step_ids
-                .resize(pool.property_definitions.len(), 0);
         }
         for (idx, pd) in pool.property_definitions.iter_with_ids() {
             let PropertyDefinition::Itself(data) = pd else {
@@ -440,11 +397,7 @@ impl WriteBuffer<'_> {
                     s
                 }
                 CharacterizedDefinition::DimensionalLocation(dl_id) => {
-                    let s = self
-                        .dimensional_location_step_ids
-                        .get(dl_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(dl_id);
                     if s == 0 {
                         continue;
                     }
@@ -454,11 +407,7 @@ impl WriteBuffer<'_> {
                     // PDS arena entry's step id was cached in Pass A
                     // (emit_property_definitions_pds_only). Slot 0 means the
                     // PDS itself failed to emit — skip this PD too.
-                    let s = self
-                        .property_definition_step_ids
-                        .get(pds_pd_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(pds_pd_id);
                     if s == 0 {
                         continue;
                     }
@@ -467,11 +416,7 @@ impl WriteBuffer<'_> {
                 CharacterizedDefinition::GeneralProperty(gp_id) => {
                     // GENERAL_PROPERTY step ids are filled by
                     // emit_general_properties, which must run before this pass.
-                    let s = self
-                        .general_property_step_ids
-                        .get(gp_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(gp_id);
                     if s == 0 {
                         continue;
                     }
@@ -480,11 +425,7 @@ impl WriteBuffer<'_> {
                 CharacterizedDefinition::Document(doc_id) => {
                     // DOCUMENT_FILE step ids are filled by emit_documents_prepass,
                     // which must run before this pass.
-                    let s = self
-                        .plm_document_step_ids
-                        .get(doc_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(doc_id);
                     if s == 0 {
                         continue;
                     }
@@ -494,11 +435,7 @@ impl WriteBuffer<'_> {
                     // CIWR step ids are reserved by emit_characterized_objects_prepass
                     // before this pass; the CO body emits later under the reserved id.
                     // 0 = inline-DM CO (out of scope) → skip symmetrically.
-                    let s = self
-                        .characterized_object_step_ids
-                        .get(co_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(co_id);
                     if s == 0 {
                         continue;
                     }
@@ -508,11 +445,7 @@ impl WriteBuffer<'_> {
                     // MBD draughting-model CO facet — reserved by
                     // emit_characterized_objects_prepass; the DM complex body
                     // emits later under this same shared id.
-                    let s = self
-                        .characterized_object_step_ids
-                        .get(co_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(co_id);
                     if s == 0 {
                         continue;
                     }
@@ -524,15 +457,9 @@ impl WriteBuffer<'_> {
                     // before this pass.
                     use crate::ir::pmi::GeometricToleranceRef;
                     let s = match gt_ref {
-                        GeometricToleranceRef::Plain(id) => {
-                            self.geometric_tolerance_step_ids.get(id.0 as usize)
-                        }
-                        GeometricToleranceRef::WithDatumReference(id) => self
-                            .geometric_tolerance_with_datum_reference_step_ids
-                            .get(id.0 as usize),
-                    }
-                    .copied()
-                    .unwrap_or(0);
+                        GeometricToleranceRef::Plain(id) => self.step_id(id),
+                        GeometricToleranceRef::WithDatumReference(id) => self.step_id(id),
+                    };
                     if s == 0 {
                         continue;
                     }
@@ -541,26 +468,20 @@ impl WriteBuffer<'_> {
                 CharacterizedDefinition::DimensionalSize(ds_id) => {
                     // dimensional_size step ids are filled by
                     // emit_dimensional_sizes, which runs before this pass.
-                    let s = self
-                        .dimensional_size_step_ids
-                        .get(ds_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(ds_id);
                     if s == 0 {
                         continue;
                     }
                     s
                 }
             };
-            let step = self.push_simple(
-                "PROPERTY_DEFINITION",
-                vec![
-                    Attribute::String(data.name.clone()),
-                    Attribute::String(data.description.clone()),
-                    Attribute::EntityRef(target_step),
-                ],
+            let early = crate::early::lift::lift_property_definition(
+                data.name.clone(),
+                Some(data.description.clone()),
+                target_step,
             );
-            self.property_definition_step_ids[idx.0 as usize] = step;
+            let step = crate::early::serialize::serialize_property_definition(self, &early);
+            self.set_step_id(idx, step);
         }
     }
 
@@ -597,15 +518,10 @@ impl WriteBuffer<'_> {
     }
 
     /// Resolve an explicit [`PropertyMeasureUnit`] to its emitted STEP id.
-    pub(in crate::writer::buffer) fn resolve_explicit_unit_ref(
+    pub(crate) fn resolve_explicit_unit_ref(
         &self,
         unit_ref: Option<PropertyMeasureUnit>,
     ) -> Option<u64> {
-        match unit_ref? {
-            PropertyMeasureUnit::Named(id) => self.named_unit_step_ids.get(id.0 as usize).copied(),
-            PropertyMeasureUnit::Derived(id) => {
-                self.derived_unit_step_ids.get(id.0 as usize).copied()
-            }
-        }
+        Some(unit_ref?.emit_select(self))
     }
 }

@@ -13,12 +13,11 @@
 //! `emit_tessellation` so the `tessellated_*_step_ids` caches are
 //! fully populated before `items` refs resolve.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::tessellation::resolve_tessellated_item_ref;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{Representation, TessellatedShapeRepresentation};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::shape_rep::TessellatedShapeRepresentation;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -34,38 +33,10 @@ impl SimpleEntityHandler for TessellatedShapeRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "TESSELLATED_SHAPE_REPRESENTATION")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        // EXPRESS WHERE wr1: must be GLOBAL_UNIT_ASSIGNED_CONTEXT. Only
-        // accept the Unitful variant; other contexts drop the carrier.
-        let context = ctx.resolve_repr_context(ctx_ref);
-        let Some(crate::ir::shape_rep::RepresentationContextRef::Unitful(ctx_id)) = context else {
-            return Ok(());
-        };
-        ctx.repr_context_map.insert(entity_id, ctx_id);
-
-        let items: Vec<_> = item_refs
-            .iter()
-            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
-            .collect();
-        if items.is_empty() {
-            return Ok(());
-        }
-
-        let repr_id = ctx
-            .representations
-            .push(Representation::TessellatedShapeRepresentation(
-                TessellatedShapeRepresentation {
-                    name,
-                    items,
-                    context,
-                },
-            ));
-        ctx.repr_id_map.insert(entity_id, repr_id);
+        let early = bind::bind_tessellated_shape_representation(entity_id, attrs)?;
+        lower::lower_tessellated_shape_representation(ctx, entity_id, early);
         Ok(())
     }
 
@@ -73,19 +44,9 @@ impl SimpleEntityHandler for TessellatedShapeRepresentationHandler {
         buf: &mut WriteBuffer,
         tsr: TessellatedShapeRepresentation,
     ) -> Result<u64, WriteError> {
-        let items: Vec<Attribute> = tsr
-            .items
-            .iter()
-            .map(|&r| Attribute::EntityRef(buf.emit_tessellated_item_ref(r)))
-            .collect();
-        let ctx_attr = buf.repr_context_attr(tsr.context);
-        Ok(buf.push_simple(
-            "TESSELLATED_SHAPE_REPRESENTATION",
-            vec![
-                Attribute::String(tsr.name),
-                Attribute::List(items),
-                ctx_attr,
-            ],
+        Ok(serialize::serialize_tessellated_shape_representation(
+            buf,
+            &lift::lift_tessellated_shape_representation(buf, tsr),
         ))
     }
 }

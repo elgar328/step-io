@@ -18,6 +18,7 @@ impl WriteBuffer<'_> {
         // Snapshot to release the &model borrow before per-item emission.
         let items: Vec<_> = self
             .model
+            .shape_rep
             .numeric_representation_items
             .iter()
             .cloned()

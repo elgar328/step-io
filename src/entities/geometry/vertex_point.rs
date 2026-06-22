@@ -1,20 +1,13 @@
-//! `VERTEX_POINT` handler leaf vertex.
-//!
-//! Mirrors the legacy `ReaderContext::convert_vertex_point` and
-//! `WriteBuffer::emit_vertex` one-to-one. The writer entry point keeps
-//! its existing wrapper (`emit_vertex`) so callers in adjacent emit
-//! functions don't have to import the handler.
+//! `VERTEX_POINT` handler — leaf vertex wrapping a point (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::VertexId;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::Vertex;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity;
 
 pub(crate) struct VertexPointHandler;
@@ -27,23 +20,16 @@ impl SimpleEntityHandler for VertexPointHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "VERTEX_POINT")?;
-        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
-        let pt_ref = read_entity_ref(attrs, 1, entity_id, "vertex_geometry")?;
-
-        let point = ctx.resolve_point(entity_id, pt_ref, "vertex_geometry")?;
-
-        let vertex = Vertex { point };
-        let id = ctx.geometry.vertices.push(vertex);
-        ctx.vertex_map.insert(entity_id, id);
-        Ok(())
+        let early = bind::bind_vertex_point(entity_id, attrs)?;
+        lower::lower_vertex_point(ctx, entity_id, &early)
     }
 
     fn write(buf: &mut WriteBuffer, id: VertexId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.vertex_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let v = buf
             .model
@@ -56,18 +42,9 @@ impl SimpleEntityHandler for VertexPointHandler {
                 detail: format!("VertexId({})", id.0),
             })?;
         let point = buf.emit_point(v.point)?;
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "VERTEX_POINT".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(point),
-                ],
-            },
-        });
-        buf.vertex_ids.insert(id, n);
+        let early = lift::lift_vertex_point(point);
+        let n = serialize::serialize_vertex_point(buf, &early);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

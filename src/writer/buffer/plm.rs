@@ -26,57 +26,48 @@ impl WriteBuffer<'_> {
             return Ok(());
         };
         // UTC offsets first — LocalTime carries a ref into this cache.
-        self.plm_utc_step_ids = Vec::with_capacity(plm.utc_offsets.len());
-        for utc in plm.utc_offsets.iter() {
+        for (__aid, utc) in plm.utc_offsets.iter_with_ids() {
             let id = CoordinatedUniversalTimeOffsetHandler::write(self, *utc)?;
-            self.plm_utc_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // Calendar dates — DateAndTime carries a ref into this cache.
-        self.plm_date_step_ids = Vec::with_capacity(plm.dates.len());
-        for d in plm.dates.iter() {
+        for (__aid, d) in plm.dates.iter_with_ids() {
             let id = CalendarDateHandler::write(self, *d)?;
-            self.plm_date_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // Date-time roles — no consumers in plm-1a; cache populated for
         // Phase plm-1b's assignment writers.
-        self.plm_date_time_role_step_ids = Vec::with_capacity(plm.date_time_roles.len());
-        for role in plm.date_time_roles.iter() {
+        for (__aid, role) in plm.date_time_roles.iter_with_ids() {
             let id = DateTimeRoleHandler::write(self, role.clone())?;
-            self.plm_date_time_role_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // Local times — read plm_utc_step_ids for the zone ref.
-        self.plm_local_time_step_ids = Vec::with_capacity(plm.local_times.len());
-        for lt in plm.local_times.iter() {
+        for (__aid, lt) in plm.local_times.iter_with_ids() {
             let id = LocalTimeHandler::write(self, *lt)?;
-            self.plm_local_time_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // Date-and-time pairs — read plm_date_step_ids + plm_local_time_step_ids.
-        self.plm_date_and_time_step_ids = Vec::with_capacity(plm.date_and_times.len());
-        for dt in plm.date_and_times.iter() {
+        for (__aid, dt) in plm.date_and_times.iter_with_ids() {
             let id = DateAndTimeHandler::write(self, *dt)?;
-            self.plm_date_and_time_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // Person/Org leaves. PersonAndOrganization needs Person + Organization
         // caches; PersonAndOrganizationRole is independent.
-        self.plm_person_step_ids = Vec::with_capacity(plm.persons.len());
-        for p in plm.persons.iter() {
+        for (__aid, p) in plm.persons.iter_with_ids() {
             let id = PersonHandler::write(self, p.clone())?;
-            self.plm_person_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_organization_step_ids = Vec::with_capacity(plm.organizations.len());
-        for o in plm.organizations.iter() {
+        for (__aid, o) in plm.organizations.iter_with_ids() {
             let id = OrganizationHandler::write(self, o.clone())?;
-            self.plm_organization_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_p_and_o_role_step_ids = Vec::with_capacity(plm.p_and_o_roles.len());
-        for r in plm.p_and_o_roles.iter() {
+        for (__aid, r) in plm.p_and_o_roles.iter_with_ids() {
             let id = PersonAndOrganizationRoleHandler::write(self, r.clone())?;
-            self.plm_p_and_o_role_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_p_and_o_step_ids = Vec::with_capacity(plm.person_and_organizations.len());
-        for po in plm.person_and_organizations.iter() {
+        for (__aid, po) in plm.person_and_organizations.iter_with_ids() {
             let id = PersonAndOrganizationHandler::write(self, *po)?;
-            self.plm_p_and_o_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // Date-and-time assignments — top-level (no consumers), emit and
         // forget. Reads plm_date_and_time_step_ids + plm_date_time_role_step_ids
@@ -122,13 +113,12 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::address::AddressHandler;
         use crate::entities::plm::personal_address::PersonalAddressHandler;
         use crate::ir::plm::Address;
-        self.plm_address_step_ids = Vec::with_capacity(plm.addresses.len());
-        for addr in plm.addresses.iter() {
+        for (__aid, addr) in plm.addresses.iter_with_ids() {
             let id = match addr {
                 Address::Itself(_) => AddressHandler::write(self, addr.clone())?,
                 Address::PersonalAddress(_) => PersonalAddressHandler::write(self, addr.clone())?,
             };
-            self.plm_address_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         Ok(())
     }
@@ -139,10 +129,9 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::plm::applied_group_assignment::AppliedGroupAssignmentHandler;
         use crate::entities::plm::group::GroupHandler;
-        self.plm_group_step_ids = Vec::with_capacity(plm.groups.len());
-        for g in plm.groups.iter() {
+        for (__aid, g) in plm.groups.iter_with_ids() {
             let id = GroupHandler::write(self, g.clone())?;
-            self.plm_group_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         for aga in plm.group_assignments.iter() {
             AppliedGroupAssignmentHandler::write(self, aga.clone())?;
@@ -166,18 +155,16 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::document_file::DocumentFileHandler;
         use crate::entities::plm::document_type::DocumentTypeHandler;
         use crate::ir::plm::Document;
-        self.plm_document_type_step_ids = Vec::with_capacity(plm.document_types.len());
-        for t in plm.document_types.iter() {
+        for (__aid, t) in plm.document_types.iter_with_ids() {
             let id = DocumentTypeHandler::write(self, t.clone())?;
-            self.plm_document_type_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_document_step_ids = Vec::with_capacity(plm.documents.len());
-        for d in plm.documents.iter() {
+        for (__aid, d) in plm.documents.iter_with_ids() {
             let id = match d {
                 Document::Itself(data) => DocumentHandler::write(self, data.clone())?,
                 Document::DocumentFile(file) => DocumentFileHandler::write(self, file.clone())?,
             };
-            self.plm_document_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         Ok(())
     }
@@ -189,22 +176,17 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::applied_document_reference::AppliedDocumentReferenceHandler;
         use crate::entities::plm::document_product_equivalence::DocumentProductEquivalenceHandler;
         use crate::entities::plm::document_representation_type::DocumentRepresentationTypeHandler;
-        self.plm_document_representation_type_step_ids =
-            Vec::with_capacity(plm.document_representation_types.len());
-        for d in plm.document_representation_types.iter() {
+        for (__aid, d) in plm.document_representation_types.iter_with_ids() {
             let id = DocumentRepresentationTypeHandler::write(self, d.clone())?;
-            self.plm_document_representation_type_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_document_product_equivalence_step_ids =
-            Vec::with_capacity(plm.document_product_equivalences.len());
-        for d in plm.document_product_equivalences.iter() {
+        for (__aid, d) in plm.document_product_equivalences.iter_with_ids() {
             let id = DocumentProductEquivalenceHandler::write(self, d.clone())?;
-            self.plm_document_product_equivalence_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_document_reference_step_ids = Vec::with_capacity(plm.document_references.len());
-        for adr in plm.document_references.iter() {
+        for (__aid, adr) in plm.document_references.iter_with_ids() {
             let id = AppliedDocumentReferenceHandler::write(self, adr.clone())?;
-            self.plm_document_reference_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         Ok(())
     }
@@ -216,10 +198,9 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::plm::object_role::ObjectRoleHandler;
         use crate::entities::plm::role_association::RoleAssociationHandler;
-        self.plm_object_role_step_ids = Vec::with_capacity(plm.object_roles.len());
-        for r in plm.object_roles.iter() {
+        for (__aid, r) in plm.object_roles.iter_with_ids() {
             let id = ObjectRoleHandler::write(self, r.clone())?;
-            self.plm_object_role_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         for ra in plm.role_associations.iter() {
             RoleAssociationHandler::write(self, *ra)?;
@@ -235,15 +216,13 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::applied_external_identification_assignment::AppliedExternalIdentificationAssignmentHandler;
         use crate::entities::plm::external_source::ExternalSourceHandler;
         use crate::entities::plm::identification_role::IdentificationRoleHandler;
-        self.plm_identification_role_step_ids = Vec::with_capacity(plm.identification_roles.len());
-        for r in plm.identification_roles.iter() {
+        for (__aid, r) in plm.identification_roles.iter_with_ids() {
             let id = IdentificationRoleHandler::write(self, r.clone())?;
-            self.plm_identification_role_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_external_source_step_ids = Vec::with_capacity(plm.external_sources.len());
-        for s in plm.external_sources.iter() {
+        for (__aid, s) in plm.external_sources.iter_with_ids() {
             let id = ExternalSourceHandler::write(self, s.clone())?;
-            self.plm_external_source_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         for ia in plm.identification_assignments.iter() {
             AppliedExternalIdentificationAssignmentHandler::write(self, ia.clone())?;
@@ -261,17 +240,13 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::security_classification::SecurityClassificationHandler;
         use crate::entities::plm::security_classification_level::SecurityClassificationLevelHandler;
         use crate::ir::plm::SecurityClassificationAssignment;
-        self.plm_security_level_step_ids =
-            Vec::with_capacity(plm.security_classification_levels.len());
-        for l in plm.security_classification_levels.iter() {
+        for (__aid, l) in plm.security_classification_levels.iter_with_ids() {
             let id = SecurityClassificationLevelHandler::write(self, l.clone())?;
-            self.plm_security_level_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_security_classification_step_ids =
-            Vec::with_capacity(plm.security_classifications.len());
-        for s in plm.security_classifications.iter() {
+        for (__aid, s) in plm.security_classifications.iter_with_ids() {
             let id = SecurityClassificationHandler::write(self, s.clone())?;
-            self.plm_security_classification_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         for sca in plm.security_classification_assignments.iter() {
             match sca {
@@ -298,31 +273,25 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::approval_status::ApprovalStatusHandler;
         use crate::entities::plm::cc_design_approval::CcDesignApprovalHandler;
         use crate::ir::plm::ApprovalAssignment;
-        self.plm_approval_status_step_ids = Vec::with_capacity(plm.approval_statuses.len());
-        for s in plm.approval_statuses.iter() {
+        for (__aid, s) in plm.approval_statuses.iter_with_ids() {
             let id = ApprovalStatusHandler::write(self, s.clone())?;
-            self.plm_approval_status_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_approval_role_step_ids = Vec::with_capacity(plm.approval_roles.len());
-        for r in plm.approval_roles.iter() {
+        for (__aid, r) in plm.approval_roles.iter_with_ids() {
             let id = ApprovalRoleHandler::write(self, r.clone())?;
-            self.plm_approval_role_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_approval_step_ids = Vec::with_capacity(plm.approvals.len());
-        for a in plm.approvals.iter() {
+        for (__aid, a) in plm.approvals.iter_with_ids() {
             let id = ApprovalHandler::write(self, a.clone())?;
-            self.plm_approval_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_approval_date_time_step_ids = Vec::with_capacity(plm.approval_date_times.len());
-        for a in plm.approval_date_times.iter() {
+        for (__aid, a) in plm.approval_date_times.iter_with_ids() {
             let id = ApprovalDateTimeHandler::write(self, *a)?;
-            self.plm_approval_date_time_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
-        self.plm_approval_person_organization_step_ids =
-            Vec::with_capacity(plm.approval_person_organizations.len());
-        for a in plm.approval_person_organizations.iter() {
+        for (__aid, a) in plm.approval_person_organizations.iter_with_ids() {
             let id = ApprovalPersonOrganizationHandler::write(self, *a)?;
-            self.plm_approval_person_organization_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // Approval assignments — top-level (no consumers), emit and forget.
         for aa in plm.approval_assignments.iter() {

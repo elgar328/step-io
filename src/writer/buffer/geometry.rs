@@ -9,12 +9,10 @@ use crate::ir::{
     Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface,
     OffsetCurve3d, Parabola, Pcurve, Placement1dId, Placement2dId, Placement3dId, Plane3,
     Point2dId, PointId, Polyline, Polyline2d, RectangularTrimmedSurface, SphericalSurface,
-    StepModel, Surface, SurfaceCurveWrapper, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset,
-    SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
+    StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
+    ToroidalSurface, TrimmedCurve,
 };
-use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
-use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_point(&mut self, id: PointId) -> Result<u64, WriteError> {
@@ -38,8 +36,9 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_curve(&mut self, id: CurveId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.curve_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let curve = curve_at(self.model, id)?.clone();
         let n = match curve {
@@ -54,7 +53,7 @@ impl WriteBuffer<'_> {
             Curve::Parabola(p) => self.emit_parabola(p)?,
             Curve::OffsetCurve3d(oc) => self.emit_offset_curve_3d(oc)?,
         };
-        self.curve_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 
@@ -111,8 +110,9 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_surface(&mut self, id: SurfaceId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.surface_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let surface = surface_at(self.model, id)?.clone();
         let n = match surface {
@@ -133,7 +133,7 @@ impl WriteBuffer<'_> {
                 CurveBoundedSurfaceHandler::write(self, cbs)?
             }
         };
-        self.surface_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 
@@ -303,20 +303,22 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::geometry::planar_extent::{PlanarBoxHandler, PlanarExtentHandler};
         use crate::ir::PlanarExtent;
-        if let Some(&n) = self.planar_extent_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let n = match self.model.geometry.planar_extents[id].clone() {
             PlanarExtent::Itself(data) => PlanarExtentHandler::write(self, data)?,
             PlanarExtent::PlanarBox(pb) => PlanarBoxHandler::write(self, pb)?,
         };
-        self.planar_extent_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 
     pub(crate) fn emit_curve_2d(&mut self, id: Curve2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.curve_2d_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let curve = curve_2d_at(self.model, id)?.clone();
         let n = match curve {
@@ -326,7 +328,7 @@ impl WriteBuffer<'_> {
             Curve2d::Nurbs(nu) => self.emit_nurbs_curve_2d(&nu)?,
             Curve2d::Polyline(polyline) => self.emit_polyline_2d(polyline)?,
         };
-        self.curve_2d_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 
@@ -372,86 +374,57 @@ impl WriteBuffer<'_> {
     /// we reproduce that convention (sharing a single context would still be
     /// parseable but would diverge from fixture output).
     fn emit_2d_representation_context(&mut self) -> u64 {
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    (
-                        "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
-                        vec![Attribute::Integer(2)],
-                    ),
-                    ("PARAMETRIC_REPRESENTATION_CONTEXT".into(), vec![]),
-                    (
-                        "REPRESENTATION_CONTEXT".into(),
-                        vec![
-                            Attribute::String("2D SPACE".into()),
-                            Attribute::String(String::new()),
-                        ],
-                    ),
-                ],
-            },
-        });
-        n
+        crate::early::serialize::serialize_parametric_representation_context(
+            self,
+            &crate::early::lift::lift_default_2d_representation_context(),
+        )
     }
 
     fn emit_definitional_representation(&mut self, curve_2d_ref: u64) -> u64 {
         let ctx = self.emit_2d_representation_context();
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "DEFINITIONAL_REPRESENTATION".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(vec![Attribute::EntityRef(curve_2d_ref)]),
-                    Attribute::EntityRef(ctx),
-                ],
-            },
-        });
-        n
+        crate::early::serialize::serialize_definitional_representation(
+            self,
+            &crate::early::lift::lift_definitional_representation(curve_2d_ref, ctx),
+        )
     }
 
     pub(crate) fn emit_pcurve(&mut self, pc: Pcurve) -> Result<u64, WriteError> {
         let surface_ref = self.emit_surface(pc.basis_surface)?;
         let curve_2d_ref = self.emit_curve_2d(pc.curve_2d)?;
         let def_repr = self.emit_definitional_representation(curve_2d_ref);
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "PCURVE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(surface_ref),
-                    Attribute::EntityRef(def_repr),
-                ],
-            },
-        });
-        Ok(n)
+        Ok(crate::early::serialize::serialize_pcurve(
+            self,
+            &crate::early::lift::lift_pcurve(surface_ref, def_repr),
+        ))
     }
 
-    /// Emit the preserved SURFACE_CURVE / SEAM_CURVE wrapping `curve_3d_ref`.
-    /// The entity kind, `name`, and `master_representation` come straight from
-    /// the wrapper (no heuristic — the original is reproduced verbatim).
-    pub(crate) fn emit_surface_curve_wrapper(
+    /// Emit one `surface_curves` arena node by id, dispatching on its variant.
+    /// `step_id`-cached so the same node emitted via an edge's `edge_geometry`
+    /// and via the orphan sweep resolves to one `#N` (dedup).
+    pub(crate) fn emit_surface_curve_node(
         &mut self,
-        curve_3d_ref: u64,
-        wrapper: &SurfaceCurveWrapper,
+        scid: crate::ir::id::SurfaceCurveSubtypeId,
     ) -> Result<u64, WriteError> {
-        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
-        if wrapper.is_seam {
-            crate::entities::geometry::seam_curve::SeamCurveHandler::write(
-                self,
-                (curve_3d_ref, wrapper.clone()),
-            )
-        } else {
-            crate::entities::geometry::surface_curve::SurfaceCurveHandler::write(
-                self,
-                (curve_3d_ref, wrapper.clone()),
-            )
+        use crate::entities::geometry::seam_curve::SeamCurveHandler;
+        use crate::entities::geometry::surface_curve::SurfaceCurveHandler;
+        use crate::entities::geometry::surface_curve_subtypes::{
+            BoundedSurfaceCurveHandler, IntersectionCurveHandler,
+        };
+        use crate::ir::geometry::SurfaceCurve;
+        let cached = self.step_id(scid);
+        if cached != 0 {
+            return Ok(cached);
         }
+        let body = self.model.geometry.surface_curves[scid].clone();
+        let n = match body {
+            SurfaceCurve::Itself(d) => SurfaceCurveHandler::write(self, d)?,
+            SurfaceCurve::Seam(d) => SeamCurveHandler::write(self, d)?,
+            SurfaceCurve::BoundedSurfaceCurve(d) => BoundedSurfaceCurveHandler::write(self, d)?,
+            SurfaceCurve::IntersectionCurve(d) => IntersectionCurveHandler::write(self, d)?,
+        };
+        self.set_step_id(scid, n);
+        Ok(n)
     }
 }
 

@@ -18,8 +18,9 @@ use crate::ir::model::{FileHeader, ImplementationLevel, NonEmptyStringList, Step
 use crate::parser::entity::Attribute;
 use crate::parser::schema::{SchemaClass, StepSchema};
 
-pub(super) fn header_for(model: &StepModel) -> Vec<HeaderEntity> {
+pub(super) fn header_for(model: &StepModel, target: super::SchemaTarget) -> Vec<HeaderEntity> {
     let header_values = model
+        .metadata
         .header
         .clone()
         .unwrap_or_else(step_io_signature_header);
@@ -28,9 +29,25 @@ pub(super) fn header_for(model: &StepModel) -> Vec<HeaderEntity> {
         file_name_entity(&header_values),
         HeaderEntity {
             name: "FILE_SCHEMA".into(),
-            attrs: vec![Attribute::List(file_schema_strings(&model.schema))],
+            attrs: vec![Attribute::List(target_schema_strings(
+                &model.metadata.schema,
+                target,
+            ))],
         },
     ]
+}
+
+/// `FILE_SCHEMA` strings for the chosen target: a non-`Universal` target emits
+/// that target's baked descriptor(s); `Universal` keeps the model's own schema
+/// (preserved raw, or canonical for synthetic IR).
+fn target_schema_strings(schema: &StepSchema, target: super::SchemaTarget) -> Vec<Attribute> {
+    match crate::early::profile::SchemaProfile::for_target(target).file_schema() {
+        Some(strs) => strs
+            .iter()
+            .map(|s| Attribute::String((*s).to_string()))
+            .collect(),
+        None => file_schema_strings(schema),
+    }
 }
 
 /// step-io's signature when producing synthetic output (IR had `header: None`).
@@ -116,9 +133,17 @@ fn canonical_schema_strings(class: SchemaClass) -> Vec<Attribute> {
 mod tests {
     use super::*;
 
+    /// Test helper: header for the Universal target (as-is, no projection).
+    fn hf(model: &StepModel) -> Vec<HeaderEntity> {
+        header_for(model, crate::writer::SchemaTarget::Universal)
+    }
+
     fn model_for_schema(schema: StepSchema) -> StepModel {
         StepModel {
-            schema,
+            metadata: crate::ir::FileMetadata {
+                schema,
+                ..Default::default()
+            },
             ..StepModel::default()
         }
     }
@@ -132,7 +157,7 @@ mod tests {
             SchemaClass::Ap214Is,
             SchemaClass::Ap242Dis,
         ] {
-            let headers = header_for(&model_for_schema(StepSchema::canonical(class)));
+            let headers = hf(&model_for_schema(StepSchema::canonical(class)));
             assert_eq!(headers.len(), 3, "{class:?}");
             assert_eq!(headers[0].name, "FILE_DESCRIPTION");
             assert_eq!(headers[1].name, "FILE_NAME");
@@ -142,7 +167,7 @@ mod tests {
 
     #[test]
     fn ap214_is_canonical_schema_descriptor() {
-        let headers = header_for(&model_for_schema(StepSchema::canonical(
+        let headers = hf(&model_for_schema(StepSchema::canonical(
             SchemaClass::Ap214Is,
         )));
         let Attribute::List(inner) = &headers[2].attrs[0] else {
@@ -156,7 +181,7 @@ mod tests {
 
     #[test]
     fn ap203_canonical_schema_has_two_strings() {
-        let headers = header_for(&model_for_schema(StepSchema::canonical(SchemaClass::Ap203)));
+        let headers = hf(&model_for_schema(StepSchema::canonical(SchemaClass::Ap203)));
         let Attribute::List(inner) = &headers[2].attrs[0] else {
             panic!("expected list");
         };
@@ -174,7 +199,7 @@ mod tests {
                 .into(),
         );
         let schema = StepSchema::preserved(SchemaClass::Ap203, raw.clone());
-        let headers = header_for(&model_for_schema(schema));
+        let headers = hf(&model_for_schema(schema));
         let Attribute::List(inner) = &headers[2].attrs[0] else {
             panic!("expected list");
         };
@@ -189,7 +214,7 @@ mod tests {
     fn emits_canonical_when_raw_none() {
         // Synthetic `Known { raw: None }` must produce the canonical
         // ed1 short form for AP203.
-        let headers = header_for(&model_for_schema(StepSchema::canonical(SchemaClass::Ap203)));
+        let headers = hf(&model_for_schema(StepSchema::canonical(SchemaClass::Ap203)));
         let Attribute::List(inner) = &headers[2].attrs[0] else {
             panic!("expected list");
         };
@@ -211,7 +236,7 @@ mod tests {
         // AP214 IS canonical.
         let raw =
             NonEmptyStringList::single("AP209_MULTIDISCIPLINARY_ANALYSIS_AND_DESIGN_MIM_LF".into());
-        let headers = header_for(&model_for_schema(StepSchema::Unknown { raw: raw.clone() }));
+        let headers = hf(&model_for_schema(StepSchema::Unknown { raw: raw.clone() }));
         let Attribute::List(inner) = &headers[2].attrs[0] else {
             panic!("expected list");
         };
@@ -224,10 +249,10 @@ mod tests {
 
     #[test]
     fn ap242_is_still_falls_back_to_ap214_is() {
-        let fallback = header_for(&model_for_schema(StepSchema::canonical(
+        let fallback = hf(&model_for_schema(StepSchema::canonical(
             SchemaClass::Ap242Is,
         )));
-        let reference = header_for(&model_for_schema(StepSchema::canonical(
+        let reference = hf(&model_for_schema(StepSchema::canonical(
             SchemaClass::Ap214Is,
         )));
         assert_eq!(fallback[2], reference[2]);
@@ -235,7 +260,7 @@ mod tests {
 
     #[test]
     fn writes_step_io_signature_when_model_header_is_none() {
-        let headers = header_for(&model_for_schema(StepSchema::canonical(
+        let headers = hf(&model_for_schema(StepSchema::canonical(
             SchemaClass::Ap214Is,
         )));
         let Attribute::List(desc_inner) = &headers[0].attrs[0] else {
@@ -254,20 +279,23 @@ mod tests {
     #[test]
     fn writes_preserved_file_header_when_some() {
         let model = StepModel {
-            header: Some(FileHeader {
-                description: NonEmptyStringList::single("User Description".into()),
-                implementation_level: ImplementationLevel::v2_1(),
-                name: "user_part.step".into(),
-                time_stamp: "2024-08-15T12:34:56".into(),
-                author: NonEmptyStringList::single("Alice".into()),
-                organization: NonEmptyStringList::single("Acme".into()),
-                preprocessor_version: "CAD 2024".into(),
-                originating_system: "AcmeCAD".into(),
-                authorization: "manager".into(),
-            }),
+            metadata: crate::ir::FileMetadata {
+                header: Some(FileHeader {
+                    description: NonEmptyStringList::single("User Description".into()),
+                    implementation_level: ImplementationLevel::v2_1(),
+                    name: "user_part.step".into(),
+                    time_stamp: "2024-08-15T12:34:56".into(),
+                    author: NonEmptyStringList::single("Alice".into()),
+                    organization: NonEmptyStringList::single("Acme".into()),
+                    preprocessor_version: "CAD 2024".into(),
+                    originating_system: "AcmeCAD".into(),
+                    authorization: "manager".into(),
+                }),
+                ..Default::default()
+            },
             ..StepModel::default()
         };
-        let headers = header_for(&model);
+        let headers = hf(&model);
         let Attribute::List(desc) = &headers[0].attrs[0] else {
             panic!()
         };

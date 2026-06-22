@@ -44,11 +44,7 @@ pub mod role_association;
 pub mod security_classification;
 pub mod security_classification_level;
 
-use crate::ir::AddressData;
 use crate::ir::ProductId;
-use crate::ir::attr::read_optional_string;
-use crate::ir::error::ConvertError;
-use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 
 /// Resolve a `date_time_item` / `approval_item` /
@@ -62,74 +58,14 @@ use crate::reader::ReaderContext;
 /// silently. The helper name predates Approval / Security / P&O
 /// adoption and is retained pending a rename phase.
 pub(crate) fn resolve_date_time_item(ctx: &ReaderContext, item_ref: u64) -> Option<ProductId> {
-    if let Some(&product_step) = ctx.pdef_to_product.get(&item_ref) {
-        if let Some(&pid) = ctx.product_arena_map.get(&product_step) {
-            return Some(pid);
-        }
+    if let Some(pid) = ctx.product_of_pdef(item_ref) {
+        return Some(pid);
     }
-    if let Some(&product_step) = ctx.formation_to_product.get(&item_ref) {
-        if let Some(&pid) = ctx.product_arena_map.get(&product_step) {
-            return Some(pid);
-        }
+    if let Some(pid) = ctx.product_of_formation(item_ref) {
+        return Some(pid);
     }
-    if let Some(&pid) = ctx.product_arena_map.get(&item_ref) {
+    if let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(item_ref) {
         return Some(pid);
     }
     None
-}
-
-/// Read the 12 inherited `ADDRESS` `opt_string` fields starting at
-/// `attrs[start]`. Shared by the `ADDRESS` and `PERSONAL_ADDRESS`
-/// readers (the latter inherits these 12 fields before its own
-/// `people` / `description`).
-pub(super) fn read_address_data(
-    attrs: &[Attribute],
-    start: usize,
-    entity_id: u64,
-    entity_name: &'static str,
-) -> Result<AddressData, ConvertError> {
-    let _ = entity_name;
-    Ok(AddressData {
-        internal_location: read_optional_string(attrs, start, entity_id, "internal_location")?,
-        street_number: read_optional_string(attrs, start + 1, entity_id, "street_number")?,
-        street: read_optional_string(attrs, start + 2, entity_id, "street")?,
-        postal_box: read_optional_string(attrs, start + 3, entity_id, "postal_box")?,
-        town: read_optional_string(attrs, start + 4, entity_id, "town")?,
-        region: read_optional_string(attrs, start + 5, entity_id, "region")?,
-        postal_code: read_optional_string(attrs, start + 6, entity_id, "postal_code")?,
-        country: read_optional_string(attrs, start + 7, entity_id, "country")?,
-        facsimile_number: read_optional_string(attrs, start + 8, entity_id, "facsimile_number")?,
-        telephone_number: read_optional_string(attrs, start + 9, entity_id, "telephone_number")?,
-        electronic_mail_address: read_optional_string(
-            attrs,
-            start + 10,
-            entity_id,
-            "electronic_mail_address",
-        )?,
-        telex_number: read_optional_string(attrs, start + 11, entity_id, "telex_number")?,
-    })
-}
-
-/// Write the 12 inherited `ADDRESS` `opt_string` fields into the
-/// supplied attribute vector. Used by both `ADDRESS` and
-/// `PERSONAL_ADDRESS` writers so the inherited shape stays in sync.
-pub(super) fn write_address_data(attrs: &mut Vec<Attribute>, data: AddressData) {
-    let push = |attrs: &mut Vec<Attribute>, v: Option<String>| {
-        attrs.push(match v {
-            Some(s) => Attribute::String(s),
-            None => Attribute::Unset,
-        });
-    };
-    push(attrs, data.internal_location);
-    push(attrs, data.street_number);
-    push(attrs, data.street);
-    push(attrs, data.postal_box);
-    push(attrs, data.town);
-    push(attrs, data.region);
-    push(attrs, data.postal_code);
-    push(attrs, data.country);
-    push(attrs, data.facsimile_number);
-    push(attrs, data.telephone_number);
-    push(attrs, data.electronic_mail_address);
-    push(attrs, data.telex_number);
 }

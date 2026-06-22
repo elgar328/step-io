@@ -2,11 +2,11 @@
 //! into one of the `SURFACE_SIDE_STYLE` entry variants. Pushes into the
 //! shared `founded_item` arena as the `SurfaceStyleFillArea` variant.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{FoundedItem, SurfaceStyleFillArea, VisualizationPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::visualization::SurfaceStyleFillArea;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,30 +22,19 @@ impl SimpleEntityHandler for SurfaceStyleFillAreaHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "SURFACE_STYLE_FILL_AREA")?;
-        let fas_ref = read_entity_ref(attrs, 0, entity_id, "fill_area")?;
-        let Some(&fill_area) = ctx.viz_fas_id_map.get(&fas_ref) else {
-            return Ok(());
-        };
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
-            .founded_items
-            .push(FoundedItem::SurfaceStyleFillArea(SurfaceStyleFillArea {
-                fill_area,
-            }));
-        ctx.viz_ssfa_id_map.insert(entity_id, id);
+        // 2-layer path: bind → L1, then lower → L2. `lower` registers the typed
+        // `EarlySurfaceStyleFillAreaId` cache key so `surface_side_style`
+        // disambiguates this member by L1 type (replaces `viz_ssfa_id_map`).
+        let early = bind::bind_surface_style_fill_area(entity_id, attrs)?;
+        lower::lower_surface_style_fill_area(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ssfa: SurfaceStyleFillArea) -> Result<u64, WriteError> {
-        let fas_step_id = buf.founded_item_step_ids[ssfa.fill_area.0 as usize];
-        Ok(buf.push_simple(
-            "SURFACE_STYLE_FILL_AREA",
-            vec![Attribute::EntityRef(fas_step_id)],
-        ))
+        // 2-layer write path: lift L2 → L1, then serialize L1 → Part21 text.
+        let early = lift::lift_surface_style_fill_area(buf, &ssfa);
+        Ok(serialize::serialize_surface_style_fill_area(buf, &early))
     }
 }

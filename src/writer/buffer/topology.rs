@@ -2,7 +2,6 @@
 
 use super::WriteBuffer;
 use crate::ir::{EdgeId, FaceId, Orientation, ShellId, SolidId, VertexId, Wire, WireId};
-use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -22,8 +21,9 @@ impl WriteBuffer<'_> {
 
     pub(crate) fn emit_wire(&mut self, id: WireId) -> Result<u64, WriteError> {
         use crate::entities::SimpleEntityHandler;
-        if let Some(&n) = self.wire_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let w: Wire = self
             .model
@@ -60,7 +60,7 @@ impl WriteBuffer<'_> {
                 (loop_id, data.orientation),
             )?
         };
-        self.wire_ids.insert(id, bound_id);
+        self.set_step_id(id, bound_id);
         Ok(bound_id)
     }
 
@@ -115,12 +115,5 @@ impl WriteBuffer<'_> {
                 crate::entities::topology::brep_with_voids::BrepWithVoidsHandler::write(self, id)
             }
         }
-    }
-}
-
-pub(crate) fn orientation_bool(o: Orientation) -> Attribute {
-    match o {
-        Orientation::Forward => Attribute::Enum("T".into()),
-        Orientation::Reversed => Attribute::Enum("F".into()),
     }
 }

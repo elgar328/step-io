@@ -1,15 +1,11 @@
-//! `SEAM_CURVE` handler.
-//!
-//! Sister handler of `SURFACE_CURVE`. Both share their read/write body
-//! in `surface_curve.rs`; only the entity name on emission differs.
+//! `SEAM_CURVE` handler — 2-layer arena path (sister of `SURFACE_CURVE`).
+//! Same `SurfaceCurveData` body; only the emitted entity name differs.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::geometry::surface_curve::{
-    read_surface_or_seam_curve_body, write_surface_or_seam_curve_body,
-};
-use crate::ir::SurfaceCurveWrapper;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::geometry::SurfaceCurveData;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -19,21 +15,21 @@ pub(crate) struct SeamCurveHandler;
 
 #[step_entity(name = "SEAM_CURVE")]
 impl SimpleEntityHandler for SeamCurveHandler {
-    type WriteInput = (u64, SurfaceCurveWrapper);
+    type WriteInput = SurfaceCurveData;
 
     fn read(
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        eg: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        read_surface_or_seam_curve_body(ctx, entity_id, attrs, "SEAM_CURVE")
+        let early = bind::bind_seam_curve(entity_id, attrs)?;
+        lower::lower_seam_curve(ctx, entity_id, early, eg);
+        Ok(())
     }
 
-    fn write(
-        buf: &mut WriteBuffer,
-        (curve_3d_ref, wrapper): (u64, SurfaceCurveWrapper),
-    ) -> Result<u64, WriteError> {
-        write_surface_or_seam_curve_body(buf, curve_3d_ref, &wrapper)
+    fn write(buf: &mut WriteBuffer, body: SurfaceCurveData) -> Result<u64, WriteError> {
+        let early = lift::lift_seam_curve(buf, body)?;
+        Ok(serialize::serialize_seam_curve(buf, &early))
     }
 }

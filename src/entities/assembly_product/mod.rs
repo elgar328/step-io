@@ -1,8 +1,9 @@
 //! Assembly + product entity handlers. Each
 //! handler impls [`crate::entities::SimpleEntityHandler`] and registers
 //! via the `#[step_entity]` proc-macro attribute from `step_io_macros`.
-//! The graph-aware variants (CDSR, `PRODUCT_DEFINITION_SHAPE` classifier)
-//! receive `&EntityGraph` through the unified handler signature.
+//! The cross-walking variants (CDSR, `PRODUCT_DEFINITION_SHAPE` classifier)
+//! receive the typed [`EarlyGraph`](crate::early::EarlyGraph) facade through the
+//! unified handler signature (the raw graph is not exposed to handlers).
 
 pub mod context_dependent_shape_representation;
 pub mod design_context;
@@ -23,4 +24,3 @@ pub mod product_definition_relationship;
 pub mod product_definition_shape;
 pub mod product_definition_with_associated_documents;
 pub mod product_related_product_category;
-pub(crate) mod shared;

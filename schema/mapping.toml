@@ -1,0 +1,915 @@
+# L1 generator (gen-early) hints — hand-authored, complements schema/early.toml.
+#
+# `generate`: the migrated entity set whose model/bind/serialize gen-early emits
+# into src/early/generated/. Grows as clusters migrate (lower/lift stay hand-
+# written). v0 = the two simplest founded-item entities (no SELECT/Option/inherit).
+generate = [
+    # visualization (pilot cluster)
+    "surface_style_fill_area",
+    "view_volume",
+    "fill_area_style",
+    "surface_side_style",
+    "surface_style_usage",
+    "point_style",
+    # assembly_product (product 2-hop cluster)
+    "product",
+    "product_definition_formation",
+    "product_definition_formation_with_specified_source",
+    "product_definition",
+    "product_definition_with_associated_documents",
+    "product_definition_shape",
+    "next_assembly_usage_occurrence",
+    "context_dependent_shape_representation",
+    # shape_rep (representation relationship cluster)
+    "representation_relationship",
+    "shape_representation_relationship",
+    "constructive_geometry_representation_relationship",
+    "mechanical_design_and_draughting_relationship",
+    # RRWT assembly-placement complex (see [complex.*] below)
+    "representation_relationship_with_transformation",
+    # shape_rep (representation cluster)
+    "shape_representation",
+    "advanced_brep_shape_representation",
+    "manifold_surface_shape_representation",
+    "geometrically_bounded_surface_shape_representation",
+    "geometrically_bounded_wireframe_shape_representation",
+    "integer_representation_item",
+    "draughting_model",
+    "characterized_object_complex",
+    "characterized_object",
+    "measure_representation_item",
+    "measure_representation_item_complex",
+    # residual (A)군 묶음1 — leaf/relationship (enum 없음)
+    "limits_and_fits",
+    "draughting_pre_defined_text_font",
+    "draughting_callout_relationship",
+    "tolerance_value",
+    "plus_minus_tolerance",
+    "projected_zone_definition",
+    "terminator_symbol",
+    # plm (metadata leaf batch)
+    "approval_role",
+    "approval_status",
+    "date_time_role",
+    "person_and_organization_role",
+    "document_type",
+    "security_classification_level",
+    "application_context",
+    "product_context",
+    "mechanical_context",
+    "product_definition_context",
+    "design_context",
+    "product_definition_context_role",
+    "product_definition_context_association",
+    "object_role",
+    "identification_role",
+    "group",
+    "approval",
+    "calendar_date",
+    "document_representation_type",
+    "organization",
+    "date_and_time",
+    "security_classification",
+    "document",
+    "approval_date_time",
+    "approval_person_organization",
+    "local_time",
+    "coordinated_universal_time_offset",
+    "person",
+    "role_association",
+    "document_product_equivalence",
+    "address",
+    "personal_address",
+    "application_protocol_definition",
+    "document_file",
+    "person_and_organization",
+    "cc_design_approval",
+    "cc_design_date_and_time_assignment",
+    "cc_design_security_classification",
+    "cc_design_person_and_organization_assignment",
+    "applied_approval_assignment",
+    "applied_group_assignment",
+    "applied_date_and_time_assignment",
+    "applied_security_classification_assignment",
+    "applied_person_and_organization_assignment",
+    "applied_document_reference",
+    "applied_external_identification_assignment",
+    # units (derived cluster)
+    "derived_unit_element",
+    "derived_unit",
+    "area_unit",
+    "volume_unit",
+    "dimensional_exponents",
+    # Phase 4r: units named cluster — NAMED_UNIT bare (reserve-then-fill)
+    "named_unit",
+    # Phase 4s: units complex — SOLID_ANGLE_UNIT (SI enum + complex reserve-then-fill)
+    "solid_angle_unit",
+    # Phase 4t: units complex — LENGTH_UNIT SI case (CBU stays hand-written)
+    "length_unit",
+    # Phase 4u: units complex — MASS_UNIT + PLANE_ANGLE_UNIT SI case (CBU stays hand-written)
+    "mass_unit",
+    "plane_angle_unit",
+    # Phase 5b: units simple — RATIO_UNIT (NAMED_UNIT subtype; dimensions $ → synthetic DE)
+    "ratio_unit",
+    # visualization (pre-defined / colour leaf batch)
+    "pre_defined_marker",
+    "pre_defined_point_marker_symbol",
+    "draughting_pre_defined_colour",
+    "colour",
+    "colour_rgb",
+    "pre_defined_curve_font",
+    "draughting_pre_defined_curve_font",
+    "pre_defined_symbol",
+    "pre_defined_terminator_symbol",
+    "symbol_colour",
+    "text_literal",
+    "text_style_with_box_characteristics",
+    "surface_style_parameter_line",
+    # property (attribute leaf batch)
+    "general_property",
+    "property_definition",
+    "property_definition_representation",
+    "name_attribute",
+    "description_attribute",
+    "id_attribute",
+    # shape_rep (context / characterized leaf batch)
+    "representation_context",
+    "characterized_item_within_representation",
+    "surface_style_boundary",
+    "text_style_for_defined_font",
+    "real_representation_item",
+    "datum_target",
+    "tolerance_zone",
+    "composite_group_shape_aspect",
+    "composite_shape_aspect",
+    "composite_datum_shape_aspect",
+    "centre_of_symmetry",
+    "all_around_shape_aspect",
+    "placed_datum_target_feature",
+    "datum_system",
+    "fill_area_style_colour",
+    "surface_style_transparent",
+    "symbol_style",
+    "composite_text",
+    "camera_usage",
+    "descriptive_representation_item",
+    "qualified_representation_item",
+    "presentation_layer_assignment",
+    "product_category",
+    # product_categories arena completion (cascade chain)
+    "product_related_product_category",
+    "product_category_relationship",
+    "dimensional_characteristic_representation",
+    "general_property_association",
+    "make_from_usage_option",
+    "model_geometric_view",
+    "presented_item_representation",
+    "applied_presented_item",
+    "product_definition_relationship",
+    "shape_definition_representation",
+    # pmi (leaf + datum-free form tolerances)
+    "tolerance_zone_form",
+    "type_qualifier",
+    "value_format_type_qualifier",
+    "flatness_tolerance",
+    "flatness_tolerance_complex",
+    "surface_profile_tolerance",
+    "straightness_tolerance",
+    "straightness_tolerance_complex",
+    "roundness_tolerance",
+    "roundness_tolerance_complex",
+    "cylindricity_tolerance",
+    "datum",
+    "dimensional_size",
+    "geometric_tolerance_relationship",
+    "global_unit_assigned_context",
+    "measure_qualification",
+    "dimensional_location",
+    "directed_dimensional_location",
+    "angular_location",
+    "angular_size",
+    "datum_feature",
+    "dimensional_size_with_datum_feature",
+    # general_datum_reference subtypes — base/modifiers selects auto-synth (no hints)
+    "datum_reference_compartment",
+    "datum_reference_element",
+    "draughting_callout",
+    "leader_directed_callout",
+    "cartesian_point",
+    "direction",
+    "vertex_point",
+    "vector",
+    "line",
+    "axis1_placement",
+    "axis2_placement_3d",
+    "circle",
+    "plane",
+    "ellipse",
+    "parabola",
+    "hyperbola",
+    "conical_surface",
+    "cylindrical_surface",
+    "spherical_surface",
+    "toroidal_surface",
+    "surface_of_revolution",
+    "surface_of_linear_extrusion",
+    "polyline",
+    "face_bound",
+    "face_outer_bound",
+    "open_shell",
+    "closed_shell",
+    "vertex_loop",
+    "advanced_face",
+    "face_surface",
+    "manifold_solid_brep",
+    # geometry (low-frequency leaf batch)
+    "planar_extent",
+    "degenerate_toroidal_surface",
+    "circular_area",
+    "curve_bounded_surface",
+    # geometry (derived surface/curve leaf batch)
+    "offset_surface",
+    "offset_curve_3d",
+    "planar_box",
+    "rectangular_trimmed_surface",
+    # visualization (GRI surface model)
+    "shell_based_surface_model",
+    # geometry (composite curve cluster)
+    "composite_curve_segment",
+    "composite_curve",
+    # geometry (trimmed curve)
+    "trimmed_curve",
+    # geometry (surface_curve family — base + subtypes, master_representation enum)
+    "surface_curve",
+    "seam_curve",
+    "intersection_curve",
+    "bounded_surface_curve",
+    # batch 1: clean geometry + core topology edge pair
+    "bounded_pcurve",
+    # B2: PCURVE write+read 군집 (full bind+serialize) — def_repr는 pcurve 서브트리
+    "pcurve",
+    "definitional_representation",
+    # bare REPRESENTATION: full (read via PDR walk + write via emit_property serialize)
+    "representation",
+    "geometric_curve_set",
+    "geometric_set",
+    "edge_loop",
+    "edge_curve",
+    # batch 2: oriented topology (EXPRESS Derived `*` slots — see [derived])
+    "oriented_edge",
+    "oriented_closed_shell",
+    # batch 3: W-COMPLEX Phase 1 — non-rational b_spline curve (Simple)
+    "b_spline_curve_with_knots",
+    # Phase 1b: W-COMPLEX — non-rational b_spline surface (Simple, 2D cp grid)
+    "b_spline_surface_with_knots",
+    # Phase 1c: W-COMPLEX — quasi-uniform b_spline (derived knots; read_only)
+    "quasi_uniform_curve",
+    "quasi_uniform_surface",
+    # Phase 2 pilot: W-COMPLEX — rational b_spline curve (multi-part complex)
+    "rational_b_spline_curve",
+    # Phase 2b: W-COMPLEX — rational b_spline surface (complex + weights 2D grid)
+    "rational_b_spline_surface",
+    # Phase 2c: W-COMPLEX — rational quasi-uniform (synthetic-name complex, read_only)
+    "rational_quasi_uniform_curve",
+    "rational_quasi_uniform_surface",
+    # Phase 2d: first non-geometry complex — unitless parametric context
+    "parametric_representation_context",
+    # Phase 3a: simple entity — manifold_solid_brep subtype with voids
+    "brep_with_voids",
+    # Phase 3c: PMI complex — styled annotation text occurrence
+    "annotation_text_occurrence",
+    # Phase 3d: PMI complex — styled leader curve + terminator
+    "leader_curve",
+    "leader_terminator",
+    # Phase 3e: PMI simple — plain styled-annotation occurrences (name/styles/item)
+    "annotation_occurrence",
+    "draughting_annotation_occurrence",
+    "annotation_symbol_occurrence",
+    "annotation_curve_occurrence",
+    # PMI simple — annotation placeholder occurrences (role enum)
+    "annotation_placeholder_occurrence",
+    "annotation_placeholder_occurrence_with_leader_line",
+    # PMI simple — annotation placeholder leader lines (pattern-b 1:N writer split)
+    "annotation_to_model_leader_line",
+    "auxiliary_leader_line",
+    # PMI simple — APLL points (cartesian_point subtype; symbol enum + 1:N writer)
+    "apll_point",
+    "apll_point_with_surface",
+    # PMI simple — DMIA (definition 6-way + identified_item select; 1:N placeholder writer)
+    "draughting_model_item_association",
+    "draughting_model_item_association_with_placeholder",
+    # PMI simple relationship — annotation occurrence associativity
+    "annotation_occurrence_associativity",
+    # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
+    "annotation_plane",
+    # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)
+    "camera_model_d3",
+    "camera_model_d3_with_hlhsr",
+    # Phase 3h: visualization simple — camera model d3 multi clipping (SET shape_clipping)
+    "camera_model_d3_multi_clipping",
+    # Phase 3i: plm simple — external source (SELECT codegen pilot, hinted source_item)
+    "external_source",
+    # Phase 3j: shape_rep simple — value representation item (synth measure_value SELECT, 43-typed)
+    "value_representation_item",
+    # Phase 3k: units simple — bare measure with unit (reuse measure_value synth + unit ref)
+    "measure_with_unit",
+    # Phase 3l: units simple — typed measure_with_unit subtypes (MWU family complete)
+    "length_measure_with_unit",
+    "mass_measure_with_unit",
+    "plane_angle_measure_with_unit",
+    "ratio_measure_with_unit",
+    # Phase 3m: visualization simple — curve style (reuse size_select codegen)
+    "curve_style",
+    # Phase 3n: shape_rep simple — shape aspect supertype (subtype precedent)
+    "shape_aspect",
+    # Phase 3o: shape_rep simple — shape aspect relationship family (4, kind tag)
+    "shape_aspect_relationship",
+    "shape_aspect_associativity",
+    "shape_aspect_deriving_relationship",
+    "feature_for_datum_target_relationship",
+    # Phase 3p: visualization — presentation style assignment (SET OF mixed select, synth)
+    "presentation_style_assignment",
+    # Phase 3q: visualization — presentation style by context (PSA subtype + style_context)
+    "presentation_style_by_context",
+    # Phase 3r: visualization — invisibility (all-entity SET, lower multi-probe)
+    "invisibility",
+    # Phase 3s: visualization — styled_item family (Plain + OverRiding + CDORSI)
+    "styled_item",
+    "over_riding_styled_item",
+    "context_dependent_over_riding_styled_item",
+    # Phase 3t: pmi — geometric_tolerance_with_datum_reference simple 7 (GD&T)
+    "angularity_tolerance",
+    "circular_runout_tolerance",
+    "circular_runout_tolerance_complex",
+    "position_tolerance_complex",
+    "surface_profile_tolerance_complex",
+    "line_profile_tolerance_complex",
+    "concentricity_tolerance",
+    "parallelism_tolerance",
+    "parallelism_tolerance_complex",
+    "perpendicularity_tolerance",
+    "perpendicularity_tolerance_complex",
+    "symmetry_tolerance",
+    "total_runout_tolerance",
+    # Phase 3u: tessellation — clean leaf 7 (grids/lists, shared resolvers)
+    "coordinates_list",
+    "tessellated_curve_set",
+    "complex_triangulated_surface_set",
+    "tessellated_geometric_set",
+    "repositioned_tessellated_geometric_set",
+    "tessellated_solid",
+    "tessellated_shell",
+    "repositioned_tessellated_item",
+    # Phase 3v: tessellation — moderate 3 (shared resolvers, repr_context, deferred-emit TSR)
+    "complex_triangulated_face",
+    "tessellated_annotation_occurrence",
+    "tessellated_shape_representation",
+    # Phase 3w: visualization leaf 5 (pure ref/scalar/all-entity-select)
+    "presentation_set",
+    "area_in_set",
+    # visualization — presentation_representation subtypes (shared arena, pattern-a)
+    "presentation_view",
+    "presentation_area",
+    "presentation_size",
+    "symbol_target",
+    "defined_symbol",
+    # Phase 3x: shape_rep representation — TSR-style, drop-on-unresolvable-context
+    "constructive_geometry_representation",
+    # Phase 3y: MDGPR — same drop-on-None pattern, dual-write arena
+    "mechanical_design_geometric_presentation_representation",
+    # Phase 3z: SDR + SRWP — drop-on-None, completes push_simple+L2-payload representations
+    "shape_dimension_representation",
+    "shape_representation_with_parameters",
+    # Phase 4a: non-repr clean — first synth typed-aggregate select (compound_item_definition)
+    "compound_representation_item",
+    # Phase 4b: non-repr clean — IIRU (definition all-entity→u64, identified_item mixed synth)
+    "item_identified_representation_usage",
+    "geometric_item_specific_usage",
+    # Phase 4d: 2D geometry — distinct-name placement (mirrors axis2_placement_3d)
+    "axis2_placement_2d",
+    # Phase 4l: camera_image family — simple (flatten from mapped_item) + complex 3d_with_scale
+    "camera_image",
+    "camera_image_3d_with_scale",
+    # Phase 4m: mapped-item base — REPRESENTATION_MAP + MAPPED_ITEM (Itself)
+    "representation_map",
+    "mapped_item",
+    # Phase 4n: assembly transform — ITEM_DEFINED_TRANSFORMATION (push_simple, transform_map)
+    "item_defined_transformation",
+    # Phase 4o: MBD view — DEFAULT_MODEL_GEOMETRIC_VIEW (2-supertype flatten + DERIVE)
+    "default_model_geometric_view",
+    # Phase 4p: uncertainty — UNCERTAINTY_MEASURE_WITH_UNIT (measure_with_unit sibling)
+    "uncertainty_measure_with_unit",
+    # Phase 4q: ns-normalization framework — SURFACE_STYLE_RENDERING cluster
+    "surface_style_rendering",
+    "surface_style_rendering_with_properties",
+]
+
+# Entities whose writer fills a pre-reserved id (reserve-then-fill): also
+# generate `serialize_<entity>_with_id` for those emit paths.
+serialize_with_id = [
+    "characterized_item_within_representation",
+    "characterized_object_complex",
+    "advanced_brep_shape_representation",
+    "model_geometric_view",
+    "named_unit",
+    "solid_angle_unit",
+    "length_unit",
+    "mass_unit",
+    "plane_angle_unit",
+    "ratio_unit",
+    "dimensional_size_with_datum_feature",
+]
+
+# `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
+# the codegen can handle (filtered by support) + writes schema/coverage.txt,
+# instead of just `generate`. Committed as false (the wired 6); flip on locally
+# to measure coverage / validate that the full union compiles.
+generate_all = false
+
+# `read_only`: entities generated as model + bind only (serialize skipped). For
+# read-back-only minority forms the writer normalizes away (QUASI_UNIFORM_* →
+# B_SPLINE_*_WITH_KNOTS, per emit_nurbs_curve compatibility-first policy): read
+# but never emitted, so their handler `write` is `unreachable!()`. Precondition:
+# any enum each entity binds is also used by a serialized entity (b_spline form
+# helpers are covered by b_spline_*_with_knots).
+read_only = [
+    "quasi_uniform_curve",
+    "quasi_uniform_surface",
+    "rational_quasi_uniform_curve",
+    "rational_quasi_uniform_surface",
+]
+
+# `write_only`: entities generated as model + serialize only (bind skipped).
+# Mirror of `read_only` for write-only forms — emitted but never read standalone
+# (read goes through another handler), so the generated bind would be dead.
+# `characterized_object`: the complex DRAUGHTING_MODEL carrier reads via
+# `characterized_object_complex`; write normalizes the `Itself` carrier to a
+# plain `CHARACTERIZED_OBJECT(name, $)`, needing only serialize. No enum/select.
+write_only = [
+    "characterized_object",
+]
+
+# `[complex.<entity>]`: multi-part (complex) entity. `parts` = ordered supertype
+# part names (must match the handler's #[step_entity_complex] cases order). Each
+# part contributes its early.toml own_attrs; gen-early emits a part-wise bind
+# (require_part_attrs) + a WriterBody::Complex serialize (push_complex). Single
+# case only.
+[complex.rational_b_spline_curve]
+parts = [
+    "BOUNDED_CURVE",
+    "B_SPLINE_CURVE",
+    "B_SPLINE_CURVE_WITH_KNOTS",
+    "CURVE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "RATIONAL_B_SPLINE_CURVE",
+    "REPRESENTATION_ITEM",
+]
+
+# `camera_image_3d_with_scale` — AND-combined; data on MAPPED_ITEM
+# (mapping_source, mapping_target) + REPRESENTATION_ITEM (name). The empty parts
+# (CAMERA_IMAGE / CAMERA_IMAGE_3D_WITH_SCALE / GRI) contribute no attrs.
+[complex.camera_image_3d_with_scale]
+parts = [
+    "CAMERA_IMAGE",
+    "CAMERA_IMAGE_3D_WITH_SCALE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "MAPPED_ITEM",
+    "REPRESENTATION_ITEM",
+]
+
+[complex.rational_b_spline_surface]
+parts = [
+    "BOUNDED_SURFACE",
+    "B_SPLINE_SURFACE",
+    "B_SPLINE_SURFACE_WITH_KNOTS",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "RATIONAL_B_SPLINE_SURFACE",
+    "REPRESENTATION_ITEM",
+    "SURFACE",
+]
+
+# Synthetic-name complex (no single early.toml entity): rational quasi-uniform.
+# No *_WITH_KNOTS part — knots are derived in lower. read_only (normalized to
+# RATIONAL_B_SPLINE_* on write).
+[complex.rational_quasi_uniform_curve]
+parts = [
+    "BOUNDED_CURVE",
+    "B_SPLINE_CURVE",
+    "CURVE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "QUASI_UNIFORM_CURVE",
+    "RATIONAL_B_SPLINE_CURVE",
+    "REPRESENTATION_ITEM",
+]
+
+[complex.rational_quasi_uniform_surface]
+parts = [
+    "BOUNDED_SURFACE",
+    "B_SPLINE_SURFACE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "QUASI_UNIFORM_SURFACE",
+    "RATIONAL_B_SPLINE_SURFACE",
+    "REPRESENTATION_ITEM",
+    "SURFACE",
+]
+
+[complex.parametric_representation_context]
+parts = [
+    "GEOMETRIC_REPRESENTATION_CONTEXT",
+    "PARAMETRIC_REPRESENTATION_CONTEXT",
+    "REPRESENTATION_CONTEXT",
+]
+
+# RRWT assembly-placement complex: read (via CDSR manual bind) + write
+# (emit_rrwt_complex). transformation_operator is a mixed SELECT (synth
+# EarlyTransformation: EntityRef | SetItemDefinedTransformation); SRR part empty.
+[complex.representation_relationship_with_transformation]
+parts = [
+    "REPRESENTATION_RELATIONSHIP",
+    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+    "SHAPE_REPRESENTATION_RELATIONSHIP",
+]
+
+[complex.annotation_text_occurrence]
+parts = [
+    "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_TEXT_OCCURRENCE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "REPRESENTATION_ITEM",
+    "STYLED_ITEM",
+]
+
+[complex.leader_curve]
+parts = [
+    "ANNOTATION_CURVE_OCCURRENCE",
+    "ANNOTATION_OCCURRENCE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "LEADER_CURVE",
+    "REPRESENTATION_ITEM",
+    "STYLED_ITEM",
+]
+
+[complex.leader_terminator]
+parts = [
+    "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_SYMBOL_OCCURRENCE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "LEADER_TERMINATOR",
+    "REPRESENTATION_ITEM",
+    "STYLED_ITEM",
+    "TERMINATOR_SYMBOL",
+]
+
+# Part order matches the legacy writer emit order (SI_UNIT first), not the
+# alphabetical case order — required for byte-identical output.
+[complex.solid_angle_unit]
+parts = [
+    "SI_UNIT",
+    "NAMED_UNIT",
+    "SOLID_ANGLE_UNIT",
+]
+
+# Multi-case (units-CBU-② Plan 1): SI vs CONVERSION_BASED_UNIT. L1 enum
+# EarlyLengthUnit{Si, Cbu}. Both cases: NAMED_UNIT.dimensions = `*` (derived) —
+# the complex supertype attr is conventionally Derived (corpus, e.g. NIST
+# ctc_05 `NAMED_UNIT(*)`). CBU adds CONVERSION_BASED_UNIT(name, conversion_factor
+# MWU). Part order = each case's emit order (must match the hand emit it replaces).
+[complex.length_unit.cases.si]
+parts = ["LENGTH_UNIT", "NAMED_UNIT", "SI_UNIT"]
+derived = ["dimensions"]
+
+[complex.length_unit.cases.cbu]
+parts = ["CONVERSION_BASED_UNIT", "LENGTH_UNIT", "NAMED_UNIT"]
+derived = ["dimensions"]
+discriminant = "CONVERSION_BASED_UNIT"
+
+# Multi-case (units-CBU-② Plan 2): SI vs CONVERSION_BASED_UNIT. Both cases'
+# NAMED_UNIT.dimensions = `*` (Derived). CBU adds CONVERSION_BASED_UNIT(name,
+# conversion_factor MWU); unit identified by factor in lower (fixed kg base).
+[complex.mass_unit.cases.si]
+parts = ["MASS_UNIT", "NAMED_UNIT", "SI_UNIT"]
+derived = ["dimensions"]
+
+[complex.mass_unit.cases.cbu]
+parts = ["CONVERSION_BASED_UNIT", "MASS_UNIT", "NAMED_UNIT"]
+derived = ["dimensions"]
+discriminant = "CONVERSION_BASED_UNIT"
+
+# Multi-case (units-CBU-② Plan 2): SI vs CONVERSION_BASED_UNIT. Both cases'
+# NAMED_UNIT.dimensions = `*` (Derived). CBU unit identified by factor in lower
+# (fixed radian base).
+[complex.plane_angle_unit.cases.si]
+parts = ["SI_UNIT", "NAMED_UNIT", "PLANE_ANGLE_UNIT"]
+derived = ["dimensions"]
+
+[complex.plane_angle_unit.cases.cbu]
+parts = ["CONVERSION_BASED_UNIT", "NAMED_UNIT", "PLANE_ANGLE_UNIT"]
+derived = ["dimensions"]
+discriminant = "CONVERSION_BASED_UNIT"
+
+# GLOBAL_UNIT_ASSIGNED_CONTEXT complex `(GEOMETRIC_REPRESENTATION_CONTEXT …
+# REPRESENTATION_CONTEXT)`. Two cases discriminated by the optional
+# GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT part. Flattened L1 fields:
+# coordinate_space_dimension (GEO) + uncertainty (GUNCAC, full only) + units
+# (GUAC) + context_identifier/context_type (REPR). Part order = ISO 10303-21
+# §11.2.5.1 alphabetical (= the hand emit order it replaces). `unit` /
+# `uncertainty_measure_with_unit` are all-entity SELECT / entity → Vec<Ref>
+# (no derived slots). lower bridges to the bundled UnitContext L2.
+[complex.global_unit_assigned_context]
+also_simple = true
+
+[complex.global_unit_assigned_context.cases.full]
+parts = ["GEOMETRIC_REPRESENTATION_CONTEXT", "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT", "GLOBAL_UNIT_ASSIGNED_CONTEXT", "REPRESENTATION_CONTEXT"]
+discriminant = "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT"
+
+[complex.global_unit_assigned_context.cases.no_uncertainty]
+parts = ["GEOMETRIC_REPRESENTATION_CONTEXT", "GLOBAL_UNIT_ASSIGNED_CONTEXT", "REPRESENTATION_CONTEXT"]
+
+# GD&T datum-free COMPLEX forms (synthetic names — the simple `<leaf>_tolerance`
+# entity is generated separately; these are the AND-combined `(GEOMETRIC_TOLERANCE
+# [optional supertypes] <leaf>)` forms). Data on GEOMETRIC_TOLERANCE (4 attrs) +
+# the present optional parts (WITH_DEFINED_UNIT.unit_size / WITH_DEFINED_AREA_UNIT.
+# area_type+second_unit_size / WITH_MODIFIERS.modifiers); leaf part carries none.
+# `geometric_tolerance_modifier` (ENUM 34) / `area_unit_type` (ENUM 5) are
+# hint-less strict synth enums; lower/lift bridge to the reduced L2 enums.
+# part order = hand WriterBody order (GT, [WDU,[WDAU]], [WM], leaf).
+[complex.flatness_tolerance_complex.cases.unit_area]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT", "FLATNESS_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT", "FLATNESS_TOLERANCE"]
+
+[complex.flatness_tolerance_complex.cases.unit]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "FLATNESS_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "FLATNESS_TOLERANCE"]
+
+[complex.flatness_tolerance_complex.cases.modifiers]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "FLATNESS_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "FLATNESS_TOLERANCE"]
+
+# Single-case (one supported combination each).
+[complex.roundness_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "ROUNDNESS_TOLERANCE"]
+
+[complex.straightness_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "STRAIGHTNESS_TOLERANCE"]
+
+# GD&T datum-reference (WDR) COMPLEX forms — simple-leaf single case (GT + WDR +
+# WITH_MODIFIERS + leaf). datum_system on WDR; modifiers on WITH_MODIFIERS; leaf
+# empty. part order = hand writer (GT, WDR, WM, leaf).
+[complex.parallelism_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PARALLELISM_TOLERANCE"]
+
+[complex.perpendicularity_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PERPENDICULARITY_TOLERANCE"]
+
+[complex.circular_runout_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "CIRCULAR_RUNOUT_TOLERANCE"]
+
+# GD&T datum-reference always-complex forms (is_complex: even the no-optional
+# "plain" form emits as complex). POSITION/SURFACE_PROFILE multi-case; SURFACE_
+# PROFILE adds a displacement (UNEQUALLY_DISPOSED) case. part order = hand writer
+# (GT, GTWDR, [WM], [UD], leaf); plain ⊂ others → match_parts.
+[complex.position_tolerance_complex.cases.plain]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "POSITION_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "POSITION_TOLERANCE"]
+
+[complex.position_tolerance_complex.cases.modifiers]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "POSITION_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "POSITION_TOLERANCE"]
+
+[complex.surface_profile_tolerance_complex.cases.plain]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "SURFACE_PROFILE_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "SURFACE_PROFILE_TOLERANCE"]
+
+[complex.surface_profile_tolerance_complex.cases.modifiers]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "SURFACE_PROFILE_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "SURFACE_PROFILE_TOLERANCE"]
+
+[complex.surface_profile_tolerance_complex.cases.displacement]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE", "SURFACE_PROFILE_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE", "SURFACE_PROFILE_TOLERANCE"]
+
+[complex.line_profile_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "LINE_PROFILE_TOLERANCE"]
+
+# Repositioned tessellated geometric set — 5-part complex MI (synthetic name; the
+# plain TESSELLATED_GEOMETRIC_SET is a separate simple handler). Data: name on
+# REPRESENTATION_ITEM, location on REPOSITIONED_TESSELLATED_ITEM, children on
+# TESSELLATED_GEOMETRIC_SET; GEOMETRIC_REPRESENTATION_ITEM / TESSELLATED_ITEM empty.
+# part order = the hand WriterBody::Complex order. No self-ref → plain serialize.
+[complex.repositioned_tessellated_geometric_set]
+parts = ["GEOMETRIC_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM"]
+
+# Complex MI DRAUGHTING_MODEL family (synthetic name — no single early.toml
+# entity). 3 exact part-sets (A ⊂ B share CHARACTERIZED_OBJECT, so single-part
+# discriminant can't separate them → `match_parts` exact-set dispatch). All data
+# lives on the REPRESENTATION part; CHARACTERIZED_OBJECT's name/description are
+# `(*,*)` (part-qualified derived). part order = alphabetical = the hand
+# WriterBody::Complex order so re-read re-dispatches to the same case.
+# AND-combined SHAPE_ASPECT subtype that is simultaneously a COMPOSITE_(GROUP_)
+# SHAPE_ASPECT and a DATUM_FEATURE. All data lives on the SHAPE_ASPECT part; the
+# other leaves are empty `()`. composite ⊂ group (group adds COMPOSITE_GROUP_
+# SHAPE_ASPECT) → `match_parts` exact-set dispatch. part order = alphabetical =
+# the hand WriterBody::Complex order so re-read re-dispatches to the same case.
+[complex.composite_datum_shape_aspect.cases.composite]
+parts = ["COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+match_parts = ["COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+
+[complex.composite_datum_shape_aspect.cases.group]
+parts = ["COMPOSITE_GROUP_SHAPE_ASPECT", "COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+match_parts = ["COMPOSITE_GROUP_SHAPE_ASPECT", "COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+
+[complex.characterized_object_complex.cases.characterized]
+parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION"]
+match_parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION"]
+derived = ["CHARACTERIZED_OBJECT.name", "CHARACTERIZED_OBJECT.description"]
+
+[complex.characterized_object_complex.cases.characterized_shape_tessellated]
+parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+match_parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+derived = ["CHARACTERIZED_OBJECT.name", "CHARACTERIZED_OBJECT.description"]
+
+[complex.characterized_object_complex.cases.shape_tessellated]
+parts = ["DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+match_parts = ["DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+
+# Complex MI MEASURE_REPRESENTATION_ITEM (synthetic name). Data on REPRESENTATION_
+# ITEM (name) + MEASURE_WITH_UNIT (value_component=measure_value SELECT,
+# unit_component=unit ref); the <X>_MEASURE_WITH_UNIT supertype-marker part and
+# MEASURE_REPRESENTATION_ITEM carry no own attrs — supertype identity = case
+# variant. case length_qualified adds QUALIFIED_REPRESENTATION_ITEM (qualifiers
+# SET). length ⊂ length_qualified → match_parts exact-set dispatch. part order =
+# alphabetical = hand WriterBody order.
+[complex.measure_representation_item_complex.cases.length_qualified]
+parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "QUALIFIED_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"]
+match_parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "QUALIFIED_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"]
+
+[complex.measure_representation_item_complex.cases.length]
+parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+match_parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+
+[complex.measure_representation_item_complex.cases.plane_angle]
+parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "PLANE_ANGLE_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+match_parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "PLANE_ANGLE_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+
+[complex.measure_representation_item_complex.cases.ratio]
+parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "RATIO_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+match_parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "RATIO_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+
+# Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
+# carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21
+# positional slot (later attrs read at the right index) but is omitted from the
+# L1 struct + bind and serialized as `*`.
+[derived]
+oriented_edge = ["edge_start", "edge_end"]
+oriented_closed_shell = ["cfs_faces"]
+default_model_geometric_view = ["product_definitional"]
+solid_angle_unit = ["dimensions"]
+# length_unit / mass_unit / plane_angle_unit: per-case derived now lives in
+# [complex.<entity>.cases.*] (multi-case, units-CBU-②).
+
+# `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
+# of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member
+# to its L2 variant; the STEP Part21 token is the member upper-cased
+# (e.g. `central` -> `.CENTRAL.`).
+[enum.central_or_parallel]
+rust_type = "crate::ir::visualization::Projection"
+variants = { central = "Central", parallel = "Parallel" }
+
+# Strict (no `default`): an unknown enum token errors with
+# `NonStandardEnumValue` → the dispatcher drops the entity and reclassifies it
+# as a NORM normalization (rejecting a non-standard value is correct, not a loss).
+[enum.surface_side]
+rust_type = "crate::ir::visualization::SurfaceSide"
+variants = { positive = "Front", negative = "Back", both = "Both" }
+
+# Strict (no `default`): the handler normalizes Unset / unrecognized
+# `rendering_method` to NORMAL_SHADING *before* the strict bind (pre-bind attrs
+# rewrite, NORM-recorded), so the generated bind only ever sees a valid token.
+[enum.shading_surface_method]
+rust_type = "crate::ir::visualization::ShadingMethod"
+variants = { constant_shading = "Constant", colour_shading = "Colour", dot_shading = "Dot", normal_shading = "Normal" }
+
+# SI_UNIT prefix / name — ISO 10303-41 standard ENUMERATION (full member set,
+# strict). L1↔lower intermediate enums; typed-unit lowers collapse them to the
+# concrete unit flavour. units complex (solid_angle / length / mass / plane_angle)
+# share these.
+[enum.si_prefix]
+rust_type = "crate::ir::units::SiPrefix"
+variants = { exa = "Exa", peta = "Peta", tera = "Tera", giga = "Giga", mega = "Mega", kilo = "Kilo", hecto = "Hecto", deca = "Deca", deci = "Deci", centi = "Centi", milli = "Milli", micro = "Micro", nano = "Nano", pico = "Pico", femto = "Femto", atto = "Atto" }
+
+[enum.si_unit_name]
+rust_type = "crate::ir::units::SiUnitName"
+variants = { metre = "Metre", gram = "Gram", second = "Second", ampere = "Ampere", kelvin = "Kelvin", mole = "Mole", candela = "Candela", radian = "Radian", steradian = "Steradian", hertz = "Hertz", newton = "Newton", pascal = "Pascal", joule = "Joule", watt = "Watt", coulomb = "Coulomb", volt = "Volt", farad = "Farad", ohm = "Ohm", siemens = "Siemens", weber = "Weber", tesla = "Tesla", henry = "Henry", degree_celsius = "DegreeCelsius", lumen = "Lumen", lux = "Lux", becquerel = "Becquerel", gray = "Gray", sievert = "Sievert" }
+
+# `text_path` (text_literal.path). Strict (no `default`/`catch_all`): an unknown
+# token errors (NonStandardEnumValue) → dropped + NORM. Corpus scan confirms all
+# TEXT_LITERAL use `.RIGHT.` (no non-standard tokens), so this is behaviourally a
+# no-op vs the prior `TextPath::Other` round-trip.
+[enum.text_path]
+rust_type = "crate::ir::visualization::TextPath"
+variants = { left = "Left", right = "Right", up = "Up", down = "Down" }
+
+# Strict token-enum (SELECT member, no `catch_all`): an unknown token →
+# `None` from `marker_type_from_token`, so the SELECT drops the member; the
+# POINT_STYLE handler surfaces the drop as a NORM normalization.
+[enum.marker_type]
+rust_type = "crate::ir::visualization::MarkerType"
+variants = { dot = "Dot", x = "X", plus = "Plus", asterisk = "Asterisk", ring = "Ring", square = "Square", triangle = "Triangle" }
+
+# `[select.<name>]`: synthesize an `Early*` enum for a *mixed* SELECT (members
+# span entity / enum / primitive). `variants` names the L1 variant per member;
+# the member kind (ref / enum / real / string) and any enum hint are auto-
+# derived from early.toml (e.g. member `marker_type` resolves to `[enum.marker_type]`).
+[select.marker_select]
+rust_type = "EarlyMarker"
+variants = { marker_type = "Type", pre_defined_marker = "Predefined" }
+
+[select.size_select]
+rust_type = "EarlyMarkerSize"
+variants = { descriptive_measure = "Descriptive", measure_with_unit = "MeasureWithUnit", positive_length_measure = "PositiveLength" }
+
+# `trimming_select` = SELECT(cartesian_point[entity], parameter_value[real]) used
+# in `TRIMMED_CURVE.trim_1/trim_2` (SET OF). Synthesizes `EarlyTrimSelect`;
+# entity member emits a bare `#N`, the real member a `PARAMETER_VALUE(v)` Typed.
+# Non-standard TAG-less bare reals (`( 0.0 )`) are accepted and normalized to
+# `PARAMETER_VALUE(0.0)` on write (gen-early bare-scalar arm).
+[select.trimming_select]
+rust_type = "EarlyTrimSelect"
+variants = { cartesian_point = "Point", parameter_value = "Param" }
+
+# `source_item` = SELECT(identifier[string], message[string]) used in
+# `EXTERNAL_SOURCE.source_id`. Typed-only mixed select (no entity member):
+# `IDENTIFIER('..')` / `MESSAGE('..')`. step-io models only `Identifier` in L2.
+[select.source_item]
+rust_type = "EarlySourceItem"
+variants = { identifier = "Identifier", message = "Message" }
+
+# `box_characteristic_select` = SELECT of 4 typed reals (box_height / box_width /
+# box_slant_angle / box_rotate_angle) in `TEXT_STYLE_WITH_BOX_CHARACTERISTICS`.
+# Hinted (not auto-synth) only to drop the shared `Box` variant prefix — the
+# auto-synth pascal names (BoxHeight, ...) trip clippy::enum_variant_names. The
+# L2 `BoxCharacteristic` mapping still lives in lower/lift.
+[select.box_characteristic_select]
+rust_type = "EarlyBoxCharacteristicSelect"
+variants = { box_height = "Height", box_width = "Width", box_slant_angle = "SlantAngle", box_rotate_angle = "RotateAngle" }
+
+[enum.ahead_or_behind]
+rust_type = "crate::ir::plm::AheadOrBehind"
+variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }
+
+# `transition_code`: the 4 EXPRESS members exactly. Strict — any other token
+# (incl. the non-standard `.UNSPECIFIED.`) errors (NonStandardEnumValue) →
+# dropped + NORM.
+[enum.transition_code]
+rust_type = "crate::ir::geometry::TransitionCode"
+variants = { continuous = "Continuous", discontinuous = "Discontinuous", cont_same_gradient = "ContSameGradient", cont_same_gradient_same_curvature = "ContSameGradientSameCurvature" }
+
+# `trimming_preference`: all 3 EXPRESS members map to L2 `TrimMaster`. Strict
+# (no `default`): an unknown token errors (NonStandardEnumValue) → dropped + NORM.
+[enum.trimming_preference]
+rust_type = "crate::ir::geometry::TrimMaster"
+variants = { cartesian = "Cartesian", parameter = "Parameter", unspecified = "Unspecified" }
+
+[enum.angle_relator]
+rust_type = "crate::ir::pmi::AngleSelection"
+variants = { equal = "Equal", large = "Large", small = "Small" }
+
+# `b_spline_curve_form` (b_spline_curve.curve_form). `default` reproduces the
+# legacy `CurveForm::from_step_enum` `_ => Unspecified` catch-all exactly (behavior
+# preserved; a separate plan will strict-ify forms with a corpus token scan first).
+[enum.b_spline_curve_form]
+rust_type = "crate::ir::geometry::CurveForm"
+variants = { polyline_form = "PolylineForm", circular_arc = "CircularArc", elliptic_arc = "EllipticArc", parabolic_arc = "ParabolicArc", hyperbolic_arc = "HyperbolicArc", unspecified = "Unspecified" }
+
+# Lenient (default) to reproduce SurfaceForm::from_step_enum during the structural
+# migration; strict-ification is a separate follow-up (needs a surface-form scan).
+[enum.b_spline_surface_form]
+rust_type = "crate::ir::geometry::SurfaceForm"
+variants = { plane_surf = "PlaneSurf", cylindrical_surf = "CylindricalSurf", conical_surf = "ConicalSurf", spherical_surf = "SphericalSurf", toroidal_surf = "ToroidalSurf", surf_of_revolution = "SurfOfRevolution", ruled_surf = "RuledSurf", generalised_cone = "GeneralisedCone", quadric_surf = "QuadricSurf", surf_of_linear_extrusion = "SurfOfLinearExtrusion", unspecified = "Unspecified" }
+
+# `preferred_surface_curve_representation` (surface_curve.master_representation).
+# Strict: unrecognized token drops the entity (NonStandardEnumValue → NORM),
+# matching the INTERSECTION_CURVE/BOUNDED_SURFACE_CURVE subtype handlers. (The
+# base SURFACE_CURVE/SEAM_CURVE alias path stays hand-coded with its own lenient
+# `unwrap_or(PcurveS1)` and does not use this generated bind.)
+[enum.preferred_surface_curve_representation]
+rust_type = "crate::ir::geometry::PreferredSurfaceCurveRepresentation"
+variants = { curve_3d = "Curve3d", pcurve_s1 = "PcurveS1", pcurve_s2 = "PcurveS2" }
+
+# `annotation_placeholder_occurrence_role` (ANNOTATION_PLACEHOLDER_OCCURRENCE
+# [_WITH_LEADER_LINE].role). Strict: off-schema token is non-standard input,
+# dropped (NonStandardEnumValue → NORM). The L2 String was promoted to this
+# closed 2-member enum.
+[enum.annotation_placeholder_occurrence_role]
+rust_type = "crate::ir::pmi::AnnotationPlaceholderOccurrenceRole"
+variants = { annotation_text = "AnnotationText", gps_data = "GpsData" }
+
+# `des_apll_point_symbol` (apll_point[_with_surface].symbol_applied). Strict:
+# off-schema token is non-standard input, dropped (NonStandardEnumValue → NORM).
+# The L2 String was promoted to this closed 7-member enum.
+[enum.des_apll_point_symbol]
+rust_type = "crate::ir::pmi::DesApllPointSymbol"
+variants = { circle = "Circle", dot = "Dot", internal_pair_forward_arrowhead = "InternalPairForwardArrowhead", internal_pair_reverse_arrowhead = "InternalPairReverseArrowhead", none = "None", positive_arrowhead = "PositiveArrowhead", triangle = "Triangle" }

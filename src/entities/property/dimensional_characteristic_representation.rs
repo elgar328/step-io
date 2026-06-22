@@ -1,18 +1,12 @@
-//! `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` handler — phase sdr-dcr.
-//!
-//! Pairs a `dimensional_characteristic` SELECT (resolved through the shared
-//! `resolve_dimensional_characteristic`, which also reaches the
-//! `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` in the `datum_feature` arena) with a
-//! `RepresentationId` (resolved through `repr_id_map`). Either ref unresolved
-//! drops the occurrence, symmetric on re-read.
+//! `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` handler — property
+//! (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::pmi::resolve_dimensional_characteristic;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::DimensionalCharacteristic;
-use crate::ir::property::{DimensionalCharacteristicRepresentation, PropertyPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::property::DimensionalCharacteristicRepresentation;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -28,31 +22,10 @@ impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            2,
-            entity_id,
-            "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
-        )?;
-        let dim_ref = read_entity_ref(attrs, 0, entity_id, "dimension")?;
-        let repr_ref = read_entity_ref(attrs, 1, entity_id, "representation")?;
-        let Some(dimension) = resolve_dimensional_characteristic(ctx, dim_ref) else {
-            return Ok(());
-        };
-        let Some(&representation) = ctx.repr_id_map.get(&repr_ref) else {
-            return Ok(());
-        };
-        let property = ctx.properties.get_or_insert_with(PropertyPool::default);
-        let id = property.dimensional_characteristic_representations.push(
-            DimensionalCharacteristicRepresentation {
-                dimension,
-                representation,
-            },
-        );
-        ctx.dimensional_characteristic_representation_id_map
-            .insert(entity_id, id);
+        let early = bind::bind_dimensional_characteristic_representation(entity_id, attrs)?;
+        lower::lower_dimensional_characteristic_representation(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -61,21 +34,12 @@ impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
         dcr: DimensionalCharacteristicRepresentation,
     ) -> Result<u64, WriteError> {
         let dim_step = match dcr.dimension {
-            DimensionalCharacteristic::Size(id) => buf.dimensional_size_step_ids[id.0 as usize],
-            DimensionalCharacteristic::Location(id) => {
-                buf.dimensional_location_step_ids[id.0 as usize]
-            }
-            DimensionalCharacteristic::SizeWithDatumFeature(id) => {
-                buf.datum_feature_step_ids[id.0 as usize]
-            }
+            DimensionalCharacteristic::Size(id) => buf.step_id(id),
+            DimensionalCharacteristic::Location(id) => buf.step_id(id),
+            DimensionalCharacteristic::SizeWithDatumFeature(id) => buf.step_id(id),
         };
-        let repr_step = buf.representation_step_ids[dcr.representation.0 as usize];
-        Ok(buf.push_simple(
-            "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
-            vec![
-                Attribute::EntityRef(dim_step),
-                Attribute::EntityRef(repr_step),
-            ],
-        ))
+        let repr_step = buf.step_id(dcr.representation);
+        let early = lift::lift_dimensional_characteristic_representation(dim_step, repr_step);
+        Ok(serialize::serialize_dimensional_characteristic_representation(buf, &early))
     }
 }

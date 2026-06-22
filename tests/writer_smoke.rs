@@ -36,7 +36,7 @@ use step_io::ir::shape_rep::{
     ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
 };
 use step_io::ir::topology::{Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
-use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
+use step_io::ir::units::{MassUnit, NamedUnit, UnitsPool};
 use step_io::ir::visualization::{
     CameraModel, CameraModelD3, FoundedItem, Projection, ViewVolume, VisualizationPool,
 };
@@ -59,10 +59,12 @@ fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
             pool.push_plain_plane_angle(AngleUnit::Radian),
             pool.push_plain_solid_angle(SolidAngleUnit::Steradian),
         ],
-        length_uncertainty: None,
-        plane_angle_uncertainty: None,
-        solid_angle_uncertainty: None,
-        form: step_io::ir::shape_rep::UnitContextForm::Complex,
+        uncertainty: Vec::new(),
+        form: step_io::ir::shape_rep::UnitContextForm::Complex {
+            coordinate_space_dimension: 3,
+            repr_identifier: String::new(),
+            repr_type: String::new(),
+        },
     }
 }
 
@@ -80,7 +82,9 @@ fn reconvert(text: &str) -> StepModel {
 #[test]
 fn empty_model_produces_valid_part21_wrapper() {
     let model = empty_model();
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.starts_with("ISO-10303-21;\n"));
     assert!(text.contains("HEADER;"));
     assert!(text.contains("DATA;\n"));
@@ -103,7 +107,9 @@ fn points_round_trip_values() {
         y: 0.0,
         z: 1e-7,
     });
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.points.len(), 2);
     let p0 = re.geometry.points.iter().next().unwrap();
@@ -124,7 +130,9 @@ fn direction_round_trips_values() {
         y: 0.0,
         z: 1.0,
     });
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.directions.len(), 1);
     let d = re.geometry.directions.iter().next().unwrap();
@@ -151,7 +159,9 @@ fn line_with_inline_vector_round_trips() {
         direction: d,
         magnitude: 2.5,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.points.len(), 1);
     assert_eq!(re.geometry.directions.len(), 1);
@@ -189,7 +199,9 @@ fn plane_round_trips_axis_placement() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -229,7 +241,9 @@ fn cylinder_round_trips_radius_and_placement() {
             position,
             radius: 12.5,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -255,7 +269,9 @@ fn unset_axis_directions_round_trip_as_none() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Plane(plane) => {
@@ -271,12 +287,14 @@ fn unset_axis_directions_round_trip_as_none() {
 fn unit_context_mm_radian_steradian_round_trips() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
-    let text = model.write_to_string().expect("write");
+    model.shape_rep.unit_contexts.push(ctx);
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     // units-2: NamedUnitId may shift due to pool emit ordering — compare
     // the resolved enum values via arena lookup.
-    let ctx_back = re.units.iter().next().expect("ctx");
+    let ctx_back = re.shape_rep.unit_contexts.iter().next().expect("ctx");
     let pool = re.units_pool.as_ref().expect("units pool");
     match pool.named_units[ctx_back.length(pool).expect("length unit")] {
         NamedUnit::Length(f) => assert_eq!(f.unit, LengthUnit::Millimetre),
@@ -295,19 +313,25 @@ fn unit_context_mm_radian_steradian_round_trips() {
 #[test]
 fn unit_context_absent_stays_none() {
     let model = empty_model();
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert!(re.units.is_empty());
+    assert!(re.shape_rep.unit_contexts.is_empty());
 }
 
 #[test]
 fn write_to_and_write_to_string_produce_identical_bytes() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
-    let via_string = model.write_to_string().expect("string");
+    model.shape_rep.unit_contexts.push(ctx);
+    let via_string = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("string");
     let mut via_writer = Vec::new();
-    model.write_to(&mut via_writer).expect("writer");
+    model
+        .write_to(&mut via_writer, step_io::SchemaTarget::Universal)
+        .expect("writer");
     assert_eq!(via_string.as_bytes(), &via_writer[..]);
 }
 
@@ -355,7 +379,9 @@ fn circle_round_trips_radius() {
         position,
         radius: 5.0,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.curves.len(), 1);
     match re.geometry.curves.iter().next().unwrap() {
@@ -373,7 +399,9 @@ fn ellipse_round_trips_semi_axes() {
         semi_axis_1: 3.0,
         semi_axis_2: 1.5,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Ellipse(e) => {
@@ -395,7 +423,9 @@ fn sphere_round_trips_radius() {
             position,
             radius: 7.5,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Sphere(s) => assert!((s.radius - 7.5).abs() < f64::EPSILON),
@@ -412,7 +442,9 @@ fn cone_round_trips_radius_and_semi_angle() {
         radius: 4.0,
         semi_angle: std::f64::consts::FRAC_PI_6,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Cone(c) => {
@@ -435,7 +467,9 @@ fn torus_round_trips_major_and_minor_radii() {
             major_radius: 10.0,
             minor_radius: 2.0,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Torus(t) => {
@@ -454,7 +488,9 @@ fn non_finite_real_surfaces_as_invalid_float() {
         y: 0.0,
         z: 0.0,
     });
-    let err = model.write_to_string().expect_err("NaN must not serialize");
+    let err = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect_err("NaN must not serialize");
     assert!(matches!(err, WriteError::InvalidFloat { .. }));
 }
 
@@ -463,7 +499,9 @@ fn assembly_field_defaults_noop() {
     // Assembly isn't in W-A scope; a None value must round-trip untouched.
     let mut model = empty_model();
     model.assembly = None;
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert!(re.assembly.is_none());
     // Silence unused warning on AssemblyTree import.
@@ -518,7 +556,9 @@ fn nurbs_surface_non_rational_round_trips() {
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
@@ -553,7 +593,9 @@ fn nurbs_surface_unknown_closedness_round_trips() {
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
@@ -584,7 +626,9 @@ fn nurbs_surface_rational_round_trips() {
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
@@ -631,7 +675,9 @@ fn nurbs_curve_non_rational_round_trips() {
         form: CurveForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Nurbs(c) => {
@@ -662,7 +708,9 @@ fn nurbs_curve_rational_round_trips() {
         form: CurveForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Nurbs(c) => {
@@ -688,7 +736,9 @@ fn nurbs_curve_form_hint_round_trips() {
         form: CurveForm::CircularArc,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains(".CIRCULAR_ARC."), "writer emits STEP enum");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
@@ -715,7 +765,9 @@ fn nurbs_surface_form_hint_round_trips() {
         form: SurfaceForm::CylindricalSurf,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains(".CYLINDRICAL_SURF."),
         "writer emits STEP enum"
@@ -761,7 +813,9 @@ fn extrusion_surface_round_trips() {
             extrusion_direction: extrude_dir,
             depth: 5.0,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -804,7 +858,9 @@ fn revolution_surface_round_trips() {
             swept_curve: swept,
             axis_placement,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -870,7 +926,9 @@ fn vertex_loop_wire_round_trips() {
     // that sphere poles and some revolutions use.
     let mut model = empty_model();
     let _solid = push_minimal_solid(&mut model);
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.topology.wires.len(), 1);
     let roundtripped_wire = re.topology.wires.iter().next().unwrap();
@@ -907,7 +965,7 @@ fn simple_assembly_round_trips() {
     // Root Group holding one Instance that points at a Solid leaf product.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -964,7 +1022,9 @@ fn simple_assembly_round_trips() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
     assert_eq!(r_asm.products.len(), 2);
@@ -996,7 +1056,7 @@ fn shared_child_assembly_round_trips() {
     // occurrence ids — the classic shared-instance case.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1064,7 +1124,9 @@ fn shared_child_assembly_round_trips() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().unwrap();
     let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
@@ -1094,7 +1156,7 @@ fn nauo_arena_is_canonical_with_instance_view() {
     use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1178,7 +1240,9 @@ fn nauo_arena_is_canonical_with_instance_view() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("assembly");
 
@@ -1241,7 +1305,7 @@ fn nauo_owned_pds_property_round_trips() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let leaf_solid = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1331,14 +1395,14 @@ fn nauo_owned_pds_property_round_trips() {
         description: Some("centroid of Leaf".into()),
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(centroid_pd),
         representation_name: "centroid".into(),
-        context: Some(step_io::ir::shape_rep::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
+        context: step_io::ir::shape_rep::RepresentationContextRef::Unitful(UnitContextId(0)),
         items: vec![],
     });
     model.properties = Some(props);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // The NAUO-owned PDS body carries the SOURCE name, not "Placement of an item".
     assert!(
         text.contains("PRODUCT_DEFINITION_SHAPE('Placement #1','Placement of Leaf'"),
@@ -1393,7 +1457,7 @@ fn instance_placement_representation_round_trips() {
     use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1401,11 +1465,14 @@ fn instance_placement_representation_round_trips() {
     // Two standalone placement SHAPE_REPRESENTATIONs sharing the one placement
     // PDS — the multi-SDR-per-instance shape a single Option would have dropped.
     let mut placement_sr = |name: &str| {
-        model.representations.push(Representation::Plain(PlainRepr {
-            name: name.into(),
-            context: Some(RepresentationContextRef::Unitful(ctx_id)),
-            frame: None,
-        }))
+        model
+            .shape_rep
+            .representations
+            .push(Representation::Plain(PlainRepr {
+                name: name.into(),
+                context: RepresentationContextRef::Unitful(ctx_id),
+                frame: None,
+            }))
     };
     let placement_sr_a = placement_sr("placement_a");
     let placement_sr_b = placement_sr("placement_b");
@@ -1462,7 +1529,9 @@ fn instance_placement_representation_round_trips() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // The writer emitted BOTH extra placement SDRs (the Leaf product's own SDR
     // plus these two → at least 3 SDRs).
     assert!(
@@ -1481,6 +1550,7 @@ fn instance_placement_representation_round_trips() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     // Two instances of the same Leaf with the SAME transform must still gain
     // DISTINCT RepresentationRelationshipWithTransformation arena ids on
@@ -1491,7 +1561,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     use step_io::ir::shape_rep::RepresentationRelationship;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1559,7 +1629,9 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().unwrap();
     let root = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
@@ -1577,7 +1649,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     for rrid in [rr0, rr1] {
         assert!(
             matches!(
-                re.representation_relationships[rrid],
+                re.shape_rep.representation_relationships[rrid],
                 RepresentationRelationship::RepresentationRelationshipWithTransformation(_)
             ),
             "transform_rr must point at an RRWT arena entry"
@@ -1586,8 +1658,12 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
 
     // Idempotent: two further read->write cycles produce identical output
     // (the materialised RR ids are round-trip stable).
-    let text_b = re.write_to_string().expect("write b");
-    let text_c = reconvert(&text_b).write_to_string().expect("write c");
+    let text_b = re
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write b");
+    let text_c = reconvert(&text_b)
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write c");
     assert_eq!(
         text_b, text_c,
         "assembly placement round-trip must be idempotent"
@@ -1597,12 +1673,14 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
 #[test]
 fn default_schema_is_ap214_is() {
     let model = empty_model();
-    assert_eq!(model.schema.class(), Some(SchemaClass::Ap214Is));
+    assert_eq!(model.metadata.schema.class(), Some(SchemaClass::Ap214Is));
     assert!(
-        model.schema.raw().is_none(),
+        model.metadata.schema.raw().is_none(),
         "synthetic IR must not carry raw FILE_SCHEMA text"
     );
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Default-schema output must advertise AP214 IS in FILE_SCHEMA.
     assert!(
         text.contains("AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }"),
@@ -1610,7 +1688,7 @@ fn default_schema_is_ap214_is() {
     );
     // Round-trip through the reader recognises the class.
     let re = reconvert(&text);
-    assert_eq!(re.schema.class(), Some(SchemaClass::Ap214Is));
+    assert_eq!(re.metadata.schema.class(), Some(SchemaClass::Ap214Is));
 }
 
 #[test]
@@ -1620,7 +1698,7 @@ fn multi_body_solid_round_trips() {
     // the writer emits one MSB ref per SolidId in the items list.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let s1 = push_minimal_solid(&mut model);
     let s2 = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1648,7 +1726,9 @@ fn multi_body_solid_round_trips() {
     tree.roots = vec![pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert_eq!(
         text.matches("MANIFOLD_SOLID_BREP").count(),
         2,
@@ -1680,7 +1760,7 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
     // break round-trip equality.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -1727,7 +1807,9 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
     });
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Skip the shared `reconvert` helper: two-root-candidate assemblies
     // legitimately emit a non-fatal "using the first" warning that is
     // unrelated to the geometry_context behaviour under test.
@@ -1755,7 +1837,7 @@ fn formation_id_round_trips_faithfully() {
     use step_io::ir::{ProductDefinitionFormation, ProductDefinitionFormationData};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -1793,7 +1875,9 @@ fn formation_id_round_trips_faithfully() {
     tree.products[pid].formation = Some(fid);
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("PRODUCT_DEFINITION_FORMATION('LAST_VERSION','rev',"),
         "faithful formation id/description emitted, got:\n{text}"
@@ -1820,7 +1904,7 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
     // not leave it at the PRODUCT-pass placeholder Placement3dId(0).
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let offset_loc = model.geometry.points.push(Point3 {
@@ -1883,7 +1967,9 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
     });
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let graph = parse(&text).expect("writer output parses");
     let re = ReaderContext::convert(&graph).model;
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
@@ -1916,14 +2002,62 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
 #[test]
 fn explicit_ap203_schema_round_trips() {
     let mut model = empty_model();
-    model.schema = StepSchema::canonical(SchemaClass::Ap203);
-    let text = model.write_to_string().expect("write");
+    model.metadata.schema = StepSchema::canonical(SchemaClass::Ap203);
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("CONFIG_CONTROL_DESIGN"),
         "expected AP203 FILE_SCHEMA string, got: {text}"
     );
     let re = reconvert(&text);
-    assert_eq!(re.schema.class(), Some(SchemaClass::Ap203));
+    assert_eq!(re.metadata.schema.class(), Some(SchemaClass::Ap203));
+}
+
+#[test]
+fn ap203_target_retargets_file_schema_and_apd() {
+    // A real AP214 box, written to the AP203 target, must declare AP203 in both
+    // the FILE_SCHEMA header and the DATA-section APPLICATION_PROTOCOL_DEFINITION
+    // / APPLICATION_CONTEXT — none of the source AP214 strings may survive.
+    let src = include_str!("fixtures/box_ap214_is.step");
+    let graph = step_io::parse(src).expect("parse");
+    let model = step_io::reader::ReaderContext::convert(&graph).model;
+
+    // Universal keeps the source AP214 header + APD verbatim.
+    let universal = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write universal");
+    assert!(universal.contains("AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }"));
+    assert!(universal.contains("'automotive_design'"));
+
+    // AP203 target retargets FILE_SCHEMA + APD + AC to the AP203 values.
+    let ap203 = model
+        .write_to_string(step_io::SchemaTarget::Ap203)
+        .expect("write ap203");
+    assert!(
+        ap203.contains(
+            "AP203_CONFIGURATION_CONTROLLED_3D_DESIGN_OF_MECHANICAL_PARTS_AND_ASSEMBLIES_MIM_LF \
+             { 1 0 10303 403 2 1 2 }"
+        ),
+        "AP203 FILE_SCHEMA"
+    );
+    assert!(ap203.contains("'config_control_design'"), "AP203 APD name");
+    assert!(
+        ap203.contains("configuration controlled 3D designs of mechanical parts and assemblies"),
+        "AP203 AC description"
+    );
+    assert!(
+        !ap203.contains("AUTOMOTIVE_DESIGN { 1 0 10303 214"),
+        "source AP214 FILE_SCHEMA must not survive"
+    );
+    assert!(
+        !ap203.contains("'automotive_design'"),
+        "source AP214 APD name must not survive"
+    );
+
+    // The retargeted output reparses cleanly.
+    let re = step_io::parse(&ap203).expect("reparse AP203 output");
+    assert!(!re.entities.is_empty());
 }
 
 #[test]
@@ -1937,7 +2071,7 @@ fn general_property_and_association_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -1995,9 +2129,7 @@ fn general_property_and_association_round_trip() {
         description: Some("user defined attribute".into()),
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: String::new(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
+        context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
         items: Vec::new(),
     });
     pool.general_properties.push(GeneralProperty {
@@ -2014,7 +2146,9 @@ fn general_property_and_association_round_trip() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2051,7 +2185,7 @@ fn property_definition_with_general_property_target_round_trips() {
     // #gp back to a GeneralProperty variant).
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {
@@ -2067,7 +2201,9 @@ fn property_definition_with_general_property_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2119,7 +2255,9 @@ fn property_definition_with_dimensional_size_target_round_trips() {
     // PD pass, so the PD must reference it. (Full re-read symmetry is covered
     // by reference-check on real fixtures, which carry the product-shape PDS
     // this minimal model omits.)
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("PROPERTY_DEFINITION('p_ds'"),
         "PD with DIMENSIONAL_SIZE definition must emit (writer arm fires): {text}"
@@ -2141,7 +2279,7 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let mwu = model
         .units_pool
         .as_mut()
@@ -2182,7 +2320,9 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
     // run before the PD pass (the reorder). Reverting the reorder leaves the GT
     // step 0 → the PD arm skips → no PD line → this fails. (Full re-read
     // symmetry is covered by reference-check on real fixtures.)
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("PROPERTY_DEFINITION('p_gt'"),
         "PD with GEOMETRIC_TOLERANCE definition must emit (writer arm + GT reorder): {text}"
@@ -2201,7 +2341,7 @@ fn property_definition_with_document_file_target_round_trips() {
     // read (resolve #doc back to a Document variant).
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mut plm = PlmPool::default();
     let dtype_id = plm.document_types.push(DocumentType {
@@ -2226,7 +2366,9 @@ fn property_definition_with_document_file_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2257,14 +2399,15 @@ fn pd_based_shape_definition_representation_round_trips() {
     // pattern), not a product PDS — captured in the new arena and emitted.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "validation shape".into(),
-        context: Some(RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    model.shape_rep.unit_contexts.push(ctx);
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "validation shape".into(),
+            context: RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
+            frame: None,
+        }));
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {
@@ -2286,7 +2429,9 @@ fn pd_based_shape_definition_representation_round_trips() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2308,14 +2453,15 @@ fn description_attribute_targeting_shape_representation_round_trips() {
     use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "supplemental geometry".into(),
-        context: Some(RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    model.shape_rep.unit_contexts.push(ctx);
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "supplemental geometry".into(),
+            context: RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
+            frame: None,
+        }));
 
     let mut pool = PropertyPool::default();
     pool.description_attributes.push(DescriptionAttribute {
@@ -2324,7 +2470,9 @@ fn description_attribute_targeting_shape_representation_round_trips() {
     });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DESCRIPTION_ATTRIBUTE("),
         "DESCRIPTION_ATTRIBUTE not emitted"
@@ -2351,13 +2499,14 @@ fn shape_aspect_based_shape_definition_representation_round_trips() {
     // (C3D / grabcad pattern), not a property_definition — resolves through
     // the shape_aspect arena and survives round-trip.
     let (mut model, sa, _cg, _ds, _cs) = shape_aspect_relationship_fixture();
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "aspect shape".into(),
-        context: Some(RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "aspect shape".into(),
+            context: RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
+            frame: None,
+        }));
     let mut pool = PropertyPool::default();
     pool.shape_definition_representations
         .push(ShapeDefinitionRepresentationLink {
@@ -2366,7 +2515,9 @@ fn shape_aspect_based_shape_definition_representation_round_trips() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re.properties.as_ref().expect("properties");
     assert_eq!(re_pool.shape_definition_representations.len(), 1);
@@ -2397,15 +2548,16 @@ fn product_with_additional_shape_representation_round_trips() {
     // SDRs share the single product PDS and must survive the round-trip.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let identity_frame = model.geometry.identity_placement();
     // The additional representation: a second ABSR over its own solid.
     let extra_solid = push_minimal_solid(&mut model);
     let extra_rep = model
+        .shape_rep
         .representations
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: "additional rep".into(),
-            context: Some(RepresentationContextRef::Unitful(UnitContextId(0))),
+            context: RepresentationContextRef::Unitful(UnitContextId(0)),
             items: vec![
                 RepresentationItemRef::Placement3d(identity_frame),
                 RepresentationItemRef::Solid(extra_solid),
@@ -2458,7 +2610,9 @@ fn product_with_additional_shape_representation_round_trips() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert_eq!(
         text.matches("SHAPE_DEFINITION_REPRESENTATION").count(),
         2,
@@ -2490,7 +2644,7 @@ fn multi_root_independent_products_round_trip() {
     // LOSS trigger). `reconvert` asserts the reader produced no warnings.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let identity_frame = model.geometry.identity_placement();
 
     let mut tree = AssemblyTree::default();
@@ -2523,7 +2677,9 @@ fn multi_root_independent_products_round_trip() {
     tree.roots = pids.clone();
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
     assert_eq!(r_asm.products.len(), 2);
@@ -2537,19 +2693,14 @@ fn gram_conversion_based_unit_round_trips() {
     // `reconvert` asserts the reader produced no warnings.
     let mut model = empty_model();
     let mut pool = UnitsPool::default();
-    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Kilogram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Gram,
-        cbu_base: Some(kg),
-        dim_exp: None,
-    }));
+    // push_cbu_mass pushes the base SI kilogram, the preserved conversion-factor
+    // MASS_MEASURE_WITH_UNIT, and the gram CBU outer (cbu_factor_mwu_id set).
+    pool.push_cbu_mass(MassUnit::Gram, MassUnit::Kilogram);
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
     assert_eq!(re_pool.named_units.len(), 2);
@@ -2575,14 +2726,12 @@ fn megagram_si_unit_round_trips() {
     // reader warnings.
     let mut model = empty_model();
     let mut pool = UnitsPool::default();
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Megagram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
+    pool.push_plain_mass(MassUnit::Megagram);
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("SI_UNIT(.MEGA.,.GRAM.)"),
         "megagram must emit SI_UNIT(.MEGA.,.GRAM.); got:\n{text}"
@@ -2608,25 +2757,14 @@ fn ton_conversion_based_unit_round_trips() {
     // wrapper, not `(MEGA, GRAM)`. Ton and Megagram coexist.
     let mut model = empty_model();
     let mut pool = UnitsPool::default();
-    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Kilogram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Ton,
-        cbu_base: Some(kg),
-        dim_exp: None,
-    }));
+    pool.push_cbu_mass(MassUnit::Ton, MassUnit::Kilogram);
     // A coexisting plain-SI megagram (also 1000 kg, different form).
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Megagram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
+    pool.push_plain_mass(MassUnit::Megagram);
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("CONVERSION_BASED_UNIT('ton'"),
         "ton must re-emit as a lowercase CBU wrapper; got:\n{text}"
@@ -2664,7 +2802,7 @@ fn shape_aspect_subtypes_round_trip() {
     // ALL_AROUND_SHAPE_ASPECT — SHAPE_ASPECT subtypes, each its own arena.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -2694,6 +2832,7 @@ fn shape_aspect_subtypes_round_trip() {
     model.assembly = Some(tree);
 
     model
+        .shape_rep
         .composite_group_shape_aspects
         .push(CompositeGroupShapeAspect {
             name: "cg".into(),
@@ -2703,35 +2842,45 @@ fn shape_aspect_subtypes_round_trip() {
             kind: CompositeShapeAspectKind::Group,
             datum_feature: false,
         });
-    model.centre_of_symmetries.push(CentreOfSymmetry {
+    model.shape_rep.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: true,
     });
-    model.all_around_shape_aspects.push(AllAroundShapeAspect {
-        name: "aa".into(),
-        description: String::new(),
-        target: part_pid,
-        product_definitional: false,
-    });
+    model
+        .shape_rep
+        .all_around_shape_aspects
+        .push(AllAroundShapeAspect {
+            name: "aa".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.composite_group_shape_aspects.len(), 1);
-    assert_eq!(re.centre_of_symmetries.len(), 1);
-    assert_eq!(re.all_around_shape_aspects.len(), 1);
+    assert_eq!(re.shape_rep.composite_group_shape_aspects.len(), 1);
+    assert_eq!(re.shape_rep.centre_of_symmetries.len(), 1);
+    assert_eq!(re.shape_rep.all_around_shape_aspects.len(), 1);
 
-    let cg = re.composite_group_shape_aspects.iter().next().unwrap();
+    let cg = re
+        .shape_rep
+        .composite_group_shape_aspects
+        .iter()
+        .next()
+        .unwrap();
     assert_eq!(cg.name, "cg");
     assert_eq!(cg.target, step_io::ProductId(0));
-    let cs = re.centre_of_symmetries.iter().next().unwrap();
+    let cs = re.shape_rep.centre_of_symmetries.iter().next().unwrap();
     assert_eq!(cs.name, "cs");
     assert!(
         cs.product_definitional,
         "centre_of_symmetry .T. round-trips"
     );
-    let aa = re.all_around_shape_aspects.iter().next().unwrap();
+    let aa = re.shape_rep.all_around_shape_aspects.iter().next().unwrap();
     assert_eq!(aa.name, "aa");
 }
 
@@ -2747,7 +2896,7 @@ fn shape_aspect_relationship_fixture() -> (
 ) {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -2776,13 +2925,14 @@ fn shape_aspect_relationship_fixture() -> (
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
     let cg = model
+        .shape_rep
         .composite_group_shape_aspects
         .push(CompositeGroupShapeAspect {
             name: "cg".into(),
@@ -2792,18 +2942,21 @@ fn shape_aspect_relationship_fixture() -> (
             kind: CompositeShapeAspectKind::Group,
             datum_feature: false,
         });
-    let cs = model.centre_of_symmetries.push(CentreOfSymmetry {
+    let cs = model.shape_rep.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let aa = model.all_around_shape_aspects.push(AllAroundShapeAspect {
-        name: "aa".into(),
-        description: String::new(),
-        target: part_pid,
-        product_definitional: false,
-    });
+    let aa = model
+        .shape_rep
+        .all_around_shape_aspects
+        .push(AllAroundShapeAspect {
+            name: "aa".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        });
     (model, sa, cg, cs, aa)
 }
 
@@ -2814,8 +2967,9 @@ fn composite_shape_aspect_round_trips_under_its_own_name() {
     // (kind=Group); the writer must re-emit each under its own STEP name and
     // the round-trip must preserve the kind.
     let (mut model, _sa, cg, _cs, _aa) = shape_aspect_relationship_fixture();
-    let target = model.composite_group_shape_aspects[cg].target;
+    let target = model.shape_rep.composite_group_shape_aspects[cg].target;
     model
+        .shape_rep
         .composite_group_shape_aspects
         .push(CompositeGroupShapeAspect {
             name: "plain".into(),
@@ -2826,13 +2980,16 @@ fn composite_shape_aspect_round_trips_under_its_own_name() {
             datum_feature: false,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("COMPOSITE_SHAPE_ASPECT("),
         "emits the plain COMPOSITE_SHAPE_ASPECT name: {text}"
     );
     let re = reconvert(&text);
     let kinds: Vec<_> = re
+        .shape_rep
         .composite_group_shape_aspects
         .iter()
         .map(|c| c.kind)
@@ -2853,6 +3010,7 @@ fn shape_aspect_relationship_round_trip() {
     // variants (plain shape_aspect + 3 subtypes) as relation endpoints.
     let (mut model, sa, cg, cs, aa) = shape_aspect_relationship_fixture();
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "r1".into(),
@@ -2862,6 +3020,7 @@ fn shape_aspect_relationship_round_trip() {
             kind: ShapeAspectRelationshipKind::Plain,
         });
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "r2".into(),
@@ -2871,10 +3030,12 @@ fn shape_aspect_relationship_round_trip() {
             kind: ShapeAspectRelationshipKind::Plain,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.shape_aspect_relationships.len(), 2);
-    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_rep.shape_aspect_relationships.iter().collect();
     assert!(matches!(
         rels[0].relating_shape_aspect,
         ShapeAspectRef::ShapeAspect(_)
@@ -2912,7 +3073,9 @@ fn id_attribute_shape_aspect_round_trip() {
             identified_item: IdAttributeItem::ShapeAspect(ShapeAspectRef::ShapeAspect(sa)),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pool = re.properties.as_ref().expect("properties pool survives");
     assert_eq!(
@@ -2946,7 +3109,9 @@ fn id_attribute_composite_shape_aspect_round_trip() {
             ),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pool = re.properties.as_ref().expect("properties pool survives");
     assert_eq!(pool.id_attributes.len(), 1);
@@ -2962,6 +3127,7 @@ fn shape_aspect_relationship_subtypes_round_trip() {
     // the two subtypes round-trip via the `kind` discriminant.
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "assoc".into(),
@@ -2971,6 +3137,7 @@ fn shape_aspect_relationship_subtypes_round_trip() {
             kind: ShapeAspectRelationshipKind::Associativity,
         });
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "deriv".into(),
@@ -2980,10 +3147,12 @@ fn shape_aspect_relationship_subtypes_round_trip() {
             kind: ShapeAspectRelationshipKind::DerivingRelationship,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.shape_aspect_relationships.len(), 2);
-    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_rep.shape_aspect_relationships.iter().collect();
     assert_eq!(rels[0].kind, ShapeAspectRelationshipKind::Associativity);
     assert_eq!(
         rels[1].kind,
@@ -3008,7 +3177,9 @@ fn dimensional_size_round_trip() {
         kind: DimensionalSizeKind::Angular(AngleSelection::Equal),
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
     assert_eq!(pmi.dimensional_sizes.len(), 2);
@@ -3050,7 +3221,9 @@ fn dimensional_location_round_trip() {
             angle_selection: AngleSelection::Small,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
     assert_eq!(pmi.dimensional_locations.len(), 3);
@@ -3101,7 +3274,9 @@ fn view_volume_round_trip() {
             view_window: pb,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let viz = re.visualization.expect("viz pool");
     let vv = viz
@@ -3158,7 +3333,9 @@ fn camera_model_d3_round_trip() {
             perspective_of_volume: vv,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let viz = re.visualization.expect("viz pool");
     assert_eq!(viz.camera_models.len(), 1);
@@ -3176,7 +3353,7 @@ fn camera_usage_round_trip() {
     use step_io::ir::shape_rep::{CameraUsage, PlainRepr, Representation, RepresentationMap};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -3213,22 +3390,30 @@ fn camera_usage_round_trip() {
             view_reference_system: frame,
             perspective_of_volume: vv,
         }));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "target".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "target".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::CameraUsage(CameraUsage {
             mapping_origin: cam,
             mapped_representation: rep,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.representation_maps.len(), 1);
-    let RepresentationMap::CameraUsage(cu) = re.representation_maps.iter().next().unwrap() else {
+    assert_eq!(re.shape_rep.representation_maps.len(), 1);
+    let RepresentationMap::CameraUsage(cu) =
+        re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected CameraUsage variant");
     };
     assert_eq!(cu.mapping_origin, cam);
@@ -3244,7 +3429,7 @@ fn camera_image_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -3281,18 +3466,23 @@ fn camera_image_round_trip() {
             view_reference_system: frame,
             perspective_of_volume: vv,
         }));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "target".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "target".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     let cu = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::CameraUsage(CameraUsage {
             mapping_origin: cam,
             mapped_representation: rep,
         }));
     model
+        .shape_rep
         .mapped_items
         .push(MappedItem::CameraImage(CameraImage {
             name: "img".into(),
@@ -3300,6 +3490,7 @@ fn camera_image_round_trip() {
             mapping_target: pb,
         }));
     model
+        .shape_rep
         .mapped_items
         .push(MappedItem::CameraImage3dWithScale(CameraImage {
             name: "img3d".into(),
@@ -3307,10 +3498,12 @@ fn camera_image_round_trip() {
             mapping_target: pb,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.mapped_items.len(), 2);
-    let mut iter = re.mapped_items.iter();
+    assert_eq!(re.shape_rep.mapped_items.len(), 2);
+    let mut iter = re.shape_rep.mapped_items.iter();
     let MappedItem::CameraImage(ci) = iter.next().unwrap() else {
         panic!("expected CameraImage");
     };
@@ -3360,7 +3553,9 @@ fn planar_extent_and_box_round_trip() {
             placement: PlanarBoxPlacement::Placement2d(frame2d),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.planar_extents.len(), 3);
     let mut it = re.geometry.planar_extents.iter();
@@ -3406,7 +3601,9 @@ fn pmi_primitives_round_trip() {
         });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("round-tripped pmi pool");
     assert_eq!(re_pmi.tolerance_zone_forms.len(), 1);
@@ -3443,7 +3640,7 @@ fn mapped_item_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let loc = model.geometry.points.push(Point3 {
         x: 0.0,
         y: 0.0,
@@ -3460,28 +3657,37 @@ fn mapped_item_round_trip() {
         z: 0.0,
     });
     let placement = push_placement(&mut model, loc, Some(axis), Some(refd));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "mapped".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "mapped".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::Placement3d(placement),
             mapped_representation: MappedRepresentationRef::Representation(rep),
         }));
-    model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: "inst".into(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement3d(placement),
-    }));
+    model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: "inst".into(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement3d(placement),
+        }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.representation_maps.len(), 1);
-    assert_eq!(re.mapped_items.len(), 1);
-    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+    assert_eq!(re.shape_rep.representation_maps.len(), 1);
+    assert_eq!(re.shape_rep.mapped_items.len(), 1);
+    let MappedItem::Itself(mi) = re.shape_rep.mapped_items.iter().next().unwrap() else {
         panic!("expected Itself variant");
     };
     assert_eq!(mi.name, "inst");
@@ -3489,7 +3695,8 @@ fn mapped_item_round_trip() {
         mi.mapping_target,
         RepresentationItemRef::Placement3d(_)
     ));
-    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+    let RepresentationMap::Itself(rm) = re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected Itself variant");
     };
     assert!(matches!(
@@ -3514,7 +3721,7 @@ fn camera_origin_mapped_item_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
 
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
@@ -3553,24 +3760,33 @@ fn camera_origin_mapped_item_round_trip() {
             perspective_of_volume: vv,
         }));
 
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "mapped".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "mapped".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::CameraModel(cam),
             mapped_representation: MappedRepresentationRef::Representation(rep),
         }));
-    model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: "inst".into(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement3d(frame),
-    }));
+    model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: "inst".into(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement3d(frame),
+        }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // No dangling forward-ref: a 0 step id would serialize as `#0`.
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
@@ -3578,19 +3794,20 @@ fn camera_origin_mapped_item_round_trip() {
     );
     let re = reconvert(&text);
     assert_eq!(
-        re.representation_maps.len(),
+        re.shape_rep.representation_maps.len(),
         1,
         "camera-origin REPRESENTATION_MAP survives instead of being dropped"
     );
-    assert_eq!(re.mapped_items.len(), 1, "MAPPED_ITEM survives");
-    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+    assert_eq!(re.shape_rep.mapped_items.len(), 1, "MAPPED_ITEM survives");
+    let RepresentationMap::Itself(rm) = re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected Itself variant");
     };
     assert!(
         matches!(rm.mapping_origin, RepresentationItemRef::CameraModel(_)),
         "the camera mapping_origin round-trips (no dangling drop)"
     );
-    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+    let MappedItem::Itself(mi) = re.shape_rep.mapped_items.iter().next().unwrap() else {
         panic!("expected Itself variant");
     };
     assert_eq!(mi.name, "inst");
@@ -3613,7 +3830,7 @@ fn presentation_mapped_representation_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
 
     let frame = model.geometry.identity_placement();
     let loc2 = model.geometry.points_2d.push(Point2 { x: 0.0, y: 0.0 });
@@ -3629,30 +3846,45 @@ fn presentation_mapped_representation_round_trips() {
         .push(PresentationRepresentation::View(PresentationReprData {
             name: "Default".into(),
             items: vec![RepresentationItemRef::Placement3d(frame)],
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
         }));
 
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::Placement3d(frame),
             mapped_representation: MappedRepresentationRef::Presentation(view),
         }));
-    model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: "inst".into(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement2d(placement2),
-    }));
+    model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: "inst".into(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement2d(placement2),
+        }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
     );
     let re = reconvert(&text);
-    assert_eq!(re.representation_maps.len(), 1, "the rmap round-trips");
-    assert_eq!(re.mapped_items.len(), 1, "the mapped item round-trips");
-    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+    assert_eq!(
+        re.shape_rep.representation_maps.len(),
+        1,
+        "the rmap round-trips"
+    );
+    assert_eq!(
+        re.shape_rep.mapped_items.len(),
+        1,
+        "the mapped item round-trips"
+    );
+    let RepresentationMap::Itself(rm) = re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected Itself variant");
     };
     assert!(
@@ -3662,7 +3894,7 @@ fn presentation_mapped_representation_round_trips() {
         ),
         "the mapped_representation points at the PRESENTATION_VIEW"
     );
-    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+    let MappedItem::Itself(mi) = re.shape_rep.mapped_items.iter().next().unwrap() else {
         panic!("expected Itself variant");
     };
     assert!(
@@ -3684,31 +3916,39 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
 
     // A target representation the MAPPED_ITEM's map points into.
-    let target = model.representations.push(Representation::Plain(PlainRepr {
-        name: "part".into(),
-        context: Some(RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let target = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "part".into(),
+            context: RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::Placement3d(frame),
             mapped_representation: MappedRepresentationRef::Representation(target),
         }));
-    let mi = model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: String::new(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement3d(frame),
-    }));
+    let mi = model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: String::new(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement3d(frame),
+        }));
     let absr = model
+        .shape_rep
         .representations
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: "Assem1".into(),
-            context: Some(RepresentationContextRef::Unitful(uc)),
+            context: RepresentationContextRef::Unitful(uc),
             items: vec![
                 RepresentationItemRef::MappedItem(mi),
                 RepresentationItemRef::Placement3d(frame),
@@ -3716,7 +3956,9 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
         }));
     let _ = absr;
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
@@ -3724,6 +3966,7 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
     let re = reconvert(&text);
     // No "without a MANIFOLD_SOLID_BREP" defect — assembly ABSR is valid.
     let asm = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -3776,7 +4019,9 @@ fn annotation_plane_round_trip() {
         }));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrences.len(), 1);
@@ -3798,6 +4043,7 @@ fn tessellated_annotation_occurrence_round_trip() {
     use step_io::ir::tessellation::{TessellatedGeometricSet, TessellatedItem};
     let mut model = empty_model();
     let gset = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedGeometricSet(
             TessellatedGeometricSet {
@@ -3817,7 +4063,9 @@ fn tessellated_annotation_occurrence_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrences.len(), 1);
@@ -3906,7 +4154,9 @@ fn annotation_occurrence_associativity_round_trips() {
         });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrence_associativities.len(), 1);
@@ -3986,7 +4236,9 @@ fn annotation_occurrence_subtypes_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrences.len(), 3);
@@ -4076,7 +4328,9 @@ fn leader_curve_terminator_round_trip() {
             annotated_curve: lc_id,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.annotation_curve_occurrences.len(), 1);
@@ -4133,7 +4387,9 @@ fn plain_annotation_curve_occurrence_round_trips() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("ANNOTATION_CURVE_OCCURRENCE"));
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
@@ -4234,7 +4490,9 @@ fn draughting_callout_round_trip() {
             related: leader_id,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.draughting_callouts.len(), 2);
@@ -4278,7 +4536,7 @@ fn gt_relationship_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -4305,7 +4563,7 @@ fn gt_relationship_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -4345,7 +4603,9 @@ fn gt_relationship_round_trip() {
             related: GeometricToleranceRef::Plain(gt2),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.geometric_tolerance_relationships.len(), 1);
@@ -4366,7 +4626,7 @@ fn datum_round_trip() {
     use step_io::ir::pmi::Datum;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4405,7 +4665,9 @@ fn datum_round_trip() {
     });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.datums.len(), 1);
@@ -4423,7 +4685,7 @@ fn datum_feature_round_trip() {
     use step_io::ir::pmi::{Datum, DatumFeature};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4471,6 +4733,7 @@ fn datum_feature_round_trip() {
     model.pmi = Some(pmi);
 
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "r".into(),
@@ -4480,7 +4743,9 @@ fn datum_feature_round_trip() {
             kind: ShapeAspectRelationshipKind::Plain,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
 
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
@@ -4490,8 +4755,13 @@ fn datum_feature_round_trip() {
     assert!(re_df.product_definitional);
     assert_eq!(re_df.target, step_io::ProductId(0));
 
-    assert_eq!(re.shape_aspect_relationships.len(), 1);
-    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 1);
+    let rel = re
+        .shape_rep
+        .shape_aspect_relationships
+        .iter()
+        .next()
+        .unwrap();
     assert!(matches!(
         rel.relating_shape_aspect,
         ShapeAspectRef::DatumFeature(_)
@@ -4509,7 +4779,7 @@ fn dimensional_size_with_datum_feature_round_trip() {
     use step_io::ir::shape_aspect_ref::ShapeAspectRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4566,7 +4836,9 @@ fn dimensional_size_with_datum_feature_round_trip() {
     }
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DIMENSIONAL_SIZE_WITH_DATUM_FEATURE("),
         "expected DIMENSIONAL_SIZE_WITH_DATUM_FEATURE in STEP output"
@@ -4602,7 +4874,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4631,7 +4903,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -4677,7 +4949,9 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     pmi.geometric_tolerances
         .push(GeometricTolerance::SurfaceProfile(data(measure())));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     let gts: Vec<_> = re_pmi.geometric_tolerances.iter().collect();
@@ -4728,7 +5002,7 @@ fn general_datum_reference_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4778,7 +5052,9 @@ fn general_datum_reference_round_trip() {
         .push(GeneralDatumReference::Element(data()));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     let gdrs: Vec<_> = re_pmi.general_datum_references.iter().collect();
@@ -4804,7 +5080,7 @@ fn id_attribute_general_datum_reference_round_trip() {
     use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -4863,7 +5139,9 @@ fn id_attribute_general_datum_reference_round_trip() {
             )),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pool = re.properties.as_ref().expect("properties pool survives");
     assert_eq!(pool.id_attributes.len(), 1);
@@ -4884,7 +5162,7 @@ fn datum_reference_compartment_common_datum_list_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4947,7 +5225,9 @@ fn datum_reference_compartment_common_datum_list_round_trip() {
         ));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("COMMON_DATUM_LIST("),
         "expected COMMON_DATUM_LIST base, got:\n{text}"
@@ -4982,7 +5262,7 @@ fn tolerance_zone_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -5011,7 +5291,7 @@ fn tolerance_zone_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -5043,7 +5323,7 @@ fn tolerance_zone_round_trip() {
         name: "cylindrical".into(),
     });
 
-    model.tolerance_zones.push(ToleranceZone {
+    model.shape_rep.tolerance_zones.push(ToleranceZone {
         name: "tz".into(),
         description: String::new(),
         target: part_pid,
@@ -5052,10 +5332,16 @@ fn tolerance_zone_round_trip() {
         form,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.tolerance_zones.len(), 1, "TOLERANCE_ZONE round-trips");
-    let tz = re.tolerance_zones.iter().next().unwrap();
+    assert_eq!(
+        re.shape_rep.tolerance_zones.len(),
+        1,
+        "TOLERANCE_ZONE round-trips"
+    );
+    let tz = re.shape_rep.tolerance_zones.iter().next().unwrap();
     assert_eq!(tz.name, "tz");
     assert_eq!(
         tz.defining_tolerance.len(),
@@ -5078,7 +5364,7 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -5105,23 +5391,23 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let sdr_id = model
-        .representations
-        .push(Representation::ShapeDimensionRepresentation(
-            ShapeDimensionRepresentation {
-                name: "sdr".into(),
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                    UnitContextId(0),
-                )),
-                items: vec![],
-            },
-        ));
+    let sdr_id =
+        model
+            .shape_rep
+            .representations
+            .push(Representation::ShapeDimensionRepresentation(
+                ShapeDimensionRepresentation {
+                    name: "sdr".into(),
+                    context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
+                    items: vec![],
+                },
+            ));
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     let size_id = pmi.dimensional_sizes.push(DimensionalSize {
         applies_to: ShapeAspectRef::ShapeAspect(sa),
@@ -5136,7 +5422,9 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         },
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_property = re.properties.expect("property pool");
     assert_eq!(
@@ -5150,6 +5438,7 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         .unwrap();
     assert!(matches!(dcr.dimension, DimensionalCharacteristic::Size(_)));
     let sdr_count = re
+        .shape_rep
         .representations
         .iter()
         .filter(|r| matches!(r, Representation::ShapeDimensionRepresentation(_)))
@@ -5169,7 +5458,9 @@ fn pre_defined_marker_round_trip() {
             name: "x".into(),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.pre_defined_markers.len(), 1);
@@ -5199,7 +5490,9 @@ fn text_style_for_defined_font_round_trip() {
             text_colour: colour_id,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_styles_for_defined_font.len(), 1);
@@ -5226,7 +5519,9 @@ fn invisibility_round_trip() {
         presentation_context: None,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.invisibilities.len(), 1);
@@ -5262,7 +5557,9 @@ fn invisibility_presentation_layer_assignment_round_trip() {
         presentation_context: None,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
@@ -5291,6 +5588,7 @@ fn invisibility_annotation_occurrence_round_trip() {
     use step_io::ir::visualization::{Invisibility, InvisibleItem, VisualizationPool};
     let mut model = empty_model();
     let gset = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedGeometricSet(
             TessellatedGeometricSet {
@@ -5318,7 +5616,9 @@ fn invisibility_annotation_occurrence_round_trip() {
             presentation_context: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
@@ -5344,24 +5644,28 @@ fn unitless_context_round_trip() {
         UnitlessContext,
     };
     let mut model = empty_model();
-    let uc_id = model.unitless_contexts.push(UnitlessContext {
+    let uc_id = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: "2D coordinate system context".into(),
         context_type: "2".into(),
         coordinate_space_dimension: Some(2),
     });
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
             items: vec![],
-            context: Some(RepresentationContextRef::Unitless(uc_id)),
+            context: RepresentationContextRef::Unitless(uc_id),
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.unitless_contexts.len(), 1);
+    assert_eq!(re.shape_rep.unitless_contexts.len(), 1);
     let dm_count = re
+        .shape_rep
         .representations
         .iter()
         .filter(|r| matches!(r, Representation::DraughtingModel(_)))
@@ -5369,7 +5673,7 @@ fn unitless_context_round_trip() {
     // DraughtingModel with empty items drops the carrier on read (existing
     // policy). Only assert the unitless context survives the round-trip.
     let _ = dm_count;
-    let uc = re.unitless_contexts.iter().next().unwrap();
+    let uc = re.shape_rep.unitless_contexts.iter().next().unwrap();
     assert_eq!(uc.identifier, "2D coordinate system context");
     assert_eq!(uc.coordinate_space_dimension, Some(2));
 }
@@ -5383,28 +5687,31 @@ fn plain_representation_context_round_trips() {
     // A plain simple REPRESENTATION_CONTEXT (no coordinate_space_dimension) —
     // written as a simple entity, not the GRC+PRC complex.
     let mut model = empty_model();
-    let uc_id = model.unitless_contexts.push(UnitlessContext {
+    let uc_id = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: String::new(),
         context_type: "document parameters".into(),
         coordinate_space_dimension: None,
     });
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
             items: vec![],
-            context: Some(RepresentationContextRef::Unitless(uc_id)),
+            context: RepresentationContextRef::Unitless(uc_id),
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("REPRESENTATION_CONTEXT(''"),
         "plain context emits as a simple REPRESENTATION_CONTEXT: {text}"
     );
     let re = reconvert(&text);
-    assert_eq!(re.unitless_contexts.len(), 1);
-    let uc = re.unitless_contexts.iter().next().unwrap();
+    assert_eq!(re.shape_rep.unitless_contexts.len(), 1);
+    let uc = re.shape_rep.unitless_contexts.iter().next().unwrap();
     assert_eq!(uc.context_type, "document parameters");
     // `None` proves it round-tripped through the simple form (the complex
     // form would carry `Some(dim)`).
@@ -5423,7 +5730,7 @@ fn property_with_plain_context_round_trips() {
     // of the document-property that previously FAILed round-trip. Now the
     // context is modelled, so it survives both ways.
     let mut model = empty_model();
-    let uc_id = model.unitless_contexts.push(UnitlessContext {
+    let uc_id = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: String::new(),
         context_type: "document parameters".into(),
         coordinate_space_dimension: None,
@@ -5447,7 +5754,7 @@ fn property_with_plain_context_round_trips() {
         description: None,
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: "document format".into(),
-        context: Some(RepresentationContextRef::Unitless(uc_id)),
+        context: RepresentationContextRef::Unitless(uc_id),
         items: vec![PropertyItem::Descriptive(DescriptiveItem {
             name: "data format".into(),
             description: "STEP AP214".into(),
@@ -5455,7 +5762,9 @@ fn property_with_plain_context_round_trips() {
     });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -5467,7 +5776,7 @@ fn property_with_plain_context_round_trips() {
         .find(|p| p.representation_name == "document format")
         .expect("the document property survives round-trip");
     assert!(
-        matches!(prop.context, Some(RepresentationContextRef::Unitless(_))),
+        matches!(prop.context, RepresentationContextRef::Unitless(_)),
         "the plain context is preserved as Unitless, not dropped to None"
     );
 }
@@ -5481,7 +5790,7 @@ fn draughting_model_round_trip() {
     use step_io::ir::shape_rep::{DraughtingModel, DraughtingModelForm, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -5496,17 +5805,21 @@ fn draughting_model_round_trip() {
             item: RepresentationItemRef::Surface(surf),
         }));
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "dm".into(),
             items: vec![RepresentationItemRef::Surface(surf)],
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let dm_count = re
+        .shape_rep
         .representations
         .iter()
         .filter(|r| matches!(r, Representation::DraughtingModel(_)))
@@ -5527,21 +5840,24 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
     }));
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "gvp".into(),
             items: vec![RepresentationItemRef::Surface(surf)],
-            context: Some(RepresentationContextRef::Unitful(ctx_id)),
+            context: RepresentationContextRef::Unitful(ctx_id),
             form: DraughtingModelForm::ShapeTessellated,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DRAUGHTING_MODEL()")
             && text.contains("SHAPE_REPRESENTATION()")
@@ -5550,6 +5866,7 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
     );
     let re = reconvert(&text);
     let dm = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -5585,7 +5902,9 @@ fn plain_annotation_occurrence_round_trips() {
             item: RepresentationItemRef::Surface(surf),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
     assert!(
@@ -5608,7 +5927,7 @@ fn dmia_round_trip() {
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -5622,16 +5941,22 @@ fn dmia_round_trip() {
             styles: vec![],
             item: RepresentationItemRef::Surface(surf),
         }));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
-    let def = model.representations.push(Representation::Plain(PlainRepr {
-        name: "definition".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
+            frame: None,
+        }));
+    let def = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "definition".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -5645,7 +5970,9 @@ fn dmia_round_trip() {
             annotation_placeholder: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
@@ -5677,7 +6004,7 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -5725,11 +6052,14 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
             styles: vec![],
             item: RepresentationItemRef::Surface(surf),
         }));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -5743,7 +6073,9 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
             annotation_placeholder: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
@@ -5775,11 +6107,11 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
     use step_io::ir::units::MeasureWithUnit;
     use step_io::ir::{PmiPool, ShapeAspectRef};
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
-    let target = model.shape_aspects[sa].target;
+    let target = model.shape_rep.shape_aspects[sa].target;
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    let ctx_id = model.units.push(ctx);
-    let ds = model.datum_systems.push(DatumSystem {
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target,
@@ -5823,11 +6155,14 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
             styles: vec![],
             item: RepresentationItemRef::Surface(surf),
         }));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "dm".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "dm".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -5843,7 +6178,9 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
             annotation_placeholder: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert!(
@@ -5887,7 +6224,9 @@ fn text_literal_round_trip() {
         font: FontSelect::DraughtingPreDefined(font_id),
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_literals.len(), 1);
@@ -5896,6 +6235,31 @@ fn text_literal_round_trip() {
     assert_eq!(re_t.alignment, "baseline left");
     assert!(matches!(re_t.path, TextPath::Right));
     assert!(matches!(re_t.placement, Axis2Placement::D3(_)));
+}
+
+#[test]
+fn external_source_identifier_round_trips() {
+    // SELECT-codegen pilot: `source_item` (IDENTIFIER/MESSAGE) via the hinted
+    // `EarlySourceItem`. L2 models only `Identifier`; a non-empty payload
+    // round-trips as `IDENTIFIER('..')` (corpus only carries `IDENTIFIER('')`).
+    use step_io::ir::plm::{ExternalSource, ExternalSourceItem, PlmPool};
+    let mut model = empty_model();
+    model
+        .plm
+        .get_or_insert_with(PlmPool::default)
+        .external_sources
+        .push(ExternalSource {
+            source_id: ExternalSourceItem::Identifier("src-42".into()),
+        });
+
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
+    let re = reconvert(&text);
+    let re_plm = re.plm.expect("plm pool");
+    assert_eq!(re_plm.external_sources.len(), 1);
+    let es = re_plm.external_sources.iter().next().unwrap();
+    assert!(matches!(&es.source_id, ExternalSourceItem::Identifier(s) if s == "src-42"));
 }
 
 #[test]
@@ -5941,7 +6305,9 @@ fn composite_text_round_trip() {
         ],
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_literals.len(), 2);
@@ -5986,7 +6352,9 @@ fn text_style_with_box_characteristics_round_trip() {
         },
     ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_styles.len(), 1);
@@ -6032,7 +6400,9 @@ fn point_style_round_trip() {
         marker_colour: colour_id,
     }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let count = re_viz
@@ -6075,7 +6445,9 @@ fn point_style_marker_type_in_psa_round_trips() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
 
@@ -6124,16 +6496,16 @@ fn defined_symbol_round_trip() {
         .push(PreDefinedSymbol::Plain(PreDefinedSymbolData {
             name: "filled arrow".into(),
         }));
-    let target_id =
-        model
-            .geometric_representation_items
-            .push(GeometricRepresentationItem::SymbolTarget(SymbolTarget {
-                name: "tgt".into(),
-                placement: SymbolPlacement::Placement3d(frame),
-                x_scale: 3.5,
-                y_scale: 3.5,
-            }));
+    let target_id = model.geometry.geometric_representation_items.push(
+        GeometricRepresentationItem::SymbolTarget(SymbolTarget {
+            name: "tgt".into(),
+            placement: SymbolPlacement::Placement3d(frame),
+            x_scale: 3.5,
+            y_scale: 3.5,
+        }),
+    );
     model
+        .geometry
         .geometric_representation_items
         .push(GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
             name: "sym".into(),
@@ -6141,9 +6513,12 @@ fn defined_symbol_round_trip() {
             target: target_id,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let ds = re
+        .geometry
         .geometric_representation_items
         .iter()
         .find_map(|i| match i {
@@ -6156,6 +6531,7 @@ fn defined_symbol_round_trip() {
         .expect("defined_symbol round-trips");
     assert_eq!(ds.name, "sym");
     let st = re
+        .geometry
         .geometric_representation_items
         .iter()
         .find_map(|i| match i {
@@ -6187,7 +6563,9 @@ fn pre_defined_point_marker_symbol_round_trip() {
             PreDefinedPointMarkerSymbol { name: "x".into() },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let p = re_viz
@@ -6231,7 +6609,9 @@ fn surface_style_boundary_round_trip() {
             style_of_boundary: CurveOrRender::SurfaceStyleRendering(ssr_id),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let count = re_viz
@@ -6275,7 +6655,9 @@ fn surface_style_parameter_line_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let sspl = re_viz
@@ -6315,7 +6697,9 @@ fn symbol_style_round_trip() {
             style_of_symbol: sc_id,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let count = re_viz
@@ -6345,7 +6729,9 @@ fn symbol_colour_round_trip() {
         colour_of_symbol: colour_id,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.symbol_colours.len(), 1);
@@ -6375,7 +6761,9 @@ fn bare_colour_in_fill_area_style_round_trips() {
             }],
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     // The bare COLOUR survives the round-trip as Colour::Itself.
@@ -6406,7 +6794,7 @@ fn ciwr_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let p0 = model.geometry.points.push(Point3 {
         x: 0.0,
         y: 0.0,
@@ -6427,16 +6815,16 @@ fn ciwr_round_trip() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "rep".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
-    model
-        .characterized_objects
-        .push(CharacterizedObject::CharacterizedItemWithinRepresentation(
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "rep".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
+            frame: None,
+        }));
+    model.shape_rep.characterized_objects.push(
+        CharacterizedObject::CharacterizedItemWithinRepresentation(
             CharacterizedItemWithinRepresentation {
                 inherited: CharacterizedObjectData {
                     name: "ciwr".into(),
@@ -6445,13 +6833,16 @@ fn ciwr_round_trip() {
                 item: RepresentationItemRef::Surface(surf),
                 rep: rep_id,
             },
-        ));
+        ),
+    );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.characterized_objects.len(), 1);
+    assert_eq!(re.shape_rep.characterized_objects.len(), 1);
     let CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) =
-        re.characterized_objects.iter().next().unwrap()
+        re.shape_rep.characterized_objects.iter().next().unwrap()
     else {
         panic!("expected CIWR");
     };
@@ -6470,7 +6861,7 @@ fn model_geometric_view_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -6486,13 +6877,14 @@ fn model_geometric_view_round_trip() {
             size_in_y: 2.0,
             placement: PlanarBoxPlacement::Placement3d(frame),
         }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
+            frame: None,
+        }));
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -6515,6 +6907,7 @@ fn model_geometric_view_round_trip() {
             perspective_of_volume: vv,
         }));
     model
+        .shape_rep
         .characterized_objects
         .push(CharacterizedObject::ModelGeometricView(
             ModelGeometricView {
@@ -6527,15 +6920,17 @@ fn model_geometric_view_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("MODEL_GEOMETRIC_VIEW("),
         "expected MODEL_GEOMETRIC_VIEW in output"
     );
     let re = reconvert(&text);
-    assert_eq!(re.characterized_objects.len(), 1);
+    assert_eq!(re.shape_rep.characterized_objects.len(), 1);
     let CharacterizedObject::ModelGeometricView(mgv) =
-        re.characterized_objects.iter().next().unwrap()
+        re.shape_rep.characterized_objects.iter().next().unwrap()
     else {
         panic!("expected ModelGeometricView");
     };
@@ -6549,11 +6944,13 @@ fn annotation_placeholder_occurrence_round_trip() {
     // role enum token + line_spacing measure preserved.
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Surface};
-    use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlaceholderOccurrence};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceRole,
+    };
     use step_io::ir::representation_item::RepresentationItemRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -6567,12 +6964,14 @@ fn annotation_placeholder_occurrence_round_trip() {
                 name: "Note (195)".into(),
                 styles: vec![],
                 item: RepresentationItemRef::Surface(surf),
-                role: "GPS_DATA".into(),
+                role: AnnotationPlaceholderOccurrenceRole::GpsData,
                 line_spacing: 4.889_495_205_134_15,
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains(".GPS_DATA."), "role enum token not emitted");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
@@ -6583,7 +6982,7 @@ fn annotation_placeholder_occurrence_round_trip() {
         panic!("expected AnnotationPlaceholderOccurrence");
     };
     assert_eq!(apo.name, "Note (195)");
-    assert_eq!(apo.role, "GPS_DATA");
+    assert_eq!(apo.role, AnnotationPlaceholderOccurrenceRole::GpsData);
     assert!((apo.line_spacing - 4.889_495_205_134_15).abs() < 1e-12);
 }
 
@@ -6594,14 +6993,14 @@ fn leader_line_cluster_round_trip() {
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Point3, Surface};
     use step_io::ir::pmi::{
-        AnnotationOccurrence, AnnotationPlaceholderLeaderLine,
+        AnnotationOccurrence, AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrenceRole,
         AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
-        ApllPointElement,
+        ApllPointElement, DesApllPointSymbol,
     };
     use step_io::ir::representation_item::RepresentationItemRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -6617,7 +7016,7 @@ fn leader_line_cluster_round_trip() {
                 y: 2.0,
                 z: 3.0,
             },
-            symbol_applied: "NONE".into(),
+            symbol_applied: DesApllPointSymbol::None,
         }));
     let p1 = pmi
         .apll_points
@@ -6628,7 +7027,7 @@ fn leader_line_cluster_round_trip() {
                 y: 5.0,
                 z: 6.0,
             },
-            symbol_applied: "NONE".into(),
+            symbol_applied: DesApllPointSymbol::None,
         }));
     let leader = pmi.annotation_placeholder_leader_lines.push(
         AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(AnnotationToModelLeaderLine {
@@ -6642,14 +7041,16 @@ fn leader_line_cluster_round_trip() {
                 name: "Flatness.1".into(),
                 styles: vec![],
                 item: RepresentationItemRef::Surface(surf),
-                role: "GPS_DATA".into(),
+                role: AnnotationPlaceholderOccurrenceRole::GpsData,
                 line_spacing: 7.0,
                 leader_line: vec![leader],
             },
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("APLL_POINT("), "APLL_POINT not emitted");
     assert!(text.contains("ANNOTATION_TO_MODEL_LEADER_LINE("));
     assert!(text.contains("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE("));
@@ -6671,7 +7072,7 @@ fn leader_line_cluster_round_trip() {
         panic!("expected APLL_POINT");
     };
     assert!((re_p0.coordinates.x - 1.0).abs() < 1e-12);
-    assert_eq!(re_p0.symbol_applied, "NONE");
+    assert_eq!(re_p0.symbol_applied, DesApllPointSymbol::None);
     let with_leader = re_pmi.annotation_occurrences.iter().any(|ao| {
         matches!(
             ao,
@@ -6693,11 +7094,11 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
     use step_io::ir::geometry::Point3;
     use step_io::ir::pmi::{
         AnnotationPlaceholderLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
-        ApllPointElement, ApllPointWithSurfaceData, AuxiliaryLeaderLineData,
+        ApllPointElement, ApllPointWithSurfaceData, AuxiliaryLeaderLineData, DesApllPointSymbol,
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     // A solid gives us an ADVANCED_FACE for the with-surface point to bind to.
     let _solid = push_minimal_solid(&mut model);
     let face = model.topology.faces.iter_with_ids().next().unwrap().0;
@@ -6713,7 +7114,7 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
                 y: 2.0,
                 z: 3.0,
             },
-            symbol_applied: "NONE".into(),
+            symbol_applied: DesApllPointSymbol::None,
         }));
     let p_surf = pmi.apll_points.push(ApllPointElement::ApllPointWithSurface(
         ApllPointWithSurfaceData {
@@ -6723,7 +7124,7 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
                 y: 5.0,
                 z: 6.0,
             },
-            symbol_applied: "POSITIVE_ARROWHEAD".into(),
+            symbol_applied: DesApllPointSymbol::PositiveArrowhead,
             associated_surface: face,
         },
     ));
@@ -6741,7 +7142,9 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
         }),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("APLL_POINT_WITH_SURFACE("),
         "APLL_POINT_WITH_SURFACE not emitted"
@@ -6791,14 +7194,15 @@ fn dmia_with_placeholder_round_trip() {
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Surface};
     use step_io::ir::pmi::{
-        AnnotationOccurrence, AnnotationPlaceholderOccurrence, DraughtingModelIdentifiedItem,
-        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+        AnnotationOccurrence, AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceRole,
+        DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
+        DraughtingModelItemDefinition,
     };
     use step_io::ir::representation_item::RepresentationItemRef;
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -6811,20 +7215,26 @@ fn dmia_with_placeholder_round_trip() {
                     name: "Note (195)".into(),
                     styles: vec![],
                     item: RepresentationItemRef::Surface(surf),
-                    role: "GPS_DATA".into(),
+                    role: AnnotationPlaceholderOccurrenceRole::GpsData,
                     line_spacing: 1.5,
                 },
             ));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
-    let def = model.representations.push(Representation::Plain(PlainRepr {
-        name: "definition".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
+            frame: None,
+        }));
+    let def = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "definition".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -6838,7 +7248,9 @@ fn dmia_with_placeholder_round_trip() {
             annotation_placeholder: Some(ph),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER("),
         "subtype type name not emitted"
@@ -6873,7 +7285,7 @@ fn property_definition_with_ciwr_target_round_trips() {
     // emits later under the reserved id) and read it back as the variant.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let p0 = model.geometry.points.push(Point3 {
         x: 0.0,
         y: 0.0,
@@ -6894,14 +7306,15 @@ fn property_definition_with_ciwr_target_round_trips() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "validation".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
-    let co_id = model.characterized_objects.push(
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "validation".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
+            frame: None,
+        }));
+    let co_id = model.shape_rep.characterized_objects.push(
         CharacterizedObject::CharacterizedItemWithinRepresentation(
             CharacterizedItemWithinRepresentation {
                 inherited: CharacterizedObjectData {
@@ -6923,7 +7336,9 @@ fn property_definition_with_ciwr_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -6959,7 +7374,7 @@ fn property_definition_with_mgv_target_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -6975,13 +7390,14 @@ fn property_definition_with_mgv_target_round_trips() {
             size_in_y: 2.0,
             placement: PlanarBoxPlacement::Placement3d(frame),
         }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
+            frame: None,
+        }));
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -7003,18 +7419,20 @@ fn property_definition_with_mgv_target_round_trips() {
             view_reference_system: frame,
             perspective_of_volume: vv,
         }));
-    let co_id = model
-        .characterized_objects
-        .push(CharacterizedObject::ModelGeometricView(
-            ModelGeometricView {
-                inherited: CharacterizedObjectData {
-                    name: "Top".into(),
-                    description: Some(String::new()),
+    let co_id =
+        model
+            .shape_rep
+            .characterized_objects
+            .push(CharacterizedObject::ModelGeometricView(
+                ModelGeometricView {
+                    inherited: CharacterizedObjectData {
+                        name: "Top".into(),
+                        description: Some(String::new()),
+                    },
+                    item: cam,
+                    rep: rep_id,
                 },
-                item: cam,
-                rep: rep_id,
-            },
-        ));
+            ));
 
     let mut pool = PropertyPool::default();
     pool.property_definitions
@@ -7025,7 +7443,9 @@ fn property_definition_with_mgv_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("MODEL_GEOMETRIC_VIEW("));
     let re = reconvert(&text);
     let re_pool = re.properties.as_ref().expect("properties pool survives");
@@ -7041,7 +7461,8 @@ fn property_definition_with_mgv_target_round_trips() {
         "PROPERTY_DEFINITION targeting an MGV should round-trip"
     );
     assert!(
-        re.characterized_objects
+        re.shape_rep
+            .characterized_objects
             .iter()
             .any(|co| matches!(co, CharacterizedObject::ModelGeometricView(_))),
         "the MODEL_GEOMETRIC_VIEW arena entry should survive"
@@ -7069,6 +7490,7 @@ fn qri_vri_round_trip() {
             format_type: "NR2 1.3".into(),
         });
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::QualifiedRepresentationItem(
             QualifiedRepresentationItem {
@@ -7080,6 +7502,7 @@ fn qri_vri_round_trip() {
             },
         ));
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::ValueRepresentationItem(
             ValueRepresentationItem {
@@ -7091,10 +7514,12 @@ fn qri_vri_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.representation_items.len(), 2);
-    let mut iter = re.representation_items.iter();
+    assert_eq!(re.shape_rep.representation_items.len(), 2);
+    let mut iter = re.shape_rep.representation_items.iter();
     let RepresentationItem::QualifiedRepresentationItem(qri) = iter.next().unwrap() else {
         panic!("expected QRI");
     };
@@ -7107,6 +7532,97 @@ fn qri_vri_round_trip() {
     };
     assert_eq!(type_name, "POSITIVE_LENGTH_MEASURE");
     assert!((value - 0.05).abs() < 1e-9);
+}
+
+#[test]
+fn value_representation_item_all_measure_types_round_trip() {
+    // Exercises every arm of the 42-member `measure_value` bridge
+    // (`measure_value_to_l2` / `measure_value_to_early`) so a tag typo in either
+    // direction is caught — the corpus only covers COUNT/NUMERIC_MEASURE.
+    use step_io::ir::representation_item::{
+        MeasureValue, RepresentationItem, ValueRepresentationItem,
+    };
+    const REAL_TAGS: [&str; 41] = [
+        "ABSORBED_DOSE_MEASURE",
+        "ACCELERATION_MEASURE",
+        "AMOUNT_OF_SUBSTANCE_MEASURE",
+        "AREA_MEASURE",
+        "CAPACITANCE_MEASURE",
+        "CELSIUS_TEMPERATURE_MEASURE",
+        "CONDUCTANCE_MEASURE",
+        "CONTEXT_DEPENDENT_MEASURE",
+        "COUNT_MEASURE",
+        "DOSE_EQUIVALENT_MEASURE",
+        "ELECTRIC_CHARGE_MEASURE",
+        "ELECTRIC_CURRENT_MEASURE",
+        "ELECTRIC_POTENTIAL_MEASURE",
+        "ENERGY_MEASURE",
+        "FORCE_MEASURE",
+        "FREQUENCY_MEASURE",
+        "ILLUMINANCE_MEASURE",
+        "INDUCTANCE_MEASURE",
+        "LENGTH_MEASURE",
+        "LUMINOUS_FLUX_MEASURE",
+        "LUMINOUS_INTENSITY_MEASURE",
+        "MAGNETIC_FLUX_DENSITY_MEASURE",
+        "MAGNETIC_FLUX_MEASURE",
+        "MASS_MEASURE",
+        "NON_NEGATIVE_LENGTH_MEASURE",
+        "NUMERIC_MEASURE",
+        "PARAMETER_VALUE",
+        "PLANE_ANGLE_MEASURE",
+        "POSITIVE_LENGTH_MEASURE",
+        "POSITIVE_PLANE_ANGLE_MEASURE",
+        "POSITIVE_RATIO_MEASURE",
+        "POWER_MEASURE",
+        "PRESSURE_MEASURE",
+        "RADIOACTIVITY_MEASURE",
+        "RATIO_MEASURE",
+        "RESISTANCE_MEASURE",
+        "SOLID_ANGLE_MEASURE",
+        "THERMODYNAMIC_TEMPERATURE_MEASURE",
+        "TIME_MEASURE",
+        "VELOCITY_MEASURE",
+        "VOLUME_MEASURE",
+    ];
+    let mut cases: Vec<MeasureValue> = REAL_TAGS
+        .iter()
+        .map(|t| MeasureValue::Real {
+            type_name: (*t).into(),
+            value: 2.5,
+        })
+        .collect();
+    cases.push(MeasureValue::Text {
+        type_name: "DESCRIPTIVE_MEASURE".into(),
+        value: "d".into(),
+    });
+
+    for mv in cases {
+        let mut model = empty_model();
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::ValueRepresentationItem(
+                ValueRepresentationItem {
+                    name: "v".into(),
+                    value_component: mv.clone(),
+                },
+            ));
+        let text = model
+            .write_to_string(step_io::SchemaTarget::Universal)
+            .expect("write");
+        let re = reconvert(&text);
+        let RepresentationItem::ValueRepresentationItem(vri) = re
+            .shape_rep
+            .representation_items
+            .iter()
+            .next()
+            .expect("vri")
+        else {
+            panic!("expected VRI");
+        };
+        assert_eq!(vri.value_component, mv, "round-trip mismatch");
+    }
 }
 
 #[test]
@@ -7123,7 +7639,7 @@ fn measure_representation_item_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     let vftq = pmi
         .value_format_type_qualifiers
@@ -7131,6 +7647,7 @@ fn measure_representation_item_round_trip() {
             format_type: "NR2 1.1".into(),
         });
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
@@ -7146,15 +7663,17 @@ fn measure_representation_item_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
     assert!(text.contains("MEASURE_WITH_UNIT"));
     assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
 
     let re = reconvert(&text);
-    assert_eq!(re.representation_items.len(), 1);
+    assert_eq!(re.shape_rep.representation_items.len(), 1);
     let RepresentationItem::MeasureRepresentationItem(mri) =
-        re.representation_items.iter().next().unwrap()
+        re.shape_rep.representation_items.iter().next().unwrap()
     else {
         panic!("expected MeasureRepresentationItem");
     };
@@ -7190,7 +7709,7 @@ fn tolerance_magnitude_references_arena_measure() {
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let vftq = model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -7198,21 +7717,23 @@ fn tolerance_magnitude_references_arena_measure() {
         .push(ValueFormatTypeQualifier {
             format_type: "NR2 1.1".into(),
         });
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Complex,
-                name: "nominal value".into(),
-                value: MeasureValue::Real {
-                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
-                    value: 0.1,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Complex,
+                    name: "nominal value".into(),
+                    value: MeasureValue::Real {
+                        type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                        value: 0.1,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                    measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
-                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
-            },
-        ));
+            ));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -7227,7 +7748,9 @@ fn tolerance_magnitude_references_arena_measure() {
             defined_area_unit: None,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Complex MRI emitted once (arena), in full multi-part form.
     assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
     assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
@@ -7274,7 +7797,7 @@ fn property_item_references_arena_measure() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let vftq = model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -7282,21 +7805,23 @@ fn property_item_references_arena_measure() {
         .push(ValueFormatTypeQualifier {
             format_type: "NR2 1.1".into(),
         });
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Complex,
-                name: "nominal value".into(),
-                value: MeasureValue::Real {
-                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
-                    value: 0.1,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Complex,
+                    name: "nominal value".into(),
+                    value: MeasureValue::Real {
+                        type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                        value: 0.1,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                    measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
-                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
-            },
-        ));
+            ));
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {
@@ -7316,12 +7841,14 @@ fn property_item_references_arena_measure() {
         description: None,
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: "gvp".into(),
-        context: Some(RepresentationContextRef::Unitful(ctx_id)),
+        context: RepresentationContextRef::Unitful(ctx_id),
         items: vec![PropertyItem::MeasureItem(mri)],
     });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
     // No downgraded duplicate: exactly one MEASURE_REPRESENTATION_ITEM (the complex part).
     assert_eq!(
@@ -7358,8 +7885,9 @@ fn simple_measure_representation_item_round_trips_via_arena() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
@@ -7375,7 +7903,9 @@ fn simple_measure_representation_item_round_trips_via_arena() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("NUMERIC_MEASURE"));
     // Simple form, not the complex multi-part body.
     assert!(!text.contains("QUALIFIED_REPRESENTATION_ITEM"));
@@ -7386,9 +7916,9 @@ fn simple_measure_representation_item_round_trips_via_arena() {
     );
 
     let re = reconvert(&text);
-    assert_eq!(re.representation_items.len(), 1);
+    assert_eq!(re.shape_rep.representation_items.len(), 1);
     let RepresentationItem::MeasureRepresentationItem(mri) =
-        re.representation_items.iter().next().unwrap()
+        re.shape_rep.representation_items.iter().next().unwrap()
     else {
         panic!("expected MeasureRepresentationItem");
     };
@@ -7418,7 +7948,7 @@ fn measure_qualification_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mwu_id = model
         .units_pool
@@ -7448,7 +7978,9 @@ fn measure_qualification_round_trip() {
         ],
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.measure_qualifications.len(), 1);
@@ -7478,7 +8010,7 @@ fn projected_zone_definition_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -7505,13 +8037,13 @@ fn projected_zone_definition_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let sa_end = model.shape_aspects.push(ShapeAspect {
+    let sa_end = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "end".into(),
         description: String::new(),
         target: part_pid,
@@ -7550,7 +8082,7 @@ fn projected_zone_definition_round_trip() {
     let form = pmi.tolerance_zone_forms.push(ToleranceZoneForm {
         name: "cylindrical".into(),
     });
-    let tz_id = model.tolerance_zones.push(ToleranceZone {
+    let tz_id = model.shape_rep.tolerance_zones.push(ToleranceZone {
         name: "tz".into(),
         description: String::new(),
         target: part_pid,
@@ -7570,7 +8102,9 @@ fn projected_zone_definition_round_trip() {
             projected_length: ToleranceMagnitude::MeasureWithUnit(mwu_id),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.tolerance_zone_definitions.len(), 1);
@@ -7589,7 +8123,7 @@ fn datum_system_round_trip() {
     use step_io::ir::shape_rep::DatumSystem;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -7639,7 +8173,7 @@ fn datum_system_round_trip() {
         ));
     model.pmi = Some(pmi);
 
-    model.datum_systems.push(DatumSystem {
+    model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -7647,16 +8181,19 @@ fn datum_system_round_trip() {
         constituents: vec![gdr],
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.datum_systems.len(), 1);
-    let ds = re.datum_systems.iter().next().unwrap();
+    assert_eq!(re.shape_rep.datum_systems.len(), 1);
+    let ds = re.shape_rep.datum_systems.iter().next().unwrap();
     assert_eq!(ds.name, "DS");
     assert_eq!(ds.constituents.len(), 1, "constituent round-trips");
     assert_eq!(ds.target, step_io::ProductId(0));
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn datum_target_cluster_round_trip() {
     // DATUM_TARGET + PLACED_DATUM_TARGET_FEATURE + FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.
     // Three new shape_aspect-family entities sharing the same product chain.
@@ -7667,7 +8204,7 @@ fn datum_target_cluster_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -7696,13 +8233,13 @@ fn datum_target_cluster_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa_id = model.shape_aspects.push(ShapeAspect {
+    let sa_id = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "feature".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let dt_id = model.datum_targets.push(DatumTarget {
+    let dt_id = model.shape_rep.datum_targets.push(DatumTarget {
         name: "datum target".into(),
         description: String::new(),
         target: part_pid,
@@ -7710,6 +8247,7 @@ fn datum_target_cluster_round_trip() {
         target_id: "A1".into(),
     });
     let _pdtf_id = model
+        .shape_rep
         .placed_datum_target_features
         .push(PlacedDatumTargetFeature {
             name: "placed target".into(),
@@ -7719,6 +8257,7 @@ fn datum_target_cluster_round_trip() {
             target_id: "B2".into(),
         });
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: String::new(),
@@ -7728,29 +8267,41 @@ fn datum_target_cluster_round_trip() {
             kind: ShapeAspectRelationshipKind::FeatureForDatumTarget,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.datum_targets.len(), 1, "DATUM_TARGET round-trips");
     assert_eq!(
-        re.datum_targets.iter().next().unwrap().target_id,
+        re.shape_rep.datum_targets.len(),
+        1,
+        "DATUM_TARGET round-trips"
+    );
+    assert_eq!(
+        re.shape_rep.datum_targets.iter().next().unwrap().target_id,
         "A1",
         "target_id preserved"
     );
     assert_eq!(
-        re.placed_datum_target_features.len(),
+        re.shape_rep.placed_datum_target_features.len(),
         1,
         "PLACED_DATUM_TARGET_FEATURE round-trips"
     );
     assert_eq!(
-        re.placed_datum_target_features
+        re.shape_rep
+            .placed_datum_target_features
             .iter()
             .next()
             .unwrap()
             .target_id,
         "B2"
     );
-    assert_eq!(re.shape_aspect_relationships.len(), 1);
-    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 1);
+    let rel = re
+        .shape_rep
+        .shape_aspect_relationships
+        .iter()
+        .next()
+        .unwrap();
     assert_eq!(rel.kind, ShapeAspectRelationshipKind::FeatureForDatumTarget);
     assert!(matches!(
         rel.related_shape_aspect,
@@ -7771,7 +8322,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -7800,7 +8351,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -7809,7 +8360,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
 
     // DatumSystem with empty `constituents` — the constituent resolution is
     // covered by `datum_system_round_trip`; this test exercises the tolerance.
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -7842,7 +8393,9 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     );
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.geometric_tolerance_with_datum_references.len(), 1);
@@ -7875,7 +8428,7 @@ fn complex_datum_ref_tolerance_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -7904,13 +8457,13 @@ fn complex_datum_ref_tolerance_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -7942,7 +8495,9 @@ fn complex_datum_ref_tolerance_round_trip() {
     );
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"),
         "POSITION_TOLERANCE emits as the complex MI form"
@@ -7980,7 +8535,7 @@ fn geometric_tolerance_with_modifiers_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -8008,13 +8563,13 @@ fn geometric_tolerance_with_modifiers_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "feature".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -8061,19 +8616,78 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             displacement: None,
         }),
     );
+    // WDR simple-leaf COMPLEX forms (PARALLELISM/PERPENDICULARITY/CIRCULAR_RUNOUT)
+    // with a modifier — exercises the generated complex bind/serialize.
+    for leaf in [
+        GeometricToleranceWithDatumReference::Parallelism(
+            GeometricToleranceWithDatumReferenceData {
+                name: "PA".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+                displacement: None,
+            },
+        ),
+        GeometricToleranceWithDatumReference::Perpendicularity(
+            GeometricToleranceWithDatumReferenceData {
+                name: "PE".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: vec![GeometricToleranceModifier::Other("PITCH_DIAMETER".into())],
+                displacement: None,
+            },
+        ),
+        GeometricToleranceWithDatumReference::CircularRunout(
+            GeometricToleranceWithDatumReferenceData {
+                name: "CR".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
+                displacement: None,
+            },
+        ),
+        // LINE_PROFILE is always-complex (is_complex) with no optionals — the
+        // "plain" complex case. (No simple form; corpus-absent.)
+        GeometricToleranceWithDatumReference::LineProfile(
+            GeometricToleranceWithDatumReferenceData {
+                name: "LP".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: None,
+            },
+        ),
+    ] {
+        pmi.geometric_tolerance_with_datum_references.push(leaf);
+    }
     pmi.geometric_tolerances
         .push(GeometricTolerance::Roundness(GeometricToleranceData {
             name: "R".into(),
             description: String::new(),
             magnitude: magnitude(),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
-            modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
+            // Named (LMR) + an unnamed schema member (PITCH_DIAMETER, carried as
+            // `Other`) — exercises both arms of the L1-strict modifier bridge.
+            modifiers: vec![
+                GeometricToleranceModifier::LeastMaterialRequirement,
+                GeometricToleranceModifier::Other("PITCH_DIAMETER".into()),
+            ],
             unit_size: None,
             defined_area_unit: None,
         }));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("GEOMETRIC_TOLERANCE_WITH_MODIFIERS"),
         "expected WM part in complex MI output"
@@ -8105,8 +8719,54 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         .expect("Roundness variant present after round-trip");
     assert_eq!(
         round.modifiers,
+        vec![
+            GeometricToleranceModifier::LeastMaterialRequirement,
+            GeometricToleranceModifier::Other("PITCH_DIAMETER".into()),
+        ],
+        "Roundness named + Other modifier preserved"
+    );
+    // WDR simple-leaf COMPLEX forms with modifiers survive the round-trip.
+    let wdr_mods = |name: &str| {
+        re_pmi
+            .geometric_tolerance_with_datum_references
+            .iter()
+            .find_map(|gt| match gt {
+                GeometricToleranceWithDatumReference::Parallelism(d)
+                | GeometricToleranceWithDatumReference::Perpendicularity(d)
+                | GeometricToleranceWithDatumReference::CircularRunout(d)
+                    if d.name == name =>
+                {
+                    Some(d.modifiers.clone())
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("{name} variant present after round-trip"))
+    };
+    assert_eq!(
+        wdr_mods("PA"),
+        vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+        "Parallelism modifier preserved"
+    );
+    assert_eq!(
+        wdr_mods("PE"),
+        vec![GeometricToleranceModifier::Other("PITCH_DIAMETER".into())],
+        "Perpendicularity Other modifier preserved"
+    );
+    assert_eq!(
+        wdr_mods("CR"),
         vec![GeometricToleranceModifier::LeastMaterialRequirement],
-        "Roundness modifier preserved"
+        "CircularRunout modifier preserved"
+    );
+    // LINE_PROFILE always-complex plain form survives the round-trip.
+    assert!(
+        re_pmi
+            .geometric_tolerance_with_datum_references
+            .iter()
+            .any(|gt| matches!(
+                gt,
+                GeometricToleranceWithDatumReference::LineProfile(d) if d.name == "LP"
+            )),
+        "LineProfile plain complex present after round-trip"
     );
 }
 
@@ -8139,7 +8799,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
                 unit: length_unit,
             })
     };
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -8167,13 +8827,13 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "feature".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -8250,7 +8910,9 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
     );
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"),
         "expected WDU part"
@@ -8321,9 +8983,9 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
-    let target = model.shape_aspects[sa].target;
-    let ds = model.datum_systems.push(DatumSystem {
+    model.shape_rep.unit_contexts.push(ctx);
+    let target = model.shape_rep.shape_aspects[sa].target;
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target,
@@ -8339,21 +9001,23 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
         });
     // A complex qualified measure in the representation_item arena — the form
     // that lives in repr_item_id_map, not mwu_id_map.
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Complex,
-                name: String::new(),
-                value: MeasureValue::Real {
-                    type_name: "LENGTH_MEASURE".into(),
-                    value: 0.25,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Complex,
+                    name: String::new(),
+                    value: MeasureValue::Real {
+                        type_name: "LENGTH_MEASURE".into(),
+                        value: 0.25,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                    measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
-                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
-            },
-        ));
+            ));
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     // Flatness + WDU(unit_size) + WDAU(second_unit_size), both complex measures.
     pmi.geometric_tolerances
@@ -8384,7 +9048,9 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"));
     assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"));
     assert!(text.contains("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"));
@@ -8446,7 +9112,7 @@ fn plus_minus_tolerance_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -8475,7 +9141,7 @@ fn plus_minus_tolerance_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -8508,7 +9174,9 @@ fn plus_minus_tolerance_round_trip() {
     });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.tolerance_values.len(), 1);
@@ -8533,7 +9201,9 @@ fn draughting_pre_defined_text_font_round_trip() {
         });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.draughting_pre_defined_text_fonts.len(), 1);
@@ -8571,7 +9241,9 @@ fn pre_defined_curve_font_family_round_trip() {
         ));
     model.visualization = Some(viz);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.as_ref().expect("visualization pool");
     assert_eq!(re_viz.pre_defined_curve_fonts.len(), 2);
@@ -8605,7 +9277,9 @@ fn pre_defined_symbol_family_round_trip() {
         }));
     model.visualization = Some(viz);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.as_ref().expect("visualization pool");
     assert_eq!(re_viz.pre_defined_symbols.len(), 2);
@@ -8640,7 +9314,9 @@ fn document_file_six_attributes_round_trip() {
     }));
     model.plm = Some(plm);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_plm = re.plm.as_ref().expect("plm pool");
     assert_eq!(re_plm.documents.len(), 1);
@@ -8664,6 +9340,7 @@ fn numeric_representation_item_round_trip() {
     };
     let mut model = empty_model();
     model
+        .shape_rep
         .numeric_representation_items
         .push(NumericRepresentationItem::Integer(
             IntegerRepresentationItem {
@@ -8672,23 +9349,35 @@ fn numeric_representation_item_round_trip() {
             },
         ));
     model
+        .shape_rep
         .numeric_representation_items
         .push(NumericRepresentationItem::Real(RealRepresentationItem {
             name: "saved view scale".into(),
             the_value: 2.5,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.numeric_representation_items.len(), 2);
-    let NumericRepresentationItem::Integer(i) =
-        re.numeric_representation_items.iter().next().unwrap()
+    assert_eq!(re.shape_rep.numeric_representation_items.len(), 2);
+    let NumericRepresentationItem::Integer(i) = re
+        .shape_rep
+        .numeric_representation_items
+        .iter()
+        .next()
+        .unwrap()
     else {
         panic!("expected Integer variant first");
     };
     assert_eq!(i.name, "number of segments");
     assert_eq!(i.the_value, 19);
-    let NumericRepresentationItem::Real(r) = re.numeric_representation_items.iter().nth(1).unwrap()
+    let NumericRepresentationItem::Real(r) = re
+        .shape_rep
+        .numeric_representation_items
+        .iter()
+        .nth(1)
+        .unwrap()
     else {
         panic!("expected Real variant second");
     };
@@ -8703,6 +9392,7 @@ fn tessellation_round_trip() {
     use step_io::ir::tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8713,28 +9403,34 @@ fn tessellation_round_trip() {
                 vec![0.0, 1.0, 0.0],
             ],
         }));
-    model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "face".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "face".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.tessellated_items.len(), 1);
-    assert_eq!(re.tessellated_faces.len(), 1);
-    let Some(TessellatedItem::CoordinatesList(c)) = re.tessellated_items.iter().next() else {
+    assert_eq!(re.shape_rep.tessellated_items.len(), 1);
+    assert_eq!(re.shape_rep.tessellated_faces.len(), 1);
+    let Some(TessellatedItem::CoordinatesList(c)) = re.shape_rep.tessellated_items.iter().next()
+    else {
         panic!("expected CoordinatesList");
     };
     assert_eq!(c.npoints, 3);
     assert_eq!(c.position_coords.len(), 3);
     assert!((c.position_coords[1][0] - 1.0).abs() < f64::EPSILON);
-    let f = re.tessellated_faces.iter().next().unwrap();
+    let f = re.shape_rep.tessellated_faces.iter().next().unwrap();
     assert_eq!(f.name, "face");
     assert_eq!(f.pnmax, 3);
     assert_eq!(f.pnindex, vec![1, 2, 3]);
@@ -8754,6 +9450,7 @@ fn styled_item_tessellated_face_round_trips() {
     use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8764,16 +9461,19 @@ fn styled_item_tessellated_face_round_trips() {
                 vec![0.0, 1.0, 0.0],
             ],
         }));
-    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "face".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    let face = model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "face".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -8783,7 +9483,9 @@ fn styled_item_tessellated_face_round_trips() {
         item: RepresentationItemRef::TessellatedFace(face),
     }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(
@@ -8813,7 +9515,7 @@ fn draughting_model_with_styled_item_round_trips() {
     };
     use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
     let mut model = empty_model();
-    let uc = model.unitless_contexts.push(UnitlessContext {
+    let uc = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: String::new(),
         context_type: "document parameters".into(),
         coordinate_space_dimension: None,
@@ -8830,17 +9532,21 @@ fn draughting_model_with_styled_item_round_trips() {
         }))
     };
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
             items: vec![RepresentationItemRef::StyledItem(styled)],
-            context: Some(RepresentationContextRef::Unitless(uc)),
+            context: RepresentationContextRef::Unitless(uc),
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let dm = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -8864,6 +9570,7 @@ fn tessellation_2_round_trip() {
     };
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8876,6 +9583,7 @@ fn tessellation_2_round_trip() {
             ],
         }));
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
             name: "curves".into(),
@@ -8883,6 +9591,7 @@ fn tessellation_2_round_trip() {
             line_strips: vec![vec![1, 2], vec![3, 4, 1]],
         }));
     model
+        .shape_rep
         .tessellated_surface_sets
         .push(ComplexTriangulatedSurfaceSet {
             name: "surf".into(),
@@ -8894,12 +9603,15 @@ fn tessellation_2_round_trip() {
             triangle_fans: vec![],
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.tessellated_items.len(), 2);
-    assert_eq!(re.tessellated_surface_sets.len(), 1);
+    assert_eq!(re.shape_rep.tessellated_items.len(), 2);
+    assert_eq!(re.shape_rep.tessellated_surface_sets.len(), 1);
 
     let curve_set = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|item| match item {
@@ -8915,7 +9627,7 @@ fn tessellation_2_round_trip() {
     assert_eq!(curve_set.name, "curves");
     assert_eq!(curve_set.line_strips, vec![vec![1, 2], vec![3, 4, 1]]);
 
-    let s = re.tessellated_surface_sets.iter().next().unwrap();
+    let s = re.shape_rep.tessellated_surface_sets.iter().next().unwrap();
     assert_eq!(s.name, "surf");
     assert_eq!(s.pnmax, 4);
     assert_eq!(s.pnindex, vec![1, 2, 3, 4]);
@@ -8933,6 +9645,7 @@ fn repositioned_tessellated_geometric_set_complex_round_trips() {
     let mut model = empty_model();
     let placement = xyz_placement(&mut model);
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::RepositionedTessellatedGeometricSet(
             RepositionedTessellatedGeometricSet {
@@ -8942,7 +9655,9 @@ fn repositioned_tessellated_geometric_set_complex_round_trips() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("REPOSITIONED_TESSELLATED_ITEM(")
             && text.contains("TESSELLATED_GEOMETRIC_SET("),
@@ -8950,7 +9665,8 @@ fn repositioned_tessellated_geometric_set_complex_round_trips() {
     );
     let re = reconvert(&text);
     assert!(
-        re.tessellated_items
+        re.shape_rep
+            .tessellated_items
             .iter()
             .any(|i| matches!(i, TessellatedItem::RepositionedTessellatedGeometricSet(_))),
         "5-part tessellated complex MI should round-trip"
@@ -8967,6 +9683,7 @@ fn tessellated_geometric_set_round_trip() {
     };
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8978,23 +9695,28 @@ fn tessellated_geometric_set_round_trip() {
             ],
         }));
     let curve = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
             name: "curve".into(),
             coordinates: coords,
             line_strips: vec![vec![1, 2, 3]],
         }));
-    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "face".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    let face = model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "face".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
     let ss = model
+        .shape_rep
         .tessellated_surface_sets
         .push(ComplexTriangulatedSurfaceSet {
             name: "ss".into(),
@@ -9006,6 +9728,7 @@ fn tessellated_geometric_set_round_trip() {
             triangle_fans: vec![],
         });
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedGeometricSet(
             TessellatedGeometricSet {
@@ -9018,9 +9741,12 @@ fn tessellated_geometric_set_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let gset = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|item| match item {
@@ -9055,7 +9781,9 @@ fn psa_null_style_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("NULL_STYLE(.NULL.)"));
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz");
@@ -9080,12 +9808,15 @@ fn presentation_style_by_context_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "ctx".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let uc = model.shape_rep.unit_contexts.push(ctx);
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "ctx".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -9096,7 +9827,9 @@ fn presentation_style_by_context_round_trip() {
         }),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz");
     let psbc = re_viz
@@ -9163,7 +9896,9 @@ fn surface_curve_subtypes_round_trip() {
             ..body
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let mut iter = re.geometry.surface_curves.iter();
     let SurfaceCurve::BoundedSurfaceCurve(bsc) = iter.next().expect("bsc") else {
@@ -9216,7 +9951,9 @@ fn curve_bounded_surface_round_trip() {
             implicit_outer: true,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cbs = re
         .geometry
@@ -9240,7 +9977,7 @@ fn bounded_pcurve_round_trip() {
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let plane = model
         .geometry
@@ -9248,11 +9985,14 @@ fn bounded_pcurve_round_trip() {
         .push(step_io::ir::geometry::Surface::Plane(
             step_io::ir::geometry::Plane3 { position: frame },
         ));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "defrepr".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "defrepr".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     model
         .geometry
         .parameter_space_curves
@@ -9262,7 +10002,9 @@ fn bounded_pcurve_round_trip() {
             reference_to_curve: rep,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let psc = re
         .geometry
@@ -9290,7 +10032,9 @@ fn circular_area_round_trip() {
         radius: 2.0,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let ca = re
         .geometry
@@ -9326,8 +10070,8 @@ fn circular_area_with_external_reference_round_trips() {
                END-ISO-10303-21;\n";
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
     // External reference + anchor materialized; CIRCULAR_AREA survives.
-    assert_eq!(model.external_references.len(), 1);
-    assert_eq!(model.anchors.len(), 1);
+    assert_eq!(model.metadata.external_references.len(), 1);
+    assert_eq!(model.metadata.anchors.len(), 1);
     let ca = model
         .geometry
         .circular_areas
@@ -9338,14 +10082,16 @@ fn circular_area_with_external_reference_round_trips() {
 
     // Round-trip: the output re-emits the REFERENCE/ANCHOR sections and the
     // CIRCULAR_AREA re-reads identically.
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("REFERENCE;"), "REFERENCE section re-emitted");
     assert!(text.contains("ANCHOR;"), "ANCHOR section re-emitted");
     assert!(text.contains("<testAnchorAndData.stp#TestAnchor>"));
     assert!(text.contains("CIRCULAR_AREA("));
     let re = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
-    assert_eq!(re.external_references.len(), 1);
-    assert_eq!(re.anchors.len(), 1);
+    assert_eq!(re.metadata.external_references.len(), 1);
+    assert_eq!(re.metadata.anchors.len(), 1);
     let re_ca = re.geometry.circular_areas.iter().next().expect("survives");
     assert!(matches!(re_ca.centre, CircularAreaCentre::External(_)));
     assert_eq!(re_ca.name, "testarea");
@@ -9361,6 +10107,7 @@ fn compound_representation_item_round_trip() {
     };
     let mut model = empty_model();
     model
+        .shape_rep
         .compound_representation_items
         .push(CompoundRepresentationItem {
             name: "dimensional note".into(),
@@ -9373,9 +10120,12 @@ fn compound_representation_item_round_trip() {
             },
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cri = re
+        .shape_rep
         .compound_representation_items
         .iter()
         .next()
@@ -9398,13 +10148,16 @@ fn characterized_object_simple_emit() {
     use step_io::ir::shape_rep::{CharacterizedObject, CharacterizedObjectData};
     let mut model = empty_model();
     model
+        .shape_rep
         .characterized_objects
         .push(CharacterizedObject::Itself(CharacterizedObjectData {
             name: "Back".into(),
             description: None,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("CHARACTERIZED_OBJECT('Back',$)"));
 }
 
@@ -9418,7 +10171,7 @@ fn srwp_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let dir = model.geometry.directions.push(Direction3 {
         x: 1.0,
@@ -9426,6 +10179,7 @@ fn srwp_round_trip() {
         z: 0.0,
     });
     model
+        .shape_rep
         .representations
         .push(Representation::ShapeRepresentationWithParameters(
             ShapeRepresentationWithParameters {
@@ -9438,13 +10192,16 @@ fn srwp_round_trip() {
                         description: "v".into(),
                     }),
                 ],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let srwp = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9469,36 +10226,42 @@ fn srwp_measure_item_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Simple,
-                name: "target width".into(),
-                value: MeasureValue::Real {
-                    type_name: "LENGTH_MEASURE".into(),
-                    value: 1.25,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Simple,
+                    name: "target width".into(),
+                    value: MeasureValue::Real {
+                        type_name: "LENGTH_MEASURE".into(),
+                        value: 1.25,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: Vec::new(),
+                    measure_supertype: None,
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: Vec::new(),
-                measure_supertype: None,
-            },
-        ));
+            ));
     model
+        .shape_rep
         .representations
         .push(Representation::ShapeRepresentationWithParameters(
             ShapeRepresentationWithParameters {
                 name: "srwp".into(),
                 items: vec![SrwpItem::Placement(frame), SrwpItem::MeasureItem(mri)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let srwp = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9531,14 +10294,16 @@ fn iiru_round_trip() {
     };
     let (mut model, sa, _, _, _) = shape_aspect_relationship_fixture();
     let frame = model.geometry.identity_placement();
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "used".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "used".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
+            frame: None,
+        }));
     model
+        .shape_rep
         .item_identified_representation_usages
         .push(ItemIdentifiedRepresentationUsage {
             name: "iiru".into(),
@@ -9551,9 +10316,12 @@ fn iiru_round_trip() {
             },
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let iiru = re
+        .shape_rep
         .item_identified_representation_usages
         .iter()
         .next()
@@ -9573,18 +10341,24 @@ fn mddr_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
-    let sr1 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "sr1".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
-    let sr2 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "sr2".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
-    model.representation_relationships.push(
+    let uc = model.shape_rep.unit_contexts.push(ctx);
+    let sr1 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "sr1".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
+    let sr2 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "sr2".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
+    model.shape_rep.representation_relationships.push(
         RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(
             MechanicalDesignAndDraughtingRelationship {
                 name: "mddr".into(),
@@ -9595,9 +10369,12 @@ fn mddr_round_trip() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let mddr = re
+        .shape_rep
         .representation_relationships
         .iter()
         .find_map(|r| match r {
@@ -9621,18 +10398,25 @@ fn representation_relationship_itself_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
-    let r1 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "r1".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
-    let r2 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "r2".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let uc = model.shape_rep.unit_contexts.push(ctx);
+    let r1 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "r1".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
+    let r2 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "r2".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     model
+        .shape_rep
         .representation_relationships
         .push(RepresentationRelationship::Itself(
             RepresentationRelationshipData {
@@ -9643,13 +10427,16 @@ fn representation_relationship_itself_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("= REPRESENTATION_RELATIONSHIP("),
         "base subtype is emitted (not a SHAPE_/SUBTYPE form), got:\n{text}"
     );
     let re = reconvert(&text);
     let rr = re
+        .shape_rep
         .representation_relationships
         .iter()
         .find_map(|r| match r {
@@ -9676,23 +10463,27 @@ fn cgr_relationship_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
-    let sr = model.representations.push(Representation::Plain(PlainRepr {
-        name: "sr".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let sr = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "sr".into(),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
+            frame: None,
+        }));
     let cgr = model
+        .shape_rep
         .representations
         .push(Representation::ConstructiveGeometry(
             ConstructiveGeometryRepr {
                 name: "cgr".into(),
                 items: vec![RepresentationItemRef::Placement3d(frame)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
-    model.representation_relationships.push(
+    model.shape_rep.representation_relationships.push(
         RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(
             ConstructiveGeometryRepresentationRelationship {
                 name: "supplemental geometry".into(),
@@ -9703,9 +10494,12 @@ fn cgr_relationship_round_trip() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cgrr = re
+        .shape_rep
         .representation_relationships
         .iter()
         .find_map(|r| match r {
@@ -9730,21 +10524,25 @@ fn constructive_geometry_representation_round_trip() {
     use step_io::ir::shape_rep::{ConstructiveGeometryRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     model
+        .shape_rep
         .representations
         .push(Representation::ConstructiveGeometry(
             ConstructiveGeometryRepr {
                 name: "supplemental geometry".into(),
                 items: vec![RepresentationItemRef::Placement3d(frame)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cgr = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9769,8 +10567,9 @@ fn tessellated_shape_representation_round_trip() {
     use step_io::ir::tessellation::{CoordinatesList, TessellatedItem, TessellatedItemRef};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -9782,18 +10581,22 @@ fn tessellated_shape_representation_round_trip() {
             ],
         }));
     model
+        .shape_rep
         .representations
         .push(Representation::TessellatedShapeRepresentation(
             TessellatedShapeRepresentation {
                 name: "tsr".into(),
                 items: vec![TessellatedItemRef::Item(coords)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let tsr = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9814,6 +10617,7 @@ fn repositioned_tessellated_item_round_trip() {
     let mut model = empty_model();
     let frame = model.geometry.identity_placement();
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::RepositionedTessellatedItem(
             RepositionedTessellatedItem {
@@ -9822,9 +10626,12 @@ fn repositioned_tessellated_item_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let rti = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|item| match item {
@@ -9845,6 +10652,7 @@ fn tessellated_solid_shell_round_trip() {
     };
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -9855,17 +10663,21 @@ fn tessellated_solid_shell_round_trip() {
                 vec![0.0, 1.0, 0.0],
             ],
         }));
-    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "f".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    let face = model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "f".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
     let ss = model
+        .shape_rep
         .tessellated_surface_sets
         .push(ComplexTriangulatedSurfaceSet {
             name: "ss".into(),
@@ -9877,6 +10689,7 @@ fn tessellated_solid_shell_round_trip() {
             triangle_fans: vec![],
         });
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedSolid(TessellatedSolid {
             name: "solid".into(),
@@ -9887,6 +10700,7 @@ fn tessellated_solid_shell_round_trip() {
             geometric_link: None,
         }));
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedShell(TessellatedShell {
             name: "shell".into(),
@@ -9894,9 +10708,12 @@ fn tessellated_solid_shell_round_trip() {
             topological_link: None,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let solid = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|i| match i {
@@ -9907,6 +10724,7 @@ fn tessellated_solid_shell_round_trip() {
     assert_eq!(solid.name, "solid");
     assert_eq!(solid.items.len(), 2);
     let shell = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|i| match i {
@@ -9946,29 +10764,34 @@ fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
     });
     let ratio_id = pool.named_units.push(NamedUnit::Ratio(RatioFlavor {
         dim_exp: Some(de_id),
-        complex: false,
     }));
     let simple_form = UnitContextForm::Simple {
         identifier: "NONE".into(),
         context_type: "NONE".into(),
     };
-    model.units.push(UnitContext {
+    model.shape_rep.unit_contexts.push(UnitContext {
         units: vec![ratio_id],
-        length_uncertainty: None,
-        plane_angle_uncertainty: None,
-        solid_angle_uncertainty: None,
+        uncertainty: Vec::new(),
         form: simple_form.clone(),
     });
 
-    let re = reconvert(&model.write_to_string().expect("write"));
-    assert_eq!(re.units.len(), 1);
-    let ctx = re.units.iter().next().expect("unit context survived");
+    let re = reconvert(
+        &model
+            .write_to_string(step_io::SchemaTarget::Universal)
+            .expect("write"),
+    );
+    assert_eq!(re.shape_rep.unit_contexts.len(), 1);
+    let ctx = re
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("unit context survived");
     assert_eq!(ctx.form, simple_form);
     assert_eq!(ctx.units.len(), 1);
     let rpool = re.units_pool.as_ref().expect("units pool");
     match rpool.named_units[ctx.units[0]] {
         NamedUnit::Ratio(f) => {
-            assert!(!f.complex, "simple RATIO_UNIT must re-read as simple form");
             assert!(f.dim_exp.is_some(), "explicit dimensions preserved");
         }
         other => panic!("expected Ratio, got {other:?}"),
@@ -9984,7 +10807,7 @@ fn general_property_bound_pdr_round_trips() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {
@@ -9997,14 +10820,16 @@ fn general_property_bound_pdr_round_trips() {
         description: None,
         definition: PropertyDefinitionRef::GeneralProperty(gp_id),
         representation_name: "gvp".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
+        context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
         items: Vec::new(),
     });
     model.properties = Some(pool);
 
-    let re = reconvert(&model.write_to_string().expect("write"));
+    let re = reconvert(
+        &model
+            .write_to_string(step_io::SchemaTarget::Universal)
+            .expect("write"),
+    );
     let re_pool = re
         .properties
         .as_ref()
@@ -10019,50 +10844,8 @@ fn general_property_bound_pdr_round_trips() {
     assert_eq!(prop.representation_name, "gvp");
     assert!(matches!(
         prop.context,
-        Some(step_io::ir::RepresentationContextRef::Unitful(_)),
+        step_io::ir::RepresentationContextRef::Unitful(_),
     ));
-}
-
-/// A descriptive property `REPRESENTATION` whose `context_of_items` is `$`
-/// (c3d) is accepted as `None` with a `NonStandardInput` normalization warning,
-/// not dropped.
-#[test]
-fn representation_unset_context_round_trips_as_none_with_warning() {
-    use step_io::ir::error::ConvertError;
-    use step_io::ir::property::PropertyDefinitionRef;
-
-    let mut model = empty_model();
-    let mut pool = PropertyPool::default();
-    let gp_id = pool.general_properties.push(GeneralProperty {
-        id: String::new(),
-        name: "VP".into(),
-        description: None,
-    });
-    pool.properties.push(Property {
-        name: String::new(),
-        description: None,
-        definition: PropertyDefinitionRef::GeneralProperty(gp_id),
-        representation_name: String::new(),
-        context: None, // -> REPRESENTATION emits `$` context_of_items
-        items: Vec::new(),
-    });
-    model.properties = Some(pool);
-
-    let text = model.write_to_string().expect("write");
-    let graph = parse(&text).expect("writer output parses");
-    let result = ReaderContext::convert(&graph);
-
-    assert!(
-        result.warnings.iter().any(|w| matches!(
-            w,
-            ConvertError::NonStandardInput { field, .. } if field.contains("context_of_items")
-        )),
-        "expected context_of_items NonStandardInput, got {:#?}",
-        result.warnings,
-    );
-    let re_pool = result.model.properties.as_ref().expect("has properties");
-    let prop = re_pool.properties.iter().next().expect("property survived");
-    assert_eq!(prop.context, None);
 }
 
 /// A bare `MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3), unit)` (the carrier
@@ -10084,7 +10867,9 @@ fn bare_measure_with_unit_round_trips_as_itself() {
         }));
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // The emitted entity must be the bare supertype, not a typed subtype.
     assert!(
         text.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3"),
@@ -10131,7 +10916,9 @@ fn bare_named_unit_count_round_trips_as_itself() {
         }));
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Bare supertype NAMED_UNIT, not a typed subtype (no MASS_UNIT/SI_UNIT etc.).
     assert!(
         text.contains("= NAMED_UNIT("),

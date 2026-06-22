@@ -9,8 +9,8 @@
 use super::assembly::WireframeContent;
 use super::id::StyledItemId;
 use super::id::{
-    GeneralDatumReferenceId, NamedUnitId, Placement3dId, ProductId, RepresentationId,
-    RepresentationMapId, ShellId, SolidId, ToleranceZoneFormId, UnitContextId,
+    GeneralDatumReferenceId, MeasureWithUnitId, NamedUnitId, Placement3dId, ProductId,
+    RepresentationId, RepresentationMapId, ShellId, SolidId, ToleranceZoneFormId, UnitContextId,
 };
 use super::pmi::GeometricToleranceRef;
 use super::representation_item::RepresentationItemRef;
@@ -21,13 +21,14 @@ use super::shape_aspect_ref::ShapeAspectRef;
 /// The IR preserves original units — numeric values are **not** normalized.
 /// Kernel adapters inspect `UnitContext` and convert if needed.
 ///
-/// `length_uncertainty` is `Some` when the source file carried a
-/// `UNCERTAINTY_MEASURE_WITH_UNIT` referenced through
-/// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT`. The numeric value is in the
-/// source's length unit (mm / inch / ...) — no normalization. The
-/// `name` / `description` strings are preserved verbatim so round-trip
-/// reproduces the original metadata (writers no longer hardcode
-/// `'distance_accuracy_value'` / `'confusion accuracy'`).
+/// `uncertainty` holds the `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty :
+/// SET OF uncertainty_measure_with_unit` refs (source order) into
+/// `StepModel.units_pool.measure_with_units` (each a
+/// [`crate::ir::units::MeasureWithUnit::UncertaintyMeasureWithUnit`]). Empty when
+/// the source carried no uncertainty part. Per-kind views (length / plane-angle /
+/// solid-angle) are derived on demand via [`UnitContext::length_uncertainty`] etc.
+/// — the numeric value is in the source unit (mm / radian / ...), unnormalized,
+/// and the `name` / `description` strings are preserved verbatim.
 /// `units` is the schema's `GLOBAL_UNIT_ASSIGNED_CONTEXT.units : SET[1:?] OF
 /// unit` — an ordered set of `NamedUnitId` refs into
 /// `StepModel.units_pool.named_units`. Any unit kind (`length` / `plane_angle`
@@ -41,14 +42,10 @@ use super::shape_aspect_ref::ShapeAspectRef;
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitContext {
     pub units: Vec<NamedUnitId>,
-    pub length_uncertainty: Option<LengthUncertainty>,
-    /// Optional plane-angle uncertainty (e.g. `'angle_accuracy'` in some
-    /// CAD exports). `None` when the source carried no angle-typed
-    /// `UNCERTAINTY_MEASURE_WITH_UNIT`. Value is in the source's plane
-    /// angle unit (radian / degree).
-    pub plane_angle_uncertainty: Option<LengthUncertainty>,
-    /// Optional solid-angle uncertainty. `None` for the typical case.
-    pub solid_angle_uncertainty: Option<LengthUncertainty>,
+    /// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty` refs (source order).
+    /// Each points at a `MeasureWithUnit::UncertaintyMeasureWithUnit` in the
+    /// shared `measure_with_units` arena. Empty for the no-uncertainty form.
+    pub uncertainty: Vec<MeasureWithUnitId>,
     /// Which source form this context was read from, so the writer
     /// reproduces it. See [`UnitContextForm`].
     pub form: UnitContextForm,
@@ -65,8 +62,15 @@ pub struct UnitContext {
 /// IR-faithful (a complex GRC would distort a non-geometric ratio context).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UnitContextForm {
-    /// Complex `(GEOMETRIC_REPRESENTATION_CONTEXT … REPRESENTATION_CONTEXT)`.
-    Complex,
+    /// Complex `(GEOMETRIC_REPRESENTATION_CONTEXT(coordinate_space_dimension) …
+    /// REPRESENTATION_CONTEXT(repr_identifier, repr_type))`. The dimension and
+    /// the two `representation_context` strings are preserved verbatim (the
+    /// writer no longer hardcodes `3` / `''`).
+    Complex {
+        coordinate_space_dimension: i64,
+        repr_identifier: String,
+        repr_type: String,
+    },
     /// Standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT` with its inherited
     /// `representation_context` strings.
     Simple {
@@ -106,6 +110,62 @@ impl UnitContext {
             .iter()
             .copied()
             .find(|&id| want(&pool.named_units[id]))
+    }
+
+    /// Length-kind uncertainty view: the first `uncertainty` ref whose
+    /// `UncertaintyMeasureWithUnit.unit` is a `Length` unit, projected to the
+    /// [`LengthUncertainty`] carrier (value + metadata).
+    #[must_use]
+    pub fn length_uncertainty(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::Length(_))
+        })
+    }
+    /// Plane-angle-kind uncertainty view (radian / degree unit).
+    #[must_use]
+    pub fn plane_angle_uncertainty(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::PlaneAngle(_))
+        })
+    }
+    /// Solid-angle-kind uncertainty view (steradian unit).
+    #[must_use]
+    pub fn solid_angle_uncertainty(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::SolidAngle(_))
+        })
+    }
+    fn uncertainty_of_kind(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+        want: impl Fn(&crate::ir::units::NamedUnit) -> bool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty.iter().copied().find_map(|id| {
+            if let crate::ir::units::MeasureWithUnit::UncertaintyMeasureWithUnit {
+                value,
+                unit,
+                name,
+                description,
+            } = &pool.measure_with_units[id]
+            {
+                want(&pool.named_units[*unit]).then(|| LengthUncertainty {
+                    value: *value,
+                    name: name.clone(),
+                    description: description.clone(),
+                })
+            } else {
+                None
+            }
+        })
     }
 }
 
@@ -157,9 +217,9 @@ pub struct Mdgpr {
     /// Unit / uncertainty context referenced by this MDGPR. `Some(id)` indexes
     /// into [`crate::ir::model::StepModel::units`]. Fusion 360 typically uses
     /// a separate context here (different uncertainty than the geometry rep).
-    /// `None` → writer emits `Attribute::Unset` for `context_of_items`
-    /// (allowed by the spec for kernel-built IR with no context info).
-    pub context: Option<RepresentationContextRef>,
+    /// `context_of_items` is schema-required (non-optional); `lower` drops any
+    /// carrier whose context did not resolve, so this is always a real ref.
+    pub context: RepresentationContextRef,
 }
 
 /// A unit-less representation context — either the
@@ -248,7 +308,7 @@ pub enum Representation {
 pub struct ShapeRepresentationWithParameters {
     pub name: String,
     pub items: Vec<SrwpItem>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
 }
 
 /// `shape_representation_with_parameters_items` SELECT. The
@@ -398,7 +458,7 @@ pub enum IiruIdentifiedItem {
 pub struct ConstructiveGeometryRepr {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
 }
 
 /// `TESSELLATED_SHAPE_REPRESENTATION(name, items, context_of_items)` —
@@ -413,7 +473,7 @@ pub struct TessellatedShapeRepresentation {
     /// [`crate::ir::tessellation::TessellatedItemRef`] enum so `items`
     /// can point at any tessellated arena (item / face / surface set).
     pub items: Vec<crate::ir::tessellation::TessellatedItemRef>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
 }
 
 /// `GEOMETRIC_ITEM_SPECIFIC_USAGE(name, description, definition,
@@ -437,7 +497,7 @@ pub struct GeometricItemSpecificUsage {
 pub struct DraughtingModel {
     pub name: String,
     pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     /// Which on-disk entity form this draughting model was read from /
     /// must be written back as.
     pub form: DraughtingModelForm,
@@ -531,7 +591,7 @@ pub struct ModelGeometricView {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDimensionRepresentation {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub items: Vec<DimensionItem>,
 }
 
@@ -553,7 +613,7 @@ pub enum DimensionItem {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedBrepRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub items: Vec<RepresentationItemRef>,
 }
 
@@ -591,7 +651,7 @@ impl AdvancedBrepRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSurfaceRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub ref_frame: Option<Placement3dId>,
     pub shells: Vec<ShellId>,
     pub sbsm_ids: Vec<crate::ir::id::GeometricRepresentationItemId>,
@@ -602,7 +662,7 @@ pub struct ManifoldSurfaceRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlainRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub frame: Option<Placement3dId>,
 }
 
@@ -620,7 +680,7 @@ pub struct PlainRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WireframeRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub ref_frame: Option<Placement3dId>,
     pub content: WireframeContent,
     pub gcs_ids: Vec<crate::ir::id::GeometricRepresentationItemId>,
@@ -737,8 +797,8 @@ pub struct RealRepresentationItem {
 /// `SHAPE_ASPECT(name, description, of_shape, product_definitional)`.
 ///
 /// `of_shape` is a `PRODUCT_DEFINITION_SHAPE` reference resolved to a
-/// `ProductId` at read time via the existing `pdef_shape_to_pdef` and
-/// `pdef_to_product` maps. SAs whose `of_shape` does not resolve are
+/// `ProductId` at read time via the typed `product_of_pds` probe. SAs
+/// whose `of_shape` does not resolve are
 /// silently dropped on read (symmetric ignorance preserves round-trip
 /// equality for fixtures with non-standard targets).
 ///

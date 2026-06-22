@@ -3,12 +3,10 @@
 //! Sister of [`crate::entities::units::length_measure_with_unit`]; same
 //! attribute shape with `MASS_MEASURE(real)` as the typed value component.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::units::length_measure_with_unit::emit_mwu;
-use crate::entities::units::shared::read_mwu_attrs;
 use crate::ir::error::ConvertError;
-use crate::ir::units::MeasureWithUnit;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -24,33 +22,18 @@ impl SimpleEntityHandler for MassMeasureWithUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
-            return Ok(());
-        }
-        let Some((value, unit_step)) = read_mwu_attrs(attrs, entity_id, "MASS_MEASURE_WITH_UNIT")?
-        else {
+        let attrs = super::shared::normalize_bare_measure_attrs(attrs, "MASS_MEASURE");
+        let Some(early) = bind::bind_mass_measure_with_unit(entity_id, &attrs)? else {
             return Ok(());
         };
-        let Some(&unit_id) = ctx.named_unit_id_map.get(&unit_step) else {
-            return Ok(());
-        };
-        let id = ctx.mwu_arena.push(MeasureWithUnit::Mass {
-            value,
-            unit: unit_id,
-        });
-        ctx.mwu_id_map.insert(entity_id, id);
+        lower::lower_mass_measure_with_unit(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, (value, unit_step): (f64, u64)) -> Result<u64, WriteError> {
-        Ok(emit_mwu(
-            buf,
-            "MASS_MEASURE_WITH_UNIT",
-            "MASS_MEASURE",
-            value,
-            unit_step,
-        ))
+        let early = lift::lift_mass_measure_with_unit(value, unit_step);
+        Ok(serialize::serialize_mass_measure_with_unit(buf, &early))
     }
 }

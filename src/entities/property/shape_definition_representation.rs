@@ -6,11 +6,11 @@
 //! Writer emits the bare two-attr SDR linking a `PRODUCT_DEFINITION_SHAPE`
 //! and the inner shape representation.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::{GeometryLeaf, SolidContent, SurfaceBodyContent};
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -31,67 +31,10 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "SHAPE_DEFINITION_REPRESENTATION")?;
-        let pdef_shape_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
-        let shape_rep_ref = read_entity_ref(attrs, 1, entity_id, "used_representation")?;
-
-        // Only consider SDRs where `pdef_shape.definition` is a
-        // PRODUCT_DEFINITION. Others (definition = a PROPERTY_DEFINITION, e.g.
-        // geometric-validation / CATIA geometric-set PMI shapes) are stashed
-        // raw and resolved after all entities are read (the PD is read by the
-        // property handler, later than this SDR). NAUO-tagged PDS resolve to neither and
-        // stay dropped (assembly-instance shape — a later phase).
-        let Some(pdef_ref) = ctx.pdef_shape_to_pdef.get(&pdef_shape_ref).copied() else {
-            // NAUO-tagged placement PDS: this SDR links the instance's placement
-            // PDS to a standalone placement SHAPE_REPRESENTATION (an extra SDR
-            // some exporters emit besides the CDSR; one placement PDS may carry
-            // several). Append the SR to the NAUO's list so
-            // `resolve_nauo_instances` attaches them to the Instance; the writer
-            // re-emits one SDR per SR next to the NAUO-owned PDS. (Without this
-            // it falls to `sdr_link_refs` and `resolve_sdr_links` drops it, since
-            // the NAUO-owned PDS is never a modelled property_definition.)
-            if let Some(&nauo_ref) = ctx.pdef_shape_to_nauo.get(&pdef_shape_ref) {
-                if let Some(&sr_id) = ctx.repr_id_map.get(&shape_rep_ref) {
-                    ctx.nauo_placement_sr
-                        .entry(nauo_ref)
-                        .or_default()
-                        .push(sr_id);
-                }
-                return Ok(());
-            }
-            ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
-            return Ok(());
-        };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_ref) else {
-            return Err(ConvertError::MissingReference {
-                from: entity_id,
-                to: pdef_ref,
-                field_name: "definition.definition",
-            });
-        };
-        let Some(&pid) = ctx.product_arena_map.get(&product_step_id) else {
-            return Err(ConvertError::MissingReference {
-                from: entity_id,
-                to: product_step_id,
-                field_name: "definition.product",
-            });
-        };
-
-        // Defer the geometry classification: it follows the indirect chain
-        // `SDR -> plain SR -> SHAPE_REPRESENTATION_RELATIONSHIP -> geometry rep`
-        // through maps (`srr_equiv_map`, `wireframe_data_map`, ...) that this
-        // SDR does not reference, so under topological dispatch they may not be
-        // populated yet. `resolve_sdr_product_geometry` runs the body below
-        // once every relationship and geometry representation has been read.
-        ctx.pending_sdr_geometry
-            .push(crate::reader::PendingSdrGeometry {
-                pid,
-                shape_rep_ref,
-                entity_id,
-                pdef_shape_ref,
-            });
+        let early = bind::bind_shape_definition_representation(entity_id, attrs)?;
+        lower::lower_shape_definition_representation(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -102,12 +45,9 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             shape_rep,
         }: ShapeDefinitionRepresentationWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "SHAPE_DEFINITION_REPRESENTATION",
-            vec![
-                Attribute::EntityRef(pdef_shape),
-                Attribute::EntityRef(shape_rep),
-            ],
+        let early = lift::lift_shape_definition_representation(pdef_shape, shape_rep);
+        Ok(serialize::serialize_shape_definition_representation(
+            buf, &early,
         ))
     }
 }
@@ -142,9 +82,11 @@ impl ReaderContext {
                 // it against the same single PDS step id). Resolve the PDS to its
                 // `property_definitions` slot and the SDR's literal
                 // `used_representation` to its arena entry.
-                if let (Some(&definition), Some(&used_representation)) = (
-                    ctx.property_def_step_to_id.get(&pdef_shape_ref),
-                    ctx.repr_id_map.get(&shape_rep_ref),
+                if let (Some(definition), Some(used_representation)) = (
+                    ctx.id_cache
+                        .get::<crate::ir::id::PropertyDefinitionId>(pdef_shape_ref),
+                    ctx.id_cache
+                        .get::<crate::ir::id::RepresentationId>(shape_rep_ref),
                 ) {
                     ctx.properties
                         .get_or_insert_with(crate::ir::property::PropertyPool::default)
@@ -269,9 +211,12 @@ fn classify_sdr_geometry(
     // (ABSR/MSSR/wireframe/plain). `outer_representation_id` is the outer
     // plain SR wrapper when the indirect pattern was taken — the writer
     // re-uses both cached step ids instead of re-emitting.
-    ctx.assembly_products[pid].representation_id = ctx.repr_id_map.get(&effective_ref).copied();
+    ctx.assembly_products[pid].representation_id = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(effective_ref);
     if effective_ref != shape_rep_ref {
         ctx.assembly_products[pid].outer_representation_id =
-            ctx.repr_id_map.get(&shape_rep_ref).copied();
+            ctx.id_cache
+                .get::<crate::ir::id::RepresentationId>(shape_rep_ref);
     }
 }

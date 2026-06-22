@@ -122,47 +122,6 @@ fn topo_order(graph: &EntityGraph) -> Vec<u64> {
 }
 
 impl ReaderContext {
-    /// For each CBU outer recorded in `cbu_outer_to_mwu`, look up its
-    /// conversion-factor MWU in `graph`, extract `unit_component` to get
-    /// the base SI's `entity_id`, then mutate the outer's flavor entry in
-    /// `named_units_arena` to set `cbu_base = Some(base_NamedUnitId)`.
-    fn backfill_cbu_base(&mut self, graph: &EntityGraph) {
-        use crate::ir::units::NamedUnit;
-        let pairs: Vec<(u64, u64)> = self
-            .cbu_outer_to_mwu
-            .iter()
-            .map(|(&o, &m)| (o, m))
-            .collect();
-        for (outer_id, mwu_id) in pairs {
-            let base_entity = match graph.entities.get(&mwu_id) {
-                Some(RawEntity::Simple { attributes, .. }) => {
-                    attributes.iter().find_map(|a| match a {
-                        // Typed wrapper: MEASURE_TYPE(real). Skip — that's the value.
-                        crate::parser::entity::Attribute::EntityRef(e) => Some(*e),
-                        _ => None,
-                    })
-                }
-                _ => None,
-            };
-            let Some(base_entity_id) = base_entity else {
-                continue;
-            };
-            let Some(&base_nuid) = self.named_unit_id_map.get(&base_entity_id) else {
-                continue;
-            };
-            let Some(&outer_nuid) = self.named_unit_id_map.get(&outer_id) else {
-                continue;
-            };
-            match &mut self.named_units_arena.items[outer_nuid.0 as usize] {
-                NamedUnit::Length(f) => f.cbu_base = Some(base_nuid),
-                NamedUnit::PlaneAngle(f) => f.cbu_base = Some(base_nuid),
-                NamedUnit::Mass(f) => f.cbu_base = Some(base_nuid),
-                // SolidAngle / Ratio / bare Itself have no CBU variant.
-                NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => {}
-            }
-        }
-    }
-
     /// Re-resolve `SHAPE_DIMENSION_REPRESENTATION` items deferred from the
     /// SDR handler (phase measure-arena-1). Runs once the complex
     /// `MEASURE_REPRESENTATION_ITEM` arena entries (and their
@@ -217,55 +176,15 @@ impl ReaderContext {
                     ),
                 });
         }
-        // Order-independent seeding of the CBU `conversion_factor` suppression
-        // set. Under topo the embedded MWU (a dependency) is processed before
-        // its CONVERSION_BASED_UNIT, so the set must be seeded up front or the
-        // MWU duplicates the inline conversion factor the writer re-emits.
-        self.prescan_cbu_internal_mwu_refs(graph);
         let index = build_topo_index();
         for id in order {
             let Some(ent) = graph.get(id) else { continue };
             self.dispatch_one_topo(graph, id, ent, &index);
-            // Fold the SURFACE_CURVE / SEAM_CURVE pcurve collection in at the
-            // entity's topo position (its surfaces / 2D curves are already done).
-            if let RawEntity::Simple {
-                name, attributes, ..
-            } = ent
-                && (name == "SURFACE_CURVE" || name == "SEAM_CURVE")
-            {
-                crate::entities::geometry::surface_curve::collect_surface_curve(
-                    self,
-                    id,
-                    attributes,
-                    graph,
-                    name == "SEAM_CURVE",
-                );
-            }
         }
         // Inline post-passes that `run_*_passes` ran mid-sequence — now after
-        // the single loop (all producers done; equivalent timing).
-        self.backfill_cbu_base(graph);
+        // the single loop (all producers done; equivalent timing). CBU base
+        // linkage is set inline at read time (units-CBU-①), so no backfill pass.
         self.resolve_deferred_sdr_items();
-    }
-
-    /// Seed `cbu_internal_mwu_refs` from every `CONVERSION_BASED_UNIT`'s
-    /// `conversion_factor` ref (attr index 1) so the MWU handlers suppress the
-    /// embedded duplicate regardless of dispatch order. Mirrors the insert in
-    /// `read_conversion_based_unit_body` (which fires for any CBU name,
-    /// recognised or not), just hoisted ahead of the topo loop.
-    fn prescan_cbu_internal_mwu_refs(&mut self, graph: &EntityGraph) {
-        for ent in graph.entities.values() {
-            let RawEntity::Complex { parts, .. } = ent else {
-                continue;
-            };
-            for part in parts {
-                if part.name == "CONVERSION_BASED_UNIT"
-                    && let Some(Attribute::EntityRef(r)) = part.attributes.get(1)
-                {
-                    self.cbu_internal_mwu_refs.insert(*r);
-                }
-            }
-        }
     }
 
     /// Dispatch all matching handlers for one instance, applying the
@@ -323,14 +242,16 @@ impl ReaderContext {
                     name, attributes, ..
                 },
             ) if name == entry.name => {
-                if let Err(e) = read(self, id, attributes, graph) {
+                let early = crate::early::EarlyGraph::new(graph);
+                if let Err(e) = read(self, id, attributes, early) {
                     self.record_drop_or_warn(entry, id, e, graph);
                 }
             }
             (ReadKind::Complex { cases, read }, RawEntity::Complex { parts, .. })
                 if crate::reader::matches_any_case(parts, cases) =>
             {
-                if let Err(e) = read(self, id, parts, graph) {
+                let early = crate::early::EarlyGraph::new(graph);
+                if let Err(e) = read(self, id, parts, early) {
                     self.record_drop_or_warn(entry, id, e, graph);
                 }
             }
@@ -358,10 +279,37 @@ impl ReaderContext {
             && let crate::ir::error::ConvertError::MissingReference { to, .. } = &e
             && (graph.get(*to).is_none() || self.nonstandard_dropped_refs.contains(to))
         {
-            // [NS-dangling-reference-drop]
-            self.record_nonstandard(
+            self.ns_record(
+                super::NsCase::DanglingReferenceDrop,
                 entry.name.to_string(),
                 "dropped (dangling/cascade reference)",
+            );
+            self.nonstandard_dropped_refs.insert(id);
+            return;
+        }
+        // A strict ENUM bind rejected a non-standard token. Rejecting a
+        // non-standard value is correct behaviour, so classify the drop as a
+        // NORM normalization (not a defect/LOSS); seed the id so references
+        // cascade the same way.
+        if let crate::ir::error::ConvertError::NonStandardEnumValue { .. } = &e {
+            self.ns_record(
+                super::NsCase::NonStandardEnumValue,
+                entry.name.to_string(),
+                "dropped (non-standard enum value)",
+            );
+            self.nonstandard_dropped_refs.insert(id);
+            return;
+        }
+        // A strict bind rejected a *required* field the source left `$` (Unset) —
+        // a source EXPRESS violation. Drop + seed the cascade, classified as a
+        // NORM normalization (LOSS-exempt). Gated to Simple handlers (entry.name
+        // is the exact type name there). See `reader::nonstandard`
+        // (`NS-required-field-unset`).
+        if matches!(entry.kind, ReadKind::Simple { .. }) && e.unset_required_field().is_some() {
+            self.ns_record(
+                super::NsCase::RequiredFieldUnset,
+                entry.name.to_string(),
+                "dropped (required field $)",
             );
             self.nonstandard_dropped_refs.insert(id);
             return;

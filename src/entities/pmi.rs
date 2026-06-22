@@ -5,43 +5,31 @@
 //! entity pushed into [`PmiPool`]. They have no entity references; the
 //! GD&T entities that consume them arrive in later phases.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
-use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
-use crate::ir::ShapeAspectRef;
-use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real,
-    read_real_list, read_string_or_unset,
-};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
-    AngleSelection, AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
     AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
     AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
-    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
-    AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, ApllPointWithSurfaceData,
-    AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalCharacteristic, DimensionalLocation,
-    DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
-    DimensionalSizeWithDatumFeatureData, DraughtingAnnotationOccurrence, DraughtingCallout,
-    DraughtingCalloutData, DraughtingCalloutElement, DraughtingCalloutRelationship,
-    DraughtingModelIdentifiedItem, DraughtingModelItemAssociation, DraughtingModelItemDefinition,
-    DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
-    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData, GeometricToleranceRef,
-    GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
-    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
-    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
-    PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
-    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, ApllPointElement,
+    DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalSize,
+    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCalloutData,
+    DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelItemAssociation,
+    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumReference,
+    GeometricTolerance, GeometricToleranceRef, GeometricToleranceRelationship,
+    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
+    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
+    PlainAnnotationOccurrence, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
-use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
+use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct ToleranceZoneFormHandler;
@@ -54,21 +42,18 @@ impl SimpleEntityHandler for ToleranceZoneFormHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "TOLERANCE_ZONE_FORM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .tolerance_zone_forms
-            .push(ToleranceZoneForm { name });
-        ctx.tolerance_zone_form_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_tolerance_zone_form(entity_id, attrs)?;
+        crate::early::lower::lower_tolerance_zone_form(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, tzf: ToleranceZoneForm) -> Result<u64, WriteError> {
-        Ok(buf.push_simple("TOLERANCE_ZONE_FORM", vec![Attribute::String(tzf.name)]))
+        let early = crate::early::lift::lift_tolerance_zone_form(tzf.name);
+        Ok(crate::early::serialize::serialize_tolerance_zone_form(
+            buf, &early,
+        ))
     }
 }
 
@@ -82,21 +67,18 @@ impl SimpleEntityHandler for TypeQualifierHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "TYPE_QUALIFIER")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .type_qualifiers
-            .push(TypeQualifier { name });
-        ctx.type_qualifier_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_type_qualifier(entity_id, attrs)?;
+        crate::early::lower::lower_type_qualifier(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, tq: TypeQualifier) -> Result<u64, WriteError> {
-        Ok(buf.push_simple("TYPE_QUALIFIER", vec![Attribute::String(tq.name)]))
+        let early = crate::early::lift::lift_type_qualifier(tq.name);
+        Ok(crate::early::serialize::serialize_type_qualifier(
+            buf, &early,
+        ))
     }
 }
 
@@ -110,24 +92,16 @@ impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "VALUE_FORMAT_TYPE_QUALIFIER")?;
-        let format_type = read_string_or_unset(attrs, 0, entity_id, "format_type")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .value_format_type_qualifiers
-            .push(ValueFormatTypeQualifier { format_type });
-        ctx.value_format_type_qualifier_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_value_format_type_qualifier(entity_id, attrs)?;
+        crate::early::lower::lower_value_format_type_qualifier(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, vftq: ValueFormatTypeQualifier) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "VALUE_FORMAT_TYPE_QUALIFIER",
-            vec![Attribute::String(vftq.format_type)],
-        ))
+        let early = crate::early::lift::lift_value_format_type_qualifier(vftq.format_type);
+        Ok(crate::early::serialize::serialize_value_format_type_qualifier(buf, &early))
     }
 }
 
@@ -141,23 +115,17 @@ impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "DRAUGHTING_PRE_DEFINED_TEXT_FONT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_pre_defined_text_fonts
-            .push(DraughtingPreDefinedTextFont { name });
-        ctx.dptf_id_map.insert(entity_id, id);
+        let early = bind::bind_draughting_pre_defined_text_font(entity_id, attrs)?;
+        lower::lower_draughting_pre_defined_text_font(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, font: DraughtingPreDefinedTextFont) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
-            vec![Attribute::String(font.name)],
+        let early = lift::lift_draughting_pre_defined_text_font(font.name);
+        Ok(serialize::serialize_draughting_pre_defined_text_font(
+            buf, &early,
         ))
     }
 }
@@ -165,11 +133,13 @@ impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
 pub(crate) struct AnnotationPlaneHandler;
 
 /// `ANNOTATION_PLANE(name, styles, item, elements)` — a `styled_item`
-/// subtype. `styles` resolves through `viz_psa_id_map` (like `STYLED_ITEM`)
-/// and `item` through the shared `representation_item` resolver; the 4th
-/// attribute `elements` (a `DRAUGHTING_CALLOUT` list) is not modelled and
-/// is ignored on read. An `ANNOTATION_PLANE` whose `item` does not resolve
-/// is silently dropped, symmetric on re-read.
+/// subtype, on the 2-layer path (`bind`/`lower` read, `lift`/`serialize`
+/// write). `styles` keeps only resolved `PresentationStyleAssignment` refs and
+/// `item` goes through the shared `representation_item` resolver; the 4th
+/// attribute `elements` (an `annotation_plane_element` list) is not modelled —
+/// `lower` ignores it and `lift` emits `None`, re-serialized as `$` (matching
+/// the legacy writer's unconditional unset). An `ANNOTATION_PLANE` whose `item`
+/// does not resolve is silently dropped, symmetric on re-read.
 #[step_entity(name = "ANNOTATION_PLANE")]
 impl SimpleEntityHandler for AnnotationPlaneHandler {
     type WriteInput = AnnotationPlane;
@@ -178,34 +148,10 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "ANNOTATION_PLANE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        // attr 3 (`elements`) — DRAUGHTING_CALLOUT list, not modelled.
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
-                name,
-                styles,
-                item,
-            }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_plane(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_plane(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -213,16 +159,11 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
         let item_id = buf.emit_representation_item_ref(ap.item)?;
         let mut style_refs = Vec::with_capacity(ap.styles.len());
         for psa_id in ap.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_PLANE",
-            vec![
-                Attribute::String(ap.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::Unset,
-            ],
+        let early = crate::early::lift::lift_annotation_plane(ap.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_plane(
+            buf, &early,
         ))
     }
 }
@@ -242,31 +183,10 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "TESSELLATED_ANNOTATION_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(&item) = ctx.tessellated_item_id_map.get(&item_ref) else {
-            return Ok(()); // item unresolved — drop the occurrence
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
-                TessellatedAnnotationOccurrence { name, styles, item },
-            ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = bind::bind_tessellated_annotation_occurrence(entity_id, attrs)?;
+        lower::lower_tessellated_annotation_occurrence(ctx, entity_id, early);
         Ok(())
     }
 
@@ -274,18 +194,9 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
         buf: &mut WriteBuffer,
         tao: TessellatedAnnotationOccurrence,
     ) -> Result<u64, WriteError> {
-        let item = buf.tessellated_item_step_ids[tao.item.0 as usize];
-        let mut style_refs = Vec::with_capacity(tao.styles.len());
-        for psa_id in tao.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
-        }
-        Ok(buf.push_simple(
-            "TESSELLATED_ANNOTATION_OCCURRENCE",
-            vec![
-                Attribute::String(tao.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item),
-            ],
+        Ok(serialize::serialize_tessellated_annotation_occurrence(
+            buf,
+            &lift::lift_tessellated_annotation_occurrence(buf, tao),
         ))
     }
 }
@@ -306,31 +217,10 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANNOTATION_SYMBOL_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationSymbolOccurrence(
-                AnnotationSymbolOccurrence { name, styles, item },
-            ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_symbol_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_symbol_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -338,16 +228,11 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(aso.item)?;
         let mut style_refs = Vec::with_capacity(aso.styles.len());
         for psa_id in aso.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_SYMBOL_OCCURRENCE",
-            vec![
-                Attribute::String(aso.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
-        ))
+        let early =
+            crate::early::lift::lift_annotation_symbol_occurrence(aso.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_symbol_occurrence(buf, &early))
     }
 }
 
@@ -379,32 +264,10 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
-        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
-        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
-        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationTextOccurrence(
-                AnnotationTextOccurrence { name, styles, item },
-            ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_text_occurrence(entity_id, parts)?;
+        crate::early::lower::lower_annotation_text_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -412,31 +275,11 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(ato.item)?;
         let mut style_refs = Vec::with_capacity(ato.styles.len());
         for psa_id in ato.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        // Re-emit the AND-combined complex form (alphabetical parts); data only
-        // on REPRESENTATION_ITEM (name) + STYLED_ITEM (styles, item).
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("ANNOTATION_TEXT_OCCURRENCE".into(), vec![]),
-                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(ato.name)],
-                    ),
-                    (
-                        "STYLED_ITEM".into(),
-                        vec![Attribute::List(style_refs), Attribute::EntityRef(item_id)],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let early =
+            crate::early::lift::lift_annotation_text_occurrence(ato.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_text_occurrence(buf, &early))
     }
 }
 
@@ -455,31 +298,10 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "DRAUGHTING_ANNOTATION_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::DraughtingAnnotationOccurrence(
-                DraughtingAnnotationOccurrence { name, styles, item },
-            ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_draughting_annotation_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_draughting_annotation_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -490,16 +312,12 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(dao.item)?;
         let mut style_refs = Vec::with_capacity(dao.styles.len());
         for psa_id in dao.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "DRAUGHTING_ANNOTATION_OCCURRENCE",
-            vec![
-                Attribute::String(dao.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
-        ))
+        let early = crate::early::lift::lift_draughting_annotation_occurrence(
+            dao.name, style_refs, item_id,
+        );
+        Ok(crate::early::serialize::serialize_draughting_annotation_occurrence(buf, &early))
     }
 }
 
@@ -516,70 +334,34 @@ impl SimpleEntityHandler for ApllPointHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "APLL_POINT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
-        if coords.len() != 3 {
-            return Err(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("APLL_POINT must have 3 coordinates, got {}", coords.len()),
-            });
-        }
-        let symbol_applied = read_enum(attrs, 2, entity_id, "symbol_applied")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .apll_points
-            .push(ApllPointElement::ApllPoint(ApllPointData {
-                name,
-                coordinates: Point3 {
-                    x: coords[0],
-                    y: coords[1],
-                    z: coords[2],
-                },
-                symbol_applied,
-            }));
-        ctx.apll_point_id_map.insert(entity_id, id);
+        let early = bind::bind_apll_point(entity_id, attrs)?;
+        lower::lower_apll_point(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, apll: ApllPointElement) -> Result<u64, WriteError> {
+        // The shared arena holds both subtypes; this base handler is the sole
+        // emitter and routes each variant to its own generated `serialize`
+        // (the `ApllPointWithSurfaceHandler::write` is `unreachable!`).
         match apll {
-            ApllPointElement::ApllPoint(data) => Ok(buf.push_simple(
-                "APLL_POINT",
-                vec![
-                    Attribute::String(data.name),
-                    Attribute::List(vec![
-                        Attribute::Real(data.coordinates.x),
-                        Attribute::Real(data.coordinates.y),
-                        Attribute::Real(data.coordinates.z),
-                    ]),
-                    Attribute::Enum(data.symbol_applied),
-                ],
-            )),
+            ApllPointElement::ApllPoint(data) => {
+                let early =
+                    lift::lift_apll_point(data.name, &data.coordinates, data.symbol_applied);
+                Ok(serialize::serialize_apll_point(buf, &early))
+            }
             ApllPointElement::ApllPointWithSurface(data) => {
                 // Surfaces (`face_surface`) are emitted in the topology pass,
-                // well before the PMI pass, so `face_ids` is populated here.
-                let surface_step = buf
-                    .face_ids
-                    .get(&data.associated_surface)
-                    .copied()
-                    .unwrap_or(0);
-                Ok(buf.push_simple(
-                    "APLL_POINT_WITH_SURFACE",
-                    vec![
-                        Attribute::String(data.name),
-                        Attribute::List(vec![
-                            Attribute::Real(data.coordinates.x),
-                            Attribute::Real(data.coordinates.y),
-                            Attribute::Real(data.coordinates.z),
-                        ]),
-                        Attribute::Enum(data.symbol_applied),
-                        Attribute::EntityRef(surface_step),
-                    ],
-                ))
+                // well before the PMI pass, so the step id is populated here.
+                let surface_step = buf.step_id(data.associated_surface);
+                let early = lift::lift_apll_point_with_surface(
+                    data.name,
+                    &data.coordinates,
+                    data.symbol_applied,
+                    surface_step,
+                );
+                Ok(serialize::serialize_apll_point_with_surface(buf, &early))
             }
         }
     }
@@ -600,49 +382,10 @@ impl SimpleEntityHandler for ApllPointWithSurfaceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "APLL_POINT_WITH_SURFACE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
-        if coords.len() != 3 {
-            return Err(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "APLL_POINT_WITH_SURFACE must have 3 coordinates, got {}",
-                    coords.len()
-                ),
-            });
-        }
-        let symbol_applied = read_enum(attrs, 2, entity_id, "symbol_applied")?.to_owned();
-        let surface_ref = read_entity_ref(attrs, 3, entity_id, "associated_surface")?;
-        let Some(&associated_surface) = ctx.face_map.get(&surface_ref) else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "APLL_POINT_WITH_SURFACE.associated_surface #{surface_ref} did not resolve to \
-                     a known face_surface"
-                ),
-            });
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .apll_points
-            .push(ApllPointElement::ApllPointWithSurface(
-                ApllPointWithSurfaceData {
-                    name,
-                    coordinates: Point3 {
-                        x: coords[0],
-                        y: coords[1],
-                        z: coords[2],
-                    },
-                    symbol_applied,
-                    associated_surface,
-                },
-            ));
-        ctx.apll_point_id_map.insert(entity_id, id);
+        let early = bind::bind_apll_point_with_surface(entity_id, attrs)?;
+        lower::lower_apll_point_with_surface(ctx, entity_id, early);
         Ok(())
     }
 
@@ -664,31 +407,10 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "ANNOTATION_TO_MODEL_LEADER_LINE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
-        let mut geometric_elements = Vec::with_capacity(elem_refs.len());
-        for r in elem_refs {
-            if let Some(&id) = ctx.apll_point_id_map.get(&r) {
-                geometric_elements.push(id);
-            }
-        }
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_placeholder_leader_lines
-            .push(
-                AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(
-                    AnnotationToModelLeaderLine {
-                        name,
-                        geometric_elements,
-                    },
-                ),
-            );
-        ctx.annotation_placeholder_leader_line_id_map
-            .insert(entity_id, id);
+        let early = bind::bind_annotation_to_model_leader_line(entity_id, attrs)?;
+        lower::lower_annotation_to_model_leader_line(ctx, entity_id, early);
         Ok(())
     }
 
@@ -696,41 +418,34 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
         buf: &mut WriteBuffer,
         leader: AnnotationPlaceholderLeaderLine,
     ) -> Result<u64, WriteError> {
+        // The shared arena holds both subtypes; this base handler is the sole
+        // emitter and routes each variant to its own generated `serialize`
+        // (the `AuxiliaryLeaderLineHandler::write` is `unreachable!`).
         match leader {
             AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(data) => {
-                let elem_refs = data
+                let elems = data
                     .geometric_elements
                     .iter()
-                    .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
+                    .map(|id| buf.step_id(id))
                     .collect();
-                Ok(buf.push_simple(
-                    "ANNOTATION_TO_MODEL_LEADER_LINE",
-                    vec![Attribute::String(data.name), Attribute::List(elem_refs)],
+                let early = lift::lift_annotation_to_model_leader_line(data.name, elems);
+                Ok(serialize::serialize_annotation_to_model_leader_line(
+                    buf, &early,
                 ))
             }
             AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(data) => {
-                let elem_refs = data
+                let elems = data
                     .geometric_elements
                     .iter()
-                    .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
+                    .map(|id| buf.step_id(id))
                     .collect();
                 // `controlling_leader_line` points at another member of the same
                 // arena. Topo order processes it first (lower arena index), so
-                // its step id is already in the partially-built cache; `.get`
+                // its step id is already in the partially-built cache; `.step_id`
                 // keeps any ordering violation a visible dangling 0, not a panic.
-                let controlling_step = buf
-                    .annotation_placeholder_leader_line_step_ids
-                    .get(data.controlling_leader_line.0 as usize)
-                    .copied()
-                    .unwrap_or(0);
-                Ok(buf.push_simple(
-                    "AUXILIARY_LEADER_LINE",
-                    vec![
-                        Attribute::String(data.name),
-                        Attribute::List(elem_refs),
-                        Attribute::EntityRef(controlling_step),
-                    ],
-                ))
+                let controlling_step = buf.step_id(data.controlling_leader_line);
+                let early = lift::lift_auxiliary_leader_line(data.name, elems, controlling_step);
+                Ok(serialize::serialize_auxiliary_leader_line(buf, &early))
             }
         }
     }
@@ -752,44 +467,10 @@ impl SimpleEntityHandler for AuxiliaryLeaderLineHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "AUXILIARY_LEADER_LINE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
-        let mut geometric_elements = Vec::with_capacity(elem_refs.len());
-        for r in elem_refs {
-            if let Some(&id) = ctx.apll_point_id_map.get(&r) {
-                geometric_elements.push(id);
-            }
-        }
-        let controlling_ref = read_entity_ref(attrs, 2, entity_id, "controlling_leader_line")?;
-        let Some(&controlling_leader_line) = ctx
-            .annotation_placeholder_leader_line_id_map
-            .get(&controlling_ref)
-        else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "AUXILIARY_LEADER_LINE.controlling_leader_line #{controlling_ref} did not \
-                     resolve to a known leader line"
-                ),
-            });
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_placeholder_leader_lines
-            .push(AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(
-                AuxiliaryLeaderLineData {
-                    name,
-                    geometric_elements,
-                    controlling_leader_line,
-                },
-            ));
-        ctx.annotation_placeholder_leader_line_id_map
-            .insert(entity_id, id);
+        let early = bind::bind_auxiliary_leader_line(entity_id, attrs)?;
+        lower::lower_auxiliary_leader_line(ctx, entity_id, early);
         Ok(())
     }
 
@@ -819,39 +500,10 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "ANNOTATION_PLACEHOLDER_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let role = read_enum(attrs, 3, entity_id, "role")?.to_owned();
-        let line_spacing = read_real(attrs, 4, entity_id, "line_spacing")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
-                AnnotationPlaceholderOccurrence {
-                    name,
-                    styles,
-                    item,
-                    role,
-                    line_spacing,
-                },
-            ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = bind::bind_annotation_placeholder_occurrence(entity_id, attrs)?;
+        lower::lower_annotation_placeholder_occurrence(ctx, entity_id, early);
         Ok(())
     }
 
@@ -860,19 +512,16 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
         apo: AnnotationPlaceholderOccurrence,
     ) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(apo.item)?;
-        let mut style_refs = Vec::with_capacity(apo.styles.len());
-        for psa_id in apo.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
-        }
-        Ok(buf.push_simple(
-            "ANNOTATION_PLACEHOLDER_OCCURRENCE",
-            vec![
-                Attribute::String(apo.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::Enum(apo.role),
-                Attribute::Real(apo.line_spacing),
-            ],
+        let style_refs = apo.styles.iter().map(|&psa| buf.step_id(psa)).collect();
+        let early = lift::lift_annotation_placeholder_occurrence(
+            apo.name,
+            style_refs,
+            item_id,
+            apo.role,
+            apo.line_spacing,
+        );
+        Ok(serialize::serialize_annotation_placeholder_occurrence(
+            buf, &early,
         ))
     }
 }
@@ -892,54 +541,11 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            6,
-            entity_id,
-            "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
-        )?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let role = read_enum(attrs, 3, entity_id, "role")?.to_owned();
-        let line_spacing = read_real(attrs, 4, entity_id, "line_spacing")?;
-        let leader_refs = read_entity_ref_list(attrs, 5, entity_id, "leader_line")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-        let mut leader_line = Vec::with_capacity(leader_refs.len());
-        for r in leader_refs {
-            if let Some(&id) = ctx.annotation_placeholder_leader_line_id_map.get(&r) {
-                leader_line.push(id);
-            }
-        }
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(
-                AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(
-                    AnnotationPlaceholderOccurrenceWithLeaderLine {
-                        name,
-                        styles,
-                        item,
-                        role,
-                        line_spacing,
-                        leader_line,
-                    },
-                ),
-            );
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early =
+            bind::bind_annotation_placeholder_occurrence_with_leader_line(entity_id, attrs)?;
+        lower::lower_annotation_placeholder_occurrence_with_leader_line(ctx, entity_id, early);
         Ok(())
     }
 
@@ -948,28 +554,17 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         apo: AnnotationPlaceholderOccurrenceWithLeaderLine,
     ) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(apo.item)?;
-        let mut style_refs = Vec::with_capacity(apo.styles.len());
-        for psa_id in apo.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
-        }
-        let leader_refs = apo
-            .leader_line
-            .iter()
-            .map(|id| {
-                Attribute::EntityRef(buf.annotation_placeholder_leader_line_step_ids[id.0 as usize])
-            })
-            .collect();
-        Ok(buf.push_simple(
-            "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
-            vec![
-                Attribute::String(apo.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::Enum(apo.role),
-                Attribute::Real(apo.line_spacing),
-                Attribute::List(leader_refs),
-            ],
-        ))
+        let style_refs = apo.styles.iter().map(|&psa| buf.step_id(psa)).collect();
+        let leader_line = apo.leader_line.iter().map(|id| buf.step_id(id)).collect();
+        let early = lift::lift_annotation_placeholder_occurrence_with_leader_line(
+            apo.name,
+            style_refs,
+            item_id,
+            apo.role,
+            apo.line_spacing,
+            leader_line,
+        );
+        Ok(serialize::serialize_annotation_placeholder_occurrence_with_leader_line(buf, &early))
     }
 }
 
@@ -987,33 +582,10 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANNOTATION_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::Plain(PlainAnnotationOccurrence {
-                name,
-                styles,
-                item,
-            }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -1021,15 +593,11 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(ao.item)?;
         let mut style_refs = Vec::with_capacity(ao.styles.len());
         for psa_id in ao.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_OCCURRENCE",
-            vec![
-                Attribute::String(ao.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
+        let early = crate::early::lift::lift_annotation_occurrence(ao.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_occurrence(
+            buf, &early,
         ))
     }
 }
@@ -1065,34 +633,10 @@ impl ComplexEntityHandler for LeaderCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
-        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
-        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
-        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(&item) = ctx.curve_map.get(&item_ref) else {
-            return Ok(()); // item unresolved — drop the occurrence
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_curve_occurrences
-            .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
-                name,
-                styles,
-                item,
-            }));
-        ctx.annotation_curve_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_leader_curve(entity_id, parts)?;
+        crate::early::lower::lower_leader_curve(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -1100,36 +644,10 @@ impl ComplexEntityHandler for LeaderCurveHandler {
         let curve_step = buf.emit_curve(lc.item)?;
         let mut style_refs = Vec::with_capacity(lc.styles.len());
         for psa_id in lc.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        // Re-emit the AND-combined complex form (alphabetical parts, matching the
-        // source); data only on REPRESENTATION_ITEM (name) + STYLED_ITEM
-        // (styles, item).
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("ANNOTATION_CURVE_OCCURRENCE".into(), vec![]),
-                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    ("LEADER_CURVE".into(), vec![]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(lc.name)],
-                    ),
-                    (
-                        "STYLED_ITEM".into(),
-                        vec![
-                            Attribute::List(style_refs),
-                            Attribute::EntityRef(curve_step),
-                        ],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let early = crate::early::lift::lift_leader_curve(lc.name, style_refs, curve_step);
+        Ok(crate::early::serialize::serialize_leader_curve(buf, &early))
     }
 }
 
@@ -1150,31 +668,10 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANNOTATION_CURVE_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(()); // item unresolved — drop the occurrence
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_curve_occurrences
-            .push(AnnotationCurveOccurrence::Plain(
-                PlainAnnotationCurveOccurrence { name, styles, item },
-            ));
-        ctx.annotation_curve_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_curve_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_curve_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -1185,16 +682,11 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
         let item_step = buf.emit_representation_item_ref(aco.item)?;
         let mut style_refs = Vec::with_capacity(aco.styles.len());
         for psa_id in aco.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_CURVE_OCCURRENCE",
-            vec![
-                Attribute::String(aco.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_step),
-            ],
-        ))
+        let early =
+            crate::early::lift::lift_annotation_curve_occurrence(aco.name, style_refs, item_step);
+        Ok(crate::early::serialize::serialize_annotation_curve_occurrence(buf, &early))
     }
 }
 
@@ -1214,57 +706,19 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "TERMINATOR_SYMBOL")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let ac_ref = read_entity_ref(attrs, 3, entity_id, "annotated_curve")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-        let Some(&annotated_curve) = ctx.annotation_curve_occurrence_id_map.get(&ac_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
-                name,
-                styles,
-                item,
-                annotated_curve,
-            }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = bind::bind_terminator_symbol(entity_id, attrs)?;
+        lower::lower_terminator_symbol(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ts: TerminatorSymbol) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(ts.item)?;
-        let ac_step = buf.acoc_step_ids[ts.annotated_curve.0 as usize];
-        let mut style_refs = Vec::with_capacity(ts.styles.len());
-        for psa_id in ts.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
-        }
-        Ok(buf.push_simple(
-            "TERMINATOR_SYMBOL",
-            vec![
-                Attribute::String(ts.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::EntityRef(ac_step),
-            ],
-        ))
+        let ac_step = buf.step_id(ts.annotated_curve);
+        let style_refs = ts.styles.iter().map(|&psa| buf.step_id(psa)).collect();
+        let early = lift::lift_terminator_symbol(ts.name, style_refs, item_id, ac_step);
+        Ok(serialize::serialize_terminator_symbol(buf, &early))
     }
 }
 
@@ -1298,79 +752,25 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
-        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
-        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
-        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
-        let ts = require_part_attrs(parts, "TERMINATOR_SYMBOL", entity_id)?;
-        let ac_ref = read_entity_ref(ts, 0, entity_id, "annotated_curve")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-        let Some(&annotated_curve) = ctx.annotation_curve_occurrence_id_map.get(&ac_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
-                name,
-                styles,
-                item,
-                annotated_curve,
-            }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_leader_terminator(entity_id, parts)?;
+        crate::early::lower::lower_leader_terminator(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, lt: LeaderTerminator) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(lt.item)?;
-        let ac_step = buf.acoc_step_ids[lt.annotated_curve.0 as usize];
+        let ac_step = buf.step_id(lt.annotated_curve);
         let mut style_refs = Vec::with_capacity(lt.styles.len());
         for psa_id in lt.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(buf.step_id(psa_id));
         }
-        // Re-emit the AND-combined complex form (alphabetical parts); data on
-        // REPRESENTATION_ITEM (name), STYLED_ITEM (styles, item), TERMINATOR_SYMBOL
-        // (annotated_curve).
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("ANNOTATION_SYMBOL_OCCURRENCE".into(), vec![]),
-                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    ("LEADER_TERMINATOR".into(), vec![]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(lt.name)],
-                    ),
-                    (
-                        "STYLED_ITEM".into(),
-                        vec![Attribute::List(style_refs), Attribute::EntityRef(item_id)],
-                    ),
-                    (
-                        "TERMINATOR_SYMBOL".into(),
-                        vec![Attribute::EntityRef(ac_step)],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let early =
+            crate::early::lift::lift_leader_terminator(lt.name, style_refs, item_id, ac_step);
+        Ok(crate::early::serialize::serialize_leader_terminator(
+            buf, &early,
+        ))
     }
 }
 
@@ -1378,40 +778,20 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
 /// `annotation_curve_occurrence` (`acoc_id_map`) or to an
 /// `annotation_occurrence` enum entry (`ao_id_map`). Unresolved refs are
 /// silently dropped (per-element drop, the occurrence itself is kept).
-fn read_draughting_callout_contents(
+pub(crate) fn read_draughting_callout_contents(
     ctx: &ReaderContext,
     content_refs: &[u64],
 ) -> Vec<DraughtingCalloutElement> {
     let mut contents = Vec::with_capacity(content_refs.len());
     for r in content_refs {
-        if let Some(&id) = ctx.annotation_curve_occurrence_id_map.get(r) {
-            contents.push(DraughtingCalloutElement::AnnotationCurveOccurrence(id));
-        } else if let Some(&id) = ctx.annotation_occurrence_id_map.get(r) {
-            contents.push(DraughtingCalloutElement::AnnotationOccurrence(id));
+        // Members + probe order are generated from the enum by `StepSelect`.
+        // An unmodelled select member (e.g. annotation_fill_area_occurrence)
+        // resolves to `None` and the element is dropped.
+        if let Some(elem) = DraughtingCalloutElement::resolve_select(ctx, *r) {
+            contents.push(elem);
         }
-        // else: unmodelled select member (e.g. annotation_fill_area_occurrence)
-        // — drop the element.
     }
     contents
-}
-
-/// Emit `contents` SET attribute — each `DraughtingCalloutElement`
-/// becomes an `EntityRef` into the matching step-id cache.
-fn emit_draughting_callout_contents(
-    buf: &WriteBuffer,
-    contents: &[DraughtingCalloutElement],
-) -> Vec<Attribute> {
-    let mut refs = Vec::with_capacity(contents.len());
-    for elem in contents {
-        let step = match elem {
-            DraughtingCalloutElement::AnnotationCurveOccurrence(id) => {
-                buf.acoc_step_ids[id.0 as usize]
-            }
-            DraughtingCalloutElement::AnnotationOccurrence(id) => buf.ao_step_ids[id.0 as usize],
-        };
-        refs.push(Attribute::EntityRef(step));
-    }
-    refs
 }
 
 pub(crate) struct DraughtingCalloutHandler;
@@ -1427,29 +807,22 @@ impl SimpleEntityHandler for DraughtingCalloutHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "DRAUGHTING_CALLOUT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let content_refs = read_entity_ref_list(attrs, 1, entity_id, "contents")?;
-        let contents = read_draughting_callout_contents(ctx, &content_refs);
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_callouts
-            .push(DraughtingCallout::Plain(DraughtingCalloutData {
-                name,
-                contents,
-            }));
-        ctx.draughting_callout_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_draughting_callout(entity_id, attrs)?;
+        crate::early::lower::lower_draughting_callout(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, data: DraughtingCalloutData) -> Result<u64, WriteError> {
-        let contents = emit_draughting_callout_contents(buf, &data.contents);
-        Ok(buf.push_simple(
-            "DRAUGHTING_CALLOUT",
-            vec![Attribute::String(data.name), Attribute::List(contents)],
+        let contents: Vec<u64> = data
+            .contents
+            .iter()
+            .map(|elem| elem.emit_select(buf))
+            .collect();
+        let early = crate::early::lift::lift_draughting_callout(data.name, contents);
+        Ok(crate::early::serialize::serialize_draughting_callout(
+            buf, &early,
         ))
     }
 }
@@ -1467,29 +840,22 @@ impl SimpleEntityHandler for LeaderDirectedCalloutHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "LEADER_DIRECTED_CALLOUT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let content_refs = read_entity_ref_list(attrs, 1, entity_id, "contents")?;
-        let contents = read_draughting_callout_contents(ctx, &content_refs);
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_callouts
-            .push(DraughtingCallout::LeaderDirected(DraughtingCalloutData {
-                name,
-                contents,
-            }));
-        ctx.draughting_callout_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_leader_directed_callout(entity_id, attrs)?;
+        crate::early::lower::lower_leader_directed_callout(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, data: DraughtingCalloutData) -> Result<u64, WriteError> {
-        let contents = emit_draughting_callout_contents(buf, &data.contents);
-        Ok(buf.push_simple(
-            "LEADER_DIRECTED_CALLOUT",
-            vec![Attribute::String(data.name), Attribute::List(contents)],
+        let contents: Vec<u64> = data
+            .contents
+            .iter()
+            .map(|elem| elem.emit_select(buf))
+            .collect();
+        let early = crate::early::lift::lift_leader_directed_callout(data.name, contents);
+        Ok(crate::early::serialize::serialize_leader_directed_callout(
+            buf, &early,
         ))
     }
 }
@@ -1507,62 +873,25 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "DRAUGHTING_CALLOUT_RELATIONSHIP")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_draughting_callout")?;
-        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_draughting_callout")?;
-        let Some(&relating) = ctx.draughting_callout_id_map.get(&relating_ref) else {
-            return Ok(());
-        };
-        let Some(&related) = ctx.draughting_callout_id_map.get(&related_ref) else {
-            return Ok(());
-        };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_callout_relationships
-            .push(DraughtingCalloutRelationship {
-                name,
-                description,
-                relating,
-                related,
-            });
+        let early = bind::bind_draughting_callout_relationship(entity_id, attrs)?;
+        lower::lower_draughting_callout_relationship(ctx, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, rel: DraughtingCalloutRelationship) -> Result<u64, WriteError> {
-        let relating = buf.draughting_callout_step_ids[rel.relating.0 as usize];
-        let related = buf.draughting_callout_step_ids[rel.related.0 as usize];
-        Ok(buf.push_simple(
-            "DRAUGHTING_CALLOUT_RELATIONSHIP",
-            vec![
-                Attribute::String(rel.name),
-                Attribute::String(rel.description),
-                Attribute::EntityRef(relating),
-                Attribute::EntityRef(related),
-            ],
+        let relating = buf.step_id(rel.relating);
+        let related = buf.step_id(rel.related);
+        let early = lift::lift_draughting_callout_relationship(
+            rel.name,
+            rel.description,
+            relating,
+            related,
+        );
+        Ok(serialize::serialize_draughting_callout_relationship(
+            buf, &early,
         ))
-    }
-}
-
-/// Resolve an `annotation_occurrence` reference to step-io's two annotation
-/// occurrence arenas: the [`AnnotationOccurrence`] enum
-/// (`annotation_occurrence_id_map`) or the separate
-/// `annotation_curve_occurrence` arena (`annotation_curve_occurrence_id_map`).
-/// Returns `None` for an unmodelled member (e.g.
-/// `annotation_fill_area_occurrence`).
-fn resolve_annotation_occurrence_ref(
-    ctx: &ReaderContext,
-    entity_ref: u64,
-) -> Option<AnnotationOccurrenceRef> {
-    if let Some(&id) = ctx.annotation_occurrence_id_map.get(&entity_ref) {
-        Some(AnnotationOccurrenceRef::AnnotationOccurrence(id))
-    } else {
-        ctx.annotation_curve_occurrence_id_map
-            .get(&entity_ref)
-            .map(|&id| AnnotationOccurrenceRef::AnnotationCurveOccurrence(id))
     }
 }
 
@@ -1579,42 +908,10 @@ impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "ANNOTATION_OCCURRENCE_ASSOCIATIVITY")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_annotation_occurrence")?;
-        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_annotation_occurrence")?;
-        let Some(relating) = resolve_annotation_occurrence_ref(ctx, relating_ref) else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY relating #{relating_ref} \
-                     resolves to no modelled annotation occurrence — skipping"
-                ),
-            });
-            return Ok(());
-        };
-        let Some(related) = resolve_annotation_occurrence_ref(ctx, related_ref) else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY related #{related_ref} \
-                     resolves to no modelled annotation occurrence — skipping"
-                ),
-            });
-            return Ok(());
-        };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrence_associativities
-            .push(AnnotationOccurrenceAssociativity {
-                name,
-                description,
-                relating,
-                related,
-            });
+        let early = bind::bind_annotation_occurrence_associativity(entity_id, attrs)?;
+        lower::lower_annotation_occurrence_associativity(ctx, entity_id, early);
         Ok(())
     }
 
@@ -1624,14 +921,14 @@ impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
     ) -> Result<u64, WriteError> {
         let relating = emit_annotation_occurrence_ref(buf, aoa.relating);
         let related = emit_annotation_occurrence_ref(buf, aoa.related);
-        Ok(buf.push_simple(
-            "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
-            vec![
-                Attribute::String(aoa.name),
-                Attribute::String(aoa.description),
-                Attribute::EntityRef(relating),
-                Attribute::EntityRef(related),
-            ],
+        let early = lift::lift_annotation_occurrence_associativity(
+            aoa.name,
+            aoa.description,
+            relating,
+            related,
+        );
+        Ok(serialize::serialize_annotation_occurrence_associativity(
+            buf, &early,
         ))
     }
 }
@@ -1640,10 +937,7 @@ impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
 /// occurrence, via the writer's two annotation occurrence step-id caches
 /// (`ao_step_ids` / `acoc_step_ids`).
 fn emit_annotation_occurrence_ref(buf: &WriteBuffer, r: AnnotationOccurrenceRef) -> u64 {
-    match r {
-        AnnotationOccurrenceRef::AnnotationOccurrence(id) => buf.ao_step_ids[id.0 as usize],
-        AnnotationOccurrenceRef::AnnotationCurveOccurrence(id) => buf.acoc_step_ids[id.0 as usize],
-    }
+    r.emit_select(buf)
 }
 
 pub(crate) struct MeasureQualificationHandler;
@@ -1662,58 +956,28 @@ impl SimpleEntityHandler for MeasureQualificationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "MEASURE_QUALIFICATION")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let qm_ref = read_entity_ref(attrs, 2, entity_id, "qualified_measure")?;
-        let qualifier_refs = read_entity_ref_list(attrs, 3, entity_id, "qualifiers")?;
-        let Some(&qualified_measure) = ctx.mwu_id_map.get(&qm_ref) else {
-            return Ok(());
-        };
-        let mut qualifiers = Vec::with_capacity(qualifier_refs.len());
-        for r in qualifier_refs {
-            if let Some(&id) = ctx.type_qualifier_id_map.get(&r) {
-                qualifiers.push(ValueQualifier::TypeQualifier(id));
-            } else if let Some(&id) = ctx.value_format_type_qualifier_id_map.get(&r) {
-                qualifiers.push(ValueQualifier::ValueFormatTypeQualifier(id));
-            }
-            // else: precision_qualifier / uncertainty_qualifier (corpus 0,
-            // not modelled) — silently drop the SELECT member.
-        }
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .measure_qualifications
-            .push(MeasureQualification {
-                name,
-                description,
-                qualified_measure,
-                qualifiers,
-            });
+        let early = crate::early::bind::bind_measure_qualification(entity_id, attrs)?;
+        crate::early::lower::lower_measure_qualification(ctx, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, mq: MeasureQualification) -> Result<u64, WriteError> {
-        let qm_step = buf.mwu_step_ids[mq.qualified_measure.0 as usize];
-        let mut qualifier_refs = Vec::with_capacity(mq.qualifiers.len());
-        for q in mq.qualifiers {
-            let step = match q {
-                ValueQualifier::TypeQualifier(id) => buf.type_qualifier_step_ids[id.0 as usize],
-                ValueQualifier::ValueFormatTypeQualifier(id) => {
-                    buf.value_format_type_qualifier_step_ids[id.0 as usize]
-                }
-            };
-            qualifier_refs.push(Attribute::EntityRef(step));
-        }
-        Ok(buf.push_simple(
-            "MEASURE_QUALIFICATION",
-            vec![
-                Attribute::String(mq.name),
-                Attribute::String(mq.description),
-                Attribute::EntityRef(qm_step),
-                Attribute::List(qualifier_refs),
-            ],
+        let qm_step = buf.step_id(mq.qualified_measure);
+        let qualifiers: Vec<u64> = mq
+            .qualifiers
+            .into_iter()
+            .map(|q| q.emit_select(buf))
+            .collect();
+        let early = crate::early::lift::lift_measure_qualification(
+            mq.name,
+            mq.description,
+            qm_step,
+            qualifiers,
+        );
+        Ok(crate::early::serialize::serialize_measure_qualification(
+            buf, &early,
         ))
     }
 }
@@ -1734,60 +998,29 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "PROJECTED_ZONE_DEFINITION")?;
-        let zone_ref = read_entity_ref(attrs, 0, entity_id, "zone")?;
-        let boundary_refs = read_entity_ref_list(attrs, 1, entity_id, "boundaries")?;
-        let projection_end_ref = read_entity_ref(attrs, 2, entity_id, "projection_end")?;
-        let projected_length_ref = read_entity_ref(attrs, 3, entity_id, "projected_length")?;
-        let Some(&zone) = ctx.tolerance_zone_id_map.get(&zone_ref) else {
-            return Ok(());
-        };
-        let Some(projection_end) = resolve_shape_aspect_ref(ctx, projection_end_ref) else {
-            return Ok(());
-        };
-        // projected_length is a measure_with_unit but exporters also emit the
-        // complex MEASURE_REPRESENTATION_ITEM form (in repr_item_id_map, not
-        // mwu_id_map) — resolve through both paths like a tolerance magnitude.
-        let Some(projected_length) = resolve_tolerance_magnitude(ctx, projected_length_ref) else {
-            return Ok(());
-        };
-        let mut boundaries = Vec::with_capacity(boundary_refs.len());
-        for r in boundary_refs {
-            if let Some(sar) = resolve_shape_aspect_ref(ctx, r) {
-                boundaries.push(sar);
-            }
-        }
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .tolerance_zone_definitions
-            .push(ProjectedZoneDefinition {
-                zone,
-                boundaries,
-                projection_end,
-                projected_length,
-            });
+        let early = bind::bind_projected_zone_definition(entity_id, attrs)?;
+        lower::lower_projected_zone_definition(ctx, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, pzd: ProjectedZoneDefinition) -> Result<u64, WriteError> {
-        let zone_step = buf.tolerance_zone_step_ids[pzd.zone.0 as usize];
+        let zone_step = buf.step_id(pzd.zone);
         let projection_end_step = buf.emit_shape_aspect_ref(pzd.projection_end);
         let projected_length_step = emit_tolerance_magnitude(buf, &pzd.projected_length);
-        let mut boundary_refs = Vec::with_capacity(pzd.boundaries.len());
-        for sar in pzd.boundaries {
-            boundary_refs.push(Attribute::EntityRef(buf.emit_shape_aspect_ref(sar)));
-        }
-        Ok(buf.push_simple(
-            "PROJECTED_ZONE_DEFINITION",
-            vec![
-                Attribute::EntityRef(zone_step),
-                Attribute::List(boundary_refs),
-                Attribute::EntityRef(projection_end_step),
-                Attribute::EntityRef(projected_length_step),
-            ],
-        ))
+        let boundary_steps = pzd
+            .boundaries
+            .into_iter()
+            .map(|sar| buf.emit_shape_aspect_ref(sar))
+            .collect();
+        let early = lift::lift_projected_zone_definition(
+            zone_step,
+            boundary_steps,
+            projection_end_step,
+            projected_length_step,
+        );
+        Ok(serialize::serialize_projected_zone_definition(buf, &early))
     }
 }
 
@@ -1805,28 +1038,10 @@ impl SimpleEntityHandler for GeometricToleranceRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "GEOMETRIC_TOLERANCE_RELATIONSHIP")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_geometric_tolerance")?;
-        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_geometric_tolerance")?;
-        let Some(relating) = resolve_geometric_tolerance_ref(ctx, relating_ref) else {
-            return Ok(());
-        };
-        let Some(related) = resolve_geometric_tolerance_ref(ctx, related_ref) else {
-            return Ok(());
-        };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_relationships
-            .push(GeometricToleranceRelationship {
-                name,
-                description,
-                relating,
-                related,
-            });
+        let early = crate::early::bind::bind_geometric_tolerance_relationship(entity_id, attrs)?;
+        crate::early::lower::lower_geometric_tolerance_relationship(ctx, early);
         Ok(())
     }
 
@@ -1835,26 +1050,20 @@ impl SimpleEntityHandler for GeometricToleranceRelationshipHandler {
         rel: GeometricToleranceRelationship,
     ) -> Result<u64, WriteError> {
         let relating_step = match rel.relating {
-            GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
-            GeometricToleranceRef::WithDatumReference(id) => {
-                buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
-            }
+            GeometricToleranceRef::Plain(id) => buf.step_id(id),
+            GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
         };
         let related_step = match rel.related {
-            GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
-            GeometricToleranceRef::WithDatumReference(id) => {
-                buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
-            }
+            GeometricToleranceRef::Plain(id) => buf.step_id(id),
+            GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
         };
-        Ok(buf.push_simple(
-            "GEOMETRIC_TOLERANCE_RELATIONSHIP",
-            vec![
-                Attribute::String(rel.name),
-                Attribute::String(rel.description),
-                Attribute::EntityRef(relating_step),
-                Attribute::EntityRef(related_step),
-            ],
-        ))
+        let early = crate::early::lift::lift_geometric_tolerance_relationship(
+            rel.name,
+            rel.description,
+            relating_step,
+            related_step,
+        );
+        Ok(crate::early::serialize::serialize_geometric_tolerance_relationship(buf, &early))
     }
 }
 
@@ -1884,54 +1093,22 @@ impl SimpleEntityHandler for DatumHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "DATUM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-        let identification =
-            read_string_or_unset(attrs, 4, entity_id, "identification")?.to_owned();
-
-        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(());
-        };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-            return Ok(());
-        };
-        let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .datums
-            .push(Datum {
-                name,
-                description,
-                target,
-                product_definitional,
-                identification,
-            });
-        ctx.datum_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_datum(entity_id, attrs)?;
+        crate::early::lower::lower_datum(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, input: DatumWriteInput) -> Result<u64, WriteError> {
-        let bool_attr = if input.product_definitional { "T" } else { "F" };
-        Ok(buf.push_simple(
-            "DATUM",
-            vec![
-                Attribute::String(input.name),
-                Attribute::String(input.description),
-                Attribute::EntityRef(input.pds_step_id),
-                Attribute::Enum(bool_attr.into()),
-                Attribute::String(input.identification),
-            ],
-        ))
+        let early = crate::early::lift::lift_datum(
+            input.name,
+            input.description,
+            input.pds_step_id,
+            input.product_definitional,
+            input.identification,
+        );
+        Ok(crate::early::serialize::serialize_datum(buf, &early))
     }
 }
 
@@ -1942,9 +1119,6 @@ pub(crate) struct DatumFeatureWriteInput {
     pub(crate) description: String,
     pub(crate) pds_step_id: u64,
     pub(crate) product_definitional: bool,
-    /// `DATUM_FEATURE` or `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`, resolved
-    /// from the IR `DatumFeature` variant at the emit site.
-    pub(crate) entity_name: &'static str,
 }
 
 /// `DATUM_FEATURE(name, description, of_shape, product_definitional)` — a
@@ -1964,15 +1138,11 @@ impl SimpleEntityHandler for DatumFeatureHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        read_datum_feature_variant(
-            ctx,
-            entity_id,
-            attrs,
-            "DATUM_FEATURE",
-            crate::ir::DatumFeature::Itself,
-        )
+        let early = crate::early::bind::bind_datum_feature(entity_id, attrs)?;
+        crate::early::lower::lower_datum_feature(ctx, entity_id, early);
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, input: DatumFeatureWriteInput) -> Result<u64, WriteError> {
@@ -1998,57 +1168,10 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 6, entity_id, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-        // attrs[4] = applies_to (WR1: SELF), resolved after self-registration.
-        let applies_to_ref = read_entity_ref(attrs, 4, entity_id, "applies_to")?;
-        let size_name = read_string_or_unset(attrs, 5, entity_id, "size_name")?.to_owned();
-
-        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(());
-        };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-            return Ok(());
-        };
-        let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
-            return Ok(());
-        };
-
-        // Push and register first so the WR1 self-reference resolves, then fill
-        // applies_to (chicken-and-egg: the id only exists after the push).
-        let df_id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .datum_features
-            .push(DatumFeature::DimensionalSizeWithDatumFeature(
-                DimensionalSizeWithDatumFeatureData {
-                    base: crate::ir::DatumFeatureData {
-                        name,
-                        description,
-                        target,
-                        product_definitional,
-                    },
-                    applies_to: ShapeAspectRef::DatumFeature(
-                        // placeholder, overwritten below once the id is known
-                        crate::ir::DatumFeatureId(0),
-                    ),
-                    size_name,
-                },
-            ));
-        ctx.datum_feature_id_map.insert(entity_id, df_id);
-        let applies_to = resolve_shape_aspect_ref(ctx, applies_to_ref)
-            .unwrap_or(ShapeAspectRef::DatumFeature(df_id));
-        if let DatumFeature::DimensionalSizeWithDatumFeature(d) =
-            &mut ctx.pmi.get_or_insert_with(PmiPool::default).datum_features[df_id]
-        {
-            d.applies_to = applies_to;
-        }
+        let early = bind::bind_dimensional_size_with_datum_feature(entity_id, attrs)?;
+        lower::lower_dimensional_size_with_datum_feature(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2057,104 +1180,31 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
     }
 }
 
-/// Shared 4-attr `shape_aspect` body read + arena push for the
-/// `datum_feature` family. Drops the entry when the `of_shape` chain
-/// fails to resolve (kernel-built IR / malformed sources).
-fn read_datum_feature_variant(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-    variant: fn(crate::ir::DatumFeatureData) -> DatumFeature,
-) -> Result<(), ConvertError> {
-    check_count(attrs, 4, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-    let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-
-    // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-    let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-        return Ok(());
-    };
-    let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-        return Ok(());
-    };
-    let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
-        return Ok(());
-    };
-
-    let id = ctx
-        .pmi
-        .get_or_insert_with(PmiPool::default)
-        .datum_features
-        .push(variant(crate::ir::DatumFeatureData {
-            name,
-            description,
-            target,
-            product_definitional,
-        }));
-    ctx.datum_feature_id_map.insert(entity_id, id);
-    Ok(())
-}
-
-/// Shared writer for the `datum_feature` family. The STEP entity name is
-/// resolved from the IR variant at the emit site and carried on `input`.
+/// Writer for `DATUM_FEATURE` (the only `DatumFeature::Itself` emit form; the
+/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` subtype emits via its own path).
 fn write_datum_feature(buf: &mut WriteBuffer, input: DatumFeatureWriteInput) -> u64 {
-    let bool_attr = if input.product_definitional { "T" } else { "F" };
-    buf.push_simple(
-        input.entity_name,
-        vec![
-            Attribute::String(input.name),
-            Attribute::String(input.description),
-            Attribute::EntityRef(input.pds_step_id),
-            Attribute::Enum(bool_attr.into()),
-        ],
-    )
-}
-
-/// Map a STEP `angle_relator` enum value to [`AngleSelection`].
-fn read_angle_selection(
-    attrs: &[Attribute],
-    index: usize,
-    entity_id: u64,
-    field_name: &'static str,
-) -> Result<AngleSelection, ConvertError> {
-    match read_enum(attrs, index, entity_id, field_name)? {
-        "EQUAL" => Ok(AngleSelection::Equal),
-        "LARGE" => Ok(AngleSelection::Large),
-        "SMALL" => Ok(AngleSelection::Small),
-        other => Err(ConvertError::UnexpectedEntityForm {
-            entity_id,
-            detail: format!("{field_name}: unknown angle_relator '.{other}.'"),
-        }),
-    }
-}
-
-/// [`AngleSelection`] → a STEP enum `Attribute`.
-fn angle_selection_attr(sel: AngleSelection) -> Attribute {
-    Attribute::Enum(
-        match sel {
-            AngleSelection::Equal => "EQUAL",
-            AngleSelection::Large => "LARGE",
-            AngleSelection::Small => "SMALL",
-        }
-        .into(),
-    )
+    let early = crate::early::lift::lift_datum_feature(
+        input.name,
+        input.description,
+        input.pds_step_id,
+        input.product_definitional,
+    );
+    crate::early::serialize::serialize_datum_feature(buf, &early)
 }
 
 /// Emit a `DimensionalSize` under the STEP entity name its `kind` selects.
 fn write_dimensional_size(buf: &mut WriteBuffer, ds: DimensionalSize) -> u64 {
     let applies_to = buf.emit_shape_aspect_ref(ds.applies_to);
-    let mut fields = vec![Attribute::EntityRef(applies_to), Attribute::String(ds.name)];
-    let name = match ds.kind {
-        DimensionalSizeKind::Plain => "DIMENSIONAL_SIZE",
-        DimensionalSizeKind::Angular(sel) => {
-            fields.push(angle_selection_attr(sel));
-            "ANGULAR_SIZE"
+    match ds.kind {
+        DimensionalSizeKind::Plain => {
+            let early = crate::early::lift::lift_dimensional_size(applies_to, ds.name);
+            crate::early::serialize::serialize_dimensional_size(buf, &early)
         }
-    };
-    buf.push_simple(name, fields)
+        DimensionalSizeKind::Angular(sel) => {
+            let early = crate::early::lift::lift_angular_size(applies_to, ds.name, sel);
+            crate::early::serialize::serialize_angular_size(buf, &early)
+        }
+    }
 }
 
 pub(crate) struct DimensionalSizeHandler;
@@ -2167,26 +1217,10 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "DIMENSIONAL_SIZE")?;
-        let applies_to_ref = read_entity_ref(attrs, 0, entity_id, "applies_to")?;
-        let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
-
-        let Some(applies_to) = resolve_shape_aspect_ref(ctx, applies_to_ref) else {
-            return Ok(()); // applies_to unresolved — drop the dimension
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .dimensional_sizes
-            .push(DimensionalSize {
-                applies_to,
-                name,
-                kind: DimensionalSizeKind::Plain,
-            });
-        ctx.dimensional_size_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_dimensional_size(entity_id, attrs)?;
+        crate::early::lower::lower_dimensional_size(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2205,27 +1239,10 @@ impl SimpleEntityHandler for AngularSizeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANGULAR_SIZE")?;
-        let applies_to_ref = read_entity_ref(attrs, 0, entity_id, "applies_to")?;
-        let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
-        let angle_selection = read_angle_selection(attrs, 2, entity_id, "angle_selection")?;
-
-        let Some(applies_to) = resolve_shape_aspect_ref(ctx, applies_to_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .dimensional_sizes
-            .push(DimensionalSize {
-                applies_to,
-                name,
-                kind: DimensionalSizeKind::Angular(angle_selection),
-            });
-        ctx.dimensional_size_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_angular_size(entity_id, attrs)?;
+        crate::early::lower::lower_angular_size(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2234,77 +1251,28 @@ impl SimpleEntityHandler for AngularSizeHandler {
     }
 }
 
-/// Read the shared `DIMENSIONAL_LOCATION` 4-attr body. `Ok(None)` when
-/// either endpoint does not resolve — the location is dropped, symmetric
-/// on re-read.
-fn read_dimensional_location_data(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> Result<Option<DimensionalLocationData>, ConvertError> {
-    check_count(attrs, 4, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_shape_aspect")?;
-    let related_ref = read_entity_ref(attrs, 3, entity_id, "related_shape_aspect")?;
-
-    let Some(relating_shape_aspect) = resolve_shape_aspect_ref(ctx, relating_ref) else {
-        return Ok(None);
-    };
-    let Some(related_shape_aspect) = resolve_shape_aspect_ref(ctx, related_ref) else {
-        return Ok(None);
-    };
-    Ok(Some(DimensionalLocationData {
-        name,
-        description,
-        relating_shape_aspect,
-        related_shape_aspect,
-    }))
-}
-
-/// Emit the shared 4-attr `DIMENSIONAL_LOCATION`-shaped body under `name`.
-fn write_dimensional_location_4attr(
-    buf: &mut WriteBuffer,
-    name: &str,
-    data: DimensionalLocationData,
-) -> u64 {
-    let relating = buf.emit_shape_aspect_ref(data.relating_shape_aspect);
-    let related = buf.emit_shape_aspect_ref(data.related_shape_aspect);
-    buf.push_simple(
-        name,
-        vec![
-            Attribute::String(data.name),
-            Attribute::String(data.description),
-            Attribute::EntityRef(relating),
-            Attribute::EntityRef(related),
-        ],
-    )
-}
-
 /// Emit a `DimensionalLocation` under the STEP entity name its variant
 /// selects, returning the STEP id. Shared by all three family handlers.
 fn write_dimensional_location(buf: &mut WriteBuffer, dl: DimensionalLocation) -> u64 {
     match dl {
         DimensionalLocation::Plain(d) => {
-            write_dimensional_location_4attr(buf, "DIMENSIONAL_LOCATION", d)
+            let relating = buf.emit_shape_aspect_ref(d.relating_shape_aspect);
+            let related = buf.emit_shape_aspect_ref(d.related_shape_aspect);
+            let early = crate::early::lift::lift_dimensional_location(d, relating, related);
+            crate::early::serialize::serialize_dimensional_location(buf, &early)
         }
         DimensionalLocation::Directed(d) => {
-            write_dimensional_location_4attr(buf, "DIRECTED_DIMENSIONAL_LOCATION", d)
+            let relating = buf.emit_shape_aspect_ref(d.relating_shape_aspect);
+            let related = buf.emit_shape_aspect_ref(d.related_shape_aspect);
+            let early =
+                crate::early::lift::lift_directed_dimensional_location(d, relating, related);
+            crate::early::serialize::serialize_directed_dimensional_location(buf, &early)
         }
         DimensionalLocation::Angular(d) => {
             let relating = buf.emit_shape_aspect_ref(d.relating_shape_aspect);
             let related = buf.emit_shape_aspect_ref(d.related_shape_aspect);
-            buf.push_simple(
-                "ANGULAR_LOCATION",
-                vec![
-                    Attribute::String(d.name),
-                    Attribute::String(d.description),
-                    Attribute::EntityRef(relating),
-                    Attribute::EntityRef(related),
-                    angle_selection_attr(d.angle_selection),
-                ],
-            )
+            let early = crate::early::lift::lift_angular_location(d, relating, related);
+            crate::early::serialize::serialize_angular_location(buf, &early)
         }
     }
 }
@@ -2319,19 +1287,10 @@ impl SimpleEntityHandler for DimensionalLocationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_dimensional_location_data(ctx, entity_id, attrs, "DIMENSIONAL_LOCATION")?
-        else {
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .dimensional_locations
-            .push(DimensionalLocation::Plain(data));
-        ctx.dimensional_location_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_dimensional_location(entity_id, attrs)?;
+        crate::early::lower::lower_dimensional_location(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2350,19 +1309,10 @@ impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_dimensional_location_data(ctx, entity_id, attrs, "DIRECTED_DIMENSIONAL_LOCATION")?
-        else {
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .dimensional_locations
-            .push(DimensionalLocation::Directed(data));
-        ctx.dimensional_location_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_directed_dimensional_location(entity_id, attrs)?;
+        crate::early::lower::lower_directed_dimensional_location(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2381,34 +1331,10 @@ impl SimpleEntityHandler for AngularLocationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "ANGULAR_LOCATION")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_shape_aspect")?;
-        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_shape_aspect")?;
-        let angle_selection = read_angle_selection(attrs, 4, entity_id, "angle_selection")?;
-
-        let Some(relating_shape_aspect) = resolve_shape_aspect_ref(ctx, relating_ref) else {
-            return Ok(());
-        };
-        let Some(related_shape_aspect) = resolve_shape_aspect_ref(ctx, related_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .dimensional_locations
-            .push(DimensionalLocation::Angular(AngularLocationData {
-                name,
-                description,
-                relating_shape_aspect,
-                related_shape_aspect,
-                angle_selection,
-            }));
-        ctx.dimensional_location_id_map.insert(entity_id, id);
+        let early = crate::early::bind::bind_angular_location(entity_id, attrs)?;
+        crate::early::lower::lower_angular_location(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2422,13 +1348,22 @@ impl SimpleEntityHandler for AngularLocationHandler {
 /// `MEASURE_REPRESENTATION_ITEM` (simple or complex) through the
 /// `representation_item` arena (`repr_item_id_map`). `None` when the ref
 /// resolves to neither.
-fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<ToleranceMagnitude> {
-    if let Some(&id) = ctx.mwu_id_map.get(&item_ref) {
+pub(crate) fn resolve_tolerance_magnitude(
+    ctx: &ReaderContext,
+    item_ref: u64,
+) -> Option<ToleranceMagnitude> {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::MeasureWithUnitId>(item_ref)
+    {
         return Some(ToleranceMagnitude::MeasureWithUnit(id));
     }
     // MEASURE_REPRESENTATION_ITEM lives in the representation_item arena.
     // Guard on the variant: repr_item_id_map also holds QRI / VRI.
-    if let Some(&id) = ctx.repr_item_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationItemId>(item_ref)
+    {
         if matches!(
             ctx.representation_items[id],
             crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(_)
@@ -2442,19 +1377,23 @@ fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<Tol
 /// Push a `GeometricTolerance` into the `pmi` pool and register its
 /// `#N → GeometricToleranceId` so `TOLERANCE_ZONE.defining_tolerance` can
 /// resolve a `ref_geometric_tolerance` onto it.
-fn push_geometric_tolerance(ctx: &mut ReaderContext, entity_id: u64, gt: GeometricTolerance) {
+pub(crate) fn push_geometric_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    gt: GeometricTolerance,
+) {
     let id = ctx
         .pmi
         .get_or_insert_with(PmiPool::default)
         .geometric_tolerances
         .push(gt);
-    ctx.geometric_tolerance_id_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Push a `GeometricToleranceWithDatumReference` into the `pmi` pool and
 /// register its `#N → GeometricToleranceWithDatumReferenceId` — see
 /// [`push_geometric_tolerance`].
-fn push_gt_with_datum_reference(
+pub(crate) fn push_gt_with_datum_reference(
     ctx: &mut ReaderContext,
     entity_id: u64,
     gt: GeometricToleranceWithDatumReference,
@@ -2464,8 +1403,7 @@ fn push_gt_with_datum_reference(
         .get_or_insert_with(PmiPool::default)
         .geometric_tolerance_with_datum_references
         .push(gt);
-    ctx.geometric_tolerance_with_datum_reference_id_map
-        .insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Resolve a `ref_geometric_tolerance` (`TOLERANCE_ZONE.defining_tolerance`)
@@ -2475,12 +1413,14 @@ pub(crate) fn resolve_geometric_tolerance_ref(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<GeometricToleranceRef> {
-    if let Some(&id) = ctx.geometric_tolerance_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::GeometricToleranceId>(item_ref)
+    {
         return Some(GeometricToleranceRef::Plain(id));
     }
-    ctx.geometric_tolerance_with_datum_reference_id_map
-        .get(&item_ref)
-        .copied()
+    ctx.id_cache
+        .get::<crate::ir::GeometricToleranceWithDatumReferenceId>(item_ref)
         .map(GeometricToleranceRef::WithDatumReference)
 }
 
@@ -2490,14 +1430,16 @@ pub(crate) fn resolve_geometric_tolerance_ref(
 /// PDS branch is gated on the arena variant so a tolerance targeting a non-PDS
 /// `PROPERTY_DEFINITION` (which also lives in `property_def_step_to_id`) does
 /// not mis-resolve. `None` when the ref is neither.
-fn resolve_geometric_tolerance_target(
+pub(crate) fn resolve_geometric_tolerance_target(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<GeometricToleranceTarget> {
     if let Some(sa) = resolve_shape_aspect_ref(ctx, item_ref) {
         return Some(GeometricToleranceTarget::ShapeAspect(sa));
     }
-    let &pd_id = ctx.property_def_step_to_id.get(&item_ref)?;
+    let pd_id = ctx
+        .id_cache
+        .get::<crate::ir::id::PropertyDefinitionId>(item_ref)?;
     let pool = ctx.properties.as_ref()?;
     if matches!(
         pool.property_definitions[pd_id],
@@ -2508,42 +1450,125 @@ fn resolve_geometric_tolerance_target(
     None
 }
 
-/// Read the shared `geometric_tolerance` 4-attr form-tolerance body.
-/// `Ok(None)` when `magnitude` or `toleranced_shape_aspect` does not
-/// resolve — the tolerance is dropped, symmetric on re-read.
-fn read_geometric_tolerance_data(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> Result<Option<GeometricToleranceData>, ConvertError> {
-    check_count(attrs, 4, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
-
-    let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
-        return Ok(None);
-    };
-    let Some(toleranced_shape_aspect) = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)
-    else {
-        return Ok(None);
-    };
-    Ok(Some(GeometricToleranceData {
-        name,
-        description,
-        magnitude,
-        toleranced_shape_aspect,
-        modifiers: Vec::new(),
-        unit_size: None,
-        defined_area_unit: None,
-    }))
-}
-
 /// Emit a `GeometricTolerance` under the STEP entity name its variant
 /// selects, returning the STEP id. Shared by all four form-tolerance
 /// handlers and by `emit_geometric_tolerances`.
+/// Emit a datum-free GT in its simple 4-attr form (no optional supertypes) via
+/// the generated serialize. `magnitude` / `shape_aspect` are pre-resolved step ids.
+fn write_gt_simple_form(
+    buf: &mut WriteBuffer,
+    entity_name: &str,
+    data: crate::ir::pmi::GeometricToleranceData,
+    magnitude: u64,
+    shape_aspect: u64,
+) -> u64 {
+    match entity_name {
+        "FLATNESS_TOLERANCE" => crate::early::serialize::serialize_flatness_tolerance(
+            buf,
+            &crate::early::lift::lift_flatness_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        "STRAIGHTNESS_TOLERANCE" => crate::early::serialize::serialize_straightness_tolerance(
+            buf,
+            &crate::early::lift::lift_straightness_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        "ROUNDNESS_TOLERANCE" => crate::early::serialize::serialize_roundness_tolerance(
+            buf,
+            &crate::early::lift::lift_roundness_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        "CYLINDRICITY_TOLERANCE" => crate::early::serialize::serialize_cylindricity_tolerance(
+            buf,
+            &crate::early::lift::lift_cylindricity_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        _ => crate::early::serialize::serialize_surface_profile_tolerance(
+            buf,
+            &crate::early::lift::lift_surface_profile_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+    }
+}
+
+/// Emit a migrated datum-free COMPLEX form (FLATNESS / ROUNDNESS / STRAIGHTNESS)
+/// via the generated serialize. `magnitude` / `shape_aspect` are pre-resolved
+/// step ids; the optional unit/area refs are resolved here.
+fn write_gt_data_complex_migrated(
+    buf: &mut WriteBuffer,
+    entity_name: &str,
+    data: crate::ir::pmi::GeometricToleranceData,
+    magnitude: u64,
+    shape_aspect: u64,
+) -> u64 {
+    let unit_size = data
+        .unit_size
+        .as_ref()
+        .map(|us| emit_tolerance_magnitude(buf, us));
+    let area = data.defined_area_unit.as_ref().map(|a| {
+        (
+            a.area_type.clone(),
+            a.second_unit_size
+                .as_ref()
+                .map(|s| emit_tolerance_magnitude(buf, s)),
+        )
+    });
+    match entity_name {
+        "FLATNESS_TOLERANCE" => crate::early::serialize::serialize_flatness_tolerance_complex(
+            buf,
+            &crate::early::lift::lift_flatness_tolerance_complex(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+                &data.modifiers,
+                unit_size,
+                area,
+            ),
+        ),
+        "ROUNDNESS_TOLERANCE" => crate::early::serialize::serialize_roundness_tolerance_complex(
+            buf,
+            &crate::early::lift::lift_roundness_tolerance_complex(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+                &data.modifiers,
+            ),
+        ),
+        _ => crate::early::serialize::serialize_straightness_tolerance_complex(
+            buf,
+            &crate::early::lift::lift_straightness_tolerance_complex(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+                unit_size.expect("STRAIGHTNESS complex requires unit_size"),
+            ),
+        ),
+    }
+}
+
 pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTolerance) -> u64 {
     let (entity_name, data) = match gt {
         GeometricTolerance::Flatness(d) => ("FLATNESS_TOLERANCE", d),
@@ -2556,110 +1581,30 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     // reference its cached step id. A `Measure` magnitude has no arena entry;
     // emit the (simple) MRI inline here.
     let magnitude = match data.magnitude {
-        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
-        ToleranceMagnitude::RepresentationItem(id) => {
-            buf.representation_item_step_ids[id.0 as usize]
-        }
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
+        ToleranceMagnitude::RepresentationItem(id) => buf.step_id(id),
     };
     let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
     let has_unit_size = data.unit_size.is_some();
     let has_area_unit = data.defined_area_unit.is_some();
     let has_modifiers = !data.modifiers.is_empty();
     if !has_unit_size && !has_area_unit && !has_modifiers {
-        return buf.push_simple(
-            entity_name,
-            vec![
-                Attribute::String(data.name),
-                Attribute::String(data.description),
-                Attribute::EntityRef(magnitude),
-                Attribute::EntityRef(shape_aspect),
-            ],
-        );
+        return write_gt_simple_form(buf, entity_name, data, magnitude, shape_aspect);
     }
-    // Complex MI emit. Part order follows EXPRESS supertype order:
-    // GT → [WDU] → [WDAU] → [WM] → LEAF.
-    let mut parts: Vec<(String, Vec<Attribute>)> = Vec::with_capacity(5);
-    parts.push((
-        "GEOMETRIC_TOLERANCE".into(),
-        vec![
-            Attribute::String(data.name),
-            Attribute::String(data.description),
-            Attribute::EntityRef(magnitude),
-            Attribute::EntityRef(shape_aspect),
-        ],
-    ));
-    if let Some(unit_size) = data.unit_size {
-        let unit_size_step = emit_tolerance_magnitude(buf, &unit_size);
-        parts.push((
-            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT".into(),
-            vec![Attribute::EntityRef(unit_size_step)],
-        ));
-        if let Some(area_unit) = &data.defined_area_unit {
-            parts.push((
-                "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT".into(),
-                emit_defined_area_unit(buf, area_unit),
-            ));
-        }
+    // Migrated datum-free COMPLEX leaves emit via the generated serialize
+    // (lift picks the case variant). The rest stay hand-built below.
+    if matches!(
+        entity_name,
+        "FLATNESS_TOLERANCE" | "ROUNDNESS_TOLERANCE" | "STRAIGHTNESS_TOLERANCE"
+    ) {
+        return write_gt_data_complex_migrated(buf, entity_name, data, magnitude, shape_aspect);
     }
-    if has_modifiers {
-        parts.push((
-            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
-            vec![Attribute::List(emit_modifier_set(&data.modifiers))],
-        ));
-    }
-    parts.push((entity_name.into(), vec![]));
-    let n = buf.fresh();
-    buf.entities.push(crate::writer::entity::WriterEntity {
-        id: n,
-        body: crate::writer::entity::WriterBody::Complex { parts },
-    });
-    n
-}
-
-/// Encode `DefinedAreaUnit` as the two-attr body of
-/// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT`. `second_unit_size`
-/// resolves through `emit_tolerance_magnitude` (units-pool or repr-item
-/// arena; None → `$`).
-fn emit_defined_area_unit(
-    buf: &WriteBuffer,
-    area_unit: &crate::ir::DefinedAreaUnit,
-) -> Vec<Attribute> {
-    use crate::ir::AreaUnitType;
-    let area_token = match &area_unit.area_type {
-        AreaUnitType::Circular => "CIRCULAR",
-        AreaUnitType::Rectangular => "RECTANGULAR",
-        AreaUnitType::Square => "SQUARE",
-        AreaUnitType::Other(s) => s.as_str(),
-    };
-    let second = match &area_unit.second_unit_size {
-        Some(m) => Attribute::EntityRef(emit_tolerance_magnitude(buf, m)),
-        None => Attribute::Unset,
-    };
-    vec![Attribute::Enum(area_token.into()), second]
-}
-
-/// Encode a `GeometricToleranceModifier` Vec as the `Attribute::List` that
-/// occupies attr[0] of `GEOMETRIC_TOLERANCE_WITH_MODIFIERS`. Mirrors the
-/// reader's `read_optional_modifiers` token decoding so round-trip is
-/// lossless (Other variants preserve the source token verbatim).
-fn emit_modifier_set(modifiers: &[crate::ir::GeometricToleranceModifier]) -> Vec<Attribute> {
-    use crate::ir::GeometricToleranceModifier;
-    modifiers
-        .iter()
-        .map(|m| {
-            let token = match m {
-                GeometricToleranceModifier::MaximumMaterialRequirement => {
-                    "MAXIMUM_MATERIAL_REQUIREMENT"
-                }
-                GeometricToleranceModifier::LeastMaterialRequirement => {
-                    "LEAST_MATERIAL_REQUIREMENT"
-                }
-                GeometricToleranceModifier::ReciprocityRequirement => "RECIPROCITY_REQUIREMENT",
-                GeometricToleranceModifier::Other(s) => s.as_str(),
-            };
-            Attribute::Enum(token.into())
-        })
-        .collect()
+    // CYLINDRICITY_TOLERANCE / datum-free SURFACE_PROFILE_TOLERANCE: the complex MI
+    // form (GT + WDU/WDAU/WM parts) has no read handler — it is `UnhandledComplex`
+    // (warn+drop) on read, so it is not reader-producible. A kernel-built IR that
+    // sets those parts degrades to the simple form here rather than fabricating a
+    // complex the reader cannot round-trip (symmetric with the read drop).
+    write_gt_simple_form(buf, entity_name, data, magnitude, shape_aspect)
 }
 
 pub(crate) struct FlatnessToleranceHandler;
@@ -2672,14 +1617,10 @@ impl SimpleEntityHandler for FlatnessToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "FLATNESS_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Flatness(data));
+        let early = crate::early::bind::bind_flatness_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_flatness_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2705,14 +1646,10 @@ impl SimpleEntityHandler for SurfaceProfileToleranceSimpleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "SURFACE_PROFILE_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::SurfaceProfile(data));
+        let early = crate::early::bind::bind_surface_profile_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_surface_profile_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2731,14 +1668,10 @@ impl SimpleEntityHandler for StraightnessToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "STRAIGHTNESS_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Straightness(data));
+        let early = crate::early::bind::bind_straightness_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_straightness_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2757,14 +1690,10 @@ impl SimpleEntityHandler for RoundnessToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "ROUNDNESS_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Roundness(data));
+        let early = crate::early::bind::bind_roundness_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_roundness_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2783,114 +1712,16 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "CYLINDRICITY_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Cylindricity(data));
+        let early = crate::early::bind::bind_cylindricity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_cylindricity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
         Ok(write_geometric_tolerance(buf, gt))
     }
-}
-
-/// Read the shared `general_datum_reference` 6-attr body. `Ok(None)` when
-/// `of_shape` or `base` does not resolve — the entry is dropped, symmetric
-/// on re-read. The 6th attr `modifiers` is not modelled and is ignored.
-fn read_general_datum_reference_data(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    graph: &EntityGraph,
-    entity_name: &'static str,
-) -> Result<Option<GeneralDatumReferenceData>, ConvertError> {
-    check_count(attrs, 6, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    // [NS-general-datum-reference-of-shape-unset] of_shape is a mandatory
-    // shape_aspect attribute (EXPRESS + UNIQUE constraint); some NIST exports
-    // (ctc_05) emit `$`. Classify as non-standard input rather than an
-    // AttributeType defect; the owning entity carries no resolvable product.
-    if matches!(attrs.get(2), Some(Attribute::Unset | Attribute::Derived)) {
-        ctx.record_nonstandard(
-            entity_name.into(),
-            "dropped (of_shape Unset — EXPRESS shape_aspect.of_shape required)",
-        );
-        return Ok(None);
-    }
-    let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-    let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-    // attr 5 (`modifiers`) — datum_reference_modifier set, not modelled.
-
-    // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-    let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-        return Ok(None);
-    };
-    let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-        return Ok(None);
-    };
-    let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
-        return Ok(None);
-    };
-    // base — `datum_or_common_datum` SELECT: a single `DATUM` ref, or a
-    // `COMMON_DATUM_LIST` (a Typed list of `datum_reference_element`s, an "A-B"
-    // composite datum). A base outside these forms drops the owner.
-    let base = match attrs.get(4) {
-        Some(Attribute::EntityRef(r)) => {
-            let Some(&datum_id) = ctx.datum_id_map.get(r) else {
-                return Ok(None);
-            };
-            GeneralDatumBase::Datum(datum_id)
-        }
-        Some(Attribute::Typed { type_name, value }) if type_name == "COMMON_DATUM_LIST" => {
-            let Attribute::List(items) = value.as_ref() else {
-                return Ok(None);
-            };
-            let mut ids = Vec::with_capacity(items.len());
-            for item in items {
-                let Attribute::EntityRef(r) = item else {
-                    return Ok(None);
-                };
-                let Some(&gdr_id) = ctx.general_datum_reference_id_map.get(r) else {
-                    // The member dropped. Record the cascade only when it is an
-                    // of_shape=$ sibling (NS-general-datum-reference-of-shape-unset);
-                    // a member dropped for a different reason (e.g. unmodelled
-                    // datum) stays a plain drop, not a normalization.
-                    let member_of_shape_unset = matches!(
-                        graph.get(*r),
-                        Some(RawEntity::Simple { attributes, .. })
-                            if matches!(
-                                attributes.get(2),
-                                Some(Attribute::Unset | Attribute::Derived)
-                            )
-                    );
-                    if member_of_shape_unset {
-                        ctx.record_nonstandard(
-                            entity_name.into(),
-                            "dropped (common_datum_list member of_shape Unset — cascade)",
-                        );
-                    }
-                    return Ok(None);
-                };
-                ids.push(gdr_id);
-            }
-            GeneralDatumBase::CommonDatumList(ids)
-        }
-        _ => return Ok(None),
-    };
-
-    Ok(Some(GeneralDatumReferenceData {
-        name,
-        description,
-        target,
-        product_definitional,
-        base,
-    }))
 }
 
 /// Emit a `GeneralDatumReference` under the STEP entity name its variant
@@ -2900,49 +1731,16 @@ pub(crate) fn write_general_datum_reference(
     buf: &mut WriteBuffer,
     gdr: GeneralDatumReference,
 ) -> u64 {
-    let (entity_name, data) = match gdr {
-        GeneralDatumReference::Compartment(d) => ("DATUM_REFERENCE_COMPARTMENT", d),
-        GeneralDatumReference::Element(d) => ("DATUM_REFERENCE_ELEMENT", d),
-    };
-    // `target` → PRODUCT_DEFINITION_SHAPE step id. A miss is the kernel-built
-    // IR defensive case (no product chain) — in practice unreachable, since a
-    // general_datum_reference only enters the arena once `of_shape` resolved.
-    let pds_step_id = buf
-        .product_def_shape_ids
-        .get(&data.target)
-        .copied()
-        .unwrap_or(0);
-    let base_attr = match data.base {
-        GeneralDatumBase::Datum(id) => Attribute::EntityRef(buf.datum_step_ids[id.0 as usize]),
-        GeneralDatumBase::CommonDatumList(ids) => Attribute::Typed {
-            type_name: "COMMON_DATUM_LIST".to_string(),
-            value: Box::new(Attribute::List(
-                ids.iter()
-                    .map(|id| {
-                        let step = buf.general_datum_reference_step_ids[id.0 as usize];
-                        // Invariant: list members (datum_reference_elements) are
-                        // referenced-before-referrer, so emitted first in the
-                        // arena-order loop — their step ids are non-zero here.
-                        debug_assert_ne!(step, 0, "common datum element emitted after compartment");
-                        Attribute::EntityRef(step)
-                    })
-                    .collect(),
-            )),
-        },
-    };
-    let bool_attr = if data.product_definitional { "T" } else { "F" };
-    buf.push_simple(
-        entity_name,
-        vec![
-            Attribute::String(data.name),
-            Attribute::String(data.description),
-            Attribute::EntityRef(pds_step_id),
-            Attribute::Enum(bool_attr.into()),
-            base_attr,
-            // modifiers — not modelled, always emitted as `$`.
-            Attribute::Unset,
-        ],
-    )
+    match gdr {
+        GeneralDatumReference::Compartment(d) => {
+            let early = crate::early::lift::lift_datum_reference_compartment(buf, d);
+            crate::early::serialize::serialize_datum_reference_compartment(buf, &early)
+        }
+        GeneralDatumReference::Element(d) => {
+            let early = crate::early::lift::lift_datum_reference_element(buf, d);
+            crate::early::serialize::serialize_datum_reference_element(buf, &early)
+        }
+    }
 }
 
 pub(crate) struct DatumReferenceCompartmentHandler;
@@ -2955,24 +1753,16 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_general_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            graph,
-            "DATUM_REFERENCE_COMPARTMENT",
-        )?
+        // of_shape = $ (non-standard, NIST ctc_05): the strict `bind` rejects the
+        // required ref → handler Err → dispatch's `unset_required_field` arm drops
+        // it as a RequiredFieldUnset NORM and records it in nonstandard_dropped_refs.
+        let Some(early) = crate::early::bind::bind_datum_reference_compartment(entity_id, attrs)?
         else {
             return Ok(());
         };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .general_datum_references
-            .push(GeneralDatumReference::Compartment(data));
-        ctx.general_datum_reference_id_map.insert(entity_id, id);
+        crate::early::lower::lower_datum_reference_compartment(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2991,24 +1781,15 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_general_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            graph,
-            "DATUM_REFERENCE_ELEMENT",
-        )?
+        // of_shape = $ → handler Err → dispatch's RequiredFieldUnset arm drops it
+        // (see DatumReferenceCompartmentHandler::read).
+        let Some(early) = crate::early::bind::bind_datum_reference_element(entity_id, attrs)?
         else {
             return Ok(());
         };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .general_datum_references
-            .push(GeneralDatumReference::Element(data));
-        ctx.general_datum_reference_id_map.insert(entity_id, id);
+        crate::early::lower::lower_datum_reference_element(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3026,7 +1807,7 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
 /// does not resolve; individual `datum_system` refs that do not resolve are
 /// skipped. Shared by the simple-form and complex-form readers.
 #[allow(clippy::too_many_arguments)]
-fn build_gt_with_datum_reference_data(
+pub(crate) fn build_gt_with_datum_reference_data(
     ctx: &ReaderContext,
     name: String,
     description: String,
@@ -3040,7 +1821,7 @@ fn build_gt_with_datum_reference_data(
     let toleranced_shape_aspect = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)?;
     let mut datum_system = Vec::with_capacity(datum_system_refs.len());
     for &r in datum_system_refs {
-        if let Some(&id) = ctx.datum_system_id_map.get(&r) {
+        if let Some(id) = ctx.id_cache.get::<crate::ir::DatumSystemId>(r) {
             datum_system.push(id);
         }
     }
@@ -3055,229 +1836,12 @@ fn build_gt_with_datum_reference_data(
     })
 }
 
-/// Read the simple 5-attr `geometric_tolerance_with_datum_reference` body
-/// (the form the seven direct subtypes take). `Ok(None)` when a ref does
-/// not resolve — the tolerance is dropped, symmetric on re-read.
-fn read_geometric_tolerance_with_datum_reference_data(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
-    check_count(attrs, 5, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let datum_system_refs = read_entity_ref_list(attrs, 4, entity_id, "datum_system")?;
-    Ok(build_gt_with_datum_reference_data(
-        ctx,
-        name,
-        description,
-        magnitude_ref,
-        shape_aspect_ref,
-        &datum_system_refs,
-        Vec::new(),
-        None,
-    ))
-}
-
-/// Read the multiple-inheritance complex form `(GEOMETRIC_TOLERANCE
-/// GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE <leaf>)` — the encoding
-/// `POSITION` / `SURFACE_PROFILE` / `LINE_PROFILE` tolerances take. `Ok(None)`
-/// when a ref does not resolve. An optional
-/// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS` part populates the `modifiers` Vec
-/// when present (phase gt-modifiers).
-fn read_gt_with_datum_reference_complex(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    parts: &[RawEntityPart],
-) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
-    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
-    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
-    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let gtwdr_attrs =
-        require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", entity_id)?;
-    let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
-    let modifiers = read_optional_modifiers(parts, entity_id)?;
-    let displacement = read_optional_displacement(ctx, parts, entity_id)?;
-    Ok(build_gt_with_datum_reference_data(
-        ctx,
-        name,
-        description,
-        magnitude_ref,
-        shape_aspect_ref,
-        &datum_system_refs,
-        modifiers,
-        displacement,
-    ))
-}
-
-/// Read the `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers` set from a
-/// complex MI's parts. Empty Vec when the part is absent (silent —
-/// modifier presence is optional per the ir.toml blueprint /
-/// EXPRESS ANDOR group 3). Unknown modifier tokens land in
-/// `Other(raw)` so the round-trip preserves the source text verbatim.
-fn read_optional_modifiers(
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Vec<crate::ir::GeometricToleranceModifier>, ConvertError> {
-    use crate::ir::GeometricToleranceModifier;
-    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS") else {
-        return Ok(Vec::new());
-    };
-    check_count(attrs, 1, entity_id, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS")?;
-    let Some(Attribute::List(raw)) = attrs.first() else {
-        return Ok(Vec::new());
-    };
-    let mut modifiers = Vec::with_capacity(raw.len());
-    for item in raw {
-        let token = match item {
-            Attribute::Enum(s) => s.as_str(),
-            _ => continue,
-        };
-        modifiers.push(match token {
-            "MAXIMUM_MATERIAL_REQUIREMENT" => {
-                GeometricToleranceModifier::MaximumMaterialRequirement
-            }
-            "LEAST_MATERIAL_REQUIREMENT" => GeometricToleranceModifier::LeastMaterialRequirement,
-            "RECIPROCITY_REQUIREMENT" => GeometricToleranceModifier::ReciprocityRequirement,
-            other => GeometricToleranceModifier::Other(other.to_owned()),
-        });
-    }
-    Ok(modifiers)
-}
-
-/// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size` part —
-/// `ref_measure_with_unit`. Returns `None` when the part is absent or the
-/// ref resolves to neither a units-pool `MEASURE_WITH_UNIT` nor a
-/// `MEASURE_REPRESENTATION_ITEM` (same 2-path resolution as `magnitude`).
-fn read_optional_unit_size(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Option<ToleranceMagnitude>, ConvertError> {
-    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT") else {
-        return Ok(None);
-    };
-    check_count(attrs, 1, entity_id, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")?;
-    let unit_ref = read_entity_ref(attrs, 0, entity_id, "unit_size")?;
-    Ok(resolve_tolerance_magnitude(ctx, unit_ref))
-}
-
-/// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` part —
-/// `area_type` enum + optional `second_unit_size` (`length_measure_with_unit`).
-/// The EXPRESS WHERE clause makes `second_unit_size` mandatory iff
-/// `area_type == rectangular`; reader preserves whatever the source
-/// emitted (warn on mismatch is left to future schema validation).
-fn read_optional_defined_area_unit(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Option<crate::ir::DefinedAreaUnit>, ConvertError> {
-    use crate::ir::AreaUnitType;
-    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT") else {
-        return Ok(None);
-    };
-    check_count(
-        attrs,
-        2,
-        entity_id,
-        "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
-    )?;
-    let area_type = match attrs.first() {
-        Some(Attribute::Enum(s)) => match s.as_str() {
-            "CIRCULAR" => AreaUnitType::Circular,
-            "RECTANGULAR" => AreaUnitType::Rectangular,
-            "SQUARE" => AreaUnitType::Square,
-            other => AreaUnitType::Other(other.to_owned()),
-        },
-        _ => return Ok(None),
-    };
-    let second_unit_size = match attrs.get(1) {
-        Some(Attribute::EntityRef(n)) => resolve_tolerance_magnitude(ctx, *n),
-        _ => None,
-    };
-    Ok(Some(crate::ir::DefinedAreaUnit {
-        area_type,
-        second_unit_size,
-    }))
-}
-
-/// Read the `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement` part —
-/// `ref_length_measure_with_unit`. Returns `None` when the part is absent
-/// or the ref resolves to neither a units-pool `MEASURE_WITH_UNIT` nor a
-/// `MEASURE_REPRESENTATION_ITEM` (same 2-path resolution as `magnitude`).
-fn read_optional_displacement(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Option<ToleranceMagnitude>, ConvertError> {
-    let Some(attrs) = find_part_attrs(parts, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE") else {
-        return Ok(None);
-    };
-    check_count(
-        attrs,
-        1,
-        entity_id,
-        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
-    )?;
-    let unit_ref = read_entity_ref(attrs, 0, entity_id, "displacement")?;
-    Ok(resolve_tolerance_magnitude(ctx, unit_ref))
-}
-
-/// Read the form-tolerance complex form `(GEOMETRIC_TOLERANCE
-/// [GEOMETRIC_TOLERANCE_WITH_MODIFIERS] <leaf>)` — used by the new
-/// FLATNESS / ROUNDNESS complex handlers (form-tolerance + modifier).
-fn read_gt_data_complex(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    parts: &[RawEntityPart],
-) -> Result<Option<GeometricToleranceData>, ConvertError> {
-    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
-    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
-    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
-        return Ok(None);
-    };
-    let Some(toleranced_shape_aspect) = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)
-    else {
-        return Ok(None);
-    };
-    let modifiers = read_optional_modifiers(parts, entity_id)?;
-    let unit_size = read_optional_unit_size(ctx, parts, entity_id)?;
-    // WDAU cascades from WDU per EXPRESS — drop WDAU when WDU's ref did
-    // not resolve. Mirrors the writer's nested emit (WDAU only inside
-    // the WDU branch). Without this guard, an IR with (unit_size: None,
-    // defined_area_unit: Some(_)) would write as simple form and re-read
-    // as (None, None) — IR mismatch (round-trip FAIL).
-    let defined_area_unit = if unit_size.is_some() {
-        read_optional_defined_area_unit(ctx, parts, entity_id)?
-    } else {
-        None
-    };
-    Ok(Some(GeometricToleranceData {
-        name,
-        description,
-        magnitude,
-        toleranced_shape_aspect,
-        modifiers,
-        unit_size,
-        defined_area_unit,
-    }))
-}
-
 /// Emit a `GeometricToleranceWithDatumReference`, returning the STEP id.
 /// The seven direct subtypes emit as a simple 5-attr entity; `POSITION` /
 /// `SURFACE_PROFILE` / `LINE_PROFILE` emit as the multiple-inheritance
 /// complex `(GEOMETRIC_TOLERANCE GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE
 /// <leaf>)` (parts in ISO 10303-21 alphabetical order).
+#[allow(clippy::too_many_lines)]
 pub(crate) fn write_geometric_tolerance_with_datum_reference(
     buf: &mut WriteBuffer,
     gt: GeometricToleranceWithDatumReference,
@@ -3307,65 +1871,189 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
         GeometricToleranceWithDatumReference::LineProfile(d) => ("LINE_PROFILE_TOLERANCE", true, d),
     };
     let magnitude = match data.magnitude {
-        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
-        ToleranceMagnitude::RepresentationItem(id) => {
-            buf.representation_item_step_ids[id.0 as usize]
-        }
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
+        ToleranceMagnitude::RepresentationItem(id) => buf.step_id(id),
     };
     let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
-    let mut datum_system_refs = Vec::with_capacity(data.datum_system.len());
-    for ds_id in &data.datum_system {
-        datum_system_refs.push(Attribute::EntityRef(
-            buf.datum_system_step_ids[ds_id.0 as usize],
-        ));
-    }
+    let datum_system_ids: Vec<u64> = data
+        .datum_system
+        .iter()
+        .map(|ds_id| buf.step_id(ds_id))
+        .collect();
     let force_complex = is_complex || !data.modifiers.is_empty() || data.displacement.is_some();
     if force_complex {
-        let mut parts = Vec::with_capacity(5);
-        parts.push((
-            "GEOMETRIC_TOLERANCE".into(),
-            vec![
-                Attribute::String(data.name),
-                Attribute::String(data.description),
-                Attribute::EntityRef(magnitude),
-                Attribute::EntityRef(shape_aspect),
-            ],
-        ));
-        parts.push((
-            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
-            vec![Attribute::List(datum_system_refs)],
-        ));
-        if !data.modifiers.is_empty() {
-            parts.push((
-                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
-                vec![Attribute::List(emit_modifier_set(&data.modifiers))],
-            ));
+        // Migrated WDR simple-leaf COMPLEX forms emit via the generated serialize.
+        // The rest (POSITION / SURFACE_PROFILE / LINE_PROFILE) stay hand-built below.
+        match type_name {
+            "PARALLELISM_TOLERANCE" => {
+                return crate::early::serialize::serialize_parallelism_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_parallelism_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            "PERPENDICULARITY_TOLERANCE" => {
+                return crate::early::serialize::serialize_perpendicularity_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_perpendicularity_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            "CIRCULAR_RUNOUT_TOLERANCE" => {
+                return crate::early::serialize::serialize_circular_runout_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_circular_runout_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            "POSITION_TOLERANCE" => {
+                return crate::early::serialize::serialize_position_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_position_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            "SURFACE_PROFILE_TOLERANCE" => {
+                let displacement = data
+                    .displacement
+                    .as_ref()
+                    .map(|d| emit_tolerance_magnitude(buf, d));
+                return crate::early::serialize::serialize_surface_profile_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_surface_profile_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                        displacement,
+                    ),
+                );
+            }
+            "LINE_PROFILE_TOLERANCE" => {
+                return crate::early::serialize::serialize_line_profile_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_line_profile_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                    ),
+                );
+            }
+            // ANGULARITY / CONCENTRICITY / SYMMETRY / TOTAL_RUNOUT reach here only
+            // via kernel-set modifiers/displacement; their complex MI form has no
+            // read handler (`UnhandledComplex` warn+drop on read), so it is not
+            // reader-producible. Degrade to the simple 5-attr form below rather than
+            // fabricate a complex the reader cannot round-trip (symmetric with the
+            // read drop).
+            _ => {}
         }
-        if let Some(disp) = &data.displacement {
-            let disp_step = emit_tolerance_magnitude(buf, disp);
-            parts.push((
-                "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE".into(),
-                vec![Attribute::EntityRef(disp_step)],
-            ));
+    }
+    // Simple 5-attr emit via the generated serialize. Reached by the non-complex
+    // subtypes and the degraded with-modifiers leaves above; POSITION /
+    // SURFACE_PROFILE / LINE_PROFILE always return inside the complex match.
+    {
+        use crate::early::{lift, serialize};
+        match type_name {
+            "ANGULARITY_TOLERANCE" => serialize::serialize_angularity_tolerance(
+                buf,
+                &lift::lift_angularity_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "CIRCULAR_RUNOUT_TOLERANCE" => serialize::serialize_circular_runout_tolerance(
+                buf,
+                &lift::lift_circular_runout_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "CONCENTRICITY_TOLERANCE" => serialize::serialize_concentricity_tolerance(
+                buf,
+                &lift::lift_concentricity_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "PARALLELISM_TOLERANCE" => serialize::serialize_parallelism_tolerance(
+                buf,
+                &lift::lift_parallelism_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "PERPENDICULARITY_TOLERANCE" => serialize::serialize_perpendicularity_tolerance(
+                buf,
+                &lift::lift_perpendicularity_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "SYMMETRY_TOLERANCE" => serialize::serialize_symmetry_tolerance(
+                buf,
+                &lift::lift_symmetry_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "TOTAL_RUNOUT_TOLERANCE" => serialize::serialize_total_runout_tolerance(
+                buf,
+                &lift::lift_total_runout_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            _ => unreachable!("complex-only with-datum variant reached the simple branch"),
         }
-        parts.push((type_name.into(), vec![]));
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex { parts },
-        });
-        n
-    } else {
-        buf.push_simple(
-            type_name,
-            vec![
-                Attribute::String(data.name),
-                Attribute::String(data.description),
-                Attribute::EntityRef(magnitude),
-                Attribute::EntityRef(shape_aspect),
-                Attribute::List(datum_system_refs),
-            ],
-        )
     }
 }
 
@@ -3379,22 +2067,10 @@ impl SimpleEntityHandler for AngularityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "ANGULARITY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Angularity(data),
-        );
+        let early = crate::early::bind::bind_angularity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_angularity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3416,22 +2092,10 @@ impl SimpleEntityHandler for CircularRunoutToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "CIRCULAR_RUNOUT_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::CircularRunout(data),
-        );
+        let early = crate::early::bind::bind_circular_runout_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_circular_runout_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3453,22 +2117,10 @@ impl SimpleEntityHandler for ConcentricityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "CONCENTRICITY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Concentricity(data),
-        );
+        let early = crate::early::bind::bind_concentricity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_concentricity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3490,22 +2142,10 @@ impl SimpleEntityHandler for ParallelismToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "PARALLELISM_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Parallelism(data),
-        );
+        let early = crate::early::bind::bind_parallelism_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_parallelism_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3527,22 +2167,10 @@ impl SimpleEntityHandler for PerpendicularityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "PERPENDICULARITY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Perpendicularity(data),
-        );
+        let early = crate::early::bind::bind_perpendicularity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_perpendicularity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3564,22 +2192,10 @@ impl SimpleEntityHandler for SymmetryToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "SYMMETRY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Symmetry(data),
-        );
+        let early = crate::early::bind::bind_symmetry_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_symmetry_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3601,22 +2217,10 @@ impl SimpleEntityHandler for TotalRunoutToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "TOTAL_RUNOUT_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::TotalRunout(data),
-        );
+        let early = crate::early::bind::bind_total_runout_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_total_runout_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3644,16 +2248,10 @@ impl ComplexEntityHandler for PositionToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Position(data),
-        );
+        let early = crate::early::bind::bind_position_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_position_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3682,16 +2280,10 @@ impl ComplexEntityHandler for SurfaceProfileToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::SurfaceProfile(data),
-        );
+        let early = crate::early::bind::bind_surface_profile_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_surface_profile_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3716,16 +2308,10 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::LineProfile(data),
-        );
+        let early = crate::early::bind::bind_line_profile_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_line_profile_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3743,10 +2329,8 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
 /// step id. Read-only: both step-id caches are populated by earlier passes.
 fn emit_tolerance_magnitude(buf: &WriteBuffer, m: &ToleranceMagnitude) -> u64 {
     match m {
-        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
-        ToleranceMagnitude::RepresentationItem(id) => {
-            buf.representation_item_step_ids[id.0 as usize]
-        }
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
+        ToleranceMagnitude::RepresentationItem(id) => buf.step_id(id),
     }
 }
 
@@ -3760,26 +2344,10 @@ impl SimpleEntityHandler for ToleranceValueHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "TOLERANCE_VALUE")?;
-        let lower_ref = read_entity_ref(attrs, 0, entity_id, "lower_bound")?;
-        let upper_ref = read_entity_ref(attrs, 1, entity_id, "upper_bound")?;
-        let Some(lower_bound) = resolve_tolerance_magnitude(ctx, lower_ref) else {
-            return Ok(());
-        };
-        let Some(upper_bound) = resolve_tolerance_magnitude(ctx, upper_ref) else {
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .tolerance_values
-            .push(ToleranceValue {
-                lower_bound,
-                upper_bound,
-            });
-        ctx.tolerance_value_id_map.insert(entity_id, id);
+        let early = bind::bind_tolerance_value(entity_id, attrs)?;
+        lower::lower_tolerance_value(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3792,10 +2360,8 @@ impl SimpleEntityHandler for ToleranceValueHandler {
 pub(crate) fn write_tolerance_value(buf: &mut WriteBuffer, tv: &ToleranceValue) -> u64 {
     let lower = emit_tolerance_magnitude(buf, &tv.lower_bound);
     let upper = emit_tolerance_magnitude(buf, &tv.upper_bound);
-    buf.push_simple(
-        "TOLERANCE_VALUE",
-        vec![Attribute::EntityRef(lower), Attribute::EntityRef(upper)],
-    )
+    let early = lift::lift_tolerance_value(lower, upper);
+    serialize::serialize_tolerance_value(buf, &early)
 }
 
 pub(crate) struct LimitsAndFitsHandler;
@@ -3808,24 +2374,10 @@ impl SimpleEntityHandler for LimitsAndFitsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "LIMITS_AND_FITS")?;
-        let form_variance = read_string_or_unset(attrs, 0, entity_id, "form_variance")?.to_owned();
-        let zone_variance = read_string_or_unset(attrs, 1, entity_id, "zone_variance")?.to_owned();
-        let grade = read_string_or_unset(attrs, 2, entity_id, "grade")?.to_owned();
-        let source = read_string_or_unset(attrs, 3, entity_id, "source")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .limits_and_fits
-            .push(LimitsAndFits {
-                form_variance,
-                zone_variance,
-                grade,
-                source,
-            });
-        ctx.limits_and_fits_id_map.insert(entity_id, id);
+        let early = bind::bind_limits_and_fits(entity_id, attrs)?;
+        lower::lower_limits_and_fits(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3836,29 +2388,21 @@ impl SimpleEntityHandler for LimitsAndFitsHandler {
 
 /// Emit a `LIMITS_AND_FITS`, returning the STEP id.
 pub(crate) fn write_limits_and_fits(buf: &mut WriteBuffer, lf: LimitsAndFits) -> u64 {
-    buf.push_simple(
-        "LIMITS_AND_FITS",
-        vec![
-            Attribute::String(lf.form_variance),
-            Attribute::String(lf.zone_variance),
-            Attribute::String(lf.grade),
-            Attribute::String(lf.source),
-        ],
-    )
+    let early = lift::lift_limits_and_fits(lf);
+    serialize::serialize_limits_and_fits(buf, &early)
 }
 
 /// Resolve a `tolerance_method_definition` SELECT ref (`PLUS_MINUS_TOLERANCE`'s
 /// `range`) — a `TOLERANCE_VALUE` or a `LIMITS_AND_FITS`.
-fn resolve_tolerance_method_definition(
+pub(crate) fn resolve_tolerance_method_definition(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<ToleranceMethodDefinition> {
-    if let Some(&id) = ctx.tolerance_value_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::ToleranceValueId>(item_ref) {
         return Some(ToleranceMethodDefinition::Value(id));
     }
-    ctx.limits_and_fits_id_map
-        .get(&item_ref)
-        .copied()
+    ctx.id_cache
+        .get::<crate::ir::id::LimitsAndFitsId>(item_ref)
         .map(ToleranceMethodDefinition::LimitsAndFits)
 }
 
@@ -3872,13 +2416,16 @@ pub(crate) fn resolve_dimensional_characteristic(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<DimensionalCharacteristic> {
-    if let Some(&id) = ctx.dimensional_location_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::DimensionalLocationId>(item_ref)
+    {
         return Some(DimensionalCharacteristic::Location(id));
     }
-    if let Some(&id) = ctx.dimensional_size_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(item_ref) {
         return Some(DimensionalCharacteristic::Size(id));
     }
-    if let Some(&df_id) = ctx.datum_feature_id_map.get(&item_ref)
+    if let Some(df_id) = ctx.id_cache.get::<crate::ir::DatumFeatureId>(item_ref)
         && let Some(pmi) = ctx.pmi.as_ref()
         && matches!(
             pmi.datum_features[df_id],
@@ -3900,25 +2447,10 @@ impl SimpleEntityHandler for PlusMinusToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PLUS_MINUS_TOLERANCE")?;
-        let range_ref = read_entity_ref(attrs, 0, entity_id, "range")?;
-        let dimension_ref = read_entity_ref(attrs, 1, entity_id, "toleranced_dimension")?;
-        let Some(range) = resolve_tolerance_method_definition(ctx, range_ref) else {
-            return Ok(());
-        };
-        let Some(toleranced_dimension) = resolve_dimensional_characteristic(ctx, dimension_ref)
-        else {
-            return Ok(());
-        };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .plus_minus_tolerances
-            .push(PlusMinusTolerance {
-                range,
-                toleranced_dimension,
-            });
+        let early = bind::bind_plus_minus_tolerance(entity_id, attrs)?;
+        lower::lower_plus_minus_tolerance(ctx, early);
         Ok(())
     }
 
@@ -3930,20 +2462,16 @@ impl SimpleEntityHandler for PlusMinusToleranceHandler {
 /// Emit a `PLUS_MINUS_TOLERANCE`, returning the STEP id.
 pub(crate) fn write_plus_minus_tolerance(buf: &mut WriteBuffer, pmt: &PlusMinusTolerance) -> u64 {
     let range = match pmt.range {
-        ToleranceMethodDefinition::Value(id) => buf.tolerance_value_step_ids[id.0 as usize],
-        ToleranceMethodDefinition::LimitsAndFits(id) => buf.limits_and_fits_step_ids[id.0 as usize],
+        ToleranceMethodDefinition::Value(id) => buf.step_id(id),
+        ToleranceMethodDefinition::LimitsAndFits(id) => buf.step_id(id),
     };
     let dimension = match pmt.toleranced_dimension {
-        DimensionalCharacteristic::Location(id) => buf.dimensional_location_step_ids[id.0 as usize],
-        DimensionalCharacteristic::Size(id) => buf.dimensional_size_step_ids[id.0 as usize],
-        DimensionalCharacteristic::SizeWithDatumFeature(id) => {
-            buf.datum_feature_step_ids[id.0 as usize]
-        }
+        DimensionalCharacteristic::Location(id) => buf.step_id(id),
+        DimensionalCharacteristic::Size(id) => buf.step_id(id),
+        DimensionalCharacteristic::SizeWithDatumFeature(id) => buf.step_id(id),
     };
-    buf.push_simple(
-        "PLUS_MINUS_TOLERANCE",
-        vec![Attribute::EntityRef(range), Attribute::EntityRef(dimension)],
-    )
+    let early = lift::lift_plus_minus_tolerance(range, dimension);
+    serialize::serialize_plus_minus_tolerance(buf, &early)
 }
 
 // =================================================================
@@ -3973,12 +2501,10 @@ impl ComplexEntityHandler for FlatnessToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Flatness(data));
+        let early = crate::early::bind::bind_flatness_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_flatness_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -4000,12 +2526,10 @@ impl ComplexEntityHandler for RoundnessToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Roundness(data));
+        let early = crate::early::bind::bind_roundness_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_roundness_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -4027,60 +2551,16 @@ impl ComplexEntityHandler for StraightnessToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Straightness(data));
+        let early = crate::early::bind::bind_straightness_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_straightness_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
         Ok(write_geometric_tolerance(buf, gt))
     }
-}
-
-/// Read a `geometric_tolerance_with_datum_reference` simple-leaf in
-/// complex form: GT (required) + WDR (required) + optional WM. Used by
-/// `PARALLELISM` / `PERPENDICULARITY` / `CIRCULAR_RUNOUT` complex handlers.
-/// WDR absence drops the entry with a warning — `datum_ref` simple leaves
-/// have no meaningful datum-less complex form.
-fn read_gtwdr_simple_leaf_complex(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    parts: &[RawEntityPart],
-    entity_name: &'static str,
-) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
-    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
-    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
-    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let Some(gtwdr_attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
-    else {
-        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-            entity_id,
-            detail: format!(
-                "complex {entity_name} missing GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE part"
-            ),
-        });
-        return Ok(None);
-    };
-    let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
-    let modifiers = read_optional_modifiers(parts, entity_id)?;
-    let displacement = read_optional_displacement(ctx, parts, entity_id)?;
-    Ok(build_gt_with_datum_reference_data(
-        ctx,
-        name,
-        description,
-        magnitude_ref,
-        shape_aspect_ref,
-        &datum_system_refs,
-        modifiers,
-        displacement,
-    ))
 }
 
 pub(crate) struct ParallelismToleranceComplexHandler;
@@ -4096,18 +2576,10 @@ impl ComplexEntityHandler for ParallelismToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "PARALLELISM_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Parallelism(data),
-        );
+        let early = crate::early::bind::bind_parallelism_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_parallelism_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -4132,18 +2604,10 @@ impl ComplexEntityHandler for PerpendicularityToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "PERPENDICULARITY_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Perpendicularity(data),
-        );
+        let early = crate::early::bind::bind_perpendicularity_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_perpendicularity_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -4168,18 +2632,10 @@ impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "CIRCULAR_RUNOUT_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::CircularRunout(data),
-        );
+        let early = crate::early::bind::bind_circular_runout_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_circular_runout_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -4189,70 +2645,6 @@ impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
     ) -> Result<u64, WriteError> {
         Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
     }
-}
-
-/// Read the shared 5-attribute `draughting_model_item_association` body
-/// (`name, description, definition, used_representation, identified_item`),
-/// returning `annotation_placeholder: None`. Shared by the plain DMIA handler
-/// and the `_WITH_PLACEHOLDER` subtype handler (which overrides the placeholder).
-/// Returns `Ok(None)` on any unresolved ref (drop, symmetric on re-read).
-fn read_dmia_base(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-) -> Result<Option<DraughtingModelItemAssociation>, ConvertError> {
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = match &attrs[1] {
-        Attribute::Unset => None,
-        Attribute::String(s) => Some(s.clone()),
-        _ => return Ok(None),
-    };
-    let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
-    let definition = if let Some(&id) = ctx.repr_id_map.get(&def_ref) {
-        DraughtingModelItemDefinition::Representation(id)
-    } else if let Some(&id) = ctx.dimensional_size_id_map.get(&def_ref) {
-        DraughtingModelItemDefinition::DimensionalSize(id)
-    } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, def_ref) {
-        // shape_aspect member — any concrete subtype (datum / all_around /
-        // datum_feature / …) via the shared ShapeAspectRef.
-        DraughtingModelItemDefinition::ShapeAspect(sa_ref)
-    } else if let Some(&id) = ctx.property_def_step_to_id.get(&def_ref) {
-        DraughtingModelItemDefinition::PropertyDefinition(id)
-    } else if let Some(&id) = ctx.dimensional_location_id_map.get(&def_ref) {
-        DraughtingModelItemDefinition::DimensionalLocation(id)
-    } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, def_ref) {
-        // geometric_tolerance member — Plain or WithDatumReference complex MI.
-        DraughtingModelItemDefinition::GeometricTolerance(gt_ref)
-    } else {
-        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-            entity_id,
-            detail: format!(
-                "DRAUGHTING_MODEL_ITEM_ASSOCIATION definition #{def_ref} \
-                 resolves to none of the 6 modelled SELECT members — skipping"
-            ),
-        });
-        return Ok(None);
-    };
-    let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
-    let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
-        return Ok(None);
-    };
-    let item_ref = read_entity_ref(attrs, 4, entity_id, "identified_item")?;
-    let identified_item = if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
-        DraughtingModelIdentifiedItem::AnnotationOccurrence(id)
-    } else if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
-        DraughtingModelIdentifiedItem::DraughtingCallout(id)
-    } else {
-        return Ok(None);
-    };
-    Ok(Some(DraughtingModelItemAssociation {
-        name,
-        description,
-        definition,
-        used_representation,
-        identified_item,
-        annotation_placeholder: None,
-    }))
 }
 
 pub(crate) struct DraughtingModelItemAssociationHandler;
@@ -4265,18 +2657,10 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "DRAUGHTING_MODEL_ITEM_ASSOCIATION")?;
-        let Some(dmia) = read_dmia_base(ctx, entity_id, attrs)? else {
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_model_item_associations
-            .push(dmia);
-        ctx.dmia_id_map.insert(entity_id, id);
+        let early = bind::bind_draughting_model_item_association(entity_id, attrs)?;
+        lower::lower_draughting_model_item_association(ctx, entity_id, early);
         Ok(())
     }
 
@@ -4284,55 +2668,43 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         buf: &mut WriteBuffer,
         dmia: DraughtingModelItemAssociation,
     ) -> Result<u64, WriteError> {
+        // The shared arena holds both subtypes; this base handler is the sole
+        // emitter and routes on `annotation_placeholder` to each per-name
+        // serialize (the `_WITH_PLACEHOLDER` handler's write is `unreachable!`).
         let def_step = match dmia.definition {
-            DraughtingModelItemDefinition::Representation(id) => {
-                buf.representation_step_ids[id.0 as usize]
-            }
-            DraughtingModelItemDefinition::DimensionalSize(id) => {
-                buf.dimensional_size_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::Representation(id) => buf.step_id(id),
+            DraughtingModelItemDefinition::DimensionalSize(id) => buf.step_id(id),
             DraughtingModelItemDefinition::ShapeAspect(sa_ref) => buf.emit_shape_aspect_ref(sa_ref),
-            DraughtingModelItemDefinition::PropertyDefinition(id) => {
-                buf.property_definition_step_ids[id.0 as usize]
-            }
-            DraughtingModelItemDefinition::DimensionalLocation(id) => {
-                buf.dimensional_location_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::PropertyDefinition(id) => buf.step_id(id),
+            DraughtingModelItemDefinition::DimensionalLocation(id) => buf.step_id(id),
             DraughtingModelItemDefinition::GeometricTolerance(r) => match r {
-                GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
-                GeometricToleranceRef::WithDatumReference(id) => {
-                    buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
-                }
+                GeometricToleranceRef::Plain(id) => buf.step_id(id),
+                GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
             },
         };
-        let used_step = buf.representation_step_ids[dmia.used_representation.0 as usize];
-        let item_step = match dmia.identified_item {
-            DraughtingModelIdentifiedItem::AnnotationOccurrence(id) => {
-                buf.ao_step_ids[id.0 as usize]
-            }
-            DraughtingModelIdentifiedItem::DraughtingCallout(id) => {
-                buf.draughting_callout_step_ids[id.0 as usize]
-            }
-        };
-        let description_attr = match dmia.description {
-            Some(s) => Attribute::String(s),
-            None => Attribute::Unset,
-        };
-        let mut body = vec![
-            Attribute::String(dmia.name),
-            description_attr,
-            Attribute::EntityRef(def_step),
-            Attribute::EntityRef(used_step),
-            Attribute::EntityRef(item_step),
-        ];
-        // `nested_field`: the `_WITH_PLACEHOLDER` subtype appends the
-        // annotation_placeholder ref and emits under the subtype name.
-        match dmia.annotation_placeholder {
-            Some(ph) => {
-                body.push(Attribute::EntityRef(buf.ao_step_ids[ph.0 as usize]));
-                Ok(buf.push_simple("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER", body))
-            }
-            None => Ok(buf.push_simple("DRAUGHTING_MODEL_ITEM_ASSOCIATION", body)),
+        let used_step = buf.step_id(dmia.used_representation);
+        let item_step = dmia.identified_item.emit_select(buf);
+        if let Some(ph) = dmia.annotation_placeholder {
+            let ph_step = buf.step_id(ph);
+            let early = lift::lift_dmia_with_placeholder(
+                dmia.name,
+                dmia.description,
+                def_step,
+                used_step,
+                item_step,
+                ph_step,
+            );
+            Ok(
+                serialize::serialize_draughting_model_item_association_with_placeholder(
+                    buf, &early,
+                ),
+            )
+        } else {
+            let early =
+                lift::lift_dmia(dmia.name, dmia.description, def_step, used_step, item_step);
+            Ok(serialize::serialize_draughting_model_item_association(
+                buf, &early,
+            ))
         }
     }
 }
@@ -4343,8 +2715,8 @@ pub(crate) struct DraughtingModelItemAssociationWithPlaceholderHandler;
 /// definition, used_representation, identified_item, annotation_placeholder)`
 /// — blueprint `nested_field` subtype of `DRAUGHTING_MODEL_ITEM_ASSOCIATION`
 /// carrying an `ANNOTATION_PLACEHOLDER_OCCURRENCE`. Shares the base body via
-/// [`read_dmia_base`] and the same arena / `dmia_id_map`; the writer is on the
-/// base handler (it branches on `annotation_placeholder`).
+/// `lower_dmia_common` and the same arena; the writer is on the base handler
+/// (it branches on `annotation_placeholder`).
 #[step_entity(name = "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER")]
 impl SimpleEntityHandler for DraughtingModelItemAssociationWithPlaceholderHandler {
     type WriteInput = DraughtingModelItemAssociation;
@@ -4353,38 +2725,23 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationWithPlaceholderHandle
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            6,
-            entity_id,
-            "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
-        )?;
-        let Some(mut dmia) = read_dmia_base(ctx, entity_id, attrs)? else {
-            return Ok(());
-        };
-        let ph_ref = read_entity_ref(attrs, 5, entity_id, "annotation_placeholder")?;
-        let Some(&ph_id) = ctx.annotation_occurrence_id_map.get(&ph_ref) else {
-            return Ok(());
-        };
-        dmia.annotation_placeholder = Some(ph_id);
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_model_item_associations
-            .push(dmia);
-        ctx.dmia_id_map.insert(entity_id, id);
+        let early =
+            bind::bind_draughting_model_item_association_with_placeholder(entity_id, attrs)?;
+        lower::lower_draughting_model_item_association_with_placeholder(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(
-        buf: &mut WriteBuffer,
-        dmia: DraughtingModelItemAssociation,
+        _buf: &mut WriteBuffer,
+        _dmia: DraughtingModelItemAssociation,
     ) -> Result<u64, WriteError> {
-        // Unused: the arena emit (`emit_dmia`) always routes through the base
-        // handler, which branches on `annotation_placeholder`. Delegate for
-        // trait completeness.
-        DraughtingModelItemAssociationHandler::write(buf, dmia)
+        // The arena emit (`emit_dmia`) always routes through the base handler,
+        // which branches on `annotation_placeholder` to the per-name serialize.
+        unreachable!(
+            "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER is emitted via \
+             DraughtingModelItemAssociationHandler::write"
+        )
     }
 }

@@ -10,7 +10,7 @@ use crate::ir::units::NamedUnit;
 /// units-2 helpers: resolve the first `UnitContext`'s `length / plane_angle
 /// / solid_angle` `NamedUnitId` to its enum value via the units pool.
 fn first_length(model: &StepModel) -> Option<LengthUnit> {
-    let ctx = model.units.iter().next()?;
+    let ctx = model.shape_rep.unit_contexts.iter().next()?;
     let pool = model.units_pool.as_ref()?;
     match pool.named_units[ctx.length(pool)?] {
         NamedUnit::Length(f) => Some(f.unit),
@@ -18,7 +18,7 @@ fn first_length(model: &StepModel) -> Option<LengthUnit> {
     }
 }
 fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
-    let ctx = model.units.iter().next()?;
+    let ctx = model.shape_rep.unit_contexts.iter().next()?;
     let pool = model.units_pool.as_ref()?;
     match pool.named_units[ctx.plane_angle(pool)?] {
         NamedUnit::PlaneAngle(f) => Some(f.unit),
@@ -26,7 +26,7 @@ fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
     }
 }
 fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
-    let ctx = model.units.iter().next()?;
+    let ctx = model.shape_rep.unit_contexts.iter().next()?;
     let pool = model.units_pool.as_ref()?;
     match pool.named_units[ctx.solid_angle(pool)?] {
         NamedUnit::SolidAngle(f) => Some(f.unit),
@@ -58,7 +58,7 @@ fn reads_file_header_from_fixture_pattern() {
     let src = step_with_full_header("2;1", "Author", "Acme");
     let result = convert_source(&src);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    let h = result.model.header.expect("header preserved");
+    let h = result.model.metadata.header.expect("header preserved");
     assert_eq!(h.description.as_slice(), &["FreeCAD Model".to_string()]);
     assert_eq!(h.implementation_level.as_str(), "2;1");
     assert_eq!(h.name, "Open CASCADE Shape Model");
@@ -82,7 +82,7 @@ fn reads_file_header_empty_description_list_returns_none() {
                ENDSEC;\n\
                END-ISO-10303-21;\n";
     let result = convert_source(src);
-    assert!(result.model.header.is_none());
+    assert!(result.model.metadata.header.is_none());
     assert!(
         result.warnings.iter().any(|w| matches!(
             w,
@@ -98,7 +98,7 @@ fn reads_file_header_empty_description_list_returns_none() {
 fn reads_file_header_empty_implementation_level_returns_none() {
     let src = step_with_full_header("", "Author", "Acme");
     let result = convert_source(&src);
-    assert!(result.model.header.is_none());
+    assert!(result.model.metadata.header.is_none());
     assert!(
         result.warnings.iter().any(|w| matches!(
             w,
@@ -127,8 +127,11 @@ fn preserves_ap203_ed2_schema_raw_through_convert() {
                ENDSEC;\n\
                END-ISO-10303-21;\n";
     let result = convert_source(src);
-    assert_eq!(result.model.schema.class(), Some(SchemaClass::Ap203));
-    let raw = result.model.schema.raw().expect("raw preserved");
+    assert_eq!(
+        result.model.metadata.schema.class(),
+        Some(SchemaClass::Ap203)
+    );
+    let raw = result.model.metadata.schema.raw().expect("raw preserved");
     assert_eq!(
         raw.as_slice(),
         &[
@@ -422,7 +425,10 @@ fn inch_cbu_bare_measure_with_unit_factor_round_trips() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#2) LENGTH_UNIT() NAMED_UNIT(#3) );",
     ));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         out.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4)"),
         "bare MEASURE_WITH_UNIT factor must be preserved, got:\n{out}"
@@ -435,18 +441,19 @@ fn inch_cbu_bare_measure_with_unit_factor_round_trips() {
 
 #[test]
 fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
-    // [NS-general-datum-reference-of-shape-unset] shape_aspect.of_shape is
-    // mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits `$`. Classify as a
-    // NonStandardInput drop rather than an AttributeType defect. (of_shape=$ is
-    // detected before base, so the dangling base ref is never read.)
+    // shape_aspect.of_shape is mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits
+    // `$`. The strict `bind` rejects the required ref so the dispatch
+    // `unset_required_field` arm classifies it as a RequiredFieldUnset
+    // NonStandardInput drop (not an AttributeType defect). of_shape (attr[2]) is
+    // read before base (attr[4]), so the dangling base ref is never reached.
     let result = convert_source(&minimal_step(
         "#1 = DATUM_REFERENCE_ELEMENT($,$,$,.F.,#99,$);",
     ));
     assert!(
         result.warnings.iter().all(|w| matches!(w,
             ConvertError::NonStandardInput { field, normalized_to, .. }
-                if field == "DATUM_REFERENCE_ELEMENT" && normalized_to.starts_with("dropped (of_shape Unset"))),
-        "expected only an of_shape-Unset normalization, got {:#?}",
+                if field == "DATUM_REFERENCE_ELEMENT" && normalized_to.starts_with("dropped (required field"))),
+        "expected only a required-field-unset normalization, got {:#?}",
         result.warnings
     );
     assert!(
@@ -461,7 +468,7 @@ fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
 
 #[test]
 fn psa_styles_unset_normalized_as_empty() {
-    // [NS-psa-styles-unset] mandatory `styles` SET[1:?] emitted as `$` → accept
+    // NsCase::PsaStylesUnset mandatory `styles` SET[1:?] emitted as `$` → accept
     // as empty (NonStandardInput, not a defect); the PSA survives.
     let result = convert_source(&minimal_step("#1 = PRESENTATION_STYLE_ASSIGNMENT($);"));
     assert!(
@@ -481,7 +488,7 @@ fn psa_styles_unset_normalized_as_empty() {
 
 #[test]
 fn orsi_over_ridden_style_unset_dropped_as_normalization() {
-    // [NS-orsi-over-ridden-unset] mandatory `over_ridden_style` emitted as `$` →
+    // NsCase::OrsiOverRiddenUnset mandatory `over_ridden_style` emitted as `$` →
     // drop as NonStandardInput (no over-ridden target to model), not a defect.
     let result = convert_source(&minimal_step(
         "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
@@ -505,8 +512,45 @@ fn orsi_over_ridden_style_unset_dropped_as_normalization() {
 }
 
 #[test]
+fn non_standard_required_enum_dropped_as_normalization() {
+    // NsCase::NonStandardEnumValue (required-field path) — a strict ENUM field
+    // (here `SURFACE_STYLE_USAGE.side`) given a token outside the EXPRESS
+    // enumeration. The strict bind returns `NonStandardEnumValue`; the
+    // dispatcher reclassifies the drop as a `NonStandardInput` normalization
+    // (NORM) — rejecting a non-standard value is correct, not a defect/LOSS.
+    let result = convert_source(&minimal_step("#1 = SURFACE_STYLE_USAGE(.WEIRD.,#1);"));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "SURFACE_STYLE_USAGE"
+                    && normalized_to.starts_with("dropped (non-standard enum"))),
+        "expected a non-standard-enum drop normalization, got {:#?}",
+        result.warnings
+    );
+}
+
+#[test]
+fn non_standard_marker_type_dropped_as_normalization() {
+    // NsCase::NonStandardEnumValue (SELECT path) — a marker token outside the
+    // EXPRESS `marker_type` enumeration. `bind_marker_select` yields `None` so
+    // `bind_point_style` returns `Ok(None)`; the handler records the drop as a
+    // `NonStandardInput` normalization, not a silent loss.
+    let result = convert_source(&minimal_step(
+        "#1 = POINT_STYLE('',MARKER_TYPE(.WEIRD.),$,$);",
+    ));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "POINT_STYLE"
+                    && normalized_to.starts_with("dropped (non-standard marker"))),
+        "expected a non-standard-marker drop normalization, got {:#?}",
+        result.warnings
+    );
+}
+
+#[test]
 fn pcurve_3d_in_parameter_space_dropped_as_normalization() {
-    // [NS-pcurve-3d-in-pspace] A PCURVE whose 2D parameter-space
+    // NsCase::Pcurve3dInPspace A PCURVE whose 2D parameter-space
     // DEFINITIONAL_REPRESENTATION holds a 3D curve (TRIMMED_CURVE on a 3D
     // CIRCLE / AXIS2_PLACEMENT_3D) violates EXPRESS pcurve.wr3 (dim must be 2).
     // The dropped subtree is classified as NonStandardInput "dropped", not a
@@ -1098,6 +1142,51 @@ fn unit_data(length_prefix: &str) -> String {
     )
 }
 
+/// The complex GUAC now preserves the `GEOMETRIC_REPRESENTATION_CONTEXT`
+/// dimension and the two `REPRESENTATION_CONTEXT` strings (previously dropped /
+/// hardcoded to 3 / ''), round-tripping through the generated multi-case
+/// bind / serialize.
+#[test]
+fn complex_guac_preserves_dimension_and_repr_strings() {
+    let src = minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #3 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #4 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#2,#3))\n\
+         \t\tREPRESENTATION_CONTEXT('Context #1','3D Context with UNIT') );",
+    );
+    let result = convert_source(&src);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let ctx = result
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("ctx");
+    match &ctx.form {
+        crate::ir::shape_rep::UnitContextForm::Complex {
+            coordinate_space_dimension,
+            repr_identifier,
+            repr_type,
+        } => {
+            assert_eq!(*coordinate_space_dimension, 3);
+            assert_eq!(repr_identifier, "Context #1");
+            assert_eq!(repr_type, "3D Context with UNIT");
+        }
+        crate::ir::shape_rep::UnitContextForm::Simple { .. } => {
+            panic!("expected Complex form, got Simple")
+        }
+    }
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
+    assert!(text.contains("'Context #1'"), "{text}");
+    assert!(text.contains("'3D Context with UNIT'"), "{text}");
+}
+
 #[test]
 fn unit_millimetre_radian_steradian() {
     let result = convert_source(&minimal_step(&unit_data(".MILLI.")));
@@ -1108,10 +1197,14 @@ fn unit_millimetre_radian_steradian() {
         first_solid_angle(&result.model),
         Some(SolidAngleUnit::Steradian)
     );
-    let ctx = result.model.units.iter().next().expect("ctx");
-    assert!(ctx.length_uncertainty.is_none());
-    assert!(ctx.plane_angle_uncertainty.is_none());
-    assert!(ctx.solid_angle_uncertainty.is_none());
+    let ctx = result
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("ctx");
+    assert!(ctx.uncertainty.is_empty());
 }
 
 #[test]
@@ -1150,7 +1243,8 @@ fn unit_unsupported_prefix_produces_warning_and_default_length() {
     // carries only the resolvable units — no fabricated length.
     let unit = result
         .model
-        .units
+        .shape_rep
+        .unit_contexts
         .iter()
         .next()
         .expect("unit context pushed");
@@ -1172,20 +1266,35 @@ fn partial_unit_context_omits_solid_angle_faithfully() {
     let result = convert_source(&minimal_step(data));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     let pool = result.model.units_pool.as_ref().expect("pool");
-    let ctx = result.model.units.iter().next().expect("ctx");
+    let ctx = result
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("ctx");
     assert_eq!(ctx.units.len(), 2, "only the two source units are kept");
     assert!(ctx.length(pool).is_some());
     assert!(ctx.plane_angle(pool).is_some());
     assert!(ctx.solid_angle(pool).is_none(), "no fabricated solid angle");
 
     // Round-trip: re-emit keeps the 2-unit GUAC, no SOLID_ANGLE_UNIT.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !out.contains("SOLID_ANGLE_UNIT"),
         "no fabricated SOLID_ANGLE_UNIT:\n{out}"
     );
     let re = convert_source(&out);
-    let re_ctx = re.model.units.iter().next().expect("re ctx");
+    let re_ctx = re
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("re ctx");
     assert_eq!(
         re_ctx.units.len(),
         2,
@@ -1366,7 +1475,8 @@ fn reads_unrecognized_cbu_name_warns() {
     );
     let unit = result
         .model
-        .units
+        .shape_rep
+        .unit_contexts
         .iter()
         .next()
         .expect("unit context pushed");
@@ -1430,7 +1540,7 @@ fn unit_no_global_context_is_silent() {
     // emit no warnings (silent skip).
     let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(0.,0.,0.));"));
     assert!(result.warnings.is_empty());
-    assert!(result.model.units.is_empty());
+    assert!(result.model.shape_rep.unit_contexts.is_empty());
 }
 
 #[test]
@@ -1663,6 +1773,7 @@ fn file_name_unset_string_fields_normalized_to_empty() {
     let result = convert_source(source);
     let header = result
         .model
+        .metadata
         .header
         .as_ref()
         .expect("header kept, not discarded");
@@ -1688,9 +1799,15 @@ fn file_name_unset_string_fields_normalized_to_empty() {
     );
 
     // Re-read of the written output keeps the header with no new normalization.
-    let text = result.model.write_to_string().expect("write");
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&text);
-    assert!(re.model.header.is_some(), "header survives round-trip");
+    assert!(
+        re.model.metadata.header.is_some(),
+        "header survives round-trip"
+    );
 }
 
 #[test]
@@ -1719,7 +1836,10 @@ fn curve_style_unset_curve_font_round_trips_as_none() {
     ));
 
     // Writer re-emits `$`, and re-reading yields the same `None` (idempotent).
-    let text = result.model.write_to_string().expect("write");
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("CURVE_STYLE("), "CURVE_STYLE emitted: {text}");
     let re = convert_source(&text);
     let re_cs = re
@@ -1759,7 +1879,10 @@ fn curve_style_measure_with_unit_width_round_trips() {
     );
 
     // Writer re-emits the ref and re-reading preserves the variant.
-    let text = result.model.write_to_string().expect("write");
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&text);
     let re_cs = re
         .model
@@ -1836,12 +1959,19 @@ fn surface_curve_aliases_to_inner_curve_3d() {
     );
     // Only the 3D LINE should be in the curves pool.
     assert_eq!(result.model.geometry.curves.len(), 1);
-    // The edge must point at that LINE via the SURFACE_CURVE alias.
+    // The surface-curve body drops (its only member is an unresolvable PCURVE),
+    // so the edge falls back to the 3D LINE via the `curve_3d` alias.
     assert_eq!(result.model.topology.edges.len(), 1);
     let edge = &result.model.topology.edges[crate::EdgeId(0)];
-    match &result.model.geometry.curves[edge.curve] {
+    let curve_id = match edge.edge_geometry {
+        crate::ir::topology::EdgeGeometry::Curve3d(c) => c,
+        crate::ir::topology::EdgeGeometry::SurfaceCurve(_) => {
+            panic!("surface-curve body dropped; edge should alias to the 3D curve")
+        }
+    };
+    match &result.model.geometry.curves[curve_id] {
         Curve::Line(_) => {}
-        _ => panic!("edge.curve should resolve to the aliased LINE"),
+        _ => panic!("edge_geometry should resolve to the aliased LINE"),
     }
 }
 
@@ -1854,9 +1984,9 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
     // ashtray (grabcad) and similar AP203 fixtures emit
     //   PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS(id, desc, formation, ctx, documentation_ids)
     // in the PRODUCT chain instead of plain PRODUCT_DEFINITION. The reader
-    // must accept the subtype: the entity dispatch builds pdef_to_product,
-    // and the PDS classification (pdef_shape_to_pdef map) treats the subtype
-    // as a valid PDEF target. Without this, the SDR handler skips silently
+    // must accept the subtype: the pdef lower records the typed product
+    // correspondence, and the PDS classification treats the subtype as a
+    // valid PDEF target. Without this, the SDR handler skips silently
     // and the product ends up with `geometry_context = None` plus empty
     // content - exactly the ashtray failure mode.
     let source = minimal_step(
@@ -1909,7 +2039,10 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
     );
     // Write-back re-emits the subtype (not a downgraded plain PRODUCT_DEFINITION)
     // and a full round-trip preserves the documentation_ids.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         out.contains("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"),
         "writer must re-emit the subtype, got:\n{out}"
@@ -1975,7 +2108,10 @@ fn geometric_tolerance_targets_product_definition_shape() {
     );
 
     // Writer re-emits the PDS ref and re-reading preserves the variant.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&out);
     let re_pmi = re.model.pmi.as_ref().expect("pmi pool");
     let GeometricTolerance::Flatness(rd) = re_pmi.geometric_tolerances.iter().next().unwrap()
@@ -2034,7 +2170,10 @@ fn product_definition_id_description_materialised_in_arena() {
     // Round-trip: the writer now emits id/description from the arena (Commit B),
     // so they survive write -> read (the legacy hardcoded 'design'/'' would
     // lose them).
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&out);
     let re_pd = re
         .model
@@ -2093,12 +2232,18 @@ fn gisu_unset_used_representation_derived_from_identified_item() {
     // The GISU is recovered (not dropped); its used_representation resolves to
     // the only representation in the model (the ABSR containing the solid).
     assert_eq!(
-        result.model.geometric_item_specific_usages.iter().count(),
+        result
+            .model
+            .shape_rep
+            .geometric_item_specific_usages
+            .iter()
+            .count(),
         1,
         "$-used_representation GISU recovered"
     );
     let gisu = result
         .model
+        .shape_rep
         .geometric_item_specific_usages
         .iter()
         .next()
@@ -2149,7 +2294,7 @@ fn shape_aspect_of_shape_product_definition_normalised() {
 
     // The shape_aspect is recovered (target = the product), not dropped.
     assert_eq!(
-        result.model.shape_aspects.iter().count(),
+        result.model.shape_rep.shape_aspects.iter().count(),
         1,
         "of_shape=PRODUCT_DEFINITION shape_aspect recovered"
     );
@@ -2175,7 +2320,7 @@ fn shape_aspect_of_shape_product_definition_normalised() {
     // The target resolves to the single product (the writer re-emits the
     // standard of_shape=PDS form from it). Standard-form round-trip idempotency
     // is covered on real C3D data (input-shaft) by the reference-check run.
-    let sa = result.model.shape_aspects.iter().next().unwrap();
+    let sa = result.model.shape_rep.shape_aspects.iter().next().unwrap();
     assert_eq!(
         sa.target,
         crate::ProductId(0),
@@ -2206,7 +2351,10 @@ fn pmi_validation_property_on_mbd_characterized_object_recovered() {
     let result = convert_source(&source);
 
     // The MBD complex registered a CHARACTERIZED_OBJECT facet (Itself).
-    assert_eq!(result.model.characterized_objects.iter().count(), 1);
+    assert_eq!(
+        result.model.shape_rep.characterized_objects.iter().count(),
+        1
+    );
 
     // The PD is recovered into the property arena with a CharacterizedObject
     // definition (not dropped).
@@ -2251,7 +2399,8 @@ fn shape_dimension_representation_preserves_descriptive_item() {
     let result = convert_source(&source);
 
     let sdr_items = |m: &crate::StepModel| {
-        m.representations
+        m.shape_rep
+            .representations
             .iter()
             .find_map(|r| match r {
                 Representation::ShapeDimensionRepresentation(s) => Some(s.items.clone()),
@@ -2272,7 +2421,10 @@ fn shape_dimension_representation_preserves_descriptive_item() {
 
     // Round-trip: the SDR is standalone (no product chain), so the descriptive
     // item survives write -> read.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&out);
     let re_items = sdr_items(&re.model);
     assert_eq!(items, re_items, "SDR items idempotent across round-trip");

@@ -1,11 +1,11 @@
-//! `SECURITY_CLASSIFICATION` handler plm. Depends on
-//! the security-level handler for the `security_level` ref.
+//! `SECURITY_CLASSIFICATION` handler — plm (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{PlmPool, SecurityClassification};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::SecurityClassification;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -21,34 +21,16 @@ impl SimpleEntityHandler for SecurityClassificationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "SECURITY_CLASSIFICATION")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let purpose = read_string_or_unset(attrs, 1, entity_id, "purpose")?.to_owned();
-        let level_ref = read_entity_ref(attrs, 2, entity_id, "security_level")?;
-        let Some(&security_level) = ctx.plm_security_level_id_map.get(&level_ref) else {
-            return Ok(());
-        };
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.security_classifications.push(SecurityClassification {
-            name,
-            purpose,
-            security_level,
-        });
-        ctx.plm_security_classification_id_map.insert(entity_id, id);
+        let early = bind::bind_security_classification(entity_id, attrs)?;
+        lower::lower_security_classification(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, s: SecurityClassification) -> Result<u64, WriteError> {
-        let level_step = buf.plm_security_level_step_ids[s.security_level.0 as usize];
-        Ok(buf.push_simple(
-            "SECURITY_CLASSIFICATION",
-            vec![
-                Attribute::String(s.name),
-                Attribute::String(s.purpose),
-                Attribute::EntityRef(level_step),
-            ],
-        ))
+        let level_step = buf.step_id(s.security_level);
+        let early = lift::lift_security_classification(s, level_step);
+        Ok(serialize::serialize_security_classification(buf, &early))
     }
 }

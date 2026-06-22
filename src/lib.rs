@@ -1,3 +1,4 @@
+pub(crate) mod early;
 pub mod entities;
 pub mod ir;
 pub mod parser;
@@ -22,4 +23,4 @@ pub use parser::{
     RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse, parse_bytes,
     tokenize,
 };
-pub use writer::WriteError;
+pub use writer::{LossReport, SchemaTarget, WriteError};

@@ -1,10 +1,11 @@
-//! `DOCUMENT_TYPE` handler plm Document leaf.
+//! `DOCUMENT_TYPE` handler — plm metadata leaf (2-layer path: generated
+//! bind/serialize + pass-through lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{DocumentType, PlmPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::DocumentType;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -20,21 +21,15 @@ impl SimpleEntityHandler for DocumentTypeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "DOCUMENT_TYPE")?;
-        let product_data_type =
-            read_string_or_unset(attrs, 0, entity_id, "product_data_type")?.to_owned();
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.document_types.push(DocumentType { product_data_type });
-        ctx.plm_document_type_id_map.insert(entity_id, id);
+        let early = bind::bind_document_type(entity_id, attrs)?;
+        lower::lower_document_type(ctx, entity_id, early);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, t: DocumentType) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "DOCUMENT_TYPE",
-            vec![Attribute::String(t.product_data_type)],
-        ))
+    fn write(buf: &mut WriteBuffer, v: DocumentType) -> Result<u64, WriteError> {
+        let early = lift::lift_document_type(v);
+        Ok(serialize::serialize_document_type(buf, &early))
     }
 }

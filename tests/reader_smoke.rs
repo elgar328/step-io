@@ -6,6 +6,26 @@ use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use step_io::ir::units::NamedUnit;
 use step_io::reader::ReaderContext;
 
+/// An edge's surface-curve `associated_geometry` (empty for a plain 3D-curve
+/// edge). The base/seam/subtype surface curves now live in the
+/// `surface_curves` arena, referenced through `Edge::edge_geometry`.
+fn edge_assoc<'a>(
+    model: &'a step_io::StepModel,
+    e: &step_io::Edge,
+) -> &'a [step_io::ir::PCurveOrSurface] {
+    use step_io::ir::geometry::SurfaceCurve;
+    use step_io::ir::topology::EdgeGeometry;
+    match e.edge_geometry {
+        EdgeGeometry::SurfaceCurve(scid) => match &model.geometry.surface_curves[scid] {
+            SurfaceCurve::Itself(d)
+            | SurfaceCurve::Seam(d)
+            | SurfaceCurve::BoundedSurfaceCurve(d)
+            | SurfaceCurve::IntersectionCurve(d) => &d.associated_geometry,
+        },
+        EdgeGeometry::Curve3d(_) => &[],
+    }
+}
+
 // ------------------------------------------------------------------
 // Box fixtures
 // ------------------------------------------------------------------
@@ -1030,7 +1050,7 @@ fn face_surface_ap214_is_spot_check() {
     // Round-trip the IR through the writer and check the emitted text.
     let written = result
         .model
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .expect("writer produced output");
     let face_surface_count = written.matches("FACE_SURFACE(").count();
     let advanced_face_count = written.matches("ADVANCED_FACE(").count();
@@ -1152,7 +1172,7 @@ fn offset_surface_ap214_is_spot_check() {
     // Round-trip: emitted text must preserve OFFSET_SURFACE entity name.
     let written = result
         .model
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .expect("writer produced output");
     let offset_surface_count = written.matches("OFFSET_SURFACE(").count();
     assert_eq!(
@@ -1335,7 +1355,8 @@ fn every_fixture_has_expected_units() {
             let result = ReaderContext::convert(&graph);
             let units = result
                 .model
-                .units
+                .shape_rep
+                .unit_contexts
                 .iter()
                 .next()
                 .cloned()
@@ -1378,7 +1399,7 @@ fn every_fixture_has_expected_units() {
             // Every FreeCAD fixture carries a length uncertainty. Values
             // vary per-fixture (1e-7 vs 2e-7), so just assert presence.
             assert!(
-                units.length_uncertainty.is_some(),
+                units.length_uncertainty(pool).is_some(),
                 "fixture {name}: length_uncertainty missing",
             );
         }
@@ -1560,11 +1581,7 @@ fn cylinder_ap214_is_collects_pcurves() {
         .topology
         .edges
         .iter()
-        .map(|e| {
-            e.surface_curve
-                .as_ref()
-                .map_or(0, |w| w.associated_geometry.len())
-        })
+        .map(|e| edge_assoc(&model, e).len())
         .sum();
     assert_eq!(total_pcurves, 6, "cylinder_ap214_is total pcurves");
 
@@ -1582,10 +1599,9 @@ fn cylinder_ap214_is_collects_pcurves() {
         .topology
         .edges
         .iter()
-        .find(|e| e.surface_curve.is_some())
+        .find(|e| !edge_assoc(&model, e).is_empty())
         .expect("at least one edge has a surface curve");
-    let wrapper = first.surface_curve.as_ref().unwrap();
-    let PCurveOrSurface::Pcurve(pc) = wrapper.associated_geometry[0] else {
+    let PCurveOrSurface::Pcurve(pc) = edge_assoc(&model, first)[0] else {
         panic!("cylinder_ap214_is: expected a pcurve member in associated_geometry");
     };
     let basis = pc.basis_surface;
@@ -1613,11 +1629,7 @@ fn loft_ap214_is_collects_pcurves() {
         .topology
         .edges
         .iter()
-        .map(|e| {
-            e.surface_curve
-                .as_ref()
-                .map_or(0, |w| w.associated_geometry.len())
-        })
+        .map(|e| edge_assoc(&model, e).len())
         .sum();
     assert!(
         total_pcurves > 20,
@@ -1686,11 +1698,7 @@ fn pcurve_fixtures_convert_without_warnings() {
             .topology
             .edges
             .iter()
-            .map(|e| {
-                e.surface_curve
-                    .as_ref()
-                    .map_or(0, |w| w.associated_geometry.len())
-            })
+            .map(|e| edge_assoc(&result.model, e).len())
             .sum();
         assert!(
             total > 0,
@@ -1781,8 +1789,12 @@ fn nist_property_def_datum_systems() {
     let source = include_str!("fixtures/external_temp_nist_property_def.stp");
     let graph = step_io::parse(source).expect("parse failed");
     let result = ReaderContext::convert(&graph);
-    assert_eq!(result.model.datum_systems.len(), 9, "DATUM_SYSTEM count");
-    for ds in result.model.datum_systems.iter() {
+    assert_eq!(
+        result.model.shape_rep.datum_systems.len(),
+        9,
+        "DATUM_SYSTEM count"
+    );
+    for ds in result.model.shape_rep.datum_systems.iter() {
         assert!(
             !ds.constituents.is_empty(),
             "DATUM_SYSTEM constituents should resolve"
@@ -1801,12 +1813,13 @@ fn nist_property_def_tolerance_zones() {
     let graph = step_io::parse(source).expect("parse failed");
     let result = ReaderContext::convert(&graph);
     assert_eq!(
-        result.model.tolerance_zones.len(),
+        result.model.shape_rep.tolerance_zones.len(),
         7,
         "TOLERANCE_ZONE count"
     );
     let resolved = result
         .model
+        .shape_rep
         .tolerance_zones
         .iter()
         .filter(|tz| !tz.defining_tolerance.is_empty())

@@ -3,13 +3,11 @@
 //! into a named composite. Pushes into the shared `founded_item` arena
 //! as the `SurfaceSideStyle` variant.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{
-    FoundedItem, SurfaceSideStyle, SurfaceSideStyleEntry, VisualizationPool,
-};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::visualization::SurfaceSideStyle;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -26,46 +24,20 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "SURFACE_SIDE_STYLE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(&ssfa_id) = ctx.viz_ssfa_id_map.get(&r) {
-                styles.push(SurfaceSideStyleEntry::FillArea(ssfa_id));
-            } else if let Some(&ssr_id) = ctx.viz_ssr_id_map.get(&r) {
-                styles.push(SurfaceSideStyleEntry::Rendering(ssr_id));
-            }
-        }
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
-            .founded_items
-            .push(FoundedItem::SurfaceSideStyle(SurfaceSideStyle {
-                name,
-                styles,
-            }));
-        ctx.viz_sss_id_map.insert(entity_id, id);
+        // 2-layer path: bind → L1, then lower → L2. `lower` disambiguates each
+        // style member by L1 type — `FillArea` via the typed
+        // `EarlySurfaceStyleFillAreaId` cache bucket (no `viz_ssfa_id_map`),
+        // `Rendering` via the existing `SurfaceStyleRenderingId` bucket.
+        let early = bind::bind_surface_side_style(entity_id, attrs)?;
+        lower::lower_surface_side_style(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, sss: SurfaceSideStyle) -> Result<u64, WriteError> {
-        let mut style_refs = Vec::with_capacity(sss.styles.len());
-        for entry in sss.styles {
-            let entry_id = match entry {
-                SurfaceSideStyleEntry::FillArea(ssfa_id) => {
-                    buf.founded_item_step_ids[ssfa_id.0 as usize]
-                }
-                SurfaceSideStyleEntry::Rendering(ssr_id) => buf.ssr_step_ids[ssr_id.0 as usize],
-            };
-            style_refs.push(Attribute::EntityRef(entry_id));
-        }
-        Ok(buf.push_simple(
-            "SURFACE_SIDE_STYLE",
-            vec![Attribute::String(sss.name), Attribute::List(style_refs)],
-        ))
+        // 2-layer write path: lift L2 → L1, then serialize L1 → Part21 text.
+        let early = lift::lift_surface_side_style(buf, &sss);
+        Ok(serialize::serialize_surface_side_style(buf, &early))
     }
 }

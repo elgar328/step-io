@@ -243,6 +243,33 @@ pub fn read_string<'a>(
     }
 }
 
+/// Extract the hex-encoded `&str` of a `binary` attribute from `attrs[index]`.
+///
+/// The lexer already strips the surrounding quotes and keeps the hex digits
+/// verbatim ([`Attribute::Binary`]); this returns them unchanged for a faithful
+/// round-trip (decoding to bytes is a later, semantic concern).
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_binary<'a>(
+    attrs: &'a [Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<&'a str, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::Binary(s) => Ok(s.as_str()),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Binary",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
 /// Extract a `&str` from `attrs[index]`, treating `$` (Unset) as `""`.
 ///
 /// STEP spec marks some informal string fields (descriptions, labels,
@@ -725,6 +752,208 @@ pub fn read_integer_grid(
     Ok(grid)
 }
 
+/// Extract a 3D entity-ref grid (`LIST OF LIST OF LIST OF <entity>`) from
+/// `attrs[index]` — one extra nesting level over [`read_entity_ref_grid`], for
+/// B-spline *volume* control points. Each level must be a [`Attribute::List`]
+/// and rectangular (uniform inner lengths); the innermost element is an
+/// [`Attribute::EntityRef`].
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`], [`ConvertError::AttributeType`], or
+/// [`ConvertError::DimensionMismatch`].
+pub fn read_entity_ref_grid3(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<Vec<Vec<u64>>>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let planes = match attr {
+        Attribute::List(planes) => planes,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List (3D grid)",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut out = Vec::with_capacity(planes.len());
+    let mut expected_rows = None;
+    for plane in planes {
+        let rows = match plane {
+            Attribute::List(rows) => rows,
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "List (plane of 3D grid)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        };
+        if let Some(expected) = expected_rows {
+            if rows.len() != expected {
+                return Err(ConvertError::DimensionMismatch {
+                    entity_id,
+                    field_name,
+                    expected,
+                    actual: rows.len(),
+                });
+            }
+        } else {
+            expected_rows = Some(rows.len());
+        }
+        let mut grid = Vec::with_capacity(rows.len());
+        let mut expected_cols = None;
+        for row in rows {
+            let cols = match row {
+                Attribute::List(cols) => cols,
+                other => {
+                    return Err(ConvertError::AttributeType {
+                        entity_id,
+                        field_name,
+                        expected: "List (row of 3D grid)",
+                        actual: AttributeKindTag::from_attribute(other),
+                    });
+                }
+            };
+            if let Some(expected) = expected_cols {
+                if cols.len() != expected {
+                    return Err(ConvertError::DimensionMismatch {
+                        entity_id,
+                        field_name,
+                        expected,
+                        actual: cols.len(),
+                    });
+                }
+            } else {
+                expected_cols = Some(cols.len());
+            }
+            let mut row_ids = Vec::with_capacity(cols.len());
+            for col in cols {
+                match col {
+                    Attribute::EntityRef(id) => row_ids.push(*id),
+                    other => {
+                        return Err(ConvertError::AttributeType {
+                            entity_id,
+                            field_name,
+                            expected: "EntityRef (inside 3D grid)",
+                            actual: AttributeKindTag::from_attribute(other),
+                        });
+                    }
+                }
+            }
+            grid.push(row_ids);
+        }
+        out.push(grid);
+    }
+    Ok(out)
+}
+
+/// Extract a 3D real grid (`LIST OF LIST OF LIST OF real`) from `attrs[index]` —
+/// the [`read_real_grid`] analogue with one extra nesting level (B-spline volume
+/// weights). Integers promote to `f64`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`], [`ConvertError::AttributeType`], or
+/// [`ConvertError::DimensionMismatch`].
+#[allow(clippy::cast_precision_loss)]
+pub fn read_real_grid3(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<Vec<Vec<f64>>>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let planes = match attr {
+        Attribute::List(planes) => planes,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List (3D grid)",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut out = Vec::with_capacity(planes.len());
+    let mut expected_rows = None;
+    for plane in planes {
+        let rows = match plane {
+            Attribute::List(rows) => rows,
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "List (plane of 3D grid)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        };
+        if let Some(expected) = expected_rows {
+            if rows.len() != expected {
+                return Err(ConvertError::DimensionMismatch {
+                    entity_id,
+                    field_name,
+                    expected,
+                    actual: rows.len(),
+                });
+            }
+        } else {
+            expected_rows = Some(rows.len());
+        }
+        let mut grid = Vec::with_capacity(rows.len());
+        let mut expected_cols = None;
+        for row in rows {
+            let cols = match row {
+                Attribute::List(cols) => cols,
+                other => {
+                    return Err(ConvertError::AttributeType {
+                        entity_id,
+                        field_name,
+                        expected: "List (row of 3D grid)",
+                        actual: AttributeKindTag::from_attribute(other),
+                    });
+                }
+            };
+            if let Some(expected) = expected_cols {
+                if cols.len() != expected {
+                    return Err(ConvertError::DimensionMismatch {
+                        entity_id,
+                        field_name,
+                        expected,
+                        actual: cols.len(),
+                    });
+                }
+            } else {
+                expected_cols = Some(cols.len());
+            }
+            let mut row_values = Vec::with_capacity(cols.len());
+            for col in cols {
+                match col {
+                    Attribute::Real(v) => row_values.push(*v),
+                    Attribute::Integer(v) => row_values.push(*v as f64),
+                    other => {
+                        return Err(ConvertError::AttributeType {
+                            entity_id,
+                            field_name,
+                            expected: "Real (inside 3D grid)",
+                            actual: AttributeKindTag::from_attribute(other),
+                        });
+                    }
+                }
+            }
+            grid.push(row_values);
+        }
+        out.push(grid);
+    }
+    Ok(out)
+}
+
 // ---------------------------------------------------------------------------
 // Boolean extractor
 // ---------------------------------------------------------------------------
@@ -811,6 +1040,49 @@ pub fn is_unset_or_derived(attrs: &[Attribute], index: usize) -> bool {
     )
 }
 
+/// Normalize TAG-less bare scalar elements in the given SET/LIST attribute
+/// `slots` to the standard `Typed { type_name: tag, value }` form, returning the
+/// (possibly-rewritten) attrs and the count of rewritten elements.
+///
+/// Some exporters write a select's defined-type member (e.g. `parameter_value`)
+/// as a bare `0.0` instead of `PARAMETER_VALUE(0.0)`. The strict generated
+/// `bind` only accepts the tagged form, so the entity handler normalizes the
+/// input *before* binding (and surfaces a `NonStandardInput`). When no bare
+/// scalar is present the original slice is borrowed (no allocation). See
+/// `reader::nonstandard` `### NS-tagless-parameter-value`.
+pub(crate) fn normalize_tagless_select<'a>(
+    attrs: &'a [Attribute],
+    slots: &[usize],
+    tag: &str,
+) -> (std::borrow::Cow<'a, [Attribute]>, usize) {
+    let is_bare = |a: &Attribute| matches!(a, Attribute::Real(_) | Attribute::Integer(_));
+    let count: usize = slots
+        .iter()
+        .filter_map(|&i| match attrs.get(i) {
+            Some(Attribute::List(elems)) => Some(elems.iter().filter(|e| is_bare(e)).count()),
+            _ => None,
+        })
+        .sum();
+    if count == 0 {
+        return (std::borrow::Cow::Borrowed(attrs), 0);
+    }
+    let mut out = attrs.to_vec();
+    for &i in slots {
+        if let Some(Attribute::List(elems)) = out.get_mut(i) {
+            for e in elems.iter_mut() {
+                if is_bare(e) {
+                    let value = Box::new(std::mem::replace(e, Attribute::Unset));
+                    *e = Attribute::Typed {
+                        type_name: tag.to_string(),
+                        value,
+                    };
+                }
+            }
+        }
+    }
+    (std::borrow::Cow::Owned(out), count)
+}
+
 // ===========================================================================
 // Tests
 // ===========================================================================
@@ -880,6 +1152,28 @@ mod tests {
             ConvertError::AttributeIndex {
                 index: 0,
                 len: 0,
+                ..
+            }
+        ));
+    }
+
+    // --- read_binary ---
+
+    #[test]
+    fn read_binary_ok() {
+        let attrs = vec![Attribute::Binary("0F3A".into())];
+        assert_eq!(read_binary(&attrs, 0, 1, "lit_value").unwrap(), "0F3A");
+    }
+
+    #[test]
+    fn read_binary_wrong_type() {
+        let attrs = vec![Attribute::String("0F3A".into())];
+        let err = read_binary(&attrs, 0, 1, "lit_value").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeType {
+                expected: "Binary",
+                actual: AttributeKindTag::String,
                 ..
             }
         ));
@@ -1133,6 +1427,58 @@ mod tests {
         let grid = read_real_grid(&attrs, 0, 1, "weights").unwrap();
         assert!((grid[0][0] - 1.0).abs() < f64::EPSILON);
         assert!((grid[0][1] - 2.5).abs() < f64::EPSILON);
+    }
+
+    // --- read_*_grid3 (3D, B-spline volume) ---
+
+    #[test]
+    fn read_entity_ref_grid3_ok() {
+        // 2 planes x 1 row x 2 cols.
+        let plane = || {
+            Attribute::List(vec![Attribute::List(vec![
+                Attribute::EntityRef(10),
+                Attribute::EntityRef(11),
+            ])])
+        };
+        let attrs = vec![Attribute::List(vec![plane(), plane()])];
+        let g = read_entity_ref_grid3(&attrs, 0, 1, "control_points_list").unwrap();
+        assert_eq!(g.len(), 2);
+        assert_eq!(g[0].len(), 1);
+        assert_eq!(g[1][0], vec![10, 11]);
+    }
+
+    #[test]
+    fn read_real_grid3_ok_with_promotion() {
+        let attrs = vec![Attribute::List(vec![Attribute::List(vec![
+            Attribute::List(vec![Attribute::Integer(1), Attribute::Real(2.5)]),
+        ])])];
+        let g = read_real_grid3(&attrs, 0, 1, "weights_data").unwrap();
+        assert!((g[0][0][0] - 1.0).abs() < f64::EPSILON);
+        assert!((g[0][0][1] - 2.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn read_entity_ref_grid3_wrong_type() {
+        // innermost element is not an EntityRef.
+        let attrs = vec![Attribute::List(vec![Attribute::List(vec![
+            Attribute::List(vec![Attribute::Real(1.0)]),
+        ])])];
+        let err = read_entity_ref_grid3(&attrs, 0, 1, "control_points_list").unwrap_err();
+        assert!(matches!(err, ConvertError::AttributeType { .. }));
+    }
+
+    #[test]
+    fn read_real_grid3_non_rectangular() {
+        // two planes with differing row counts.
+        let attrs = vec![Attribute::List(vec![
+            Attribute::List(vec![Attribute::List(vec![Attribute::Real(1.0)])]),
+            Attribute::List(vec![
+                Attribute::List(vec![Attribute::Real(2.0)]),
+                Attribute::List(vec![Attribute::Real(3.0)]),
+            ]),
+        ])];
+        let err = read_real_grid3(&attrs, 0, 1, "weights_data").unwrap_err();
+        assert!(matches!(err, ConvertError::DimensionMismatch { .. }));
     }
 
     // --- is_unset_or_derived ---

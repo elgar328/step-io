@@ -1,13 +1,11 @@
-//! `ROLE_ASSOCIATION` handler plm. STEP positional shape
-//! `(role, item_with_role)` per `AP214e3` schema lines 9773–9776.
-//! `item_with_role` is the AP214 `role_select` SELECT — step-io
-//! currently scopes to `APPLIED_DOCUMENT_REFERENCE` only.
+//! `ROLE_ASSOCIATION` handler — plm (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{PlmPool, RoleAssociation, RoleSelect};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::RoleAssociation;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -23,40 +21,17 @@ impl SimpleEntityHandler for RoleAssociationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "ROLE_ASSOCIATION")?;
-        let role_ref = read_entity_ref(attrs, 0, entity_id, "role")?;
-        let item_ref = read_entity_ref(attrs, 1, entity_id, "item_with_role")?;
-        let Some(&role) = ctx.plm_object_role_id_map.get(&role_ref) else {
-            return Ok(());
-        };
-        let item_with_role = if let Some(&adr_id) = ctx.plm_document_reference_id_map.get(&item_ref)
-        {
-            RoleSelect::DocumentReference(adr_id)
-        } else {
-            return Ok(()); // unsupported SELECT variant (Approval/DTA/etc) — drop
-        };
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.role_associations.push(RoleAssociation {
-            role,
-            item_with_role,
-        });
-        ctx.plm_role_association_id_map.insert(entity_id, id);
+        let early = bind::bind_role_association(entity_id, attrs)?;
+        lower::lower_role_association(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ra: RoleAssociation) -> Result<u64, WriteError> {
-        let role_step = buf.plm_object_role_step_ids[ra.role.0 as usize];
-        let item_step = match ra.item_with_role {
-            RoleSelect::DocumentReference(id) => buf.plm_document_reference_step_ids[id.0 as usize],
-        };
-        Ok(buf.push_simple(
-            "ROLE_ASSOCIATION",
-            vec![
-                Attribute::EntityRef(role_step),
-                Attribute::EntityRef(item_step),
-            ],
-        ))
+        let role_step = buf.step_id(ra.role);
+        let item_step = ra.item_with_role.emit_select(buf);
+        let early = lift::lift_role_association(role_step, item_step);
+        Ok(serialize::serialize_role_association(buf, &early))
     }
 }

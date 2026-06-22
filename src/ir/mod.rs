@@ -9,6 +9,7 @@ pub mod plm;
 pub mod pmi;
 pub mod property;
 pub mod representation_item;
+pub mod select;
 pub mod shape_aspect_ref;
 pub mod shape_rep;
 pub mod tessellation;
@@ -34,9 +35,8 @@ pub use geometry::{
     NurbsCurve, NurbsCurve2d, NurbsSurface, OffsetCurve3d, PCurveOrSurface, Parabola, Pcurve,
     PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point2, Point3,
     Polyline, Polyline2d, PreferredSurfaceCurveRepresentation, RectangularTrimmedSurface,
-    SphericalSurface, Surface, SurfaceCurveWrapper, SurfaceForm, SurfaceOfLinearExtrusion,
-    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
-    TrimmedCurve, Vertex,
+    SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfOffset,
+    SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster, TrimmedCurve, Vertex,
 };
 pub use id::{
     AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,
@@ -77,8 +77,8 @@ pub use id::{
     },
 };
 pub use model::{
-    ExternalAnchor, ExternalReference, FileHeader, GeometryPool, ImplementationLevel,
-    NonEmptyStringList, StepModel, TopologyPool,
+    ExternalAnchor, ExternalReference, FileHeader, FileMetadata, GeometryPool, ImplementationLevel,
+    NonEmptyStringList, ShapeRepPool, StepModel, TopologyPool,
 };
 pub use plm::{
     Address, AddressData, AheadOrBehind, ApplicationContext, ApplicationProtocolDefinition,

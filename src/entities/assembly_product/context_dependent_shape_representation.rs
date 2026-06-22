@@ -1,21 +1,24 @@
 //! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` handler.
 //!
 //! Binds each NAUO to a `Transform3d` by walking the RR-complex sub-entity
-//! that the CDSR's first attribute references. Reader body needs `&graph`
-//! to resolve the complex parts (`REPRESENTATION_RELATIONSHIP` +
+//! that the CDSR's first attribute references. Reader body cross-walks the
+//! RR complex (`REPRESENTATION_RELATIONSHIP` +
 //! `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` +
-//! `SHAPE_REPRESENTATION_RELATIONSHIP`). Writer emits the two-attr form:
+//! `SHAPE_REPRESENTATION_RELATIONSHIP`) through the `EarlyGraph` facade. Writer
+//! emits the two-attr form:
 //! `CDSR(rr_complex_ref, pdef_shape_ref)`.
 
+use crate::early::model::EarlyTransformation;
+use crate::early::{bind, lift, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
 
+#[derive(Clone, Copy)]
 pub(crate) struct ContextDependentShapeRepresentationWriteInput {
     pub(crate) rrwt: u64,
     pub(crate) nauo_pds: u64,
@@ -31,42 +34,33 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        eg: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            2,
-            entity_id,
-            "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
-        )?;
-        let rr_ref = read_entity_ref(attrs, 0, entity_id, "representation_relation")?;
-        let pdef_shape_ref = read_entity_ref(attrs, 1, entity_id, "represented_product_relation")?;
+        let early = bind::bind_context_dependent_shape_representation(entity_id, attrs)?;
+        let rr_ref = early.representation_relation;
+        let pdef_shape_ref = early.represented_product_relation;
 
         // Only NAUO-tagged CDSRs — product-level CDSRs skip silently.
-        let Some(&nauo_ref) = ctx.pdef_shape_to_nauo.get(&pdef_shape_ref) else {
+        let Some(nauo_ref) = ctx.nauo_pds_info.get(&pdef_shape_ref).map(|i| i.nauo) else {
             return Ok(());
         };
 
-        // Look up the RR complex. Must carry all three part types.
-        let Some(RawEntity::Complex { parts, .. }) = graph.get(rr_ref) else {
+        // Read the RRWT complex through the L1 facade (it folds the Complex
+        // guard + has_all_parts + strict bind). Outer `None` = not the RRWT
+        // triple; `?` propagates a bind defect; inner `None` = unrecognized
+        // transformation SELECT member → skip.
+        let early = eg;
+        let Some(rrwt_res) = early.representation_relationship_with_transformation(rr_ref) else {
             return Ok(());
         };
-        if !crate::reader::has_all_parts(
-            parts,
-            &[
-                "REPRESENTATION_RELATIONSHIP",
-                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
-                "SHAPE_REPRESENTATION_RELATIONSHIP",
-            ],
-        ) {
+        let Some(rrwt) = rrwt_res? else {
             return Ok(());
-        }
-        let rrwt_attrs = crate::reader::require_part_attrs(
-            parts,
-            "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
-            rr_ref,
-        )?;
-        let transform_ref = read_entity_ref(rrwt_attrs, 0, rr_ref, "transform_operator")?;
+        };
+        let transform_ref = match rrwt.transformation_operator {
+            EarlyTransformation::EntityRef(n) => n,
+            // SET-of-IDT form is not modelled (corpus 0) — skip the transform.
+            EarlyTransformation::SetItemDefinedTransformation(_) => return Ok(()),
+        };
         let Some(&transform) = ctx.transform_map.get(&transform_ref) else {
             return Err(ConvertError::MissingReference {
                 from: rr_ref,
@@ -83,15 +77,15 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         // the resulting id is round-trip stable. If either rep is not a
         // modelled `Representation`, skip materialisation (the transform is
         // still recorded above; `style_context` then drops with a warning).
-        let rr_attrs =
-            crate::reader::require_part_attrs(parts, "REPRESENTATION_RELATIONSHIP", rr_ref)?;
-        let name = read_string_or_unset(rr_attrs, 0, rr_ref, "name")?.to_owned();
-        let description = read_string_or_unset(rr_attrs, 1, rr_ref, "description")?.to_owned();
-        let rep_1_ref = read_entity_ref(rr_attrs, 2, rr_ref, "rep_1")?;
-        let rep_2_ref = read_entity_ref(rr_attrs, 3, rr_ref, "rep_2")?;
-        if let (Some(&rep_1), Some(&rep_2)) = (
-            ctx.repr_id_map.get(&rep_1_ref),
-            ctx.repr_id_map.get(&rep_2_ref),
+        let name = rrwt.name;
+        let description = rrwt.description.unwrap_or_default();
+        let rep_1_ref = rrwt.rep_1;
+        let rep_2_ref = rrwt.rep_2;
+        if let (Some(rep_1), Some(rep_2)) = (
+            ctx.id_cache
+                .get::<crate::ir::id::RepresentationId>(rep_1_ref),
+            ctx.id_cache
+                .get::<crate::ir::id::RepresentationId>(rep_2_ref),
         ) {
             ctx.nauo_assembly_rr.insert(
                 nauo_ref,
@@ -109,11 +103,11 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        ContextDependentShapeRepresentationWriteInput { rrwt, nauo_pds }: ContextDependentShapeRepresentationWriteInput,
+        input: ContextDependentShapeRepresentationWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
-            vec![Attribute::EntityRef(rrwt), Attribute::EntityRef(nauo_pds)],
+        let early = lift::lift_context_dependent_shape_representation(input);
+        Ok(serialize::serialize_context_dependent_shape_representation(
+            buf, &early,
         ))
     }
 }

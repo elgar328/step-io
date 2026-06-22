@@ -6,12 +6,11 @@
 //! the standard SBSM line; shell entities themselves are emitted by
 //! `emit_shell` upstream.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::ShellId;
-use crate::ir::visualization::{GeometricRepresentationItem, ShellBasedSurfaceModel};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,41 +26,19 @@ impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "SHELL_BASED_SURFACE_MODEL")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let shell_refs = read_entity_ref_list(attrs, 1, entity_id, "sbsm_boundary")?;
-        let shells: Vec<ShellId> = shell_refs
-            .iter()
-            .filter_map(|r| ctx.shell_map.get(r).copied())
-            .collect();
-        ctx.sbsm_shells_map.insert(entity_id, shells.clone());
-        // Also push into the unified `geometric_representation_item` arena so
-        // a `STYLED_ITEM` (or any other representation_item consumer) can
-        // resolve the SBSM as a single id. MSSR continues to flatten through
-        // `sbsm_shells_map` so the dual storage stays consistent.
-        let gri_id = ctx.geometric_representation_items.push(
-            GeometricRepresentationItem::ShellBasedSurfaceModel(ShellBasedSurfaceModel {
-                name,
-                shells,
-            }),
-        );
-        ctx.sbsm_id_map.insert(entity_id, gri_id);
+        let early = bind::bind_shell_based_surface_model(entity_id, attrs)?;
+        lower::lower_shell_based_surface_model(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, shells: Vec<ShellId>) -> Result<u64, WriteError> {
         let mut shell_refs = Vec::with_capacity(shells.len());
         for s in shells {
-            shell_refs.push(Attribute::EntityRef(buf.emit_shell(s)?));
+            shell_refs.push(buf.emit_shell(s)?);
         }
-        Ok(buf.push_simple(
-            "SHELL_BASED_SURFACE_MODEL",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(shell_refs),
-            ],
-        ))
+        let early = lift::lift_shell_based_surface_model(shell_refs);
+        Ok(serialize::serialize_shell_based_surface_model(buf, &early))
     }
 }

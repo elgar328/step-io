@@ -1,10 +1,11 @@
-//! `APPROVAL_STATUS` handler plm Approval leaf.
+//! `APPROVAL_STATUS` handler — plm metadata leaf (2-layer path: generated
+//! bind/serialize + pass-through lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{ApprovalStatus, PlmPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::ApprovalStatus;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -20,17 +21,15 @@ impl SimpleEntityHandler for ApprovalStatusHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "APPROVAL_STATUS")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.approval_statuses.push(ApprovalStatus { name });
-        ctx.plm_approval_status_id_map.insert(entity_id, id);
+        let early = bind::bind_approval_status(entity_id, attrs)?;
+        lower::lower_approval_status(ctx, entity_id, early);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, s: ApprovalStatus) -> Result<u64, WriteError> {
-        Ok(buf.push_simple("APPROVAL_STATUS", vec![Attribute::String(s.name)]))
+    fn write(buf: &mut WriteBuffer, v: ApprovalStatus) -> Result<u64, WriteError> {
+        let early = lift::lift_approval_status(v);
+        Ok(serialize::serialize_approval_status(buf, &early))
     }
 }

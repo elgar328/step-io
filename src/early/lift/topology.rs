@@ -1,0 +1,151 @@
+//! Topology-domain `lift` fns (W-RECURSIVE spread). See the [module docs](super)
+//! for the lifting contract. Child refs are pre-resolved to output step ids by
+//! the handler's emit recursion; `name` is the legacy empty string.
+
+use crate::early::model::{
+    EarlyAdvancedFace, EarlyBrepWithVoids, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop,
+    EarlyFaceBound, EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell,
+    EarlyOrientedClosedShell, EarlyOrientedEdge, EarlyVertexLoop,
+};
+use crate::ir::topology::Orientation;
+
+/// `Orientation` → the BOOLEAN the legacy writer emitted (`Forward` = `T`).
+fn orientation_to_bool(o: Orientation) -> bool {
+    matches!(o, Orientation::Forward)
+}
+
+/// Lift one `ORIENTED_EDGE`. `edge_element` = emitted `EDGE_CURVE` step id; the
+/// Derived (`*`) `edge_start`/`edge_end` slots are re-emitted by serialize.
+pub(crate) fn lift_oriented_edge(edge_element: u64, orientation: Orientation) -> EarlyOrientedEdge {
+    EarlyOrientedEdge {
+        name: String::new(),
+        edge_element,
+        orientation: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `ORIENTED_CLOSED_SHELL`. `closed_shell_element` = the already-emitted
+/// `CLOSED_SHELL` step id; the Derived (`*`) `cfs_faces` slot is re-emitted by
+/// serialize.
+pub(crate) fn lift_oriented_closed_shell(
+    closed_shell_element: u64,
+    orientation: Orientation,
+) -> EarlyOrientedClosedShell {
+    EarlyOrientedClosedShell {
+        name: String::new(),
+        closed_shell_element,
+        orientation: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `EDGE_LOOP` — `edge_list` = emitted `ORIENTED_EDGE` refs. Name empty.
+pub(crate) fn lift_edge_loop(edge_list: Vec<u64>) -> EarlyEdgeLoop {
+    EarlyEdgeLoop {
+        name: String::new(),
+        edge_list,
+    }
+}
+
+/// Lift one `EDGE_CURVE` — child refs are emitted step ids; `same_sense` is the
+/// orientation's BOOLEAN. Name empty.
+pub(crate) fn lift_edge_curve(
+    edge_start: u64,
+    edge_end: u64,
+    edge_geometry: u64,
+    orientation: Orientation,
+) -> EarlyEdgeCurve {
+    EarlyEdgeCurve {
+        name: String::new(),
+        edge_start,
+        edge_end,
+        edge_geometry,
+        same_sense: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `FACE_BOUND` (bound = the loop's output step id).
+pub(crate) fn lift_face_bound(bound: u64, orientation: Orientation) -> EarlyFaceBound {
+    EarlyFaceBound {
+        name: String::new(),
+        bound,
+        orientation: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `FACE_OUTER_BOUND`.
+pub(crate) fn lift_face_outer_bound(bound: u64, orientation: Orientation) -> EarlyFaceOuterBound {
+    EarlyFaceOuterBound {
+        name: String::new(),
+        bound,
+        orientation: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `OPEN_SHELL` (faces = child face output step ids).
+pub(crate) fn lift_open_shell(cfs_faces: Vec<u64>) -> EarlyOpenShell {
+    EarlyOpenShell {
+        name: String::new(),
+        cfs_faces,
+    }
+}
+
+/// Lift one `CLOSED_SHELL`.
+pub(crate) fn lift_closed_shell(cfs_faces: Vec<u64>) -> EarlyClosedShell {
+    EarlyClosedShell {
+        name: String::new(),
+        cfs_faces,
+    }
+}
+
+/// Lift one `VERTEX_LOOP` (`loop_vertex` = child `VERTEX_POINT` output step id).
+pub(crate) fn lift_vertex_loop(loop_vertex: u64) -> EarlyVertexLoop {
+    EarlyVertexLoop {
+        name: String::new(),
+        loop_vertex,
+    }
+}
+
+/// Lift one `ADVANCED_FACE` (bounds/surface = child output step ids; legacy
+/// emits empty name).
+pub(crate) fn lift_advanced_face(
+    bounds: Vec<u64>,
+    face_geometry: u64,
+    orientation: Orientation,
+) -> EarlyAdvancedFace {
+    EarlyAdvancedFace {
+        name: String::new(),
+        bounds,
+        face_geometry,
+        same_sense: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `FACE_SURFACE`.
+pub(crate) fn lift_face_surface(
+    bounds: Vec<u64>,
+    face_geometry: u64,
+    orientation: Orientation,
+) -> EarlyFaceSurface {
+    EarlyFaceSurface {
+        name: String::new(),
+        bounds,
+        face_geometry,
+        same_sense: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `MANIFOLD_SOLID_BREP` (name preserved; outer = child shell step id).
+pub(crate) fn lift_manifold_solid_brep(name: String, outer: u64) -> EarlyManifoldSolidBrep {
+    EarlyManifoldSolidBrep { name, outer }
+}
+
+/// Lift one `BREP_WITH_VOIDS` (name preserved; `outer` + each `voids` entry are
+/// child step ids pre-emitted by the handler — the voids as `ORIENTED_CLOSED_SHELL`
+/// wrapper refs).
+pub(crate) fn lift_brep_with_voids(
+    name: String,
+    outer: u64,
+    voids: Vec<u64>,
+) -> EarlyBrepWithVoids {
+    EarlyBrepWithVoids { name, outer, voids }
+}

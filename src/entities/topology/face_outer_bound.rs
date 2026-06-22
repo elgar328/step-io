@@ -1,13 +1,12 @@
-//! `FACE_OUTER_BOUND` handler (intermediate map).
-//!
-//! Sister handler of `FACE_BOUND`. Both share the read/write body in
-//! `face_bound.rs`; only the `is_outer` flag flips.
+//! `FACE_OUTER_BOUND` handler — face boundary wire (2-layer path). The bound loop's
+//! step id is pre-resolved by the wire emitter; this handler emits the
+//! boundary record.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::topology::face_bound::{read_face_bound_body, write_face_bound_body};
 use crate::ir::Orientation;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -23,20 +22,17 @@ impl SimpleEntityHandler for FaceOuterBoundHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        read_face_bound_body(ctx, entity_id, attrs, true)
+        let early = bind::bind_face_outer_bound(entity_id, attrs)?;
+        lower::lower_face_outer_bound(ctx, entity_id, &early)
     }
 
     fn write(
         buf: &mut WriteBuffer,
-        (inner_loop_ref, orientation): (u64, Orientation),
+        (bound, orientation): (u64, Orientation),
     ) -> Result<u64, WriteError> {
-        Ok(write_face_bound_body(
-            buf,
-            inner_loop_ref,
-            orientation,
-            true,
-        ))
+        let early = lift::lift_face_outer_bound(bound, orientation);
+        Ok(serialize::serialize_face_outer_bound(buf, &early))
     }
 }

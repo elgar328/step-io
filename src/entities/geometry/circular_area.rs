@@ -6,11 +6,11 @@
 //! fixture, through `external_ref_id_map` (a `REFERENCE`-section external
 //! reference); unresolved drops the carrier.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{CircularArea, CircularAreaCentre};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -26,39 +26,19 @@ impl SimpleEntityHandler for CircularAreaHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "CIRCULAR_AREA")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let centre_ref = read_entity_ref(attrs, 1, entity_id, "centre")?;
-        let radius = read_real(attrs, 2, entity_id, "radius")?;
-        let centre = if let Some(&point) = ctx.point_map.get(&centre_ref) {
-            CircularAreaCentre::Point(point)
-        } else if let Some(&ext) = ctx.external_ref_id_map.get(&centre_ref) {
-            CircularAreaCentre::External(ext)
-        } else {
-            return Ok(());
-        };
-        ctx.geometry.circular_areas.push(CircularArea {
-            name,
-            centre,
-            radius,
-        });
+        let early = bind::bind_circular_area(entity_id, attrs)?;
+        lower::lower_circular_area(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ca: CircularArea) -> Result<u64, WriteError> {
         let centre_step = match ca.centre {
             CircularAreaCentre::Point(point) => buf.emit_point(point)?,
-            CircularAreaCentre::External(ext) => buf.external_ref_step_ids[ext.0 as usize],
+            CircularAreaCentre::External(ext) => buf.step_id(ext),
         };
-        Ok(buf.push_simple(
-            "CIRCULAR_AREA",
-            vec![
-                Attribute::String(ca.name),
-                Attribute::EntityRef(centre_step),
-                Attribute::Real(ca.radius),
-            ],
-        ))
+        let early = lift::lift_circular_area(ca.name, centre_step, ca.radius);
+        Ok(serialize::serialize_circular_area(buf, &early))
     }
 }

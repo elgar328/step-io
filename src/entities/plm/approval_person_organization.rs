@@ -1,13 +1,11 @@
-//! `APPROVAL_PERSON_ORGANIZATION` handler plm. Depends on
-//! the `APPROVAL` handler (`authorized_approval` ref),
-//! the `PERSON_AND_ORGANIZATION` handler (`person_organization` SELECT) and
-//! the approval-leaf handlers (`role` ref).
+//! `APPROVAL_PERSON_ORGANIZATION` handler — plm (2-layer path: generated
+//! bind/serialize + hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{ApprovalPersonOrganization, PersonOrganizationSelect, PlmPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::{ApprovalPersonOrganization, PersonOrganizationSelect};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -23,60 +21,21 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "APPROVAL_PERSON_ORGANIZATION")?;
-        let po_ref = read_entity_ref(attrs, 0, entity_id, "person_organization")?;
-        let approval_ref = read_entity_ref(attrs, 1, entity_id, "authorized_approval")?;
-        let role_ref = read_entity_ref(attrs, 2, entity_id, "role")?;
-        let Some(&po_id) = ctx.plm_p_and_o_id_map.get(&po_ref) else {
-            // The P&O was dropped as a dangling-reference cascade → surface a
-            // MissingReference so the dispatcher reclassifies this approval the
-            // same way (NS-dangling-reference-drop). Otherwise it is an
-            // unsupported SELECT variant (direct PERSON / ORGANIZATION) → silent.
-            if ctx.nonstandard_dropped_refs.contains(&po_ref) {
-                return Err(ConvertError::MissingReference {
-                    from: entity_id,
-                    to: po_ref,
-                    field_name: "person_organization",
-                });
-            }
-            return Ok(());
-        };
-        let Some(&authorized_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {
-            return Ok(());
-        };
-        let Some(&role) = ctx.plm_approval_role_id_map.get(&role_ref) else {
-            return Ok(());
-        };
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool
-            .approval_person_organizations
-            .push(ApprovalPersonOrganization {
-                person_organization: PersonOrganizationSelect::PersonAndOrganization(po_id),
-                authorized_approval,
-                role,
-            });
-        ctx.plm_approval_person_organization_id_map
-            .insert(entity_id, id);
-        Ok(())
+        let early = bind::bind_approval_person_organization(entity_id, attrs)?;
+        lower::lower_approval_person_organization(ctx, entity_id, early)
     }
 
     fn write(buf: &mut WriteBuffer, a: ApprovalPersonOrganization) -> Result<u64, WriteError> {
         let po_step = match a.person_organization {
-            PersonOrganizationSelect::PersonAndOrganization(id) => {
-                buf.plm_p_and_o_step_ids[id.0 as usize]
-            }
+            PersonOrganizationSelect::PersonAndOrganization(id) => buf.step_id(id),
         };
-        let approval_step = buf.plm_approval_step_ids[a.authorized_approval.0 as usize];
-        let role_step = buf.plm_approval_role_step_ids[a.role.0 as usize];
-        Ok(buf.push_simple(
-            "APPROVAL_PERSON_ORGANIZATION",
-            vec![
-                Attribute::EntityRef(po_step),
-                Attribute::EntityRef(approval_step),
-                Attribute::EntityRef(role_step),
-            ],
+        let approval_step = buf.step_id(a.authorized_approval);
+        let role_step = buf.step_id(a.role);
+        let early = lift::lift_approval_person_organization(po_step, approval_step, role_step);
+        Ok(serialize::serialize_approval_person_organization(
+            buf, &early,
         ))
     }
 }

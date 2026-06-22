@@ -1,10 +1,11 @@
-//! `OBJECT_ROLE` handler plm Role leaf.
+//! `OBJECT_ROLE` handler — plm metadata leaf (2-layer path: generated
+//! bind/serialize + pass-through lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{ObjectRole, PlmPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::plm::ObjectRole;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -20,22 +21,15 @@ impl SimpleEntityHandler for ObjectRoleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "OBJECT_ROLE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_optional_string(attrs, 1, entity_id, "description")?;
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.object_roles.push(ObjectRole { name, description });
-        ctx.plm_object_role_id_map.insert(entity_id, id);
+        let early = bind::bind_object_role(entity_id, attrs)?;
+        lower::lower_object_role(ctx, entity_id, early);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, r: ObjectRole) -> Result<u64, WriteError> {
-        let desc_attr = match r.description {
-            Some(s) => Attribute::String(s),
-            None => Attribute::Unset,
-        };
-        Ok(buf.push_simple("OBJECT_ROLE", vec![Attribute::String(r.name), desc_attr]))
+    fn write(buf: &mut WriteBuffer, v: ObjectRole) -> Result<u64, WriteError> {
+        let early = lift::lift_object_role(v);
+        Ok(serialize::serialize_object_role(buf, &early))
     }
 }

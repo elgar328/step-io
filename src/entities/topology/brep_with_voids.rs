@@ -1,28 +1,17 @@
-//! `BREP_WITH_VOIDS` handler.
-//!
-//! Mirrors the legacy `convert_brep_with_voids` and the multi-shell
-//! branch of `emit_solid`. Reads the inner shells via the
-//! `oriented_closed_shell_map` populated by the `ORIENTED_CLOSED_SHELL` handler and, on the read
-//! side, overwrites each inner shell's orientation in place rather
-//! than cloning so the arena stays free of duplicates.
+//! `BREP_WITH_VOIDS` handler — `manifold_solid_brep` plus inner void shells
+//! (2-layer path). The void resolution (orientation written back onto the inner
+//! shell in place — the IR `Solid` stores only `Vec<ShellId>`) lives in
+//! `lower`; the write emits each void's `ORIENTED_CLOSED_SHELL` wrapper.
 
-// IR_PRESSURE: read side mutates `topology.shells[inner_id].orientation`
-// in place because `BREP_WITH_VOIDS` has its own ORIENTED_CLOSED_SHELL
-// wrappers but the IR `Solid` only stores `Vec<ShellId>`. A future IR
-// refactor may replace this with an `OrientedShell` arena
-// variant so the wrapper stays first-class instead of leaking into the
-// Shell record.
-
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::SolidId;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Orientation, Shell, Solid};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::topology::{Shell, Solid};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity;
 
 pub(crate) struct BrepWithVoidsHandler;
@@ -35,58 +24,16 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "BREP_WITH_VOIDS")?;
-        let name_str = read_string_or_unset(attrs, 0, entity_id, "name")?;
-        let outer_ref = read_entity_ref(attrs, 1, entity_id, "outer")?;
-        let void_refs = read_entity_ref_list(attrs, 2, entity_id, "voids")?;
-
-        let outer = ctx.resolve_shell(entity_id, outer_ref, "outer")?;
-
-        let mut voids = Vec::with_capacity(void_refs.len());
-
-        for &ocs_ref in &void_refs {
-            let (inner_id, orientation) = *ctx.oriented_closed_shell_map.get(&ocs_ref).ok_or(
-                ConvertError::MissingReference {
-                    from: entity_id,
-                    to: ocs_ref,
-                    field_name: "voids",
-                },
-            )?;
-            // Guard against a CS being wrapped by multiple OCS with conflicting
-            // orientations, or serving as both outer and inner. Not observed in
-            // any fixture so far; if it ever occurs we'd need a copy-based
-            // fallback, but for now we surface it as an IR violation.
-            let existing = ctx.topology.shells[inner_id].orientation;
-            if existing != Orientation::Forward && existing != orientation {
-                return Err(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!(
-                        "shared CLOSED_SHELL (ShellId {}) with conflicting \
-                         orientations in multiple roles",
-                        inner_id.0
-                    ),
-                });
-            }
-            ctx.topology.shells[inner_id].orientation = orientation;
-            voids.push(inner_id);
-        }
-
-        let name = if name_str.is_empty() {
-            None
-        } else {
-            Some(name_str.to_owned())
-        };
-        let solid = Solid::BrepWithVoids { outer, voids, name };
-        let id = ctx.topology.solids.push(solid);
-        ctx.solid_map.insert(entity_id, id);
-        Ok(())
+        let early = bind::bind_brep_with_voids(entity_id, attrs)?;
+        lower::lower_brep_with_voids(ctx, entity_id, &early)
     }
 
     fn write(buf: &mut WriteBuffer, id: SolidId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.solid_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let s: Solid = buf
             .model
@@ -98,10 +45,10 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
             .ok_or_else(|| WriteError::DanglingId {
                 detail: format!("SolidId({})", id.0),
             })?;
-        let outer_ref = buf.emit_shell(s.outer())?;
+        let outer = buf.emit_shell(s.outer())?;
         let name = s.name().unwrap_or_default().to_owned();
 
-        let mut void_refs = Vec::with_capacity(s.voids().len());
+        let mut voids = Vec::with_capacity(s.voids().len());
         for &inner_id in s.voids() {
             let inner_shell: Shell = buf
                 .model
@@ -114,22 +61,11 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
                     detail: format!("ShellId({}) void", inner_id.0),
                 })?;
             let inner_cs_ref = buf.emit_shell(inner_id)?;
-            let ocs_ref = buf.emit_oriented_closed_shell(inner_cs_ref, inner_shell.orientation)?;
-            void_refs.push(Attribute::EntityRef(ocs_ref));
+            voids.push(buf.emit_oriented_closed_shell(inner_cs_ref, inner_shell.orientation)?);
         }
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "BREP_WITH_VOIDS".into(),
-                attrs: vec![
-                    Attribute::String(name),
-                    Attribute::EntityRef(outer_ref),
-                    Attribute::List(void_refs),
-                ],
-            },
-        });
-        buf.solid_ids.insert(id, n);
+        let early = lift::lift_brep_with_voids(name, outer, voids);
+        let n = serialize::serialize_brep_with_voids(buf, &early);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

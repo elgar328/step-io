@@ -38,14 +38,12 @@ impl WriteBuffer<'_> {
         };
         // DIMENSIONAL_EXPONENTS arena (phase dim-exp-arena-c) emits first
         // so NAMED_UNIT subtype writers below can resolve flavor.dim_exp
-        // through `dimensional_exponents_step_ids`.
-        self.dimensional_exponents_step_ids
-            .resize(pool.dimensional_exponents.len(), 0);
+        // through the `DimensionalExponentsId` step-id cache.
         for (id, de) in pool.dimensional_exponents.iter_with_ids() {
             use crate::entities::SimpleEntityHandler;
             use crate::entities::units::dimensional_exponents::DimensionalExponentsHandler;
             let step = DimensionalExponentsHandler::write(self, *de)?;
-            self.dimensional_exponents_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
         // units-2: pre-reserve step ids for all NamedUnit entries in arena
         // order. The emit then writes each entry at its reserved id. This
@@ -53,56 +51,51 @@ impl WriteBuffer<'_> {
         // (so re-read produces an identical arena), and CBU outers can
         // reference their base's pre-reserved id even if the base appears
         // later in arena order (forward-ref).
-        self.named_unit_step_ids.resize(pool.named_units.len(), 0);
         for (id, _) in pool.named_units.iter_with_ids() {
-            self.named_unit_step_ids[id.0 as usize] = self.fresh();
+            let reserved = self.fresh();
+            self.set_step_id(id, reserved);
         }
-        // Now emit each entry at its reserved id. Sub-entities (DE, MWU)
-        // use `fresh()` and get ids after the reservation block.
+        // Emit the MEASURE_WITH_UNIT arena BEFORE the NamedUnit entries:
+        // a CBU outer references its preserved conversion-factor MWU
+        // (`cbu_factor_mwu_id`), so the MWU's step id must exist first. The
+        // MWU's own `unit` (base SI) resolves through the pre-reserved NamedUnit
+        // block above. (units-CBU-① preservation: the factor MWU is no longer
+        // regenerated inline by the CBU emit path.)
+        for (id, mwu) in pool.measure_with_units.iter_with_ids() {
+            let step = emit_measure_with_unit(self, mwu)?;
+            self.set_step_id(id, step);
+        }
+        // Now emit each NamedUnit at its reserved id. Sub-entities (DE) use
+        // `fresh()` and get ids after the reservation block.
         let entries: Vec<(crate::ir::id::NamedUnitId, NamedUnit)> = pool
             .named_units
             .iter_with_ids()
             .map(|(id, n)| (id, *n))
             .collect();
         for (id, named) in entries {
-            let target = self.named_unit_step_ids[id.0 as usize];
-            if let Some(base_id) = cbu_base_of(&named) {
-                let base_step = self.named_unit_step_ids[base_id.0 as usize];
-                emit_named_unit_cbu(self, named, base_step, target)?;
-            } else {
-                emit_named_unit_plain(self, named, target)?;
-            }
+            let target = self.step_id(id);
+            // units-CBU-②: every NAMED_UNIT (SI + CBU, all flavours) is fully
+            // 2-layer → the plain (serialize_with_id) path picks SI/CBU by the
+            // flavor's `cbu_factor_mwu_id`. No hand CBU emit path remains.
+            emit_named_unit_plain(self, named, target);
         }
-        self.mwu_step_ids.resize(pool.measure_with_units.len(), 0);
-        for (id, mwu) in pool.measure_with_units.iter_with_ids() {
-            let step = emit_measure_with_unit(self, mwu)?;
-            self.mwu_step_ids[id.0 as usize] = step;
-        }
-        self.due_step_ids
-            .resize(pool.derived_unit_elements.len(), 0);
         for (id, due) in pool.derived_unit_elements.iter_with_ids() {
-            let unit_step = self.named_unit_step_ids[due.unit.0 as usize];
+            let unit_step = self.step_id(due.unit);
             let step = emit_derived_unit_element(self, unit_step, due.exponent)?;
-            self.due_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
         // units-1b / units-3a: DERIVED_UNIT and its dimension-constrained
         // subtypes (AREA_UNIT / VOLUME_UNIT) wrap DUE refs — emit after the
-        // DUE loop so `due_step_ids` is fully populated.
-        self.derived_unit_step_ids
-            .resize(pool.derived_units.len(), 0);
+        // DUE loop so the DUE step-id cache is fully populated.
         let du_entries: Vec<(crate::ir::id::DerivedUnitId, crate::ir::units::DerivedUnit)> = pool
             .derived_units
             .iter_with_ids()
             .map(|(id, du)| (id, du.clone()))
             .collect();
         for (id, du) in du_entries {
-            let element_steps: Vec<u64> = du
-                .elements
-                .iter()
-                .map(|e| self.due_step_ids[e.0 as usize])
-                .collect();
+            let element_steps: Vec<u64> = du.elements.iter().map(|e| self.step_id(e)).collect();
             let step = emit_derived_unit_by_kind(self, du.kind, element_steps)?;
-            self.derived_unit_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
         Ok(())
     }
@@ -140,92 +133,68 @@ fn emit_derived_unit_element(
     )
 }
 
-fn cbu_base_of(named: &NamedUnit) -> Option<crate::ir::id::NamedUnitId> {
-    match named {
-        NamedUnit::Length(f) => f.cbu_base,
-        NamedUnit::PlaneAngle(f) => f.cbu_base,
-        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => None,
-        NamedUnit::Mass(f) => f.cbu_base,
-    }
-}
-
-fn emit_named_unit_plain(
-    buf: &mut WriteBuffer<'_>,
-    named: NamedUnit,
-    target_id: u64,
-) -> Result<u64, WriteError> {
-    use crate::entities::units::length_unit::LengthUnitHandler;
-    use crate::entities::units::mass_unit::MassUnitHandler;
-    use crate::entities::units::named_unit::NamedUnitSimpleHandler;
-    use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
-    use crate::entities::units::ratio_unit::{RatioUnitHandler, RatioUnitSimpleHandler};
-    use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
-    use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-    let dim_exp_step = |de: Option<crate::ir::DimensionalExponentsId>| {
-        de.map_or(0, |id| buf.dimensional_exponents_step_ids[id.0 as usize])
-    };
+fn emit_named_unit_plain(buf: &mut WriteBuffer<'_>, named: NamedUnit, target_id: u64) -> u64 {
     match named {
         NamedUnit::Length(f) => {
-            LengthUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+            // units-CBU-②: SI vs CBU chosen by the preserved factor MWU. CBU
+            // references that MWU (emitted earlier); NAMED_UNIT.dimensions is `*`
+            // (Derived) for both cases.
+            let l1 = if let Some(mwu_id) = f.cbu_factor_mwu_id {
+                crate::early::lift::lift_length_cbu(f.unit, buf.step_id(mwu_id))
+            } else {
+                crate::early::lift::lift_length_si(f.unit)
+            };
+            crate::early::serialize::serialize_length_unit_with_id(buf, target_id, &l1);
+            target_id
         }
         NamedUnit::PlaneAngle(f) => {
-            PlaneAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+            // units-CBU-②: SI vs CBU by the preserved factor MWU; dimensions `*`.
+            let l1 = if let Some(mwu_id) = f.cbu_factor_mwu_id {
+                crate::early::lift::lift_plane_angle_cbu(f.unit, buf.step_id(mwu_id))
+            } else {
+                crate::early::lift::lift_plane_angle_si()
+            };
+            crate::early::serialize::serialize_plane_angle_unit_with_id(buf, target_id, &l1);
+            target_id
         }
-        NamedUnit::SolidAngle(f) => {
-            SolidAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+        NamedUnit::SolidAngle(_f) => {
+            crate::early::serialize::serialize_solid_angle_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_solid_angle_unit(),
+            );
+            target_id
         }
         NamedUnit::Mass(f) => {
-            MassUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+            // units-CBU-②: SI vs CBU by the preserved factor MWU; dimensions `*`.
+            let l1 = if let Some(mwu_id) = f.cbu_factor_mwu_id {
+                crate::early::lift::lift_mass_cbu(f.unit, buf.step_id(mwu_id))
+            } else {
+                crate::early::lift::lift_mass_si(f.unit)
+            };
+            crate::early::serialize::serialize_mass_unit_with_id(buf, target_id, &l1);
+            target_id
         }
-        // Reproduce the source form: complex `(NAMED_UNIT()RATIO_UNIT())` vs
-        // the standalone simple `RATIO_UNIT(dimensions)` entity.
-        NamedUnit::Ratio(f) if f.complex => {
-            RatioUnitHandler::write(buf, (target_id, dim_exp_step(f.dim_exp)))
-        }
+        // Standalone simple `RATIO_UNIT(dimensions)` (2-layer serialize_with_id).
         NamedUnit::Ratio(f) => {
-            RatioUnitSimpleHandler::write(buf, (target_id, dim_exp_step(f.dim_exp)))
+            let dim_step = f.dim_exp.map_or(0, |id| buf.step_id(id));
+            crate::early::serialize::serialize_ratio_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_ratio_unit(dim_step),
+            );
+            target_id
         }
-        // Bare NAMED_UNIT(#dimensions) — a dimensionless/count unit.
+        // Bare NAMED_UNIT(#dimensions) — a dimensionless/count unit. Emitted at
+        // the pre-reserved id via the 2-layer serialize_with_id path.
         NamedUnit::Itself(d) => {
-            NamedUnitSimpleHandler::write(buf, (target_id, dim_exp_step(d.dimensions)))
-        }
-    }
-}
-
-fn emit_named_unit_cbu(
-    buf: &mut WriteBuffer<'_>,
-    named: NamedUnit,
-    base_step: u64,
-    target_id: u64,
-) -> Result<u64, WriteError> {
-    use crate::entities::units::length_unit::emit_length_cbu_outer;
-    use crate::entities::units::mass_unit::emit_mass_cbu_outer;
-    use crate::entities::units::plane_angle_unit::emit_plane_angle_cbu_outer;
-    let dim_exp_step = |de: Option<crate::ir::DimensionalExponentsId>| {
-        de.map_or(0, |id| buf.dimensional_exponents_step_ids[id.0 as usize])
-    };
-    match named {
-        NamedUnit::Length(f) => Ok(emit_length_cbu_outer(
-            buf,
-            f.unit,
-            base_step,
-            target_id,
-            dim_exp_step(f.dim_exp),
-            f.cbu_factor_bare,
-        )),
-        NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
-            buf,
-            f.unit,
-            base_step,
-            target_id,
-            dim_exp_step(f.dim_exp),
-        )),
-        NamedUnit::Mass(f) => {
-            emit_mass_cbu_outer(buf, f.unit, base_step, target_id, dim_exp_step(f.dim_exp))
-        }
-        // SolidAngle / Ratio / bare Itself have no CBU variant; fall through.
-        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => {
-            emit_named_unit_plain(buf, named, target_id)
+            let dim_step = d.dimensions.map_or(0, |id| buf.step_id(id));
+            crate::early::serialize::serialize_named_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_named_unit(dim_step),
+            );
+            target_id
         }
     }
 }
@@ -244,27 +213,61 @@ fn emit_measure_with_unit(
     match mwu {
         MeasureWithUnit::Itself(d) => {
             use crate::entities::units::measure_with_unit::MeasureWithUnitHandler;
-            let unit_step = buf.named_unit_step_ids[d.unit.0 as usize];
+            let unit_step = buf.step_id(d.unit);
             // Bare supertype: re-emit `MEASURE_WITH_UNIT(<measure_type>(value), unit)`
             // preserving the generic form (not a typed subtype).
             MeasureWithUnitHandler::write(buf, (d.measure_type.clone(), d.value, unit_step))
         }
         MeasureWithUnit::Length { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             LengthMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::Mass { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             MassMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::PlaneAngle { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             PlaneAngleMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::Ratio { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             RatioMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
+        MeasureWithUnit::UncertaintyMeasureWithUnit {
+            value,
+            unit,
+            name,
+            description,
+        } => {
+            use crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWithUnitHandler;
+            let unit_step = buf.step_id(unit);
+            // The `value_component` measure kind is derived from the unit's
+            // category (matching the legacy unit-routed write).
+            let measure_type = uncertainty_measure_type(buf, *unit);
+            let unc = crate::ir::shape_rep::LengthUncertainty {
+                value: *value,
+                name: name.clone(),
+                description: description.clone(),
+            };
+            UncertaintyMeasureWithUnitHandler::write(buf, (unc, unit_step, measure_type))
+        }
+    }
+}
+
+/// Measure-kind token for an `UNCERTAINTY_MEASURE_WITH_UNIT`'s `value_component`,
+/// derived from its unit's `NamedUnit` category. `Length` / `Itself` (and the
+/// `None` pool fallback) map to `LENGTH_MEASURE`.
+fn uncertainty_measure_type(buf: &WriteBuffer, unit: crate::ir::id::NamedUnitId) -> &'static str {
+    let Some(pool) = buf.model.units_pool.as_ref() else {
+        return "LENGTH_MEASURE";
+    };
+    match &pool.named_units[unit] {
+        NamedUnit::PlaneAngle(_) => "PLANE_ANGLE_MEASURE",
+        NamedUnit::SolidAngle(_) => "SOLID_ANGLE_MEASURE",
+        NamedUnit::Mass(_) => "MASS_MEASURE",
+        NamedUnit::Ratio(_) => "RATIO_MEASURE",
+        _ => "LENGTH_MEASURE",
     }
 }
 
@@ -272,7 +275,7 @@ fn emit_measure_with_unit(
 mod tests {
     use crate::ir::arena::Arena;
     use crate::ir::shape_rep::LengthUncertainty;
-    use crate::ir::units::{NamedUnit, UnitsPool};
+    use crate::ir::units::{MeasureWithUnit, NamedUnit, UnitsPool};
     use crate::ir::{AngleUnit, LengthUnit, SolidAngleUnit, StepModel, UnitContext};
     use crate::parse;
     use crate::reader::ReaderContext;
@@ -350,18 +353,44 @@ mod tests {
             };
             let solid_id = pool.push_plain_solid_angle(self.solid_angle);
 
+            // Uncertainties become `UncertaintyMeasureWithUnit` entries in the
+            // shared MWU arena, referenced by id (source order: length, angle,
+            // solid), each bound to its kind's unit.
+            let mut uncertainty = Vec::new();
+            for (unc, unit) in [
+                (self.length_uncertainty, length_id),
+                (self.plane_angle_uncertainty, plane_id),
+                (self.solid_angle_uncertainty, solid_id),
+            ] {
+                if let Some(u) = unc {
+                    uncertainty.push(pool.measure_with_units.push(
+                        MeasureWithUnit::UncertaintyMeasureWithUnit {
+                            value: u.value,
+                            unit,
+                            name: u.name,
+                            description: u.description,
+                        },
+                    ));
+                }
+            }
+
             let ctx = UnitContext {
                 units: vec![length_id, plane_id, solid_id],
-                length_uncertainty: self.length_uncertainty,
-                plane_angle_uncertainty: self.plane_angle_uncertainty,
-                solid_angle_uncertainty: self.solid_angle_uncertainty,
-                form: crate::ir::shape_rep::UnitContextForm::Complex,
+                uncertainty,
+                form: crate::ir::shape_rep::UnitContextForm::Complex {
+                    coordinate_space_dimension: 3,
+                    repr_identifier: String::new(),
+                    repr_type: String::new(),
+                },
             };
 
             let mut arena: Arena<UnitContext> = Arena::default();
             arena.push(ctx);
             StepModel {
-                units: arena,
+                shape_rep: crate::ir::ShapeRepPool {
+                    unit_contexts: arena,
+                    ..Default::default()
+                },
                 units_pool: Some(pool),
                 ..StepModel::default()
             }
@@ -374,7 +403,7 @@ mod tests {
 
     /// Lookup the resolved `LengthUnit` for the first context's `length` ref.
     fn first_length(model: &StepModel) -> Option<LengthUnit> {
-        let ctx = model.units.iter().next()?;
+        let ctx = model.shape_rep.unit_contexts.iter().next()?;
         let pool = model.units_pool.as_ref()?;
         match pool.named_units[ctx.length(pool)?] {
             NamedUnit::Length(f) => Some(f.unit),
@@ -382,7 +411,7 @@ mod tests {
         }
     }
     fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
-        let ctx = model.units.iter().next()?;
+        let ctx = model.shape_rep.unit_contexts.iter().next()?;
         let pool = model.units_pool.as_ref()?;
         match pool.named_units[ctx.plane_angle(pool)?] {
             NamedUnit::PlaneAngle(f) => Some(f.unit),
@@ -390,7 +419,7 @@ mod tests {
         }
     }
     fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
-        let ctx = model.units.iter().next()?;
+        let ctx = model.shape_rep.unit_contexts.iter().next()?;
         let pool = model.units_pool.as_ref()?;
         match pool.named_units[ctx.solid_angle(pool)?] {
             NamedUnit::SolidAngle(f) => Some(f.unit),
@@ -398,7 +427,7 @@ mod tests {
         }
     }
     fn first_ctx(model: &StepModel) -> Option<&UnitContext> {
-        model.units.iter().next()
+        model.shape_rep.unit_contexts.iter().next()
     }
 
     #[test]
@@ -408,10 +437,22 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('INCH'"), "{out}");
-        assert!(out.contains("LENGTH_MEASURE_WITH_UNIT(25.4"), "{out}");
-        assert!(out.contains("DIMENSIONAL_EXPONENTS(1."), "{out}");
+        // units-CBU-①: the preserved factor MWU re-emits in the canonical typed
+        // form `LENGTH_MEASURE(25.4)` (corpus form), not a bare real.
+        assert!(
+            out.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4)"),
+            "{out}"
+        );
+        // units-CBU-②: the CBU outer's NAMED_UNIT.dimensions is `*` (Derived),
+        // matching the corpus complex-supertype form (NIST ctc_05) — no synth DE.
+        assert!(
+            out.contains("CONVERSION_BASED_UNIT('INCH',#") && out.contains("NAMED_UNIT(*))"),
+            "{out}"
+        );
         assert!(out.contains("(.MILLI.,.METRE.)"), "{out}");
     }
 
@@ -422,9 +463,14 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('FOOT'"), "{out}");
-        assert!(out.contains("LENGTH_MEASURE_WITH_UNIT(304.8"), "{out}");
+        assert!(
+            out.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(304.8)"),
+            "{out}"
+        );
         assert!(out.contains("(.MILLI.,.METRE.)"), "{out}");
     }
 
@@ -435,13 +481,16 @@ mod tests {
             AngleUnit::Degree,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('DEGREE'"), "{out}");
         assert!(
-            out.contains("PLANE_ANGLE_MEASURE_WITH_UNIT(0.017453"),
+            out.contains("PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.017453"),
             "{out}"
         );
-        assert!(out.contains("DIMENSIONAL_EXPONENTS(0."), "{out}");
+        // units-CBU-②: the CBU outer's NAMED_UNIT.dimensions is `*` (Derived).
+        assert!(out.contains("NAMED_UNIT(*) PLANE_ANGLE_UNIT())"), "{out}");
     }
 
     #[test]
@@ -451,7 +500,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(
             !out.contains("CONVERSION_BASED_UNIT"),
             "plain mm should not wrap in CBU: {out}"
@@ -466,7 +517,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
         assert!(out.contains("(.CENTI.,.METRE.)"), "{out}");
     }
@@ -478,7 +531,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
         assert!(out.contains("SI_UNIT($,.METRE.)"), "{out}");
     }
@@ -509,7 +564,9 @@ mod tests {
         ];
         for &(l, p, s) in cases {
             let model = model_with_units(UnitsBuilder::new(l, p, s));
-            let text = model.write_to_string().expect("write");
+            let text = model
+                .write_to_string(crate::SchemaTarget::Universal)
+                .expect("write");
             let graph = parse(&text).expect("re-parse");
             let back = ReaderContext::convert(&graph);
             assert!(
@@ -533,13 +590,16 @@ mod tests {
             )
             .length_self_wrap(true),
         );
-        let text = model.write_to_string().expect("write");
+        let text = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('METRE'"),
             "writer must emit CBU('METRE') for self-wrap length: {text}"
         );
-        assert!(text.contains("LENGTH_MEASURE_WITH_UNIT(1."));
-        assert!(text.contains("DIMENSIONAL_EXPONENTS(1."));
+        assert!(text.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(1."));
+        // units-CBU-②: CBU outer's NAMED_UNIT.dimensions is `*` (Derived).
+        assert!(text.contains("NAMED_UNIT(*))"), "{text}");
 
         let graph = parse(&text).expect("re-parse");
         let back = ReaderContext::convert(&graph);
@@ -557,7 +617,9 @@ mod tests {
             )
             .plane_angle_self_wrap(true),
         );
-        let text = model.write_to_string().expect("write");
+        let text = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('RADIAN'"),
             "writer must emit CBU('RADIAN') for self-wrap angle: {text}"
@@ -599,7 +661,9 @@ mod tests {
             .plane_angle_uncertainty(plane_unc.clone())
             .solid_angle_uncertainty(solid_unc.clone()),
         );
-        let text = model.write_to_string().expect("write");
+        let text = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(text.contains("LENGTH_MEASURE("), "{text}");
         assert!(text.contains("PLANE_ANGLE_MEASURE("), "{text}");
         assert!(text.contains("SOLID_ANGLE_MEASURE("), "{text}");
@@ -610,8 +674,9 @@ mod tests {
         let back = ReaderContext::convert(&graph);
         assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
         let ctx = first_ctx(&back.model).expect("ctx");
-        assert_eq!(ctx.length_uncertainty.as_ref(), Some(&length_unc));
-        assert_eq!(ctx.plane_angle_uncertainty.as_ref(), Some(&plane_unc));
-        assert_eq!(ctx.solid_angle_uncertainty.as_ref(), Some(&solid_unc));
+        let pool = back.model.units_pool.as_ref().expect("pool");
+        assert_eq!(ctx.length_uncertainty(pool), Some(length_unc));
+        assert_eq!(ctx.plane_angle_uncertainty(pool), Some(plane_unc));
+        assert_eq!(ctx.solid_angle_uncertainty(pool), Some(solid_unc));
     }
 }

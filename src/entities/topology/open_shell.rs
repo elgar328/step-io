@@ -1,13 +1,12 @@
-//! `OPEN_SHELL` handler.
-//!
-//! Sister handler of `CLOSED_SHELL`. Both share the read/write body in
-//! `closed_shell.rs`; only `is_open` flips and the entity name differs.
+//! `OPEN_SHELL` handler (2-layer path; shares the shell writer with
+//! `CLOSED_SHELL`).
 
+use crate::early::{bind, lower};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::topology::closed_shell::{read_shell_body, write_shell_body};
+use crate::entities::topology::closed_shell::write_shell_body;
 use crate::ir::ShellId;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -23,9 +22,10 @@ impl SimpleEntityHandler for OpenShellHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        read_shell_body(ctx, entity_id, attrs, "OPEN_SHELL", true)
+        let early = bind::bind_open_shell(entity_id, attrs)?;
+        lower::lower_open_shell(ctx, entity_id, &early)
     }
 
     fn write(buf: &mut WriteBuffer, id: ShellId) -> Result<u64, WriteError> {

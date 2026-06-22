@@ -15,11 +15,13 @@
 use std::collections::HashMap;
 
 use super::WriteBuffer;
+use crate::ir::PropertyDefinitionId;
 use crate::ir::arena::Arena;
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::Representation;
 use crate::ir::{
-    GeometryLeaf, Instance, Product, ProductId, Transform3d, WireframeContent, WireframeReprKind,
+    GeometryLeaf, Instance, Product, ProductCategoryId, ProductId, Transform3d, WireframeContent,
+    WireframeReprKind,
 };
 use crate::parser::entity::Attribute;
 use crate::parser::schema::{SchemaClass, StepSchema};
@@ -56,7 +58,7 @@ impl WriteBuffer<'_> {
         }
         // Clone out of `self.model` so the pass is free to call `&mut self`
         // methods without keeping a borrow on the model.
-        let schema = self.model.schema.clone();
+        let schema = self.model.metadata.schema.clone();
         let products = assembly.products.clone();
         self.emit_assembly_chain(&products, &schema)?;
         self.emit_pdca_cluster();
@@ -105,7 +107,7 @@ impl WriteBuffer<'_> {
                     ) else {
                         continue;
                     };
-                    let quantity_step = self.mwu_step_ids[mfu.quantity.0 as usize];
+                    let quantity_step = self.step_id(mfu.quantity);
                     let _ = MakeFromUsageOptionHandler::write(
                         self,
                         MakeFromUsageOptionWriteInput {
@@ -131,29 +133,25 @@ impl WriteBuffer<'_> {
         let mut pdcr_step_ids: Vec<u64> =
             Vec::with_capacity(assembly.product_definition_context_roles.len());
         for r in assembly.product_definition_context_roles.iter() {
-            let desc_attr = match &r.description {
-                Some(d) => Attribute::String(d.clone()),
-                None => Attribute::Unset,
-            };
-            let id = self.push_simple(
-                "PRODUCT_DEFINITION_CONTEXT_ROLE",
-                vec![Attribute::String(r.name.clone()), desc_attr],
+            let id = crate::early::serialize::serialize_product_definition_context_role(
+                self,
+                &crate::early::lift::lift_product_definition_context_role(r),
             );
             pdcr_step_ids.push(id);
         }
         for a in assembly.product_definition_context_associations.iter() {
+            // refs resolved here (orchestrator owns these caches); lift +
+            // generated serialize handle the L1 shape / emit.
             let Some(&pdef_step) = self.product_def_ids.get(&a.definition) else {
                 continue;
             };
             let pdc_step = self.pdc_step_ids[a.frame_of_reference.0 as usize];
             let role_step = pdcr_step_ids[a.role.0 as usize];
-            let _ = self.push_simple(
-                "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION",
-                vec![
-                    Attribute::EntityRef(pdef_step),
-                    Attribute::EntityRef(pdc_step),
-                    Attribute::EntityRef(role_step),
-                ],
+            let _ = crate::early::serialize::serialize_product_definition_context_association(
+                self,
+                &crate::early::lift::lift_product_definition_context_association(
+                    pdef_step, pdc_step, role_step,
+                ),
             );
         }
     }
@@ -175,15 +173,6 @@ impl WriteBuffer<'_> {
         schema: &StepSchema,
     ) -> Result<(), WriteError> {
         let fallback_ctx = self.emit_application_context(schema);
-
-        // Size the formation step-id cache to the arena so `emit_formation`
-        // can record each faithful formation's step id by `FormationId`.
-        let formation_arena_len = self
-            .model
-            .assembly
-            .as_ref()
-            .map_or(0, |a| a.product_definition_formations.len());
-        self.product_definition_formation_step_ids = vec![0; formation_arena_len];
 
         // Emit PRODUCT chain + shape representation + SDR for every product;
         // collect each product's PDEF and SR entity ids for later instance
@@ -247,7 +236,7 @@ impl WriteBuffer<'_> {
             let doc_refs: Vec<u64> = product
                 .associated_documents
                 .iter()
-                .map(|d| self.plm_document_step_ids[d.0 as usize])
+                .map(|d| self.step_id(d))
                 .collect();
             // Reader-built products carry the canonical PD id/description in the
             // arena (the legacy synthesis hardcoded "design"/""). Kernel-built
@@ -298,7 +287,7 @@ impl WriteBuffer<'_> {
                 // Reader-built IR: the representation was pre-emitted in
                 // arena order by `emit_representations_pre_pass`. Reuse the
                 // cached step id rather than re-emitting inline.
-                let geo_sr = self.representation_step_ids[rep_id.0 as usize];
+                let geo_sr = self.step_id(rep_id);
                 match product.outer_representation_id {
                     // Fusion 360 / CATIA indirect form: the outer plain SR
                     // wrapper is a separate pre-emitted arena entry. The
@@ -306,7 +295,7 @@ impl WriteBuffer<'_> {
                     // emitted from the `representation_relationships`
                     // arena (phase srr-unify-b), so we only need to point
                     // the SDR at the outer SR here.
-                    Some(outer_id) => self.representation_step_ids[outer_id.0 as usize],
+                    Some(outer_id) => self.step_id(outer_id),
                     None => geo_sr,
                 }
             } else {
@@ -405,9 +394,14 @@ impl WriteBuffer<'_> {
         use crate::entities::shape_rep::parametric_representation_context::ParametricRepresentationContextHandler;
         use crate::entities::shape_rep::representation_context::RepresentationContextHandler;
         use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-        let entries: Vec<_> = self.model.unitless_contexts.iter().cloned().collect();
-        self.unitless_context_step_ids = Vec::with_capacity(entries.len());
-        for uc in entries {
+        let entries: Vec<_> = self
+            .model
+            .shape_rep
+            .unitless_contexts
+            .iter_with_ids()
+            .map(|(__id, v)| (__id, v.clone()))
+            .collect();
+        for (__id, uc) in entries {
             // `Some(dim)` → GRC+PRC+RC complex; `None` → plain simple
             // REPRESENTATION_CONTEXT.
             let step_id = if uc.coordinate_space_dimension.is_some() {
@@ -415,7 +409,7 @@ impl WriteBuffer<'_> {
             } else {
                 RepresentationContextHandler::write(self, uc)?
             };
-            self.unitless_context_step_ids.push(step_id);
+            self.set_step_id(__id, step_id);
         }
         Ok(())
     }
@@ -431,11 +425,15 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_draughting_models(&mut self) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::draughting_model::DraughtingModelHandler;
-        let reprs = self.model.representations.clone();
+        self.assert_phase(
+            super::EmitPhase::Annotations,
+            "emit_draughting_models (indexes annotation_occurrence/draughting_callout step ids)",
+        );
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::DraughtingModel(dm) = repr {
                 let step_id = DraughtingModelHandler::write(self, dm.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -454,11 +452,11 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::tessellated_shape_representation::TessellatedShapeRepresentationHandler;
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::TessellatedShapeRepresentation(tsr) = repr {
                 let step_id = TessellatedShapeRepresentationHandler::write(self, tsr.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -476,11 +474,11 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::constructive_geometry_representation::ConstructiveGeometryRepresentationHandler;
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ConstructiveGeometry(cgr) = repr {
                 let step_id = ConstructiveGeometryRepresentationHandler::write(self, cgr.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -495,11 +493,11 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::srwp::ShapeRepresentationWithParametersHandler;
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ShapeRepresentationWithParameters(srwp) = repr {
                 let step_id = ShapeRepresentationWithParametersHandler::write(self, srwp.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -517,6 +515,7 @@ impl WriteBuffer<'_> {
         use crate::ir::shape_rep::RepresentationRelationship;
         let rrs: Vec<_> = self
             .model
+            .shape_rep
             .representation_relationships
             .iter()
             .cloned()
@@ -525,16 +524,8 @@ impl WriteBuffer<'_> {
             match rr {
                 RepresentationRelationship::Itself(data) => {
                     use crate::entities::shape_rep::representation_relationship::RepresentationRelationshipHandler;
-                    let r1 = self
-                        .representation_step_ids
-                        .get(data.rep_1.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
-                    let r2 = self
-                        .representation_step_ids
-                        .get(data.rep_2.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let r1 = self.step_id(data.rep_1);
+                    let r2 = self.step_id(data.rep_2);
                     if r1 == 0 || r2 == 0 {
                         continue;
                     }
@@ -547,32 +538,16 @@ impl WriteBuffer<'_> {
                 }
                 RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(mddr) => {
                     use crate::entities::shape_rep::mddr::MechanicalDesignAndDraughtingRelationshipHandler;
-                    let r1 = self
-                        .representation_step_ids
-                        .get(mddr.rep_1.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
-                    let r2 = self
-                        .representation_step_ids
-                        .get(mddr.rep_2.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let r1 = self.step_id(mddr.rep_1);
+                    let r2 = self.step_id(mddr.rep_2);
                     if r1 == 0 || r2 == 0 {
                         continue;
                     }
                     MechanicalDesignAndDraughtingRelationshipHandler::write(self, mddr)?;
                 }
                 RepresentationRelationship::ShapeRepresentationRelationship(srr) => {
-                    let r1 = self
-                        .representation_step_ids
-                        .get(srr.rep_1.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
-                    let r2 = self
-                        .representation_step_ids
-                        .get(srr.rep_2.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let r1 = self.step_id(srr.rep_1);
+                    let r2 = self.step_id(srr.rep_2);
                     if r1 == 0 || r2 == 0 {
                         continue;
                     }
@@ -591,7 +566,11 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_representations_pre_pass(
         &mut self,
     ) -> Result<(), WriteError> {
-        let reprs = self.model.representations.clone();
+        self.assert_phase(
+            super::EmitPhase::Representations,
+            "emit_representations_pre_pass (indexes geometry/topology/representation_item step ids)",
+        );
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             // Mdgpr (visualization pass) and DraughtingModel (post-callout
             // pass) are emitted later — their `items` refs depend on
@@ -617,36 +596,38 @@ impl WriteBuffer<'_> {
                     .any(|it| matches!(it, RepresentationItemRef::MappedItem(_)))
                 {
                     let reserved = self.fresh();
-                    self.representation_step_ids[id.0 as usize] = reserved;
+                    self.set_step_id(id, reserved);
                     self.deferred_assembly_absr_ids.push((id, reserved));
                     continue;
                 }
             }
             let step_id = self.emit_representation(repr)?;
-            self.representation_step_ids[id.0 as usize] = step_id;
+            self.set_step_id(id, step_id);
         }
         Ok(())
     }
 
-    /// Build the `[name, items, context]` attrs of an
-    /// `ADVANCED_BREP_SHAPE_REPRESENTATION` from its arena items, preserving
-    /// source order. Shared by the pre-pass (solid ABSR) and the deferred pass
-    /// (assembly ABSR whose MAPPED_ITEM items emit later).
-    fn advanced_brep_attrs(
+    /// Build the L1 `EarlyAdvancedBrepShapeRepresentation` from an arena ABSR,
+    /// resolving items in source order. Shared by the pre-pass (solid ABSR) and
+    /// the deferred pass (assembly ABSR whose MAPPED_ITEM items emit later).
+    /// `context` is always an `EntityRef` here — `lower` drops any carrier whose
+    /// context did not resolve.
+    fn advanced_brep_early(
         &mut self,
         r: &crate::ir::shape_rep::AdvancedBrepRepr,
-    ) -> Result<Vec<Attribute>, WriteError> {
+    ) -> Result<crate::early::model::EarlyAdvancedBrepShapeRepresentation, WriteError> {
         let mut items = Vec::with_capacity(r.items.len());
         for it in &r.items {
-            items.push(Attribute::EntityRef(
-                self.emit_representation_item_ref(*it)?,
-            ));
+            items.push(self.emit_representation_item_ref(*it)?);
         }
-        Ok(vec![
-            Attribute::String(r.name.clone()),
-            Attribute::List(items),
-            self.repr_context_attr(r.context),
-        ])
+        let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+            unreachable!("ABSR context is guaranteed resolved by lower → EntityRef")
+        };
+        Ok(crate::early::lift::lift_advanced_brep_shape_representation(
+            r.name.clone(),
+            items,
+            context,
+        ))
     }
 
     /// Emit the bodies of assembly ABSRs whose step ids were reserved in
@@ -656,11 +637,13 @@ impl WriteBuffer<'_> {
         &mut self,
     ) -> Result<(), WriteError> {
         let deferred = std::mem::take(&mut self.deferred_assembly_absr_ids);
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (rid, reserved) in deferred {
             if let Representation::AdvancedBrep(r) = &reprs[rid] {
-                let attrs = self.advanced_brep_attrs(r)?;
-                self.push_simple_with_id(reserved, "ADVANCED_BREP_SHAPE_REPRESENTATION", attrs);
+                let early = self.advanced_brep_early(r)?;
+                crate::early::serialize::serialize_advanced_brep_shape_representation_with_id(
+                    self, reserved, &early,
+                );
             }
         }
         Ok(())
@@ -682,13 +665,17 @@ impl WriteBuffer<'_> {
 
         match repr {
             Representation::AdvancedBrep(r) => {
-                let attrs = self.advanced_brep_attrs(r)?;
-                Ok(self.push_simple("ADVANCED_BREP_SHAPE_REPRESENTATION", attrs))
+                let early = self.advanced_brep_early(r)?;
+                Ok(
+                    crate::early::serialize::serialize_advanced_brep_shape_representation(
+                        self, &early,
+                    ),
+                )
             }
             Representation::ManifoldSurface(r) => {
                 let mut items = Vec::with_capacity(2);
                 if let Some(frame) = r.ref_frame {
-                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                    items.push(self.emit_axis2_placement_3d(frame)?);
                 }
                 // Route SBSM emit through the unified GRI arena cache so
                 // an SBSM also referenced from a STYLED_ITEM doesn't
@@ -698,7 +685,7 @@ impl WriteBuffer<'_> {
                 // emit from the flattened `shells`.
                 if r.sbsm_ids.is_empty() {
                     let sbsm = ShellBasedSurfaceModelHandler::write(self, r.shells.clone())?;
-                    items.push(Attribute::EntityRef(sbsm));
+                    items.push(sbsm);
                 } else {
                     for sbsm_id in &r.sbsm_ids {
                         let step_id = self.emit_representation_item_ref(
@@ -706,36 +693,41 @@ impl WriteBuffer<'_> {
                                 *sbsm_id,
                             ),
                         )?;
-                        items.push(Attribute::EntityRef(step_id));
+                        items.push(step_id);
                     }
                 }
-                Ok(self.push_simple(
-                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
-                    vec![
-                        Attribute::String(r.name.clone()),
-                        Attribute::List(items),
-                        self.repr_context_attr(r.context),
-                    ],
-                ))
+                let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+                    unreachable!("MSSR context is guaranteed resolved by lower → EntityRef")
+                };
+                let early = crate::early::lift::lift_manifold_surface_shape_representation(
+                    r.name.clone(),
+                    items,
+                    context,
+                );
+                Ok(
+                    crate::early::serialize::serialize_manifold_surface_shape_representation(
+                        self, &early,
+                    ),
+                )
             }
             Representation::Plain(r) => {
                 let mut items = Vec::with_capacity(1);
                 if let Some(frame) = r.frame {
-                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                    items.push(self.emit_axis2_placement_3d(frame)?);
                 }
-                Ok(self.push_simple(
-                    "SHAPE_REPRESENTATION",
-                    vec![
-                        Attribute::String(r.name.clone()),
-                        Attribute::List(items),
-                        self.repr_context_attr(r.context),
-                    ],
+                let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+                    unreachable!("SR context is guaranteed resolved by lower → EntityRef")
+                };
+                let early =
+                    crate::early::lift::lift_shape_representation(r.name.clone(), items, context);
+                Ok(crate::early::serialize::serialize_shape_representation(
+                    self, &early,
                 ))
             }
             Representation::Wireframe(r) => {
                 let mut items = Vec::with_capacity(2);
                 if let Some(frame) = r.ref_frame {
-                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                    items.push(self.emit_axis2_placement_3d(frame)?);
                 }
                 // Route GCS/GS emits through the unified GRI arena cache
                 // so a curve set also referenced from a STYLED_ITEM
@@ -753,7 +745,7 @@ impl WriteBuffer<'_> {
                     } else {
                         GeometricSetHandler::write(self, set_input)?
                     };
-                    items.push(Attribute::EntityRef(set_ref));
+                    items.push(set_ref);
                 } else {
                     for gcs_id in &r.gcs_ids {
                         let set_ref = self.emit_representation_item_ref(
@@ -761,25 +753,32 @@ impl WriteBuffer<'_> {
                                 *gcs_id,
                             ),
                         )?;
-                        items.push(Attribute::EntityRef(set_ref));
+                        items.push(set_ref);
                     }
                 }
-                let name = match r.content.repr_kind {
+                let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+                    unreachable!("wireframe SR context is guaranteed resolved by lower → EntityRef")
+                };
+                // `repr_kind` selects which wrapper entity the source used so
+                // the original spelling round-trips.
+                Ok(match r.content.repr_kind {
                     WireframeReprKind::Surface => {
-                        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"
+                        let early = crate::early::lift::lift_geometrically_bounded_surface_shape_representation(
+                            r.name.clone(),
+                            items,
+                            context,
+                        );
+                        crate::early::serialize::serialize_geometrically_bounded_surface_shape_representation(self, &early)
                     }
                     WireframeReprKind::Wireframe => {
-                        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"
+                        let early = crate::early::lift::lift_geometrically_bounded_wireframe_shape_representation(
+                            r.name.clone(),
+                            items,
+                            context,
+                        );
+                        crate::early::serialize::serialize_geometrically_bounded_wireframe_shape_representation(self, &early)
                     }
-                };
-                Ok(self.push_simple(
-                    name,
-                    vec![
-                        Attribute::String(r.name.clone()),
-                        Attribute::List(items),
-                        self.repr_context_attr(r.context),
-                    ],
-                ))
+                })
             }
             Representation::Mdgpr(_) => {
                 unreachable!("MDGPR is emitted by the visualization pass, not the pre-emit pass")
@@ -811,22 +810,20 @@ impl WriteBuffer<'_> {
         }
     }
 
-    /// Resolve a representation's `Option<RepresentationContextRef>` to
-    /// its `context_of_items` attribute. `Unitful` indexes the cached
-    /// `REPRESENTATION_CONTEXT` step ids populated by the unit pass;
-    /// `Unitless` indexes the GRC+PRC complex step ids populated by the
-    /// `emit_unitless_contexts` pass; `None` emits `Unset`.
+    /// Resolve a representation's (schema-required, non-optional)
+    /// `RepresentationContextRef` to its `context_of_items` attribute. `Unitful`
+    /// indexes the cached `REPRESENTATION_CONTEXT` step ids populated by the unit
+    /// pass; `Unitless` indexes the GRC+PRC complex step ids populated by the
+    /// `emit_unitless_contexts` pass. Always an `EntityRef` — `lower` drops any
+    /// carrier whose context did not resolve, so there is no `Unset` case.
     pub(crate) fn repr_context_attr(
         &self,
-        context: Option<crate::ir::shape_rep::RepresentationContextRef>,
+        context: crate::ir::shape_rep::RepresentationContextRef,
     ) -> Attribute {
         use crate::ir::shape_rep::RepresentationContextRef as R;
         match context {
-            Some(R::Unitful(id)) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
-            Some(R::Unitless(id)) => {
-                Attribute::EntityRef(self.unitless_context_step_ids[id.0 as usize])
-            }
-            None => Attribute::Unset,
+            R::Unitful(id) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
+            R::Unitless(id) => Attribute::EntityRef(self.step_id(id)),
         }
     }
 
@@ -836,6 +833,12 @@ impl WriteBuffer<'_> {
 
     #[allow(clippy::too_many_lines)]
     fn emit_application_context(&mut self, schema: &StepSchema) -> AssemblyContextIds {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::application_context::ApplicationContextHandler;
+        use crate::entities::plm::application_protocol_definition::{
+            ApplicationProtocolDefinitionHandler, ApplicationProtocolDefinitionWriteInput,
+        };
+        use crate::ir::plm::ApplicationContext;
         use crate::ir::{ProductContext, ProductDefinitionContext};
         let has_ac = self
             .model
@@ -846,110 +849,148 @@ impl WriteBuffer<'_> {
             !a.product_contexts.is_empty() || !a.product_definition_contexts.is_empty()
         });
         if has_ac || has_pc_pdc {
-            // 1) Emit all IR AC entries, caching step ids by IR index.
-            let plm = self.model.plm.clone().unwrap_or_default();
-            self.ac_step_ids = Vec::with_capacity(plm.application_contexts.len());
-            for ac in plm.application_contexts.iter() {
-                let id = self.push_simple(
-                    "APPLICATION_CONTEXT",
-                    vec![Attribute::String(ac.application.clone())],
-                );
-                self.ac_step_ids.push(id);
-            }
-            // If IR has no AC but does have PC/PDC, synthesise one AC for
-            // PC.frame_of_reference to point at.
-            if self.ac_step_ids.is_empty() {
-                let (desc, status, name, year) = apd_info(schema);
-                let id =
-                    self.push_simple("APPLICATION_CONTEXT", vec![Attribute::String(desc.into())]);
-                self.ac_step_ids.push(id);
-                let _ = self.push_simple(
-                    "APPLICATION_PROTOCOL_DEFINITION",
-                    vec![
-                        Attribute::String(status.into()),
-                        Attribute::String(name.into()),
-                        Attribute::Integer(year),
-                        Attribute::EntityRef(id),
-                    ],
-                );
-            }
-            // 2) Emit all APD entries (refs AC via cache).
-            self.apd_step_ids = Vec::with_capacity(plm.application_protocol_definitions.len());
-            for apd in plm.application_protocol_definitions.iter() {
-                let ac_step = self.ac_step_ids[apd.application.0 as usize];
-                let id = self.push_simple(
-                    "APPLICATION_PROTOCOL_DEFINITION",
-                    vec![
-                        Attribute::String(apd.status.clone()),
-                        Attribute::String(apd.application_interpreted_model_schema_name.clone()),
-                        Attribute::Integer(apd.application_protocol_year),
-                        Attribute::EntityRef(ac_step),
-                    ],
-                );
-                self.apd_step_ids.push(id);
-            }
+            // 1+2) AC/APD — retarget to a single target pair (non-Universal),
+            // or re-emit the source AC/APD verbatim (Universal).
+            if let Some((apd_desc, apd_status, apd_name, apd_year)) =
+                crate::early::profile::SchemaProfile::for_target(self.target).apd()
+            {
+                let ac_id = ApplicationContextHandler::write(
+                    self,
+                    ApplicationContext {
+                        application: apd_desc.into(),
+                    },
+                )
+                .expect("AC write only pushes one simple entity");
+                // All PC/PDC frame_of_reference indices resolve to the one
+                // target AC.
+                let n = self
+                    .model
+                    .plm
+                    .as_ref()
+                    .map_or(0, |p| p.application_contexts.len())
+                    .max(1);
+                self.ac_step_ids = vec![ac_id; n];
+                let _ = ApplicationProtocolDefinitionHandler::write(
+                    self,
+                    ApplicationProtocolDefinitionWriteInput {
+                        status: apd_status.into(),
+                        application_interpreted_model_schema_name: apd_name.into(),
+                        application_protocol_year: apd_year,
+                        application: ac_id,
+                    },
+                )
+                .expect("APD write only pushes one simple entity");
+            } else {
+                // 1) Emit all IR AC entries, caching step ids by IR index.
+                let plm = self.model.plm.clone().unwrap_or_default();
+                self.ac_step_ids = Vec::with_capacity(plm.application_contexts.len());
+                for ac in plm.application_contexts.iter() {
+                    let id = ApplicationContextHandler::write(self, ac.clone())
+                        .expect("AC write only pushes one simple entity");
+                    self.ac_step_ids.push(id);
+                }
+                // If IR has no AC but does have PC/PDC, synthesise one AC for
+                // PC.frame_of_reference to point at.
+                if self.ac_step_ids.is_empty() {
+                    let (desc, status, name, year) = apd_info(schema);
+                    let id = ApplicationContextHandler::write(
+                        self,
+                        ApplicationContext {
+                            application: desc.into(),
+                        },
+                    )
+                    .expect("AC write only pushes one simple entity");
+                    self.ac_step_ids.push(id);
+                    let _ = ApplicationProtocolDefinitionHandler::write(
+                        self,
+                        ApplicationProtocolDefinitionWriteInput {
+                            status: status.into(),
+                            application_interpreted_model_schema_name: name.into(),
+                            application_protocol_year: year,
+                            application: id,
+                        },
+                    )
+                    .expect("APD write only pushes one simple entity");
+                }
+                // 2) Emit all APD entries (refs AC via cache). APD is top-level
+                // (no consumer), so its step id is not cached.
+                for apd in plm.application_protocol_definitions.iter() {
+                    let ac_step = self.ac_step_ids[apd.application.0 as usize];
+                    let _ = ApplicationProtocolDefinitionHandler::write(
+                        self,
+                        ApplicationProtocolDefinitionWriteInput {
+                            status: apd.status.clone(),
+                            application_interpreted_model_schema_name: apd
+                                .application_interpreted_model_schema_name
+                                .clone(),
+                            application_protocol_year: apd.application_protocol_year,
+                            application: ac_step,
+                        },
+                    )
+                    .expect("APD write only pushes one simple entity");
+                }
+            } // end Universal AC/APD re-emit
             // 3) Emit all PC entries (refs AC via cache).
             let assembly = self.model.assembly.clone().unwrap_or_default();
             self.pc_step_ids = Vec::with_capacity(assembly.product_contexts.len());
             for pc in assembly.product_contexts.iter() {
-                let entity_name = match pc {
-                    ProductContext::Itself(_) => "PRODUCT_CONTEXT",
-                    ProductContext::Mechanical(_) => "MECHANICAL_CONTEXT",
-                };
+                // ref resolved here (orchestrator owns the ac cache); lift +
+                // generated serialize handle the L1 shape / emit.
                 let d = pc.data();
                 let ac_step = self.ac_step_ids[d.frame_of_reference.0 as usize];
-                let id = self.push_simple(
-                    entity_name,
-                    vec![
-                        Attribute::String(d.name.clone()),
-                        Attribute::EntityRef(ac_step),
-                        Attribute::String(d.discipline_type.clone()),
-                    ],
-                );
+                let id = match pc {
+                    ProductContext::Itself(_) => {
+                        crate::early::serialize::serialize_product_context(
+                            self,
+                            &crate::early::lift::lift_product_context(d, ac_step),
+                        )
+                    }
+                    ProductContext::Mechanical(_) => {
+                        crate::early::serialize::serialize_mechanical_context(
+                            self,
+                            &crate::early::lift::lift_mechanical_context(d, ac_step),
+                        )
+                    }
+                };
                 self.pc_step_ids.push(id);
             }
             // 4) Emit all PDC entries (refs AC via cache).
             self.pdc_step_ids = Vec::with_capacity(assembly.product_definition_contexts.len());
             for pdc in assembly.product_definition_contexts.iter() {
-                let entity_name = match pdc {
-                    ProductDefinitionContext::Itself(_) => "PRODUCT_DEFINITION_CONTEXT",
-                    ProductDefinitionContext::Design(_) => "DESIGN_CONTEXT",
-                };
                 let d = pdc.data();
                 let ac_step = self.ac_step_ids[d.frame_of_reference.0 as usize];
-                let id = self.push_simple(
-                    entity_name,
-                    vec![
-                        Attribute::String(d.name.clone()),
-                        Attribute::EntityRef(ac_step),
-                        Attribute::String(d.life_cycle_stage.clone()),
-                    ],
-                );
+                let id = match pdc {
+                    ProductDefinitionContext::Itself(_) => {
+                        crate::early::serialize::serialize_product_definition_context(
+                            self,
+                            &crate::early::lift::lift_product_definition_context(d, ac_step),
+                        )
+                    }
+                    ProductDefinitionContext::Design(_) => {
+                        crate::early::serialize::serialize_design_context(
+                            self,
+                            &crate::early::lift::lift_design_context(d, ac_step),
+                        )
+                    }
+                };
                 self.pdc_step_ids.push(id);
             }
             // Fallback PC/PDC for products without explicit context.
+            let ac = self.ac_step_ids[0];
             let product_ctx = if let Some(&id) = self.pc_step_ids.first() {
                 id
             } else {
-                self.push_simple(
-                    "PRODUCT_CONTEXT",
-                    vec![
-                        Attribute::String(String::new()),
-                        Attribute::EntityRef(self.ac_step_ids[0]),
-                        Attribute::String("mechanical".into()),
-                    ],
+                crate::early::serialize::serialize_product_context(
+                    self,
+                    &crate::early::lift::lift_default_product_context(ac),
                 )
             };
             let pdef_ctx = if let Some(&id) = self.pdc_step_ids.first() {
                 id
             } else {
-                self.push_simple(
-                    "PRODUCT_DEFINITION_CONTEXT",
-                    vec![
-                        Attribute::String("part definition".into()),
-                        Attribute::EntityRef(self.ac_step_ids[0]),
-                        Attribute::String("design".into()),
-                    ],
+                crate::early::serialize::serialize_product_definition_context(
+                    self,
+                    &crate::early::lift::lift_default_product_definition_context(ac),
                 )
             };
             return AssemblyContextIds {
@@ -957,33 +998,37 @@ impl WriteBuffer<'_> {
                 pdef_ctx,
             };
         }
-        // Fallback: synthesise from schema class (no IR context entries).
-        let (desc, status, name, year) = apd_info(schema);
-        let app_ctx = self.push_simple("APPLICATION_CONTEXT", vec![Attribute::String(desc.into())]);
-        let _ = self.push_simple(
-            "APPLICATION_PROTOCOL_DEFINITION",
-            vec![
-                Attribute::String(status.into()),
-                Attribute::String(name.into()),
-                Attribute::Integer(year),
-                Attribute::EntityRef(app_ctx),
-            ],
+        // Fallback: synthesise from the target (non-Universal) or the model's
+        // schema class (Universal — no IR context entries).
+        let (desc, status, name, year) =
+            match crate::early::profile::SchemaProfile::for_target(self.target).apd() {
+                Some(apd) => apd,
+                None => apd_info(schema),
+            };
+        let app_ctx = ApplicationContextHandler::write(
+            self,
+            ApplicationContext {
+                application: desc.into(),
+            },
+        )
+        .expect("AC write only pushes one simple entity");
+        let _ = ApplicationProtocolDefinitionHandler::write(
+            self,
+            ApplicationProtocolDefinitionWriteInput {
+                status: status.into(),
+                application_interpreted_model_schema_name: name.into(),
+                application_protocol_year: year,
+                application: app_ctx,
+            },
+        )
+        .expect("APD write only pushes one simple entity");
+        let product_ctx = crate::early::serialize::serialize_product_context(
+            self,
+            &crate::early::lift::lift_default_product_context(app_ctx),
         );
-        let product_ctx = self.push_simple(
-            "PRODUCT_CONTEXT",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::EntityRef(app_ctx),
-                Attribute::String("mechanical".into()),
-            ],
-        );
-        let pdef_ctx = self.push_simple(
-            "PRODUCT_DEFINITION_CONTEXT",
-            vec![
-                Attribute::String("part definition".into()),
-                Attribute::EntityRef(app_ctx),
-                Attribute::String("design".into()),
-            ],
+        let pdef_ctx = crate::early::serialize::serialize_product_definition_context(
+            self,
+            &crate::early::lift::lift_default_product_definition_context(app_ctx),
         );
         AssemblyContextIds {
             product_ctx,
@@ -1051,7 +1096,7 @@ impl WriteBuffer<'_> {
                 }
             }
             .expect("formation write only pushes one simple entity");
-            self.product_definition_formation_step_ids[fid.0 as usize] = step;
+            self.set_step_id(fid, step);
             return step;
         }
 
@@ -1084,6 +1129,9 @@ impl WriteBuffer<'_> {
     /// arena order, emitting PC `Itself` and PRPC variants in turn.
     /// Slot id of every emit is cached in `product_category_step_ids`
     /// for the PCR emitter to consume.
+    // `idx` is an arena index, which fits u32 by the arena's own overflow
+    // guard — the `idx as u32` id reconstruction is safe.
+    #[allow(clippy::cast_possible_truncation)]
     pub(in crate::writer::buffer) fn emit_product_categories_arena(&mut self) {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::assembly_product::product_category::{
@@ -1097,7 +1145,6 @@ impl WriteBuffer<'_> {
         let pool = self.model.assembly.as_ref();
         let Some(pool) = pool else { return };
         let pcs: Vec<ProductCategory> = pool.product_categories.iter().cloned().collect();
-        self.product_category_step_ids = vec![0; pcs.len()];
         for (idx, pc) in pcs.iter().enumerate() {
             let step = match pc {
                 ProductCategory::Itself(data) => ProductCategoryHandler::write(
@@ -1128,7 +1175,7 @@ impl WriteBuffer<'_> {
                     .expect("PRPC write only pushes one simple entity")
                 }
             };
-            self.product_category_step_ids[idx] = step;
+            self.set_step_id(ProductCategoryId(idx as u32), step);
         }
     }
 
@@ -1148,22 +1195,16 @@ impl WriteBuffer<'_> {
             .cloned()
             .collect();
         for pcr in pcrs {
-            let pc = self
-                .product_category_step_ids
-                .get(pcr.category.0 as usize)
-                .copied()
-                .unwrap_or(0);
-            let prpc = self
-                .product_category_step_ids
-                .get(pcr.sub_category.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let pc = self.step_id(pcr.category);
+            let prpc = self.step_id(pcr.sub_category);
             if pc == 0 || prpc == 0 {
                 continue;
             }
             let _ = ProductCategoryRelationshipHandler::write(
                 self,
                 ProductCategoryRelationshipWriteInput {
+                    name: pcr.name.clone(),
+                    description: pcr.description.clone(),
                     pc_ref: pc,
                     prpc_ref: prpc,
                 },
@@ -1335,14 +1376,12 @@ impl WriteBuffer<'_> {
             return Ok(geo_sr);
         };
         let outer_axis = self.emit_axis2_placement_3d(outer_frame)?;
-        let plain_sr = self.push_simple(
-            "SHAPE_REPRESENTATION",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(vec![Attribute::EntityRef(outer_axis)]),
-                Attribute::EntityRef(unit_ctx),
-            ],
+        let early = crate::early::lift::lift_shape_representation(
+            String::new(),
+            vec![outer_axis],
+            unit_ctx,
         );
+        let plain_sr = crate::early::serialize::serialize_shape_representation(self, &early);
         let _ = self.emit_simple_srr(plain_sr, geo_sr);
         Ok(plain_sr)
     }
@@ -1363,6 +1402,9 @@ impl WriteBuffer<'_> {
     // Per-instance emitters
     // ----------------------------------------------------------------
 
+    // `slot` is an arena index, which fits u32 by the arena's own overflow
+    // guard — the `slot as u32` id reconstruction is safe.
+    #[allow(clippy::cast_possible_truncation)]
     fn emit_instance_bundle(
         &mut self,
         inst: &Instance,
@@ -1385,15 +1427,14 @@ impl WriteBuffer<'_> {
             .and_then(|a| self.nauo_pds_arena_slot.get(&a).cloned());
         let nauo_pds = match arena_pds {
             Some((slot, name, description)) => {
-                let step = self.push_simple(
-                    "PRODUCT_DEFINITION_SHAPE",
-                    vec![
-                        Attribute::String(name),
-                        Attribute::String(description),
-                        Attribute::EntityRef(nauo),
-                    ],
+                let early = crate::early::lift::lift_product_definition_shape(
+                    name,
+                    Some(description),
+                    nauo,
                 );
-                self.property_definition_step_ids[slot] = step;
+                let step =
+                    crate::early::serialize::serialize_product_definition_shape(self, &early);
+                self.set_step_id(PropertyDefinitionId(slot as u32), step);
                 step
             }
             None => self.emit_nauo_owned_pds(nauo),
@@ -1403,9 +1444,8 @@ impl WriteBuffer<'_> {
         // Re-emit one SDR per entry, all sharing the same `nauo_pds` the CDSR
         // uses (so every SDR references the one placement PDS, as in the source).
         for &sr_id in &inst.placement_representation {
-            if let Some(&sr_step) = self.representation_step_ids.get(sr_id.0 as usize)
-                && sr_step != 0
-            {
+            let sr_step = self.step_id(sr_id);
+            if sr_step != 0 {
                 self.emit_sdr(nauo_pds, sr_step);
             }
         }
@@ -1420,27 +1460,24 @@ impl WriteBuffer<'_> {
                 use crate::ir::shape_rep::RepresentationRelationship;
                 let (name, description, p_step, c_step) = match &self
                     .model
+                    .shape_rep
                     .representation_relationships[rrid]
                 {
                     RepresentationRelationship::RepresentationRelationshipWithTransformation(d) => {
-                        let p = self
-                            .representation_step_ids
-                            .get(d.rep_1.0 as usize)
-                            .copied()
-                            .filter(|&s| s != 0)
-                            .unwrap_or(parent_sr);
-                        let c = self
-                            .representation_step_ids
-                            .get(d.rep_2.0 as usize)
-                            .copied()
-                            .filter(|&s| s != 0)
-                            .unwrap_or(child_sr);
+                        let p = match self.step_id(d.rep_1) {
+                            0 => parent_sr,
+                            s => s,
+                        };
+                        let c = match self.step_id(d.rep_2) {
+                            0 => child_sr,
+                            s => s,
+                        };
                         (d.name.clone(), d.description.clone(), p, c)
                     }
                     _ => (String::new(), String::new(), parent_sr, child_sr),
                 };
                 let rrwt = self.emit_rrwt_complex(&name, &description, p_step, c_step, idt);
-                self.representation_relationship_step_ids[rrid.0 as usize] = rrwt;
+                self.set_step_id(rrid, rrwt);
                 rrwt
             }
             None => self.emit_rrwt_complex("", "", parent_sr, child_sr, idt),
@@ -1482,46 +1519,33 @@ impl WriteBuffer<'_> {
         use crate::entities::assembly_product::next_assembly_usage_occurrence::{
             NextAssemblyUsageOccurrenceHandler, NextAssemblyUsageOccurrenceWriteInput,
         };
-        if let Some(acuid) = inst.acu {
-            let (id, name, description, reference_designator) = {
-                let acu = &self
-                    .model
-                    .assembly
-                    .as_ref()
-                    .expect("assembly present when Instance.acu is set")
-                    .assembly_component_usages[acuid];
-                (
-                    acu.id.clone(),
-                    acu.name.clone(),
-                    acu.description.clone(),
-                    acu.reference_designator.clone(),
-                )
-            };
-            let ref_designator_attr = match reference_designator {
-                Some(s) => Attribute::String(s),
-                None => Attribute::Unset,
-            };
-            return self.push_simple(
-                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
-                vec![
-                    Attribute::String(id),
-                    Attribute::String(name),
-                    Attribute::String(description),
-                    Attribute::EntityRef(parent_pdef),
-                    Attribute::EntityRef(child_pdef),
-                    ref_designator_attr,
-                ],
-            );
-        }
-        NextAssemblyUsageOccurrenceHandler::write(
-            self,
+        let input = if let Some(acuid) = inst.acu {
+            let acu = &self
+                .model
+                .assembly
+                .as_ref()
+                .expect("assembly present when Instance.acu is set")
+                .assembly_component_usages[acuid];
             NextAssemblyUsageOccurrenceWriteInput {
-                inst: inst.clone(),
-                parent_pdef,
-                child_pdef,
-            },
-        )
-        .expect("NAUO write only pushes one simple entity")
+                id: acu.id.clone(),
+                name: acu.name.clone(),
+                description: acu.description.clone(),
+                reference_designator: acu.reference_designator.clone(),
+                relating: parent_pdef,
+                related: child_pdef,
+            }
+        } else {
+            NextAssemblyUsageOccurrenceWriteInput {
+                id: inst.occurrence_id.clone(),
+                name: inst.occurrence_name.clone(),
+                description: String::new(),
+                reference_designator: None,
+                relating: parent_pdef,
+                related: child_pdef,
+            }
+        };
+        NextAssemblyUsageOccurrenceHandler::write(self, input)
+            .expect("NAUO write only pushes one simple entity")
     }
 
     /// NAUO-owned `PRODUCT_DEFINITION_SHAPE` — its `definition` points at the
@@ -1529,14 +1553,12 @@ impl WriteBuffer<'_> {
     /// `'Placement'` / `'Placement of an item'` for name/description so diffs
     /// against FreeCAD fixtures stay small.
     fn emit_nauo_owned_pds(&mut self, nauo: u64) -> u64 {
-        self.push_simple(
-            "PRODUCT_DEFINITION_SHAPE",
-            vec![
-                Attribute::String("Placement".into()),
-                Attribute::String("Placement of an item".into()),
-                Attribute::EntityRef(nauo),
-            ],
-        )
+        let early = crate::early::lift::lift_product_definition_shape(
+            "Placement".into(),
+            Some("Placement of an item".into()),
+            nauo,
+        );
+        crate::early::serialize::serialize_product_definition_shape(self, &early)
     }
 
     fn emit_rrwt_complex(
@@ -1547,29 +1569,10 @@ impl WriteBuffer<'_> {
         child_sr: u64,
         idt: u64,
     ) -> u64 {
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    (
-                        "REPRESENTATION_RELATIONSHIP".into(),
-                        vec![
-                            Attribute::String(name.to_owned()),
-                            Attribute::String(description.to_owned()),
-                            Attribute::EntityRef(parent_sr),
-                            Attribute::EntityRef(child_sr),
-                        ],
-                    ),
-                    (
-                        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION".into(),
-                        vec![Attribute::EntityRef(idt)],
-                    ),
-                    ("SHAPE_REPRESENTATION_RELATIONSHIP".into(), vec![]),
-                ],
-            },
-        });
-        n
+        let early = crate::early::lift::lift_rrwt(name, description, parent_sr, child_sr, idt);
+        crate::early::serialize::serialize_representation_relationship_with_transformation(
+            self, &early,
+        )
     }
 
     // ----------------------------------------------------------------
@@ -1588,6 +1591,17 @@ impl WriteBuffer<'_> {
         n
     }
 
+    /// Push a complex (multi-part) entity: `parts` is the ordered
+    /// `(part_name, attrs)` list rendered as `( PART1(..) PART2(..) … )`.
+    pub(crate) fn push_complex(&mut self, parts: Vec<(String, Vec<Attribute>)>) -> u64 {
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Complex { parts },
+        });
+        n
+    }
+
     /// Push a simple entity under a previously-reserved id (from `fresh()`),
     /// rather than minting a new one. Lets a body emit after the referrers
     /// that already used its reserved id (STEP forward references).
@@ -1598,6 +1612,16 @@ impl WriteBuffer<'_> {
                 name: name.into(),
                 attrs,
             },
+        });
+    }
+
+    /// Push a complex (multi-part) entity under a previously-reserved id — the
+    /// complex analogue of [`Self::push_simple_with_id`], for reserve-then-fill
+    /// emit paths (e.g. the units pool's pre-reserved `NamedUnit` ids).
+    pub(crate) fn push_complex_with_id(&mut self, id: u64, parts: Vec<(String, Vec<Attribute>)>) {
+        self.entities.push(WriterEntity {
+            id,
+            body: WriterBody::Complex { parts },
         });
     }
 }

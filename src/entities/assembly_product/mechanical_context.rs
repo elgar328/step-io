@@ -4,11 +4,11 @@
 //! field layout. Lands in the `product_contexts` arena with
 //! `kind = Mechanical`.
 
+use crate::early::{bind, lower};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::assembly_product::product_context::read_product_context;
 use crate::ir::assembly::ProductContext;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -24,15 +24,11 @@ impl SimpleEntityHandler for MechanicalContextHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        read_product_context(
-            ctx,
-            entity_id,
-            attrs,
-            "MECHANICAL_CONTEXT",
-            ProductContext::Mechanical,
-        )
+        let early = bind::bind_mechanical_context(entity_id, attrs)?;
+        lower::lower_mechanical_context(ctx, entity_id, early);
+        Ok(())
     }
 
     fn write(_buf: &mut WriteBuffer, _pc: ProductContext) -> Result<u64, WriteError> {

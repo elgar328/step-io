@@ -2,11 +2,11 @@
 //! arena ref with a side enum (Front / Back / Both). Pushes into the
 //! shared `founded_item` arena as the `SurfaceStyleUsage` variant.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_enum};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{FoundedItem, SurfaceSide, SurfaceStyleUsage, VisualizationPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::visualization::SurfaceStyleUsage;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,45 +22,19 @@ impl SimpleEntityHandler for SurfaceStyleUsageHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "SURFACE_STYLE_USAGE")?;
-        let side_str = read_enum(attrs, 0, entity_id, "side")?;
-        let side = match side_str {
-            "POSITIVE" => SurfaceSide::Front,
-            "NEGATIVE" => SurfaceSide::Back,
-            _ => SurfaceSide::Both, // BOTH or unknown
-        };
-        let style_ref = read_entity_ref(attrs, 1, entity_id, "style")?;
-        let Some(&style) = ctx.viz_sss_id_map.get(&style_ref) else {
-            return Ok(());
-        };
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
-            .founded_items
-            .push(FoundedItem::SurfaceStyleUsage(SurfaceStyleUsage {
-                side,
-                style,
-            }));
-        ctx.viz_ssu_id_map.insert(entity_id, id);
+        // 2-layer path: bind → L1, then lower → L2. `lower` resolves `style`
+        // via the typed `EarlySurfaceSideStyleId` bucket and registers the typed
+        // `EarlySurfaceStyleUsageId` key (replaces viz_sss/viz_ssu maps).
+        let early = bind::bind_surface_style_usage(entity_id, attrs)?;
+        lower::lower_surface_style_usage(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ssu: SurfaceStyleUsage) -> Result<u64, WriteError> {
-        let style_ref = buf.founded_item_step_ids[ssu.style.0 as usize];
-        let side = match ssu.side {
-            SurfaceSide::Front => "POSITIVE",
-            SurfaceSide::Back => "NEGATIVE",
-            SurfaceSide::Both => "BOTH",
-        };
-        Ok(buf.push_simple(
-            "SURFACE_STYLE_USAGE",
-            vec![
-                Attribute::Enum(side.into()),
-                Attribute::EntityRef(style_ref),
-            ],
-        ))
+        // 2-layer write path: lift L2 → L1, then serialize L1 → Part21 text.
+        let early = lift::lift_surface_style_usage(buf, &ssu);
+        Ok(serialize::serialize_surface_style_usage(buf, &early))
     }
 }

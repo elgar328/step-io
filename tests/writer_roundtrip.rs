@@ -23,10 +23,19 @@ fn assert_unit_contexts_equivalent(
     lhs: &step_io::ir::model::StepModel,
     rhs: &step_io::ir::model::StepModel,
 ) {
-    assert_eq!(lhs.units.len(), rhs.units.len(), "{name}: units count");
+    assert_eq!(
+        lhs.shape_rep.unit_contexts.len(),
+        rhs.shape_rep.unit_contexts.len(),
+        "{name}: units count"
+    );
     let lpool = lhs.units_pool.as_ref().expect("lhs units pool");
     let rpool = rhs.units_pool.as_ref().expect("rhs units pool");
-    for (lc, rc) in lhs.units.iter().zip(rhs.units.iter()) {
+    for (lc, rc) in lhs
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .zip(rhs.shape_rep.unit_contexts.iter())
+    {
         // Compare semantic content (unit enum + flag bits); skip `cbu_base`
         // since it's an arena ref whose absolute value depends on emit order.
         let l_len = match lpool.named_units[lc.length(lpool).expect("length unit")] {
@@ -57,15 +66,18 @@ fn assert_unit_contexts_equivalent(
         };
         assert_eq!(l_solid, r_solid, "{name}: solid_angle");
         assert_eq!(
-            lc.length_uncertainty, rc.length_uncertainty,
+            lc.length_uncertainty(lpool),
+            rc.length_uncertainty(rpool),
             "{name}: length_uncertainty"
         );
         assert_eq!(
-            lc.plane_angle_uncertainty, rc.plane_angle_uncertainty,
+            lc.plane_angle_uncertainty(lpool),
+            rc.plane_angle_uncertainty(rpool),
             "{name}: plane_angle_uncertainty"
         );
         assert_eq!(
-            lc.solid_angle_uncertainty, rc.solid_angle_uncertainty,
+            lc.solid_angle_uncertainty(lpool),
+            rc.solid_angle_uncertainty(rpool),
             "{name}: solid_angle_uncertainty"
         );
     }
@@ -77,7 +89,7 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         ReaderContext::convert(&graph).model
     };
     let text = original
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .unwrap_or_else(|e| panic!("{name}: write failed: {e}"));
     let graph2 = parse(&text).unwrap_or_else(|e| panic!("{name}: writer output parses: {e}"));
     let result = ReaderContext::convert(&graph2);
@@ -160,8 +172,8 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         "{name}: curves_2d count"
     );
 
-    // Per-edge SURFACE_CURVE / SEAM_CURVE wrapper — compares the whole
-    // preserved wrapper (entity kind, name, master_representation, members).
+    // Per-edge `edge_geometry` (plain 3D curve vs surface_curve arena node) —
+    // arena order is idempotent across round-trip so the ids compare directly.
     for (eidx, (oe, re_edge)) in original
         .topology
         .edges
@@ -170,14 +182,30 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         .enumerate()
     {
         assert_eq!(
-            oe.surface_curve, re_edge.surface_curve,
-            "{name}: edge[{eidx}] surface_curve wrapper"
+            oe.edge_geometry, re_edge.edge_geometry,
+            "{name}: edge[{eidx}] edge_geometry"
         );
     }
+    // The surface_curve arena itself (entity kind, name, master_representation,
+    // associated_geometry members) round-trips verbatim.
+    assert!(
+        original
+            .geometry
+            .surface_curves
+            .iter()
+            .eq(re.geometry.surface_curves.iter()),
+        "{name}: surface_curves arena"
+    );
 
     assert_unit_contexts_equivalent(name, &re, &original);
-    assert_eq!(re.schema, original.schema, "{name}: schema preserved");
-    assert_eq!(re.header, original.header, "{name}: header");
+    assert_eq!(
+        re.metadata.schema, original.metadata.schema,
+        "{name}: schema preserved"
+    );
+    assert_eq!(
+        re.metadata.header, original.metadata.header,
+        "{name}: header"
+    );
 
     // Idempotency of the order-incidental pools (visualization, properties,
     // shape_aspects, units, ...) via a serialization fixed point rather than
@@ -190,13 +218,13 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
     // second round-trip reproduces the first's output exactly). This is the
     // order-insensitive idempotency notion the corpus round-trip gate enforces.
     let first_write = re
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .unwrap_or_else(|e| panic!("{name}: re-write failed: {e}"));
     let graph3 =
         parse(&first_write).unwrap_or_else(|e| panic!("{name}: second writer output parses: {e}"));
     let second_write = ReaderContext::convert(&graph3)
         .model
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .unwrap_or_else(|e| panic!("{name}: second re-write failed: {e}"));
     assert_eq!(
         first_write, second_write,
@@ -363,7 +391,9 @@ fn hemisphere_tube_emits_surface_body_chain() {
         "indirect SR pattern not preserved in IR",
     );
 
-    let out = model.write_to_string().expect("write");
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         out.contains("MANIFOLD_SURFACE_SHAPE_REPRESENTATION"),
         "writer output missing MSSR",
@@ -452,7 +482,9 @@ fn wire1_emits_geometric_set_and_gbssr() {
         "wire1 uses indirect SR pattern; outer_sr_frame must be set"
     );
 
-    let out = model.write_to_string().expect("write");
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(out.contains("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"));
     assert!(out.contains("GEOMETRIC_SET"));
     assert!(out.contains("COMPOSITE_CURVE"));
@@ -493,7 +525,9 @@ fn wire2_emits_gbwsr_in_assembly() {
     assert_eq!(surface_body_count, 1);
     assert_eq!(group_count, 1);
 
-    let out = model.write_to_string().expect("write");
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(out.contains("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"));
     assert!(out.contains("GEOMETRIC_CURVE_SET"));
     assert!(out.contains("TRIMMED_CURVE"));
@@ -562,7 +596,9 @@ fn hollow_box_ap214_is_preserves_void_orientation() {
     use step_io::Orientation;
     let src = include_str!("fixtures/hollow_box_ap214_is.step");
     let original = ReaderContext::convert(&parse(src).unwrap()).model;
-    let text = original.write_to_string().expect("write");
+    let text = original
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = ReaderContext::convert(&parse(&text).unwrap()).model;
 
     assert_eq!(re.topology.solids.len(), 1);
@@ -709,7 +745,9 @@ fn box_ap214_is_preserves_visualization() {
 fn external_temp_abc_explicit_de_round_trip() {
     let src = include_str!("fixtures/external_temp_abc_explicit_de.step");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
     assert_unit_contexts_equivalent("abc_explicit_de", &model, &back);
 }
@@ -729,7 +767,9 @@ fn external_temp_polyline_round_trip() {
         .filter(|c| matches!(c, step_io::ir::geometry::Curve::Polyline(_)))
         .count();
     assert_eq!(polyline_count, 3, "fixture must yield three polylines");
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
     let back_count = back
         .geometry
@@ -752,14 +792,16 @@ fn external_temp_fusion360_two_context_round_trip() {
     let src = include_str!("fixtures/external_temp_fusion360_two_context.stp");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
     assert_eq!(
-        model.units.len(),
+        model.shape_rep.unit_contexts.len(),
         2,
         "fusion fixture must yield two distinct unit contexts"
     );
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
     assert_eq!(
-        back.units.len(),
+        back.shape_rep.unit_contexts.len(),
         2,
         "writer must emit both unit contexts, re-read should see two"
     );
@@ -767,7 +809,7 @@ fn external_temp_fusion360_two_context_round_trip() {
     // contexts — Fusion 360's geometry vs. visualization split.
     let viz = back.visualization.as_ref().expect("MDGPR present");
     let mdgpr = viz.mdgprs.first().expect("at least one MDGPR");
-    let Some(step_io::ir::RepresentationContextRef::Unitful(mdgpr_ctx)) = mdgpr.context else {
+    let step_io::ir::RepresentationContextRef::Unitful(mdgpr_ctx) = mdgpr.context else {
         panic!("MDGPR carries a unitful context after Commit 2");
     };
     let assembly = back.assembly.as_ref().expect("assembly present");
@@ -819,9 +861,31 @@ fn wire1_preserves_pc_chain_with_specification() {
     );
 }
 
+/// L1-strict: `PRODUCT_CATEGORY_RELATIONSHIP` must round-trip its real
+/// `name`/`description` (`box_ap203` carries empty `''` strings), not the legacy
+/// hardcoded `' '` placeholder the writer used to emit. (The
+/// `product_category_relationships` arena is not deep-diffed by the corpus
+/// reference-check, so this guards the fidelity directly.)
+#[test]
+fn product_category_relationship_preserves_name_description() {
+    let src = include_str!("fixtures/box_ap203.step");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
+    let pcr_line = out
+        .lines()
+        .find(|l| l.contains("PRODUCT_CATEGORY_RELATIONSHIP"))
+        .expect("PCR round-trips (sub_category is a non-empty PRPC)");
+    assert!(
+        pcr_line.contains("PRODUCT_CATEGORY_RELATIONSHIP('','',"),
+        "PCR name/description must emit the faithful empty strings, not ' ': {pcr_line}"
+    );
+}
+
 /// PMI scaffolding reader check — same NIST fixture as the property test
 /// reader-only check below. Verifies the reader populates
-/// `model.shape_aspects` with at least one entry. Round-trip is not
+/// `model.shape_rep.shape_aspects` with at least one entry. Round-trip is not
 /// asserted because the fixture's 2-unit GUAC keeps the assembly pass
 /// from emitting a product chain (`product_def_shape_ids` cache empty →
 /// `SHAPE_ASPECT` emit silent skip — see plan R1).
@@ -830,7 +894,7 @@ fn external_temp_nist_shape_aspect_reader_only() {
     let src = include_str!("fixtures/external_temp_nist_property_def.stp");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
     assert!(
-        !model.shape_aspects.is_empty(),
+        !model.shape_rep.shape_aspects.is_empty(),
         "at least one SHAPE_ASPECT parsed"
     );
 }
@@ -845,7 +909,7 @@ fn external_temp_nist_shape_aspect_reader_only() {
 ///
 /// This fixture's `GLOBAL_UNIT_ASSIGNED_CONTEXT` carries only two unit
 /// refs (length + `plane_angle`, no `solid_angle`) so step-io's strict unit
-/// context builder rejects it — `model.units` ends up empty and the
+/// context builder rejects it — `model.shape_rep.unit_contexts` ends up empty and the
 /// product chain is silently skipped on emit. As a result this test
 /// exercises only the reader: it confirms user-defined attributes flow
 /// from the source file into `model.properties`. Round-trip preservation

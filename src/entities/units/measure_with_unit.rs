@@ -9,12 +9,10 @@
 //! the writer re-emits the generic form (not a typed subtype). Tolerance values
 //! / measure qualifications resolve it through `mwu_id_map` regardless of variant.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::units::length_measure_with_unit::emit_mwu;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::units::{MeasureWithUnit, MeasureWithUnitData};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -31,37 +29,12 @@ impl SimpleEntityHandler for MeasureWithUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        // A bare MWU used as a CONVERSION_BASED_UNIT conversion factor is
-        // re-emitted inline by the CBU path — keep it out of the arena to avoid
-        // double-emit (mirrors the typed MWU handlers).
-        if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
-            return Ok(());
-        }
-        check_count(attrs, 2, entity_id, "MEASURE_WITH_UNIT")?;
-        // value_component is a typed `measure_value`, e.g. LENGTH_MEASURE(-0.3).
-        // Keep the type name (the measure kind) — unlike `read_mwu_attrs`, which
-        // discards it. Negative reals are accepted (tolerance bounds).
-        let (measure_type, value) = match attrs.first() {
-            Some(Attribute::Typed { type_name, value }) => match value.as_ref() {
-                Attribute::Real(v) => (type_name.clone(), *v),
-                _ => return Ok(()),
-            },
-            _ => return Ok(()),
+        let Some(early) = bind::bind_measure_with_unit(entity_id, attrs)? else {
+            return Ok(()); // value_component (measure_value) did not bind — drop
         };
-        let unit_step = read_entity_ref(attrs, 1, entity_id, "unit_component")?;
-        let Some(&unit) = ctx.named_unit_id_map.get(&unit_step) else {
-            return Ok(());
-        };
-        let id = ctx
-            .mwu_arena
-            .push(MeasureWithUnit::Itself(MeasureWithUnitData {
-                measure_type,
-                value,
-                unit,
-            }));
-        ctx.mwu_id_map.insert(entity_id, id);
+        lower::lower_measure_with_unit(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -69,12 +42,7 @@ impl SimpleEntityHandler for MeasureWithUnitHandler {
         buf: &mut WriteBuffer,
         (measure_type, value, unit_step): (String, f64, u64),
     ) -> Result<u64, WriteError> {
-        Ok(emit_mwu(
-            buf,
-            "MEASURE_WITH_UNIT",
-            &measure_type,
-            value,
-            unit_step,
-        ))
+        let early = lift::lift_measure_with_unit(measure_type, value, unit_step);
+        Ok(serialize::serialize_measure_with_unit(buf, &early))
     }
 }

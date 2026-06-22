@@ -1,10 +1,11 @@
-//! `COMPOSITE_TEXT` handler — phase text-literal.
+//! `COMPOSITE_TEXT` handler (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{CompositeText, TextOrCharacter, VisualizationPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::visualization::CompositeText;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -20,54 +21,20 @@ impl SimpleEntityHandler for CompositeTextHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "COMPOSITE_TEXT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let Attribute::List(items) = &attrs[1] else {
-            return Ok(());
-        };
-        let mut collected_text = Vec::with_capacity(items.len());
-        for item in items {
-            if let Attribute::EntityRef(n) = item {
-                if let Some(&id) = ctx.text_literal_id_map.get(n) {
-                    collected_text.push(TextOrCharacter::TextLiteral(id));
-                }
-                // non-text_literal SELECT members (annotation_text_character,
-                // character_glyph, nested composite_text) are not modelled —
-                // skip the element.
-            }
-        }
-        // EXPRESS SET[2:?] cardinality — drop the carrier if fewer than 2
-        // members survived (emit symmetry, avoid schema-violating output).
-        if collected_text.len() < 2 {
-            return Ok(());
-        }
-        let id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .composite_texts
-            .push(CompositeText {
-                name,
-                collected_text,
-            });
-        ctx.composite_text_id_map.insert(entity_id, id);
+        let early = bind::bind_composite_text(entity_id, attrs)?;
+        lower::lower_composite_text(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, t: CompositeText) -> Result<u64, WriteError> {
-        let items = t
+        let collected_text: Vec<u64> = t
             .collected_text
             .into_iter()
-            .map(|tc| match tc {
-                TextOrCharacter::TextLiteral(id) => {
-                    Attribute::EntityRef(buf.text_literal_step_ids[id.0 as usize])
-                }
-            })
+            .map(|tc| tc.emit_select(buf))
             .collect();
-        Ok(buf.push_simple(
-            "COMPOSITE_TEXT",
-            vec![Attribute::String(t.name), Attribute::List(items)],
-        ))
+        let early = lift::lift_composite_text(t.name, collected_text);
+        Ok(serialize::serialize_composite_text(buf, &early))
     }
 }

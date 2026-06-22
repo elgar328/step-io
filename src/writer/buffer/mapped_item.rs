@@ -14,10 +14,14 @@ use crate::entities::visualization::camera_image::{
 };
 use crate::entities::visualization::camera_usage::CameraUsageHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
+use crate::ir::id::{MappedItemId, RepresentationMapId};
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::{MappedItem, MappedRepresentationRef, RepresentationMap};
 use crate::writer::WriteError;
 
+// Snapshot indices are arena indices, which fit u32 by the arena's own
+// overflow guard — the `idx as u32` id reconstructions are safe.
+#[allow(clippy::cast_possible_truncation)]
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_mapped_items(&mut self) -> Result<(), WriteError> {
         // Snapshot each arena to release the &model borrow before emission
@@ -26,8 +30,13 @@ impl WriteBuffer<'_> {
         // and are filled in by `emit_camera_usage_arena` after
         // `emit_draughting_models` populates the DM slot of
         // `representation_step_ids`.
-        let rmaps: Vec<_> = self.model.representation_maps.iter().cloned().collect();
-        self.representation_map_step_ids = vec![0; rmaps.len()];
+        let rmaps: Vec<_> = self
+            .model
+            .shape_rep
+            .representation_maps
+            .iter()
+            .cloned()
+            .collect();
         for (idx, rmap) in rmaps.into_iter().enumerate() {
             // A camera-origin Itself rmap needs `viz_camera_model_step_ids`
             // (deferred to `emit_camera_origin_mapped_items`); a
@@ -39,7 +48,7 @@ impl WriteBuffer<'_> {
                     && !matches!(d.mapped_representation, MappedRepresentationRef::Presentation(_)))
             {
                 let step_id = RepresentationMapHandler::write(self, rmap)?;
-                self.representation_map_step_ids[idx] = step_id;
+                self.set_step_id(RepresentationMapId(idx as u32), step_id);
             }
         }
         // Only `Itself` MAPPED_ITEM emits here; CameraImage variants
@@ -48,15 +57,14 @@ impl WriteBuffer<'_> {
         // `representation_map_step_ids` is populated. A MAPPED_ITEM whose
         // source rmap is camera-origin is likewise deferred (its source slot is
         // still 0 here).
-        let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
-        self.mapped_item_step_ids = vec![0; mitems.len()];
+        let mitems: Vec<_> = self.model.shape_rep.mapped_items.iter().cloned().collect();
         for (idx, mi) in mitems.into_iter().enumerate() {
             if matches!(&mi, MappedItem::Itself(_))
                 && !self.is_camera_sourced(&mi)
                 && !self.is_presentation_sourced(&mi)
             {
                 let step_id = MappedItemHandler::write(self, mi)?;
-                self.mapped_item_step_ids[idx] = step_id;
+                self.set_step_id(MappedItemId(idx as u32), step_id);
             }
         }
         Ok(())
@@ -70,7 +78,7 @@ impl WriteBuffer<'_> {
             return false;
         };
         matches!(
-            &self.model.representation_maps[d.mapping_source],
+            &self.model.shape_rep.representation_maps[d.mapping_source],
             RepresentationMap::Itself(rd)
                 if matches!(rd.mapping_origin, RepresentationItemRef::CameraModel(_))
         )
@@ -85,7 +93,7 @@ impl WriteBuffer<'_> {
             return false;
         };
         matches!(
-            &self.model.representation_maps[d.mapping_source],
+            &self.model.shape_rep.representation_maps[d.mapping_source],
             RepresentationMap::Itself(rd)
                 if matches!(rd.mapped_representation, MappedRepresentationRef::Presentation(_))
         )
@@ -100,21 +108,27 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_presentation_mapped_items(
         &mut self,
     ) -> Result<(), WriteError> {
-        let rmaps: Vec<_> = self.model.representation_maps.iter().cloned().collect();
+        let rmaps: Vec<_> = self
+            .model
+            .shape_rep
+            .representation_maps
+            .iter()
+            .cloned()
+            .collect();
         for (idx, rmap) in rmaps.into_iter().enumerate() {
-            if self.representation_map_step_ids[idx] == 0
+            if self.step_id(RepresentationMapId(idx as u32)) == 0
                 && matches!(&rmap, RepresentationMap::Itself(d)
                     if matches!(d.mapped_representation, MappedRepresentationRef::Presentation(_)))
             {
                 let step_id = RepresentationMapHandler::write(self, rmap)?;
-                self.representation_map_step_ids[idx] = step_id;
+                self.set_step_id(RepresentationMapId(idx as u32), step_id);
             }
         }
-        let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
+        let mitems: Vec<_> = self.model.shape_rep.mapped_items.iter().cloned().collect();
         for (idx, mi) in mitems.into_iter().enumerate() {
-            if self.mapped_item_step_ids[idx] == 0 && self.is_presentation_sourced(&mi) {
+            if self.step_id(MappedItemId(idx as u32)) == 0 && self.is_presentation_sourced(&mi) {
                 let step_id = MappedItemHandler::write(self, mi)?;
-                self.mapped_item_step_ids[idx] = step_id;
+                self.set_step_id(MappedItemId(idx as u32), step_id);
             }
         }
         Ok(())
@@ -130,21 +144,27 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_camera_origin_mapped_items(
         &mut self,
     ) -> Result<(), WriteError> {
-        let rmaps: Vec<_> = self.model.representation_maps.iter().cloned().collect();
+        let rmaps: Vec<_> = self
+            .model
+            .shape_rep
+            .representation_maps
+            .iter()
+            .cloned()
+            .collect();
         for (idx, rmap) in rmaps.into_iter().enumerate() {
-            if self.representation_map_step_ids[idx] == 0
+            if self.step_id(RepresentationMapId(idx as u32)) == 0
                 && matches!(&rmap, RepresentationMap::Itself(d)
                     if matches!(d.mapping_origin, RepresentationItemRef::CameraModel(_)))
             {
                 let step_id = RepresentationMapHandler::write(self, rmap)?;
-                self.representation_map_step_ids[idx] = step_id;
+                self.set_step_id(RepresentationMapId(idx as u32), step_id);
             }
         }
-        let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
+        let mitems: Vec<_> = self.model.shape_rep.mapped_items.iter().cloned().collect();
         for (idx, mi) in mitems.into_iter().enumerate() {
-            if self.mapped_item_step_ids[idx] == 0 && self.is_camera_sourced(&mi) {
+            if self.step_id(MappedItemId(idx as u32)) == 0 && self.is_camera_sourced(&mi) {
                 let step_id = MappedItemHandler::write(self, mi)?;
-                self.mapped_item_step_ids[idx] = step_id;
+                self.set_step_id(MappedItemId(idx as u32), step_id);
             }
         }
         Ok(())
@@ -155,11 +175,17 @@ impl WriteBuffer<'_> {
     /// slots before the `mapped_representation` index is resolved.
     /// Overwrites the 0 placeholder slot installed by `emit_mapped_items`.
     pub(in crate::writer::buffer) fn emit_camera_usage_arena(&mut self) -> Result<(), WriteError> {
-        let rmaps: Vec<_> = self.model.representation_maps.iter().cloned().collect();
+        let rmaps: Vec<_> = self
+            .model
+            .shape_rep
+            .representation_maps
+            .iter()
+            .cloned()
+            .collect();
         for (idx, rmap) in rmaps.into_iter().enumerate() {
             if let RepresentationMap::CameraUsage(cu) = rmap {
                 let step_id = CameraUsageHandler::write(self, cu)?;
-                self.representation_map_step_ids[idx] = step_id;
+                self.set_step_id(RepresentationMapId(idx as u32), step_id);
             }
         }
         Ok(())
@@ -169,20 +195,17 @@ impl WriteBuffer<'_> {
     /// runs after `emit_camera_usage_arena` so each entity's
     /// `mapping_source` (a `CameraUsage` slot) resolves to a non-zero STEP id.
     pub(in crate::writer::buffer) fn emit_camera_image_arena(&mut self) -> Result<(), WriteError> {
-        let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
-        if self.mapped_item_step_ids.len() != mitems.len() {
-            self.mapped_item_step_ids.resize(mitems.len(), 0);
-        }
+        let mitems: Vec<_> = self.model.shape_rep.mapped_items.iter().cloned().collect();
         for (idx, mi) in mitems.into_iter().enumerate() {
             match mi {
                 MappedItem::Itself(_) => {}
                 MappedItem::CameraImage(ci) => {
                     let step_id = CameraImageHandler::write(self, ci)?;
-                    self.mapped_item_step_ids[idx] = step_id;
+                    self.set_step_id(MappedItemId(idx as u32), step_id);
                 }
                 MappedItem::CameraImage3dWithScale(ci) => {
                     let step_id = CameraImage3dWithScaleHandler::write(self, ci)?;
-                    self.mapped_item_step_ids[idx] = step_id;
+                    self.set_step_id(MappedItemId(idx as u32), step_id);
                 }
             }
         }

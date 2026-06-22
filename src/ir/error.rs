@@ -72,6 +72,16 @@ pub enum ConvertError {
         count: usize,
         normalized_to: String,
     },
+    /// A strict ENUM bind received a token outside the EXPRESS enumeration.
+    /// Distinct from `UnexpectedEntityForm` so the dispatcher can reclassify it
+    /// as a `NonStandardInput` drop (NORM) rather than a step-io defect (LOSS) —
+    /// rejecting a non-standard value is correct behaviour, not a coverage gap.
+    /// Never reaches `warnings` directly: the dispatcher always reclassifies it.
+    NonStandardEnumValue {
+        entity_id: u64,
+        field: String,
+        token: String,
+    },
 }
 
 /// Lightweight tag identifying the `Attribute` variant without carrying its
@@ -122,6 +132,24 @@ impl std::fmt::Display for AttributeKindTag {
             Self::Derived => write!(f, "Derived"),
             Self::List => write!(f, "List"),
             Self::Typed => write!(f, "Typed"),
+        }
+    }
+}
+
+impl ConvertError {
+    /// If this is a strict-`bind` rejection of a **required** field that the
+    /// source left `$` (Unset), return that field name. A required field being
+    /// `$` is a source EXPRESS violation (non-standard input), not a step-io
+    /// coverage gap — callers use this to drop + record a NORM normalization
+    /// (LOSS-exempt) instead of treating it as a defect.
+    pub(crate) fn unset_required_field(&self) -> Option<&'static str> {
+        match self {
+            ConvertError::AttributeType {
+                field_name,
+                actual: AttributeKindTag::Unset,
+                ..
+            } => Some(field_name),
+            _ => None,
         }
     }
 }
@@ -210,6 +238,15 @@ impl std::fmt::Display for ConvertError {
                 "non-standard input: {count}× {field} violates ISO 10303 \
                  (required field); reader normalized to {normalized_to}. \
                  The source file is non-standard; this is not a step-io defect."
+            ),
+            Self::NonStandardEnumValue {
+                entity_id,
+                field,
+                token,
+            } => write!(
+                f,
+                "entity #{entity_id}: field '{field}' has non-standard enum \
+                 value '.{token}.' (outside the EXPRESS enumeration)"
             ),
         }
     }
@@ -300,6 +337,34 @@ mod tests {
             err.to_string(),
             "entity #10: field 'location' references #99 which was not found"
         );
+    }
+
+    #[test]
+    fn unset_required_field_detects_unset() {
+        let err = ConvertError::AttributeType {
+            entity_id: 1,
+            field_name: "context_of_items",
+            expected: "EntityRef",
+            actual: AttributeKindTag::Unset,
+        };
+        assert_eq!(err.unset_required_field(), Some("context_of_items"));
+    }
+
+    #[test]
+    fn unset_required_field_none_for_other_errors() {
+        let wrong_type = ConvertError::AttributeType {
+            entity_id: 1,
+            field_name: "axis",
+            expected: "EntityRef",
+            actual: AttributeKindTag::Real,
+        };
+        assert_eq!(wrong_type.unset_required_field(), None);
+        let missing = ConvertError::MissingReference {
+            from: 1,
+            to: 2,
+            field_name: "loc",
+        };
+        assert_eq!(missing.unset_required_field(), None);
     }
 
     #[test]

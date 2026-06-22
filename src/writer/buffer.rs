@@ -8,15 +8,9 @@
 //! - [`units`] — `SI_UNIT`-based unit context
 //! - [`assembly`] — single-part PRODUCT chain + ABSR + SDR
 
-use std::collections::HashMap;
-
 use super::WriteError;
 use super::entity::WriterEntity;
-use crate::ir::{
-    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, StepModel, SurfaceId, VertexId,
-    WireId,
-};
+use crate::ir::{ProductId, StepModel};
 
 pub(crate) mod assembly;
 pub(crate) mod geometry;
@@ -25,378 +19,62 @@ pub(crate) mod numeric_representation_item;
 pub(crate) mod plm;
 pub(crate) mod pmi;
 pub(crate) mod property;
+pub(crate) mod step_id_cache;
 pub(crate) mod tessellation;
 pub(crate) mod topology;
 pub(crate) mod units;
 pub(crate) mod visualization;
 
+/// Coarse emit phase for `emit_all`'s ordering guard. `emit_all` advances this
+/// monotonically (it is the master) at each coarse block; cross-phase emit
+/// helpers assert `phase >= EmitPhase::<dependency>` on entry. The variant
+/// declaration order *is* `emit_all`'s intended call order, so a block moved
+/// out of order trips `set_phase`'s monotonic `debug_assert` (or a dependent's
+/// `assert_phase`) in debug builds. All of this is `debug_assert!` only — a
+/// no-op in release, so output is unaffected.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub(crate) enum EmitPhase {
+    Init,
+    Geometry,
+    Topology,
+    Units,
+    Representations,
+    Product,
+    Pmi,
+    Tessellation,
+    MappedItems,
+    Visualization,
+    Annotations,
+    DraughtingModels,
+    CharacterizedObjects,
+    ReprRelationships,
+    Presentation,
+    PlmProperties,
+}
+
 pub(crate) struct WriteBuffer<'m> {
     pub(crate) model: &'m StepModel,
     pub(crate) next_id: u64,
     pub(crate) entities: Vec<WriterEntity>,
-    pub(crate) point_ids: HashMap<PointId, u64>,
-    pub(crate) direction_ids: HashMap<DirectionId, u64>,
-    pub(crate) placement_ids: HashMap<Placement3dId, u64>,
-    pub(crate) placement_1d_ids: HashMap<Placement1dId, u64>,
-    pub(crate) placement_2d_ids: HashMap<Placement2dId, u64>,
-    pub(crate) curve_ids: HashMap<CurveId, u64>,
-    pub(crate) surface_ids: HashMap<SurfaceId, u64>,
-    pub(crate) vertex_ids: HashMap<VertexId, u64>,
-    pub(crate) edge_ids: HashMap<EdgeId, u64>,
-    pub(crate) wire_ids: HashMap<WireId, u64>,
-    pub(crate) face_ids: HashMap<FaceId, u64>,
-    pub(crate) shell_ids: HashMap<ShellId, u64>,
-    pub(crate) solid_ids: HashMap<SolidId, u64>,
-    pub(crate) point_2d_ids: HashMap<Point2dId, u64>,
-    pub(crate) direction_2d_ids: HashMap<Direction2dId, u64>,
-    pub(crate) curve_2d_ids: HashMap<Curve2dId, u64>,
-    /// Emitted `PLANAR_EXTENT` / `PLANAR_BOX` step ids, indexed by
-    /// `PlanarExtentId` — keeps `emit_planar_extent` idempotent so the
-    /// standalone arena loop and a `VIEW_VOLUME`'s `view_window` ref emit
-    /// the entity exactly once.
-    pub(crate) planar_extent_ids: HashMap<crate::ir::PlanarExtentId, u64>,
+    /// Emitted STEP id per arena entry, keyed by arena-id type. Replaces the
+    /// former hand-declared `*_step_ids: Vec<u64>` fields (arena-1:1 caches).
+    pub(crate) step_ids: step_id_cache::StepIdCache,
     /// STEP entity ids of every emitted `REPRESENTATION_CONTEXT` complex
     /// entity, indexed by `UnitContextId.0`. Populated up-front in `emit_all`
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(crate) unit_context_ids: Vec<u64>,
-    /// STEP entity id of every emitted representation (`ABSR` / `MSSR` /
-    /// plain `SR` / `GBWSR` / `GBSSR` / `MDGPR`), indexed by
-    /// `RepresentationId.0`. Geometry representations are filled by
-    /// `emit_representations_pre_pass` in `representations` arena order
-    /// before the product chain runs; `MDGPR` slots are appended by
-    /// `emit_visualization_if_set`. The product chain resolves each
-    /// product's `representation_id` / `outer_representation_id` to a
-    /// cached id instead of re-emitting the representation inline. Empty
-    /// for hand/kernel-built IR (the arena is reader-populated only).
-    pub(crate) representation_step_ids: Vec<u64>,
-    /// Reserved STEP id of every P21 edition 3 external reference, indexed by
-    /// `ExternalRefId.0`. Reserved up-front in `emit_all` (before any DATA
-    /// entity that resolves one, e.g. `CIRCULAR_AREA.centre`) and emitted in
-    /// the `REFERENCE` section by `write_file`.
-    pub(crate) external_ref_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `RepresentationRelationship`, indexed by
-    /// `RepresentationRelationshipId.0`. Only the assembly
-    /// `RepresentationRelationshipWithTransformation` slots are populated (by
-    /// `emit_instance_bundle`, inline with each placement); standalone RR
-    /// variants leave their slot `0` since nothing references them. Consumed by
-    /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context`.
-    pub(crate) representation_relationship_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `REPRESENTATION_MAP`, indexed by
-    /// `RepresentationMapId.0`. Populated by `emit_mapped_items` before the
-    /// `MAPPED_ITEM` loop so each item resolves its `mapping_source` ref.
-    pub(crate) representation_map_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `COORDINATES_LIST`, indexed by
-    /// `TessellatedItemId.0`. Populated by `emit_tessellation` before the
-    /// `COMPLEX_TRIANGULATED_FACE` loop so each face resolves its
-    /// `coordinates` ref.
-    pub(crate) tessellated_item_step_ids: Vec<u64>,
-    /// Emitted `COMPLEX_TRIANGULATED_FACE` / `COMPLEX_TRIANGULATED_SURFACE_SET`
-    /// step ids, indexed by `TessellatedFaceId.0` / `TessellatedSurfaceSetId.0`.
-    /// Populated by `emit_tessellation` so a `TESSELLATED_GEOMETRIC_SET`
-    /// child resolves through `emit_tessellated_item_ref`.
-    pub(crate) tessellated_face_step_ids: Vec<u64>,
-    pub(crate) tessellated_surface_set_step_ids: Vec<u64>,
-    /// Emitted `LEADER_CURVE` step ids, indexed by
-    /// `AnnotationCurveOccurrenceId.0`. Populated by
-    /// `emit_annotation_curve_occurrences` before `emit_annotation_occurrences`
-    /// so `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` can resolve their
-    /// `annotated_curve` back-reference.
-    pub(crate) acoc_step_ids: Vec<u64>,
-    /// Emitted `annotation_occurrence` enum step ids, indexed by
-    /// `AnnotationOccurrenceId.0`. Populated by
-    /// `emit_annotation_occurrences` (one push per enum entry, in arena
-    /// order) before `emit_draughting_callouts` so its `contents` SELECT
-    /// members resolve.
-    pub(crate) ao_step_ids: Vec<u64>,
-    /// Emitted `APLL_POINT` step ids, indexed by `ApllPointId.0`. Filled by
-    /// `emit_apll_points` before leader lines / annotation occurrences.
-    pub(crate) apll_point_step_ids: Vec<u64>,
-    /// Emitted `ANNOTATION_TO_MODEL_LEADER_LINE` step ids, indexed by
-    /// `AnnotationPlaceholderLeaderLineId.0`.
-    pub(crate) annotation_placeholder_leader_line_step_ids: Vec<u64>,
-    /// Emitted `draughting_callout` step ids, indexed by
-    /// `DraughtingCalloutId.0`. Populated by `emit_draughting_callouts`
-    /// before `emit_draughting_callout_relationships`.
-    pub(crate) draughting_callout_step_ids: Vec<u64>,
-    /// Emitted `TOLERANCE_ZONE` step ids, indexed by `ToleranceZoneId.0`.
-    /// Populated by `emit_tolerance_zones` so
-    /// `ProjectedZoneDefinitionHandler::write` can resolve `zone`.
-    pub(crate) tolerance_zone_step_ids: Vec<u64>,
-    /// Emitted `TYPE_QUALIFIER` step ids, indexed by `TypeQualifierId.0`.
-    /// Populated by `emit_pmi_if_set` so `MeasureQualificationHandler::write`
-    /// can resolve a `qualifiers` SET member.
-    pub(crate) type_qualifier_step_ids: Vec<u64>,
-    /// Emitted `VALUE_FORMAT_TYPE_QUALIFIER` step ids, indexed by
-    /// `ValueFormatTypeQualifierId.0`. Same role as
-    /// `type_qualifier_step_ids`.
-    pub(crate) value_format_type_qualifier_step_ids: Vec<u64>,
-    /// Emitted `representation_item` arena step ids (phase
-    /// repr-item-arena-1), indexed by `RepresentationItemId.0`. Consumed
-    /// by `emit_representation_item_ref` 의 11번째 variant.
-    pub(crate) representation_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `NAMED_UNIT` complex from
-    /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
-    /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
-    /// so every consumer (including the GUAC writer that resolves
-    /// `UnitContext.{length, plane_angle, solid_angle}`) resolves its
-    /// `NamedUnitId` ref with a single index lookup.
-    pub(crate) named_unit_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `MEASURE_WITH_UNIT` subtype, indexed
-    /// by `MeasureWithUnitId.0`. Currently unused by downstream emitters
-    /// (no entity in this phase consumes an MWU ref through the units
-    /// pool — the existing `UMU` / `PROPERTY_DEFINITION_REPRESENTATION`
-    /// paths predate units-1 and route through the legacy ctx caches).
-    /// The vec is populated for parity with the other arenas and to
-    /// support post-units-1 consumers (e.g. MFUO `quantity`).
-    pub(crate) mwu_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `DERIVED_UNIT_ELEMENT`, indexed by
-    /// `DerivedUnitElementId.0`. Consumed by `DERIVED_UNIT` emission
-    /// (units-1b) to resolve `elements` refs.
-    pub(crate) due_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `DERIVED_UNIT`, indexed by
-    /// `DerivedUnitId.0`. Currently unused by downstream emitters; kept
-    /// for parity with the other units-pool caches and for any future
-    /// consumer that wires a `ref_derived_unit` field.
-    pub(crate) derived_unit_step_ids: Vec<u64>,
-    /// Lazily emitted `DIMENSIONAL_EXPONENTS(1, 0, ...)` step id, shared by
-    /// every length-flavour CBU outer in this file. `None` until the first
-    /// length CBU is emitted (units-3c dedup).
-    pub(crate) length_dim_exp_step: Option<u64>,
-    /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, ...)` step id, shared by
-    /// every dimensionless emitter (plane-angle / solid-angle CBU outers,
-    /// area / volume DUE consumers).
-    pub(crate) dimensionless_dim_exp_step: Option<u64>,
-    /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, 1, ...)` step id, shared
-    /// by every mass CBU outer.
-    pub(crate) mass_dim_exp_step: Option<u64>,
-    /// STEP entity id of every emitted `COLOUR_RGB` /
-    /// `DRAUGHTING_PRE_DEFINED_COLOUR` entity, indexed by `ColourId.0`.
-    /// Populated by `emit_visualization_if_set` before any consumer
-    /// (`FILL_AREA_STYLE_COLOUR`, `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`)
-    /// needs to resolve a colour ref.
-    pub(crate) colour_step_ids: Vec<u64>,
-    /// Emitted `SYMBOL_COLOUR` step ids, indexed by `SymbolColourId.0`
-    /// (phase symbol-colour). Future `SYMBOL_STYLE` writers consume this.
-    pub(crate) symbol_colour_step_ids: Vec<u64>,
-    /// Emitted `TEXT_STYLE_FOR_DEFINED_FONT` step ids, indexed by
-    /// `TextStyleForDefinedFontId.0` (phase text-style-font). Future
-    /// `text_style.character_appearance` SELECT writers consume this.
-    pub(crate) text_style_for_defined_font_step_ids: Vec<u64>,
-    /// Emitted `PRE_DEFINED_MARKER` step ids (phase pre-defined-marker),
-    /// indexed by `PreDefinedMarkerId.0`.
-    pub(crate) pre_defined_marker_step_ids: Vec<u64>,
-    /// Emitted `text_style` enum-arena step ids (phase text-style-box),
-    /// indexed by `TextStyleId.0`. Reserved for future consumers
-    /// (`presentation_style_select` SELECT) — no step-io entity references
-    /// this cache today.
-    pub(crate) text_style_step_ids: Vec<u64>,
-    /// Emitted `DRAUGHTING_PRE_DEFINED_TEXT_FONT` step ids (phase
-    /// text-literal — cache added retroactively for the `text_literal.font`
-    /// SELECT). Indexed by `DraughtingPreDefinedTextFontId.0`.
-    pub(crate) dptf_step_ids: Vec<u64>,
-    /// Emitted `TEXT_LITERAL` step ids (phase text-literal), indexed by
-    /// `TextLiteralId.0`. Consumed by the `COMPOSITE_TEXT` emitter for the
-    /// `text_or_character` SELECT.
-    pub(crate) text_literal_step_ids: Vec<u64>,
-    /// Emitted `COMPOSITE_TEXT` step ids, indexed by `CompositeTextId.0`.
-    /// Populated by `emit_visualization_if_set` so an annotation occurrence's
-    /// `item` can resolve to a `COMPOSITE_TEXT`.
-    pub(crate) composite_text_step_ids: Vec<u64>,
-    /// Emitted `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step ids (phase dmia),
-    /// indexed by `DraughtingModelItemAssociationId.0`. No other entity
-    /// currently references the cache; retained for symmetry.
-    pub(crate) dmia_step_ids: Vec<u64>,
-    /// Emitted `(GRC PRC REP_CONTEXT)` complex step ids (phase
-    /// unitless-context), indexed by `UnitlessContextId.0`. Consumed by
-    /// `repr_context_attr` when a representation's `context_of_items`
-    /// resolves to a `RepresentationContextRef::Unitless`.
-    pub(crate) unitless_context_step_ids: Vec<u64>,
-    /// Emitted `GEOMETRIC_ITEM_SPECIFIC_USAGE` step ids (phase gisu),
-    /// indexed by `GeometricItemSpecificUsageId.0`. No other entity
-    /// currently references the cache; retained for symmetry with DMIA.
-    pub(crate) gisu_step_ids: Vec<u64>,
-    /// Emitted `INVISIBILITY` step ids (phase invisibility), indexed by
-    /// `InvisibilityId.0`. Retained for symmetry — no other entity
-    /// references this cache.
-    pub(crate) invisibility_step_ids: Vec<u64>,
-    /// Emitted `PRESENTATION_VIEW` / `PRESENTATION_AREA` step ids (phase
-    /// pr-core), indexed by `PresentationRepresentationId.0`. Consumed by
-    /// `AREA_IN_SET` and `PRESENTATION_SIZE` emitters in subsequent
-    /// sub-phases.
-    pub(crate) presentation_representation_step_ids: Vec<u64>,
-    /// Emitted `PRESENTATION_SET` step ids (phase pr-core), indexed by
-    /// `PresentationSetId.0`. Consumed by `AREA_IN_SET.in_set`.
-    pub(crate) presentation_set_step_ids: Vec<u64>,
-    /// Emitted `APPLIED_PRESENTED_ITEM` step ids (phase pr-item), indexed by
-    /// `AppliedPresentedItemId.0`. Consumed by `presented_item_representation.item`.
-    pub(crate) applied_presented_item_step_ids: Vec<u64>,
-    /// Emitted `PRESENTATION_LAYER_ASSIGNMENT` step ids, indexed by
-    /// `PresentationLayerAssignmentId.0`. Consumed by `INVISIBILITY`.
-    pub(crate) presentation_layer_assignment_step_ids: Vec<u64>,
+    // tessellated_item / tessellated_face / tessellated_surface_set step ids
+    // now live in `step_ids` keyed by their arena-id type.
+    // units-pool step ids (NAMED_UNIT / MEASURE_WITH_UNIT / DERIVED_UNIT_ELEMENT
+    // / DERIVED_UNIT) now live in `step_ids` keyed by their arena-id type.
     /// Assembly `ADVANCED_BREP_SHAPE_REPRESENTATION`s (items include a
     /// `MAPPED_ITEM`) whose step id was reserved in `emit_representations_pre_pass`
     /// and whose body is emitted by `emit_deferred_assembly_absr` after
     /// `emit_mapped_items`. `(RepresentationId, reserved step id)`.
     pub(crate) deferred_assembly_absr_ids: Vec<(crate::ir::RepresentationId, u64)>,
-    /// Emitted `AREA_IN_SET` step ids (phase pr-size), indexed by
-    /// `AreaInSetId.0`. Consumed by `PRESENTATION_SIZE.unit` SELECT.
-    pub(crate) area_in_set_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted curve-font entity
-    /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
-    /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
-    /// writer.
-    pub(crate) pre_defined_curve_font_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted pre-defined-symbol entity
-    /// (`PRE_DEFINED_SYMBOL` / `PRE_DEFINED_TERMINATOR_SYMBOL`), indexed by
-    /// `PreDefinedSymbolId.0`. No step-io consumer reads this cache yet —
-    /// it exists for round-trip symmetry with the arena.
-    pub(crate) pre_defined_symbol_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `GeometricRepresentationItem`
-    /// arena entry, indexed by `GeometricRepresentationItemId.0`.
-    /// Populated by `emit_geometric_representation_items` (phase ds-st)
-    /// in two passes — `SymbolTarget` first so `DefinedSymbol` can resolve
-    /// its `target` ref through this cache.
-    pub(crate) geometric_representation_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `CURVE_STYLE` entity, indexed by
-    /// `CurveStyleId.0`. Consumed by the PSA writer when dispatching a
-    /// `PsaStyle::Curve(...)` entry.
-    pub(crate) curve_style_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `STYLED_ITEM` entity, indexed by
-    /// `StyledItemId.0`. Populated by `emit_visualization_if_set` before
-    /// MDGPR emission so each MDGPR can resolve its `items` list to
-    /// cached STEP ids with one index lookup per entry.
-    pub(crate) styled_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `PRESENTATION_STYLE_ASSIGNMENT`
-    /// entity, indexed by `PresentationStyleAssignmentId.0`. Populated by
-    /// `emit_visualization_if_set` before any `STYLED_ITEM` /
-    /// `OVER_RIDING_STYLED_ITEM` emission so each styled item resolves its
-    /// `styles` ref list with one index lookup per entry.
-    pub(crate) psa_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `SURFACE_STYLE_RENDERING` /
-    /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` entity, indexed by
-    /// `SurfaceStyleRenderingId.0`. Populated by `emit_visualization_if_set`
-    /// before `SURFACE_SIDE_STYLE` emission so each
-    /// `SurfaceSideStyleEntry::Rendering` resolves with one index lookup.
-    pub(crate) ssr_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `FoundedItem` arena entry, indexed
-    /// by `FoundedItemId.0`. Populated by `emit_visualization_if_set` in a
-    /// 2-pass walk (`FillAreaStyle` first so `SurfaceStyleFillArea` can
-    /// resolve its `fill_area` ref); consumed by
-    /// `SurfaceStyleFillAreaHandler` and downstream styled-side writers.
-    pub(crate) founded_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `CameraModel` arena entry, indexed
-    /// by `CameraModelId.0`. Populated by `emit_visualization_if_set`
-    /// after `founded_item_step_ids`; consumed by `emit_camera_usage_arena`
-    /// to resolve `CameraUsage.mapping_origin`.
-    pub(crate) viz_camera_model_step_ids: Vec<u64>,
-    /// plm Date/Time caches — populated by `emit_plm_if_set` in
-    /// dependency order so downstream entities (`LocalTime`, `DateAndTime`)
-    /// resolve refs through one index lookup.
-    pub(crate) plm_utc_step_ids: Vec<u64>,
-    pub(crate) plm_date_step_ids: Vec<u64>,
-    pub(crate) plm_date_time_role_step_ids: Vec<u64>,
-    pub(crate) plm_local_time_step_ids: Vec<u64>,
-    pub(crate) plm_date_and_time_step_ids: Vec<u64>,
-    /// plm Person/Org caches — populated by `emit_plm_if_set`.
-    pub(crate) plm_person_step_ids: Vec<u64>,
-    pub(crate) plm_organization_step_ids: Vec<u64>,
-    pub(crate) plm_p_and_o_role_step_ids: Vec<u64>,
-    pub(crate) plm_p_and_o_step_ids: Vec<u64>,
-    /// plm Approval caches — populated by `emit_plm_if_set` in dependency
-    /// order: leaves (status / role) → `Approval` → linkers.
-    pub(crate) plm_approval_status_step_ids: Vec<u64>,
-    pub(crate) plm_approval_role_step_ids: Vec<u64>,
-    pub(crate) plm_approval_step_ids: Vec<u64>,
-    pub(crate) plm_approval_date_time_step_ids: Vec<u64>,
-    pub(crate) plm_approval_person_organization_step_ids: Vec<u64>,
-    /// plm Security caches — populated by `emit_plm_if_set` in
-    /// dependency order: level → classification → assignments.
-    /// SCA itself has no consumers and is not cached.
-    pub(crate) plm_security_level_step_ids: Vec<u64>,
-    pub(crate) plm_security_classification_step_ids: Vec<u64>,
-    /// plm Identification caches — populated by `emit_plm_if_set`.
-    /// `AppliedExternalIdentificationAssignment` itself has no consumers
-    /// and is not cached.
-    pub(crate) plm_identification_role_step_ids: Vec<u64>,
-    pub(crate) plm_external_source_step_ids: Vec<u64>,
-    /// plm Document caches — populated by `emit_plm_if_set`. `Applied`
-    /// `DocumentReference` is top-level (no consumer) and not cached.
-    pub(crate) plm_document_type_step_ids: Vec<u64>,
-    pub(crate) plm_document_step_ids: Vec<u64>,
-    /// Reserved STEP ids for `characterized_objects`, indexed by
-    /// `CharacterizedObjectId.0`. Filled by `emit_characterized_objects_prepass`
-    /// before the PD-definition pass so a `PROPERTY_DEFINITION` targeting a
-    /// CIWR resolves the forward ref; the CO bodies emit later under these ids.
-    /// 0 = no reserved id (inline-DM CO or absent).
-    pub(crate) characterized_object_step_ids: Vec<u64>,
-    pub(crate) plm_document_representation_type_step_ids: Vec<u64>,
-    pub(crate) plm_document_product_equivalence_step_ids: Vec<u64>,
-    /// plm Group cache — `AppliedGroupAssignment` is top-level (no
-    /// consumer) and not cached.
-    pub(crate) plm_group_step_ids: Vec<u64>,
-    /// plm `APPLIED_DOCUMENT_REFERENCE` cache — populated alongside the
-    /// Document cluster emit so the Role cluster can resolve
-    /// `RoleSelect::DocumentReference` step ids.
-    pub(crate) plm_document_reference_step_ids: Vec<u64>,
-    /// plm Role cache — `RoleAssociation` is top-level (no consumer)
-    /// and not cached.
-    pub(crate) plm_object_role_step_ids: Vec<u64>,
-    /// plm `address` arena — top-level (no current consumer); cache
-    /// reserved for future enhancement phases.
-    pub(crate) plm_address_step_ids: Vec<u64>,
     /// IR `ApplicationContext` index → emitted `APPLICATION_CONTEXT` step id.
     pub(crate) ac_step_ids: Vec<u64>,
-    /// IR `ShapeAspectId.0` index → emitted `SHAPE_ASPECT` step id.
-    /// Populated by `emit_pmi_if_set`; consumed by `id_attribute` writer.
-    pub(crate) shape_aspect_step_ids: Vec<u64>,
-    /// `SHAPE_ASPECT` subtype index → emitted step id (phase shape-aspect-ref).
-    /// Populated by `emit_shape_aspect_subtypes`; consumed by
-    /// `emit_shape_aspect_ref`.
-    pub(crate) composite_shape_aspect_step_ids: Vec<u64>,
-    pub(crate) centre_of_symmetry_step_ids: Vec<u64>,
-    pub(crate) all_around_shape_aspect_step_ids: Vec<u64>,
-    /// IR `DatumId.0` / `DatumFeatureId.0` index → emitted step id (phase
-    /// datum-feature). Populated by `emit_datums` / `emit_datum_features`;
-    /// consumed by `emit_shape_aspect_ref`.
-    pub(crate) datum_step_ids: Vec<u64>,
-    pub(crate) datum_feature_step_ids: Vec<u64>,
-    /// IR `GeneralDatumReferenceId.0` index → emitted step id (phase
-    /// datum-system). Populated by `emit_general_datum_references`; consumed
-    /// by `emit_datum_systems` to resolve a `DATUM_SYSTEM`'s `constituents`.
-    pub(crate) general_datum_reference_step_ids: Vec<u64>,
-    /// IR `DatumSystemId.0` index → emitted `DATUM_SYSTEM` step id (phase
-    /// datum-system). Populated by `emit_datum_systems`; consumed by
-    /// `emit_shape_aspect_ref`.
-    pub(crate) datum_system_step_ids: Vec<u64>,
-    /// Step-id cache for `datum_targets` (phase datum-target). Indexed by
-    /// `DatumTargetId.0`. Consumed by `emit_shape_aspect_ref` when a
-    /// `ShapeAspectRef::DatumTarget(_)` reaches the writer
-    /// (e.g. `feature_for_datum_target_relationship.related_shape_aspect`).
-    pub(crate) datum_target_step_ids: Vec<u64>,
-    /// Step-id cache for `placed_datum_target_features` (phase
-    /// datum-target). Indexed by `PlacedDatumTargetFeatureId.0`.
-    pub(crate) placed_datum_target_feature_step_ids: Vec<u64>,
-    /// Step-id caches for the plus-minus-tolerance cluster (phase
-    /// plus-minus-tolerance). The `tolerance_value` / `limits_and_fits`
-    /// caches feed `PLUS_MINUS_TOLERANCE.range`; the dimensional caches feed
-    /// its `toleranced_dimension` (`emit_dimensional_locations` /
-    /// `emit_dimensional_sizes` fill those — index-cached this phase).
-    pub(crate) tolerance_value_step_ids: Vec<u64>,
-    pub(crate) limits_and_fits_step_ids: Vec<u64>,
-    pub(crate) dimensional_location_step_ids: Vec<u64>,
-    pub(crate) dimensional_size_step_ids: Vec<u64>,
-    /// Step-id caches for the tolerance-zone phase. The two
-    /// `geometric_tolerance` caches feed `TOLERANCE_ZONE.defining_tolerance`
-    /// (`emit_geometric_tolerances` / `emit_geometric_tolerance_with_datum_references`
-    /// index-fill them); `tolerance_zone_form_step_ids` feeds its `form`
-    /// (`emit_pmi_pool`'s `tolerance_zone_forms` loop fills it).
-    pub(crate) geometric_tolerance_step_ids: Vec<u64>,
-    pub(crate) geometric_tolerance_with_datum_reference_step_ids: Vec<u64>,
-    pub(crate) tolerance_zone_form_step_ids: Vec<u64>,
-    /// IR `ApplicationProtocolDefinition` index → emitted
-    /// `APPLICATION_PROTOCOL_DEFINITION` step id.
-    pub(crate) apd_step_ids: Vec<u64>,
     /// IR `ProductContext` index → emitted `PRODUCT_CONTEXT`
     /// (or `MECHANICAL_CONTEXT`) step id.
     pub(crate) pc_step_ids: Vec<u64>,
@@ -421,29 +99,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// Empty when the model has no assembly (kernel-built IR with
     /// properties only — the property emitter silently skips in that case).
     pub(crate) product_def_ids: std::collections::HashMap<ProductId, u64>,
-    /// `MappedItemId → MAPPED_ITEM` (or `CAMERA_IMAGE` /
-    /// `CAMERA_IMAGE_3D_WITH_SCALE`) step id. Filled by `emit_mapped_items`
-    /// (`Itself`) and `emit_camera_image_arena` (`CameraImage` variants);
-    /// consumed by `emit_representation_item_ref` for the `MappedItem` variant.
-    pub(crate) mapped_item_step_ids: Vec<u64>,
-    /// `DimensionalExponentsId → DIMENSIONAL_EXPONENTS step id` (phase
-    /// dim-exp-arena-a). Filled by `emit_units_pool_if_set`; consumed by
-    /// `NAMED_UNIT` subtype writers in phase dim-exp-arena-b.
-    pub(crate) dimensional_exponents_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT entity step id`. Phase pc-unify-a:
     /// consumed by `emit_product_categories_arena` so PRPC.products
     /// refs land on the right entity (PDEF doesn't match the schema
     /// here — PRPC.products narrows to PRODUCT itself).
     pub(crate) product_step_ids: std::collections::HashMap<ProductId, u64>,
-    /// `ProductCategoryId → step id` (PC or PRPC). Filled by
-    /// `emit_product_categories_arena`, consumed by
-    /// `emit_product_category_relationships_arena`.
-    pub(crate) product_category_step_ids: Vec<u64>,
-    /// `ProductDefinitionFormationId → PRODUCT_DEFINITION_FORMATION step id`.
-    /// Filled by `emit_formation` (arena path); consumed by the DPE writer when
-    /// its `related_product` was a formation. Sized to the arena before the
-    /// per-product loop; `0` means "not emitted".
-    pub(crate) product_definition_formation_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT_DEFINITION_SHAPE step id`. Same role as
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
@@ -457,160 +117,36 @@ pub(crate) struct WriteBuffer<'m> {
     /// dangling reference). Absent ⇒ kernel-built IR (synthesise instead).
     pub(crate) nauo_pds_arena_slot:
         std::collections::HashMap<crate::ir::id::AssemblyComponentUsageId, (usize, String, String)>,
-    /// STEP entity id of every emitted `PROPERTY_DEFINITION`, indexed by
-    /// `PropertyId.0`. Filled by `emit_properties_if_set`; consumed by the
-    /// `GENERAL_PROPERTY_ASSOCIATION` emitter to resolve `derived_definition`.
-    /// A slot stays 0 when that property's emit early-returned (no product
-    /// chain) — the GPA emitter skips a 0 slot.
-    pub(crate) property_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `property_definitions` arena entry
-    /// (`PROPERTY_DEFINITION` Itself or `PRODUCT_DEFINITION_SHAPE`),
-    /// indexed by `PropertyDefinitionId.0`. Filled by
-    /// `emit_property_definitions_if_set` immediately after the assembly
-    /// chain so subsequent passes (`emit_pmi_if_set` consuming
-    /// `product_def_shape_ids`, `emit_properties_if_set` resolving
-    /// `Property.definition`, `emit_general_property_associations` for
-    /// `derived_definition`) all see filled slots.
-    pub(crate) property_definition_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `GENERAL_PROPERTY`, indexed by
-    /// `GeneralPropertyId.0`. Consumed by the GPA emitter for `base_definition`.
-    pub(crate) general_property_step_ids: Vec<u64>,
+    /// Coarse emit phase — `emit_all`'s ordering-guard state (master). See
+    /// [`EmitPhase`]. Debug-only guard; no effect on output.
+    phase: EmitPhase,
+    /// Output schema target. `Universal` = emit as-is (current behaviour);
+    /// `Ap*` triggers projection (entity prune + `FILE_SCHEMA`/`APD` retarget),
+    /// consumed in the post-build projection pass. Stored here so the deep
+    /// emit chain can reach it without threading a param everywhere.
+    #[allow(dead_code)] // consumed by the projection pass (batch 2c)
+    pub(crate) target: crate::writer::SchemaTarget,
 }
 
 impl<'m> WriteBuffer<'m> {
     #[allow(clippy::too_many_lines)]
-    pub(crate) fn new(model: &'m StepModel) -> Self {
+    pub(crate) fn new(model: &'m StepModel, target: crate::writer::SchemaTarget) -> Self {
         Self {
             model,
+            target,
             next_id: 0,
             entities: Vec::new(),
-            point_ids: HashMap::new(),
-            direction_ids: HashMap::new(),
-            placement_ids: HashMap::new(),
-            placement_1d_ids: HashMap::new(),
-            placement_2d_ids: HashMap::new(),
-            curve_ids: HashMap::new(),
-            surface_ids: HashMap::new(),
-            vertex_ids: HashMap::new(),
-            edge_ids: HashMap::new(),
-            wire_ids: HashMap::new(),
-            face_ids: HashMap::new(),
-            shell_ids: HashMap::new(),
-            solid_ids: HashMap::new(),
-            point_2d_ids: HashMap::new(),
-            direction_2d_ids: HashMap::new(),
-            curve_2d_ids: HashMap::new(),
-            planar_extent_ids: HashMap::new(),
+            step_ids: step_id_cache::StepIdCache::default(),
             unit_context_ids: Vec::new(),
-            representation_step_ids: Vec::new(),
-            external_ref_step_ids: Vec::new(),
-            representation_relationship_step_ids: Vec::new(),
-            representation_map_step_ids: Vec::new(),
-            tessellated_item_step_ids: Vec::new(),
-            tessellated_face_step_ids: Vec::new(),
-            tessellated_surface_set_step_ids: Vec::new(),
-            acoc_step_ids: Vec::new(),
-            ao_step_ids: Vec::new(),
-            apll_point_step_ids: Vec::new(),
-            annotation_placeholder_leader_line_step_ids: Vec::new(),
-            draughting_callout_step_ids: Vec::new(),
-            tolerance_zone_step_ids: Vec::new(),
-            type_qualifier_step_ids: Vec::new(),
-            value_format_type_qualifier_step_ids: Vec::new(),
-            representation_item_step_ids: Vec::new(),
-            named_unit_step_ids: Vec::new(),
-            mwu_step_ids: Vec::new(),
-            due_step_ids: Vec::new(),
-            derived_unit_step_ids: Vec::new(),
-            length_dim_exp_step: None,
-            dimensionless_dim_exp_step: None,
-            mass_dim_exp_step: None,
-            colour_step_ids: Vec::new(),
-            symbol_colour_step_ids: Vec::new(),
-            text_style_for_defined_font_step_ids: Vec::new(),
-            pre_defined_marker_step_ids: Vec::new(),
-            text_style_step_ids: Vec::new(),
-            dptf_step_ids: Vec::new(),
-            text_literal_step_ids: Vec::new(),
-            composite_text_step_ids: Vec::new(),
-            dmia_step_ids: Vec::new(),
-            unitless_context_step_ids: Vec::new(),
-            gisu_step_ids: Vec::new(),
-            invisibility_step_ids: Vec::new(),
-            presentation_representation_step_ids: Vec::new(),
-            presentation_set_step_ids: Vec::new(),
-            applied_presented_item_step_ids: Vec::new(),
-            presentation_layer_assignment_step_ids: Vec::new(),
             deferred_assembly_absr_ids: Vec::new(),
-            area_in_set_step_ids: Vec::new(),
-            pre_defined_curve_font_step_ids: Vec::new(),
-            pre_defined_symbol_step_ids: Vec::new(),
-            geometric_representation_item_step_ids: Vec::new(),
-            curve_style_step_ids: Vec::new(),
-            styled_item_step_ids: Vec::new(),
-            psa_step_ids: Vec::new(),
-            ssr_step_ids: Vec::new(),
-            founded_item_step_ids: Vec::new(),
-            viz_camera_model_step_ids: Vec::new(),
-            plm_utc_step_ids: Vec::new(),
-            plm_date_step_ids: Vec::new(),
-            plm_date_time_role_step_ids: Vec::new(),
-            plm_local_time_step_ids: Vec::new(),
-            plm_date_and_time_step_ids: Vec::new(),
-            plm_person_step_ids: Vec::new(),
-            plm_organization_step_ids: Vec::new(),
-            plm_p_and_o_role_step_ids: Vec::new(),
-            plm_p_and_o_step_ids: Vec::new(),
-            plm_approval_status_step_ids: Vec::new(),
-            plm_approval_role_step_ids: Vec::new(),
-            plm_approval_step_ids: Vec::new(),
-            plm_approval_date_time_step_ids: Vec::new(),
-            plm_approval_person_organization_step_ids: Vec::new(),
-            plm_security_level_step_ids: Vec::new(),
-            plm_security_classification_step_ids: Vec::new(),
-            plm_identification_role_step_ids: Vec::new(),
-            plm_external_source_step_ids: Vec::new(),
-            plm_document_type_step_ids: Vec::new(),
-            plm_document_step_ids: Vec::new(),
-            characterized_object_step_ids: Vec::new(),
-            plm_document_representation_type_step_ids: Vec::new(),
-            plm_document_product_equivalence_step_ids: Vec::new(),
-            plm_group_step_ids: Vec::new(),
-            plm_document_reference_step_ids: Vec::new(),
-            plm_object_role_step_ids: Vec::new(),
-            plm_address_step_ids: Vec::new(),
             ac_step_ids: Vec::new(),
-            shape_aspect_step_ids: Vec::new(),
-            composite_shape_aspect_step_ids: Vec::new(),
-            centre_of_symmetry_step_ids: Vec::new(),
-            all_around_shape_aspect_step_ids: Vec::new(),
-            datum_step_ids: Vec::new(),
-            datum_feature_step_ids: Vec::new(),
-            general_datum_reference_step_ids: Vec::new(),
-            datum_system_step_ids: Vec::new(),
-            datum_target_step_ids: Vec::new(),
-            placed_datum_target_feature_step_ids: Vec::new(),
-            tolerance_value_step_ids: Vec::new(),
-            geometric_tolerance_step_ids: Vec::new(),
-            geometric_tolerance_with_datum_reference_step_ids: Vec::new(),
-            tolerance_zone_form_step_ids: Vec::new(),
-            limits_and_fits_step_ids: Vec::new(),
-            dimensional_location_step_ids: Vec::new(),
-            dimensional_size_step_ids: Vec::new(),
-            apd_step_ids: Vec::new(),
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
-            mapped_item_step_ids: Vec::new(),
-            dimensional_exponents_step_ids: Vec::new(),
             product_step_ids: std::collections::HashMap::new(),
-            product_category_step_ids: Vec::new(),
-            product_definition_formation_step_ids: Vec::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
             nauo_pds_arena_slot: std::collections::HashMap::new(),
-            property_step_ids: Vec::new(),
-            property_definition_step_ids: Vec::new(),
-            general_property_step_ids: Vec::new(),
+            phase: EmitPhase::Init,
         }
     }
 
@@ -618,23 +154,45 @@ impl<'m> WriteBuffer<'m> {
         self.entities
     }
 
-    #[allow(clippy::too_many_lines)]
+    /// Advance the coarse emit phase (monotonic). A non-increasing transition
+    /// means an `emit_all` block was reordered — caught in debug builds.
+    pub(in crate::writer::buffer) fn set_phase(&mut self, p: EmitPhase) {
+        debug_assert!(
+            p > self.phase,
+            "emit order: phase regressed {:?} -> {p:?} (block swap?)",
+            self.phase
+        );
+        self.phase = p;
+    }
+
+    /// Guard a cross-phase dependency: the caller requires every cache from
+    /// phases up to `min` to be populated. Debug-only.
+    pub(in crate::writer::buffer) fn assert_phase(&self, min: EmitPhase, ctx: &str) {
+        debug_assert!(
+            self.phase >= min,
+            "emit order guard: {ctx} requires phase >= {min:?}, got {:?}",
+            self.phase
+        );
+    }
+
+    // Arena indices fit u32 by the arena's own overflow guard, so the
+    // `idx as u32` surface-curve id reconstruction is safe.
+    #[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
     pub(crate) fn emit_all(&mut self) -> Result<(), WriteError> {
         // Order: geometry -> topology -> units -> assembly. Mirrors the
         // OCCT-flavoured fixture layout (topology before units) and keeps
         // all cross-pool references backward (parent after children).
         // Arena iteration yields the original Id order, so dedup maps set
         // in one pass are reused in the next.
-        self.representation_step_ids = vec![0u64; self.model.representations.len()];
-        self.representation_relationship_step_ids =
-            vec![0u64; self.model.representation_relationships.len()];
         // Reserve an id per P21 edition 3 external reference up front (in arena
         // order) so any DATA entity resolving one — e.g. CIRCULAR_AREA.centre —
         // emits a consistent `#N`, and write_file can emit the REFERENCE
         // section. Deterministic: same arena → same ids across round-trips.
-        self.external_ref_step_ids = (0..self.model.external_references.len())
-            .map(|_| self.fresh())
-            .collect();
+        for id in self.model.metadata.external_references.iter_ids() {
+            let reserved = self.fresh();
+            self.set_step_id(id, reserved);
+        }
+        self.set_phase(EmitPhase::Geometry);
         for id in self.model.geometry.points.iter_ids() {
             self.emit_point(id)?;
         }
@@ -654,7 +212,7 @@ impl<'m> WriteBuffer<'m> {
             self.emit_surface(id)?;
         }
         // 2D geometry (PCURVE parametric space) — emitted after 3D surfaces
-        // so `emit_surface_curve_wrapper` can cache-hit the 3D basis surface,
+        // so `emit_surface_curve_node` can cache-hit the 3D basis surface,
         // and before topology so `emit_edge` can cache-hit the 2D curves.
         // Arena is empty for files without PCURVE content → zero iterations.
         for id in self.model.geometry.points_2d.iter_ids() {
@@ -678,6 +236,7 @@ impl<'m> WriteBuffer<'m> {
         for id in self.model.geometry.vertices.iter_ids() {
             self.emit_vertex(id)?;
         }
+        self.set_phase(EmitPhase::Topology);
         for id in self.model.topology.edges.iter_ids() {
             self.emit_edge(id)?;
         }
@@ -696,13 +255,14 @@ impl<'m> WriteBuffer<'m> {
         // units-2: emit the units pool first so `named_unit_step_ids` is
         // populated before GUAC emit (which now looks up its leaf step
         // ids from that cache instead of producing fresh entities).
+        self.set_phase(EmitPhase::Units);
         self.emit_units_pool_if_set()?;
         // Emit one REPRESENTATION_CONTEXT per IR `UnitContext`. The cached
         // STEP ids land in `unit_context_ids` so each downstream emitter can
         // resolve `Option<UnitContextId>` with a single index lookup. Leaf
         // entities are reused from the units pool — see GUAC writer.
-        self.unit_context_ids = Vec::with_capacity(self.model.units.len());
-        for ctx in self.model.units.iter() {
+        self.unit_context_ids = Vec::with_capacity(self.model.shape_rep.unit_contexts.len());
+        for ctx in self.model.shape_rep.unit_contexts.iter() {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);
         }
@@ -721,6 +281,7 @@ impl<'m> WriteBuffer<'m> {
         // resolve its child SBSMs through the GRI cache (phase
         // sbsm-cluster). The symbol-domain GRI entries still emit after
         // visualization (`emit_geometric_representation_items`).
+        self.set_phase(EmitPhase::Representations);
         self.emit_sbsm_in_gri_arena()?;
         // Emit the value-qualifier pools and the representation_item arena
         // before the representation pre-pass (phase measure-arena-1): a
@@ -740,12 +301,14 @@ impl<'m> WriteBuffer<'m> {
         if let Some(plm) = self.model.plm.clone() {
             self.emit_documents_prepass(&plm)?;
         }
+        self.set_phase(EmitPhase::Product);
         self.emit_product_chain_if_eligible()?;
         // PC cluster (phase pc-unify-a) — arena-driven emit. Coexists with
         // the legacy `emit_product_category_chain` inline path until phase
         // pc-unify-b removes the latter.
         self.emit_product_categories_arena();
         self.emit_product_category_relationships_arena();
+        self.set_phase(EmitPhase::Pmi);
         self.emit_pmi_if_set();
         // general_datum_reference + DATUM_SYSTEM — emitted before the
         // ShapeAspectRef consumers below so `datum_system_step_ids` is
@@ -826,16 +389,19 @@ impl<'m> WriteBuffer<'m> {
         // `tessellated_item_step_ids` during visualization. Only the
         // `tessellated_items` arena is filled here; annotation_occurrence
         // and related orphans still emit after visualization.
+        self.set_phase(EmitPhase::Tessellation);
         self.emit_tessellation()?;
         // REPRESENTATION_MAP + MAPPED_ITEM (phase si-mapped-item) — moved
         // before visualization so STYLED_ITEM / CDORSI can resolve a
         // MAPPED_ITEM target through `mapped_item_step_ids`. MDGPR /
         // STYLED_ITEM-target MAPPED_ITEMs are reader-cascade-dropped, so
         // the cache need not cover MDGPR slots.
+        self.set_phase(EmitPhase::MappedItems);
         self.emit_mapped_items()?;
         // Assembly ABSR bodies whose step ids were reserved in the pre-pass —
         // their MAPPED_ITEM items now resolve (emit_mapped_items just ran).
         self.emit_deferred_assembly_absr()?;
+        self.set_phase(EmitPhase::Visualization);
         self.emit_visualization_if_set()?;
         // Camera-origin plain REPRESENTATION_MAPs + their MAPPED_ITEMs, deferred
         // by `emit_mapped_items` until cameras are stepped. Must precede
@@ -853,6 +419,7 @@ impl<'m> WriteBuffer<'m> {
         // PMI / shape_aspect / representation step-id caches populated.
         for iiru in self
             .model
+            .shape_rep
             .item_identified_representation_usages
             .iter()
             .cloned()
@@ -893,29 +460,12 @@ impl<'m> WriteBuffer<'m> {
                 }
             }
         }
-        // BOUNDED_SURFACE_CURVE + INTERSECTION_CURVE — orphan, after curves
-        // + surfaces emitted.
-        for sc in self
-            .model
-            .geometry
-            .surface_curves
-            .iter()
-            .cloned()
-            .collect::<Vec<_>>()
-        {
-            use crate::entities::SimpleEntityHandler;
-            use crate::entities::geometry::surface_curve_subtypes::{
-                BoundedSurfaceCurveHandler, IntersectionCurveHandler,
-            };
-            use crate::ir::geometry::SurfaceCurve;
-            match sc {
-                SurfaceCurve::BoundedSurfaceCurve(b) => {
-                    BoundedSurfaceCurveHandler::write(self, b)?;
-                }
-                SurfaceCurve::IntersectionCurve(i) => {
-                    IntersectionCurveHandler::write(self, i)?;
-                }
-            }
+        // SURFACE_CURVE family (base/seam + bounded/intersection) — emit any
+        // node an edge did not already reach. `emit_surface_curve_node` is
+        // step_id-cached so edge-referenced nodes are not re-emitted.
+        let surface_curve_count = self.model.geometry.surface_curves.iter().count();
+        for idx in 0..surface_curve_count {
+            self.emit_surface_curve_node(crate::ir::id::SurfaceCurveSubtypeId(idx as u32))?;
         }
         // INTEGER/REAL_REPRESENTATION_ITEM — orphan value-items, no refs.
         self.emit_numeric_representation_items()?;
@@ -928,6 +478,7 @@ impl<'m> WriteBuffer<'m> {
         // LEADER_CURVE first — fills `acoc_step_ids` consumed by
         // `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` in
         // `emit_annotation_occurrences`.
+        self.set_phase(EmitPhase::Annotations);
         self.emit_annotation_curve_occurrences();
         // APLL_POINT then ANNOTATION_TO_MODEL_LEADER_LINE before
         // `emit_annotation_occurrences` so a `_WITH_LEADER_LINE` APO resolves
@@ -948,6 +499,7 @@ impl<'m> WriteBuffer<'m> {
         // every items ref cache (styled_item, ao, draughting_callout,
         // representation_item, per-geometry placements) is populated, so
         // the items refs serialise to valid step ids.
+        self.set_phase(EmitPhase::DraughtingModels);
         self.emit_draughting_models()?;
         // TESSELLATED_SHAPE_REPRESENTATION — delayed emit (Mdgpr / DM
         // pattern). Runs after `emit_tessellation` (line 687) so the
@@ -972,10 +524,12 @@ impl<'m> WriteBuffer<'m> {
         // and `item` (DRAUGHTING_CALLOUT, stepped by emit_draughting_callouts
         // above). The step ids were reserved by emit_characterized_objects_prepass
         // so the PD-definition forward refs already point at them.
+        self.set_phase(EmitPhase::CharacterizedObjects);
         self.emit_characterized_objects();
         // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — runs after
         // every Representation delayed emit so rep_1 / rep_2 resolve
         // through the fully populated representation_step_ids cache.
+        self.set_phase(EmitPhase::ReprRelationships);
         self.emit_representation_relationships()?;
         // PD-based SHAPE_DEFINITION_REPRESENTATIONs — after BOTH
         // emit_property_definitions_non_pds (definition PD step id) AND every
@@ -1007,6 +561,7 @@ impl<'m> WriteBuffer<'m> {
         // emit (Mdgpr / DraughtingModel pattern) — placing this inside
         // `emit_visualization_if_set` panics on corpora that reference
         // `DRAUGHTING_CALLOUT` since that cache is filled later.
+        self.set_phase(EmitPhase::Presentation);
         self.emit_invisibilities()?;
         // PRESENTATION_VIEW / AREA / SET — depends on repr_item and per-
         // geometry placement caches (all populated above).
@@ -1016,6 +571,7 @@ impl<'m> WriteBuffer<'m> {
         // PRESENTED_ITEM_REPRESENTATION + APPLIED_PRESENTED_ITEM — depends
         // on pr-core caches + product chain (`product_def_ids`).
         self.emit_pr_item()?;
+        self.set_phase(EmitPhase::PlmProperties);
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         Ok(())
@@ -1024,5 +580,54 @@ impl<'m> WriteBuffer<'m> {
     pub(crate) fn fresh(&mut self) -> u64 {
         self.next_id += 1;
         self.next_id
+    }
+
+    /// Emitted STEP id for an arena entry, or `0` if not yet emitted. Accepts
+    /// an id by value or by reference (`id` is taken by value so a `&Id` from
+    /// list iteration binds without an extra deref at the call site).
+    #[allow(clippy::needless_pass_by_value)]
+    pub(crate) fn step_id<I: crate::ir::arena::AsArenaId>(&self, id: I) -> u64 {
+        self.step_ids.get(id.as_arena_id())
+    }
+
+    /// Record the emitted STEP id for an arena entry.
+    #[allow(clippy::needless_pass_by_value)]
+    pub(crate) fn set_step_id<I: crate::ir::arena::AsArenaId>(&mut self, id: I, step: u64) {
+        self.step_ids.set(id.as_arena_id(), step);
+    }
+}
+
+/// Writer seam for `#[derive(StepSelect)]`-generated `emit_select`: delegate to
+/// [`WriteBuffer::step_id`].
+impl crate::ir::select::StepResolver for WriteBuffer<'_> {
+    fn step_of<K: crate::ir::arena::AsArenaId>(&self, id: K) -> u64 {
+        self.step_id(id)
+    }
+}
+
+#[cfg(all(test, debug_assertions))]
+mod phase_guard_tests {
+    use super::{EmitPhase, WriteBuffer};
+    use crate::ir::StepModel;
+
+    // A cross-phase emit helper called before its dependency phase must trip
+    // the order guard (debug build only — the guard is `debug_assert!`).
+    #[test]
+    #[should_panic(expected = "emit order guard")]
+    fn visualization_before_mapped_items_panics() {
+        let model = StepModel::default();
+        let mut buf = WriteBuffer::new(&model, crate::writer::SchemaTarget::Universal);
+        // phase is `Init` (< MappedItems); the assert fires before any work.
+        let _ = buf.emit_visualization_if_set();
+    }
+
+    // A non-increasing `set_phase` (a reordered emit_all block) must panic.
+    #[test]
+    #[should_panic(expected = "phase regressed")]
+    fn set_phase_regression_panics() {
+        let model = StepModel::default();
+        let mut buf = WriteBuffer::new(&model, crate::writer::SchemaTarget::Universal);
+        buf.set_phase(EmitPhase::Topology);
+        buf.set_phase(EmitPhase::Geometry);
     }
 }

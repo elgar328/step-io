@@ -9,15 +9,13 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use crate::ir::arena::Arena;
 use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{SurfaceCurveWrapper, TransitionCode};
+use crate::ir::geometry::TransitionCode;
 use crate::ir::id::{
-    ColourId, Curve2dId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId, FaceId,
-    FoundedItemId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
-    PreDefinedCurveFontId, PreDefinedSymbolId, PresentationStyleAssignmentId, ProductId, ShellId,
-    SolidId, StyledItemId, SurfaceId, SurfaceStyleRenderingId, UnitContextId, VertexId, WireId,
+    CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement3dId, PointId,
+    ProductId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
-use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit, UnitsPool};
 use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
@@ -26,8 +24,10 @@ use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod dispatch;
 mod header;
-/// Catalogue of non-standard input normalizations (documentation only).
+mod id_map_cache;
+/// Catalogue of non-standard input normalizations + the typed `NsCase` marker.
 mod nonstandard;
+pub(crate) use nonstandard::NsCase;
 
 #[cfg(test)]
 mod tests;
@@ -107,6 +107,17 @@ pub(crate) struct AssemblyRrData {
     pub(crate) rr_complex_entity: u64,
 }
 
+/// A NAUO-targeted `PRODUCT_DEFINITION_SHAPE`'s payload, recorded by the PDS
+/// handler's NAUO branch: the target NAUO's `#N` plus the source
+/// `name`/`description` (so `materialize_nauo_owned_pds` preserves the
+/// exporter's placement label, e.g. "Placement #462", instead of the assembly
+/// chain's hard-coded "Placement" / "Placement of an item").
+pub(crate) struct NauoPdsInfo {
+    pub(crate) nauo: u64,
+    pub(crate) name: String,
+    pub(crate) description: String,
+}
+
 /// A `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` whose `style_context` SELECT
 /// list is resolved in a post-pass. The targets are overwhelmingly assembly
 /// RR-complexes, which only gain a `RepresentationRelationshipId` after
@@ -140,6 +151,16 @@ pub(crate) struct DeferredGisu {
 // `SolidAngleUnit` variants.
 #[allow(clippy::zero_sized_map_values)]
 pub struct ReaderContext {
+    /// Type-keyed `file_id (#N) → arena id` cache. Replaces the former
+    /// per-type `*_id_map: HashMap<u64, XId>` fields for every simple arena-id
+    /// map (see [`id_map_cache`]). Maps with non-id values or a shared arena-id
+    /// type keep their own named fields below.
+    pub(crate) id_cache: id_map_cache::IdMapCache,
+    /// Transient L1 (`EarlyModel`) store for entities migrated to the 2-layer
+    /// path (currently `surface_style_fill_area` / `surface_side_style`). Holds
+    /// the read-side L1→L2 correspondence consulted during `lower`. See
+    /// [`crate::early`].
+    pub(crate) early: crate::early::EarlyModel,
     pub(crate) geometry: GeometryPool,
     pub(crate) topology: TopologyPool,
     /// Unit / uncertainty contexts — one entry per `REPRESENTATION_CONTEXT`
@@ -152,43 +173,17 @@ pub struct ReaderContext {
     /// `GeometricItemSpecificUsageHandler`.
     pub(crate) geometric_item_specific_usages:
         Arena<crate::ir::shape_rep::GeometricItemSpecificUsage>,
-    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` step id → arena id (phase gisu).
-    /// No step-io entity references GISU today; the map is retained for
-    /// symmetry with sibling handlers.
-    pub(crate) gisu_id_map: HashMap<u64, crate::ir::id::GeometricItemSpecificUsageId>,
+
     /// GISUs whose `used_representation` was a non-standard `$`, deferred so
     /// `resolve_deferred_gisu_used_representation` can derive it from the
     /// `identified_item`'s containing representation after all reps are read.
     pub(crate) deferred_gisu_used_repr: Vec<DeferredGisu>,
-    /// `INVISIBILITY` step id → arena id (phase invisibility).
-    pub(crate) invisibility_id_map: HashMap<u64, crate::ir::id::InvisibilityId>,
-    /// `PRESENTATION_VIEW` / `PRESENTATION_AREA` step id → arena id
-    /// (phase pr-core). Both variants share the same `PresentationRepresentationId`
-    /// space — `area_in_set.area` / `presentation_size.unit` resolve here.
-    pub(crate) presentation_representation_id_map:
-        HashMap<u64, crate::ir::id::PresentationRepresentationId>,
-    /// `PRESENTATION_SET` step id → arena id (phase pr-core). Consumed by
-    /// `area_in_set.in_set`.
-    pub(crate) presentation_set_id_map: HashMap<u64, crate::ir::id::PresentationSetId>,
-    /// `PRESENTATION_LAYER_ASSIGNMENT` step id → arena id. Consumed by
-    /// `invisibility.invisible_items` (a PLA is an `invisible_item` member).
-    pub(crate) presentation_layer_assignment_id_map:
-        HashMap<u64, crate::ir::id::PresentationLayerAssignmentId>,
-    /// `APPLIED_PRESENTED_ITEM` step id → arena id (phase pr-item). Consumed by
-    /// `presented_item_representation.item` (a `presented_item` whose concrete
-    /// subtype is `applied_presented_item`).
-    pub(crate) applied_presented_item_id_map: HashMap<u64, crate::ir::id::AppliedPresentedItemId>,
-    /// `AREA_IN_SET` step id → arena id (phase pr-size). Consumed by
-    /// `presentation_size.unit` SELECT.
-    pub(crate) area_in_set_id_map: HashMap<u64, crate::ir::id::AreaInSetId>,
+
     /// `REPRESENTATION_CONTEXT #N → UnitContextId`.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.
     pub(crate) context_id_map: HashMap<u64, UnitContextId>,
-    /// `(GRC PRC REP_CONTEXT) #N → UnitlessContextId` populated by the
-    /// `ParametricRepresentationContextHandler`. Representation handlers
-    /// look up here after `context_id_map` misses.
-    pub(crate) unitless_context_id_map: HashMap<u64, crate::ir::id::UnitlessContextId>,
+
     /// `representation #N → UnitContextId` for the 5 product-bearing
     /// representation entities (ABSR / MSSR / plain SR / GBWSR / GBSSR).
     /// Single map suffices because STEP entity ids are globally unique within
@@ -203,11 +198,11 @@ pub struct ReaderContext {
     /// the 2D arenas (`points_2d`, `directions_2d`, `curves_2d`).
     pub(crate) pcurve_subtree_ids: HashSet<u64>,
 
-    /// Ids already accounted for by the `[NS-pcurve-3d-in-pspace]`
+    /// Ids already accounted for by the `NsCase::Pcurve3dInPspace`
     /// normalization (see `surface_curve.rs`). A 3D curve in a 2D pcurve
     /// parameter-space (EXPRESS `pcurve.wr3` violation) drops the whole
     /// `DEFINITIONAL_REPRESENTATION` subtree; this set dedups the per-type
-    /// `record_nonstandard` accounting when several pcurves share a subtree id.
+    /// `ns_record` accounting when several pcurves share a subtree id.
     pub(crate) dropped_pcurve_recorded: HashSet<u64>,
 
     // Unit entity maps: STEP #N → resolved unit variant.
@@ -223,87 +218,25 @@ pub struct ReaderContext {
     pub(crate) mwu_arena: Arena<MeasureWithUnit>,
     /// `DERIVED_UNIT_ELEMENT` arena (units-1). Populated by the `DERIVED_UNIT_ELEMENT` handlers.
     pub(crate) due_arena: Arena<DerivedUnitElement>,
-    /// `NAMED_UNIT` complex `#N → NamedUnitId` (units-1). Used by MWU
-    /// readers (`unit_component` ref) and the DUE reader (`unit` ref) to
-    /// resolve their named-unit reference.
-    pub(crate) named_unit_id_map: HashMap<u64, crate::ir::id::NamedUnitId>,
-    /// `MEASURE_WITH_UNIT` `#N → MeasureWithUnitId` (units-1).
-    pub(crate) mwu_id_map: HashMap<u64, crate::ir::id::MeasureWithUnitId>,
-    /// `DERIVED_UNIT_ELEMENT` `#N → DerivedUnitElementId` (units-1).
-    pub(crate) due_id_map: HashMap<u64, crate::ir::id::DerivedUnitElementId>,
+
     /// `DERIVED_UNIT` arena (units-1b). Populated by the `DERIVED_UNIT` handler.
     pub(crate) derived_unit_arena: Arena<DerivedUnit>,
     /// `DIMENSIONAL_EXPONENTS` arena (phase dim-exp-arena-a). Populated by a
     /// dedicated `DIMENSIONAL_EXPONENTS` handler so `NAMED_UNIT` subtypes can
     /// look up the ref in [`Self::dim_exp_id_map`].
     pub(crate) dimensional_exponents: Arena<crate::ir::units::DimensionalExponents>,
-    /// `DIMENSIONAL_EXPONENTS` `#N → DimensionalExponentsId`.
-    pub(crate) dim_exp_id_map: HashMap<u64, crate::ir::DimensionalExponentsId>,
-    /// `DERIVED_UNIT` `#N → DerivedUnitId` (units-1b). Reserved for future
-    /// consumers (no entity references it in the current IR).
-    pub(crate) derived_unit_id_map: HashMap<u64, crate::ir::id::DerivedUnitId>,
-    /// MWU step ids that appear as the `conversion_factor` of a
-    /// `CONVERSION_BASED_UNIT` complex (units-1). Populated by the unit
-    /// complex handlers and consulted by the `MEASURE_WITH_UNIT` readers —
-    /// those MWUs are re-emitted inline by the CBU writer
-    /// chain, so adding them to `mwu_arena` would cause double-emit on
-    /// round-trip.
-    pub(crate) cbu_internal_mwu_refs: HashSet<u64>,
-    /// LENGTH `CONVERSION_BASED_UNIT` outer `entity_id`s whose
-    /// `conversion_factor` was a **bare** `MEASURE_WITH_UNIT` (supertype) rather
-    /// than the `LENGTH_MEASURE_WITH_UNIT` subtype (NIST `ctc_05` inch). Consumed
-    /// by `register_named_length` to set `LengthFlavor.cbu_factor_bare` so the
-    /// writer reproduces the input entity form (multiset-stable).
-    pub(crate) length_cbu_factor_bare: HashSet<u64>,
-    /// units-2: `CBU outer entity_id → conversion_factor MWU entity_id`.
-    /// Populated by `read_conversion_based_unit_body` (`LENGTH` / `PLANE_ANGLE`
-    /// / `MASS` branches) and consumed by the `backfill_cbu_base` post-pass
-    /// to set each outer's `LengthFlavor.cbu_base` (etc.) to the
-    /// `NamedUnitId` of its base SI entry.
-    pub(crate) cbu_outer_to_mwu: HashMap<u64, u64>,
-    /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value+metadata` for uncertainty
-    /// entities whose `unit_component` resolved to a length unit. Populated
-    /// when `UNCERTAINTY_MEASURE_WITH_UNIT` entities are read.
-    pub(crate) length_uncertainty_map: HashMap<u64, LengthUncertainty>,
-    /// Same shape as `length_uncertainty_map` but keyed on UMUs whose
-    /// `unit_component` is a plane-angle unit.
-    pub(crate) plane_angle_uncertainty_map: HashMap<u64, LengthUncertainty>,
-    /// Same shape but for solid-angle uncertainty UMUs.
-    pub(crate) solid_angle_uncertainty_map: HashMap<u64, LengthUncertainty>,
 
     // Geometry maps: STEP #N → typed Id.
-    pub(crate) point_map: HashMap<u64, PointId>,
-    pub(crate) direction_map: HashMap<u64, DirectionId>,
-    pub(crate) surface_map: HashMap<u64, SurfaceId>,
-    pub(crate) curve_map: HashMap<u64, CurveId>,
 
     // Geometry intermediate maps.
     pub(crate) placement_map: HashMap<u64, Placement3dId>,
     pub(crate) vector_map: HashMap<u64, (DirectionId, f64)>,
-    pub(crate) axis1_map: HashMap<u64, Placement1dId>,
-    /// `PLANAR_EXTENT` / `PLANAR_BOX` `#N → PlanarExtentId` (phase view-volume).
-    /// Lets `VIEW_VOLUME` resolve its `view_window` ref.
-    pub(crate) planar_extent_id_map: HashMap<u64, crate::ir::PlanarExtentId>,
 
     // 2D geometry (PCURVE parametric space) maps.
-    pub(crate) point_2d_map: HashMap<u64, Point2dId>,
-    pub(crate) direction_2d_map: HashMap<u64, Direction2dId>,
-    pub(crate) curve_2d_map: HashMap<u64, Curve2dId>,
     pub(crate) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
-    pub(crate) placement_2d_map: HashMap<u64, Placement2dId>,
-    /// `SURFACE_CURVE / SEAM_CURVE #N → SurfaceCurveWrapper`. Populated by the
-    /// `SURFACE_CURVE` / `SEAM_CURVE` handler and consumed by `convert_edge_curve`
-    /// to attach the wrapper (entity kind, associated geometry,
-    /// `master_representation`) to each edge.
-    pub(crate) surface_curve_map: HashMap<u64, SurfaceCurveWrapper>,
 
     // Topology maps: STEP #N → typed Id.
     pub(crate) vertex_map: HashMap<u64, VertexId>,
-    pub(crate) edge_map: HashMap<u64, EdgeId>,
-    pub(crate) face_bound_map: HashMap<u64, WireId>,
-    pub(crate) face_map: HashMap<u64, FaceId>,
-    pub(crate) shell_map: HashMap<u64, ShellId>,
-    pub(crate) solid_map: HashMap<u64, SolidId>,
 
     // Topology intermediate maps.
     pub(crate) oriented_edge_map: HashMap<u64, OrientedEdge>,
@@ -333,15 +266,10 @@ pub struct ReaderContext {
     /// handler and `mem::take`-n into the `AssemblyTree` at finalize. Each
     /// `Product.pdef` indexes here.
     pub(crate) product_definitions: Arena<crate::ir::ProductDefinition>,
-    /// `PRODUCT_DEFINITION` STEP id → arena id, for consumers that need a typed
-    /// `ProductDefinitionId` (e.g. NAUO relating/related). `pdef_to_product`
-    /// (PD step id → `ProductId`) stays for the untouched consumers.
-    pub(crate) pdef_arena_map: HashMap<u64, crate::ir::ProductDefinitionId>,
+
     pub(crate) product_contexts: Arena<crate::ir::ProductContext>,
     pub(crate) product_definition_contexts: Arena<crate::ir::ProductDefinitionContext>,
-    pub(crate) product_context_id_map: HashMap<u64, crate::ir::ProductContextId>,
-    pub(crate) product_definition_context_id_map:
-        HashMap<u64, crate::ir::ProductDefinitionContextId>,
+
     /// `ProductId → raw STEP entity id of the product's first PC`
     /// (`PRODUCT.frame_of_reference[0]`). `resolve_product_contexts`
     /// converts these refs to `ProductContextId`.
@@ -351,10 +279,9 @@ pub struct ReaderContext {
     pub(crate) product_definition_context_roles: Arena<crate::ir::ProductDefinitionContextRole>,
     pub(crate) product_definition_context_associations:
         Arena<crate::ir::ProductDefinitionContextAssociation>,
-    pub(crate) pdc_role_id_map: HashMap<u64, crate::ir::ProductDefinitionContextRoleId>,
-    pub(crate) pdca_id_map: HashMap<u64, crate::ir::ProductDefinitionContextAssociationId>,
+
     pub(crate) product_definition_relationships: Arena<crate::ir::ProductDefinitionRelationship>,
-    pub(crate) pdr_id_map: HashMap<u64, crate::ir::ProductDefinitionRelationshipId>,
+
     /// `product_category` `enum_base` arena (phase pc-unify).
     pub(crate) product_categories: Arena<crate::ir::assembly::ProductCategory>,
     /// `PRODUCT_CATEGORY_RELATIONSHIP` arena.
@@ -379,17 +306,12 @@ pub struct ReaderContext {
     /// so anything transitively requiring the dropped entity cascades the same
     /// way. See `reader::nonstandard` (`NS-dangling-reference-drop`).
     pub(crate) nonstandard_dropped_refs: HashSet<u64>,
-    pub(crate) product_arena_map: HashMap<u64, ProductId>,
-    pub(crate) formation_to_product: HashMap<u64, u64>,
+
     /// `PRODUCT_DEFINITION_FORMATION` arena (carrier enum), `mem::take`-n into
     /// `AssemblyTree` at finalize. Source of truth for version metadata.
     pub(crate) product_definition_formations:
         crate::ir::Arena<crate::ir::assembly::ProductDefinitionFormation>,
-    /// formation step entity id → arena `ProductDefinitionFormationId`. Lets a
-    /// `DOCUMENT_PRODUCT_EQUIVALENCE` whose `related_product` is a formation
-    /// resolve it back to the arena entry.
-    pub(crate) formation_arena_map: HashMap<u64, crate::ir::ProductDefinitionFormationId>,
-    pub(crate) pdef_to_product: HashMap<u64, u64>,
+
     pub(crate) absr_solid_map: HashMap<u64, Vec<SolidId>>,
     /// `ADVANCED_BREP_SHAPE_REPRESENTATION #N → Placement3dId` for the first
     /// `AXIS2_PLACEMENT_3D` item in the ABSR's `items` list (its coordinate
@@ -422,7 +344,9 @@ pub struct ReaderContext {
     /// simple `SHAPE_REPRESENTATION_RELATIONSHIP` entities where exactly one
     /// side resolves to a known ABSR/MSSR. Consumed by SDR conversion to
     /// follow the Fusion 360 / CATIA indirection chain
-    /// `SDR → plain SR → SRR → ABSR/MSSR`.
+    /// `SDR → plain SR → SRR → ABSR/MSSR`. Deliberately NOT a typed L1 probe:
+    /// both key and value are raw step ids the post-passes chain into the
+    /// equally raw-keyed geometry payload maps (no L2 arena id to record).
     pub(crate) srr_equiv_map: HashMap<u64, u64>,
     /// `plain SHAPE_REPRESENTATION #N → items[0] axis Placement3dId`. Captured
     /// by the plain `SHAPE_REPRESENTATION` handler so SDR conversion can attach
@@ -445,24 +369,13 @@ pub struct ReaderContext {
     /// wrapper's `items` list may omit an axis (CATIA's GBSSR commonly
     /// does).
     pub(crate) wireframe_ref_frame_map: HashMap<u64, Placement3dId>,
-    /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
-    /// `pdef_shape` points at a product definition (not a `NAUO`).
-    /// Populated by the `PRODUCT_DEFINITION_SHAPE` handler.
-    pub(crate) pdef_shape_to_pdef: HashMap<u64, u64>,
-    /// `PRODUCT_DEFINITION_SHAPE #N → NEXT_ASSEMBLY_USAGE_OCCURRENCE #N` when
-    /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated
-    /// alongside `pdef_shape_to_pdef` and consumed during NAUO instance wiring.
-    pub(crate) pdef_shape_to_nauo: HashMap<u64, u64>,
-    /// Source `(name, description)` of a NAUO-targeted `PRODUCT_DEFINITION_SHAPE`,
-    /// keyed by its `#N`. Captured so `materialize_nauo_owned_pds` preserves the
-    /// exporter's placement label (e.g. "Placement #462") instead of the
-    /// assembly chain's hard-coded "Placement" / "Placement of an item".
-    pub(crate) pdef_shape_nauo_name_desc: HashMap<u64, (String, String)>,
-    /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE #N → AssemblyComponentUsageId`. Filled in
-    /// `resolve_nauo_instances` as each ACU arena entry is built; read by
-    /// `materialize_nauo_owned_pds` to resolve a NAUO-targeted PDS's
-    /// `definition` to its canonical arena id.
-    pub(crate) nauo_step_to_acu: HashMap<u64, crate::ir::id::AssemblyComponentUsageId>,
+    /// `PRODUCT_DEFINITION_SHAPE #N` → [`NauoPdsInfo`] when the `pdef_shape`
+    /// points at a `NAUO` (instance-tagged). Populated by the
+    /// `PRODUCT_DEFINITION_SHAPE` handler's NAUO branch and consumed during
+    /// NAUO instance wiring. (The product-targeted counterpart is the typed
+    /// [`product_of_pds`](Self::product_of_pds) probe.)
+    pub(crate) nauo_pds_info: HashMap<u64, NauoPdsInfo>,
+
     /// `PROPERTY_DEFINITION`s whose `definition` targets a NAUO-owned PDS,
     /// deferred from the PD handler (the NAUO-PDS is not in the arena during
     /// dispatch) and replayed by `materialize_nauo_owned_pds`. Each entry:
@@ -479,7 +392,7 @@ pub struct ReaderContext {
         u64,
         String,
         Vec<crate::ir::property::PropertyItem>,
-        Option<crate::ir::shape_rep::RepresentationContextRef>,
+        crate::ir::shape_rep::RepresentationContextRef,
     )>,
     /// Raw `(definition #N, used_representation #N)` of `SHAPE_DEFINITION_REPRESENTATION`s
     /// whose `definition` is not a product PDS (stashed by the SDR handler,
@@ -498,10 +411,7 @@ pub struct ReaderContext {
     /// canonical (product, instance-index) order by `resolve_nauo_instances` so
     /// the resulting `RepresentationRelationshipId` is round-trip stable.
     pub(crate) nauo_assembly_rr: HashMap<u64, AssemblyRrData>,
-    /// Assembly RR-complex #N → its materialised `RepresentationRelationshipId`.
-    /// Built by `resolve_nauo_instances`; consumed by
-    /// `resolve_cdorsi_style_contexts` to resolve `style_context` targets.
-    pub(crate) rrcomplex_to_rrid: HashMap<u64, crate::ir::id::RepresentationRelationshipId>,
+
     /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM`s awaiting `style_context`
     /// resolution (post-pass, after `rrcomplex_to_rrid` is populated).
     pub(crate) pending_cdorsi: Vec<PendingCdorsiStyleContext>,
@@ -518,83 +428,29 @@ pub struct ReaderContext {
     /// Lazily-built `VisualizationPool` — the MDGPR converter pushes
     /// `Mdgpr` records here. `None` if no visualization entities were seen.
     pub(crate) visualization: Option<VisualizationPool>,
-    /// `COLOUR_RGB` / `DRAUGHTING_PRE_DEFINED_COLOUR` step entity id →
-    /// `ColourId`. Both colour-family readers push into the
-    /// `Arena<Colour>` on `ctx.visualization` and record the resulting id
-    /// here so downstream consumers (`FILL_AREA_STYLE_COLOUR`,
-    /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`) can resolve a colour ref
-    /// to an arena index without copying the colour data.
-    pub(crate) viz_colour_id_map: HashMap<u64, ColourId>,
-    /// `PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT` step
-    /// entity id → `PreDefinedCurveFontId`. Populated by the curve-font
-    /// leaf readers; consumed by the `CURVE_STYLE` reader
-    /// to resolve a font ref to an arena index.
-    pub(crate) viz_pre_defined_curve_font_id_map: HashMap<u64, PreDefinedCurveFontId>,
-    /// `PRE_DEFINED_SYMBOL` / `PRE_DEFINED_TERMINATOR_SYMBOL` step entity id
-    /// → `PreDefinedSymbolId`. Populated by the symbol leaf readers.
-    /// No step-io consumer reads this map yet; entries exist so
-    /// the writer round-trips the source symbols unchanged.
-    pub(crate) viz_pre_defined_symbol_id_map: HashMap<u64, PreDefinedSymbolId>,
-    /// `CURVE_STYLE` step entity id → `CurveStyleId`. Populated by the
-    /// `CURVE_STYLE` handler; consumed by the PSA reader to dispatch styling
-    /// list entries to the `PsaStyle::Curve(...)` variant.
-    pub(crate) viz_curve_style_id_map: HashMap<u64, CurveStyleId>,
-    /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour`.
+
+    /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour`. A value-cache (not a
+    /// founded-item map) populated by the FASC handler and read by
+    /// `lower_fill_area_style` to inline the colours.
     pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
-    /// `FILL_AREA_STYLE` step entity id → `FoundedItemId`. Populated by the
-    /// FAS handler after pushing the `FoundedItem::FillAreaStyle` variant
-    /// into `VisualizationPool::founded_items`; consumed by the
-    /// `SURFACE_STYLE_FILL_AREA` reader to resolve its `fill_area` ref.
-    pub(crate) viz_fas_id_map: HashMap<u64, FoundedItemId>,
-    /// `SURFACE_STYLE_FILL_AREA` step entity id → `FoundedItemId`.
-    /// Populated by the SSFA handler after pushing the
-    /// `FoundedItem::SurfaceStyleFillArea` variant; consumed by the
-    /// `SURFACE_SIDE_STYLE` reader for `SurfaceSideStyleEntry::FillArea`.
-    pub(crate) viz_ssfa_id_map: HashMap<u64, FoundedItemId>,
-    /// `SURFACE_STYLE_RENDERING #N | SURFACE_STYLE_RENDERING_WITH_PROPERTIES #N
-    /// → SurfaceStyleRenderingId`. Populated by the SSR handlers after
-    /// pushing the resolved enum variant into
-    /// `VisualizationPool::surface_style_renderings`; consumed by the
-    /// `SURFACE_SIDE_STYLE` reader to build `SurfaceSideStyleEntry::Rendering(...)`.
-    pub(crate) viz_ssr_id_map: HashMap<u64, SurfaceStyleRenderingId>,
+    // `viz_fas_id_map` removed: `fill_area_style` migrated to the 2-layer path,
+    // so `surface_style_fill_area` resolves its `fill_area` via the typed
+    // `EarlyFillAreaStyleId` cache bucket. See `crate::early`.
+    // `viz_ssfa_id_map` removed: `surface_style_fill_area` / `surface_side_style`
+    // migrated to the 2-layer (`EarlyModel`) path, so the `FillArea` member is
+    // disambiguated by the typed `EarlySurfaceStyleFillAreaId` cache bucket
+    // instead of a bespoke `FoundedItemId`-valued named map. See `crate::early`.
     /// `SURFACE_STYLE_TRANSPARENT #N → transparency value`.
     pub(crate) viz_transparent_map: HashMap<u64, f64>,
-    /// `SURFACE_SIDE_STYLE` step entity id → `FoundedItemId`. Populated by
-    /// the SSS handler after pushing the `FoundedItem::SurfaceSideStyle`
-    /// variant; consumed by the `SURFACE_STYLE_USAGE` reader for its
-    /// `style` ref.
-    pub(crate) viz_sss_id_map: HashMap<u64, FoundedItemId>,
-    /// `SURFACE_STYLE_USAGE` step entity id → `FoundedItemId`. Populated by
-    /// the SSU handler after pushing the `FoundedItem::SurfaceStyleUsage`
-    /// variant; consumed by the PSA reader for `PsaStyle::Surface(...)`.
-    pub(crate) viz_ssu_id_map: HashMap<u64, FoundedItemId>,
-    /// `POINT_STYLE` step entity id → `FoundedItemId`. Populated by the
-    /// `POINT_STYLE` handler after pushing the `FoundedItem::PointStyle`
-    /// variant; consumed by the PSA reader for `PsaStyle::Point(...)`.
-    pub(crate) viz_point_style_id_map: HashMap<u64, FoundedItemId>,
-    /// `VIEW_VOLUME` step entity id → `FoundedItemId` (phase camera-model-d3).
-    /// Populated by the `VIEW_VOLUME` handler; consumed by `CAMERA_MODEL_D3`
-    /// for its `perspective_of_volume` ref.
-    pub(crate) viz_view_volume_id_map: HashMap<u64, FoundedItemId>,
-    /// `SURFACE_STYLE_BOUNDARY` step entity id → `FoundedItemId` (phase ssb).
-    pub(crate) viz_ssb_id_map: HashMap<u64, FoundedItemId>,
-    /// `CAMERA_MODEL*` step entity id → `CameraModelId`. Populated by the
-    /// `CAMERA_MODEL*` handlers; consumed by the camera-usage handler to
-    /// resolve `mapping_origin`.
-    pub(crate) viz_camera_model_id_map: HashMap<u64, crate::ir::id::CameraModelId>,
-    /// `PRESENTATION_STYLE_ASSIGNMENT` step entity id →
-    /// `PresentationStyleAssignmentId`. Populated by the PSA handler after
-    /// pushing the resolved variant into
-    /// `VisualizationPool::presentation_style_assignments`; consumed by the
-    /// `STYLED_ITEM` / `OVER_RIDING_STYLED_ITEM` readers to convert their
-    /// `styles` ref lists into arena ids.
-    pub(crate) viz_psa_id_map: HashMap<u64, PresentationStyleAssignmentId>,
-    /// `STYLED_ITEM` step entity id → `StyledItemId`. Populated by the
-    /// `STYLED_ITEM` reader after pushing the resolved `StyledItem`
-    /// variant into `VisualizationPool::styled_items`. Consumed by the
-    /// MDGPR reader to convert its `items` list into arena references.
-    pub(crate) viz_styled_item_id_map: HashMap<u64, StyledItemId>,
-
+    // `viz_sss_id_map` / `viz_ssu_id_map` / `viz_point_style_id_map` /
+    // `viz_view_volume_id_map` removed: `surface_side_style` / `surface_style_usage`
+    // / `point_style` / `view_volume` migrated to the 2-layer path, so their
+    // consumers (`surface_style_usage`, `presentation_style_assignment`,
+    // camera-model handlers) resolve via the typed `Early*Id` cache buckets. See
+    // `crate::early`.
+    // `viz_ssb_id_map` removed: it was write-only — `surface_style_boundary`
+    // round-trips through the founded-item arena and nothing resolves it via a
+    // named map, so the field served no purpose.
     /// Lazily-built property pool — populated by the PDR converter.
     /// `None` if the source had no `PROPERTY_DEFINITION_REPRESENTATION`.
     pub(crate) properties: Option<crate::ir::property::PropertyPool>,
@@ -612,23 +468,6 @@ pub struct ReaderContext {
     /// PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
     pub(crate) property_def_map: HashMap<u64, (String, Option<String>)>,
-    /// `PROPERTY_DEFINITION #N → PropertyId`. Recorded by the
-    /// PDR reader when it pushes a `Property`; consumed by the GPA reader
-    /// to resolve `derived_definition`. Temp; discarded after the property handlers run.
-    pub(crate) property_step_to_id: HashMap<u64, crate::ir::PropertyId>,
-    /// `PROPERTY_DEFINITION` / `PRODUCT_DEFINITION_SHAPE` #N →
-    /// `PropertyDefinitionId`. Recorded by the PD /
-    /// PDS handlers when they push into the schema-faithful
-    /// `property_definitions` arena. Consumed by:
-    /// - the PDR handler — fills the new `Property.definition` field;
-    /// - the GPA handler — resolves `derived_definition` to a
-    ///   `PropertyDefinitionId` (replacing the legacy `property_step_to_id`
-    ///   lookup for that purpose). Phase property-definition-2.
-    pub(crate) property_def_step_to_id: HashMap<u64, crate::ir::PropertyDefinitionId>,
-    /// `GENERAL_PROPERTY #N → GeneralPropertyId`. Consumed by
-    /// the GPA reader to resolve `base_definition`. Temp; discarded after
-    /// the property handlers run.
-    pub(crate) general_property_id_map: HashMap<u64, crate::ir::GeneralPropertyId>,
 
     /// `pmi` pool — populated by the PMI handlers. `None` until the
     /// first PMI entity is seen.
@@ -637,10 +476,6 @@ pub struct ReaderContext {
     /// `SHAPE_ASPECT` arena — the `SHAPE_ASPECT` converter pushes
     /// here. Empty when no PMI entities were seen.
     pub(crate) shape_aspects: crate::ir::Arena<crate::ir::ShapeAspect>,
-    /// `SHAPE_ASPECT` `#N → ShapeAspectId`. Populated by the `SHAPE_ASPECT`
-    /// handler; consumed by `id_attribute` and future PMI
-    /// handlers that resolve shape-aspect refs.
-    pub(crate) shape_aspect_id_map: HashMap<u64, crate::ir::ShapeAspectId>,
     /// `SHAPE_ASPECT` subtype arenas. No STEP-id map (no consumer
     /// yet; the entities round-trip as standalone arena entries).
     pub(crate) composite_group_shape_aspects:
@@ -649,52 +484,18 @@ pub struct ReaderContext {
     pub(crate) all_around_shape_aspects: crate::ir::Arena<crate::ir::AllAroundShapeAspect>,
     pub(crate) default_model_geometric_views:
         crate::ir::Arena<crate::ir::DefaultModelGeometricView>,
-    /// `SHAPE_ASPECT` subtype `#N → …Id` maps (phase shape-aspect-ref).
-    /// Populated by the `SHAPE_ASPECT` subtype handlers; consumed by
-    /// `resolve_shape_aspect_ref` for `ShapeAspectRef` resolution.
-    pub(crate) composite_shape_aspect_id_map: HashMap<u64, crate::ir::CompositeShapeAspectId>,
-    pub(crate) centre_of_symmetry_id_map: HashMap<u64, crate::ir::DerivedShapeAspectId>,
-    pub(crate) all_around_shape_aspect_id_map: HashMap<u64, crate::ir::ContinuousShapeAspectId>,
-    /// `DATUM` / `DATUM_FEATURE` `#N → …Id` maps (phase datum-feature). The
-    /// `Datum` / `DatumFeature` arenas live in [`PmiPool`]; these maps let
-    /// `resolve_shape_aspect_ref` resolve a `shape_aspect` ref onto them.
-    pub(crate) datum_id_map: HashMap<u64, crate::ir::DatumId>,
-    pub(crate) datum_feature_id_map: HashMap<u64, crate::ir::DatumFeatureId>,
     /// `DATUM_SYSTEM` arena + `#N → DatumSystemId` map (phase datum-system).
     /// Populated by the `DATUM_SYSTEM` handler; the map lets `resolve_shape_aspect_ref`
     /// resolve a `shape_aspect` ref onto a datum system.
     pub(crate) datum_systems: crate::ir::Arena<crate::ir::DatumSystem>,
-    pub(crate) datum_system_id_map: HashMap<u64, crate::ir::DatumSystemId>,
-    /// `general_datum_reference` `#N → GeneralDatumReferenceId` map (phase
-    /// datum-system). Populated by the `DATUM_REFERENCE_*` handlers; consumed
-    /// by `DATUM_SYSTEM`'s `constituents` resolution.
-    pub(crate) general_datum_reference_id_map: HashMap<u64, crate::ir::GeneralDatumReferenceId>,
-    /// `#N → …Id` maps for the plus-minus-tolerance cluster. `tolerance_value`
-    /// / `limits_and_fits` feed `PLUS_MINUS_TOLERANCE.range`; the dimensional
-    /// maps feed its `toleranced_dimension` (the `dimensional_location` /
-    /// `dimensional_size` handlers populate those — added this phase).
-    pub(crate) tolerance_value_id_map: HashMap<u64, crate::ir::ToleranceValueId>,
-    pub(crate) limits_and_fits_id_map: HashMap<u64, crate::ir::LimitsAndFitsId>,
-    pub(crate) dimensional_location_id_map: HashMap<u64, crate::ir::DimensionalLocationId>,
-    pub(crate) dimensional_size_id_map: HashMap<u64, crate::ir::DimensionalSizeId>,
-    /// `TOLERANCE_ZONE` arena + `#N → …Id` maps it depends on (phase
-    /// tolerance-zone). The two geometric-tolerance maps feed
-    /// `TOLERANCE_ZONE.defining_tolerance`, `tolerance_zone_form_id_map` its
-    /// `form`. The handlers for those entities populate the maps this phase.
-    pub(crate) geometric_tolerance_id_map: HashMap<u64, crate::ir::GeometricToleranceId>,
-    pub(crate) geometric_tolerance_with_datum_reference_id_map:
-        HashMap<u64, crate::ir::GeometricToleranceWithDatumReferenceId>,
-    pub(crate) tolerance_zone_form_id_map: HashMap<u64, crate::ir::ToleranceZoneFormId>,
+
     pub(crate) tolerance_zones: crate::ir::Arena<crate::ir::ToleranceZone>,
     /// `DATUM_TARGET` arena + step entity id → `DatumTargetId` map.
     /// Phase datum-target.
     pub(crate) datum_targets: crate::ir::Arena<crate::ir::shape_rep::DatumTarget>,
-    pub(crate) datum_target_id_map: HashMap<u64, crate::ir::DatumTargetId>,
     /// `PLACED_DATUM_TARGET_FEATURE` arena + id map.
     pub(crate) placed_datum_target_features:
         crate::ir::Arena<crate::ir::shape_rep::PlacedDatumTargetFeature>,
-    pub(crate) placed_datum_target_feature_id_map:
-        HashMap<u64, crate::ir::PlacedDatumTargetFeatureId>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
     pub(crate) shape_aspect_relationships:
         crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
@@ -709,56 +510,15 @@ pub struct ReaderContext {
         crate::ir::Arena<crate::ir::representation_item::RepresentationItem>,
     /// `characterized_object` arena (phase characterized-object-ciwr).
     pub(crate) characterized_objects: crate::ir::Arena<crate::ir::shape_rep::CharacterizedObject>,
-    /// `SYMBOL_COLOUR` step entity id → `SymbolColourId` (phase symbol-colour).
-    pub(crate) symbol_colour_id_map: HashMap<u64, crate::ir::id::SymbolColourId>,
-    /// `TEXT_STYLE_FOR_DEFINED_FONT` step entity id →
-    /// `TextStyleForDefinedFontId` (phase text-style-font).
-    pub(crate) text_style_for_defined_font_id_map:
-        HashMap<u64, crate::ir::id::TextStyleForDefinedFontId>,
-    /// `PRE_DEFINED_MARKER` step entity id → `PreDefinedMarkerId` (phase
-    /// pre-defined-marker).
-    pub(crate) viz_pre_defined_marker_id_map: HashMap<u64, crate::ir::id::PreDefinedMarkerId>,
-    /// `text_style` enum-arena step id → `TextStyleId` (phase text-style-box).
-    /// Populated by the `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` handler.
-    pub(crate) text_style_id_map: HashMap<u64, crate::ir::id::TextStyleId>,
-    /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT` step id → arena id (phase
-    /// text-literal — `id_map` populated retroactively now that `TEXT_LITERAL`
-    /// references it through the `font_select` SELECT).
-    pub(crate) dptf_id_map: HashMap<u64, crate::ir::id::DraughtingPreDefinedTextFontId>,
-    /// `TEXT_LITERAL` step id → `TextLiteralId` (phase text-literal).
-    /// Consumed by `COMPOSITE_TEXT` for the `text_or_character` SELECT.
-    pub(crate) text_literal_id_map: HashMap<u64, crate::ir::id::TextLiteralId>,
-    /// `COMPOSITE_TEXT` step id → `CompositeTextId`. Lets a styled
-    /// `ANNOTATION_TEXT_OCCURRENCE` resolve a `COMPOSITE_TEXT` item.
-    pub(crate) composite_text_id_map: HashMap<u64, crate::ir::id::CompositeTextId>,
-    /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step id → arena id (phase dmia).
-    /// No other entity references DMIA in the modelled corpus; cache kept
-    /// for symmetry / future ref-receiving entities.
-    pub(crate) dmia_id_map: HashMap<u64, crate::ir::id::DraughtingModelItemAssociationId>,
-    /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
-    /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
-    /// consumed by `resolve_representation_item_ref` as last-resort
-    /// fallback (per-type arena lookups take priority).
-    pub(crate) repr_item_id_map: HashMap<u64, crate::ir::id::RepresentationItemId>,
-    /// `REPRESENTATION` `#N → RepresentationId`. Populated by the six
-    /// representation handlers; consumed by the SDR reader to link each
-    /// product to its `representation_id` / `outer_representation_id`.
-    pub(crate) repr_id_map: HashMap<u64, crate::ir::RepresentationId>,
-    /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` `#N → CharacterizedObjectId`
-    /// for standalone CIWRs. Lets `PROPERTY_DEFINITION.definition` resolve a
-    /// CIWR target (geometric-validation property shapes).
-    pub(crate) characterized_object_id_map: HashMap<u64, crate::ir::CharacterizedObjectId>,
+
     /// `REPRESENTATION_MAP` arena + `#N → RepresentationMapId` (phase
     /// mapped-item). The map lets the `MAPPED_ITEM` handler resolve its
     /// `mapping_source` ref.
     pub(crate) representation_maps: crate::ir::Arena<crate::ir::shape_rep::RepresentationMap>,
-    pub(crate) representation_map_id_map: HashMap<u64, crate::ir::RepresentationMapId>,
+
     /// `MAPPED_ITEM` arena (phase mapped-item) — orphan round-trip.
     pub(crate) mapped_items: crate::ir::Arena<crate::ir::shape_rep::MappedItem>,
-    /// `MAPPED_ITEM` STEP `#N → MappedItemId`. Populated by the `MAPPED_ITEM`
-    /// and `CAMERA_IMAGE` handlers so `STYLED_ITEM` / `CDORSI` resolvers can
-    /// surface a `RepresentationItemRef::MappedItem` (phase si-mapped-item).
-    pub(crate) mapped_item_id_map: HashMap<u64, crate::ir::MappedItemId>,
+
     /// `INTEGER`/`REAL_REPRESENTATION_ITEM` value-item arena (phase
     /// numeric-representation-item) — orphan round-trip.
     pub(crate) numeric_representation_items:
@@ -767,66 +527,19 @@ pub struct ReaderContext {
     /// (phase tessellation). The map lets the `COMPLEX_TRIANGULATED_FACE`
     /// handler resolve its `coordinates` ref.
     pub(crate) tessellated_items: crate::ir::Arena<crate::ir::tessellation::TessellatedItem>,
-    pub(crate) tessellated_item_id_map: HashMap<u64, crate::ir::TessellatedItemId>,
-    /// `LEADER_CURVE` step entity id → `AnnotationCurveOccurrenceId`
-    /// (phase annotation-curve-leader). Populated by `LeaderCurveHandler`;
-    /// consumed by `TerminatorSymbolHandler` / `LeaderTerminatorHandler` to
-    /// resolve `annotated_curve`.
-    pub(crate) annotation_curve_occurrence_id_map:
-        HashMap<u64, crate::ir::id::AnnotationCurveOccurrenceId>,
-    /// `annotation_occurrence` step entity id → `AnnotationOccurrenceId`
-    /// (phase draughting-callout). Populated by every
-    /// `annotation_occurrence` enum handler after pushing into the
-    /// `annotation_occurrences` arena; consumed by `DraughtingCalloutHandler`
-    /// / `LeaderDirectedCalloutHandler` to resolve `contents` SELECT
-    /// members.
-    pub(crate) annotation_occurrence_id_map: HashMap<u64, crate::ir::id::AnnotationOccurrenceId>,
-    /// `APLL_POINT` step entity id → `ApllPointId` (phase leader-line).
-    pub(crate) apll_point_id_map: HashMap<u64, crate::ir::id::ApllPointId>,
-    /// `ANNOTATION_TO_MODEL_LEADER_LINE` step entity id →
-    /// `AnnotationPlaceholderLeaderLineId` (phase leader-line).
-    pub(crate) annotation_placeholder_leader_line_id_map:
-        HashMap<u64, crate::ir::id::AnnotationPlaceholderLeaderLineId>,
-    /// `DRAUGHTING_CALLOUT` step entity id → `DraughtingCalloutId` (phase
-    /// draughting-callout). Populated by `DraughtingCalloutHandler` /
-    /// `LeaderDirectedCalloutHandler`; consumed by
-    /// `DraughtingCalloutRelationshipHandler` to resolve relating / related
-    /// refs.
-    pub(crate) draughting_callout_id_map: HashMap<u64, crate::ir::id::DraughtingCalloutId>,
-    /// `TOLERANCE_ZONE` step entity id → `ToleranceZoneId` (phase
-    /// projected-zone). Populated by `ToleranceZoneHandler`; consumed by
-    /// `ProjectedZoneDefinitionHandler` for the `zone` ref.
-    pub(crate) tolerance_zone_id_map: HashMap<u64, crate::ir::id::ToleranceZoneId>,
-    /// `TYPE_QUALIFIER` step entity id → `TypeQualifierId` (phase
-    /// measure-qualification). Consumed by `MeasureQualificationHandler`
-    /// to resolve a `qualifiers` SET member.
-    pub(crate) type_qualifier_id_map: HashMap<u64, crate::ir::id::TypeQualifierId>,
+
     /// `VALUE_FORMAT_TYPE_QUALIFIER` step entity id →
     /// `ValueFormatTypeQualifierId` (phase measure-qualification). Same
-    /// role as `type_qualifier_id_map`.
-    pub(crate) value_format_type_qualifier_id_map:
-        HashMap<u64, crate::ir::id::ValueFormatTypeQualifierId>,
     /// `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` step entity id →
     /// `DimensionalCharacteristicRepresentationId` (phase sdr-dcr).
     /// Populated by `DimensionalCharacteristicRepresentationHandler`;
-    /// currently no consumer.
-    pub(crate) dimensional_characteristic_representation_id_map:
-        HashMap<u64, crate::ir::id::DimensionalCharacteristicRepresentationId>,
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
     /// `COMPLEX_TRIANGULATED_SURFACE_SET` arena (phase tessellation-2).
     pub(crate) tessellated_surface_sets:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
-    /// `#N → TessellatedFaceId` / `#N → TessellatedSurfaceSetId` (phase
-    /// tessellated-item-ref). Let `resolve_tessellated_item_ref` resolve a
-    /// `set_ref_tessellated_item` member into a [`crate::ir::TessellatedItemRef`].
-    pub(crate) tessellated_face_id_map: HashMap<u64, crate::ir::TessellatedFaceId>,
-    pub(crate) tessellated_surface_set_id_map: HashMap<u64, crate::ir::TessellatedSurfaceSetId>,
 
-    /// `geometric_representation_item` enum arena (phase ds-st).
-    pub(crate) geometric_representation_items:
-        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
     /// `representation_relationship` enum arena (phase cgrr).
     pub(crate) representation_relationships:
         crate::ir::Arena<crate::ir::shape_rep::RepresentationRelationship>,
@@ -840,10 +553,7 @@ pub struct ReaderContext {
     pub(crate) external_references: crate::ir::Arena<crate::ir::ExternalReference>,
     /// P21 edition 3 `ANCHOR` section.
     pub(crate) anchors: Vec<crate::ir::ExternalAnchor>,
-    /// Source `#N` of an external reference → its `ExternalRefId`. Seeded from
-    /// `graph.external_references` before dispatch so `CIRCULAR_AREA.centre`
-    /// (and other consumers) resolve an external centre.
-    pub(crate) external_ref_id_map: HashMap<u64, crate::ir::ExternalRefId>,
+
     /// `SYMBOL_TARGET` step entity id → `GeometricRepresentationItemId`.
     /// Populated by the `SymbolTarget` reader so `DEFINED_SYMBOL.target`
     /// can resolve.
@@ -857,90 +567,6 @@ pub struct ReaderContext {
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
     /// in Phase plm-1a; Person/Approval/Security clusters later).
     pub(crate) plm: Option<crate::ir::PlmPool>,
-    /// `CALENDAR_DATE` step entity id → `DateId`.
-    pub(crate) plm_date_id_map: HashMap<u64, crate::ir::DateId>,
-    /// `LOCAL_TIME` step entity id → `LocalTimeId`.
-    pub(crate) plm_local_time_id_map: HashMap<u64, crate::ir::LocalTimeId>,
-    /// `COORDINATED_UNIVERSAL_TIME_OFFSET` step entity id → `CoordinatedUniversalTimeOffsetId`.
-    pub(crate) plm_utc_id_map: HashMap<u64, crate::ir::CoordinatedUniversalTimeOffsetId>,
-    /// `DATE_AND_TIME` step entity id → `DateAndTimeId`.
-    pub(crate) plm_date_and_time_id_map: HashMap<u64, crate::ir::DateAndTimeId>,
-    /// `DATE_TIME_ROLE` step entity id → `DateTimeRoleId`.
-    pub(crate) plm_date_time_role_id_map: HashMap<u64, crate::ir::DateTimeRoleId>,
-    /// `APPLIED_DATE_AND_TIME_ASSIGNMENT` /
-    /// `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` step entity id →
-    /// `DateAndTimeAssignmentId`.
-    pub(crate) plm_dta_id_map: HashMap<u64, crate::ir::DateAndTimeAssignmentId>,
-    /// `PERSON` step entity id → `PersonId`.
-    pub(crate) plm_person_id_map: HashMap<u64, crate::ir::PersonId>,
-    /// `ORGANIZATION` step entity id → `OrganizationId`.
-    pub(crate) plm_organization_id_map: HashMap<u64, crate::ir::OrganizationId>,
-    /// `PERSON_AND_ORGANIZATION` step entity id → `PersonAndOrganizationId`.
-    pub(crate) plm_p_and_o_id_map: HashMap<u64, crate::ir::PersonAndOrganizationId>,
-    /// `PERSON_AND_ORGANIZATION_ROLE` step entity id → `PersonAndOrganizationRoleId`.
-    pub(crate) plm_p_and_o_role_id_map: HashMap<u64, crate::ir::PersonAndOrganizationRoleId>,
-    /// `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` /
-    /// `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` step entity id →
-    /// `PersonAndOrganizationAssignmentId`.
-    pub(crate) plm_poa_id_map: HashMap<u64, crate::ir::PersonAndOrganizationAssignmentId>,
-    /// `APPROVAL_STATUS` step entity id → `ApprovalStatusId`.
-    pub(crate) plm_approval_status_id_map: HashMap<u64, crate::ir::ApprovalStatusId>,
-    /// `APPROVAL_ROLE` step entity id → `ApprovalRoleId`.
-    pub(crate) plm_approval_role_id_map: HashMap<u64, crate::ir::ApprovalRoleId>,
-    /// `APPROVAL` step entity id → `ApprovalId`.
-    pub(crate) plm_approval_id_map: HashMap<u64, crate::ir::ApprovalId>,
-    /// `APPROVAL_DATE_TIME` step entity id → `ApprovalDateTimeId`.
-    pub(crate) plm_approval_date_time_id_map: HashMap<u64, crate::ir::ApprovalDateTimeId>,
-    /// `APPROVAL_PERSON_ORGANIZATION` step entity id → `ApprovalPersonOrganizationId`.
-    pub(crate) plm_approval_person_organization_id_map:
-        HashMap<u64, crate::ir::ApprovalPersonOrganizationId>,
-    /// `APPLIED_APPROVAL_ASSIGNMENT` / `CC_DESIGN_APPROVAL` step entity id →
-    /// `ApprovalAssignmentId`.
-    pub(crate) plm_aa_id_map: HashMap<u64, crate::ir::ApprovalAssignmentId>,
-    /// `SECURITY_CLASSIFICATION_LEVEL` step entity id → `SecurityClassificationLevelId`.
-    pub(crate) plm_security_level_id_map: HashMap<u64, crate::ir::SecurityClassificationLevelId>,
-    /// `SECURITY_CLASSIFICATION` step entity id → `SecurityClassificationId`.
-    pub(crate) plm_security_classification_id_map:
-        HashMap<u64, crate::ir::SecurityClassificationId>,
-    /// `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` /
-    /// `CC_DESIGN_SECURITY_CLASSIFICATION` step entity id →
-    /// `SecurityClassificationAssignmentId`.
-    pub(crate) plm_sca_id_map: HashMap<u64, crate::ir::SecurityClassificationAssignmentId>,
-    /// `IDENTIFICATION_ROLE` step entity id → `IdentificationRoleId`.
-    pub(crate) plm_identification_role_id_map: HashMap<u64, crate::ir::IdentificationRoleId>,
-    /// `EXTERNAL_SOURCE` step entity id → `ExternalSourceId`.
-    pub(crate) plm_external_source_id_map: HashMap<u64, crate::ir::ExternalSourceId>,
-    /// `APPLIED_IDENTIFICATION_ASSIGNMENT` /
-    /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` step entity id →
-    /// `IdentificationAssignmentId`.
-    pub(crate) plm_ia_id_map: HashMap<u64, crate::ir::IdentificationAssignmentId>,
-    /// `DOCUMENT_TYPE` step entity id → `DocumentTypeId`.
-    pub(crate) plm_document_type_id_map: HashMap<u64, crate::ir::DocumentTypeId>,
-    /// `DOCUMENT` / `DOCUMENT_FILE` step entity id → `DocumentId`.
-    pub(crate) plm_document_id_map: HashMap<u64, crate::ir::DocumentId>,
-    /// `DOCUMENT_REPRESENTATION_TYPE` step entity id → `DocumentRepresentationTypeId`.
-    pub(crate) plm_document_representation_type_id_map:
-        HashMap<u64, crate::ir::DocumentRepresentationTypeId>,
-    /// `DOCUMENT_PRODUCT_EQUIVALENCE` step entity id → `DocumentProductEquivalenceId`.
-    pub(crate) plm_document_product_equivalence_id_map:
-        HashMap<u64, crate::ir::DocumentProductEquivalenceId>,
-    /// `APPLIED_DOCUMENT_REFERENCE` step entity id → `DocumentReferenceId`.
-    pub(crate) plm_document_reference_id_map: HashMap<u64, crate::ir::DocumentReferenceId>,
-    /// `GROUP` step entity id → `GroupId`.
-    pub(crate) plm_group_id_map: HashMap<u64, crate::ir::GroupId>,
-    /// `APPLIED_GROUP_ASSIGNMENT` step entity id → `GroupAssignmentId`.
-    pub(crate) plm_ga_id_map: HashMap<u64, crate::ir::GroupAssignmentId>,
-    /// `OBJECT_ROLE` step entity id → `ObjectRoleId`.
-    pub(crate) plm_object_role_id_map: HashMap<u64, crate::ir::ObjectRoleId>,
-    /// `ROLE_ASSOCIATION` step entity id → `RoleAssociationId`.
-    pub(crate) plm_role_association_id_map: HashMap<u64, crate::ir::RoleAssociationId>,
-    /// `ADDRESS` / `PERSONAL_ADDRESS` step entity id → `AddressId`.
-    pub(crate) plm_address_id_map: HashMap<u64, crate::ir::AddressId>,
-    /// `APPLICATION_CONTEXT` step entity id → `ApplicationContextId`.
-    pub(crate) plm_application_context_id_map: HashMap<u64, crate::ir::ApplicationContextId>,
-    /// `APPLICATION_PROTOCOL_DEFINITION` step entity id → `ApplicationProtocolDefinitionId`.
-    pub(crate) plm_application_protocol_definition_id_map:
-        HashMap<u64, crate::ir::ApplicationProtocolDefinitionId>,
 
     /// Per-file tally of non-standard required fields the reader normalized
     /// to a standard default. Key = (type-qualified field description,
@@ -952,47 +578,98 @@ pub struct ReaderContext {
     /// file, so a shape recurring across many instances warns once.
     pub(crate) unhandled_complex_seen: std::collections::BTreeSet<String>,
 
+    /// Largest real file-id in the DATA section (computed once at `convert`
+    /// entry). Base for [`Self::alloc_synthetic_entity_id`].
+    pub(crate) max_file_id: u64,
+    /// Monotonic counter for reader-injected placeholder entity ids.
+    pub(crate) synthetic_id_counter: u64,
+
     pub(crate) warnings: Vec<ConvertError>,
 }
 
+/// Reader seam for `#[derive(StepSelect)]`-generated `resolve_select`: probe
+/// the type-keyed id cache for a member arena id.
+impl crate::ir::select::IdResolver for ReaderContext {
+    fn resolve_arena_id<K: crate::ir::arena::ArenaId>(&self, file_id: u64) -> Option<K> {
+        self.id_cache.get::<K>(file_id)
+    }
+}
+
 impl ReaderContext {
-    /// Record that a required field was non-standard (Unset / unrecognized)
-    /// and the reader normalized it to `normalized_to`. Aggregated per file
-    /// so a 980k-instance defect surfaces as a single summary warning.
-    pub(crate) fn record_nonstandard(&mut self, field: String, normalized_to: &'static str) {
+    /// Record a non-standard input normalization, aggregated per file so a
+    /// 980k-instance defect surfaces as a single summary warning. `case` is the
+    /// typed marker (`rg "NsCase::"` finds every site); it does not affect the
+    /// aggregation key, so output stays byte-identical. The *only* aggregating
+    /// path — see [`NsCase`](crate::reader::NsCase).
+    pub(crate) fn ns_record(&mut self, _case: NsCase, field: String, normalized_to: &'static str) {
         *self
             .nonstandard_normalizations
             .entry((field, normalized_to))
             .or_default() += 1;
     }
 
+    /// Allocate a collision-free synthetic file-id for a reader-injected
+    /// placeholder entity (non-standard normalization). The result exceeds every
+    /// real file-id (`max_file_id` base) and stays well below the dangling
+    /// sentinel (`u64::MAX`), so it never aliases a real, dangling, or other
+    /// synthetic id.
+    pub(crate) fn alloc_synthetic_entity_id(&mut self) -> u64 {
+        self.synthetic_id_counter += 1;
+        self.max_file_id + self.synthetic_id_counter
+    }
+
+    /// Record a non-standard input normalization immediately (one warning with
+    /// the given `count`, not aggregated). `case` is the typed marker. The only
+    /// site (besides this module's per-file flush) that constructs a
+    /// `NonStandardInput` warning — see [`NsCase`](crate::reader::NsCase).
+    pub(crate) fn ns_push(
+        &mut self,
+        _case: NsCase,
+        field: String,
+        count: usize,
+        normalized_to: String,
+    ) {
+        self.warnings.push(ConvertError::NonStandardInput {
+            field,
+            count,
+            normalized_to,
+        });
+    }
+
     /// `true` when `id` was registered into any geometry arena (so it survives
-    /// round-trip). Used by the `[NS-pcurve-3d-in-pspace]` accounting to record
+    /// round-trip). Used by the `NsCase::Pcurve3dInPspace` accounting to record
     /// only the genuinely-dropped subtree members, not survivors like
     /// `CARTESIAN_POINT` / `DIRECTION` / `VECTOR` (which self-discriminate and
     /// land in their 2D/3D arenas even inside a pcurve subtree).
     fn is_geometry_registered(&self, id: u64) -> bool {
-        self.point_map.contains_key(&id)
-            || self.direction_map.contains_key(&id)
+        self.id_cache.contains::<crate::ir::id::PointId>(id)
+            || self.id_cache.contains::<crate::ir::id::DirectionId>(id)
             || self.vector_map.contains_key(&id)
-            || self.surface_map.contains_key(&id)
-            || self.curve_map.contains_key(&id)
+            || self.id_cache.contains::<crate::ir::id::SurfaceId>(id)
+            || self.id_cache.contains::<crate::ir::id::CurveId>(id)
             || self.placement_map.contains_key(&id)
-            || self.point_2d_map.contains_key(&id)
-            || self.direction_2d_map.contains_key(&id)
+            || self.id_cache.contains::<crate::ir::id::Point2dId>(id)
+            || self.id_cache.contains::<crate::ir::id::Direction2dId>(id)
             || self.vector_2d_map.contains_key(&id)
-            || self.curve_2d_map.contains_key(&id)
-            || self.placement_2d_map.contains_key(&id)
+            || self.id_cache.contains::<crate::ir::id::Curve2dId>(id)
+            || self.id_cache.contains::<crate::ir::id::Placement2dId>(id)
     }
 
     /// Classify a dropped `PCURVE` (the `resolve_pcurve` returned `None` path).
-    /// Returns `true` and records `[NS-pcurve-3d-in-pspace]` normalizations for
+    /// Returns `true` and records `NsCase::Pcurve3dInPspace` normalizations for
     /// the dropped `DEFINITIONAL_REPRESENTATION` subtree when the drop is an
     /// EXPRESS `pcurve.wr3` violation (a 3D curve sitting in a 2D parameter
     /// space); returns `false` for any other drop cause (missing
     /// `basis_surface`, malformed structure) so the caller emits its defect
     /// warning instead.
-    pub(crate) fn record_pcurve_wr3_drop(&mut self, pcurve_ref: u64, graph: &EntityGraph) -> bool {
+    pub(crate) fn record_pcurve_wr3_drop(
+        &mut self,
+        pcurve_ref: u64,
+        early: crate::early::EarlyGraph<'_>,
+    ) -> bool {
+        // Reader-internal raw walk (generic ref-subtree collection the facade
+        // can't express) — unwrap the facade here, inside `reader/`.
+        let graph = early.raw();
         // PCURVE(name, basis_surface, reference_to_curve).
         let Some(RawEntity::Simple { attributes, .. }) = graph.get(pcurve_ref) else {
             return false;
@@ -1002,7 +679,10 @@ impl ReaderContext {
         };
         // wr3 signature requires the basis_surface to resolve; a missing
         // surface is a different defect (keep the warning).
-        if !self.surface_map.contains_key(basis_surface_ref) {
+        if !self
+            .id_cache
+            .contains::<crate::ir::id::SurfaceId>(*basis_surface_ref)
+        {
             return false;
         }
         let Some(Attribute::EntityRef(def_repr_ref)) = attributes.get(2) else {
@@ -1027,7 +707,10 @@ impl ReaderContext {
         };
         // The wr3 violation: the parameter-space curve is NOT 2D — it never
         // landed in `curve_2d_map`, yet it is a curve entity in the graph.
-        if self.curve_2d_map.contains_key(first_item_ref) {
+        if self
+            .id_cache
+            .contains::<crate::ir::id::Curve2dId>(*first_item_ref)
+        {
             return false; // genuinely 2D; not a wr3 violation
         }
         let is_curve = matches!(
@@ -1052,7 +735,8 @@ impl ReaderContext {
                 continue;
             };
             self.dropped_pcurve_recorded.insert(id);
-            self.record_nonstandard(
+            self.ns_record(
+                NsCase::Pcurve3dInPspace,
                 name.clone(),
                 "dropped (3D curve in 2D pcurve parameter-space — EXPRESS pcurve.wr3)",
             );
@@ -1070,6 +754,7 @@ impl ReaderContext {
     pub fn convert(graph: &EntityGraph) -> ConvertResult {
         let mut ctx = Self {
             pcurve_subtree_ids: collect_pcurve_subtree_ids(graph),
+            max_file_id: graph.entities.last_key_value().map_or(0, |(&k, _)| k),
             ..Self::default()
         };
         // Materialize P21 edition 3 external references before dispatch so
@@ -1078,10 +763,10 @@ impl ReaderContext {
             let id = ctx.external_references.push(crate::ir::ExternalReference {
                 anchor: anchor.clone(),
             });
-            ctx.external_ref_id_map.insert(src_id, id);
+            ctx.id_cache.insert(src_id, id);
         }
         for (name, src_id) in &graph.anchors {
-            if let Some(&target) = ctx.external_ref_id_map.get(src_id) {
+            if let Some(target) = ctx.id_cache.get::<crate::ir::id::ExternalRefId>(*src_id) {
                 ctx.anchors.push(crate::ir::ExternalAnchor {
                     name: name.clone(),
                     target,
@@ -1099,7 +784,7 @@ impl ReaderContext {
         ctx.finalize_assembly();
         ctx.resolve_sdr_links();
         ctx.resolve_pdr_links();
-        let header = header::extract_file_header(&graph.header, &mut ctx.warnings);
+        let header = header::extract_file_header(&graph.header, &mut ctx);
         for ((field, normalized_to), count) in std::mem::take(&mut ctx.nonstandard_normalizations) {
             ctx.warnings.push(ConvertError::NonStandardInput {
                 field,
@@ -1111,25 +796,38 @@ impl ReaderContext {
             model: StepModel {
                 geometry: ctx.geometry,
                 topology: ctx.topology,
-                units: ctx.units,
-                unitless_contexts: ctx.unitless_contexts,
-                geometric_item_specific_usages: ctx.geometric_item_specific_usages,
+                shape_rep: crate::ir::ShapeRepPool {
+                    unit_contexts: ctx.units,
+                    unitless_contexts: ctx.unitless_contexts,
+                    geometric_item_specific_usages: ctx.geometric_item_specific_usages,
+                    shape_aspects: ctx.shape_aspects,
+                    composite_group_shape_aspects: ctx.composite_group_shape_aspects,
+                    centre_of_symmetries: ctx.centre_of_symmetries,
+                    all_around_shape_aspects: ctx.all_around_shape_aspects,
+                    default_model_geometric_views: ctx.default_model_geometric_views,
+                    datum_systems: ctx.datum_systems,
+                    tolerance_zones: ctx.tolerance_zones,
+                    datum_targets: ctx.datum_targets,
+                    placed_datum_target_features: ctx.placed_datum_target_features,
+                    shape_aspect_relationships: ctx.shape_aspect_relationships,
+                    representations: ctx.representations,
+                    representation_items: ctx.representation_items,
+                    characterized_objects: ctx.characterized_objects,
+                    representation_maps: ctx.representation_maps,
+                    mapped_items: ctx.mapped_items,
+                    numeric_representation_items: ctx.numeric_representation_items,
+                    tessellated_items: ctx.tessellated_items,
+                    tessellated_faces: ctx.tessellated_faces,
+                    tessellated_surface_sets: ctx.tessellated_surface_sets,
+                    representation_relationships: ctx.representation_relationships,
+                    compound_representation_items: ctx.compound_representation_items,
+                    item_identified_representation_usages: ctx
+                        .item_identified_representation_usages,
+                },
                 assembly: ctx.assembly,
-                schema: graph.schema.clone(),
-                header,
                 visualization: ctx.visualization,
                 properties: ctx.properties,
                 pmi: ctx.pmi,
-                shape_aspects: ctx.shape_aspects,
-                composite_group_shape_aspects: ctx.composite_group_shape_aspects,
-                centre_of_symmetries: ctx.centre_of_symmetries,
-                all_around_shape_aspects: ctx.all_around_shape_aspects,
-                default_model_geometric_views: ctx.default_model_geometric_views,
-                datum_systems: ctx.datum_systems,
-                tolerance_zones: ctx.tolerance_zones,
-                datum_targets: ctx.datum_targets,
-                placed_datum_target_features: ctx.placed_datum_target_features,
-                shape_aspect_relationships: ctx.shape_aspect_relationships,
                 plm: ctx.plm,
                 units_pool: build_units_pool(
                     ctx.named_units_arena,
@@ -1138,21 +836,12 @@ impl ReaderContext {
                     ctx.derived_unit_arena,
                     ctx.dimensional_exponents,
                 ),
-                representations: ctx.representations,
-                representation_items: ctx.representation_items,
-                characterized_objects: ctx.characterized_objects,
-                representation_maps: ctx.representation_maps,
-                mapped_items: ctx.mapped_items,
-                numeric_representation_items: ctx.numeric_representation_items,
-                tessellated_items: ctx.tessellated_items,
-                tessellated_faces: ctx.tessellated_faces,
-                tessellated_surface_sets: ctx.tessellated_surface_sets,
-                geometric_representation_items: ctx.geometric_representation_items,
-                representation_relationships: ctx.representation_relationships,
-                compound_representation_items: ctx.compound_representation_items,
-                item_identified_representation_usages: ctx.item_identified_representation_usages,
-                external_references: ctx.external_references,
-                anchors: ctx.anchors,
+                metadata: crate::ir::FileMetadata {
+                    schema: graph.schema.clone(),
+                    header,
+                    external_references: ctx.external_references,
+                    anchors: ctx.anchors,
+                },
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),
@@ -1166,12 +855,18 @@ impl ReaderContext {
     /// populate the id maps.
     fn resolve_product_contexts(&mut self) {
         for (pid, pc_step_id) in &self.product_pc_step_refs {
-            if let Some(&pcid) = self.product_context_id_map.get(pc_step_id) {
+            if let Some(pcid) = self
+                .id_cache
+                .get::<crate::ir::id::ProductContextId>(*pc_step_id)
+            {
                 self.assembly_products[*pid].product_context = Some(pcid);
             }
         }
         for (pid, pdc_step_id) in &self.product_pdc_step_refs {
-            if let Some(&pdcid) = self.product_definition_context_id_map.get(pdc_step_id) {
+            if let Some(pdcid) = self
+                .id_cache
+                .get::<crate::ir::id::ProductDefinitionContextId>(*pdc_step_id)
+            {
                 self.assembly_products[*pid].pdef_context = Some(pdcid);
                 // Mirror onto the canonical PD arena entry (the context id map
                 // only fills after the PD pass, so resolve it here).
@@ -1247,7 +942,7 @@ impl ReaderContext {
             );
             // Record the NAUO → ACU id so `materialize_nauo_owned_pds` can resolve
             // a NAUO-targeted PDS's `definition` to this canonical arena entry.
-            self.nauo_step_to_acu.insert(pending.nauo_id, acu_id);
+            self.id_cache.insert(pending.nauo_id, acu_id);
             // The Instance is a denormalized view of the arena entry. `child` is
             // the resolved child ProductId (the arena's `related` is the
             // PRODUCT_DEFINITION ref); occurrence id/name mirror the arena.
@@ -1296,7 +991,7 @@ impl ReaderContext {
                     ),
                 );
                 self.assembly_products[pid].instances[idx].transform_rr = Some(rrid);
-                self.rrcomplex_to_rrid.insert(data.rr_complex_entity, rrid);
+                self.id_cache.insert(data.rr_complex_entity, rrid);
             }
         }
     }
@@ -1326,21 +1021,19 @@ impl ReaderContext {
         }
 
         // 1. NAUO-targeted PDS → arena entry (source-#N order).
-        let mut nauo_pds: Vec<(u64, u64)> = self
-            .pdef_shape_to_nauo
+        let mut nauo_pds: Vec<(u64, u64, String, String)> = self
+            .nauo_pds_info
             .iter()
-            .map(|(&pds, &nauo)| (pds, nauo))
+            .map(|(&pds, info)| (pds, info.nauo, info.name.clone(), info.description.clone()))
             .collect();
-        nauo_pds.sort_unstable_by_key(|&(pds, _)| pds);
-        for (pds_step, nauo_step) in nauo_pds {
-            let Some(&acu_id) = self.nauo_step_to_acu.get(&nauo_step) else {
+        nauo_pds.sort_unstable_by_key(|&(pds, ..)| pds);
+        for (pds_step, nauo_step, name, description) in nauo_pds {
+            let Some(acu_id) = self
+                .id_cache
+                .get::<crate::ir::id::AssemblyComponentUsageId>(nauo_step)
+            else {
                 continue; // NAUO without an instance — no ACU, skip (orphan-safe).
             };
-            let (name, description) = self
-                .pdef_shape_nauo_name_desc
-                .get(&pds_step)
-                .cloned()
-                .unwrap_or_default();
             let pd_id = self
                 .properties
                 .get_or_insert_with(PropertyPool::default)
@@ -1356,14 +1049,17 @@ impl ReaderContext {
                         },
                     },
                 ));
-            self.property_def_step_to_id.insert(pds_step, pd_id);
+            self.id_cache.insert(pds_step, pd_id);
         }
 
         // 2. Deferred centroid PDs → arena entry (source-#N order).
         let mut deferred_pd = std::mem::take(&mut self.deferred_nauo_pds_pd);
         deferred_pd.sort_unstable_by_key(|&(pd_step, ..)| pd_step);
         for (pd_step, name, description, pds_target) in deferred_pd {
-            let Some(&pds_pd_id) = self.property_def_step_to_id.get(&pds_target) else {
+            let Some(pds_pd_id) = self
+                .id_cache
+                .get::<crate::ir::id::PropertyDefinitionId>(pds_target)
+            else {
                 continue; // NAUO-PDS was skipped above (no ACU) — drop this PD too.
             };
             let pd_id = self
@@ -1375,7 +1071,7 @@ impl ReaderContext {
                     description: description.clone().unwrap_or_default(),
                     definition: CharacterizedDefinition::ProductDefinitionShape(pds_pd_id),
                 }));
-            self.property_def_step_to_id.insert(pd_step, pd_id);
+            self.id_cache.insert(pd_step, pd_id);
             self.property_def_map.insert(pd_step, (name, description));
         }
 
@@ -1383,7 +1079,10 @@ impl ReaderContext {
         let mut deferred_prop = std::mem::take(&mut self.deferred_nauo_property);
         deferred_prop.sort_unstable_by_key(|&(pd_step, ..)| pd_step);
         for (pd_step, representation_name, items, context) in deferred_prop {
-            let Some(&definition) = self.property_def_step_to_id.get(&pd_step) else {
+            let Some(definition) = self
+                .id_cache
+                .get::<crate::ir::id::PropertyDefinitionId>(pd_step)
+            else {
                 continue;
             };
             let (name, description) = self
@@ -1405,7 +1104,7 @@ impl ReaderContext {
                     context,
                     items,
                 });
-            self.property_step_to_id.insert(pd_step, prop_id);
+            self.id_cache.insert(pd_step, prop_id);
         }
     }
 
@@ -1477,18 +1176,19 @@ impl ReaderContext {
                     used_representation,
                     identified_item: d.identified_item,
                 });
-            self.gisu_id_map.insert(d.entity_id, id);
+            self.id_cache.insert(d.entity_id, id);
             recovered += 1;
         }
         if recovered > 0 {
-            // [NS-gisu-unset-used-rep] recovery side (detect/defer is in
+            // NsCase::GisuUnsetUsedRep recovery side (detect/defer is in
             // geometric_item_specific_usage.rs). Surfaced as a normalization,
             // not a defect — the GISU is preserved. See reader::nonstandard.
-            self.warnings.push(ConvertError::NonStandardInput {
-                field: "GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation (Unset)".into(),
-                count: recovered,
-                normalized_to: "containing representation (derived from identified_item)".into(),
-            });
+            self.ns_push(
+                NsCase::GisuUnsetUsedRep,
+                "GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation (Unset)".into(),
+                recovered,
+                "containing representation (derived from identified_item)".into(),
+            );
         }
     }
 
@@ -1513,7 +1213,10 @@ impl ReaderContext {
             for &r in &pending.context_refs {
                 if let Some(target) = resolve_representation_item_ref(self, r) {
                     resolved.push(StyleContextRef::RepresentationItem(target));
-                } else if let Some(&rrid) = self.rrcomplex_to_rrid.get(&r) {
+                } else if let Some(rrid) = self
+                    .id_cache
+                    .get::<crate::ir::id::RepresentationRelationshipId>(r)
+                {
                     resolved.push(StyleContextRef::RepresentationRelationship(rrid));
                 } else {
                     warnings.push(ConvertError::UnexpectedEntityForm {
@@ -1541,7 +1244,7 @@ impl ReaderContext {
     /// entities were seen. `roots` lists every top-level product (a forest
     /// for multi-part files).
     fn finalize_assembly(&mut self) {
-        if self.product_arena_map.is_empty() {
+        if self.id_cache.is_empty::<crate::ir::ProductId>() {
             return;
         }
         // Collect every ProductId that appears as an Instance.child. The
@@ -1617,14 +1320,20 @@ impl ReaderContext {
             // `definition` is a `represented_definition` SELECT: a
             // property_definition, or a SHAPE_ASPECT (C3D / grabcad define a
             // shape aspect's shape directly).
-            let definition = if let Some(&pd) = self.property_def_step_to_id.get(&def_ref) {
+            let definition = if let Some(pd) = self
+                .id_cache
+                .get::<crate::ir::id::PropertyDefinitionId>(def_ref)
+            {
                 SdrDefinition::PropertyDefinition(pd)
-            } else if let Some(&sa) = self.shape_aspect_id_map.get(&def_ref) {
+            } else if let Some(sa) = self.id_cache.get::<crate::ir::ShapeAspectId>(def_ref) {
                 SdrDefinition::ShapeAspect(sa)
             } else {
                 continue;
             };
-            let Some(&used_representation) = self.repr_id_map.get(&effective) else {
+            let Some(used_representation) = self
+                .id_cache
+                .get::<crate::ir::id::RepresentationId>(effective)
+            else {
                 continue;
             };
             links.push(crate::ir::property::ShapeDefinitionRepresentationLink {
@@ -1655,9 +1364,11 @@ impl ReaderContext {
         let mut links = Vec::new();
         for (def_ref, rep_ref) in std::mem::take(&mut self.pdr_link_refs) {
             let effective = self.srr_equiv_map.get(&rep_ref).copied().unwrap_or(rep_ref);
-            if let (Some(&definition), Some(&used_representation)) = (
-                self.property_def_step_to_id.get(&def_ref),
-                self.repr_id_map.get(&effective),
+            if let (Some(definition), Some(used_representation)) = (
+                self.id_cache
+                    .get::<crate::ir::id::PropertyDefinitionId>(def_ref),
+                self.id_cache
+                    .get::<crate::ir::id::RepresentationId>(effective),
             ) {
                 links.push(crate::ir::property::PropertyDefinitionRepresentationLink {
                     definition,
@@ -1696,7 +1407,7 @@ impl ReaderContext {
         if let Some(&id) = self.context_id_map.get(&from) {
             return Some(RepresentationContextRef::Unitful(id));
         }
-        if let Some(&id) = self.unitless_context_id_map.get(&from) {
+        if let Some(id) = self.id_cache.get::<crate::ir::id::UnitlessContextId>(from) {
             return Some(RepresentationContextRef::Unitless(id));
         }
         None
@@ -1708,7 +1419,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<PointId, ConvertError> {
-        resolve_in_map(&self.point_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::PointId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_direction(
@@ -1717,7 +1429,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<DirectionId, ConvertError> {
-        resolve_in_map(&self.direction_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::DirectionId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_curve(
@@ -1726,7 +1439,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<CurveId, ConvertError> {
-        resolve_in_map(&self.curve_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::CurveId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_surface(
@@ -1735,7 +1449,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<SurfaceId, ConvertError> {
-        resolve_in_map(&self.surface_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::SurfaceId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_vertex(
@@ -1753,7 +1468,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<EdgeId, ConvertError> {
-        resolve_in_map(&self.edge_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::EdgeId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_face_bound(
@@ -1762,7 +1478,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<WireId, ConvertError> {
-        resolve_in_map(&self.face_bound_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::WireId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_face(
@@ -1771,7 +1488,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<FaceId, ConvertError> {
-        resolve_in_map(&self.face_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::FaceId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_shell(
@@ -1780,33 +1498,52 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<ShellId, ConvertError> {
-        resolve_in_map(&self.shell_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::ShellId>(from, to, field_name)
     }
 
-    /// Two-step lookup `PRODUCT_DEFINITION #N → PRODUCT #N → ProductId`
-    /// shared by the NAUO tree-wiring handlers.
+    /// One typed probe `PRODUCT_DEFINITION #N → ProductId`. The migrated
+    /// pdef's `lower` recorded the correspondence (only when the product
+    /// itself resolved — exactly when the former raw 2-hop
+    /// `pdef_to_product` → `id_cache` chain succeeded).
+    pub(crate) fn product_of_pdef(&self, pdef_ref: u64) -> Option<ProductId> {
+        self.id_cache
+            .get::<crate::early::model::EarlyProductDefinitionId>(pdef_ref)
+            .map(|e| self.early.lookup_lowered(e))
+    }
+
+    /// One typed probe `PRODUCT_DEFINITION_FORMATION #N → ProductId`
+    /// (formation counterpart of [`product_of_pdef`](Self::product_of_pdef)).
+    pub(crate) fn product_of_formation(&self, formation_ref: u64) -> Option<ProductId> {
+        self.id_cache
+            .get::<crate::early::model::EarlyProductDefinitionFormationId>(formation_ref)
+            .map(|e| self.early.lookup_lowered(e))
+    }
+
+    /// One typed probe `PRODUCT_DEFINITION_SHAPE #N → ProductId` (PDS
+    /// counterpart of [`product_of_pdef`](Self::product_of_pdef) — what the
+    /// former `pdef_shape_to_pdef` → `product_of_pdef` chain resolved to).
+    pub(crate) fn product_of_pds(&self, pds_ref: u64) -> Option<ProductId> {
+        self.id_cache
+            .get::<crate::early::model::EarlyProductDefinitionShapeId>(pds_ref)
+            .map(|e| self.early.lookup_lowered(e))
+    }
+
+    /// Lookup `PRODUCT_DEFINITION #N → ProductId` shared by the NAUO
+    /// tree-wiring handlers (error-carrying form of
+    /// [`product_of_pdef`](Self::product_of_pdef)).
     pub(crate) fn resolve_product_by_pdef(
         &self,
         from: u64,
         pdef_ref: u64,
         field_name: &'static str,
     ) -> Result<ProductId, ConvertError> {
-        let product_step_id =
-            self.pdef_to_product
-                .get(&pdef_ref)
-                .copied()
-                .ok_or(ConvertError::MissingReference {
-                    from,
-                    to: pdef_ref,
-                    field_name,
-                })?;
-        self.product_arena_map.get(&product_step_id).copied().ok_or(
-            ConvertError::MissingReference {
+        self.product_of_pdef(pdef_ref)
+            .ok_or(ConvertError::MissingReference {
                 from,
-                to: product_step_id,
+                to: pdef_ref,
                 field_name,
-            },
-        )
+            })
     }
 
     pub(crate) fn resolve_placement(
@@ -1833,7 +1570,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<Placement1dId, ConvertError> {
-        resolve_in_map(&self.axis1_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::Placement1dId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_oriented_edge(

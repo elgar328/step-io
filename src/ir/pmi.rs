@@ -18,6 +18,7 @@ use super::id::{
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
+use step_io_macros::StepSelect;
 
 /// Top-level container for `pmi`-pool entities. `None` when the source
 /// file carried no PMI content.
@@ -127,7 +128,9 @@ pub enum DraughtingModelItemDefinition {
 
 /// `draughting_model_item_association_select` SELECT — both members are
 /// modelled in step-io.
-#[derive(Debug, Clone, Copy, PartialEq)]
+///
+/// Simple SELECT — `StepSelect` generates `resolve_select` / `emit_select`.
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum DraughtingModelIdentifiedItem {
     AnnotationOccurrence(AnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
@@ -724,22 +727,29 @@ pub struct DraughtingAnnotationOccurrence {
     pub item: RepresentationItemRef,
 }
 
+/// EXPRESS `annotation_placeholder_occurrence_role` ENUMERATION — the role a
+/// placeholder occurrence plays. Closed 2-member enum; an off-schema token is
+/// non-standard input and dropped (`NonStandardEnumValue` → NORM).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AnnotationPlaceholderOccurrenceRole {
+    AnnotationText,
+    GpsData,
+}
+
 /// `ANNOTATION_PLACEHOLDER_OCCURRENCE(name, styles, item, role, line_spacing)`
 /// — an `annotation_occurrence` / `geometric_representation_item` subtype that
 /// reserves a placeholder for a PMI annotation. `item` is narrowed (EXPRESS) to
 /// a `geometric_set`, carried here as the family-uniform [`RepresentationItemRef`]
 /// (resolved through `resolve_representation_item_ref`'s `GEOMETRIC_SET` path).
-/// `role` is the `annotation_placeholder_occurrence_role` enum, kept as its raw
-/// token string for lossless round-trip; `line_spacing` is a
-/// `positive_length_measure`. Unresolved `item` drops the occurrence, symmetric
-/// on re-read.
+/// `role` is the `annotation_placeholder_occurrence_role` enum; `line_spacing`
+/// is a `positive_length_measure`. Unresolved `item` drops the occurrence,
+/// symmetric on re-read.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
-    /// `annotation_placeholder_occurrence_role` enum token (e.g. `GPS_DATA`).
-    pub role: String,
+    pub role: AnnotationPlaceholderOccurrenceRole,
     /// `positive_length_measure`.
     pub line_spacing: f64,
 }
@@ -755,7 +765,7 @@ pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
-    pub role: String,
+    pub role: AnnotationPlaceholderOccurrenceRole,
     pub line_spacing: f64,
     /// `leader_line` SET [1:?] OF `annotation_placeholder_leader_line`.
     pub leader_line: Vec<AnnotationPlaceholderLeaderLineId>,
@@ -774,6 +784,20 @@ pub enum ApllPointElement {
     ApllPointWithSurface(ApllPointWithSurfaceData),
 }
 
+/// EXPRESS `des_apll_point_symbol` ENUMERATION — the symbol drawn at an
+/// `apll_point`. Closed 7-member enum; an off-schema token is non-standard
+/// input and dropped (`NonStandardEnumValue` → NORM).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DesApllPointSymbol {
+    Circle,
+    Dot,
+    InternalPairForwardArrowhead,
+    InternalPairReverseArrowhead,
+    None,
+    PositiveArrowhead,
+    Triangle,
+}
+
 /// `APLL_POINT` body — a `cartesian_point` subtype. `coordinates` reuse the 3D
 /// [`Point3`]; `symbol_applied` keeps the `des_apll_point_symbol` enum token raw
 /// for lossless round-trip.
@@ -781,7 +805,7 @@ pub enum ApllPointElement {
 pub struct ApllPointData {
     pub name: String,
     pub coordinates: crate::ir::geometry::Point3,
-    pub symbol_applied: String,
+    pub symbol_applied: DesApllPointSymbol,
 }
 
 /// `APLL_POINT_WITH_SURFACE` body — an `apll_point` carrying the `face_surface`
@@ -791,7 +815,7 @@ pub struct ApllPointData {
 pub struct ApllPointWithSurfaceData {
     pub name: String,
     pub coordinates: crate::ir::geometry::Point3,
-    pub symbol_applied: String,
+    pub symbol_applied: DesApllPointSymbol,
     pub associated_surface: FaceId,
 }
 
@@ -832,7 +856,7 @@ pub struct AuxiliaryLeaderLineData {
 /// `precision_qualifier` / `uncertainty_qualifier` — have corpus count 0
 /// and are intentionally pruned from `ir.toml`; references to them are
 /// silently dropped on read, mirroring the [`ApprovalItem`] precedent.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum ValueQualifier {
     TypeQualifier(TypeQualifierId),
     ValueFormatTypeQualifier(ValueFormatTypeQualifierId),
@@ -909,7 +933,7 @@ pub struct DraughtingCalloutData {
 /// `draughting_callout_element` SELECT member, narrowed to the kinds
 /// step-io currently models. `annotation_fill_area_occurrence` is not
 /// represented and is silently dropped on read.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum DraughtingCalloutElement {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
@@ -933,7 +957,7 @@ pub struct DraughtingCalloutRelationship {
 /// `annotation_curve_occurrence` is a separate arena
 /// (`annotation_curve_occurrence_id_map`). An unmodelled member
 /// (`annotation_fill_area_occurrence`) is not represented.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum AnnotationOccurrenceRef {
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),

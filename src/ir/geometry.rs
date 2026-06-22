@@ -306,42 +306,6 @@ pub enum SurfaceForm {
     Unspecified,
 }
 
-impl SurfaceForm {
-    #[must_use]
-    pub fn from_step_enum(s: &str) -> Self {
-        match s {
-            "PLANE_SURF" => Self::PlaneSurf,
-            "CYLINDRICAL_SURF" => Self::CylindricalSurf,
-            "CONICAL_SURF" => Self::ConicalSurf,
-            "SPHERICAL_SURF" => Self::SphericalSurf,
-            "TOROIDAL_SURF" => Self::ToroidalSurf,
-            "SURF_OF_REVOLUTION" => Self::SurfOfRevolution,
-            "RULED_SURF" => Self::RuledSurf,
-            "GENERALISED_CONE" => Self::GeneralisedCone,
-            "QUADRIC_SURF" => Self::QuadricSurf,
-            "SURF_OF_LINEAR_EXTRUSION" => Self::SurfOfLinearExtrusion,
-            _ => Self::Unspecified,
-        }
-    }
-
-    #[must_use]
-    pub fn as_step_enum(self) -> &'static str {
-        match self {
-            Self::PlaneSurf => "PLANE_SURF",
-            Self::CylindricalSurf => "CYLINDRICAL_SURF",
-            Self::ConicalSurf => "CONICAL_SURF",
-            Self::SphericalSurf => "SPHERICAL_SURF",
-            Self::ToroidalSurf => "TOROIDAL_SURF",
-            Self::SurfOfRevolution => "SURF_OF_REVOLUTION",
-            Self::RuledSurf => "RULED_SURF",
-            Self::GeneralisedCone => "GENERALISED_CONE",
-            Self::QuadricSurf => "QUADRIC_SURF",
-            Self::SurfOfLinearExtrusion => "SURF_OF_LINEAR_EXTRUSION",
-            Self::Unspecified => "UNSPECIFIED",
-        }
-    }
-}
-
 /// SET element of a `TRIMMED_CURVE` trim slot — STEP SELECT
 /// `(PARAMETER_VALUE | CARTESIAN_POINT)`.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -407,7 +371,8 @@ pub enum Logical {
 }
 
 /// `transition_code` of a `COMPOSITE_CURVE_SEGMENT` — geometric continuity
-/// between consecutive segments.
+/// between consecutive segments. The EXPRESS enumeration is exactly these four
+/// members; a non-standard token is rejected by the strict bind.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum TransitionCode {
     #[default]
@@ -415,7 +380,6 @@ pub enum TransitionCode {
     Discontinuous,
     ContSameGradient,
     ContSameGradientSameCurvature,
-    Unspecified,
 }
 
 /// Rationality of a [`NurbsCurve`].
@@ -681,6 +645,8 @@ pub struct PlanarBox {
 
 /// `PLANAR_BOX.placement` — the STEP `axis2_placement` SELECT
 /// (`AXIS2_PLACEMENT_2D` | `AXIS2_PLACEMENT_3D`).
+// Not `StepSelect`: `Placement3d` resolves via the `placement_map` named field
+// (TypeId-collision with `id_cache`), not `id_cache.get`. See `ir::select`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PlanarBoxPlacement {
     Placement2d(Placement2dId),
@@ -706,13 +672,17 @@ pub enum CircularAreaCentre {
     External(crate::ir::ExternalRefId),
 }
 
-/// `surface_curve` enum — phase scs. Currently models the two SUBTYPE
-/// variants (`bounded_surface_curve` / `intersection_curve`). The base
-/// `SURFACE_CURVE` itself stays in the existing alias path (unwrap to
-/// `curve_3d` via `surface_curve.rs`); both subtypes are corpus 0 so
-/// the alias and this arena never overlap.
+/// `surface_curve` enum — phase scs. Models the base `SURFACE_CURVE`
+/// (`Itself`) and `SEAM_CURVE` (`Seam`) plus the two SUBTYPE variants
+/// (`bounded_surface_curve` / `intersection_curve`). All four are `curve`
+/// SUBTYPEs in EXPRESS and share one arena; an [`Edge`](crate::ir::topology::Edge)
+/// references its surface curve through [`EdgeGeometry`](crate::ir::topology::EdgeGeometry).
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceCurve {
+    /// Base `SURFACE_CURVE`.
+    Itself(SurfaceCurveData),
+    /// `SEAM_CURVE` — a surface curve bounding the same surface on both sides.
+    Seam(SurfaceCurveData),
     BoundedSurfaceCurve(SurfaceCurveData),
     IntersectionCurve(SurfaceCurveData),
 }
@@ -742,20 +712,6 @@ pub enum PreferredSurfaceCurveRepresentation {
     Curve3d,
     PcurveS1,
     PcurveS2,
-}
-
-/// Faithful image of a base `SURFACE_CURVE` / `SEAM_CURVE` wrapper carried by
-/// the edge whose `edge_geometry` referenced it. `curve_3d` lives on the edge
-/// (`Edge::curve`); this preserves the wrapper's other attributes verbatim so
-/// the writer reproduces the original entity kind and `master_representation`
-/// instead of reconstructing them by heuristic.
-#[derive(Debug, Clone, PartialEq)]
-pub struct SurfaceCurveWrapper {
-    pub name: String,
-    /// `true` for `SEAM_CURVE`, `false` for `SURFACE_CURVE`.
-    pub is_seam: bool,
-    pub associated_geometry: Vec<PCurveOrSurface>,
-    pub master_representation: PreferredSurfaceCurveRepresentation,
 }
 
 /// `parameter_space_curve` `enum_base` — phase bpc. Currently models the

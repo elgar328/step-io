@@ -314,7 +314,8 @@ define_id!(
     crate::ir::geometry::ParameterSpaceCurve
 );
 
-// surface_curve subtypes enum arena (phase scs). Orphan.
+// surface_curve family arena (phase scs) — base SURFACE_CURVE / SEAM_CURVE +
+// BOUNDED / INTERSECTION subtypes. Referenced by `Edge::edge_geometry`.
 define_id!(SurfaceCurveSubtypeId, crate::ir::geometry::SurfaceCurve);
 
 // REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).

@@ -1,18 +1,10 @@
-//! `NAME_ATTRIBUTE` handler.
-//!
-//! `(attribute_value, named_item)` — SELECT target. Initial coverage:
-//! `product_definition` (via `pdef_to_product` → `product_arena_map`) and
-//! `derived_unit` (via `derived_unit_id_map`). Other variants of the
-//! schema SELECT (`address`, `effectivity`, `CDSR`, etc.) are silently
-//! dropped with a warning; future phases expand
-//! [`NameAttributeItem`](crate::ir::NameAttributeItem).
+//! `NAME_ATTRIBUTE` handler — property (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::property::{NameAttribute, NameAttributeItem};
-use crate::ir::{ProductId, PropertyPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::ir::property::NameAttribute;
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -33,30 +25,10 @@ impl SimpleEntityHandler for NameAttributeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "NAME_ATTRIBUTE")?;
-        let attribute_value =
-            read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
-        let item_ref = read_entity_ref(attrs, 1, entity_id, "named_item")?;
-
-        let named_item = if let Some(product_id) = resolve_product_definition(ctx, item_ref) {
-            NameAttributeItem::ProductDefinition(product_id)
-        } else if let Some(&du_id) = ctx.derived_unit_id_map.get(&item_ref) {
-            NameAttributeItem::DerivedUnit(du_id)
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("NAME_ATTRIBUTE.named_item #{item_ref} target type unsupported"),
-            });
-            return Ok(());
-        };
-
-        let pool = ctx.properties.get_or_insert_with(PropertyPool::default);
-        pool.name_attributes.push(NameAttribute {
-            attribute_value,
-            named_item,
-        });
+        let early = bind::bind_name_attribute(entity_id, attrs)?;
+        lower::lower_name_attribute(ctx, entity_id, early);
         Ok(())
     }
 
@@ -64,17 +36,8 @@ impl SimpleEntityHandler for NameAttributeHandler {
         buf: &mut WriteBuffer,
         NameAttributeWriteInput { attr, item_step }: NameAttributeWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "NAME_ATTRIBUTE",
-            vec![
-                Attribute::String(attr.attribute_value),
-                Attribute::EntityRef(item_step),
-            ],
-        ))
+        let _ = buf;
+        let early = lift::lift_name_attribute(attr.attribute_value, item_step);
+        Ok(serialize::serialize_name_attribute(buf, &early))
     }
-}
-
-fn resolve_product_definition(ctx: &ReaderContext, item_ref: u64) -> Option<ProductId> {
-    let product_step = ctx.pdef_to_product.get(&item_ref).copied()?;
-    ctx.product_arena_map.get(&product_step).copied()
 }
