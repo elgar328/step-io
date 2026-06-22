@@ -14,10 +14,11 @@ pub(crate) mod buffer;
 pub(crate) mod entity;
 mod header;
 mod lexical;
-mod project;
+mod loss;
+mod projection;
 mod serialize;
 
-use crate::early::profile::LossReport;
+pub use loss::LossReport;
 
 /// Errors that the writer can emit.
 #[derive(Debug)]
@@ -116,7 +117,7 @@ impl crate::ir::StepModel {
         // Schema projection: drop target-illegal entities + cascade (no-op for
         // Universal). The LossReport is returned to the caller.
         let profile = crate::early::profile::SchemaProfile::for_target(target);
-        let loss = project::project(&mut entities, &profile);
+        let loss = projection::project(&mut entities, &profile);
         let headers = header::header_for(self, target);
         serialize::write_file(&mut writer, &headers, &ed3, &entities)?;
         Ok(loss)

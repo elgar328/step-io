@@ -19,9 +19,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::early::profile::{LossReport, SchemaProfile};
+use crate::early::profile::SchemaProfile;
 use crate::parser::entity::Attribute;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use crate::writer::loss::LossReport;
 
 /// Drop target-illegal entities + their referencers from `entities`, returning
 /// what was dropped. No-op for `Universal`.

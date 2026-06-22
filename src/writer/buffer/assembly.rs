@@ -851,7 +851,7 @@ impl WriteBuffer<'_> {
         if has_ac || has_pc_pdc {
             // 1+2) AC/APD — retarget to a single target pair (non-Universal),
             // or re-emit the source AC/APD verbatim (Universal).
-            if let Some((apd_status, apd_name, apd_year, apd_desc)) =
+            if let Some((apd_desc, apd_status, apd_name, apd_year)) =
                 crate::early::profile::SchemaProfile::for_target(self.target).apd()
             {
                 let ac_id = ApplicationContextHandler::write(
@@ -1002,7 +1002,7 @@ impl WriteBuffer<'_> {
         // schema class (Universal — no IR context entries).
         let (desc, status, name, year) =
             match crate::early::profile::SchemaProfile::for_target(self.target).apd() {
-                Some((s, nm, y, d)) => (d, s, nm, y),
+                Some(apd) => apd,
                 None => apd_info(schema),
             };
         let app_ctx = ApplicationContextHandler::write(

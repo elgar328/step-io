@@ -5,7 +5,6 @@ pub mod parser;
 pub mod reader;
 pub mod writer;
 
-pub use early::profile::LossReport;
 pub use ir::{
     AngleUnit, Arena, AssemblyComponentUsageId, AssemblyTree, Axis1Placement, Axis2Placement2d,
     Axis2Placement3d, Circle2, Circle3, ConicalSurface, ConvertError, Curve, Curve2d, Curve2dId,
@@ -24,4 +23,4 @@ pub use parser::{
     RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse, parse_bytes,
     tokenize,
 };
-pub use writer::{SchemaTarget, WriteError};
+pub use writer::{LossReport, SchemaTarget, WriteError};
