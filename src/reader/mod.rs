@@ -51,6 +51,31 @@ pub struct ConvertResult {
     /// sections land here. The IR carries the spec-conformant form;
     /// these warnings are the only trace of what was repaired.
     pub parse_warnings: Vec<crate::parser::ParseWarning>,
+    /// Canonicalizations applied while reading: **valid** legacy/variant forms
+    /// normalized to their modern canonical form (e.g. `QUASI_UNIFORM_CURVE` ->
+    /// the canonical `B_SPLINE_CURVE_WITH_KNOTS` NURBS form). Distinct from
+    /// `warnings`' non-standard-input recovery — the input was standard, just an
+    /// older/alternate encoding. Keyed by the source STEP type that was
+    /// canonicalized, value = count. Every canonicalization goes through
+    /// [`canon_record`](ReaderContext::canon_record) (`rg "CanonCase::"` finds
+    /// all sites). Consumed by round-trip accounting to recognize the source
+    /// type's absence from the output as modernization, not loss.
+    pub canonicalizations: std::collections::BTreeMap<String, usize>,
+}
+
+/// Typed marker for a canonicalization — a **valid** legacy/variant input form
+/// normalized to its modern canonical form. The canonical counterpart of
+/// [`NsCase`] (which marks non-standard *input* recovery). Every canonicalization
+/// flows through [`canon_record`](ReaderContext::canon_record); `rg "CanonCase::"`
+/// finds every site, and adding a variant is the deliberate, reviewable way to
+/// introduce a new canonicalization (drift guard).
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum CanonCase {
+    /// A b-spline curve form (`QUASI_UNIFORM_CURVE`, …) absorbed into the single
+    /// canonical `B_SPLINE_CURVE_WITH_KNOTS` NURBS form on output.
+    CurveFormToNurbs,
+    /// A b-spline surface form absorbed into `B_SPLINE_SURFACE_WITH_KNOTS`.
+    SurfaceFormToNurbs,
 }
 
 /// A `SHAPE_DEFINITION_REPRESENTATION` whose product is resolved but whose
@@ -574,6 +599,12 @@ pub struct ReaderContext {
     /// one [`ConvertError::NonStandardInput`] per key at the end of `convert`.
     pub(crate) nonstandard_normalizations: BTreeMap<(String, &'static str), usize>,
 
+    /// Per-file tally of canonicalizations (valid legacy/variant form -> modern
+    /// canonical form), keyed by the source STEP type. Flushed into
+    /// `ConvertResult.canonicalizations` at the end of `convert`. Separate from
+    /// `nonstandard_normalizations` (this is not a defect, the input was valid).
+    pub(crate) canonicalizations: BTreeMap<&'static str, usize>,
+
     /// Part-sets already reported via `ConvertError::UnhandledComplex` this
     /// file, so a shape recurring across many instances warns once.
     pub(crate) unhandled_complex_seen: std::collections::BTreeSet<String>,
@@ -606,6 +637,16 @@ impl ReaderContext {
             .nonstandard_normalizations
             .entry((field, normalized_to))
             .or_default() += 1;
+    }
+
+    /// Record a canonicalization: a **valid** legacy/variant form (`from_type`,
+    /// the source STEP entity/part name) normalized to its modern canonical form.
+    /// `case` is the typed marker (`rg "CanonCase::"` finds every site); the
+    /// aggregation key is `from_type`. Aggregated per file, flushed into
+    /// `ConvertResult.canonicalizations`. The canonical counterpart of
+    /// [`ns_record`](Self::ns_record) — distinct because the input was valid.
+    pub(crate) fn canon_record(&mut self, _case: CanonCase, from_type: &'static str) {
+        *self.canonicalizations.entry(from_type).or_default() += 1;
     }
 
     /// Allocate a collision-free synthetic file-id for a reader-injected
@@ -845,6 +886,11 @@ impl ReaderContext {
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),
+            canonicalizations: ctx
+                .canonicalizations
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v))
+                .collect(),
         }
     }
 

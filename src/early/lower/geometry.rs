@@ -33,7 +33,7 @@ use crate::ir::geometry::{
     SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
     TrimmedCurve, Vertex,
 };
-use crate::reader::{NsCase, ReaderContext};
+use crate::reader::{CanonCase, NsCase, ReaderContext};
 
 /// Lower one `BOUNDED_PCURVE` — resolve `basis_surface` + `reference_to_curve`
 /// and push to the `parameter_space_curves` arena. Orphan (no inbound refs) so
@@ -164,6 +164,8 @@ pub(crate) fn lower_quasi_uniform_curve(
     entity_id: u64,
     early: &EarlyQuasiUniformCurve,
 ) -> Result<(), ConvertError> {
+    // Canonicalized to the B_SPLINE_CURVE_WITH_KNOTS NURBS form on output.
+    ctx.canon_record(CanonCase::CurveFormToNurbs, "QUASI_UNIFORM_CURVE");
     let degree = u32::try_from(early.degree).map_err(|_| ConvertError::AttributeType {
         entity_id,
         field_name: "degree",
@@ -211,6 +213,8 @@ pub(crate) fn lower_quasi_uniform_surface(
     entity_id: u64,
     early: &EarlyQuasiUniformSurface,
 ) -> Result<(), ConvertError> {
+    // Canonicalized to the B_SPLINE_SURFACE_WITH_KNOTS NURBS form on output.
+    ctx.canon_record(CanonCase::SurfaceFormToNurbs, "QUASI_UNIFORM_SURFACE");
     let u_degree = u32::try_from(early.u_degree).map_err(|_| ConvertError::AttributeType {
         entity_id,
         field_name: "u_degree",
@@ -450,6 +454,9 @@ pub(crate) fn lower_rational_quasi_uniform_curve(
     entity_id: u64,
     early: &EarlyRationalQuasiUniformCurve,
 ) -> Result<(), ConvertError> {
+    // Rational complex; the QUASI_UNIFORM_CURVE part canonicalizes to
+    // B_SPLINE_CURVE_WITH_KNOTS on output.
+    ctx.canon_record(CanonCase::CurveFormToNurbs, "QUASI_UNIFORM_CURVE");
     let degree = u32::try_from(early.degree).map_err(|_| ConvertError::AttributeType {
         entity_id,
         field_name: "degree",
@@ -501,6 +508,9 @@ pub(crate) fn lower_rational_quasi_uniform_surface(
     entity_id: u64,
     early: &EarlyRationalQuasiUniformSurface,
 ) -> Result<(), ConvertError> {
+    // Rational complex; the QUASI_UNIFORM_SURFACE part canonicalizes to
+    // B_SPLINE_SURFACE_WITH_KNOTS on output.
+    ctx.canon_record(CanonCase::SurfaceFormToNurbs, "QUASI_UNIFORM_SURFACE");
     let u_degree = u32::try_from(early.u_degree).map_err(|_| ConvertError::AttributeType {
         entity_id,
         field_name: "u_degree",
