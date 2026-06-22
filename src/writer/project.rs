@@ -62,17 +62,31 @@ pub(crate) fn project(entities: &mut Vec<WriterEntity>, profile: &SchemaProfile)
     }
     let mut dropped = seed.clone();
 
-    // 2. Reverse-ref index (referenced id -> ids that reference it), then BFS:
-    //    any entity referencing a dropped id is itself dropped (to fixpoint).
+    // 2. Forward + reverse ref indices over the pre-projection graph (one pass).
+    //    parents_of (child -> referencers) drives the cascade; children_of
+    //    (entity -> referenced) drives the reachability passes.
     let mut parents_of: HashMap<u64, Vec<u64>> = HashMap::new();
+    let mut children_of: HashMap<u64, Vec<u64>> = HashMap::new();
     let mut refs_scratch: Vec<u64> = Vec::new();
     for e in entities.iter() {
         refs_scratch.clear();
         collect_refs(e, &mut refs_scratch);
         for &child in &refs_scratch {
             parents_of.entry(child).or_default().push(e.id);
+            children_of.entry(e.id).or_default().push(child);
         }
     }
+
+    // Roots = entities nothing references (in-degree 0), frozen before any drop.
+    // R_pre = set reachable from roots over the full pre-projection graph.
+    let roots: Vec<u64> = entities
+        .iter()
+        .map(|e| e.id)
+        .filter(|id| !parents_of.contains_key(id))
+        .collect();
+    let r_pre = reach(&roots, &children_of, |_| true);
+
+    // Cascade: any entity referencing a dropped id is itself dropped (fixpoint).
     let mut queue: Vec<u64> = dropped.iter().copied().collect();
     while let Some(id) = queue.pop() {
         if let Some(parents) = parents_of.get(&id) {
@@ -84,13 +98,29 @@ pub(crate) fn project(entities: &mut Vec<WriterEntity>, profile: &SchemaProfile)
         }
     }
 
-    // 3. Record drops (in stable emit order) and retain survivors. Distinguish
-    //    the seed (directly illegal in the target) from the cascade (legal but
-    //    referencing a dropped entity) so the loss report is actionable.
+    // 3. Reachability prune: an entity reachable from a root before projection
+    //    (r_pre) but not after (r_post, skipping dropped nodes) is an orphan the
+    //    projection stranded — drop it so the first write already equals the
+    //    settled write. Entities never root-reachable (isolated cycles; input
+    //    orphans are themselves roots) stay untouched — faithful preservation.
+    let r_post = reach(&roots, &children_of, |id| !dropped.contains(&id));
+    let mut orphans: HashSet<u64> = HashSet::new();
+    for e in entities.iter() {
+        if !dropped.contains(&e.id) && r_pre.contains(&e.id) && !r_post.contains(&e.id) {
+            orphans.insert(e.id);
+        }
+    }
+    for &id in &orphans {
+        dropped.insert(id);
+    }
+
+    // 4. Record drops (stable emit order) by reason, then retain survivors.
     for e in entities.iter() {
         if dropped.contains(&e.id) {
             let reason = if seed.contains(&e.id) {
                 "dropped (illegal in target schema)"
+            } else if orphans.contains(&e.id) {
+                "dropped (unreachable after projection)"
             } else {
                 "dropped (references a dropped entity — cascade)"
             };
@@ -99,7 +129,7 @@ pub(crate) fn project(entities: &mut Vec<WriterEntity>, profile: &SchemaProfile)
     }
     entities.retain(|e| !dropped.contains(&e.id));
 
-    // 4. Guard: the cascade guarantees no survivor references a dropped id.
+    // 5. Guard: the cascade guarantees no survivor references a dropped id.
     debug_assert!(
         {
             let mut r = Vec::new();
@@ -113,6 +143,33 @@ pub(crate) fn project(entities: &mut Vec<WriterEntity>, profile: &SchemaProfile)
     );
 
     report
+}
+
+/// BFS-reachable set from `roots` over the `children_of` forward edges,
+/// visiting only nodes for which `allow` holds (the post-projection pass passes
+/// `allow = not dropped` to skip dropped nodes).
+fn reach(
+    roots: &[u64],
+    children_of: &HashMap<u64, Vec<u64>>,
+    allow: impl Fn(u64) -> bool,
+) -> HashSet<u64> {
+    let mut seen: HashSet<u64> = HashSet::new();
+    let mut queue: Vec<u64> = Vec::new();
+    for &r in roots {
+        if allow(r) && seen.insert(r) {
+            queue.push(r);
+        }
+    }
+    while let Some(id) = queue.pop() {
+        if let Some(children) = children_of.get(&id) {
+            for &c in children {
+                if allow(c) && seen.insert(c) {
+                    queue.push(c);
+                }
+            }
+        }
+    }
+    seen
 }
 
 /// An entity is legal iff its name (simple) or every constituent part name
@@ -241,5 +298,51 @@ mod tests {
         let report = project(&mut ents, &SchemaProfile::for_target(SchemaTarget::Ap203));
         assert_eq!(ents.iter().map(|e| e.id).collect::<Vec<_>>(), vec![1]);
         assert_eq!(report.dropped().len(), 1);
+    }
+
+    #[test]
+    fn reachability_prunes_projection_orphan_keeps_input_orphan() {
+        // #10 (legal PDR) references illegal #20 -> #10 cascade-drops. #30 (legal
+        // REPRESENTATION) was reachable only via #10 -> stranded -> reachability
+        // prunes it. #40 (legal, never referenced = input orphan = root) survives.
+        let mut ents = vec![
+            WriterEntity {
+                id: 10,
+                body: WriterBody::Simple {
+                    name: "PROPERTY_DEFINITION_REPRESENTATION".into(),
+                    attrs: vec![Attribute::EntityRef(20), Attribute::EntityRef(30)],
+                },
+            },
+            simple(20, "DATUM_SYSTEM", &[]),
+            simple(30, "REPRESENTATION", &[]),
+            simple(40, "CARTESIAN_POINT", &[]),
+        ];
+        let report = project(&mut ents, &SchemaProfile::for_target(SchemaTarget::Ap203));
+        assert_eq!(
+            ents.iter().map(|e| e.id).collect::<Vec<_>>(),
+            vec![40],
+            "only the input orphan (root) survives"
+        );
+        assert_eq!(report.dropped().len(), 3); // #20 seed, #10 cascade, #30 orphan
+    }
+
+    #[test]
+    fn reachability_keeps_isolated_cycle() {
+        // #50 <-> #60 form an externally-unreferenced cycle (input orphan cycle).
+        // Neither is in-degree-0, but neither is root-reachable (r_pre false), so
+        // the prune leaves them — faithful preservation. #70 (illegal) seed-drops
+        // to force the projection to run.
+        let mut ents = vec![
+            simple(50, "REPRESENTATION", &[60]),
+            simple(60, "REPRESENTATION", &[50]),
+            simple(70, "DATUM_SYSTEM", &[]),
+        ];
+        let report = project(&mut ents, &SchemaProfile::for_target(SchemaTarget::Ap203));
+        assert_eq!(
+            ents.iter().map(|e| e.id).collect::<Vec<_>>(),
+            vec![50, 60],
+            "isolated cycle preserved"
+        );
+        assert_eq!(report.dropped().len(), 1); // only #70
     }
 }
