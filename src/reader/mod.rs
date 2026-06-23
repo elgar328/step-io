@@ -299,8 +299,6 @@ pub struct ReaderContext {
     /// (`PRODUCT.frame_of_reference[0]`). `resolve_product_contexts`
     /// converts these refs to `ProductContextId`.
     pub(crate) product_pc_step_refs: HashMap<ProductId, u64>,
-    /// Same pattern, populated by `PRODUCT_DEFINITION.frame_of_reference`.
-    pub(crate) product_pdc_step_refs: HashMap<ProductId, u64>,
     pub(crate) product_definition_context_roles: Arena<crate::ir::ProductDefinitionContextRole>,
     pub(crate) product_definition_context_associations:
         Arena<crate::ir::ProductDefinitionContextAssociation>,
@@ -894,11 +892,11 @@ impl ReaderContext {
         }
     }
 
-    /// Resolve `product_pc_step_refs` / `product_pdc_step_refs` (raw STEP
-    /// entity ids captured by the `PRODUCT` / `PRODUCT_DEFINITION` handlers) into
-    /// typed `ProductContextId` / `ProductDefinitionContextId` and write them
-    /// back onto each `Product`. Run after the assembly-context handlers
-    /// populate the id maps.
+    /// Resolve `product_pc_step_refs` (raw STEP entity ids captured by the
+    /// `PRODUCT` handler) into typed `ProductContextId` and write them back onto
+    /// each `Product`. Run after the assembly-context handlers populate the id
+    /// maps. (The PD's `frame_of_reference` context is the schema-required
+    /// `ProductDefinition.context`, resolved inline at lower time — no backfill.)
     fn resolve_product_contexts(&mut self) {
         for (pid, pc_step_id) in &self.product_pc_step_refs {
             if let Some(pcid) = self
@@ -906,16 +904,6 @@ impl ReaderContext {
                 .get::<crate::ir::id::ProductContextId>(*pc_step_id)
             {
                 self.assembly_products[*pid].product_context = Some(pcid);
-            }
-        }
-        for (pid, pdc_step_id) in &self.product_pdc_step_refs {
-            if let Some(pdcid) = self
-                .id_cache
-                .get::<crate::ir::id::ProductDefinitionContextId>(*pdc_step_id)
-            {
-                self.assembly_products[*pid].pdef_context = Some(pdcid);
-                // The canonical PD arena entry resolves `context` inline at lower
-                // time (it is schema-required), so no mirror backfill here.
             }
         }
     }

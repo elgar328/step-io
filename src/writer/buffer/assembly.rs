@@ -190,9 +190,21 @@ impl WriteBuffer<'_> {
                 .map_or(fallback_ctx.product_ctx, |id| {
                     self.pc_step_ids[id.0 as usize]
                 });
-            let pdef_ctx_step = product
-                .pdef_context
-                .map_or(fallback_ctx.pdef_ctx, |id| self.pdc_step_ids[id.0 as usize]);
+            // Context is the canonical PD arena field (schema-required); a
+            // document-style product (no PD) falls back to the shared context.
+            let pdef_ctx_step = match product.pdef {
+                Some(pd) => {
+                    let ctx = self
+                        .model
+                        .assembly
+                        .as_ref()
+                        .expect("assembly present when Product.pdef is set")
+                        .product_definitions[pd]
+                        .context;
+                    self.pdc_step_ids[ctx.0 as usize]
+                }
+                None => fallback_ctx.pdef_ctx,
+            };
             let per_product_ctx = AssemblyContextIds {
                 product_ctx,
                 pdef_ctx: pdef_ctx_step,
@@ -215,8 +227,10 @@ impl WriteBuffer<'_> {
             //
             // Kernel-built IR keeps `geometry_context = Some(_)` (the adapter
             // sets it when constructing geometry) so it bypasses this branch
-            // and gets the full chain as before.
-            if product.pdef_context.is_none() && product.geometry_context.is_none() {
+            // and gets the full chain as before. Keyed on `pdef` (document-style
+            // products have no PD): for reader-built IR `pdef.is_none()` is
+            // equivalent to the old `pdef_context.is_none()`.
+            if product.pdef.is_none() && product.geometry_context.is_none() {
                 // Document-style product: no PDEF/SDR chain. But if the source
                 // gave it a formation (e.g. an ASME-standard reference linked
                 // via DOCUMENT_PRODUCT_EQUIVALENCE), emit that formation so it
@@ -273,11 +287,11 @@ impl WriteBuffer<'_> {
         self.emit_property_definitions_pds_only();
 
         // Second loop: SR + SDR for every geometry-bearing product.
-        // Document-style products (`pdef_context = None && geometry_context
-        // = None`) already short-circuited above; metadata-only products
+        // Document-style products (`pdef = None && geometry_context = None`)
+        // already short-circuited above; metadata-only products
         // (`geometry_context = None`) skip SR/SDR here for source-mirror.
         for (pid, product) in products.iter_with_ids() {
-            if product.pdef_context.is_none() && product.geometry_context.is_none() {
+            if product.pdef.is_none() && product.geometry_context.is_none() {
                 continue;
             }
             let Some(unit_ctx) = self.resolve_product_ctx(product) else {

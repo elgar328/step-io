@@ -251,10 +251,6 @@ pub struct Product {
     /// or files without an explicit PC chain — writer falls back to
     /// IR[0] or synthesised context.
     pub product_context: Option<ProductContextId>,
-    /// `PRODUCT_DEFINITION_CONTEXT` (or `AP203` `DESIGN_CONTEXT`)
-    /// referenced by this product's `PRODUCT_DEFINITION.frame_of_reference`.
-    /// Same fallback semantics as `product_context`.
-    pub pdef_context: Option<ProductDefinitionContextId>,
     /// Unified `Representation` arena index for this product's geometry
     /// (the resolved `ABSR` / `MSSR` / wireframe / plain `SHAPE_REPRESENTATION`).
     /// `None` for metadata-only products or kernel-built IR that only sets

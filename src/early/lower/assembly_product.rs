@@ -64,7 +64,6 @@ pub(crate) fn lower_product(ctx: &mut ReaderContext, entity_id: u64, early: Earl
         formation_with_source: false,
         geometry_context: None,
         product_context: None,
-        pdef_context: None,
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
@@ -197,9 +196,6 @@ pub(crate) fn lower_product_definition(
     });
     ctx.id_cache.insert(entity_id, pd_id);
     ctx.assembly_products[pid].pdef = Some(pd_id);
-    // `Product.pdef_context` (the denormalized view field) is still backfilled by
-    // `resolve_product_contexts` from this map.
-    ctx.product_pdc_step_refs.insert(pid, frame_of_reference);
     // Product view keeps `associated_documents` (the writer's plain-vs-WAD
     // discriminator) only when at least one doc resolved — an empty list
     // keeps the plain PRODUCT_DEFINITION output, matching the legacy reader.
