@@ -914,11 +914,8 @@ impl ReaderContext {
                 .get::<crate::ir::id::ProductDefinitionContextId>(*pdc_step_id)
             {
                 self.assembly_products[*pid].pdef_context = Some(pdcid);
-                // Mirror onto the canonical PD arena entry (the context id map
-                // only fills after the PD pass, so resolve it here).
-                if let Some(pd_id) = self.assembly_products[*pid].pdef {
-                    self.product_definitions[pd_id].context = Some(pdcid);
-                }
+                // The canonical PD arena entry resolves `context` inline at lower
+                // time (it is schema-required), so no mirror backfill here.
             }
         }
     }

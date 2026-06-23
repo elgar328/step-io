@@ -1153,7 +1153,10 @@ fn nauo_arena_is_canonical_with_instance_view() {
     // emits the NAUO from the arena entry — round-tripping `description` and
     // `reference_designator`, which the legacy inline synthesis dropped. Also
     // guards the arena↔instance 1:1 invariant (no orphan NAUO).
-    use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
+    use step_io::ir::{
+        NextAssemblyUsageOccurrence, ProductDefinition, ProductDefinitionContextId,
+        ProductDefinitionFormation, ProductDefinitionFormationData,
+    };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.shape_rep.unit_contexts.push(ctx);
@@ -1205,15 +1208,31 @@ fn nauo_arena_is_canonical_with_instance_view() {
     // PRODUCT_DEFINITION arena endpoints (the NAUO's relating/related are PD
     // refs). The writer emits the NAUO's parent/child from `product_def_ids`,
     // so these are the canonical record, not the writer's working refs.
-    let make_pd = |id: &str| ProductDefinition {
-        id: id.into(),
-        description: String::new(),
-        formation: None,
-        context: None,
-        documentation_ids: vec![],
+    // `formation` / `context` are schema-required (non-Option) but inert here:
+    // the writer emits the PD chain from the Product view, not these fields. The
+    // formation arena is only read via `Product.formation` (None here) so pushing
+    // entries is inert; the context arena IS writer-iterated, so leave it empty
+    // and reference an id the writer never dereferences.
+    let mut push_pd = |id: &str, of_product| {
+        let formation =
+            tree.product_definition_formations
+                .push(ProductDefinitionFormation::Itself(
+                    ProductDefinitionFormationData {
+                        id: String::new(),
+                        description: String::new(),
+                        of_product,
+                    },
+                ));
+        tree.product_definitions.push(ProductDefinition {
+            id: id.into(),
+            description: String::new(),
+            formation,
+            context: ProductDefinitionContextId(0),
+            documentation_ids: vec![],
+        })
     };
-    let root_def = tree.product_definitions.push(make_pd("design"));
-    let leaf_def = tree.product_definitions.push(make_pd("design"));
+    let root_def = push_pd("design", root_pid);
+    let leaf_def = push_pd("design", leaf_pid);
     // Canonical NAUO arena entry with a non-empty description + reference
     // designator (the fields the legacy path dropped).
     let acu_id = tree
@@ -1276,12 +1295,12 @@ fn nauo_arena_is_canonical_with_instance_view() {
 
     // The NAUO endpoints are PRODUCT_DEFINITION refs — `related`'s PD (indexing
     // validates it resolves) points at the same child product as the Instance.
-    let related_product = r_asm.product_definitions[acu.related]
-        .formation
-        .map(|fid| r_asm.product_definition_formations[fid].data().of_product);
+    let related_fid = r_asm.product_definitions[acu.related].formation;
+    let related_product = r_asm.product_definition_formations[related_fid]
+        .data()
+        .of_product;
     assert_eq!(
-        related_product,
-        Some(inst.child),
+        related_product, inst.child,
         "NAUO.related PD's product matches the Instance child"
     );
 }
@@ -1301,7 +1320,10 @@ fn nauo_owned_pds_property_round_trips() {
         CharacterizedDefinition, ProductDefinitionShape, Property, PropertyDefinition,
         PropertyDefinitionData, PropertyPool,
     };
-    use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
+    use step_io::ir::{
+        NextAssemblyUsageOccurrence, ProductDefinition, ProductDefinitionContextId,
+        ProductDefinitionFormation, ProductDefinitionFormationData,
+    };
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
@@ -1337,15 +1359,29 @@ fn nauo_owned_pds_property_round_trips() {
         })),
     ));
     let root_pid = tree.products.push(make_product("Root", None));
-    let make_pd = |id: &str| ProductDefinition {
-        id: id.into(),
-        description: String::new(),
-        formation: None,
-        context: None,
-        documentation_ids: vec![],
+    // `formation` / `context` are schema-required (non-Option) but inert here —
+    // the writer emits the PD chain from the Product view, not these fields (see
+    // the nauo arena round-trip test for the rationale).
+    let mut push_pd = |id: &str, of_product| {
+        let formation =
+            tree.product_definition_formations
+                .push(ProductDefinitionFormation::Itself(
+                    ProductDefinitionFormationData {
+                        id: String::new(),
+                        description: String::new(),
+                        of_product,
+                    },
+                ));
+        tree.product_definitions.push(ProductDefinition {
+            id: id.into(),
+            description: String::new(),
+            formation,
+            context: ProductDefinitionContextId(0),
+            documentation_ids: vec![],
+        })
     };
-    let root_def = tree.product_definitions.push(make_pd("design"));
-    let leaf_def = tree.product_definitions.push(make_pd("design"));
+    let root_def = push_pd("design", root_pid);
+    let leaf_def = push_pd("design", leaf_pid);
     let acu_id = tree
         .assembly_component_usages
         .push(NextAssemblyUsageOccurrence {

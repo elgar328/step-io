@@ -2156,10 +2156,19 @@ fn product_definition_id_description_materialised_in_arena() {
     let pd = assembly.product_definitions.iter().next().unwrap();
     assert_eq!(pd.id, "MyPart");
     assert_eq!(pd.description, "rev A");
-    assert!(pd.formation.is_some(), "formation resolved into the arena");
-    assert!(
-        pd.context.is_some(),
-        "context resolved via the resolve_product_contexts post-pass"
+    // formation / context are non-optional; verify they resolve to the right
+    // canonical arena entries (formation #5 = '1' on product P, context #3).
+    let formation = &assembly.product_definition_formations[pd.formation];
+    assert_eq!(
+        formation.data().id,
+        "1",
+        "formation resolved into the arena"
+    );
+    let context = &assembly.product_definition_contexts[pd.context];
+    assert_eq!(
+        context.data().name,
+        "part definition",
+        "context resolved inline at lower time"
     );
     let product = assembly.products.iter().next().unwrap();
     assert!(

@@ -77,14 +77,17 @@ pub struct AssemblyTree {
 /// definition. The `id` / `description` are preserved verbatim (the writer's
 /// legacy synthesis hardcoded `'design'` / `''`); `documentation_ids` is empty
 /// for a plain `PRODUCT_DEFINITION` and non-empty for the
-/// `_WITH_ASSOCIATED_DOCUMENTS` subtype. `formation` / `context` mirror the
-/// `Product` fields the writer currently emits from.
+/// `_WITH_ASSOCIATED_DOCUMENTS` subtype. `formation` / `context` are both
+/// schema-required (`product_definition.formation` / `.frame_of_reference`), so
+/// they are stored non-optional — the reader drops the PD if either ref fails to
+/// resolve. They duplicate the denormalized `Product` view fields the writer
+/// currently emits from.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinition {
     pub id: String,
     pub description: String,
-    pub formation: Option<ProductDefinitionFormationId>,
-    pub context: Option<ProductDefinitionContextId>,
+    pub formation: ProductDefinitionFormationId,
+    pub context: ProductDefinitionContextId,
     pub documentation_ids: Vec<DocumentId>,
 }
 
