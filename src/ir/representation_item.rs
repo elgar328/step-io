@@ -134,7 +134,9 @@ pub struct MeasureRepresentationItem {
     pub form: MeasureForm,
     pub name: String,
     pub value: MeasureValue,
-    pub unit_ref: Option<crate::ir::property::PropertyMeasureUnit>,
+    /// Schema-required (`measure_with_unit.unit_component`); the reader drops the
+    /// MRI if the unit ref is dangling.
+    pub unit_ref: crate::ir::property::PropertyMeasureUnit,
     pub qualifiers: Vec<QualifierRef>,
     pub measure_supertype: Option<String>,
 }

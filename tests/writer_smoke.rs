@@ -7693,7 +7693,7 @@ fn measure_representation_item_round_trip() {
                     type_name: "POSITIVE_LENGTH_MEASURE".into(),
                     value: 1.2,
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+                unit_ref: PropertyMeasureUnit::Named(length_unit),
                 qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
                 measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
             },
@@ -7725,7 +7725,7 @@ fn measure_representation_item_round_trip() {
         Some("LENGTH_MEASURE_WITH_UNIT")
     );
     assert!(
-        mri.unit_ref.is_some(),
+        matches!(mri.unit_ref, PropertyMeasureUnit::Named(_)),
         "explicit unit ref should round-trip"
     );
 }
@@ -7765,7 +7765,7 @@ fn tolerance_magnitude_references_arena_measure() {
                         type_name: "POSITIVE_LENGTH_MEASURE".into(),
                         value: 0.1,
                     },
-                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    unit_ref: PropertyMeasureUnit::Named(length),
                     qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
                     measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
@@ -7853,7 +7853,7 @@ fn property_item_references_arena_measure() {
                         type_name: "POSITIVE_LENGTH_MEASURE".into(),
                         value: 0.1,
                     },
-                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    unit_ref: PropertyMeasureUnit::Named(length),
                     qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
                     measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
@@ -7933,7 +7933,7 @@ fn simple_measure_representation_item_round_trips_via_arena() {
                     type_name: "NUMERIC_MEASURE".into(),
                     value: 3.5,
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                unit_ref: PropertyMeasureUnit::Named(length),
                 qualifiers: Vec::new(),
                 measure_supertype: None,
             },
@@ -9049,7 +9049,7 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
                         type_name: "LENGTH_MEASURE".into(),
                         value: 0.25,
                     },
-                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    unit_ref: PropertyMeasureUnit::Named(length),
                     qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
                     measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
@@ -10276,7 +10276,7 @@ fn srwp_measure_item_round_trip() {
                         type_name: "LENGTH_MEASURE".into(),
                         value: 1.25,
                     },
-                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    unit_ref: PropertyMeasureUnit::Named(length),
                     qualifiers: Vec::new(),
                     measure_supertype: None,
                 },

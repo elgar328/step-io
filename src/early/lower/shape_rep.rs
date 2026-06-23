@@ -842,6 +842,20 @@ pub(crate) fn lower_value_representation_item(
     ctx.id_cache.insert(entity_id, id);
 }
 
+/// Drop an MRI whose schema-required `unit_component` is a dangling unit ref.
+/// Recorded directly via the funnel (not through `record_drop_or_warn`): the
+/// complex MRI is a `ReadKind::Complex` handler, which the dispatcher's
+/// Simple-gated dangling classification does not cover, so both lower fns route
+/// here for a uniform `DanglingReferenceDrop` (LOSS-exempt) classification.
+fn drop_measure_representation_item_dangling_unit(ctx: &mut ReaderContext, entity_id: u64) {
+    ctx.ns_record(
+        crate::reader::NsCase::DanglingReferenceDrop,
+        "MEASURE_REPRESENTATION_ITEM".to_string(),
+        "dropped (dangling unit reference)",
+    );
+    ctx.nonstandard_dropped_refs.insert(entity_id);
+}
+
 /// Lower one simple `MEASURE_REPRESENTATION_ITEM` into the `representation_item`
 /// arena. `value_component` (typed-only `measure_value` SELECT) bridges to the L2
 /// `MeasureValue` (type-name verbatim; the schema member type — all real/text,
@@ -853,7 +867,10 @@ pub(crate) fn lower_measure_representation_item(
     early: &EarlyMeasureRepresentationItem,
 ) {
     let value = measure_value_to_l2(early.value_component.clone());
-    let unit_ref = PropertyMeasureUnit::resolve_select(ctx, early.unit_component);
+    let Some(unit_ref) = PropertyMeasureUnit::resolve_select(ctx, early.unit_component) else {
+        drop_measure_representation_item_dangling_unit(ctx, entity_id);
+        return;
+    };
     let id = ctx
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
@@ -911,7 +928,10 @@ pub(crate) fn lower_measure_representation_item_complex(
         ),
     };
     let value = measure_value_to_l2(value_component);
-    let unit_ref = PropertyMeasureUnit::resolve_select(ctx, unit_component);
+    let Some(unit_ref) = PropertyMeasureUnit::resolve_select(ctx, unit_component) else {
+        drop_measure_representation_item_dangling_unit(ctx, entity_id);
+        return;
+    };
     let qualifiers = qualifier_refs
         .into_iter()
         .filter_map(|r| {

@@ -611,8 +611,7 @@ pub(crate) fn lift_value_representation_item(
 }
 
 /// Lift one simple `MEASURE_REPRESENTATION_ITEM`. `unit_component` = the resolved
-/// unit step id (`resolve_explicit_unit_ref`, `unwrap_or(0)` mirrors the legacy
-/// writer); `value_component` bridges back to the synth `measure_value`.
+/// unit step id; `value_component` bridges back to the synth `measure_value`.
 pub(crate) fn lift_measure_representation_item(
     buf: &WriteBuffer,
     mri: &crate::ir::representation_item::MeasureRepresentationItem,
@@ -620,7 +619,7 @@ pub(crate) fn lift_measure_representation_item(
     EarlyMeasureRepresentationItem {
         name: mri.name.clone(),
         value_component: measure_value_to_early(&mri.value),
-        unit_component: buf.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0),
+        unit_component: buf.resolve_explicit_unit_ref(mri.unit_ref),
     }
 }
 
@@ -634,7 +633,7 @@ pub(crate) fn lift_measure_representation_item_complex(
 ) -> EarlyMeasureRepresentationItemComplex {
     use crate::ir::representation_item::QualifierRef;
     let value_component = measure_value_to_early(&mri.value);
-    let unit_component = buf.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0);
+    let unit_component = buf.resolve_explicit_unit_ref(mri.unit_ref);
     let name = mri.name.clone();
     let qualifiers: Vec<u64> = mri
         .qualifiers
