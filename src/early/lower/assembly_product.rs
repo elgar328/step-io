@@ -61,7 +61,6 @@ pub(crate) fn lower_product(ctx: &mut ReaderContext, entity_id: u64, early: Earl
         instances: Vec::new(),
         shape_ref_frame: Placement3dId(0),
         outer_sr_frame: None,
-        category: None,
         formation_with_source: false,
         geometry_context: None,
         product_context: None,

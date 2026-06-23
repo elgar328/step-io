@@ -253,7 +253,6 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
             op.description, rp.description,
             "{name}: product[{pidx}] description"
         );
-        assert_eq!(op.category, rp.category, "{name}: product[{pidx}] category");
         assert_eq!(
             op.formation_with_source, rp.formation_with_source,
             "{name}: product[{pidx}] formation_with_source"

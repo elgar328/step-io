@@ -20,12 +20,12 @@ pub mod visualization;
 pub use arena::Arena;
 pub use assembly::{
     AssemblyTree, GeometryLeaf, Instance, MakeFromUsageOption, NextAssemblyUsageOccurrence,
-    PlainProductDefinitionRelationship, Product, ProductCategoryChain, ProductCategoryRoot,
-    ProductContext, ProductContextData, ProductDefinition, ProductDefinitionContext,
-    ProductDefinitionContextAssociation, ProductDefinitionContextData,
-    ProductDefinitionContextRole, ProductDefinitionFormation, ProductDefinitionFormationData,
-    ProductDefinitionFormationWithSpecifiedSource, ProductDefinitionRelationship, SolidContent,
-    SurfaceBodyContent, Transform3d, WireframeContent, WireframeReprKind,
+    PlainProductDefinitionRelationship, Product, ProductContext, ProductContextData,
+    ProductDefinition, ProductDefinitionContext, ProductDefinitionContextAssociation,
+    ProductDefinitionContextData, ProductDefinitionContextRole, ProductDefinitionFormation,
+    ProductDefinitionFormationData, ProductDefinitionFormationWithSpecifiedSource,
+    ProductDefinitionRelationship, SolidContent, SurfaceBodyContent, Transform3d, WireframeContent,
+    WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
 pub use geometry::{

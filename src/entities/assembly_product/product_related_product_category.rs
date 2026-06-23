@@ -1,10 +1,9 @@
 //! `PRODUCT_RELATED_PRODUCT_CATEGORY` handler sub-pass a.
 //!
 //! PRPC carries the product side of the category chain: a `kind` label, an
-//! optional description, and the list of products it applies to. Reader
-//! attaches a half-filled `ProductCategoryChain` (without `root`) to each
-//! referenced product immediately so the optional supertype side can fill
-//! in `root` later, even when no PCR exists.
+//! optional description, and the list of products it applies to. Reader lowers
+//! it into the `product_categories` arena (the canonical store); the writer
+//! emits the chain from that arena (`emit_product_categories_arena`).
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
