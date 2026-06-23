@@ -986,7 +986,6 @@ fn simple_assembly_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1011,7 +1010,6 @@ fn simple_assembly_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1073,7 +1071,6 @@ fn shared_child_assembly_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1109,7 +1106,6 @@ fn shared_child_assembly_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1172,7 +1168,6 @@ fn nauo_arena_is_canonical_with_instance_view() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1189,7 +1184,6 @@ fn nauo_arena_is_canonical_with_instance_view() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1334,7 +1328,6 @@ fn nauo_owned_pds_property_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     };
@@ -1515,7 +1508,6 @@ fn instance_placement_representation_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1540,7 +1532,6 @@ fn instance_placement_representation_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1600,7 +1591,6 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1636,7 +1626,6 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1731,7 +1720,6 @@ fn multi_body_solid_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1792,7 +1780,6 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1809,7 +1796,6 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1865,7 +1851,6 @@ fn formation_id_round_trips_faithfully() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1946,7 +1931,6 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -1963,7 +1947,6 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -2093,7 +2076,6 @@ fn general_property_and_association_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -2581,7 +2563,6 @@ fn product_with_additional_shape_representation_round_trips() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -2664,7 +2645,6 @@ fn multi_root_independent_products_round_trip() {
             product_context: None,
             representation_id: None,
             outer_representation_id: None,
-            associated_documents: Vec::new(),
             formation: None,
             pdef: None,
         });
@@ -2818,7 +2798,6 @@ fn shape_aspect_subtypes_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -2910,7 +2889,6 @@ fn shape_aspect_relationship_fixture() -> (
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -4547,7 +4525,6 @@ fn gt_relationship_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -4636,7 +4613,6 @@ fn datum_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -4693,7 +4669,6 @@ fn datum_feature_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -4785,7 +4760,6 @@ fn dimensional_size_with_datum_feature_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -4878,7 +4852,6 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -5004,7 +4977,6 @@ fn general_datum_reference_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -5079,7 +5051,6 @@ fn id_attribute_general_datum_reference_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -5160,7 +5131,6 @@ fn datum_reference_compartment_common_datum_list_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -5258,7 +5228,6 @@ fn tolerance_zone_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -5357,7 +5326,6 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -5996,7 +5964,6 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -7999,7 +7966,6 @@ fn projected_zone_definition_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -8111,7 +8077,6 @@ fn datum_system_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -8190,7 +8155,6 @@ fn datum_target_cluster_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -8306,7 +8270,6 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -8410,7 +8373,6 @@ fn complex_datum_ref_tolerance_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -8515,7 +8477,6 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -8777,7 +8738,6 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });
@@ -9088,7 +9048,6 @@ fn plus_minus_tolerance_round_trip() {
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     });

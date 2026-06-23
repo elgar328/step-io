@@ -66,7 +66,6 @@ pub(crate) fn lower_product(ctx: &mut ReaderContext, entity_id: u64, early: Earl
         product_context: None,
         representation_id: None,
         outer_representation_id: None,
-        associated_documents: Vec::new(),
         formation: None,
         pdef: None,
     };
@@ -192,16 +191,10 @@ pub(crate) fn lower_product_definition(
         description: description.unwrap_or_default(),
         formation,
         context,
-        documentation_ids: docs.clone(),
+        documentation_ids: docs,
     });
     ctx.id_cache.insert(entity_id, pd_id);
     ctx.assembly_products[pid].pdef = Some(pd_id);
-    // Product view keeps `associated_documents` (the writer's plain-vs-WAD
-    // discriminator) only when at least one doc resolved — an empty list
-    // keeps the plain PRODUCT_DEFINITION output, matching the legacy reader.
-    if !docs.is_empty() {
-        ctx.assembly_products[pid].associated_documents = docs;
-    }
     // Typed one-probe correspondence: pdef file id → ProductId (what the
     // 2-hop `pdef_to_product` chain ultimately resolved to).
     let early_id: EarlyProductDefinitionId = ctx.early.record_lowered(pid);

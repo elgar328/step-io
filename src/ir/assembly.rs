@@ -64,12 +64,11 @@ pub struct AssemblyTree {
     /// synthesises the NAUO from `Instance` instead — see `Instance::acu`).
     pub assembly_component_usages: Arena<NextAssemblyUsageOccurrence>,
     /// `product_definition` arena — the blueprint-canonical flat store of
-    /// `PRODUCT_DEFINITION` entities. The `Product` tree node keeps denormalized
-    /// PD-view fields (`formation` / `pdef_context` / `associated_documents`) for
-    /// the ergonomic API and the kernel synthesis fallback; each reader-built
-    /// `Product` carries a `pdef` index back into this arena, the canonical
-    /// record. Empty for kernel-built IR (the writer synthesises the PD from
-    /// `Product` instead — see `Product::pdef`).
+    /// `PRODUCT_DEFINITION` entities (`id` / `description` / `formation` /
+    /// `context` / `documentation_ids`). Each reader-built `Product` carries a
+    /// `pdef` index back into this arena, the canonical record the writer emits
+    /// from. Empty for kernel-built IR (the writer synthesises a bare PD — see
+    /// `Product::pdef`).
     pub product_definitions: Arena<ProductDefinition>,
 }
 
@@ -261,16 +260,10 @@ pub struct Product {
     /// pattern, the arena index of the outer plain `SHAPE_REPRESENTATION`
     /// wrapper. `None` for the direct form. Pairs with `outer_sr_frame`.
     pub outer_representation_id: Option<RepresentationId>,
-    /// `DOCUMENT` refs from the source `PRODUCT_DEFINITION_WITH_ASSOCIATED_
-    /// DOCUMENTS.documentation_ids`. Non-empty makes the writer re-emit that
-    /// PD subtype instead of plain `PRODUCT_DEFINITION`. Empty for plain PD and
-    /// for kernel-built IR (the common case).
-    pub associated_documents: Vec<DocumentId>,
     /// Index into [`AssemblyTree::product_definitions`] — the canonical
-    /// `PRODUCT_DEFINITION` arena entry this product's PD view mirrors. `Some`
-    /// for reader-built IR (the writer emits the PD's id/description from the
-    /// arena); `None` for kernel/hand-built IR (the writer synthesises the PD
-    /// from this product's `formation` / `pdef_context` / `associated_documents`).
+    /// `PRODUCT_DEFINITION` arena entry. `Some` for reader-built IR (the writer
+    /// emits the PD's `id` / `description` / `documentation_ids` / `context`);
+    /// `None` for kernel/hand-built IR (the writer synthesises a bare PD).
     pub pdef: Option<ProductDefinitionId>,
 }
 

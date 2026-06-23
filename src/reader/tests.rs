@@ -2030,12 +2030,13 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
         product.geometry_context.is_some(),
         "PDWAD product must get geometry_context bound via the SDR chain"
     );
-    // The subtype's documentation_ids must be captured onto the product so the
-    // writer can re-emit the subtype rather than downgrading to plain PD.
+    // The subtype's documentation_ids must be captured on the canonical PD so
+    // the writer can re-emit the subtype rather than downgrading to plain PD.
+    let pd = &assembly.product_definitions[product.pdef.expect("reader-built product has a PD")];
     assert_eq!(
-        product.associated_documents.len(),
+        pd.documentation_ids.len(),
         1,
-        "documentation_ids must be recorded on the product"
+        "documentation_ids must be recorded on the PD"
     );
     // Write-back re-emits the subtype (not a downgraded plain PRODUCT_DEFINITION)
     // and a full round-trip preserves the documentation_ids.
@@ -2048,17 +2049,16 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
         "writer must re-emit the subtype, got:\n{out}"
     );
     let re = convert_source(&out);
-    let re_product = re
-        .model
-        .assembly
-        .as_ref()
-        .expect("round-tripped assembly")
+    let re_assembly = re.model.assembly.as_ref().expect("round-tripped assembly");
+    let re_product = re_assembly
         .products
         .iter()
         .next()
         .expect("round-tripped product");
+    let re_pd =
+        &re_assembly.product_definitions[re_product.pdef.expect("round-tripped product has a PD")];
     assert_eq!(
-        re_product.associated_documents.len(),
+        re_pd.documentation_ids.len(),
         1,
         "documentation_ids survive a full round-trip"
     );

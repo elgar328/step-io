@@ -247,11 +247,20 @@ impl WriteBuffer<'_> {
             // Resolve documentation_ids (DocumentId -> DOCUMENT step id, filled
             // by the document prepass that runs before the product chain) so
             // the WITH_ASSOCIATED_DOCUMENTS subtype round-trips when present.
-            let doc_refs: Vec<u64> = product
-                .associated_documents
-                .iter()
-                .map(|d| self.step_id(d))
-                .collect();
+            // Sourced from the canonical PD arena (clone the ids to release the
+            // borrow before `self.step_id`); a product with no PD carries none.
+            let doc_ids: Vec<crate::ir::DocumentId> = match product.pdef {
+                Some(pdid) => self
+                    .model
+                    .assembly
+                    .as_ref()
+                    .expect("assembly present when Product.pdef is set")
+                    .product_definitions[pdid]
+                    .documentation_ids
+                    .clone(),
+                None => Vec::new(),
+            };
+            let doc_refs: Vec<u64> = doc_ids.iter().map(|d| self.step_id(d)).collect();
             // Reader-built products carry the canonical PD id/description in the
             // arena (the legacy synthesis hardcoded "design"/""). Kernel-built
             // products (`pdef = None`) keep the synthesized values.
