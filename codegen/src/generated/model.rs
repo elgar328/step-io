@@ -661,6 +661,32 @@ impl SimpleDatumReferenceModifier {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrimmingPreference {
+    Cartesian,
+    Parameter,
+    Unspecified,
+}
+impl TrimmingPreference {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "CARTESIAN" => Self::Cartesian,
+            "PARAMETER" => Self::Parameter,
+            "UNSPECIFIED" => Self::Unspecified,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Cartesian => ".CARTESIAN.",
+            Self::Parameter => ".PARAMETER.",
+            Self::Unspecified => ".UNSPECIFIED.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AddressId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AdvancedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AngularityToleranceId(pub usize);
@@ -839,6 +865,24 @@ pub struct OffsetSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OpenShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationRoleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationTypeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationTypeRoleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationalAddressId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationalProjectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationalProjectRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrganizationalProjectRoleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OrientedClosedShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OrientedEdgeId(pub usize);
@@ -852,6 +896,16 @@ pub struct PathId(pub usize);
 pub struct PcurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PerpendicularityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PersonId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PersonAndOrganizationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PersonAndOrganizationAddressId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PersonAndOrganizationRoleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PersonalAddressId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlacedDatumTargetFeatureId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -965,6 +1019,8 @@ pub struct ToroidalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TotalRunoutToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TrimmedCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UncertaintyMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UnequallyDisposedGeometricToleranceId(pub usize);
@@ -985,6 +1041,7 @@ pub struct ComplexUnitId(pub usize);
 
 #[derive(Debug, Clone, Copy)]
 pub enum AnyId {
+    Address(AddressId),
     AdvancedFace(AdvancedFaceId),
     AngularityTolerance(AngularityToleranceId),
     ApplicationContext(ApplicationContextId),
@@ -1074,6 +1131,15 @@ pub enum AnyId {
     NamedUnit(NamedUnitId),
     OffsetSurface(OffsetSurfaceId),
     OpenShell(OpenShellId),
+    Organization(OrganizationId),
+    OrganizationRelationship(OrganizationRelationshipId),
+    OrganizationRole(OrganizationRoleId),
+    OrganizationType(OrganizationTypeId),
+    OrganizationTypeRole(OrganizationTypeRoleId),
+    OrganizationalAddress(OrganizationalAddressId),
+    OrganizationalProject(OrganizationalProjectId),
+    OrganizationalProjectRelationship(OrganizationalProjectRelationshipId),
+    OrganizationalProjectRole(OrganizationalProjectRoleId),
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     ParallelismTolerance(ParallelismToleranceId),
@@ -1081,6 +1147,11 @@ pub enum AnyId {
     Path(PathId),
     Pcurve(PcurveId),
     PerpendicularityTolerance(PerpendicularityToleranceId),
+    Person(PersonId),
+    PersonAndOrganization(PersonAndOrganizationId),
+    PersonAndOrganizationAddress(PersonAndOrganizationAddressId),
+    PersonAndOrganizationRole(PersonAndOrganizationRoleId),
+    PersonalAddress(PersonalAddressId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     Placement(PlacementId),
     Plane(PlaneId),
@@ -1137,6 +1208,7 @@ pub enum AnyId {
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
+    TrimmedCurve(TrimmedCurveId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
     UniformCurve(UniformCurveId),
@@ -1148,7 +1220,7 @@ pub enum AnyId {
     ComplexUnit(ComplexUnitId),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ApplicationContextRef {
     ApplicationContext(ApplicationContextId),
 }
@@ -1161,7 +1233,7 @@ impl ApplicationContextRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Axis1PlacementRef {
     Axis1Placement(Axis1PlacementId),
 }
@@ -1174,7 +1246,7 @@ impl Axis1PlacementRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Axis2Placement3dRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
@@ -1187,7 +1259,7 @@ impl Axis2Placement3dRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Axis2PlacementRef {
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -1202,7 +1274,7 @@ impl Axis2PlacementRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CartesianPointRef {
     CartesianPoint(CartesianPointId),
 }
@@ -1215,7 +1287,7 @@ impl CartesianPointRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedDefinitionRef {
     AngularityTolerance(AngularityToleranceId),
     CharacterizedObject(CharacterizedObjectId),
@@ -1334,7 +1406,7 @@ impl CharacterizedDefinitionRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ClosedShellRef {
     ClosedShell(ClosedShellId),
     OrientedClosedShell(OrientedClosedShellId),
@@ -1351,7 +1423,7 @@ impl ClosedShellRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CurveRef {
     BSplineCurve(BSplineCurveId),
     BSplineCurveWithKnots(BSplineCurveWithKnotsId),
@@ -1370,6 +1442,7 @@ pub enum CurveRef {
     RationalBSplineCurve(RationalBSplineCurveId),
     SeamCurve(SeamCurveId),
     SurfaceCurve(SurfaceCurveId),
+    TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
     Complex(ComplexUnitId),
 }
@@ -1393,6 +1466,7 @@ impl CurveRef {
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
             AnyId::UniformCurve(i) => Self::UniformCurve(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("CurveRef ref -> {other:?}"),
@@ -1400,7 +1474,7 @@ impl CurveRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatumOrCommonDatumRef {
     CommonDatum(CommonDatumId),
     Datum(DatumId),
@@ -1420,7 +1494,7 @@ impl DatumOrCommonDatumRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatumRef {
     CommonDatum(CommonDatumId),
     Datum(DatumId),
@@ -1437,7 +1511,7 @@ impl DatumRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatumReferenceCompartmentRef {
     DatumReferenceCompartment(DatumReferenceCompartmentId),
 }
@@ -1450,7 +1524,7 @@ impl DatumReferenceCompartmentRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatumReferenceElementRef {
     DatumReferenceElement(DatumReferenceElementId),
 }
@@ -1463,7 +1537,7 @@ impl DatumReferenceElementRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatumReferenceModifierRef {
     DatumReferenceModifierWithValue(DatumReferenceModifierWithValueId),
     SimpleDatumReferenceModifier(SimpleDatumReferenceModifier),
@@ -1477,7 +1551,7 @@ impl DatumReferenceModifierRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatumSystemOrReferenceRef {
     DatumReference(DatumReferenceId),
     DatumSystem(DatumSystemId),
@@ -1494,7 +1568,7 @@ impl DatumSystemOrReferenceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatumSystemRef {
     DatumSystem(DatumSystemId),
     Complex(ComplexUnitId),
@@ -1509,7 +1583,7 @@ impl DatumSystemRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionalRepresentationRef {
     DefinitionalRepresentation(DefinitionalRepresentationId),
     Complex(ComplexUnitId),
@@ -1524,7 +1598,7 @@ impl DefinitionalRepresentationRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DerivedUnitElementRef {
     DerivedUnitElement(DerivedUnitElementId),
 }
@@ -1537,7 +1611,7 @@ impl DerivedUnitElementRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DimensionalCharacteristicRef {
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
@@ -1558,7 +1632,7 @@ impl DimensionalCharacteristicRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DimensionalExponentsRef {
     DimensionalExponents(DimensionalExponentsId),
 }
@@ -1571,7 +1645,7 @@ impl DimensionalExponentsRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DirectionRef {
     Direction(DirectionId),
     Complex(ComplexUnitId),
@@ -1586,7 +1660,7 @@ impl DirectionRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EdgeRef {
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -1605,7 +1679,7 @@ impl EdgeRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ExternalSourceRef {
     ExternalSource(ExternalSourceId),
     Complex(ComplexUnitId),
@@ -1620,7 +1694,7 @@ impl ExternalSourceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FaceBoundRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
@@ -1637,7 +1711,7 @@ impl FaceBoundRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FaceRef {
     AdvancedFace(AdvancedFaceId),
     Face(FaceId),
@@ -1656,7 +1730,7 @@ impl FaceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceTargetRef {
     CommonDatum(CommonDatumId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -1705,7 +1779,7 @@ impl GeometricToleranceTargetRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ItemDefinedTransformationRef {
     ItemDefinedTransformation(ItemDefinedTransformationId),
     Complex(ComplexUnitId),
@@ -1720,7 +1794,7 @@ impl ItemDefinedTransformationRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LengthMeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     Complex(ComplexUnitId),
@@ -1735,7 +1809,7 @@ impl LengthMeasureWithUnitRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
@@ -1752,7 +1826,7 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LoopRef {
     EdgeLoop(EdgeLoopId),
     Loop(LoopId),
@@ -1773,7 +1847,7 @@ impl LoopRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     MeasureWithUnit(MeasureWithUnitId),
@@ -1794,7 +1868,7 @@ impl MeasureWithUnitRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum NamedUnitRef {
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
@@ -1825,7 +1899,33 @@ impl NamedUnitRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum OrganizationRef {
+    Organization(OrganizationId),
+}
+impl OrganizationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Organization(i) => Self::Organization(i),
+            other => panic!("OrganizationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum OrganizationalProjectRef {
+    OrganizationalProject(OrganizationalProjectId),
+}
+impl OrganizationalProjectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            other => panic!("OrganizationalProjectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum OrientedClosedShellRef {
     OrientedClosedShell(OrientedClosedShellId),
     Complex(ComplexUnitId),
@@ -1840,7 +1940,7 @@ impl OrientedClosedShellRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OrientedEdgeRef {
     OrientedEdge(OrientedEdgeId),
     Complex(ComplexUnitId),
@@ -1855,7 +1955,7 @@ impl OrientedEdgeRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PcurveOrSurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
@@ -1908,7 +2008,20 @@ impl PcurveOrSurfaceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum PersonRef {
+    Person(PersonId),
+}
+impl PersonRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Person(i) => Self::Person(i),
+            other => panic!("PersonRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum PointRef {
     CartesianPoint(CartesianPointId),
     Point(PointId),
@@ -1925,7 +2038,7 @@ impl PointRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductContextRef {
     ProductContext(ProductContextId),
     Complex(ComplexUnitId),
@@ -1940,7 +2053,7 @@ impl ProductContextRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionContextRef {
     ProductDefinitionContext(ProductDefinitionContextId),
     Complex(ComplexUnitId),
@@ -1955,7 +2068,7 @@ impl ProductDefinitionContextRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionFormationRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     Complex(ComplexUnitId),
@@ -1970,7 +2083,7 @@ impl ProductDefinitionFormationRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionOrReferenceRef {
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     ProductDefinition(ProductDefinitionId),
@@ -1991,7 +2104,7 @@ impl ProductDefinitionOrReferenceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionRelationshipRef {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     Complex(ComplexUnitId),
@@ -2006,7 +2119,7 @@ impl ProductDefinitionRelationshipRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionShapeRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
     Complex(ComplexUnitId),
@@ -2021,7 +2134,7 @@ impl ProductDefinitionShapeRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductRef {
     Product(ProductId),
     Complex(ComplexUnitId),
@@ -2036,7 +2149,7 @@ impl ProductRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationContextRef {
     GeometricRepresentationContext(GeometricRepresentationContextId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
@@ -2055,7 +2168,7 @@ impl RepresentationContextRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationContextReferenceRef {
     RepresentationContextReference(RepresentationContextReferenceId),
 }
@@ -2068,7 +2181,7 @@ impl RepresentationContextReferenceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationItemRef {
     AdvancedFace(AdvancedFaceId),
     Axis1Placement(Axis1PlacementId),
@@ -2133,6 +2246,7 @@ pub enum RepresentationItemRef {
     SweptSurface(SweptSurfaceId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
     Vector(VectorId),
@@ -2207,6 +2321,7 @@ impl RepresentationItemRef {
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
             AnyId::UniformCurve(i) => Self::UniformCurve(i),
             AnyId::UniformSurface(i) => Self::UniformSurface(i),
             AnyId::Vector(i) => Self::Vector(i),
@@ -2219,7 +2334,7 @@ impl RepresentationItemRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationOrRepresentationReferenceRef {
     DefinitionalRepresentation(DefinitionalRepresentationId),
     Representation(RepresentationId),
@@ -2242,7 +2357,7 @@ impl RepresentationOrRepresentationReferenceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ShapeAspectRef {
     CommonDatum(CommonDatumId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -2281,7 +2396,7 @@ impl ShapeAspectRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ShapeDimensionRepresentationRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     Complex(ComplexUnitId),
@@ -2296,7 +2411,7 @@ impl ShapeDimensionRepresentationRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
@@ -2345,7 +2460,7 @@ impl SurfaceRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
 }
@@ -2358,7 +2473,7 @@ impl ToleranceZoneFormRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneRef {
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
@@ -2375,7 +2490,7 @@ impl ToleranceZoneRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneTargetRef {
     AngularityTolerance(AngularityToleranceId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
@@ -2458,7 +2573,7 @@ impl ToleranceZoneTargetRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TransformationRef {
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
@@ -2478,7 +2593,21 @@ impl TransformationRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum TrimmingSelectRef {
+    CartesianPoint(CartesianPointId),
+    ParameterValue(MeasureValue),
+}
+impl TrimmingSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            other => panic!("TrimmingSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum UnitRef {
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
@@ -2511,7 +2640,7 @@ impl UnitRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum VectorRef {
     Vector(VectorId),
     Complex(ComplexUnitId),
@@ -2526,7 +2655,7 @@ impl VectorRef {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum VertexRef {
     Vertex(VertexId),
     VertexPoint(VertexPointId),
@@ -2541,6 +2670,22 @@ impl VertexRef {
             other => panic!("VertexRef ref -> {other:?}"),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Address {
+    pub internal_location: Option<String>,
+    pub street_number: Option<String>,
+    pub street: Option<String>,
+    pub postal_box: Option<String>,
+    pub town: Option<String>,
+    pub region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country: Option<String>,
+    pub facsimile_number: Option<String>,
+    pub telephone_number: Option<String>,
+    pub electronic_mail_address: Option<String>,
+    pub telex_number: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3218,6 +3363,79 @@ pub struct OpenShell {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Organization {
+    pub id: Option<String>,
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_organization: OrganizationRef,
+    pub related_organization: OrganizationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationRole {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationType {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationTypeRole {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationalAddress {
+    pub internal_location: Option<String>,
+    pub street_number: Option<String>,
+    pub street: Option<String>,
+    pub postal_box: Option<String>,
+    pub town: Option<String>,
+    pub region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country: Option<String>,
+    pub facsimile_number: Option<String>,
+    pub telephone_number: Option<String>,
+    pub electronic_mail_address: Option<String>,
+    pub telex_number: Option<String>,
+    pub organizations: Vec<OrganizationRef>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationalProject {
+    pub name: String,
+    pub description: Option<String>,
+    pub responsible_organizations: Vec<OrganizationRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationalProjectRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_organizational_project: OrganizationalProjectRef,
+    pub related_organizational_project: OrganizationalProjectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrganizationalProjectRole {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct OrientedClosedShell {
     pub name: String,
     pub closed_shell_element: ClosedShellRef,
@@ -3266,6 +3484,65 @@ pub struct PerpendicularityTolerance {
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Person {
+    pub id: String,
+    pub last_name: Option<String>,
+    pub first_name: Option<String>,
+    pub middle_names: Option<Vec<String>>,
+    pub prefix_titles: Option<Vec<String>>,
+    pub suffix_titles: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PersonAndOrganization {
+    pub the_person: PersonRef,
+    pub the_organization: OrganizationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PersonAndOrganizationAddress {
+    pub internal_location: Option<String>,
+    pub street_number: Option<String>,
+    pub street: Option<String>,
+    pub postal_box: Option<String>,
+    pub town: Option<String>,
+    pub region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country: Option<String>,
+    pub facsimile_number: Option<String>,
+    pub telephone_number: Option<String>,
+    pub electronic_mail_address: Option<String>,
+    pub telex_number: Option<String>,
+    pub organizations: Vec<OrganizationRef>,
+    pub description: Option<String>,
+    pub people: Vec<PersonRef>,
+    pub description_1: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PersonAndOrganizationRole {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PersonalAddress {
+    pub internal_location: Option<String>,
+    pub street_number: Option<String>,
+    pub street: Option<String>,
+    pub postal_box: Option<String>,
+    pub town: Option<String>,
+    pub region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country: Option<String>,
+    pub facsimile_number: Option<String>,
+    pub telephone_number: Option<String>,
+    pub electronic_mail_address: Option<String>,
+    pub telex_number: Option<String>,
+    pub people: Vec<PersonRef>,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3682,6 +3959,16 @@ pub struct TotalRunoutTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TrimmedCurve {
+    pub name: String,
+    pub basis_curve: CurveRef,
+    pub trim_1: Vec<TrimmingSelectRef>,
+    pub trim_2: Vec<TrimmingSelectRef>,
+    pub sense_agreement: bool,
+    pub master_representation: TrimmingPreference,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct UncertaintyMeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
@@ -3746,6 +4033,20 @@ pub struct VertexPoint {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnitPart {
+    Address {
+        internal_location: Option<String>,
+        street_number: Option<String>,
+        street: Option<String>,
+        postal_box: Option<String>,
+        town: Option<String>,
+        region: Option<String>,
+        postal_code: Option<String>,
+        country: Option<String>,
+        facsimile_number: Option<String>,
+        telephone_number: Option<String>,
+        electronic_mail_address: Option<String>,
+        telex_number: Option<String>,
+    },
     AdvancedFace,
     ApplicationContextElement {
         name: String,
@@ -3923,6 +4224,10 @@ pub enum UnitPart {
         dimensions: Option<DimensionalExponentsRef>,
     },
     OpenShell,
+    OrganizationalAddress {
+        organizations: Vec<OrganizationRef>,
+        description: Option<String>,
+    },
     OrientedClosedShell {
         closed_shell_element: ClosedShellRef,
         orientation: bool,
@@ -3938,6 +4243,11 @@ pub enum UnitPart {
     Pcurve {
         basis_surface: SurfaceRef,
         reference_to_curve: DefinitionalRepresentationRef,
+    },
+    PersonAndOrganizationAddress,
+    PersonalAddress {
+        people: Vec<PersonRef>,
+        description: Option<String>,
     },
     PlacedDatumTargetFeature,
     Placement {
@@ -4102,6 +4412,7 @@ pub struct ComplexUnit {
 
 #[derive(Debug, Default)]
 pub struct Model {
+    pub addresss: Arena<Address>,
     pub advanced_faces: Arena<AdvancedFace>,
     pub angularity_tolerances: Arena<AngularityTolerance>,
     pub application_contexts: Arena<ApplicationContext>,
@@ -4191,6 +4502,15 @@ pub struct Model {
     pub named_units: Arena<NamedUnit>,
     pub offset_surfaces: Arena<OffsetSurface>,
     pub open_shells: Arena<OpenShell>,
+    pub organizations: Arena<Organization>,
+    pub organization_relationships: Arena<OrganizationRelationship>,
+    pub organization_roles: Arena<OrganizationRole>,
+    pub organization_types: Arena<OrganizationType>,
+    pub organization_type_roles: Arena<OrganizationTypeRole>,
+    pub organizational_addresss: Arena<OrganizationalAddress>,
+    pub organizational_projects: Arena<OrganizationalProject>,
+    pub organizational_project_relationships: Arena<OrganizationalProjectRelationship>,
+    pub organizational_project_roles: Arena<OrganizationalProjectRole>,
     pub oriented_closed_shells: Arena<OrientedClosedShell>,
     pub oriented_edges: Arena<OrientedEdge>,
     pub parallelism_tolerances: Arena<ParallelismTolerance>,
@@ -4198,6 +4518,11 @@ pub struct Model {
     pub paths: Arena<Path>,
     pub pcurves: Arena<Pcurve>,
     pub perpendicularity_tolerances: Arena<PerpendicularityTolerance>,
+    pub persons: Arena<Person>,
+    pub person_and_organizations: Arena<PersonAndOrganization>,
+    pub person_and_organization_addresss: Arena<PersonAndOrganizationAddress>,
+    pub person_and_organization_roles: Arena<PersonAndOrganizationRole>,
+    pub personal_addresss: Arena<PersonalAddress>,
     pub placed_datum_target_features: Arena<PlacedDatumTargetFeature>,
     pub placements: Arena<Placement>,
     pub planes: Arena<Plane>,
@@ -4256,6 +4581,7 @@ pub struct Model {
     pub topological_representation_items: Arena<TopologicalRepresentationItem>,
     pub toroidal_surfaces: Arena<ToroidalSurface>,
     pub total_runout_tolerances: Arena<TotalRunoutTolerance>,
+    pub trimmed_curves: Arena<TrimmedCurve>,
     pub uncertainty_measure_with_units: Arena<UncertaintyMeasureWithUnit>,
     pub unequally_disposed_geometric_tolerances: Arena<UnequallyDisposedGeometricTolerance>,
     pub uniform_curves: Arena<UniformCurve>,

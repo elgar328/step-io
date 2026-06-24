@@ -84,6 +84,7 @@ fn read_string_select(a: &Attribute) -> StringSelectValue {
 }
 
 pub const SIMPLE_NAMES: &[&str] = &[
+    "ADDRESS",
     "ADVANCED_FACE",
     "ANGULARITY_TOLERANCE",
     "APPLICATION_CONTEXT",
@@ -173,6 +174,15 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "NAMED_UNIT",
     "OFFSET_SURFACE",
     "OPEN_SHELL",
+    "ORGANIZATION",
+    "ORGANIZATION_RELATIONSHIP",
+    "ORGANIZATION_ROLE",
+    "ORGANIZATION_TYPE",
+    "ORGANIZATION_TYPE_ROLE",
+    "ORGANIZATIONAL_ADDRESS",
+    "ORGANIZATIONAL_PROJECT",
+    "ORGANIZATIONAL_PROJECT_RELATIONSHIP",
+    "ORGANIZATIONAL_PROJECT_ROLE",
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
     "PARALLELISM_TOLERANCE",
@@ -180,6 +190,11 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PATH",
     "PCURVE",
     "PERPENDICULARITY_TOLERANCE",
+    "PERSON",
+    "PERSON_AND_ORGANIZATION",
+    "PERSON_AND_ORGANIZATION_ADDRESS",
+    "PERSON_AND_ORGANIZATION_ROLE",
+    "PERSONAL_ADDRESS",
     "PLACED_DATUM_TARGET_FEATURE",
     "PLACEMENT",
     "PLANE",
@@ -236,6 +251,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "TOPOLOGICAL_REPRESENTATION_ITEM",
     "TOROIDAL_SURFACE",
     "TOTAL_RUNOUT_TOLERANCE",
+    "TRIMMED_CURVE",
     "UNCERTAINTY_MEASURE_WITH_UNIT",
     "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     "UNIFORM_CURVE",
@@ -246,6 +262,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "VERTEX_POINT",
 ];
 pub const COMPLEX_PART_NAMES: &[&str] = &[
+    "ADDRESS",
     "ADVANCED_FACE",
     "APPLICATION_CONTEXT_ELEMENT",
     "B_SPLINE_CURVE",
@@ -310,11 +327,14 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "OPEN_SHELL",
+    "ORGANIZATIONAL_ADDRESS",
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "PATH",
     "PCURVE",
+    "PERSON_AND_ORGANIZATION_ADDRESS",
+    "PERSONAL_ADDRESS",
     "PLACED_DATUM_TARGET_FEATURE",
     "PLACEMENT",
     "PLANE_ANGLE_MEASURE_WITH_UNIT",
@@ -492,6 +512,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
     let mut pending_offset_surfaces: Vec<(OffsetSurfaceId, u64)> = Vec::new();
     let mut pending_open_shells: Vec<(OpenShellId, u64)> = Vec::new();
+    let mut pending_organization_relationships: Vec<(OrganizationRelationshipId, u64)> = Vec::new();
+    let mut pending_organizational_addresss: Vec<(OrganizationalAddressId, u64)> = Vec::new();
+    let mut pending_organizational_projects: Vec<(OrganizationalProjectId, u64)> = Vec::new();
+    let mut pending_organizational_project_relationships: Vec<(
+        OrganizationalProjectRelationshipId,
+        u64,
+    )> = Vec::new();
     let mut pending_oriented_closed_shells: Vec<(OrientedClosedShellId, u64)> = Vec::new();
     let mut pending_oriented_edges: Vec<(OrientedEdgeId, u64)> = Vec::new();
     let mut pending_parallelism_tolerances: Vec<(ParallelismToleranceId, u64)> = Vec::new();
@@ -499,6 +526,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_pcurves: Vec<(PcurveId, u64)> = Vec::new();
     let mut pending_perpendicularity_tolerances: Vec<(PerpendicularityToleranceId, u64)> =
         Vec::new();
+    let mut pending_person_and_organizations: Vec<(PersonAndOrganizationId, u64)> = Vec::new();
+    let mut pending_person_and_organization_addresss: Vec<(PersonAndOrganizationAddressId, u64)> =
+        Vec::new();
+    let mut pending_personal_addresss: Vec<(PersonalAddressId, u64)> = Vec::new();
     let mut pending_placed_datum_target_features: Vec<(PlacedDatumTargetFeatureId, u64)> =
         Vec::new();
     let mut pending_placements: Vec<(PlacementId, u64)> = Vec::new();
@@ -562,6 +593,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_tolerance_zone_with_datums: Vec<(ToleranceZoneWithDatumId, u64)> = Vec::new();
     let mut pending_toroidal_surfaces: Vec<(ToroidalSurfaceId, u64)> = Vec::new();
     let mut pending_total_runout_tolerances: Vec<(TotalRunoutToleranceId, u64)> = Vec::new();
+    let mut pending_trimmed_curves: Vec<(TrimmedCurveId, u64)> = Vec::new();
     let mut pending_uncertainty_measure_with_units: Vec<(UncertaintyMeasureWithUnitId, u64)> =
         Vec::new();
     let mut pending_unequally_disposed_geometric_tolerances: Vec<(
@@ -576,6 +608,62 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();
     for (&id, ent) in map {
         match ent {
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ADDRESS" => {
+                let v = Address {
+                    internal_location: match &attributes[0] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[0])),
+                    },
+                    street_number: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    street: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    postal_box: match &attributes[3] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[3])),
+                    },
+                    town: match &attributes[4] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[4])),
+                    },
+                    region: match &attributes[5] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[5])),
+                    },
+                    postal_code: match &attributes[6] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[6])),
+                    },
+                    country: match &attributes[7] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[7])),
+                    },
+                    facsimile_number: match &attributes[8] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[8])),
+                    },
+                    telephone_number: match &attributes[9] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[9])),
+                    },
+                    electronic_mail_address: match &attributes[10] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[10])),
+                    },
+                    telex_number: match &attributes[11] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[11])),
+                    },
+                };
+                let aid = AddressId(model.addresss.push(v));
+                idmap.insert(id, AnyId::Address(aid));
+            }
             RawEntity::Simple {
                 name, attributes, ..
             } if name == "ADVANCED_FACE" => {
@@ -1968,6 +2056,191 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "ORGANIZATION" => {
+                let v = Organization {
+                    id: match &attributes[0] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[0])),
+                    },
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                };
+                let aid = OrganizationId(model.organizations.push(v));
+                idmap.insert(id, AnyId::Organization(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATION_RELATIONSHIP" => {
+                let v = OrganizationRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_organization: OrganizationRef::Organization(OrganizationId(
+                        usize::MAX,
+                    )),
+                    related_organization: OrganizationRef::Organization(OrganizationId(usize::MAX)),
+                };
+                let aid = OrganizationRelationshipId(model.organization_relationships.push(v));
+                idmap.insert(id, AnyId::OrganizationRelationship(aid));
+                pending_organization_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATION_ROLE" => {
+                let v = OrganizationRole {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = OrganizationRoleId(model.organization_roles.push(v));
+                idmap.insert(id, AnyId::OrganizationRole(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATION_TYPE" => {
+                let v = OrganizationType {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                };
+                let aid = OrganizationTypeId(model.organization_types.push(v));
+                idmap.insert(id, AnyId::OrganizationType(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATION_TYPE_ROLE" => {
+                let v = OrganizationTypeRole {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                };
+                let aid = OrganizationTypeRoleId(model.organization_type_roles.push(v));
+                idmap.insert(id, AnyId::OrganizationTypeRole(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATIONAL_ADDRESS" => {
+                let v = OrganizationalAddress {
+                    internal_location: match &attributes[0] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[0])),
+                    },
+                    street_number: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    street: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    postal_box: match &attributes[3] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[3])),
+                    },
+                    town: match &attributes[4] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[4])),
+                    },
+                    region: match &attributes[5] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[5])),
+                    },
+                    postal_code: match &attributes[6] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[6])),
+                    },
+                    country: match &attributes[7] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[7])),
+                    },
+                    facsimile_number: match &attributes[8] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[8])),
+                    },
+                    telephone_number: match &attributes[9] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[9])),
+                    },
+                    electronic_mail_address: match &attributes[10] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[10])),
+                    },
+                    telex_number: match &attributes[11] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[11])),
+                    },
+                    organizations: Vec::new(),
+                    description: match &attributes[13] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[13])),
+                    },
+                };
+                let aid = OrganizationalAddressId(model.organizational_addresss.push(v));
+                idmap.insert(id, AnyId::OrganizationalAddress(aid));
+                pending_organizational_addresss.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATIONAL_PROJECT" => {
+                let v = OrganizationalProject {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    responsible_organizations: Vec::new(),
+                };
+                let aid = OrganizationalProjectId(model.organizational_projects.push(v));
+                idmap.insert(id, AnyId::OrganizationalProject(aid));
+                pending_organizational_projects.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATIONAL_PROJECT_RELATIONSHIP" => {
+                let v = OrganizationalProjectRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_organizational_project:
+                        OrganizationalProjectRef::OrganizationalProject(OrganizationalProjectId(
+                            usize::MAX,
+                        )),
+                    related_organizational_project: OrganizationalProjectRef::OrganizationalProject(
+                        OrganizationalProjectId(usize::MAX),
+                    ),
+                };
+                let aid = OrganizationalProjectRelationshipId(
+                    model.organizational_project_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::OrganizationalProjectRelationship(aid));
+                pending_organizational_project_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ORGANIZATIONAL_PROJECT_ROLE" => {
+                let v = OrganizationalProjectRole {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = OrganizationalProjectRoleId(model.organizational_project_roles.push(v));
+                idmap.insert(id, AnyId::OrganizationalProjectRole(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "ORIENTED_CLOSED_SHELL" => {
                 let v = OrientedClosedShell {
                     name: as_str(&attributes[0]),
@@ -2064,6 +2337,188 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = PerpendicularityToleranceId(model.perpendicularity_tolerances.push(v));
                 idmap.insert(id, AnyId::PerpendicularityTolerance(aid));
                 pending_perpendicularity_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PERSON" => {
+                let v = Person {
+                    id: as_str(&attributes[0]),
+                    last_name: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    first_name: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    middle_names: match &attributes[3] {
+                        Attribute::Unset => None,
+                        Attribute::List(l) => Some(l.iter().map(|e| as_str(e)).collect()),
+                        other => panic!("opt vec: {other:?}"),
+                    },
+                    prefix_titles: match &attributes[4] {
+                        Attribute::Unset => None,
+                        Attribute::List(l) => Some(l.iter().map(|e| as_str(e)).collect()),
+                        other => panic!("opt vec: {other:?}"),
+                    },
+                    suffix_titles: match &attributes[5] {
+                        Attribute::Unset => None,
+                        Attribute::List(l) => Some(l.iter().map(|e| as_str(e)).collect()),
+                        other => panic!("opt vec: {other:?}"),
+                    },
+                };
+                let aid = PersonId(model.persons.push(v));
+                idmap.insert(id, AnyId::Person(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PERSON_AND_ORGANIZATION" => {
+                let v = PersonAndOrganization {
+                    the_person: PersonRef::Person(PersonId(usize::MAX)),
+                    the_organization: OrganizationRef::Organization(OrganizationId(usize::MAX)),
+                };
+                let aid = PersonAndOrganizationId(model.person_and_organizations.push(v));
+                idmap.insert(id, AnyId::PersonAndOrganization(aid));
+                pending_person_and_organizations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PERSON_AND_ORGANIZATION_ADDRESS" => {
+                let v = PersonAndOrganizationAddress {
+                    internal_location: match &attributes[0] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[0])),
+                    },
+                    street_number: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    street: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    postal_box: match &attributes[3] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[3])),
+                    },
+                    town: match &attributes[4] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[4])),
+                    },
+                    region: match &attributes[5] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[5])),
+                    },
+                    postal_code: match &attributes[6] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[6])),
+                    },
+                    country: match &attributes[7] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[7])),
+                    },
+                    facsimile_number: match &attributes[8] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[8])),
+                    },
+                    telephone_number: match &attributes[9] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[9])),
+                    },
+                    electronic_mail_address: match &attributes[10] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[10])),
+                    },
+                    telex_number: match &attributes[11] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[11])),
+                    },
+                    organizations: Vec::new(),
+                    description: match &attributes[13] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[13])),
+                    },
+                    people: Vec::new(),
+                    description_1: match &attributes[15] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[15])),
+                    },
+                };
+                let aid =
+                    PersonAndOrganizationAddressId(model.person_and_organization_addresss.push(v));
+                idmap.insert(id, AnyId::PersonAndOrganizationAddress(aid));
+                pending_person_and_organization_addresss.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PERSON_AND_ORGANIZATION_ROLE" => {
+                let v = PersonAndOrganizationRole {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PersonAndOrganizationRoleId(model.person_and_organization_roles.push(v));
+                idmap.insert(id, AnyId::PersonAndOrganizationRole(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PERSONAL_ADDRESS" => {
+                let v = PersonalAddress {
+                    internal_location: match &attributes[0] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[0])),
+                    },
+                    street_number: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    street: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    postal_box: match &attributes[3] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[3])),
+                    },
+                    town: match &attributes[4] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[4])),
+                    },
+                    region: match &attributes[5] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[5])),
+                    },
+                    postal_code: match &attributes[6] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[6])),
+                    },
+                    country: match &attributes[7] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[7])),
+                    },
+                    facsimile_number: match &attributes[8] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[8])),
+                    },
+                    telephone_number: match &attributes[9] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[9])),
+                    },
+                    electronic_mail_address: match &attributes[10] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[10])),
+                    },
+                    telex_number: match &attributes[11] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[11])),
+                    },
+                    people: Vec::new(),
+                    description: match &attributes[13] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[13])),
+                    },
+                };
+                let aid = PersonalAddressId(model.personal_addresss.push(v));
+                idmap.insert(id, AnyId::PersonalAddress(aid));
+                pending_personal_addresss.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -2954,6 +3409,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TRIMMED_CURVE" => {
+                let v = TrimmedCurve {
+                    name: as_str(&attributes[0]),
+                    basis_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+                    trim_1: Vec::new(),
+                    trim_2: Vec::new(),
+                    sense_agreement: matches!(&attributes[4], Attribute::Enum(s) if s == "T"),
+                    master_representation: match &attributes[5] {
+                        Attribute::Enum(s) => {
+                            TrimmingPreference::parse(s).expect("trimming_preference")
+                        }
+                        other => panic!("enum trimming_preference: {other:?}"),
+                    },
+                };
+                let aid = TrimmedCurveId(model.trimmed_curves.push(v));
+                idmap.insert(id, AnyId::TrimmedCurve(aid));
+                pending_trimmed_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "UNCERTAINTY_MEASURE_WITH_UNIT" => {
                 let v = UncertaintyMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
@@ -3472,6 +3947,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_open_shells(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_organization_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_organization_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_organizational_addresss {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_organizational_addresss(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_organizational_projects {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_organizational_projects(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_organizational_project_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_organizational_project_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_oriented_closed_shells {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_oriented_closed_shells(&mut model, aid, attributes, &idmap);
@@ -3500,6 +3995,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_perpendicularity_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_perpendicularity_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_person_and_organizations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_person_and_organizations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_person_and_organization_addresss {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_person_and_organization_addresss(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_personal_addresss {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_personal_addresss(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_placed_datum_target_features {
@@ -3744,6 +4254,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_total_runout_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_total_runout_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_trimmed_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_trimmed_curves(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_uncertainty_measure_with_units {
@@ -5162,6 +5677,70 @@ fn resolve_open_shells(
     it.cfs_faces = cfs_faces_v;
 }
 
+fn resolve_organization_relationships(
+    model: &mut Model,
+    aid: OrganizationRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_organization_v =
+        OrganizationRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_organization_v =
+        OrganizationRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.organization_relationships.items[aid.0];
+    it.relating_organization = relating_organization_v;
+    it.related_organization = related_organization_v;
+}
+
+fn resolve_organizational_addresss(
+    model: &mut Model,
+    aid: OrganizationalAddressId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let organizations_v = match &attrs[12] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| OrganizationRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.organizational_addresss.items[aid.0];
+    it.organizations = organizations_v;
+}
+
+fn resolve_organizational_projects(
+    model: &mut Model,
+    aid: OrganizationalProjectId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let responsible_organizations_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| OrganizationRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.organizational_projects.items[aid.0];
+    it.responsible_organizations = responsible_organizations_v;
+}
+
+fn resolve_organizational_project_relationships(
+    model: &mut Model,
+    aid: OrganizationalProjectRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_organizational_project_v =
+        OrganizationalProjectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_organizational_project_v =
+        OrganizationalProjectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.organizational_project_relationships.items[aid.0];
+    it.relating_organizational_project = relating_organizational_project_v;
+    it.related_organizational_project = related_organizational_project_v;
+}
+
 fn resolve_oriented_closed_shells(
     model: &mut Model,
     aid: OrientedClosedShellId,
@@ -5268,6 +5847,62 @@ fn resolve_perpendicularity_tolerances(
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
+}
+
+fn resolve_person_and_organizations(
+    model: &mut Model,
+    aid: PersonAndOrganizationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let the_person_v = PersonRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let the_organization_v =
+        OrganizationRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.person_and_organizations.items[aid.0];
+    it.the_person = the_person_v;
+    it.the_organization = the_organization_v;
+}
+
+fn resolve_person_and_organization_addresss(
+    model: &mut Model,
+    aid: PersonAndOrganizationAddressId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let organizations_v = match &attrs[12] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| OrganizationRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let people_v = match &attrs[14] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| PersonRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.person_and_organization_addresss.items[aid.0];
+    it.organizations = organizations_v;
+    it.people = people_v;
+}
+
+fn resolve_personal_addresss(
+    model: &mut Model,
+    aid: PersonalAddressId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let people_v = match &attrs[12] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| PersonRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.personal_addresss.items[aid.0];
+    it.people = people_v;
 }
 
 fn resolve_placed_datum_target_features(
@@ -6061,6 +6696,53 @@ fn resolve_total_runout_tolerances(
     it.datum_system = datum_system_v;
 }
 
+fn resolve_trimmed_curves(
+    model: &mut Model,
+    aid: TrimmedCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let basis_curve_v = CurveRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let trim_1_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| match e {
+                Attribute::Real(_) | Attribute::Integer(_) => {
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
+                }
+                Attribute::Typed { value, .. }
+                    if matches!(value.as_ref(), Attribute::Real(_) | Attribute::Integer(_)) =>
+                {
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
+                }
+                _ => TrimmingSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")),
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let trim_2_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| match e {
+                Attribute::Real(_) | Attribute::Integer(_) => {
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
+                }
+                Attribute::Typed { value, .. }
+                    if matches!(value.as_ref(), Attribute::Real(_) | Attribute::Integer(_)) =>
+                {
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
+                }
+                _ => TrimmingSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")),
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.trimmed_curves.items[aid.0];
+    it.basis_curve = basis_curve_v;
+    it.trim_1 = trim_1_v;
+    it.trim_2 = trim_2_v;
+}
+
 fn resolve_uncertainty_measure_with_units(
     model: &mut Model,
     aid: UncertaintyMeasureWithUnitId,
@@ -6171,6 +6853,56 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
     parts
         .iter()
         .map(|p| match p.name.as_str() {
+            "ADDRESS" => UnitPart::Address {
+                internal_location: match &p.attributes[0] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[0])),
+                },
+                street_number: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                street: match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[2])),
+                },
+                postal_box: match &p.attributes[3] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[3])),
+                },
+                town: match &p.attributes[4] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[4])),
+                },
+                region: match &p.attributes[5] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[5])),
+                },
+                postal_code: match &p.attributes[6] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[6])),
+                },
+                country: match &p.attributes[7] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[7])),
+                },
+                facsimile_number: match &p.attributes[8] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[8])),
+                },
+                telephone_number: match &p.attributes[9] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[9])),
+                },
+                electronic_mail_address: match &p.attributes[10] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[10])),
+                },
+                telex_number: match &p.attributes[11] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[11])),
+                },
+            },
             "ADVANCED_FACE" => UnitPart::AdvancedFace,
             "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement {
                 name: as_str(&p.attributes[0]),
@@ -6421,6 +7153,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None },
             "OPEN_SHELL" => UnitPart::OpenShell,
+            "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress {
+                organizations: Vec::new(),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+            },
             "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell {
                 closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
                 orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
@@ -6438,6 +7177,14 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(
                     DefinitionalRepresentationId(usize::MAX),
                 ),
+            },
+            "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
+            "PERSONAL_ADDRESS" => UnitPart::PersonalAddress {
+                people: Vec::new(),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
             },
             "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
             "PLACEMENT" => UnitPart::Placement {
@@ -6996,6 +7743,15 @@ fn resolve_complex(
                     )),
                 };
             }
+            UnitPart::OrganizationalAddress { organizations, .. } => {
+                *organizations = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| OrganizationRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
             UnitPart::OrientedClosedShell {
                 closed_shell_element,
                 ..
@@ -7027,6 +7783,15 @@ fn resolve_complex(
                 *reference_to_curve = DefinitionalRepresentationRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
+            }
+            UnitPart::PersonalAddress { people, .. } => {
+                *people = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| PersonRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::Placement { location, .. } => {
                 *location = CartesianPointRef::from_any(

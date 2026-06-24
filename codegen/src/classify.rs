@@ -80,6 +80,16 @@ impl<'a> Resolver<'a> {
         self.agg_element(m).is_some_and(|e| self.ref_like(&e, 0))
     }
 
+    /// True when a SELECT member resolves to a named scalar (real/int/string/
+    /// bool) — the scalar-arm shape (`SELECT(entity, parameter_value)`). Binary
+    /// is excluded (only appears in the deferred maths cluster).
+    pub fn is_scalar_member(&self, m: &str) -> bool {
+        matches!(
+            self.classify(m, 0),
+            Kind::Real | Kind::Int | Kind::Str | Kind::Bool
+        )
+    }
+
     /// True when every member of a SELECT resolves to a string — the
     /// select-of-named-strings shape (`StringSelectValue`). Checked before
     /// `is_measure_select` (which also accepts `Str`) so all-string selects do
@@ -148,10 +158,15 @@ impl<'a> Resolver<'a> {
                 }
                 // Discriminated ref over the SELECT alias when every member is an
                 // entity ref, an aggregate-of-entity (SELECT(X, LIST OF X, ..)),
-                // or an ENUM (SELECT(X, some_enum)). model_ir splits single arms
-                // vs aggregate arms vs enum arms.
+                // an ENUM (SELECT(X, some_enum)), or a named scalar (SELECT(X,
+                // parameter_value)). model_ir splits single/aggregate/enum/scalar
+                // arms. Reached only after the all-string/all-numeric checks, so a
+                // scalar member here means an entity is mixed in.
                 if members.iter().all(|m| {
-                    self.ref_like(m, 0) || self.agg_of_ref(m) || self.enum_alias(m, 0).is_some()
+                    self.ref_like(m, 0)
+                        || self.agg_of_ref(m)
+                        || self.enum_alias(m, 0).is_some()
+                        || self.is_scalar_member(m)
                 }) {
                     return Kind::Ref(t.to_string());
                 }

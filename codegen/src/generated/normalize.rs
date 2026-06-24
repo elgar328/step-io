@@ -132,6 +132,68 @@ pub fn normalize(
 
 fn simple_slots(n: &str) -> &'static [Slot] {
     match n {
+        "ADDRESS" => &[
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
         "ADVANCED_FACE" => &[
             Slot {
                 k: Sk::Str,
@@ -1876,6 +1938,207 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 der: false,
             },
         ],
+        "ORGANIZATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
+        "ORGANIZATION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
+        "ORGANIZATION_ROLE" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+        }],
+        "ORGANIZATION_TYPE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
+        "ORGANIZATION_TYPE_ROLE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
+        "ORGANIZATIONAL_ADDRESS" => &[
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
+        "ORGANIZATIONAL_PROJECT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+        ],
+        "ORGANIZATIONAL_PROJECT_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
+        "ORGANIZATIONAL_PROJECT_ROLE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
         "ORIENTED_CLOSED_SHELL" => &[
             Slot {
                 k: Sk::Str,
@@ -2017,6 +2280,209 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                der: false,
+            },
+        ],
+        "PERSON" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: false,
+                der: false,
+            },
+        ],
+        "PERSON_AND_ORGANIZATION" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
+        "PERSON_AND_ORGANIZATION_ADDRESS" => &[
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
+        "PERSON_AND_ORGANIZATION_ROLE" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+        }],
+        "PERSONAL_ADDRESS" => &[
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
                 der: false,
             },
         ],
@@ -3062,6 +3528,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 der: false,
             },
         ],
+        "TRIMMED_CURVE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Bool,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Enum,
+                req: true,
+                der: false,
+            },
+        ],
         "UNCERTAINTY_MEASURE_WITH_UNIT" => &[
             Slot {
                 k: Sk::Meas,
@@ -3237,6 +3735,68 @@ fn simple_slots(n: &str) -> &'static [Slot] {
 
 fn part_slots(n: &str) -> &'static [Slot] {
     match n {
+        "ADDRESS" => &[
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
         "ADVANCED_FACE" => &[],
         "APPLICATION_CONTEXT_ELEMENT" => &[
             Slot {
@@ -3670,6 +4230,18 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
         }],
         "OPEN_SHELL" => &[],
+        "ORGANIZATIONAL_ADDRESS" => &[
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
         "ORIENTED_CLOSED_SHELL" => &[
             Slot {
                 k: Sk::Ref,
@@ -3709,6 +4281,19 @@ fn part_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                der: false,
+            },
+        ],
+        "PERSON_AND_ORGANIZATION_ADDRESS" => &[],
+        "PERSONAL_ADDRESS" => &[
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
                 der: false,
             },
         ],

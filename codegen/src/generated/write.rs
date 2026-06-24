@@ -57,6 +57,7 @@ pub struct Writer<'a> {
     model: &'a Model,
     next: u64,
     out: String,
+    addre_ids: Vec<Option<u64>>,
     advanced_face_ids: Vec<Option<u64>>,
     angularity_tolerance_ids: Vec<Option<u64>>,
     application_context_ids: Vec<Option<u64>>,
@@ -146,6 +147,15 @@ pub struct Writer<'a> {
     named_unit_ids: Vec<Option<u64>>,
     offset_surface_ids: Vec<Option<u64>>,
     open_shell_ids: Vec<Option<u64>>,
+    organization_ids: Vec<Option<u64>>,
+    organization_relationship_ids: Vec<Option<u64>>,
+    organization_role_ids: Vec<Option<u64>>,
+    organization_type_ids: Vec<Option<u64>>,
+    organization_type_role_ids: Vec<Option<u64>>,
+    organizational_addre_ids: Vec<Option<u64>>,
+    organizational_project_ids: Vec<Option<u64>>,
+    organizational_project_relationship_ids: Vec<Option<u64>>,
+    organizational_project_role_ids: Vec<Option<u64>>,
     oriented_closed_shell_ids: Vec<Option<u64>>,
     oriented_edge_ids: Vec<Option<u64>>,
     parallelism_tolerance_ids: Vec<Option<u64>>,
@@ -153,6 +163,11 @@ pub struct Writer<'a> {
     path_ids: Vec<Option<u64>>,
     pcurve_ids: Vec<Option<u64>>,
     perpendicularity_tolerance_ids: Vec<Option<u64>>,
+    person_ids: Vec<Option<u64>>,
+    person_and_organization_ids: Vec<Option<u64>>,
+    person_and_organization_addre_ids: Vec<Option<u64>>,
+    person_and_organization_role_ids: Vec<Option<u64>>,
+    personal_addre_ids: Vec<Option<u64>>,
     placed_datum_target_feature_ids: Vec<Option<u64>>,
     placement_ids: Vec<Option<u64>>,
     plane_ids: Vec<Option<u64>>,
@@ -209,6 +224,7 @@ pub struct Writer<'a> {
     topological_representation_item_ids: Vec<Option<u64>>,
     toroidal_surface_ids: Vec<Option<u64>>,
     total_runout_tolerance_ids: Vec<Option<u64>>,
+    trimmed_curve_ids: Vec<Option<u64>>,
     uncertainty_measure_with_unit_ids: Vec<Option<u64>>,
     unequally_disposed_geometric_tolerance_ids: Vec<Option<u64>>,
     uniform_curve_ids: Vec<Option<u64>>,
@@ -226,6 +242,7 @@ impl<'a> Writer<'a> {
             model,
             next: 1,
             out: String::new(),
+            addre_ids: vec![None; model.addresss.items.len()],
             advanced_face_ids: vec![None; model.advanced_faces.items.len()],
             angularity_tolerance_ids: vec![None; model.angularity_tolerances.items.len()],
             application_context_ids: vec![None; model.application_contexts.items.len()],
@@ -405,6 +422,24 @@ impl<'a> Writer<'a> {
             named_unit_ids: vec![None; model.named_units.items.len()],
             offset_surface_ids: vec![None; model.offset_surfaces.items.len()],
             open_shell_ids: vec![None; model.open_shells.items.len()],
+            organization_ids: vec![None; model.organizations.items.len()],
+            organization_relationship_ids: vec![None; model.organization_relationships.items.len()],
+            organization_role_ids: vec![None; model.organization_roles.items.len()],
+            organization_type_ids: vec![None; model.organization_types.items.len()],
+            organization_type_role_ids: vec![None; model.organization_type_roles.items.len()],
+            organizational_addre_ids: vec![None; model.organizational_addresss.items.len()],
+            organizational_project_ids: vec![None; model.organizational_projects.items.len()],
+            organizational_project_relationship_ids: vec![
+                None;
+                model
+                    .organizational_project_relationships
+                    .items
+                    .len()
+            ],
+            organizational_project_role_ids: vec![
+                None;
+                model.organizational_project_roles.items.len()
+            ],
             oriented_closed_shell_ids: vec![None; model.oriented_closed_shells.items.len()],
             oriented_edge_ids: vec![None; model.oriented_edges.items.len()],
             parallelism_tolerance_ids: vec![None; model.parallelism_tolerances.items.len()],
@@ -421,6 +456,20 @@ impl<'a> Writer<'a> {
                 None;
                 model.perpendicularity_tolerances.items.len()
             ],
+            person_ids: vec![None; model.persons.items.len()],
+            person_and_organization_ids: vec![None; model.person_and_organizations.items.len()],
+            person_and_organization_addre_ids: vec![
+                None;
+                model
+                    .person_and_organization_addresss
+                    .items
+                    .len()
+            ],
+            person_and_organization_role_ids: vec![
+                None;
+                model.person_and_organization_roles.items.len()
+            ],
+            personal_addre_ids: vec![None; model.personal_addresss.items.len()],
             placed_datum_target_feature_ids: vec![
                 None;
                 model.placed_datum_target_features.items.len()
@@ -534,6 +583,7 @@ impl<'a> Writer<'a> {
             ],
             toroidal_surface_ids: vec![None; model.toroidal_surfaces.items.len()],
             total_runout_tolerance_ids: vec![None; model.total_runout_tolerances.items.len()],
+            trimmed_curve_ids: vec![None; model.trimmed_curves.items.len()],
             uncertainty_measure_with_unit_ids: vec![
                 None;
                 model.uncertainty_measure_with_units.items.len()
@@ -558,6 +608,68 @@ impl<'a> Writer<'a> {
     fn fresh(&mut self) -> u64 {
         let n = self.next;
         self.next += 1;
+        n
+    }
+
+    fn emit_addresss(&mut self, id: AddressId) -> u64 {
+        if let Some(n) = self.addre_ids[id.0] {
+            return n;
+        }
+        let it = self.model.addresss.get(id.0).clone();
+        let n = self.fresh();
+        self.addre_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            match &it.internal_location {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_box {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.town {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.region {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_code {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.country {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.facsimile_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telephone_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.electronic_mail_address {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telex_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = ADDRESS({});\n", attrs.join(",")));
         n
     }
 
@@ -2899,6 +3011,275 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_organizations(&mut self, id: OrganizationId) -> u64 {
+        if let Some(n) = self.organization_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organizations.get(id.0).clone();
+        let n = self.fresh();
+        self.organization_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            match &it.id {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = ORGANIZATION({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_organization_relationships(&mut self, id: OrganizationRelationshipId) -> u64 {
+        if let Some(n) = self.organization_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organization_relationships.get(id.0).clone();
+        let n = self.fresh();
+        self.organization_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_organization((&it.relating_organization).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_organization((&it.related_organization).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ORGANIZATION_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_organization_roles(&mut self, id: OrganizationRoleId) -> u64 {
+        if let Some(n) = self.organization_role_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organization_roles.get(id.0).clone();
+        let n = self.fresh();
+        self.organization_role_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out
+            .push_str(&format!("#{n} = ORGANIZATION_ROLE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_organization_types(&mut self, id: OrganizationTypeId) -> u64 {
+        if let Some(n) = self.organization_type_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organization_types.get(id.0).clone();
+        let n = self.fresh();
+        self.organization_type_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = ORGANIZATION_TYPE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_organization_type_roles(&mut self, id: OrganizationTypeRoleId) -> u64 {
+        if let Some(n) = self.organization_type_role_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organization_type_roles.get(id.0).clone();
+        let n = self.fresh();
+        self.organization_type_role_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ORGANIZATION_TYPE_ROLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_organizational_addresss(&mut self, id: OrganizationalAddressId) -> u64 {
+        if let Some(n) = self.organizational_addre_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organizational_addresss.get(id.0).clone();
+        let n = self.fresh();
+        self.organizational_addre_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            match &it.internal_location {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_box {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.town {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.region {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_code {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.country {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.facsimile_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telephone_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.electronic_mail_address {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telex_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.organizations
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_organization((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ORGANIZATIONAL_ADDRESS({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_organizational_projects(&mut self, id: OrganizationalProjectId) -> u64 {
+        if let Some(n) = self.organizational_project_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organizational_projects.get(id.0).clone();
+        let n = self.fresh();
+        self.organizational_project_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.responsible_organizations
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_organization((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ORGANIZATIONAL_PROJECT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_organizational_project_relationships(
+        &mut self,
+        id: OrganizationalProjectRelationshipId,
+    ) -> u64 {
+        if let Some(n) = self.organizational_project_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .organizational_project_relationships
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.organizational_project_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_organizational_project((&it.relating_organizational_project).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_organizational_project((&it.related_organizational_project).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ORGANIZATIONAL_PROJECT_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_organizational_project_roles(&mut self, id: OrganizationalProjectRoleId) -> u64 {
+        if let Some(n) = self.organizational_project_role_ids[id.0] {
+            return n;
+        }
+        let it = self.model.organizational_project_roles.get(id.0).clone();
+        let n = self.fresh();
+        self.organizational_project_role_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ORGANIZATIONAL_PROJECT_ROLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_oriented_closed_shells(&mut self, id: OrientedClosedShellId) -> u64 {
         if let Some(n) = self.oriented_closed_shell_ids[id.0] {
             return n;
@@ -3077,6 +3458,252 @@ impl<'a> Writer<'a> {
             "#{n} = PERPENDICULARITY_TOLERANCE({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_persons(&mut self, id: PersonId) -> u64 {
+        if let Some(n) = self.person_ids[id.0] {
+            return n;
+        }
+        let it = self.model.persons.get(id.0).clone();
+        let n = self.fresh();
+        self.person_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            match &it.last_name {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.first_name {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.middle_names {
+                Some(v) => format!(
+                    "({})",
+                    v.iter().map(|e| step_str(e)).collect::<Vec<_>>().join(",")
+                ),
+                None => "$".to_string(),
+            },
+            match &it.prefix_titles {
+                Some(v) => format!(
+                    "({})",
+                    v.iter().map(|e| step_str(e)).collect::<Vec<_>>().join(",")
+                ),
+                None => "$".to_string(),
+            },
+            match &it.suffix_titles {
+                Some(v) => format!(
+                    "({})",
+                    v.iter().map(|e| step_str(e)).collect::<Vec<_>>().join(",")
+                ),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = PERSON({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_person_and_organizations(&mut self, id: PersonAndOrganizationId) -> u64 {
+        if let Some(n) = self.person_and_organization_ids[id.0] {
+            return n;
+        }
+        let it = self.model.person_and_organizations.get(id.0).clone();
+        let n = self.fresh();
+        self.person_and_organization_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("#{}", self.emit_ref_person((&it.the_person).clone())),
+            format!(
+                "#{}",
+                self.emit_ref_organization((&it.the_organization).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PERSON_AND_ORGANIZATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_person_and_organization_addresss(&mut self, id: PersonAndOrganizationAddressId) -> u64 {
+        if let Some(n) = self.person_and_organization_addre_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .person_and_organization_addresss
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.person_and_organization_addre_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            match &it.internal_location {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_box {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.town {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.region {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_code {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.country {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.facsimile_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telephone_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.electronic_mail_address {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telex_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.organizations
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_organization((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.people
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_person((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            match &it.description_1 {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PERSON_AND_ORGANIZATION_ADDRESS({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_person_and_organization_roles(&mut self, id: PersonAndOrganizationRoleId) -> u64 {
+        if let Some(n) = self.person_and_organization_role_ids[id.0] {
+            return n;
+        }
+        let it = self.model.person_and_organization_roles.get(id.0).clone();
+        let n = self.fresh();
+        self.person_and_organization_role_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = PERSON_AND_ORGANIZATION_ROLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_personal_addresss(&mut self, id: PersonalAddressId) -> u64 {
+        if let Some(n) = self.personal_addre_ids[id.0] {
+            return n;
+        }
+        let it = self.model.personal_addresss.get(id.0).clone();
+        let n = self.fresh();
+        self.personal_addre_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            match &it.internal_location {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.street {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_box {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.town {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.region {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.postal_code {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.country {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.facsimile_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telephone_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.electronic_mail_address {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.telex_number {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.people
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_person((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = PERSONAL_ADDRESS({});\n", attrs.join(",")));
         n
     }
 
@@ -4509,6 +5136,46 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_trimmed_curves(&mut self, id: TrimmedCurveId) -> u64 {
+        if let Some(n) = self.trimmed_curve_ids[id.0] {
+            return n;
+        }
+        let it = self.model.trimmed_curves.get(id.0).clone();
+        let n = self.fresh();
+        self.trimmed_curve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_curve((&it.basis_curve).clone())),
+            format!(
+                "({})",
+                it.trim_1
+                    .iter()
+                    .map(|e| match e {
+                        TrimmingSelectRef::ParameterValue(x) => measure(x),
+                        other => format!("#{}", self.emit_ref_trimming_select(other.clone())),
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "({})",
+                it.trim_2
+                    .iter()
+                    .map(|e| match e {
+                        TrimmingSelectRef::ParameterValue(x) => measure(x),
+                        other => format!("#{}", self.emit_ref_trimming_select(other.clone())),
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            (if it.sense_agreement { ".T." } else { ".F." }).to_string(),
+            it.master_representation.token().to_string(),
+        ];
+        self.out
+            .push_str(&format!("#{n} = TRIMMED_CURVE({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_uncertainty_measure_with_units(&mut self, id: UncertaintyMeasureWithUnitId) -> u64 {
         if let Some(n) = self.uncertainty_measure_with_unit_ids[id.0] {
             return n;
@@ -4873,6 +5540,7 @@ impl<'a> Writer<'a> {
             CurveRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
             CurveRef::SeamCurve(i) => self.emit_seam_curves(i),
             CurveRef::SurfaceCurve(i) => self.emit_surface_curves(i),
+            CurveRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
             CurveRef::UniformCurve(i) => self.emit_uniform_curves(i),
             CurveRef::Complex(i) => self.emit_complex(i),
         }
@@ -5135,6 +5803,20 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_organization(&mut self, r: OrganizationRef) -> u64 {
+        match r {
+            OrganizationRef::Organization(i) => self.emit_organizations(i),
+        }
+    }
+
+    fn emit_ref_organizational_project(&mut self, r: OrganizationalProjectRef) -> u64 {
+        match r {
+            OrganizationalProjectRef::OrganizationalProject(i) => {
+                self.emit_organizational_projects(i)
+            }
+        }
+    }
+
     fn emit_ref_oriented_closed_shell(&mut self, r: OrientedClosedShellRef) -> u64 {
         match r {
             OrientedClosedShellRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
@@ -5178,6 +5860,12 @@ impl<'a> Writer<'a> {
             PcurveOrSurfaceRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
             PcurveOrSurfaceRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
             PcurveOrSurfaceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_person(&mut self, r: PersonRef) -> u64 {
+        match r {
+            PersonRef::Person(i) => self.emit_persons(i),
         }
     }
 
@@ -5363,6 +6051,7 @@ impl<'a> Writer<'a> {
                 self.emit_topological_representation_items(i)
             }
             RepresentationItemRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
+            RepresentationItemRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
             RepresentationItemRef::UniformCurve(i) => self.emit_uniform_curves(i),
             RepresentationItemRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
             RepresentationItemRef::Vector(i) => self.emit_vectors(i),
@@ -5557,6 +6246,13 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_trimming_select(&mut self, r: TrimmingSelectRef) -> u64 {
+        match r {
+            TrimmingSelectRef::CartesianPoint(i) => self.emit_cartesian_points(i),
+            TrimmingSelectRef::ParameterValue(_) => panic!("emit scalar ref via single dispatch"),
+        }
+    }
+
     fn emit_ref_unit(&mut self, r: UnitRef) -> u64 {
         match r {
             UnitRef::ContextDependentUnit(i) => self.emit_context_dependent_units(i),
@@ -5596,6 +6292,73 @@ impl<'a> Writer<'a> {
         let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len());
         for part in &cu.parts {
             part_txt.push(match part {
+                UnitPart::Address {
+                    internal_location,
+                    street_number,
+                    street,
+                    postal_box,
+                    town,
+                    region,
+                    postal_code,
+                    country,
+                    facsimile_number,
+                    telephone_number,
+                    electronic_mail_address,
+                    telex_number,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        match internal_location {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match street_number {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match street {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match postal_box {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match town {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match region {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match postal_code {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match country {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match facsimile_number {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match telephone_number {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match electronic_mail_address {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match telex_number {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("ADDRESS({})", a.join(","))
+                }
                 UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
                 UnitPart::ApplicationContextElement {
                     name,
@@ -6181,6 +6944,27 @@ impl<'a> Writer<'a> {
                     format!("NAMED_UNIT({})", a.join(","))
                 }
                 UnitPart::OpenShell => "OPEN_SHELL()".to_string(),
+                UnitPart::OrganizationalAddress {
+                    organizations,
+                    description,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "({})",
+                            organizations
+                                .iter()
+                                .map(|e| format!("#{}", self.emit_ref_organization((e).clone())))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("ORGANIZATIONAL_ADDRESS({})", a.join(","))
+                }
                 UnitPart::OrientedClosedShell {
                     closed_shell_element,
                     orientation,
@@ -6233,6 +7017,30 @@ impl<'a> Writer<'a> {
                         ),
                     ];
                     format!("PCURVE({})", a.join(","))
+                }
+                UnitPart::PersonAndOrganizationAddress => {
+                    "PERSON_AND_ORGANIZATION_ADDRESS()".to_string()
+                }
+                UnitPart::PersonalAddress {
+                    people,
+                    description,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "({})",
+                            people
+                                .iter()
+                                .map(|e| format!("#{}", self.emit_ref_person((e).clone())))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("PERSONAL_ADDRESS({})", a.join(","))
                 }
                 UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE()".to_string(),
                 UnitPart::Placement { location, .. } => {
@@ -6768,6 +7576,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.complex_units.items.len() {
             self.emit_complex(ComplexUnitId(i));
         }
+        for i in 0..self.model.addresss.items.len() {
+            self.emit_addresss(AddressId(i));
+        }
         for i in 0..self.model.advanced_faces.items.len() {
             self.emit_advanced_faces(AdvancedFaceId(i));
         }
@@ -7070,6 +7881,33 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.open_shells.items.len() {
             self.emit_open_shells(OpenShellId(i));
         }
+        for i in 0..self.model.organizations.items.len() {
+            self.emit_organizations(OrganizationId(i));
+        }
+        for i in 0..self.model.organization_relationships.items.len() {
+            self.emit_organization_relationships(OrganizationRelationshipId(i));
+        }
+        for i in 0..self.model.organization_roles.items.len() {
+            self.emit_organization_roles(OrganizationRoleId(i));
+        }
+        for i in 0..self.model.organization_types.items.len() {
+            self.emit_organization_types(OrganizationTypeId(i));
+        }
+        for i in 0..self.model.organization_type_roles.items.len() {
+            self.emit_organization_type_roles(OrganizationTypeRoleId(i));
+        }
+        for i in 0..self.model.organizational_addresss.items.len() {
+            self.emit_organizational_addresss(OrganizationalAddressId(i));
+        }
+        for i in 0..self.model.organizational_projects.items.len() {
+            self.emit_organizational_projects(OrganizationalProjectId(i));
+        }
+        for i in 0..self.model.organizational_project_relationships.items.len() {
+            self.emit_organizational_project_relationships(OrganizationalProjectRelationshipId(i));
+        }
+        for i in 0..self.model.organizational_project_roles.items.len() {
+            self.emit_organizational_project_roles(OrganizationalProjectRoleId(i));
+        }
         for i in 0..self.model.oriented_closed_shells.items.len() {
             self.emit_oriented_closed_shells(OrientedClosedShellId(i));
         }
@@ -7090,6 +7928,21 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.perpendicularity_tolerances.items.len() {
             self.emit_perpendicularity_tolerances(PerpendicularityToleranceId(i));
+        }
+        for i in 0..self.model.persons.items.len() {
+            self.emit_persons(PersonId(i));
+        }
+        for i in 0..self.model.person_and_organizations.items.len() {
+            self.emit_person_and_organizations(PersonAndOrganizationId(i));
+        }
+        for i in 0..self.model.person_and_organization_addresss.items.len() {
+            self.emit_person_and_organization_addresss(PersonAndOrganizationAddressId(i));
+        }
+        for i in 0..self.model.person_and_organization_roles.items.len() {
+            self.emit_person_and_organization_roles(PersonAndOrganizationRoleId(i));
+        }
+        for i in 0..self.model.personal_addresss.items.len() {
+            self.emit_personal_addresss(PersonalAddressId(i));
         }
         for i in 0..self.model.placed_datum_target_features.items.len() {
             self.emit_placed_datum_target_features(PlacedDatumTargetFeatureId(i));
@@ -7272,6 +8125,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.total_runout_tolerances.items.len() {
             self.emit_total_runout_tolerances(TotalRunoutToleranceId(i));
+        }
+        for i in 0..self.model.trimmed_curves.items.len() {
+            self.emit_trimmed_curves(TrimmedCurveId(i));
         }
         for i in 0..self.model.uncertainty_measure_with_units.items.len() {
             self.emit_uncertainty_measure_with_units(UncertaintyMeasureWithUnitId(i));

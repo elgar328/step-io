@@ -56,6 +56,11 @@ pub struct RefEnum {
     /// enum select member is a Typed literal `WIRE(.TOKEN.)`, so the wire name is
     /// kept for read discrimination + write. The arm holds the (Copy) enum.
     pub enum_arms: Vec<(String, String, String)>,
+    /// Scalar arms for `SELECT(.., parameter_value)`: (variant ident, scalar Kind
+    /// [Real/Str]). The arm payload is `MeasureValue` (real) / `StringSelectValue`
+    /// (string) — these already carry `type_name: Option` so the typed (`WIRE(5.)`)
+    /// vs bare (`5.`) form round-trips. Read discriminates by value kind.
+    pub scalar_arms: Vec<(String, Kind)>,
     /// True when the target can resolve to a complex part-bag instance.
     pub has_complex: bool,
 }
@@ -214,6 +219,24 @@ fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)>
             && seen.insert(m.to_string())
         {
             out.push((pascal(m), format!("{}Ref", pascal(&e)), m.to_uppercase()));
+        }
+    }
+    out
+}
+
+/// Scalar arms of a ref-target: for a SELECT with named-scalar members, one arm
+/// per member -> (variant ident, scalar Kind, UPPER wire name). Empty otherwise.
+fn scalar_arms(res: &Resolver, target: &str) -> Vec<(String, Kind)> {
+    let Some(td) = res.schema.types.get(target) else {
+        return Vec::new();
+    };
+    let Some(members) = crate::schema::select_members(td.aliased.trim()) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for m in members {
+        if res.is_scalar_member(m) {
+            out.push((pascal(m), res.classify(m, 0)));
         }
     }
     out
@@ -410,6 +433,7 @@ impl ModelIr {
                         .into_iter()
                         .map(|(v, r, alias)| (v, r, alias.to_uppercase()))
                         .collect(),
+                    scalar_arms: scalar_arms(res, target),
                     has_complex,
                 },
             );

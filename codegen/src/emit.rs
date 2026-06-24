@@ -219,13 +219,24 @@ pub struct StringSelectValue { pub type_name: Option<String>, pub value: String 
     s
 }
 
+/// Payload type for a scalar ref-enum arm. Reuses the select-of-scalars values,
+/// which carry `type_name: Option` so the typed (`WIRE(5.)`) vs bare (`5.`) wire
+/// form round-trips. (Only Real/Str scalar members occur; others surface here.)
+fn scalar_rust_ty(k: &Kind) -> &'static str {
+    match k {
+        Kind::Real => "MeasureValue",
+        Kind::Str => "StringSelectValue",
+        _ => unreachable!("unsupported scalar arm kind: {k:?}"),
+    }
+}
+
 fn emit_ref_enum(s: &mut String, re: &RefEnum) {
-    // No `Copy`: an aggregate arm holds a `Vec` (not Copy), and dropping Copy
-    // uniformly keeps the generated emit/read code simple (clone at the few
-    // deref sites; compiler flags any missed). Clone/Eq still derived.
+    // No `Copy` (aggregate arm holds a `Vec`) and no `Eq` (a scalar arm may hold
+    // an `f64`, which is not `Eq`). PartialEq/Clone are enough — the model derives
+    // only PartialEq. Clone at the few deref sites; compiler flags any missed.
     writeln!(
         s,
-        "#[derive(Debug, Clone, PartialEq, Eq)]\npub enum {} {{",
+        "#[derive(Debug, Clone, PartialEq)]\npub enum {} {{",
         re.rust
     )
     .unwrap();
@@ -242,6 +253,11 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     for (variant, enum_rust, _wire) in &re.enum_arms {
         writeln!(s, "    {variant}({enum_rust}),").unwrap();
     }
+    // Scalar arms for SELECT(.., parameter_value): hold a MeasureValue/
+    // StringSelectValue (carries typed-vs-bare via type_name).
+    for (variant, sk) in &re.scalar_arms {
+        writeln!(s, "    {variant}({}),", scalar_rust_ty(sk)).unwrap();
+    }
     if re.has_complex {
         writeln!(s, "    Complex(ComplexUnitId),").unwrap();
     }
@@ -252,6 +268,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     if re.simple_arms.is_empty()
         && re.aggregate.is_empty()
         && re.enum_arms.is_empty()
+        && re.scalar_arms.is_empty()
         && !re.has_complex
     {
         writeln!(s, "    Unresolved,").unwrap();
@@ -539,6 +556,14 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
                     .map(|(_, v)| v.clone())
                     .expect("enum arm has members");
                 format!("{}::{}({}::{})", re.rust, variant, enum_rust, member)
+            } else if let Some((variant, sk)) = re.scalar_arms.first() {
+                // scalar-only select (no entity arm): default-value placeholder.
+                let dflt = match sk {
+                    Kind::Real => "MeasureValue { type_name: None, value: 0.0 }",
+                    Kind::Str => "StringSelectValue { type_name: None, value: String::new() }",
+                    _ => unreachable!("unsupported scalar arm kind"),
+                };
+                format!("{}::{}({dflt})", re.rust, variant)
             } else {
                 // empty ref-enum (all targets excluded): referrer always escapes.
                 format!("{}::Unresolved", re.rust)
@@ -676,6 +701,33 @@ fn resolve_ref_one(re: &RefEnum, aref: &str) -> String {
         arms.push(format!(
             "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(*idmap.get(&as_ref_id(e)).expect(\"ref\"))).collect(), other => panic!(\"agg list {wire}: {{other:?}}\") }}),",
             re.rust, agg_variant, elt_ref
+        ));
+    }
+    // Scalar arms discriminate by VALUE kind (bare `5.`/`'x'` or Typed
+    // `WIRE(5.)`/`WIRE('x')`); read_measure_value/read_string_select capture the
+    // typed-vs-bare form. (>=2 same-kind scalar arms would be ambiguous on a bare
+    // literal — not present in any current select.)
+    for (sv, sk) in &re.scalar_arms {
+        let (bare, reader) = match sk {
+            Kind::Real => (
+                "Attribute::Real(_) | Attribute::Integer(_)",
+                "read_measure_value",
+            ),
+            Kind::Str => ("Attribute::String(_)", "read_string_select"),
+            _ => unreachable!("unsupported scalar arm kind"),
+        };
+        let inner = match sk {
+            Kind::Real => "Attribute::Real(_) | Attribute::Integer(_)",
+            Kind::Str => "Attribute::String(_)",
+            _ => unreachable!(),
+        };
+        // bare form
+        arms.push(format!("{bare} => {}::{}({reader}({aref})),", re.rust, sv));
+        // typed form `WIRE(value)` — matched by inner value kind (the wire name is
+        // captured into the MeasureValue/StringSelectValue).
+        arms.push(format!(
+            "Attribute::Typed {{ value, .. }} if matches!(value.as_ref(), {inner}) => {}::{}({reader}({aref})),",
+            re.rust, sv
         ));
     }
     if arms.is_empty() {
@@ -1050,6 +1102,16 @@ fn render_ref_value(re: &RefEnum, v: &str) -> String {
             rust = re.rust
         ));
     }
+    for (sv, sk) in &re.scalar_arms {
+        // measure()/string_select() render the typed (`WIRE(5.)`) or bare (`5.`)
+        // form from the payload's type_name.
+        let render = match sk {
+            Kind::Real => "measure(x)",
+            Kind::Str => "string_select(x)",
+            _ => unreachable!("unsupported scalar arm kind"),
+        };
+        arms.push(format!("{rust}::{sv}(x) => {render},", rust = re.rust));
+    }
     if arms.is_empty() {
         format!("format!(\"#{{}}\", self.emit_{m}(({v}).clone()))")
     } else {
@@ -1171,9 +1233,18 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
         )
         .unwrap();
     }
+    for (variant, _) in &re.scalar_arms {
+        writeln!(
+            s,
+            "        {}::{variant}(_) => panic!(\"emit scalar ref via single dispatch\"),",
+            re.rust
+        )
+        .unwrap();
+    }
     if re.simple_arms.is_empty()
         && re.aggregate.is_empty()
         && re.enum_arms.is_empty()
+        && re.scalar_arms.is_empty()
         && !re.has_complex
     {
         // empty ref-enum: the Unresolved placeholder is never emitted (referrer

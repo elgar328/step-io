@@ -1009,6 +1009,9 @@ geometry = [
     "seam_curve",
     "intersection_curve",
     "bounded_surface_curve",
+    # trimmed_curve: trim_1/trim_2 : SET OF trimming_select = SELECT(cartesian_point,
+    # parameter_value[real]) — exercises the entity+scalar select capability.
+    "trimmed_curve",
 ]
 topology = [
     "vertex_point",
@@ -1091,6 +1094,36 @@ gdt = [
     "representation_relationship_with_transformation",
     "item_defined_transformation",
     "functionally_defined_transformation",
+]
+
+# PLM (product lifecycle) — brought in as deliberate group-by-group seeds, not a
+# big-bang un-exclude of item_identified_representation_usage. Most members are
+# all-entity selects (already handled; just generated). New gaps surface per group
+# and are triaged: existing capability OK / entity+scalar (#1) / monster
+# (maths/heterogeneous) sub-excluded + catalogued.
+# Group (a): person / organization / project identification core (roles,
+# relationships, addresses). The applied-*-assignment roots are intentionally NOT
+# seeded here: their `items` attr is a ~90-member mega-select (person_and_
+# organization_item / organization_item / project_item) that drags the entire PLM
+# + product + representation + recursive-maths graph in one shot — the same
+# big-bang drag that keeps item_identified deferred. Assignment roots become a
+# deliberate later step (needs the maths cluster excluded + broad closure).
+plm_person_org = [
+    "person",
+    "organization",
+    "person_and_organization",
+    "address",
+    "personal_address",
+    "organizational_address",
+    "person_and_organization_address",
+    "organization_relationship",
+    "organization_role",
+    "organization_type",
+    "organization_type_role",
+    "organizational_project",
+    "organizational_project_relationship",
+    "organizational_project_role",
+    "person_and_organization_role",
 ]
 
 # Entities that appear ONLY as parts of a complex (multi-inheritance) instance
