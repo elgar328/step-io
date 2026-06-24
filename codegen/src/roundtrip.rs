@@ -14,7 +14,9 @@ fn main() {
         eprintln!("  full validation is the reference-check corpus (CODEGEN=1)");
         std::process::exit(2);
     };
-    let src = std::fs::read_to_string(&path).expect("read file");
+    // Latin-1 corpus files exist; read bytes and lossy-convert for this debug
+    // tool (the real corpus gate uses parse_bytes via check_roundtrip_bytes).
+    let src = String::from_utf8_lossy(&std::fs::read(&path).expect("read file")).into_owned();
 
     // Type-diff mode: list the entities of TYPE that differ before/after.
     if let Some(ty) = args.next() {

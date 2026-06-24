@@ -65,8 +65,14 @@ fn main() {
                 .map_or((None, d.as_str()), |(s, a)| (Some(s), a));
             // derivable: the SUPER part's attr is `*` only when a deriving
             // sibling part is present (complex form). Keyed by the super part.
+            // Only count IN-CLOSURE derivers — if the only deriver is out of
+            // closure (e.g. mechanism_representation derives representation.
+            // context_of_items, but kinematics isn't in scope), the attr is NOT
+            // `*` for any in-closure instance, so it stays a plain ref (which
+            // the Null-tolerant ref read handles for a non-standard `$`).
             if let Some(s) = sup
                 && complex_parts.contains(s)
+                && closure.contains(name)
             {
                 derivable
                     .entry(s.to_string())

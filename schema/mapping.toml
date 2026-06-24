@@ -981,6 +981,22 @@ geometry = [
     "uniform_surface",
     "quasi_uniform_surface",
     "bezier_surface",
+    # representation/pcurve cluster: closes the edge_curve -> surface_curve ->
+    # pcurve -> definitional_representation escape chain. The pspace context is a
+    # complex (GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
+    # REPRESENTATION_CONTEXT) whose parts are auto-marked is_complex_part
+    # (implicit combinability of representation_context's bare subtypes).
+    "representation",
+    "definitional_representation",
+    "representation_context",
+    "geometric_representation_context",
+    "parametric_representation_context",
+    "pcurve",
+    "bounded_pcurve",
+    "surface_curve",
+    "seam_curve",
+    "intersection_curve",
+    "bounded_surface_curve",
 ]
 topology = [
     "vertex_point",

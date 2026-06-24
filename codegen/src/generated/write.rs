@@ -62,7 +62,9 @@ pub struct Writer<'a> {
     bezier_curve_ids: Vec<Option<u64>>,
     bezier_surface_ids: Vec<Option<u64>>,
     bounded_curve_ids: Vec<Option<u64>>,
+    bounded_pcurve_ids: Vec<Option<u64>>,
     bounded_surface_ids: Vec<Option<u64>>,
+    bounded_surface_curve_ids: Vec<Option<u64>>,
     brep_with_void_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
     circle_ids: Vec<Option<u64>>,
@@ -74,6 +76,7 @@ pub struct Writer<'a> {
     conversion_based_unit_ids: Vec<Option<u64>>,
     curve_ids: Vec<Option<u64>>,
     cylindrical_surface_ids: Vec<Option<u64>>,
+    definitional_representation_ids: Vec<Option<u64>>,
     derived_unit_ids: Vec<Option<u64>>,
     derived_unit_element_ids: Vec<Option<u64>>,
     dimensional_exponent_ids: Vec<Option<u64>>,
@@ -87,7 +90,9 @@ pub struct Writer<'a> {
     face_bound_ids: Vec<Option<u64>>,
     face_outer_bound_ids: Vec<Option<u64>>,
     face_surface_ids: Vec<Option<u64>>,
+    geometric_representation_context_ids: Vec<Option<u64>>,
     geometric_representation_item_ids: Vec<Option<u64>>,
+    intersection_curve_ids: Vec<Option<u64>>,
     length_measure_with_unit_ids: Vec<Option<u64>>,
     length_unit_ids: Vec<Option<u64>>,
     line_ids: Vec<Option<u64>>,
@@ -100,7 +105,9 @@ pub struct Writer<'a> {
     open_shell_ids: Vec<Option<u64>>,
     oriented_closed_shell_ids: Vec<Option<u64>>,
     oriented_edge_ids: Vec<Option<u64>>,
+    parametric_representation_context_ids: Vec<Option<u64>>,
     path_ids: Vec<Option<u64>>,
+    pcurve_ids: Vec<Option<u64>>,
     placement_ids: Vec<Option<u64>>,
     plane_ids: Vec<Option<u64>>,
     plane_angle_unit_ids: Vec<Option<u64>>,
@@ -110,12 +117,16 @@ pub struct Writer<'a> {
     quasi_uniform_surface_ids: Vec<Option<u64>>,
     rational_b_spline_curve_ids: Vec<Option<u64>>,
     rational_b_spline_surface_ids: Vec<Option<u64>>,
+    representation_ids: Vec<Option<u64>>,
+    representation_context_ids: Vec<Option<u64>>,
     representation_item_ids: Vec<Option<u64>>,
+    seam_curve_ids: Vec<Option<u64>>,
     si_unit_ids: Vec<Option<u64>>,
     solid_angle_unit_ids: Vec<Option<u64>>,
     solid_model_ids: Vec<Option<u64>>,
     spherical_surface_ids: Vec<Option<u64>>,
     surface_ids: Vec<Option<u64>>,
+    surface_curve_ids: Vec<Option<u64>>,
     surface_of_linear_extrusion_ids: Vec<Option<u64>>,
     surface_of_revolution_ids: Vec<Option<u64>>,
     swept_surface_ids: Vec<Option<u64>>,
@@ -152,7 +163,9 @@ impl<'a> Writer<'a> {
             bezier_curve_ids: vec![None; model.bezier_curves.items.len()],
             bezier_surface_ids: vec![None; model.bezier_surfaces.items.len()],
             bounded_curve_ids: vec![None; model.bounded_curves.items.len()],
+            bounded_pcurve_ids: vec![None; model.bounded_pcurves.items.len()],
             bounded_surface_ids: vec![None; model.bounded_surfaces.items.len()],
+            bounded_surface_curve_ids: vec![None; model.bounded_surface_curves.items.len()],
             brep_with_void_ids: vec![None; model.brep_with_voidss.items.len()],
             cartesian_point_ids: vec![None; model.cartesian_points.items.len()],
             circle_ids: vec![None; model.circles.items.len()],
@@ -164,6 +177,10 @@ impl<'a> Writer<'a> {
             conversion_based_unit_ids: vec![None; model.conversion_based_units.items.len()],
             curve_ids: vec![None; model.curves.items.len()],
             cylindrical_surface_ids: vec![None; model.cylindrical_surfaces.items.len()],
+            definitional_representation_ids: vec![
+                None;
+                model.definitional_representations.items.len()
+            ],
             derived_unit_ids: vec![None; model.derived_units.items.len()],
             derived_unit_element_ids: vec![None; model.derived_unit_elements.items.len()],
             dimensional_exponent_ids: vec![None; model.dimensional_exponentss.items.len()],
@@ -177,10 +194,18 @@ impl<'a> Writer<'a> {
             face_bound_ids: vec![None; model.face_bounds.items.len()],
             face_outer_bound_ids: vec![None; model.face_outer_bounds.items.len()],
             face_surface_ids: vec![None; model.face_surfaces.items.len()],
+            geometric_representation_context_ids: vec![
+                None;
+                model
+                    .geometric_representation_contexts
+                    .items
+                    .len()
+            ],
             geometric_representation_item_ids: vec![
                 None;
                 model.geometric_representation_items.items.len()
             ],
+            intersection_curve_ids: vec![None; model.intersection_curves.items.len()],
             length_measure_with_unit_ids: vec![None; model.length_measure_with_units.items.len()],
             length_unit_ids: vec![None; model.length_units.items.len()],
             line_ids: vec![None; model.lines.items.len()],
@@ -193,7 +218,15 @@ impl<'a> Writer<'a> {
             open_shell_ids: vec![None; model.open_shells.items.len()],
             oriented_closed_shell_ids: vec![None; model.oriented_closed_shells.items.len()],
             oriented_edge_ids: vec![None; model.oriented_edges.items.len()],
+            parametric_representation_context_ids: vec![
+                None;
+                model
+                    .parametric_representation_contexts
+                    .items
+                    .len()
+            ],
             path_ids: vec![None; model.paths.items.len()],
+            pcurve_ids: vec![None; model.pcurves.items.len()],
             placement_ids: vec![None; model.placements.items.len()],
             plane_ids: vec![None; model.planes.items.len()],
             plane_angle_unit_ids: vec![None; model.plane_angle_units.items.len()],
@@ -203,12 +236,16 @@ impl<'a> Writer<'a> {
             quasi_uniform_surface_ids: vec![None; model.quasi_uniform_surfaces.items.len()],
             rational_b_spline_curve_ids: vec![None; model.rational_b_spline_curves.items.len()],
             rational_b_spline_surface_ids: vec![None; model.rational_b_spline_surfaces.items.len()],
+            representation_ids: vec![None; model.representations.items.len()],
+            representation_context_ids: vec![None; model.representation_contexts.items.len()],
             representation_item_ids: vec![None; model.representation_items.items.len()],
+            seam_curve_ids: vec![None; model.seam_curves.items.len()],
             si_unit_ids: vec![None; model.si_units.items.len()],
             solid_angle_unit_ids: vec![None; model.solid_angle_units.items.len()],
             solid_model_ids: vec![None; model.solid_models.items.len()],
             spherical_surface_ids: vec![None; model.spherical_surfaces.items.len()],
             surface_ids: vec![None; model.surfaces.items.len()],
+            surface_curve_ids: vec![None; model.surface_curves.items.len()],
             surface_of_linear_extrusion_ids: vec![
                 None;
                 model.surface_of_linear_extrusions.items.len()
@@ -590,6 +627,26 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_bounded_pcurves(&mut self, id: BoundedPcurveId) -> u64 {
+        if let Some(n) = self.bounded_pcurve_ids[id.0] {
+            return n;
+        }
+        let it = self.model.bounded_pcurves.get(id.0).clone();
+        let n = self.fresh();
+        self.bounded_pcurve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_surface(it.basis_surface)),
+            format!(
+                "#{}",
+                self.emit_ref_definitional_representation(it.reference_to_curve)
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = BOUNDED_PCURVE({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_bounded_surfaces(&mut self, id: BoundedSurfaceId) -> u64 {
         if let Some(n) = self.bounded_surface_ids[id.0] {
             return n;
@@ -600,6 +657,33 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![step_str(&it.name)];
         self.out
             .push_str(&format!("#{n} = BOUNDED_SURFACE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_bounded_surface_curves(&mut self, id: BoundedSurfaceCurveId) -> u64 {
+        if let Some(n) = self.bounded_surface_curve_ids[id.0] {
+            return n;
+        }
+        let it = self.model.bounded_surface_curves.get(id.0).clone();
+        let n = self.fresh();
+        self.bounded_surface_curve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!(
+                "({})",
+                it.associated_geometry
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            it.master_representation.token().to_string(),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = BOUNDED_SURFACE_CURVE({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -733,14 +817,16 @@ impl<'a> Writer<'a> {
         self.connected_face_set_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!(
-                "({})",
-                it.cfs_faces
-                    .iter()
-                    .map(|e| format!("#{}", self.emit_ref_face(*e)))
-                    .collect::<Vec<_>>()
-                    .join(",")
-            ),
+            match &it.cfs_faces {
+                Some(v) => format!(
+                    "({})",
+                    v.iter()
+                        .map(|e| format!("#{}", self.emit_ref_face(*e)))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                None => "*".to_string(),
+            },
         ];
         self.out.push_str(&format!(
             "#{n} = CONNECTED_FACE_SET({});\n",
@@ -813,6 +899,35 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = CYLINDRICAL_SURFACE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_definitional_representations(&mut self, id: DefinitionalRepresentationId) -> u64 {
+        if let Some(n) = self.definitional_representation_ids[id.0] {
+            return n;
+        }
+        let it = self.model.definitional_representations.get(id.0).clone();
+        let n = self.fresh();
+        self.definitional_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.items
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_context(it.context_of_items)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DEFINITIONAL_REPRESENTATION({});\n",
             attrs.join(",")
         ));
         n
@@ -1012,16 +1127,14 @@ impl<'a> Writer<'a> {
         self.face_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            match &it.bounds {
-                Some(v) => format!(
-                    "({})",
-                    v.iter()
-                        .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
-                        .collect::<Vec<_>>()
-                        .join(",")
-                ),
-                None => "*".to_string(),
-            },
+            format!(
+                "({})",
+                it.bounds
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         ];
         self.out
             .push_str(&format!("#{n} = FACE({});\n", attrs.join(",")));
@@ -1087,6 +1200,32 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_geometric_representation_contexts(
+        &mut self,
+        id: GeometricRepresentationContextId,
+    ) -> u64 {
+        if let Some(n) = self.geometric_representation_context_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .geometric_representation_contexts
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.geometric_representation_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.context_identifier),
+            step_str(&it.context_type),
+            format!("{}", it.coordinate_space_dimension),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_REPRESENTATION_CONTEXT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_geometric_representation_items(&mut self, id: GeometricRepresentationItemId) -> u64 {
         if let Some(n) = self.geometric_representation_item_ids[id.0] {
             return n;
@@ -1097,6 +1236,33 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![step_str(&it.name)];
         self.out.push_str(&format!(
             "#{n} = GEOMETRIC_REPRESENTATION_ITEM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_intersection_curves(&mut self, id: IntersectionCurveId) -> u64 {
+        if let Some(n) = self.intersection_curve_ids[id.0] {
+            return n;
+        }
+        let it = self.model.intersection_curves.get(id.0).clone();
+        let n = self.fresh();
+        self.intersection_curve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!(
+                "({})",
+                it.associated_geometry
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            it.master_representation.token().to_string(),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = INTERSECTION_CURVE({});\n",
             attrs.join(",")
         ));
         n
@@ -1312,6 +1478,28 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_parametric_representation_contexts(
+        &mut self,
+        id: ParametricRepresentationContextId,
+    ) -> u64 {
+        if let Some(n) = self.parametric_representation_context_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .parametric_representation_contexts
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.parametric_representation_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.context_identifier), step_str(&it.context_type)];
+        self.out.push_str(&format!(
+            "#{n} = PARAMETRIC_REPRESENTATION_CONTEXT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_paths(&mut self, id: PathId) -> u64 {
         if let Some(n) = self.path_ids[id.0] {
             return n;
@@ -1321,19 +1509,37 @@ impl<'a> Writer<'a> {
         self.path_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            match &it.edge_list {
-                Some(v) => format!(
-                    "({})",
-                    v.iter()
-                        .map(|e| format!("#{}", self.emit_ref_oriented_edge(*e)))
-                        .collect::<Vec<_>>()
-                        .join(",")
-                ),
-                None => "*".to_string(),
-            },
+            format!(
+                "({})",
+                it.edge_list
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_oriented_edge(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         ];
         self.out
             .push_str(&format!("#{n} = PATH({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_pcurves(&mut self, id: PcurveId) -> u64 {
+        if let Some(n) = self.pcurve_ids[id.0] {
+            return n;
+        }
+        let it = self.model.pcurves.get(id.0).clone();
+        let n = self.fresh();
+        self.pcurve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_surface(it.basis_surface)),
+            format!(
+                "#{}",
+                self.emit_ref_definitional_representation(it.reference_to_curve)
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = PCURVE({});\n", attrs.join(",")));
         n
     }
 
@@ -1572,6 +1778,48 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_representations(&mut self, id: RepresentationId) -> u64 {
+        if let Some(n) = self.representation_ids[id.0] {
+            return n;
+        }
+        let it = self.model.representations.get(id.0).clone();
+        let n = self.fresh();
+        self.representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.items
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_context(it.context_of_items)
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = REPRESENTATION({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_representation_contexts(&mut self, id: RepresentationContextId) -> u64 {
+        if let Some(n) = self.representation_context_ids[id.0] {
+            return n;
+        }
+        let it = self.model.representation_contexts.get(id.0).clone();
+        let n = self.fresh();
+        self.representation_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.context_identifier), step_str(&it.context_type)];
+        self.out.push_str(&format!(
+            "#{n} = REPRESENTATION_CONTEXT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_representation_items(&mut self, id: RepresentationItemId) -> u64 {
         if let Some(n) = self.representation_item_ids[id.0] {
             return n;
@@ -1584,6 +1832,31 @@ impl<'a> Writer<'a> {
             "#{n} = REPRESENTATION_ITEM({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_seam_curves(&mut self, id: SeamCurveId) -> u64 {
+        if let Some(n) = self.seam_curve_ids[id.0] {
+            return n;
+        }
+        let it = self.model.seam_curves.get(id.0).clone();
+        let n = self.fresh();
+        self.seam_curve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!(
+                "({})",
+                it.associated_geometry
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            it.master_representation.token().to_string(),
+        ];
+        self.out
+            .push_str(&format!("#{n} = SEAM_CURVE({});\n", attrs.join(",")));
         n
     }
 
@@ -1663,6 +1936,31 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![step_str(&it.name)];
         self.out
             .push_str(&format!("#{n} = SURFACE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_surface_curves(&mut self, id: SurfaceCurveId) -> u64 {
+        if let Some(n) = self.surface_curve_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_curves.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_curve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!(
+                "({})",
+                it.associated_geometry
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            it.master_representation.token().to_string(),
+        ];
+        self.out
+            .push_str(&format!("#{n} = SURFACE_CURVE({});\n", attrs.join(",")));
         n
     }
 
@@ -1952,6 +2250,7 @@ impl<'a> Writer<'a> {
         match r {
             ClosedShellRef::ClosedShell(i) => self.emit_closed_shells(i),
             ClosedShellRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
+            ClosedShellRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -1961,15 +2260,30 @@ impl<'a> Writer<'a> {
             CurveRef::BSplineCurveWithKnots(i) => self.emit_b_spline_curve_with_knotss(i),
             CurveRef::BezierCurve(i) => self.emit_bezier_curves(i),
             CurveRef::BoundedCurve(i) => self.emit_bounded_curves(i),
+            CurveRef::BoundedPcurve(i) => self.emit_bounded_pcurves(i),
+            CurveRef::BoundedSurfaceCurve(i) => self.emit_bounded_surface_curves(i),
             CurveRef::Circle(i) => self.emit_circles(i),
             CurveRef::Conic(i) => self.emit_conics(i),
             CurveRef::Curve(i) => self.emit_curves(i),
             CurveRef::Ellipse(i) => self.emit_ellipses(i),
+            CurveRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
             CurveRef::Line(i) => self.emit_lines(i),
+            CurveRef::Pcurve(i) => self.emit_pcurves(i),
             CurveRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
             CurveRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
+            CurveRef::SeamCurve(i) => self.emit_seam_curves(i),
+            CurveRef::SurfaceCurve(i) => self.emit_surface_curves(i),
             CurveRef::UniformCurve(i) => self.emit_uniform_curves(i),
             CurveRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_definitional_representation(&mut self, r: DefinitionalRepresentationRef) -> u64 {
+        match r {
+            DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
+                self.emit_definitional_representations(i)
+            }
+            DefinitionalRepresentationRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2005,6 +2319,7 @@ impl<'a> Writer<'a> {
         match r {
             FaceBoundRef::FaceBound(i) => self.emit_face_bounds(i),
             FaceBoundRef::FaceOuterBound(i) => self.emit_face_outer_bounds(i),
+            FaceBoundRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2034,6 +2349,7 @@ impl<'a> Writer<'a> {
             MeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 self.emit_uncertainty_measure_with_units(i)
             }
+            MeasureWithUnitRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2055,12 +2371,46 @@ impl<'a> Writer<'a> {
     fn emit_ref_oriented_closed_shell(&mut self, r: OrientedClosedShellRef) -> u64 {
         match r {
             OrientedClosedShellRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
+            OrientedClosedShellRef::Complex(i) => self.emit_complex(i),
         }
     }
 
     fn emit_ref_oriented_edge(&mut self, r: OrientedEdgeRef) -> u64 {
         match r {
             OrientedEdgeRef::OrientedEdge(i) => self.emit_oriented_edges(i),
+            OrientedEdgeRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_pcurve_or_surface(&mut self, r: PcurveOrSurfaceRef) -> u64 {
+        match r {
+            PcurveOrSurfaceRef::BSplineSurface(i) => self.emit_b_spline_surfaces(i),
+            PcurveOrSurfaceRef::BSplineSurfaceWithKnots(i) => {
+                self.emit_b_spline_surface_with_knotss(i)
+            }
+            PcurveOrSurfaceRef::BezierSurface(i) => self.emit_bezier_surfaces(i),
+            PcurveOrSurfaceRef::BoundedPcurve(i) => self.emit_bounded_pcurves(i),
+            PcurveOrSurfaceRef::BoundedSurface(i) => self.emit_bounded_surfaces(i),
+            PcurveOrSurfaceRef::ConicalSurface(i) => self.emit_conical_surfaces(i),
+            PcurveOrSurfaceRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
+            PcurveOrSurfaceRef::ElementarySurface(i) => self.emit_elementary_surfaces(i),
+            PcurveOrSurfaceRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
+            PcurveOrSurfaceRef::Pcurve(i) => self.emit_pcurves(i),
+            PcurveOrSurfaceRef::Plane(i) => self.emit_planes(i),
+            PcurveOrSurfaceRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
+            PcurveOrSurfaceRef::RationalBSplineSurface(i) => {
+                self.emit_rational_b_spline_surfaces(i)
+            }
+            PcurveOrSurfaceRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
+            PcurveOrSurfaceRef::Surface(i) => self.emit_surfaces(i),
+            PcurveOrSurfaceRef::SurfaceOfLinearExtrusion(i) => {
+                self.emit_surface_of_linear_extrusions(i)
+            }
+            PcurveOrSurfaceRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
+            PcurveOrSurfaceRef::SweptSurface(i) => self.emit_swept_surfaces(i),
+            PcurveOrSurfaceRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
+            PcurveOrSurfaceRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
+            PcurveOrSurfaceRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2069,6 +2419,108 @@ impl<'a> Writer<'a> {
             PointRef::CartesianPoint(i) => self.emit_cartesian_points(i),
             PointRef::Point(i) => self.emit_points(i),
             PointRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_representation_context(&mut self, r: RepresentationContextRef) -> u64 {
+        match r {
+            RepresentationContextRef::GeometricRepresentationContext(i) => {
+                self.emit_geometric_representation_contexts(i)
+            }
+            RepresentationContextRef::ParametricRepresentationContext(i) => {
+                self.emit_parametric_representation_contexts(i)
+            }
+            RepresentationContextRef::RepresentationContext(i) => {
+                self.emit_representation_contexts(i)
+            }
+            RepresentationContextRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_representation_item(&mut self, r: RepresentationItemRef) -> u64 {
+        match r {
+            RepresentationItemRef::AdvancedFace(i) => self.emit_advanced_faces(i),
+            RepresentationItemRef::Axis1Placement(i) => self.emit_axis1_placements(i),
+            RepresentationItemRef::Axis2Placement2d(i) => self.emit_axis2_placement2ds(i),
+            RepresentationItemRef::Axis2Placement3d(i) => self.emit_axis2_placement3ds(i),
+            RepresentationItemRef::BSplineCurve(i) => self.emit_b_spline_curves(i),
+            RepresentationItemRef::BSplineCurveWithKnots(i) => {
+                self.emit_b_spline_curve_with_knotss(i)
+            }
+            RepresentationItemRef::BSplineSurface(i) => self.emit_b_spline_surfaces(i),
+            RepresentationItemRef::BSplineSurfaceWithKnots(i) => {
+                self.emit_b_spline_surface_with_knotss(i)
+            }
+            RepresentationItemRef::BezierCurve(i) => self.emit_bezier_curves(i),
+            RepresentationItemRef::BezierSurface(i) => self.emit_bezier_surfaces(i),
+            RepresentationItemRef::BoundedCurve(i) => self.emit_bounded_curves(i),
+            RepresentationItemRef::BoundedPcurve(i) => self.emit_bounded_pcurves(i),
+            RepresentationItemRef::BoundedSurface(i) => self.emit_bounded_surfaces(i),
+            RepresentationItemRef::BoundedSurfaceCurve(i) => self.emit_bounded_surface_curves(i),
+            RepresentationItemRef::BrepWithVoids(i) => self.emit_brep_with_voidss(i),
+            RepresentationItemRef::CartesianPoint(i) => self.emit_cartesian_points(i),
+            RepresentationItemRef::Circle(i) => self.emit_circles(i),
+            RepresentationItemRef::ClosedShell(i) => self.emit_closed_shells(i),
+            RepresentationItemRef::Conic(i) => self.emit_conics(i),
+            RepresentationItemRef::ConicalSurface(i) => self.emit_conical_surfaces(i),
+            RepresentationItemRef::ConnectedFaceSet(i) => self.emit_connected_face_sets(i),
+            RepresentationItemRef::Curve(i) => self.emit_curves(i),
+            RepresentationItemRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
+            RepresentationItemRef::Direction(i) => self.emit_directions(i),
+            RepresentationItemRef::Edge(i) => self.emit_edges(i),
+            RepresentationItemRef::EdgeCurve(i) => self.emit_edge_curves(i),
+            RepresentationItemRef::EdgeLoop(i) => self.emit_edge_loops(i),
+            RepresentationItemRef::ElementarySurface(i) => self.emit_elementary_surfaces(i),
+            RepresentationItemRef::Ellipse(i) => self.emit_ellipses(i),
+            RepresentationItemRef::Face(i) => self.emit_faces(i),
+            RepresentationItemRef::FaceBound(i) => self.emit_face_bounds(i),
+            RepresentationItemRef::FaceOuterBound(i) => self.emit_face_outer_bounds(i),
+            RepresentationItemRef::FaceSurface(i) => self.emit_face_surfaces(i),
+            RepresentationItemRef::GeometricRepresentationItem(i) => {
+                self.emit_geometric_representation_items(i)
+            }
+            RepresentationItemRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
+            RepresentationItemRef::Line(i) => self.emit_lines(i),
+            RepresentationItemRef::Loop(i) => self.emit_loops(i),
+            RepresentationItemRef::ManifoldSolidBrep(i) => self.emit_manifold_solid_breps(i),
+            RepresentationItemRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
+            RepresentationItemRef::OpenShell(i) => self.emit_open_shells(i),
+            RepresentationItemRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
+            RepresentationItemRef::OrientedEdge(i) => self.emit_oriented_edges(i),
+            RepresentationItemRef::Path(i) => self.emit_paths(i),
+            RepresentationItemRef::Pcurve(i) => self.emit_pcurves(i),
+            RepresentationItemRef::Placement(i) => self.emit_placements(i),
+            RepresentationItemRef::Plane(i) => self.emit_planes(i),
+            RepresentationItemRef::Point(i) => self.emit_points(i),
+            RepresentationItemRef::PolyLoop(i) => self.emit_poly_loops(i),
+            RepresentationItemRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
+            RepresentationItemRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
+            RepresentationItemRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
+            RepresentationItemRef::RationalBSplineSurface(i) => {
+                self.emit_rational_b_spline_surfaces(i)
+            }
+            RepresentationItemRef::RepresentationItem(i) => self.emit_representation_items(i),
+            RepresentationItemRef::SeamCurve(i) => self.emit_seam_curves(i),
+            RepresentationItemRef::SolidModel(i) => self.emit_solid_models(i),
+            RepresentationItemRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
+            RepresentationItemRef::Surface(i) => self.emit_surfaces(i),
+            RepresentationItemRef::SurfaceCurve(i) => self.emit_surface_curves(i),
+            RepresentationItemRef::SurfaceOfLinearExtrusion(i) => {
+                self.emit_surface_of_linear_extrusions(i)
+            }
+            RepresentationItemRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
+            RepresentationItemRef::SweptSurface(i) => self.emit_swept_surfaces(i),
+            RepresentationItemRef::TopologicalRepresentationItem(i) => {
+                self.emit_topological_representation_items(i)
+            }
+            RepresentationItemRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
+            RepresentationItemRef::UniformCurve(i) => self.emit_uniform_curves(i),
+            RepresentationItemRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
+            RepresentationItemRef::Vector(i) => self.emit_vectors(i),
+            RepresentationItemRef::Vertex(i) => self.emit_vertexs(i),
+            RepresentationItemRef::VertexLoop(i) => self.emit_vertex_loops(i),
+            RepresentationItemRef::VertexPoint(i) => self.emit_vertex_points(i),
+            RepresentationItemRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2135,6 +2587,7 @@ impl<'a> Writer<'a> {
         let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len());
         for part in &cu.parts {
             part_txt.push(match part {
+                UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
                 UnitPart::BSplineCurve {
                     degree,
                     control_points_list,
@@ -2264,7 +2717,34 @@ impl<'a> Writer<'a> {
                 UnitPart::BezierCurve => "BEZIER_CURVE()".to_string(),
                 UnitPart::BezierSurface => "BEZIER_SURFACE()".to_string(),
                 UnitPart::BoundedCurve => "BOUNDED_CURVE()".to_string(),
+                UnitPart::BoundedPcurve => "BOUNDED_PCURVE()".to_string(),
                 UnitPart::BoundedSurface => "BOUNDED_SURFACE()".to_string(),
+                UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE()".to_string(),
+                UnitPart::BrepWithVoids { voids, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        voids
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_oriented_closed_shell(*e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("BREP_WITH_VOIDS({})", a.join(","))
+                }
+                UnitPart::ClosedShell => "CLOSED_SHELL()".to_string(),
+                UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
+                    let a: Vec<String> = vec![match cfs_faces {
+                        Some(v) => format!(
+                            "({})",
+                            v.iter()
+                                .map(|e| format!("#{}", self.emit_ref_face(*e)))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        None => "*".to_string(),
+                    }];
+                    format!("CONNECTED_FACE_SET({})", a.join(","))
+                }
                 UnitPart::ContextDependentUnit { name, .. } => {
                     let a: Vec<String> = vec![step_str(name)];
                     format!("CONTEXT_DEPENDENT_UNIT({})", a.join(","))
@@ -2281,6 +2761,18 @@ impl<'a> Writer<'a> {
                     format!("CONVERSION_BASED_UNIT({})", a.join(","))
                 }
                 UnitPart::Curve => "CURVE()".to_string(),
+                UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION()".to_string(),
+                UnitPart::DerivedUnit { elements, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        elements
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_derived_unit_element(*e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("DERIVED_UNIT({})", a.join(","))
+                }
                 UnitPart::Direction {
                     direction_ratios, ..
                 } => {
@@ -2322,19 +2814,33 @@ impl<'a> Writer<'a> {
                     ];
                     format!("EDGE_CURVE({})", a.join(","))
                 }
+                UnitPart::EdgeLoop => "EDGE_LOOP()".to_string(),
+                UnitPart::ElementarySurface { position, .. } => {
+                    let a: Vec<String> =
+                        vec![format!("#{}", self.emit_ref_axis2_placement3d(*position))];
+                    format!("ELEMENTARY_SURFACE({})", a.join(","))
+                }
                 UnitPart::Face { bounds, .. } => {
-                    let a: Vec<String> = vec![match bounds {
-                        Some(v) => format!(
-                            "({})",
-                            v.iter()
-                                .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
-                                .collect::<Vec<_>>()
-                                .join(",")
-                        ),
-                        None => "*".to_string(),
-                    }];
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        bounds
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
                     format!("FACE({})", a.join(","))
                 }
+                UnitPart::FaceBound {
+                    bound, orientation, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_loop(*bound)),
+                        (if *orientation { ".T." } else { ".F." }).to_string(),
+                    ];
+                    format!("FACE_BOUND({})", a.join(","))
+                }
+                UnitPart::FaceOuterBound => "FACE_OUTER_BOUND()".to_string(),
                 UnitPart::FaceSurface {
                     face_geometry,
                     same_sense,
@@ -2346,12 +2852,36 @@ impl<'a> Writer<'a> {
                     ];
                     format!("FACE_SURFACE({})", a.join(","))
                 }
+                UnitPart::GeometricRepresentationContext {
+                    coordinate_space_dimension,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![format!("{}", coordinate_space_dimension)];
+                    format!("GEOMETRIC_REPRESENTATION_CONTEXT({})", a.join(","))
+                }
                 UnitPart::GeometricRepresentationItem => {
                     "GEOMETRIC_REPRESENTATION_ITEM()".to_string()
                 }
+                UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
+                UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
                 UnitPart::LengthUnit => "LENGTH_UNIT()".to_string(),
                 UnitPart::Loop => "LOOP()".to_string(),
+                UnitPart::ManifoldSolidBrep { outer, .. } => {
+                    let a: Vec<String> = vec![format!("#{}", self.emit_ref_closed_shell(*outer))];
+                    format!("MANIFOLD_SOLID_BREP({})", a.join(","))
+                }
                 UnitPart::MassUnit => "MASS_UNIT()".to_string(),
+                UnitPart::MeasureWithUnit {
+                    value_component,
+                    unit_component,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        measure(value_component),
+                        format!("#{}", self.emit_ref_unit(*unit_component)),
+                    ];
+                    format!("MEASURE_WITH_UNIT({})", a.join(","))
+                }
                 UnitPart::NamedUnit { dimensions, .. } => {
                     let a: Vec<String> = vec![match dimensions {
                         Some(r) => format!("#{}", self.emit_ref_dimensional_exponents(*r)),
@@ -2359,18 +2889,56 @@ impl<'a> Writer<'a> {
                     }];
                     format!("NAMED_UNIT({})", a.join(","))
                 }
+                UnitPart::OpenShell => "OPEN_SHELL()".to_string(),
+                UnitPart::OrientedClosedShell {
+                    closed_shell_element,
+                    orientation,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_closed_shell(*closed_shell_element)),
+                        (if *orientation { ".T." } else { ".F." }).to_string(),
+                    ];
+                    format!("ORIENTED_CLOSED_SHELL({})", a.join(","))
+                }
+                UnitPart::OrientedEdge {
+                    edge_element,
+                    orientation,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_edge(*edge_element)),
+                        (if *orientation { ".T." } else { ".F." }).to_string(),
+                    ];
+                    format!("ORIENTED_EDGE({})", a.join(","))
+                }
+                UnitPart::ParametricRepresentationContext => {
+                    "PARAMETRIC_REPRESENTATION_CONTEXT()".to_string()
+                }
                 UnitPart::Path { edge_list, .. } => {
-                    let a: Vec<String> = vec![match edge_list {
-                        Some(v) => format!(
-                            "({})",
-                            v.iter()
-                                .map(|e| format!("#{}", self.emit_ref_oriented_edge(*e)))
-                                .collect::<Vec<_>>()
-                                .join(",")
-                        ),
-                        None => "*".to_string(),
-                    }];
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        edge_list
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_oriented_edge(*e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
                     format!("PATH({})", a.join(","))
+                }
+                UnitPart::Pcurve {
+                    basis_surface,
+                    reference_to_curve,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_surface(*basis_surface)),
+                        format!(
+                            "#{}",
+                            self.emit_ref_definitional_representation(*reference_to_curve)
+                        ),
+                    ];
+                    format!("PCURVE({})", a.join(","))
                 }
                 UnitPart::Placement { location, .. } => {
                     let a: Vec<String> =
@@ -2417,10 +2985,42 @@ impl<'a> Writer<'a> {
                     )];
                     format!("RATIONAL_B_SPLINE_SURFACE({})", a.join(","))
                 }
+                UnitPart::Representation {
+                    name,
+                    items,
+                    context_of_items,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "({})",
+                            items
+                                .iter()
+                                .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_context(*context_of_items)
+                        ),
+                    ];
+                    format!("REPRESENTATION({})", a.join(","))
+                }
+                UnitPart::RepresentationContext {
+                    context_identifier,
+                    context_type,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![step_str(context_identifier), step_str(context_type)];
+                    format!("REPRESENTATION_CONTEXT({})", a.join(","))
+                }
                 UnitPart::RepresentationItem { name, .. } => {
                     let a: Vec<String> = vec![step_str(name)];
                     format!("REPRESENTATION_ITEM({})", a.join(","))
                 }
+                UnitPart::SeamCurve => "SEAM_CURVE()".to_string(),
                 UnitPart::SiUnit { prefix, name, .. } => {
                     let a: Vec<String> = vec![
                         match prefix {
@@ -2434,9 +3034,37 @@ impl<'a> Writer<'a> {
                 UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT()".to_string(),
                 UnitPart::SolidModel => "SOLID_MODEL()".to_string(),
                 UnitPart::Surface => "SURFACE()".to_string(),
+                UnitPart::SurfaceCurve {
+                    curve_3d,
+                    associated_geometry,
+                    master_representation,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_curve(*curve_3d)),
+                        format!(
+                            "({})",
+                            associated_geometry
+                                .iter()
+                                .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        master_representation.token().to_string(),
+                    ];
+                    format!("SURFACE_CURVE({})", a.join(","))
+                }
                 UnitPart::TimeUnit => "TIME_UNIT()".to_string(),
                 UnitPart::TopologicalRepresentationItem => {
                     "TOPOLOGICAL_REPRESENTATION_ITEM()".to_string()
+                }
+                UnitPart::ToroidalSurface {
+                    major_radius,
+                    minor_radius,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![real(*major_radius), real(*minor_radius)];
+                    format!("TOROIDAL_SURFACE({})", a.join(","))
                 }
                 UnitPart::UniformCurve => "UNIFORM_CURVE()".to_string(),
                 UnitPart::UniformSurface => "UNIFORM_SURFACE()".to_string(),
@@ -2505,8 +3133,14 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.bounded_curves.items.len() {
             self.emit_bounded_curves(BoundedCurveId(i));
         }
+        for i in 0..self.model.bounded_pcurves.items.len() {
+            self.emit_bounded_pcurves(BoundedPcurveId(i));
+        }
         for i in 0..self.model.bounded_surfaces.items.len() {
             self.emit_bounded_surfaces(BoundedSurfaceId(i));
+        }
+        for i in 0..self.model.bounded_surface_curves.items.len() {
+            self.emit_bounded_surface_curves(BoundedSurfaceCurveId(i));
         }
         for i in 0..self.model.brep_with_voidss.items.len() {
             self.emit_brep_with_voidss(BrepWithVoidsId(i));
@@ -2540,6 +3174,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.cylindrical_surfaces.items.len() {
             self.emit_cylindrical_surfaces(CylindricalSurfaceId(i));
+        }
+        for i in 0..self.model.definitional_representations.items.len() {
+            self.emit_definitional_representations(DefinitionalRepresentationId(i));
         }
         for i in 0..self.model.derived_units.items.len() {
             self.emit_derived_units(DerivedUnitId(i));
@@ -2580,8 +3217,14 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.face_surfaces.items.len() {
             self.emit_face_surfaces(FaceSurfaceId(i));
         }
+        for i in 0..self.model.geometric_representation_contexts.items.len() {
+            self.emit_geometric_representation_contexts(GeometricRepresentationContextId(i));
+        }
         for i in 0..self.model.geometric_representation_items.items.len() {
             self.emit_geometric_representation_items(GeometricRepresentationItemId(i));
+        }
+        for i in 0..self.model.intersection_curves.items.len() {
+            self.emit_intersection_curves(IntersectionCurveId(i));
         }
         for i in 0..self.model.length_measure_with_units.items.len() {
             self.emit_length_measure_with_units(LengthMeasureWithUnitId(i));
@@ -2619,8 +3262,14 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.oriented_edges.items.len() {
             self.emit_oriented_edges(OrientedEdgeId(i));
         }
+        for i in 0..self.model.parametric_representation_contexts.items.len() {
+            self.emit_parametric_representation_contexts(ParametricRepresentationContextId(i));
+        }
         for i in 0..self.model.paths.items.len() {
             self.emit_paths(PathId(i));
+        }
+        for i in 0..self.model.pcurves.items.len() {
+            self.emit_pcurves(PcurveId(i));
         }
         for i in 0..self.model.placements.items.len() {
             self.emit_placements(PlacementId(i));
@@ -2649,8 +3298,17 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.rational_b_spline_surfaces.items.len() {
             self.emit_rational_b_spline_surfaces(RationalBSplineSurfaceId(i));
         }
+        for i in 0..self.model.representations.items.len() {
+            self.emit_representations(RepresentationId(i));
+        }
+        for i in 0..self.model.representation_contexts.items.len() {
+            self.emit_representation_contexts(RepresentationContextId(i));
+        }
         for i in 0..self.model.representation_items.items.len() {
             self.emit_representation_items(RepresentationItemId(i));
+        }
+        for i in 0..self.model.seam_curves.items.len() {
+            self.emit_seam_curves(SeamCurveId(i));
         }
         for i in 0..self.model.si_units.items.len() {
             self.emit_si_units(SiUnitId(i));
@@ -2666,6 +3324,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.surfaces.items.len() {
             self.emit_surfaces(SurfaceId(i));
+        }
+        for i in 0..self.model.surface_curves.items.len() {
+            self.emit_surface_curves(SurfaceCurveId(i));
         }
         for i in 0..self.model.surface_of_linear_extrusions.items.len() {
             self.emit_surface_of_linear_extrusions(SurfaceOfLinearExtrusionId(i));
