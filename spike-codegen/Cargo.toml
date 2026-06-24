@@ -1,0 +1,12 @@
+[package]
+name = "spike-codegen"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+step-io = { path = ".." }
+
+[[bin]]
+name = "roundtrip"
+path = "src/main.rs"

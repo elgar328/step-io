@@ -12,6 +12,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "codegen"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "step-io",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -211,6 +220,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26"
 dependencies = [
  "serde_core",
+]
+
+[[package]]
+name = "spike-codegen"
+version = "0.0.0"
+dependencies = [
+ "step-io",
 ]
 
 [[package]]

@@ -1,0 +1,21 @@
+[package]
+name = "codegen"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+step-io = { path = ".." }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+
+# The generator (reads early.toml + mapping.toml, emits codegen/src/generated/).
+[[bin]]
+name = "codegen"
+path = "src/main.rs"
+
+# Single-file round-trip debug tool (no fixture dependency). The real gate is
+# the reference-check corpus (CODEGEN=1), which calls codegen::check directly.
+[[bin]]
+name = "roundtrip"
+path = "src/roundtrip.rs"

@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "macros", "gen-early"]
+members = [".", "macros", "gen-early", "spike-codegen", "codegen"]
 
 [package]
 name = "step-io"

@@ -913,3 +913,96 @@ variants = { annotation_text = "AnnotationText", gps_data = "GpsData" }
 [enum.des_apll_point_symbol]
 rust_type = "crate::ir::pmi::DesApllPointSymbol"
 variants = { circle = "Circle", dot = "Dot", internal_pair_forward_arrowhead = "InternalPairForwardArrowhead", internal_pair_reverse_arrowhead = "InternalPairReverseArrowhead", none = "None", positive_arrowhead = "PositiveArrowhead", triangle = "Triangle" }
+
+# ---------------------------------------------------------------------------
+# [codegen] — schema-faithful generator (codegen/ crate) domain seeds.
+#
+# Each domain seed list is the entry point for a transitive schema closure
+# (seed + parents + every entity reachable via attr ty: Ref / SELECT members /
+# Vec(Ref) inners). The closure is BOTH the entity set generated AND the
+# round-trip subset filter. units seeds copy the spike's constants. Synthetic
+# complex names (units multi-inheritance combos) are NOT entities — they enter
+# the closure as their component part entities (NAMED_UNIT, SI_UNIT, …) which
+# are listed directly so the generic part-bag covers them.
+# ---------------------------------------------------------------------------
+[codegen.domains]
+units = [
+    "dimensional_exponents",
+    "measure_with_unit",
+    "length_measure_with_unit",
+    "uncertainty_measure_with_unit",
+    "derived_unit",
+    "derived_unit_element",
+    # complex part entities (multi-inheritance named_unit instances)
+    "named_unit",
+    "si_unit",
+    "conversion_based_unit",
+    "context_dependent_unit",
+    "length_unit",
+    "mass_unit",
+    "plane_angle_unit",
+    "solid_angle_unit",
+    "time_unit",
+]
+geometry = [
+    "cartesian_point",
+    "direction",
+    "vector",
+    "line",
+    "circle",
+    "ellipse",
+    "b_spline_curve_with_knots",
+    # pcurve / surface_curve / seam_curve are OUT of the Phase 0 closure: they
+    # drag in the `representation` / pcurve subsystem (definitional_representation
+    # + representation_context complex), which is Phase 2 territory. The
+    # round-trip filter excludes any entity whose refs escape the closure, so
+    # fixtures using these (cylinder/seam curves) still round-trip their
+    # in-closure geometry — the escaping edge_curves are simply not compared.
+    "axis1_placement",
+    "axis2_placement_2d",
+    "axis2_placement_3d",
+    "plane",
+    "cylindrical_surface",
+    "conical_surface",
+    "spherical_surface",
+    "toroidal_surface",
+    "surface_of_linear_extrusion",
+    "surface_of_revolution",
+    "offset_surface",
+    "b_spline_surface_with_knots",
+]
+topology = [
+    "vertex_point",
+    "edge_curve",
+    "oriented_edge",
+    "edge_loop",
+    "poly_loop",
+    "vertex_loop",
+    "face_bound",
+    "face_outer_bound",
+    "advanced_face",
+    "closed_shell",
+    "open_shell",
+    "oriented_closed_shell",
+    "manifold_solid_brep",
+    "brep_with_voids",
+]
+
+# Entities that appear ONLY as parts of a complex (multi-inheritance) instance
+# (never as a standalone simple `#N=NAME(..)`). They are collected into a single
+# generic part-bag arena (`ComplexUnit { parts: Vec<UnitPart> }` in the spike),
+# NOT given individual simple arenas. On read, a `RawEntity::Complex` whose parts
+# intersect this set routes to the part-bag; each part keeps its own_attrs.
+# (Mechanical: copied from the spike's COMPLEX_PART_NAMES.)
+[codegen.complex_parts]
+units = [
+    "named_unit",
+    "si_unit",
+    "conversion_based_unit",
+    "context_dependent_unit",
+    "length_unit",
+    "mass_unit",
+    "plane_angle_unit",
+    "solid_angle_unit",
+    "time_unit",
+]
