@@ -64,6 +64,9 @@ fn read_measure_value(a: &Attribute) -> MeasureValue {
 
 pub const SIMPLE_NAMES: &[&str] = &[
     "ADVANCED_FACE",
+    "ANGULARITY_TOLERANCE",
+    "APPLICATION_CONTEXT",
+    "APPLICATION_CONTEXT_ELEMENT",
     "AXIS1_PLACEMENT",
     "AXIS2_PLACEMENT_2D",
     "AXIS2_PLACEMENT_3D",
@@ -79,8 +82,14 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
     "CARTESIAN_POINT",
+    "CHARACTERIZED_OBJECT",
     "CIRCLE",
+    "CIRCULAR_RUNOUT_TOLERANCE",
     "CLOSED_SHELL",
+    "COAXIALITY_TOLERANCE",
+    "COMMON_DATUM",
+    "COMPOSITE_SHAPE_ASPECT",
+    "CONCENTRICITY_TOLERANCE",
     "CONIC",
     "CONICAL_SURFACE",
     "CONNECTED_FACE_SET",
@@ -88,10 +97,21 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONVERSION_BASED_UNIT",
     "CURVE",
     "CYLINDRICAL_SURFACE",
+    "CYLINDRICITY_TOLERANCE",
+    "DATUM",
+    "DATUM_FEATURE",
+    "DATUM_REFERENCE",
+    "DATUM_SYSTEM",
+    "DATUM_TARGET",
     "DEFINITIONAL_REPRESENTATION",
     "DERIVED_UNIT",
     "DERIVED_UNIT_ELEMENT",
+    "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
     "DIMENSIONAL_EXPONENTS",
+    "DIMENSIONAL_LOCATION",
+    "DIMENSIONAL_LOCATION_WITH_PATH",
+    "DIMENSIONAL_SIZE",
+    "DIMENSIONAL_SIZE_WITH_PATH",
     "DIRECTION",
     "EDGE",
     "EDGE_CURVE",
@@ -102,29 +122,54 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "FACE_BOUND",
     "FACE_OUTER_BOUND",
     "FACE_SURFACE",
+    "FLATNESS_TOLERANCE",
+    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
+    "GEOMETRIC_TOLERANCE",
+    "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+    "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
+    "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+    "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
+    "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
     "INTERSECTION_CURVE",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
     "LINE",
+    "LINE_PROFILE_TOLERANCE",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
     "MASS_UNIT",
     "MEASURE_WITH_UNIT",
+    "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "OFFSET_SURFACE",
     "OPEN_SHELL",
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
+    "PARALLELISM_TOLERANCE",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "PATH",
     "PCURVE",
+    "PERPENDICULARITY_TOLERANCE",
+    "PLACED_DATUM_TARGET_FEATURE",
     "PLACEMENT",
     "PLANE",
+    "PLANE_ANGLE_MEASURE_WITH_UNIT",
     "PLANE_ANGLE_UNIT",
     "POINT",
     "POLY_LOOP",
+    "POSITION_TOLERANCE",
+    "PRODUCT",
+    "PRODUCT_CONTEXT",
+    "PRODUCT_DEFINITION",
+    "PRODUCT_DEFINITION_CONTEXT",
+    "PRODUCT_DEFINITION_FORMATION",
+    "PRODUCT_DEFINITION_OCCURRENCE",
+    "PRODUCT_DEFINITION_RELATIONSHIP",
+    "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
+    "PRODUCT_DEFINITION_SHAPE",
+    "PROPERTY_DEFINITION",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
     "RATIONAL_B_SPLINE_CURVE",
@@ -132,20 +177,35 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "REPRESENTATION",
     "REPRESENTATION_CONTEXT",
     "REPRESENTATION_ITEM",
+    "ROUNDNESS_TOLERANCE",
     "SEAM_CURVE",
+    "SHAPE_ASPECT",
+    "SHAPE_ASPECT_RELATIONSHIP",
+    "SHAPE_DIMENSION_REPRESENTATION",
+    "SHAPE_REPRESENTATION",
     "SI_UNIT",
     "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
     "SPHERICAL_SURFACE",
+    "STRAIGHTNESS_TOLERANCE",
     "SURFACE",
     "SURFACE_CURVE",
     "SURFACE_OF_LINEAR_EXTRUSION",
     "SURFACE_OF_REVOLUTION",
+    "SURFACE_PROFILE_TOLERANCE",
     "SWEPT_SURFACE",
+    "SYMMETRY_TOLERANCE",
     "TIME_UNIT",
+    "TOLERANCE_VALUE",
+    "TOLERANCE_ZONE",
+    "TOLERANCE_ZONE_DEFINITION",
+    "TOLERANCE_ZONE_FORM",
+    "TOLERANCE_ZONE_WITH_DATUM",
     "TOPOLOGICAL_REPRESENTATION_ITEM",
     "TOROIDAL_SURFACE",
+    "TOTAL_RUNOUT_TOLERANCE",
     "UNCERTAINTY_MEASURE_WITH_UNIT",
+    "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     "UNIFORM_CURVE",
     "UNIFORM_SURFACE",
     "VECTOR",
@@ -155,6 +215,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
 ];
 pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ADVANCED_FACE",
+    "APPLICATION_CONTEXT_ELEMENT",
     "B_SPLINE_CURVE",
     "B_SPLINE_CURVE_WITH_KNOTS",
     "B_SPLINE_SURFACE",
@@ -166,13 +227,23 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "BOUNDED_SURFACE",
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
+    "CHARACTERIZED_OBJECT",
     "CLOSED_SHELL",
+    "COMMON_DATUM",
+    "COMPOSITE_SHAPE_ASPECT",
     "CONNECTED_FACE_SET",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
     "CURVE",
+    "CYLINDRICITY_TOLERANCE",
+    "DATUM",
+    "DATUM_FEATURE",
+    "DATUM_REFERENCE",
+    "DATUM_SYSTEM",
+    "DATUM_TARGET",
     "DEFINITIONAL_REPRESENTATION",
     "DERIVED_UNIT",
+    "DIMENSIONAL_SIZE",
     "DIRECTION",
     "EDGE",
     "EDGE_CURVE",
@@ -182,15 +253,25 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "FACE_BOUND",
     "FACE_OUTER_BOUND",
     "FACE_SURFACE",
+    "FLATNESS_TOLERANCE",
+    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
+    "GEOMETRIC_TOLERANCE",
+    "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+    "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
+    "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+    "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
+    "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
     "INTERSECTION_CURVE",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
+    "LINE_PROFILE_TOLERANCE",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
     "MASS_UNIT",
     "MEASURE_WITH_UNIT",
+    "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "OPEN_SHELL",
     "ORIENTED_CLOSED_SHELL",
@@ -198,10 +279,23 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "PATH",
     "PCURVE",
+    "PLACED_DATUM_TARGET_FEATURE",
     "PLACEMENT",
+    "PLANE_ANGLE_MEASURE_WITH_UNIT",
     "PLANE_ANGLE_UNIT",
     "POINT",
     "POLY_LOOP",
+    "POSITION_TOLERANCE",
+    "PRODUCT",
+    "PRODUCT_CONTEXT",
+    "PRODUCT_DEFINITION",
+    "PRODUCT_DEFINITION_CONTEXT",
+    "PRODUCT_DEFINITION_FORMATION",
+    "PRODUCT_DEFINITION_OCCURRENCE",
+    "PRODUCT_DEFINITION_RELATIONSHIP",
+    "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
+    "PRODUCT_DEFINITION_SHAPE",
+    "PROPERTY_DEFINITION",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
     "RATIONAL_B_SPLINE_CURVE",
@@ -209,15 +303,26 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "REPRESENTATION",
     "REPRESENTATION_CONTEXT",
     "REPRESENTATION_ITEM",
+    "ROUNDNESS_TOLERANCE",
     "SEAM_CURVE",
+    "SHAPE_ASPECT",
+    "SHAPE_ASPECT_RELATIONSHIP",
+    "SHAPE_DIMENSION_REPRESENTATION",
+    "SHAPE_REPRESENTATION",
     "SI_UNIT",
     "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
+    "STRAIGHTNESS_TOLERANCE",
     "SURFACE",
     "SURFACE_CURVE",
+    "SURFACE_PROFILE_TOLERANCE",
     "TIME_UNIT",
+    "TOLERANCE_ZONE",
+    "TOLERANCE_ZONE_DEFINITION",
+    "TOLERANCE_ZONE_WITH_DATUM",
     "TOPOLOGICAL_REPRESENTATION_ITEM",
     "TOROIDAL_SURFACE",
+    "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     "UNIFORM_CURVE",
     "UNIFORM_SURFACE",
     "VECTOR",
@@ -242,6 +347,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut model = Model::default();
     let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();
     let mut pending_advanced_faces: Vec<(AdvancedFaceId, u64)> = Vec::new();
+    let mut pending_angularity_tolerances: Vec<(AngularityToleranceId, u64)> = Vec::new();
+    let mut pending_application_context_elements: Vec<(ApplicationContextElementId, u64)> =
+        Vec::new();
     let mut pending_axis1_placements: Vec<(Axis1PlacementId, u64)> = Vec::new();
     let mut pending_axis2_placement2ds: Vec<(Axis2Placement2dId, u64)> = Vec::new();
     let mut pending_axis2_placement3ds: Vec<(Axis2Placement3dId, u64)> = Vec::new();
@@ -256,17 +364,37 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_bounded_surface_curves: Vec<(BoundedSurfaceCurveId, u64)> = Vec::new();
     let mut pending_brep_with_voidss: Vec<(BrepWithVoidsId, u64)> = Vec::new();
     let mut pending_circles: Vec<(CircleId, u64)> = Vec::new();
+    let mut pending_circular_runout_tolerances: Vec<(CircularRunoutToleranceId, u64)> = Vec::new();
     let mut pending_closed_shells: Vec<(ClosedShellId, u64)> = Vec::new();
+    let mut pending_coaxiality_tolerances: Vec<(CoaxialityToleranceId, u64)> = Vec::new();
+    let mut pending_common_datums: Vec<(CommonDatumId, u64)> = Vec::new();
+    let mut pending_composite_shape_aspects: Vec<(CompositeShapeAspectId, u64)> = Vec::new();
+    let mut pending_concentricity_tolerances: Vec<(ConcentricityToleranceId, u64)> = Vec::new();
     let mut pending_conics: Vec<(ConicId, u64)> = Vec::new();
     let mut pending_conical_surfaces: Vec<(ConicalSurfaceId, u64)> = Vec::new();
     let mut pending_connected_face_sets: Vec<(ConnectedFaceSetId, u64)> = Vec::new();
     let mut pending_context_dependent_units: Vec<(ContextDependentUnitId, u64)> = Vec::new();
     let mut pending_conversion_based_units: Vec<(ConversionBasedUnitId, u64)> = Vec::new();
     let mut pending_cylindrical_surfaces: Vec<(CylindricalSurfaceId, u64)> = Vec::new();
+    let mut pending_cylindricity_tolerances: Vec<(CylindricityToleranceId, u64)> = Vec::new();
+    let mut pending_datums: Vec<(DatumId, u64)> = Vec::new();
+    let mut pending_datum_features: Vec<(DatumFeatureId, u64)> = Vec::new();
+    let mut pending_datum_references: Vec<(DatumReferenceId, u64)> = Vec::new();
+    let mut pending_datum_systems: Vec<(DatumSystemId, u64)> = Vec::new();
+    let mut pending_datum_targets: Vec<(DatumTargetId, u64)> = Vec::new();
     let mut pending_definitional_representations: Vec<(DefinitionalRepresentationId, u64)> =
         Vec::new();
     let mut pending_derived_units: Vec<(DerivedUnitId, u64)> = Vec::new();
     let mut pending_derived_unit_elements: Vec<(DerivedUnitElementId, u64)> = Vec::new();
+    let mut pending_dimensional_characteristic_representations: Vec<(
+        DimensionalCharacteristicRepresentationId,
+        u64,
+    )> = Vec::new();
+    let mut pending_dimensional_locations: Vec<(DimensionalLocationId, u64)> = Vec::new();
+    let mut pending_dimensional_location_with_paths: Vec<(DimensionalLocationWithPathId, u64)> =
+        Vec::new();
+    let mut pending_dimensional_sizes: Vec<(DimensionalSizeId, u64)> = Vec::new();
+    let mut pending_dimensional_size_with_paths: Vec<(DimensionalSizeWithPathId, u64)> = Vec::new();
     let mut pending_edges: Vec<(EdgeId, u64)> = Vec::new();
     let mut pending_edge_curves: Vec<(EdgeCurveId, u64)> = Vec::new();
     let mut pending_edge_loops: Vec<(EdgeLoopId, u64)> = Vec::new();
@@ -276,42 +404,114 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_face_bounds: Vec<(FaceBoundId, u64)> = Vec::new();
     let mut pending_face_outer_bounds: Vec<(FaceOuterBoundId, u64)> = Vec::new();
     let mut pending_face_surfaces: Vec<(FaceSurfaceId, u64)> = Vec::new();
+    let mut pending_flatness_tolerances: Vec<(FlatnessToleranceId, u64)> = Vec::new();
+    let mut pending_generic_product_definition_references: Vec<(
+        GenericProductDefinitionReferenceId,
+        u64,
+    )> = Vec::new();
+    let mut pending_geometric_tolerances: Vec<(GeometricToleranceId, u64)> = Vec::new();
+    let mut pending_geometric_tolerance_with_datum_references: Vec<(
+        GeometricToleranceWithDatumReferenceId,
+        u64,
+    )> = Vec::new();
+    let mut pending_geometric_tolerance_with_defined_area_units: Vec<(
+        GeometricToleranceWithDefinedAreaUnitId,
+        u64,
+    )> = Vec::new();
+    let mut pending_geometric_tolerance_with_defined_units: Vec<(
+        GeometricToleranceWithDefinedUnitId,
+        u64,
+    )> = Vec::new();
+    let mut pending_geometric_tolerance_with_maximum_tolerances: Vec<(
+        GeometricToleranceWithMaximumToleranceId,
+        u64,
+    )> = Vec::new();
+    let mut pending_geometric_tolerance_with_modifierss: Vec<(
+        GeometricToleranceWithModifiersId,
+        u64,
+    )> = Vec::new();
     let mut pending_intersection_curves: Vec<(IntersectionCurveId, u64)> = Vec::new();
     let mut pending_length_measure_with_units: Vec<(LengthMeasureWithUnitId, u64)> = Vec::new();
     let mut pending_length_units: Vec<(LengthUnitId, u64)> = Vec::new();
     let mut pending_lines: Vec<(LineId, u64)> = Vec::new();
+    let mut pending_line_profile_tolerances: Vec<(LineProfileToleranceId, u64)> = Vec::new();
     let mut pending_manifold_solid_breps: Vec<(ManifoldSolidBrepId, u64)> = Vec::new();
     let mut pending_mass_units: Vec<(MassUnitId, u64)> = Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
+    let mut pending_modified_geometric_tolerances: Vec<(ModifiedGeometricToleranceId, u64)> =
+        Vec::new();
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
     let mut pending_offset_surfaces: Vec<(OffsetSurfaceId, u64)> = Vec::new();
     let mut pending_open_shells: Vec<(OpenShellId, u64)> = Vec::new();
     let mut pending_oriented_closed_shells: Vec<(OrientedClosedShellId, u64)> = Vec::new();
     let mut pending_oriented_edges: Vec<(OrientedEdgeId, u64)> = Vec::new();
+    let mut pending_parallelism_tolerances: Vec<(ParallelismToleranceId, u64)> = Vec::new();
     let mut pending_paths: Vec<(PathId, u64)> = Vec::new();
     let mut pending_pcurves: Vec<(PcurveId, u64)> = Vec::new();
+    let mut pending_perpendicularity_tolerances: Vec<(PerpendicularityToleranceId, u64)> =
+        Vec::new();
+    let mut pending_placed_datum_target_features: Vec<(PlacedDatumTargetFeatureId, u64)> =
+        Vec::new();
     let mut pending_placements: Vec<(PlacementId, u64)> = Vec::new();
     let mut pending_planes: Vec<(PlaneId, u64)> = Vec::new();
+    let mut pending_plane_angle_measure_with_units: Vec<(PlaneAngleMeasureWithUnitId, u64)> =
+        Vec::new();
     let mut pending_plane_angle_units: Vec<(PlaneAngleUnitId, u64)> = Vec::new();
     let mut pending_poly_loops: Vec<(PolyLoopId, u64)> = Vec::new();
+    let mut pending_position_tolerances: Vec<(PositionToleranceId, u64)> = Vec::new();
+    let mut pending_products: Vec<(ProductId, u64)> = Vec::new();
+    let mut pending_product_contexts: Vec<(ProductContextId, u64)> = Vec::new();
+    let mut pending_product_definitions: Vec<(ProductDefinitionId, u64)> = Vec::new();
+    let mut pending_product_definition_contexts: Vec<(ProductDefinitionContextId, u64)> =
+        Vec::new();
+    let mut pending_product_definition_formations: Vec<(ProductDefinitionFormationId, u64)> =
+        Vec::new();
+    let mut pending_product_definition_occurrences: Vec<(ProductDefinitionOccurrenceId, u64)> =
+        Vec::new();
+    let mut pending_product_definition_relationships: Vec<(ProductDefinitionRelationshipId, u64)> =
+        Vec::new();
+    let mut pending_product_definition_relationship_relationships: Vec<(
+        ProductDefinitionRelationshipRelationshipId,
+        u64,
+    )> = Vec::new();
+    let mut pending_product_definition_shapes: Vec<(ProductDefinitionShapeId, u64)> = Vec::new();
+    let mut pending_property_definitions: Vec<(PropertyDefinitionId, u64)> = Vec::new();
     let mut pending_quasi_uniform_curves: Vec<(QuasiUniformCurveId, u64)> = Vec::new();
     let mut pending_quasi_uniform_surfaces: Vec<(QuasiUniformSurfaceId, u64)> = Vec::new();
     let mut pending_rational_b_spline_curves: Vec<(RationalBSplineCurveId, u64)> = Vec::new();
     let mut pending_rational_b_spline_surfaces: Vec<(RationalBSplineSurfaceId, u64)> = Vec::new();
     let mut pending_representations: Vec<(RepresentationId, u64)> = Vec::new();
+    let mut pending_roundness_tolerances: Vec<(RoundnessToleranceId, u64)> = Vec::new();
     let mut pending_seam_curves: Vec<(SeamCurveId, u64)> = Vec::new();
+    let mut pending_shape_aspects: Vec<(ShapeAspectId, u64)> = Vec::new();
+    let mut pending_shape_aspect_relationships: Vec<(ShapeAspectRelationshipId, u64)> = Vec::new();
+    let mut pending_shape_dimension_representations: Vec<(ShapeDimensionRepresentationId, u64)> =
+        Vec::new();
+    let mut pending_shape_representations: Vec<(ShapeRepresentationId, u64)> = Vec::new();
     let mut pending_si_units: Vec<(SiUnitId, u64)> = Vec::new();
     let mut pending_solid_angle_units: Vec<(SolidAngleUnitId, u64)> = Vec::new();
     let mut pending_spherical_surfaces: Vec<(SphericalSurfaceId, u64)> = Vec::new();
+    let mut pending_straightness_tolerances: Vec<(StraightnessToleranceId, u64)> = Vec::new();
     let mut pending_surface_curves: Vec<(SurfaceCurveId, u64)> = Vec::new();
     let mut pending_surface_of_linear_extrusions: Vec<(SurfaceOfLinearExtrusionId, u64)> =
         Vec::new();
     let mut pending_surface_of_revolutions: Vec<(SurfaceOfRevolutionId, u64)> = Vec::new();
+    let mut pending_surface_profile_tolerances: Vec<(SurfaceProfileToleranceId, u64)> = Vec::new();
     let mut pending_swept_surfaces: Vec<(SweptSurfaceId, u64)> = Vec::new();
+    let mut pending_symmetry_tolerances: Vec<(SymmetryToleranceId, u64)> = Vec::new();
     let mut pending_time_units: Vec<(TimeUnitId, u64)> = Vec::new();
+    let mut pending_tolerance_values: Vec<(ToleranceValueId, u64)> = Vec::new();
+    let mut pending_tolerance_zones: Vec<(ToleranceZoneId, u64)> = Vec::new();
+    let mut pending_tolerance_zone_definitions: Vec<(ToleranceZoneDefinitionId, u64)> = Vec::new();
+    let mut pending_tolerance_zone_with_datums: Vec<(ToleranceZoneWithDatumId, u64)> = Vec::new();
     let mut pending_toroidal_surfaces: Vec<(ToroidalSurfaceId, u64)> = Vec::new();
+    let mut pending_total_runout_tolerances: Vec<(TotalRunoutToleranceId, u64)> = Vec::new();
     let mut pending_uncertainty_measure_with_units: Vec<(UncertaintyMeasureWithUnitId, u64)> =
         Vec::new();
+    let mut pending_unequally_disposed_geometric_tolerances: Vec<(
+        UnequallyDisposedGeometricToleranceId,
+        u64,
+    )> = Vec::new();
     let mut pending_uniform_curves: Vec<(UniformCurveId, u64)> = Vec::new();
     let mut pending_uniform_surfaces: Vec<(UniformSurfaceId, u64)> = Vec::new();
     let mut pending_vectors: Vec<(VectorId, u64)> = Vec::new();
@@ -332,6 +532,47 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = AdvancedFaceId(model.advanced_faces.push(v));
                 idmap.insert(id, AnyId::AdvancedFace(aid));
                 pending_advanced_faces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANGULARITY_TOLERANCE" => {
+                let v = AngularityTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = AngularityToleranceId(model.angularity_tolerances.push(v));
+                idmap.insert(id, AnyId::AngularityTolerance(aid));
+                pending_angularity_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPLICATION_CONTEXT" => {
+                let v = ApplicationContext {
+                    application: as_str(&attributes[0]),
+                };
+                let aid = ApplicationContextId(model.application_contexts.push(v));
+                idmap.insert(id, AnyId::ApplicationContext(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPLICATION_CONTEXT_ELEMENT" => {
+                let v = ApplicationContextElement {
+                    name: as_str(&attributes[0]),
+                    frame_of_reference: ApplicationContextRef::ApplicationContext(
+                        ApplicationContextId(usize::MAX),
+                    ),
+                };
+                let aid = ApplicationContextElementId(model.application_context_elements.push(v));
+                idmap.insert(id, AnyId::ApplicationContextElement(aid));
+                pending_application_context_elements.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -604,6 +845,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CHARACTERIZED_OBJECT" => {
+                let v = CharacterizedObject {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = CharacterizedObjectId(model.characterized_objects.push(v));
+                idmap.insert(id, AnyId::CharacterizedObject(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CIRCLE" => {
                 let v = Circle {
                     name: as_str(&attributes[0]),
@@ -616,6 +870,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CIRCULAR_RUNOUT_TOLERANCE" => {
+                let v = CircularRunoutTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = CircularRunoutToleranceId(model.circular_runout_tolerances.push(v));
+                idmap.insert(id, AnyId::CircularRunoutTolerance(aid));
+                pending_circular_runout_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CLOSED_SHELL" => {
                 let v = ClosedShell {
                     name: as_str(&attributes[0]),
@@ -624,6 +897,81 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ClosedShellId(model.closed_shells.push(v));
                 idmap.insert(id, AnyId::ClosedShell(aid));
                 pending_closed_shells.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COAXIALITY_TOLERANCE" => {
+                let v = CoaxialityTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = CoaxialityToleranceId(model.coaxiality_tolerances.push(v));
+                idmap.insert(id, AnyId::CoaxialityTolerance(aid));
+                pending_coaxiality_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COMMON_DATUM" => {
+                let v = CommonDatum {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    identification: as_str(&attributes[4]),
+                };
+                let aid = CommonDatumId(model.common_datums.push(v));
+                idmap.insert(id, AnyId::CommonDatum(aid));
+                pending_common_datums.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COMPOSITE_SHAPE_ASPECT" => {
+                let v = CompositeShapeAspect {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                };
+                let aid = CompositeShapeAspectId(model.composite_shape_aspects.push(v));
+                idmap.insert(id, AnyId::CompositeShapeAspect(aid));
+                pending_composite_shape_aspects.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONCENTRICITY_TOLERANCE" => {
+                let v = ConcentricityTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = ConcentricityToleranceId(model.concentricity_tolerances.push(v));
+                idmap.insert(id, AnyId::ConcentricityTolerance(aid));
+                pending_concentricity_tolerances.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -712,6 +1060,110 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CYLINDRICITY_TOLERANCE" => {
+                let v = CylindricityTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = CylindricityToleranceId(model.cylindricity_tolerances.push(v));
+                idmap.insert(id, AnyId::CylindricityTolerance(aid));
+                pending_cylindricity_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATUM" => {
+                let v = Datum {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    identification: as_str(&attributes[4]),
+                };
+                let aid = DatumId(model.datums.push(v));
+                idmap.insert(id, AnyId::Datum(aid));
+                pending_datums.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATUM_FEATURE" => {
+                let v = DatumFeature {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                };
+                let aid = DatumFeatureId(model.datum_features.push(v));
+                idmap.insert(id, AnyId::DatumFeature(aid));
+                pending_datum_features.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATUM_REFERENCE" => {
+                let v = DatumReference {
+                    precedence: as_int(&attributes[0]),
+                    referenced_datum: DatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+                };
+                let aid = DatumReferenceId(model.datum_references.push(v));
+                idmap.insert(id, AnyId::DatumReference(aid));
+                pending_datum_references.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATUM_SYSTEM" => {
+                let v = DatumSystem {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    constituents: Vec::new(),
+                };
+                let aid = DatumSystemId(model.datum_systems.push(v));
+                idmap.insert(id, AnyId::DatumSystem(aid));
+                pending_datum_systems.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATUM_TARGET" => {
+                let v = DatumTarget {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    target_id: as_str(&attributes[4]),
+                };
+                let aid = DatumTargetId(model.datum_targets.push(v));
+                idmap.insert(id, AnyId::DatumTarget(aid));
+                pending_datum_targets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DEFINITIONAL_REPRESENTATION" => {
                 let v = DefinitionalRepresentation {
                     name: as_str(&attributes[0]),
@@ -747,6 +1199,23 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION" => {
+                let v = DimensionalCharacteristicRepresentation {
+                    dimension: DimensionalCharacteristicRef::DimensionalLocation(
+                        DimensionalLocationId(usize::MAX),
+                    ),
+                    representation: ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(
+                        ShapeDimensionRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = DimensionalCharacteristicRepresentationId(
+                    model.dimensional_characteristic_representations.push(v),
+                );
+                idmap.insert(id, AnyId::DimensionalCharacteristicRepresentation(aid));
+                pending_dimensional_characteristic_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DIMENSIONAL_EXPONENTS" => {
                 let v = DimensionalExponents {
                     length_exponent: as_real(&attributes[0]),
@@ -759,6 +1228,63 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = DimensionalExponentsId(model.dimensional_exponentss.push(v));
                 idmap.insert(id, AnyId::DimensionalExponents(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DIMENSIONAL_LOCATION" => {
+                let v = DimensionalLocation {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                };
+                let aid = DimensionalLocationId(model.dimensional_locations.push(v));
+                idmap.insert(id, AnyId::DimensionalLocation(aid));
+                pending_dimensional_locations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DIMENSIONAL_LOCATION_WITH_PATH" => {
+                let v = DimensionalLocationWithPath {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    path: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                };
+                let aid =
+                    DimensionalLocationWithPathId(model.dimensional_location_with_paths.push(v));
+                idmap.insert(id, AnyId::DimensionalLocationWithPath(aid));
+                pending_dimensional_location_with_paths.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DIMENSIONAL_SIZE" => {
+                let v = DimensionalSize {
+                    applies_to: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    name: as_str(&attributes[1]),
+                };
+                let aid = DimensionalSizeId(model.dimensional_sizes.push(v));
+                idmap.insert(id, AnyId::DimensionalSize(aid));
+                pending_dimensional_sizes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DIMENSIONAL_SIZE_WITH_PATH" => {
+                let v = DimensionalSizeWithPath {
+                    applies_to: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    name: as_str(&attributes[1]),
+                    path: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                };
+                let aid = DimensionalSizeWithPathId(model.dimensional_size_with_paths.push(v));
+                idmap.insert(id, AnyId::DimensionalSizeWithPath(aid));
+                pending_dimensional_size_with_paths.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -884,6 +1410,36 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "FLATNESS_TOLERANCE" => {
+                let v = FlatnessTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = FlatnessToleranceId(model.flatness_tolerances.push(v));
+                idmap.insert(id, AnyId::FlatnessTolerance(aid));
+                pending_flatness_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GENERIC_PRODUCT_DEFINITION_REFERENCE" => {
+                let v = GenericProductDefinitionReference {
+                    source: ExternalSourceRef::Unresolved,
+                };
+                let aid = GenericProductDefinitionReferenceId(
+                    model.generic_product_definition_references.push(v),
+                );
+                idmap.insert(id, AnyId::GenericProductDefinitionReference(aid));
+                pending_generic_product_definition_references.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "GEOMETRIC_REPRESENTATION_CONTEXT" => {
                 let v = GeometricRepresentationContext {
                     context_identifier: as_str(&attributes[0]),
@@ -904,6 +1460,161 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid =
                     GeometricRepresentationItemId(model.geometric_representation_items.push(v));
                 idmap.insert(id, AnyId::GeometricRepresentationItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRIC_TOLERANCE" => {
+                let v = GeometricTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = GeometricToleranceId(model.geometric_tolerances.push(v));
+                idmap.insert(id, AnyId::GeometricTolerance(aid));
+                pending_geometric_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => {
+                let v = GeometricToleranceWithDatumReference {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = GeometricToleranceWithDatumReferenceId(
+                    model.geometric_tolerance_with_datum_references.push(v),
+                );
+                idmap.insert(id, AnyId::GeometricToleranceWithDatumReference(aid));
+                pending_geometric_tolerance_with_datum_references.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => {
+                let v = GeometricToleranceWithDefinedAreaUnit {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                    area_type: match &attributes[5] {
+                        Attribute::Enum(s) => AreaUnitType::parse(s).expect("area_unit_type"),
+                        other => panic!("enum area_unit_type: {other:?}"),
+                    },
+                    second_unit_size: None,
+                };
+                let aid = GeometricToleranceWithDefinedAreaUnitId(
+                    model.geometric_tolerance_with_defined_area_units.push(v),
+                );
+                idmap.insert(id, AnyId::GeometricToleranceWithDefinedAreaUnit(aid));
+                pending_geometric_tolerance_with_defined_area_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => {
+                let v = GeometricToleranceWithDefinedUnit {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                };
+                let aid = GeometricToleranceWithDefinedUnitId(
+                    model.geometric_tolerance_with_defined_units.push(v),
+                );
+                idmap.insert(id, AnyId::GeometricToleranceWithDefinedUnit(aid));
+                pending_geometric_tolerance_with_defined_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => {
+                let v = GeometricToleranceWithMaximumTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    modifiers: match &attributes[4] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::Enum(s) => GeometricToleranceModifier::parse(s)
+                                    .expect("geometric_tolerance_modifier"),
+                                o => panic!("{o:?}"),
+                            })
+                            .collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                };
+                let aid = GeometricToleranceWithMaximumToleranceId(
+                    model.geometric_tolerance_with_maximum_tolerances.push(v),
+                );
+                idmap.insert(id, AnyId::GeometricToleranceWithMaximumTolerance(aid));
+                pending_geometric_tolerance_with_maximum_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => {
+                let v = GeometricToleranceWithModifiers {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    modifiers: match &attributes[4] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::Enum(s) => GeometricToleranceModifier::parse(s)
+                                    .expect("geometric_tolerance_modifier"),
+                                o => panic!("{o:?}"),
+                            })
+                            .collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = GeometricToleranceWithModifiersId(
+                    model.geometric_tolerance_with_modifierss.push(v),
+                );
+                idmap.insert(id, AnyId::GeometricToleranceWithModifiers(aid));
+                pending_geometric_tolerance_with_modifierss.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -961,6 +1672,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "LINE_PROFILE_TOLERANCE" => {
+                let v = LineProfileTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = LineProfileToleranceId(model.line_profile_tolerances.push(v));
+                idmap.insert(id, AnyId::LineProfileTolerance(aid));
+                pending_line_profile_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "LOOP" => {
                 let v = Loop {
                     name: as_str(&attributes[0]),
@@ -1003,6 +1732,28 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = MeasureWithUnitId(model.measure_with_units.push(v));
                 idmap.insert(id, AnyId::MeasureWithUnit(aid));
                 pending_measure_with_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "MODIFIED_GEOMETRIC_TOLERANCE" => {
+                let v = ModifiedGeometricTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    modifier: match &attributes[4] {
+                        Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"),
+                        other => panic!("enum limit_condition: {other:?}"),
+                    },
+                };
+                let aid = ModifiedGeometricToleranceId(model.modified_geometric_tolerances.push(v));
+                idmap.insert(id, AnyId::ModifiedGeometricTolerance(aid));
+                pending_modified_geometric_tolerances.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1062,6 +1813,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PARALLELISM_TOLERANCE" => {
+                let v = ParallelismTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = ParallelismToleranceId(model.parallelism_tolerances.push(v));
+                idmap.insert(id, AnyId::ParallelismTolerance(aid));
+                pending_parallelism_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PARAMETRIC_REPRESENTATION_CONTEXT" => {
                 let v = ParametricRepresentationContext {
                     context_identifier: as_str(&attributes[0]),
@@ -1099,6 +1869,44 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PERPENDICULARITY_TOLERANCE" => {
+                let v = PerpendicularityTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = PerpendicularityToleranceId(model.perpendicularity_tolerances.push(v));
+                idmap.insert(id, AnyId::PerpendicularityTolerance(aid));
+                pending_perpendicularity_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PLACED_DATUM_TARGET_FEATURE" => {
+                let v = PlacedDatumTargetFeature {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    target_id: as_str(&attributes[4]),
+                };
+                let aid = PlacedDatumTargetFeatureId(model.placed_datum_target_features.push(v));
+                idmap.insert(id, AnyId::PlacedDatumTargetFeature(aid));
+                pending_placed_datum_target_features.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PLACEMENT" => {
                 let v = Placement {
                     name: as_str(&attributes[0]),
@@ -1118,6 +1926,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = PlaneId(model.planes.push(v));
                 idmap.insert(id, AnyId::Plane(aid));
                 pending_planes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PLANE_ANGLE_MEASURE_WITH_UNIT" => {
+                let v = PlaneAngleMeasureWithUnit {
+                    value_component: read_measure_value(&attributes[0]),
+                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = PlaneAngleMeasureWithUnitId(model.plane_angle_measure_with_units.push(v));
+                idmap.insert(id, AnyId::PlaneAngleMeasureWithUnit(aid));
+                pending_plane_angle_measure_with_units.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1150,6 +1971,205 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = PolyLoopId(model.poly_loops.push(v));
                 idmap.insert(id, AnyId::PolyLoop(aid));
                 pending_poly_loops.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "POSITION_TOLERANCE" => {
+                let v = PositionTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = PositionToleranceId(model.position_tolerances.push(v));
+                idmap.insert(id, AnyId::PositionTolerance(aid));
+                pending_position_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT" => {
+                let v = Product {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    frame_of_reference: Vec::new(),
+                };
+                let aid = ProductId(model.products.push(v));
+                idmap.insert(id, AnyId::Product(aid));
+                pending_products.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_CONTEXT" => {
+                let v = ProductContext {
+                    name: as_str(&attributes[0]),
+                    frame_of_reference: ApplicationContextRef::ApplicationContext(
+                        ApplicationContextId(usize::MAX),
+                    ),
+                    discipline_type: as_str(&attributes[2]),
+                };
+                let aid = ProductContextId(model.product_contexts.push(v));
+                idmap.insert(id, AnyId::ProductContext(aid));
+                pending_product_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION" => {
+                let v = ProductDefinition {
+                    id: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
+                        ProductDefinitionFormationId(usize::MAX),
+                    ),
+                    frame_of_reference: ProductDefinitionContextRef::ProductDefinitionContext(
+                        ProductDefinitionContextId(usize::MAX),
+                    ),
+                };
+                let aid = ProductDefinitionId(model.product_definitions.push(v));
+                idmap.insert(id, AnyId::ProductDefinition(aid));
+                pending_product_definitions.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_CONTEXT" => {
+                let v = ProductDefinitionContext {
+                    name: as_str(&attributes[0]),
+                    frame_of_reference: ApplicationContextRef::ApplicationContext(
+                        ApplicationContextId(usize::MAX),
+                    ),
+                    life_cycle_stage: as_str(&attributes[2]),
+                };
+                let aid = ProductDefinitionContextId(model.product_definition_contexts.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionContext(aid));
+                pending_product_definition_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_FORMATION" => {
+                let v = ProductDefinitionFormation {
+                    id: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_product: ProductRef::Product(ProductId(usize::MAX)),
+                };
+                let aid = ProductDefinitionFormationId(model.product_definition_formations.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionFormation(aid));
+                pending_product_definition_formations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_OCCURRENCE" => {
+                let v = ProductDefinitionOccurrence {
+                    id: as_str(&attributes[0]),
+                    name: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    definition: None,
+                    quantity: None,
+                };
+                let aid =
+                    ProductDefinitionOccurrenceId(model.product_definition_occurrences.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionOccurrence(aid));
+                pending_product_definition_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_RELATIONSHIP" => {
+                let v = ProductDefinitionRelationship {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    relating_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                    related_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                };
+                let aid =
+                    ProductDefinitionRelationshipId(model.product_definition_relationships.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionRelationship(aid));
+                pending_product_definition_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => {
+                let v = ProductDefinitionRelationshipRelationship {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    relating: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
+                        ProductDefinitionRelationshipId(usize::MAX),
+                    ),
+                    related: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
+                        ProductDefinitionRelationshipId(usize::MAX),
+                    ),
+                };
+                let aid = ProductDefinitionRelationshipRelationshipId(
+                    model.product_definition_relationship_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::ProductDefinitionRelationshipRelationship(aid));
+                pending_product_definition_relationship_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_SHAPE" => {
+                let v = ProductDefinitionShape {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    definition: CharacterizedDefinitionRef::AngularityTolerance(
+                        AngularityToleranceId(usize::MAX),
+                    ),
+                };
+                let aid = ProductDefinitionShapeId(model.product_definition_shapes.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionShape(aid));
+                pending_product_definition_shapes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PROPERTY_DEFINITION" => {
+                let v = PropertyDefinition {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    definition: CharacterizedDefinitionRef::AngularityTolerance(
+                        AngularityToleranceId(usize::MAX),
+                    ),
+                };
+                let aid = PropertyDefinitionId(model.property_definitions.push(v));
+                idmap.insert(id, AnyId::PropertyDefinition(aid));
+                pending_property_definitions.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1286,6 +2306,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "ROUNDNESS_TOLERANCE" => {
+                let v = RoundnessTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = RoundnessToleranceId(model.roundness_tolerances.push(v));
+                idmap.insert(id, AnyId::RoundnessTolerance(aid));
+                pending_roundness_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SEAM_CURVE" => {
                 let v = SeamCurve {
                     name: as_str(&attributes[0]),
@@ -1300,6 +2338,69 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = SeamCurveId(model.seam_curves.push(v));
                 idmap.insert(id, AnyId::SeamCurve(aid));
                 pending_seam_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SHAPE_ASPECT" => {
+                let v = ShapeAspect {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                };
+                let aid = ShapeAspectId(model.shape_aspects.push(v));
+                idmap.insert(id, AnyId::ShapeAspect(aid));
+                pending_shape_aspects.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SHAPE_ASPECT_RELATIONSHIP" => {
+                let v = ShapeAspectRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                };
+                let aid = ShapeAspectRelationshipId(model.shape_aspect_relationships.push(v));
+                idmap.insert(id, AnyId::ShapeAspectRelationship(aid));
+                pending_shape_aspect_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SHAPE_DIMENSION_REPRESENTATION" => {
+                let v = ShapeDimensionRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid =
+                    ShapeDimensionRepresentationId(model.shape_dimension_representations.push(v));
+                idmap.insert(id, AnyId::ShapeDimensionRepresentation(aid));
+                pending_shape_dimension_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SHAPE_REPRESENTATION" => {
+                let v = ShapeRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = ShapeRepresentationId(model.shape_representations.push(v));
+                idmap.insert(id, AnyId::ShapeRepresentation(aid));
+                pending_shape_representations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1356,6 +2457,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "STRAIGHTNESS_TOLERANCE" => {
+                let v = StraightnessTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = StraightnessToleranceId(model.straightness_tolerances.push(v));
+                idmap.insert(id, AnyId::StraightnessTolerance(aid));
+                pending_straightness_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SURFACE" => {
                 let v = Surface {
                     name: as_str(&attributes[0]),
@@ -1406,6 +2525,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "SURFACE_PROFILE_TOLERANCE" => {
+                let v = SurfaceProfileTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                };
+                let aid = SurfaceProfileToleranceId(model.surface_profile_tolerances.push(v));
+                idmap.insert(id, AnyId::SurfaceProfileTolerance(aid));
+                pending_surface_profile_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SWEPT_SURFACE" => {
                 let v = SweptSurface {
                     name: as_str(&attributes[0]),
@@ -1414,6 +2551,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = SweptSurfaceId(model.swept_surfaces.push(v));
                 idmap.insert(id, AnyId::SweptSurface(aid));
                 pending_swept_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SYMMETRY_TOLERANCE" => {
+                let v = SymmetryTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = SymmetryToleranceId(model.symmetry_tolerances.push(v));
+                idmap.insert(id, AnyId::SymmetryTolerance(aid));
+                pending_symmetry_tolerances.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1426,6 +2582,82 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = TimeUnitId(model.time_units.push(v));
                 idmap.insert(id, AnyId::TimeUnit(aid));
                 pending_time_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TOLERANCE_VALUE" => {
+                let v = ToleranceValue {
+                    lower_bound: MeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                    upper_bound: MeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                };
+                let aid = ToleranceValueId(model.tolerance_values.push(v));
+                idmap.insert(id, AnyId::ToleranceValue(aid));
+                pending_tolerance_values.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TOLERANCE_ZONE" => {
+                let v = ToleranceZone {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    defining_tolerance: Vec::new(),
+                    form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)),
+                };
+                let aid = ToleranceZoneId(model.tolerance_zones.push(v));
+                idmap.insert(id, AnyId::ToleranceZone(aid));
+                pending_tolerance_zones.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TOLERANCE_ZONE_DEFINITION" => {
+                let v = ToleranceZoneDefinition {
+                    zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)),
+                    boundaries: Vec::new(),
+                };
+                let aid = ToleranceZoneDefinitionId(model.tolerance_zone_definitions.push(v));
+                idmap.insert(id, AnyId::ToleranceZoneDefinition(aid));
+                pending_tolerance_zone_definitions.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TOLERANCE_ZONE_FORM" => {
+                let v = ToleranceZoneForm {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = ToleranceZoneFormId(model.tolerance_zone_forms.push(v));
+                idmap.insert(id, AnyId::ToleranceZoneForm(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TOLERANCE_ZONE_WITH_DATUM" => {
+                let v = ToleranceZoneWithDatum {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    defining_tolerance: Vec::new(),
+                    form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)),
+                    datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(usize::MAX)),
+                };
+                let aid = ToleranceZoneWithDatumId(model.tolerance_zone_with_datums.push(v));
+                idmap.insert(id, AnyId::ToleranceZoneWithDatum(aid));
+                pending_tolerance_zone_with_datums.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1452,6 +2684,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TOTAL_RUNOUT_TOLERANCE" => {
+                let v = TotalRunoutTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    datum_system: Vec::new(),
+                };
+                let aid = TotalRunoutToleranceId(model.total_runout_tolerances.push(v));
+                idmap.insert(id, AnyId::TotalRunoutTolerance(aid));
+                pending_total_runout_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "UNCERTAINTY_MEASURE_WITH_UNIT" => {
                 let v = UncertaintyMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
@@ -1468,6 +2719,29 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     UncertaintyMeasureWithUnitId(model.uncertainty_measure_with_units.push(v));
                 idmap.insert(id, AnyId::UncertaintyMeasureWithUnit(aid));
                 pending_uncertainty_measure_with_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => {
+                let v = UnequallyDisposedGeometricTolerance {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    magnitude: None,
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
+                        CommonDatumId(usize::MAX),
+                    ),
+                    displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                };
+                let aid = UnequallyDisposedGeometricToleranceId(
+                    model.unequally_disposed_geometric_tolerances.push(v),
+                );
+                idmap.insert(id, AnyId::UnequallyDisposedGeometricTolerance(aid));
+                pending_unequally_disposed_geometric_tolerances.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1568,6 +2842,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_advanced_faces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_angularity_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_angularity_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_application_context_elements {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_application_context_elements(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_axis1_placements {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_axis1_placements(&mut model, aid, attributes, &idmap);
@@ -1633,9 +2917,34 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_circles(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_circular_runout_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_circular_runout_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_closed_shells {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_closed_shells(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_coaxiality_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_coaxiality_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_common_datums {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_common_datums(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_composite_shape_aspects {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_composite_shape_aspects(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_concentricity_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_concentricity_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_conics {
@@ -1668,6 +2977,36 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_cylindrical_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_cylindricity_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_cylindricity_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_datums {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datums(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_datum_features {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datum_features(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_datum_references {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datum_references(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_datum_systems {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datum_systems(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_datum_targets {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datum_targets(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_definitional_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_definitional_representations(&mut model, aid, attributes, &idmap);
@@ -1681,6 +3020,31 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_derived_unit_elements {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_derived_unit_elements(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_dimensional_characteristic_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_dimensional_characteristic_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_dimensional_locations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_dimensional_locations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_dimensional_location_with_paths {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_dimensional_location_with_paths(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_dimensional_sizes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_dimensional_sizes(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_dimensional_size_with_paths {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_dimensional_size_with_paths(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_edges {
@@ -1728,6 +3092,50 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_face_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_flatness_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_flatness_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_generic_product_definition_references {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_generic_product_definition_references(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_geometric_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_geometric_tolerance_with_datum_references {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_tolerance_with_datum_references(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_geometric_tolerance_with_defined_area_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_tolerance_with_defined_area_units(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
+    for (aid, raw) in pending_geometric_tolerance_with_defined_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_tolerance_with_defined_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_geometric_tolerance_with_maximum_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_tolerance_with_maximum_tolerances(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
+    for (aid, raw) in pending_geometric_tolerance_with_modifierss {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_tolerance_with_modifierss(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_intersection_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_intersection_curves(&mut model, aid, attributes, &idmap);
@@ -1748,6 +3156,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_lines(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_line_profile_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_line_profile_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_manifold_solid_breps {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_manifold_solid_breps(&mut model, aid, attributes, &idmap);
@@ -1761,6 +3174,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_measure_with_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_measure_with_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_modified_geometric_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_modified_geometric_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_named_units {
@@ -1788,6 +3206,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_oriented_edges(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_parallelism_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_parallelism_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_paths {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_paths(&mut model, aid, attributes, &idmap);
@@ -1796,6 +3219,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_pcurves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_pcurves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_perpendicularity_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_perpendicularity_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_placed_datum_target_features {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_placed_datum_target_features(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_placements {
@@ -1808,6 +3241,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_planes(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_plane_angle_measure_with_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_plane_angle_measure_with_units(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_plane_angle_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_plane_angle_units(&mut model, aid, attributes, &idmap);
@@ -1816,6 +3254,63 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_poly_loops {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_poly_loops(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_position_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_position_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_products {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_products(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definitions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definitions(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_formations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_formations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_relationship_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_relationship_relationships(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
+    for (aid, raw) in pending_product_definition_shapes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_shapes(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_property_definitions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_property_definitions(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_quasi_uniform_curves {
@@ -1843,9 +3338,34 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_representations(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_roundness_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_roundness_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_seam_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_seam_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_shape_aspects {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_aspects(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_shape_aspect_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_aspect_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_shape_dimension_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_dimension_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_shape_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_representations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_si_units {
@@ -1863,6 +3383,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_spherical_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_straightness_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_straightness_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_surface_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_surface_curves(&mut model, aid, attributes, &idmap);
@@ -1878,9 +3403,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_surface_of_revolutions(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_surface_profile_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_profile_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_swept_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_swept_surfaces(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_symmetry_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_symmetry_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_time_units {
@@ -1888,14 +3423,44 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_time_units(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_tolerance_values {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tolerance_values(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_tolerance_zones {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tolerance_zones(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_tolerance_zone_definitions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tolerance_zone_definitions(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_tolerance_zone_with_datums {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tolerance_zone_with_datums(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_toroidal_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_toroidal_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_total_runout_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_total_runout_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_uncertainty_measure_with_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_uncertainty_measure_with_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_unequally_disposed_geometric_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_unequally_disposed_geometric_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_uniform_curves {
@@ -1949,6 +3514,46 @@ fn resolve_advanced_faces(
     let it = &mut model.advanced_faces.items[aid.0];
     it.bounds = bounds_v;
     it.face_geometry = face_geometry_v;
+}
+
+fn resolve_angularity_tolerances(
+    model: &mut Model,
+    aid: AngularityToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.angularity_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
+}
+
+fn resolve_application_context_elements(
+    model: &mut Model,
+    aid: ApplicationContextElementId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let frame_of_reference_v =
+        ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.application_context_elements.items[aid.0];
+    it.frame_of_reference = frame_of_reference_v;
 }
 
 fn resolve_axis1_placements(
@@ -2206,6 +3811,34 @@ fn resolve_circles(
     it.position = position_v;
 }
 
+fn resolve_circular_runout_tolerances(
+    model: &mut Model,
+    aid: CircularRunoutToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.circular_runout_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
+}
+
 fn resolve_closed_shells(
     model: &mut Model,
     aid: ClosedShellId,
@@ -2222,6 +3855,86 @@ fn resolve_closed_shells(
     };
     let it = &mut model.closed_shells.items[aid.0];
     it.cfs_faces = cfs_faces_v;
+}
+
+fn resolve_coaxiality_tolerances(
+    model: &mut Model,
+    aid: CoaxialityToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.coaxiality_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
+}
+
+fn resolve_common_datums(
+    model: &mut Model,
+    aid: CommonDatumId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.common_datums.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
+fn resolve_composite_shape_aspects(
+    model: &mut Model,
+    aid: CompositeShapeAspectId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.composite_shape_aspects.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
+fn resolve_concentricity_tolerances(
+    model: &mut Model,
+    aid: ConcentricityToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.concentricity_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
 }
 
 fn resolve_conics(
@@ -2302,6 +4015,95 @@ fn resolve_cylindrical_surfaces(
     it.position = position_v;
 }
 
+fn resolve_cylindricity_tolerances(
+    model: &mut Model,
+    aid: CylindricityToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.cylindricity_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_datums(
+    model: &mut Model,
+    aid: DatumId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.datums.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
+fn resolve_datum_features(
+    model: &mut Model,
+    aid: DatumFeatureId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.datum_features.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
+fn resolve_datum_references(
+    model: &mut Model,
+    aid: DatumReferenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let referenced_datum_v = DatumRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.datum_references.items[aid.0];
+    it.referenced_datum = referenced_datum_v;
+}
+
+fn resolve_datum_systems(
+    model: &mut Model,
+    aid: DatumSystemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let constituents_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                DatumReferenceCompartmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.datum_systems.items[aid.0];
+    it.of_shape = of_shape_v;
+    it.constituents = constituents_v;
+}
+
+fn resolve_datum_targets(
+    model: &mut Model,
+    aid: DatumTargetId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.datum_targets.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
 fn resolve_definitional_representations(
     model: &mut Model,
     aid: DefinitionalRepresentationId,
@@ -2350,6 +4152,77 @@ fn resolve_derived_unit_elements(
     let unit_v = NamedUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.derived_unit_elements.items[aid.0];
     it.unit = unit_v;
+}
+
+fn resolve_dimensional_characteristic_representations(
+    model: &mut Model,
+    aid: DimensionalCharacteristicRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimension_v =
+        DimensionalCharacteristicRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let representation_v =
+        ShapeDimensionRepresentationRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.dimensional_characteristic_representations.items[aid.0];
+    it.dimension = dimension_v;
+    it.representation = representation_v;
+}
+
+fn resolve_dimensional_locations(
+    model: &mut Model,
+    aid: DimensionalLocationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.dimensional_locations.items[aid.0];
+    it.relating_shape_aspect = relating_shape_aspect_v;
+    it.related_shape_aspect = related_shape_aspect_v;
+}
+
+fn resolve_dimensional_location_with_paths(
+    model: &mut Model,
+    aid: DimensionalLocationWithPathId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let path_v = ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.dimensional_location_with_paths.items[aid.0];
+    it.relating_shape_aspect = relating_shape_aspect_v;
+    it.related_shape_aspect = related_shape_aspect_v;
+    it.path = path_v;
+}
+
+fn resolve_dimensional_sizes(
+    model: &mut Model,
+    aid: DimensionalSizeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let applies_to_v = ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.dimensional_sizes.items[aid.0];
+    it.applies_to = applies_to_v;
+}
+
+fn resolve_dimensional_size_with_paths(
+    model: &mut Model,
+    aid: DimensionalSizeWithPathId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let applies_to_v = ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let path_v = ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.dimensional_size_with_paths.items[aid.0];
+    it.applies_to = applies_to_v;
+    it.path = path_v;
 }
 
 fn resolve_edges(
@@ -2490,6 +4363,177 @@ fn resolve_face_surfaces(
     it.face_geometry = face_geometry_v;
 }
 
+fn resolve_flatness_tolerances(
+    model: &mut Model,
+    aid: FlatnessToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.flatness_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_generic_product_definition_references(
+    model: &mut Model,
+    aid: GenericProductDefinitionReferenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.generic_product_definition_references.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_geometric_tolerances(
+    model: &mut Model,
+    aid: GeometricToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.geometric_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_geometric_tolerance_with_datum_references(
+    model: &mut Model,
+    aid: GeometricToleranceWithDatumReferenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.geometric_tolerance_with_datum_references.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
+}
+
+fn resolve_geometric_tolerance_with_defined_area_units(
+    model: &mut Model,
+    aid: GeometricToleranceWithDefinedAreaUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let unit_size_v = LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[4])).expect("ref"),
+    );
+    let second_unit_size_v = match &attrs[6] {
+        Attribute::Unset => None,
+        _ => Some(LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[6])).expect("ref"),
+        )),
+    };
+    let it = &mut model.geometric_tolerance_with_defined_area_units.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.unit_size = unit_size_v;
+    it.second_unit_size = second_unit_size_v;
+}
+
+fn resolve_geometric_tolerance_with_defined_units(
+    model: &mut Model,
+    aid: GeometricToleranceWithDefinedUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let unit_size_v = LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[4])).expect("ref"),
+    );
+    let it = &mut model.geometric_tolerance_with_defined_units.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.unit_size = unit_size_v;
+}
+
+fn resolve_geometric_tolerance_with_maximum_tolerances(
+    model: &mut Model,
+    aid: GeometricToleranceWithMaximumToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let maximum_upper_tolerance_v =
+        LengthMeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[5])).expect("ref"));
+    let it = &mut model.geometric_tolerance_with_maximum_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.maximum_upper_tolerance = maximum_upper_tolerance_v;
+}
+
+fn resolve_geometric_tolerance_with_modifierss(
+    model: &mut Model,
+    aid: GeometricToleranceWithModifiersId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.geometric_tolerance_with_modifierss.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
 fn resolve_intersection_curves(
     model: &mut Model,
     aid: IntersectionCurveId,
@@ -2546,6 +4590,25 @@ fn resolve_lines(
     it.dir = dir_v;
 }
 
+fn resolve_line_profile_tolerances(
+    model: &mut Model,
+    aid: LineProfileToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.line_profile_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
 fn resolve_manifold_solid_breps(
     model: &mut Model,
     aid: ManifoldSolidBrepId,
@@ -2578,6 +4641,25 @@ fn resolve_measure_with_units(
     let unit_component_v = UnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.measure_with_units.items[aid.0];
     it.unit_component = unit_component_v;
+}
+
+fn resolve_modified_geometric_tolerances(
+    model: &mut Model,
+    aid: ModifiedGeometricToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.modified_geometric_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
 }
 
 fn resolve_named_units(
@@ -2648,6 +4730,34 @@ fn resolve_oriented_edges(
     it.edge_element = edge_element_v;
 }
 
+fn resolve_parallelism_tolerances(
+    model: &mut Model,
+    aid: ParallelismToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.parallelism_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
+}
+
 fn resolve_paths(
     model: &mut Model,
     aid: PathId,
@@ -2680,6 +4790,46 @@ fn resolve_pcurves(
     it.reference_to_curve = reference_to_curve_v;
 }
 
+fn resolve_perpendicularity_tolerances(
+    model: &mut Model,
+    aid: PerpendicularityToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.perpendicularity_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
+}
+
+fn resolve_placed_datum_target_features(
+    model: &mut Model,
+    aid: PlacedDatumTargetFeatureId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.placed_datum_target_features.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
 fn resolve_placements(
     model: &mut Model,
     aid: PlacementId,
@@ -2700,6 +4850,17 @@ fn resolve_planes(
     let position_v = Axis2Placement3dRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.planes.items[aid.0];
     it.position = position_v;
+}
+
+fn resolve_plane_angle_measure_with_units(
+    model: &mut Model,
+    aid: PlaneAngleMeasureWithUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let unit_component_v = UnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.plane_angle_measure_with_units.items[aid.0];
+    it.unit_component = unit_component_v;
 }
 
 fn resolve_plane_angle_units(
@@ -2730,6 +4891,170 @@ fn resolve_poly_loops(
     };
     let it = &mut model.poly_loops.items[aid.0];
     it.polygon = polygon_v;
+}
+
+fn resolve_position_tolerances(
+    model: &mut Model,
+    aid: PositionToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.position_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_products(
+    model: &mut Model,
+    aid: ProductId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let frame_of_reference_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ProductContextRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.products.items[aid.0];
+    it.frame_of_reference = frame_of_reference_v;
+}
+
+fn resolve_product_contexts(
+    model: &mut Model,
+    aid: ProductContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let frame_of_reference_v =
+        ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.product_contexts.items[aid.0];
+    it.frame_of_reference = frame_of_reference_v;
+}
+
+fn resolve_product_definitions(
+    model: &mut Model,
+    aid: ProductDefinitionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let formation_v =
+        ProductDefinitionFormationRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let frame_of_reference_v =
+        ProductDefinitionContextRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.product_definitions.items[aid.0];
+    it.formation = formation_v;
+    it.frame_of_reference = frame_of_reference_v;
+}
+
+fn resolve_product_definition_contexts(
+    model: &mut Model,
+    aid: ProductDefinitionContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let frame_of_reference_v =
+        ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.product_definition_contexts.items[aid.0];
+    it.frame_of_reference = frame_of_reference_v;
+}
+
+fn resolve_product_definition_formations(
+    model: &mut Model,
+    aid: ProductDefinitionFormationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_product_v = ProductRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.product_definition_formations.items[aid.0];
+    it.of_product = of_product_v;
+}
+
+fn resolve_product_definition_occurrences(
+    model: &mut Model,
+    aid: ProductDefinitionOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v = match &attrs[3] {
+        Attribute::Unset => None,
+        _ => Some(ProductDefinitionOrReferenceRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+        )),
+    };
+    let quantity_v = match &attrs[4] {
+        Attribute::Unset => None,
+        _ => Some(MeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[4])).expect("ref"),
+        )),
+    };
+    let it = &mut model.product_definition_occurrences.items[aid.0];
+    it.definition = definition_v;
+    it.quantity = quantity_v;
+}
+
+fn resolve_product_definition_relationships(
+    model: &mut Model,
+    aid: ProductDefinitionRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let related_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.product_definition_relationships.items[aid.0];
+    it.relating_product_definition = relating_product_definition_v;
+    it.related_product_definition = related_product_definition_v;
+}
+
+fn resolve_product_definition_relationship_relationships(
+    model: &mut Model,
+    aid: ProductDefinitionRelationshipRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_v =
+        ProductDefinitionRelationshipRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let related_v =
+        ProductDefinitionRelationshipRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.product_definition_relationship_relationships.items[aid.0];
+    it.relating = relating_v;
+    it.related = related_v;
+}
+
+fn resolve_product_definition_shapes(
+    model: &mut Model,
+    aid: ProductDefinitionShapeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v =
+        CharacterizedDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.product_definition_shapes.items[aid.0];
+    it.definition = definition_v;
+}
+
+fn resolve_property_definitions(
+    model: &mut Model,
+    aid: PropertyDefinitionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v =
+        CharacterizedDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.property_definitions.items[aid.0];
+    it.definition = definition_v;
 }
 
 fn resolve_quasi_uniform_curves(
@@ -2839,6 +5164,25 @@ fn resolve_representations(
     it.context_of_items = context_of_items_v;
 }
 
+fn resolve_roundness_tolerances(
+    model: &mut Model,
+    aid: RoundnessToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.roundness_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
 fn resolve_seam_curves(
     model: &mut Model,
     aid: SeamCurveId,
@@ -2857,6 +5201,75 @@ fn resolve_seam_curves(
     let it = &mut model.seam_curves.items[aid.0];
     it.curve_3d = curve_3d_v;
     it.associated_geometry = associated_geometry_v;
+}
+
+fn resolve_shape_aspects(
+    model: &mut Model,
+    aid: ShapeAspectId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.shape_aspects.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
+fn resolve_shape_aspect_relationships(
+    model: &mut Model,
+    aid: ShapeAspectRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.shape_aspect_relationships.items[aid.0];
+    it.relating_shape_aspect = relating_shape_aspect_v;
+    it.related_shape_aspect = related_shape_aspect_v;
+}
+
+fn resolve_shape_dimension_representations(
+    model: &mut Model,
+    aid: ShapeDimensionRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.shape_dimension_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
+}
+
+fn resolve_shape_representations(
+    model: &mut Model,
+    aid: ShapeRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.shape_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
 }
 
 fn resolve_si_units(
@@ -2889,6 +5302,25 @@ fn resolve_spherical_surfaces(
     let position_v = Axis2Placement3dRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.spherical_surfaces.items[aid.0];
     it.position = position_v;
+}
+
+fn resolve_straightness_tolerances(
+    model: &mut Model,
+    aid: StraightnessToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.straightness_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
 }
 
 fn resolve_surface_curves(
@@ -2938,6 +5370,25 @@ fn resolve_surface_of_revolutions(
     it.axis_position = axis_position_v;
 }
 
+fn resolve_surface_profile_tolerances(
+    model: &mut Model,
+    aid: SurfaceProfileToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.surface_profile_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
 fn resolve_swept_surfaces(
     model: &mut Model,
     aid: SweptSurfaceId,
@@ -2947,6 +5398,34 @@ fn resolve_swept_surfaces(
     let swept_curve_v = CurveRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.swept_surfaces.items[aid.0];
     it.swept_curve = swept_curve_v;
+}
+
+fn resolve_symmetry_tolerances(
+    model: &mut Model,
+    aid: SymmetryToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.symmetry_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
 }
 
 fn resolve_time_units(
@@ -2961,6 +5440,90 @@ fn resolve_time_units(
     it.dimensions = dimensions_v;
 }
 
+fn resolve_tolerance_values(
+    model: &mut Model,
+    aid: ToleranceValueId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let lower_bound_v =
+        MeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let upper_bound_v =
+        MeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.tolerance_values.items[aid.0];
+    it.lower_bound = lower_bound_v;
+    it.upper_bound = upper_bound_v;
+}
+
+fn resolve_tolerance_zones(
+    model: &mut Model,
+    aid: ToleranceZoneId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let defining_tolerance_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ToleranceZoneTargetRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let form_v = ToleranceZoneFormRef::from_any(*idmap.get(&as_ref_id(&attrs[5])).expect("ref"));
+    let it = &mut model.tolerance_zones.items[aid.0];
+    it.of_shape = of_shape_v;
+    it.defining_tolerance = defining_tolerance_v;
+    it.form = form_v;
+}
+
+fn resolve_tolerance_zone_definitions(
+    model: &mut Model,
+    aid: ToleranceZoneDefinitionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let zone_v = ToleranceZoneRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let boundaries_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ShapeAspectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.tolerance_zone_definitions.items[aid.0];
+    it.zone = zone_v;
+    it.boundaries = boundaries_v;
+}
+
+fn resolve_tolerance_zone_with_datums(
+    model: &mut Model,
+    aid: ToleranceZoneWithDatumId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let defining_tolerance_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ToleranceZoneTargetRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let form_v = ToleranceZoneFormRef::from_any(*idmap.get(&as_ref_id(&attrs[5])).expect("ref"));
+    let datum_reference_v =
+        DatumSystemRef::from_any(*idmap.get(&as_ref_id(&attrs[6])).expect("ref"));
+    let it = &mut model.tolerance_zone_with_datums.items[aid.0];
+    it.of_shape = of_shape_v;
+    it.defining_tolerance = defining_tolerance_v;
+    it.form = form_v;
+    it.datum_reference = datum_reference_v;
+}
+
 fn resolve_toroidal_surfaces(
     model: &mut Model,
     aid: ToroidalSurfaceId,
@@ -2972,6 +5535,34 @@ fn resolve_toroidal_surfaces(
     it.position = position_v;
 }
 
+fn resolve_total_runout_tolerances(
+    model: &mut Model,
+    aid: TotalRunoutToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let datum_system_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.total_runout_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.datum_system = datum_system_v;
+}
+
 fn resolve_uncertainty_measure_with_units(
     model: &mut Model,
     aid: UncertaintyMeasureWithUnitId,
@@ -2981,6 +5572,28 @@ fn resolve_uncertainty_measure_with_units(
     let unit_component_v = UnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.uncertainty_measure_with_units.items[aid.0];
     it.unit_component = unit_component_v;
+}
+
+fn resolve_unequally_disposed_geometric_tolerances(
+    model: &mut Model,
+    aid: UnequallyDisposedGeometricToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let magnitude_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(LengthMeasureWithUnitRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let toleranced_shape_aspect_v =
+        GeometricToleranceTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let displacement_v =
+        LengthMeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.unequally_disposed_geometric_tolerances.items[aid.0];
+    it.magnitude = magnitude_v;
+    it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+    it.displacement = displacement_v;
 }
 
 fn resolve_uniform_curves(
@@ -3064,6 +5677,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         .iter()
         .map(|p| match p.name.as_str() {
             "ADVANCED_FACE" => UnitPart::AdvancedFace,
+            "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement {
+                name: as_str(&p.attributes[0]),
+                frame_of_reference: ApplicationContextRef::ApplicationContext(
+                    ApplicationContextId(usize::MAX),
+                ),
+            },
             "B_SPLINE_CURVE" => UnitPart::BSplineCurve {
                 degree: as_int(&p.attributes[0]),
                 control_points_list: Vec::new(),
@@ -3131,7 +5750,16 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
             "BOUNDED_SURFACE_CURVE" => UnitPart::BoundedSurfaceCurve,
             "BREP_WITH_VOIDS" => UnitPart::BrepWithVoids { voids: Vec::new() },
+            "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+            },
             "CLOSED_SHELL" => UnitPart::ClosedShell,
+            "COMMON_DATUM" => UnitPart::CommonDatum,
+            "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
             "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None },
             "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit {
                 name: as_str(&p.attributes[0]),
@@ -3143,9 +5771,28 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 ),
             },
             "CURVE" => UnitPart::Curve,
+            "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
+            "DATUM" => UnitPart::Datum {
+                identification: as_str(&p.attributes[0]),
+            },
+            "DATUM_FEATURE" => UnitPart::DatumFeature,
+            "DATUM_REFERENCE" => UnitPart::DatumReference {
+                precedence: as_int(&p.attributes[0]),
+                referenced_datum: DatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+            },
+            "DATUM_SYSTEM" => UnitPart::DatumSystem {
+                constituents: Vec::new(),
+            },
+            "DATUM_TARGET" => UnitPart::DatumTarget {
+                target_id: as_str(&p.attributes[0]),
+            },
             "DEFINITIONAL_REPRESENTATION" => UnitPart::DefinitionalRepresentation,
             "DERIVED_UNIT" => UnitPart::DerivedUnit {
                 elements: Vec::new(),
+            },
+            "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize {
+                applies_to: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                name: as_str(&p.attributes[1]),
             },
             "DIRECTION" => UnitPart::Direction {
                 direction_ratios: match &p.attributes[0] {
@@ -3175,13 +5822,70 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
                 same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
             },
+            "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
+            "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference {
+                source: ExternalSourceRef::Unresolved,
+            },
             "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext {
                 coordinate_space_dimension: as_int(&p.attributes[0]),
             },
             "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
+            "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                magnitude: None,
+                toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(CommonDatumId(
+                    usize::MAX,
+                )),
+            },
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => {
+                UnitPart::GeometricToleranceWithDatumReference {
+                    datum_system: Vec::new(),
+                }
+            }
+            "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => {
+                UnitPart::GeometricToleranceWithDefinedAreaUnit {
+                    area_type: match &p.attributes[0] {
+                        Attribute::Enum(s) => AreaUnitType::parse(s).expect("area_unit_type"),
+                        other => panic!("enum area_unit_type: {other:?}"),
+                    },
+                    second_unit_size: None,
+                }
+            }
+            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => {
+                UnitPart::GeometricToleranceWithDefinedUnit {
+                    unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                }
+            }
+            "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => {
+                UnitPart::GeometricToleranceWithMaximumTolerance {
+                    maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                }
+            }
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => UnitPart::GeometricToleranceWithModifiers {
+                modifiers: match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| match e {
+                            Attribute::Enum(s) => GeometricToleranceModifier::parse(s)
+                                .expect("geometric_tolerance_modifier"),
+                            o => panic!("{o:?}"),
+                        })
+                        .collect(),
+                    other => panic!("vec: {other:?}"),
+                },
+            },
             "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
             "LENGTH_MEASURE_WITH_UNIT" => UnitPart::LengthMeasureWithUnit,
             "LENGTH_UNIT" => UnitPart::LengthUnit,
+            "LINE_PROFILE_TOLERANCE" => UnitPart::LineProfileTolerance,
             "LOOP" => UnitPart::Loop,
             "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep {
                 outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
@@ -3190,6 +5894,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit {
                 value_component: read_measure_value(&p.attributes[0]),
                 unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)),
+            },
+            "MODIFIED_GEOMETRIC_TOLERANCE" => UnitPart::ModifiedGeometricTolerance {
+                modifier: match &p.attributes[0] {
+                    Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"),
+                    other => panic!("enum limit_condition: {other:?}"),
+                },
             },
             "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None },
             "OPEN_SHELL" => UnitPart::OpenShell,
@@ -3211,13 +5921,108 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     DefinitionalRepresentationId(usize::MAX),
                 ),
             },
+            "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
             "PLACEMENT" => UnitPart::Placement {
                 location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
             },
+            "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
             "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
             "POINT" => UnitPart::Point,
             "POLY_LOOP" => UnitPart::PolyLoop {
                 polygon: Vec::new(),
+            },
+            "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
+            "PRODUCT" => UnitPart::Product {
+                id: as_str(&p.attributes[0]),
+                name: as_str(&p.attributes[1]),
+                description: match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[2])),
+                },
+                frame_of_reference: Vec::new(),
+            },
+            "PRODUCT_CONTEXT" => UnitPart::ProductContext {
+                discipline_type: as_str(&p.attributes[0]),
+            },
+            "PRODUCT_DEFINITION" => UnitPart::ProductDefinition {
+                id: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
+                    ProductDefinitionFormationId(usize::MAX),
+                ),
+                frame_of_reference: ProductDefinitionContextRef::ProductDefinitionContext(
+                    ProductDefinitionContextId(usize::MAX),
+                ),
+            },
+            "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext {
+                life_cycle_stage: as_str(&p.attributes[0]),
+            },
+            "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation {
+                id: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                of_product: ProductRef::Product(ProductId(usize::MAX)),
+            },
+            "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence {
+                id: as_str(&p.attributes[0]),
+                name: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                description: match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[2])),
+                },
+                definition: None,
+                quantity: None,
+            },
+            "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship {
+                id: as_str(&p.attributes[0]),
+                name: as_str(&p.attributes[1]),
+                description: match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[2])),
+                },
+                relating_product_definition:
+                    ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                        GenericProductDefinitionReferenceId(usize::MAX),
+                    ),
+                related_product_definition:
+                    ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                        GenericProductDefinitionReferenceId(usize::MAX),
+                    ),
+            },
+            "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => {
+                UnitPart::ProductDefinitionRelationshipRelationship {
+                    id: as_str(&p.attributes[0]),
+                    name: as_str(&p.attributes[1]),
+                    description: match &p.attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&p.attributes[2])),
+                    },
+                    relating: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
+                        ProductDefinitionRelationshipId(usize::MAX),
+                    ),
+                    related: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
+                        ProductDefinitionRelationshipId(usize::MAX),
+                    ),
+                }
+            }
+            "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
+            "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                definition: CharacterizedDefinitionRef::AngularityTolerance(AngularityToleranceId(
+                    usize::MAX,
+                )),
             },
             "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
             "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
@@ -3253,7 +6058,30 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "REPRESENTATION_ITEM" => UnitPart::RepresentationItem {
                 name: as_str(&p.attributes[0]),
             },
+            "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
             "SEAM_CURVE" => UnitPart::SeamCurve,
+            "SHAPE_ASPECT" => UnitPart::ShapeAspect {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                    ProductDefinitionShapeId(usize::MAX),
+                ),
+                product_definitional: as_logical(&p.attributes[3]),
+            },
+            "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+            },
+            "SHAPE_DIMENSION_REPRESENTATION" => UnitPart::ShapeDimensionRepresentation,
+            "SHAPE_REPRESENTATION" => UnitPart::ShapeRepresentation,
             "SI_UNIT" => UnitPart::SiUnit {
                 prefix: match &p.attributes[0] {
                     Attribute::Unset => None,
@@ -3269,6 +6097,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
             "SOLID_MODEL" => UnitPart::SolidModel,
+            "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
             "SURFACE" => UnitPart::Surface,
             "SURFACE_CURVE" => UnitPart::SurfaceCurve {
                 curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
@@ -3279,12 +6108,31 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     other => panic!("enum preferred_surface_curve_representation: {other:?}"),
                 },
             },
+            "SURFACE_PROFILE_TOLERANCE" => UnitPart::SurfaceProfileTolerance,
             "TIME_UNIT" => UnitPart::TimeUnit,
+            "TOLERANCE_ZONE" => UnitPart::ToleranceZone {
+                defining_tolerance: Vec::new(),
+                form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)),
+            },
+            "TOLERANCE_ZONE_DEFINITION" => UnitPart::ToleranceZoneDefinition {
+                zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)),
+                boundaries: Vec::new(),
+            },
+            "TOLERANCE_ZONE_WITH_DATUM" => UnitPart::ToleranceZoneWithDatum {
+                datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(usize::MAX)),
+            },
             "TOPOLOGICAL_REPRESENTATION_ITEM" => UnitPart::TopologicalRepresentationItem,
             "TOROIDAL_SURFACE" => UnitPart::ToroidalSurface {
                 major_radius: as_real(&p.attributes[0]),
                 minor_radius: as_real(&p.attributes[1]),
             },
+            "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => {
+                UnitPart::UnequallyDisposedGeometricTolerance {
+                    displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                }
+            }
             "UNIFORM_CURVE" => UnitPart::UniformCurve,
             "UNIFORM_SURFACE" => UnitPart::UniformSurface,
             "VECTOR" => UnitPart::Vector {
@@ -3309,6 +6157,13 @@ fn resolve_complex(
     let bag = &mut model.complex_units.items[aid.0];
     for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {
         match slot {
+            UnitPart::ApplicationContextElement {
+                frame_of_reference, ..
+            } => {
+                *frame_of_reference = ApplicationContextRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::BSplineCurve {
                 control_points_list,
                 ..
@@ -3379,6 +6234,26 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
             }
+            UnitPart::DatumReference {
+                referenced_datum, ..
+            } => {
+                *referenced_datum =
+                    DatumRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
+            }
+            UnitPart::DatumSystem { constituents, .. } => {
+                *constituents = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            DatumReferenceCompartmentRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
             UnitPart::DerivedUnit { elements, .. } => {
                 *elements = match &p.attributes[0] {
                     Attribute::List(l) => l
@@ -3390,6 +6265,11 @@ fn resolve_complex(
                     Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::DimensionalSize { applies_to, .. } => {
+                *applies_to = ShapeAspectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
             }
             UnitPart::Edge {
                 edge_start,
@@ -3434,6 +6314,63 @@ fn resolve_complex(
             UnitPart::FaceSurface { face_geometry, .. } => {
                 *face_geometry =
                     SurfaceRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::GenericProductDefinitionReference { source, .. } => {
+                *source = ExternalSourceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::GeometricTolerance {
+                magnitude,
+                toleranced_shape_aspect,
+                ..
+            } => {
+                *magnitude = match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(LengthMeasureWithUnitRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                    )),
+                };
+                *toleranced_shape_aspect = GeometricToleranceTargetRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
+            UnitPart::GeometricToleranceWithDatumReference { datum_system, .. } => {
+                *datum_system = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            DatumSystemOrReferenceRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::GeometricToleranceWithDefinedAreaUnit {
+                second_unit_size, ..
+            } => {
+                *second_unit_size = match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                    )),
+                };
+            }
+            UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
+                *unit_size = LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::GeometricToleranceWithMaximumTolerance {
+                maximum_upper_tolerance,
+                ..
+            } => {
+                *maximum_upper_tolerance = LengthMeasureWithUnitRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
             }
             UnitPart::ManifoldSolidBrep { outer, .. } => {
                 *outer = ClosedShellRef::from_any(
@@ -3502,6 +6439,81 @@ fn resolve_complex(
                     other => panic!("vec ref: {other:?}"),
                 };
             }
+            UnitPart::Product {
+                frame_of_reference, ..
+            } => {
+                *frame_of_reference = match &p.attributes[3] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            ProductContextRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::ProductDefinition {
+                formation,
+                frame_of_reference,
+                ..
+            } => {
+                *formation = ProductDefinitionFormationRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+                *frame_of_reference = ProductDefinitionContextRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
+            UnitPart::ProductDefinitionFormation { of_product, .. } => {
+                *of_product =
+                    ProductRef::from_any(*idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"));
+            }
+            UnitPart::ProductDefinitionOccurrence {
+                definition,
+                quantity,
+                ..
+            } => {
+                *definition = match &p.attributes[3] {
+                    Attribute::Unset => None,
+                    _ => Some(ProductDefinitionOrReferenceRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                    )),
+                };
+                *quantity = match &p.attributes[4] {
+                    Attribute::Unset => None,
+                    _ => Some(MeasureWithUnitRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[4])).expect("ref"),
+                    )),
+                };
+            }
+            UnitPart::ProductDefinitionRelationship {
+                relating_product_definition,
+                related_product_definition,
+                ..
+            } => {
+                *relating_product_definition = ProductDefinitionOrReferenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+                *related_product_definition = ProductDefinitionOrReferenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[4])).expect("ref"),
+                );
+            }
+            UnitPart::ProductDefinitionRelationshipRelationship {
+                relating, related, ..
+            } => {
+                *relating = ProductDefinitionRelationshipRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+                *related = ProductDefinitionRelationshipRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[4])).expect("ref"),
+                );
+            }
+            UnitPart::PropertyDefinition { definition, .. } => {
+                *definition = CharacterizedDefinitionRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+            }
             UnitPart::Representation {
                 items,
                 context_of_items,
@@ -3521,6 +6533,23 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
                 );
             }
+            UnitPart::ShapeAspect { of_shape, .. } => {
+                *of_shape = ProductDefinitionShapeRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+            }
+            UnitPart::ShapeAspectRelationship {
+                relating_shape_aspect,
+                related_shape_aspect,
+                ..
+            } => {
+                *relating_shape_aspect = ShapeAspectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+                *related_shape_aspect = ShapeAspectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
             UnitPart::SurfaceCurve {
                 curve_3d,
                 associated_geometry,
@@ -3538,6 +6567,54 @@ fn resolve_complex(
                     Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::ToleranceZone {
+                defining_tolerance,
+                form,
+                ..
+            } => {
+                *defining_tolerance = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            ToleranceZoneTargetRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+                *form = ToleranceZoneFormRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
+            UnitPart::ToleranceZoneDefinition {
+                zone, boundaries, ..
+            } => {
+                *zone = ToleranceZoneRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *boundaries = match &p.attributes[1] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| ShapeAspectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::ToleranceZoneWithDatum {
+                datum_reference, ..
+            } => {
+                *datum_reference = DatumSystemRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
+                *displacement = LengthMeasureWithUnitRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
             }
             UnitPart::Vector { orientation, .. } => {
                 *orientation =

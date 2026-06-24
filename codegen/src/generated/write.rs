@@ -52,6 +52,9 @@ pub struct Writer<'a> {
     next: u64,
     out: String,
     advanced_face_ids: Vec<Option<u64>>,
+    angularity_tolerance_ids: Vec<Option<u64>>,
+    application_context_ids: Vec<Option<u64>>,
+    application_context_element_ids: Vec<Option<u64>>,
     axis1_placement_ids: Vec<Option<u64>>,
     axis2_placement2d_ids: Vec<Option<u64>>,
     axis2_placement3d_ids: Vec<Option<u64>>,
@@ -67,8 +70,14 @@ pub struct Writer<'a> {
     bounded_surface_curve_ids: Vec<Option<u64>>,
     brep_with_void_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
+    characterized_object_ids: Vec<Option<u64>>,
     circle_ids: Vec<Option<u64>>,
+    circular_runout_tolerance_ids: Vec<Option<u64>>,
     closed_shell_ids: Vec<Option<u64>>,
+    coaxiality_tolerance_ids: Vec<Option<u64>>,
+    common_datum_ids: Vec<Option<u64>>,
+    composite_shape_aspect_ids: Vec<Option<u64>>,
+    concentricity_tolerance_ids: Vec<Option<u64>>,
     conic_ids: Vec<Option<u64>>,
     conical_surface_ids: Vec<Option<u64>>,
     connected_face_set_ids: Vec<Option<u64>>,
@@ -76,10 +85,21 @@ pub struct Writer<'a> {
     conversion_based_unit_ids: Vec<Option<u64>>,
     curve_ids: Vec<Option<u64>>,
     cylindrical_surface_ids: Vec<Option<u64>>,
+    cylindricity_tolerance_ids: Vec<Option<u64>>,
+    datum_ids: Vec<Option<u64>>,
+    datum_feature_ids: Vec<Option<u64>>,
+    datum_reference_ids: Vec<Option<u64>>,
+    datum_system_ids: Vec<Option<u64>>,
+    datum_target_ids: Vec<Option<u64>>,
     definitional_representation_ids: Vec<Option<u64>>,
     derived_unit_ids: Vec<Option<u64>>,
     derived_unit_element_ids: Vec<Option<u64>>,
+    dimensional_characteristic_representation_ids: Vec<Option<u64>>,
     dimensional_exponent_ids: Vec<Option<u64>>,
+    dimensional_location_ids: Vec<Option<u64>>,
+    dimensional_location_with_path_ids: Vec<Option<u64>>,
+    dimensional_size_ids: Vec<Option<u64>>,
+    dimensional_size_with_path_ids: Vec<Option<u64>>,
     direction_ids: Vec<Option<u64>>,
     edge_ids: Vec<Option<u64>>,
     edge_curve_ids: Vec<Option<u64>>,
@@ -90,29 +110,54 @@ pub struct Writer<'a> {
     face_bound_ids: Vec<Option<u64>>,
     face_outer_bound_ids: Vec<Option<u64>>,
     face_surface_ids: Vec<Option<u64>>,
+    flatness_tolerance_ids: Vec<Option<u64>>,
+    generic_product_definition_reference_ids: Vec<Option<u64>>,
     geometric_representation_context_ids: Vec<Option<u64>>,
     geometric_representation_item_ids: Vec<Option<u64>>,
+    geometric_tolerance_ids: Vec<Option<u64>>,
+    geometric_tolerance_with_datum_reference_ids: Vec<Option<u64>>,
+    geometric_tolerance_with_defined_area_unit_ids: Vec<Option<u64>>,
+    geometric_tolerance_with_defined_unit_ids: Vec<Option<u64>>,
+    geometric_tolerance_with_maximum_tolerance_ids: Vec<Option<u64>>,
+    geometric_tolerance_with_modifier_ids: Vec<Option<u64>>,
     intersection_curve_ids: Vec<Option<u64>>,
     length_measure_with_unit_ids: Vec<Option<u64>>,
     length_unit_ids: Vec<Option<u64>>,
     line_ids: Vec<Option<u64>>,
+    line_profile_tolerance_ids: Vec<Option<u64>>,
     loop_ids: Vec<Option<u64>>,
     manifold_solid_brep_ids: Vec<Option<u64>>,
     mass_unit_ids: Vec<Option<u64>>,
     measure_with_unit_ids: Vec<Option<u64>>,
+    modified_geometric_tolerance_ids: Vec<Option<u64>>,
     named_unit_ids: Vec<Option<u64>>,
     offset_surface_ids: Vec<Option<u64>>,
     open_shell_ids: Vec<Option<u64>>,
     oriented_closed_shell_ids: Vec<Option<u64>>,
     oriented_edge_ids: Vec<Option<u64>>,
+    parallelism_tolerance_ids: Vec<Option<u64>>,
     parametric_representation_context_ids: Vec<Option<u64>>,
     path_ids: Vec<Option<u64>>,
     pcurve_ids: Vec<Option<u64>>,
+    perpendicularity_tolerance_ids: Vec<Option<u64>>,
+    placed_datum_target_feature_ids: Vec<Option<u64>>,
     placement_ids: Vec<Option<u64>>,
     plane_ids: Vec<Option<u64>>,
+    plane_angle_measure_with_unit_ids: Vec<Option<u64>>,
     plane_angle_unit_ids: Vec<Option<u64>>,
     point_ids: Vec<Option<u64>>,
     poly_loop_ids: Vec<Option<u64>>,
+    position_tolerance_ids: Vec<Option<u64>>,
+    product_ids: Vec<Option<u64>>,
+    product_context_ids: Vec<Option<u64>>,
+    product_definition_ids: Vec<Option<u64>>,
+    product_definition_context_ids: Vec<Option<u64>>,
+    product_definition_formation_ids: Vec<Option<u64>>,
+    product_definition_occurrence_ids: Vec<Option<u64>>,
+    product_definition_relationship_ids: Vec<Option<u64>>,
+    product_definition_relationship_relationship_ids: Vec<Option<u64>>,
+    product_definition_shape_ids: Vec<Option<u64>>,
+    property_definition_ids: Vec<Option<u64>>,
     quasi_uniform_curve_ids: Vec<Option<u64>>,
     quasi_uniform_surface_ids: Vec<Option<u64>>,
     rational_b_spline_curve_ids: Vec<Option<u64>>,
@@ -120,20 +165,35 @@ pub struct Writer<'a> {
     representation_ids: Vec<Option<u64>>,
     representation_context_ids: Vec<Option<u64>>,
     representation_item_ids: Vec<Option<u64>>,
+    roundness_tolerance_ids: Vec<Option<u64>>,
     seam_curve_ids: Vec<Option<u64>>,
+    shape_aspect_ids: Vec<Option<u64>>,
+    shape_aspect_relationship_ids: Vec<Option<u64>>,
+    shape_dimension_representation_ids: Vec<Option<u64>>,
+    shape_representation_ids: Vec<Option<u64>>,
     si_unit_ids: Vec<Option<u64>>,
     solid_angle_unit_ids: Vec<Option<u64>>,
     solid_model_ids: Vec<Option<u64>>,
     spherical_surface_ids: Vec<Option<u64>>,
+    straightness_tolerance_ids: Vec<Option<u64>>,
     surface_ids: Vec<Option<u64>>,
     surface_curve_ids: Vec<Option<u64>>,
     surface_of_linear_extrusion_ids: Vec<Option<u64>>,
     surface_of_revolution_ids: Vec<Option<u64>>,
+    surface_profile_tolerance_ids: Vec<Option<u64>>,
     swept_surface_ids: Vec<Option<u64>>,
+    symmetry_tolerance_ids: Vec<Option<u64>>,
     time_unit_ids: Vec<Option<u64>>,
+    tolerance_value_ids: Vec<Option<u64>>,
+    tolerance_zone_ids: Vec<Option<u64>>,
+    tolerance_zone_definition_ids: Vec<Option<u64>>,
+    tolerance_zone_form_ids: Vec<Option<u64>>,
+    tolerance_zone_with_datum_ids: Vec<Option<u64>>,
     topological_representation_item_ids: Vec<Option<u64>>,
     toroidal_surface_ids: Vec<Option<u64>>,
+    total_runout_tolerance_ids: Vec<Option<u64>>,
     uncertainty_measure_with_unit_ids: Vec<Option<u64>>,
+    unequally_disposed_geometric_tolerance_ids: Vec<Option<u64>>,
     uniform_curve_ids: Vec<Option<u64>>,
     uniform_surface_ids: Vec<Option<u64>>,
     vector_ids: Vec<Option<u64>>,
@@ -150,6 +210,12 @@ impl<'a> Writer<'a> {
             next: 1,
             out: String::new(),
             advanced_face_ids: vec![None; model.advanced_faces.items.len()],
+            angularity_tolerance_ids: vec![None; model.angularity_tolerances.items.len()],
+            application_context_ids: vec![None; model.application_contexts.items.len()],
+            application_context_element_ids: vec![
+                None;
+                model.application_context_elements.items.len()
+            ],
             axis1_placement_ids: vec![None; model.axis1_placements.items.len()],
             axis2_placement2d_ids: vec![None; model.axis2_placement2ds.items.len()],
             axis2_placement3d_ids: vec![None; model.axis2_placement3ds.items.len()],
@@ -168,8 +234,14 @@ impl<'a> Writer<'a> {
             bounded_surface_curve_ids: vec![None; model.bounded_surface_curves.items.len()],
             brep_with_void_ids: vec![None; model.brep_with_voidss.items.len()],
             cartesian_point_ids: vec![None; model.cartesian_points.items.len()],
+            characterized_object_ids: vec![None; model.characterized_objects.items.len()],
             circle_ids: vec![None; model.circles.items.len()],
+            circular_runout_tolerance_ids: vec![None; model.circular_runout_tolerances.items.len()],
             closed_shell_ids: vec![None; model.closed_shells.items.len()],
+            coaxiality_tolerance_ids: vec![None; model.coaxiality_tolerances.items.len()],
+            common_datum_ids: vec![None; model.common_datums.items.len()],
+            composite_shape_aspect_ids: vec![None; model.composite_shape_aspects.items.len()],
+            concentricity_tolerance_ids: vec![None; model.concentricity_tolerances.items.len()],
             conic_ids: vec![None; model.conics.items.len()],
             conical_surface_ids: vec![None; model.conical_surfaces.items.len()],
             connected_face_set_ids: vec![None; model.connected_face_sets.items.len()],
@@ -177,13 +249,39 @@ impl<'a> Writer<'a> {
             conversion_based_unit_ids: vec![None; model.conversion_based_units.items.len()],
             curve_ids: vec![None; model.curves.items.len()],
             cylindrical_surface_ids: vec![None; model.cylindrical_surfaces.items.len()],
+            cylindricity_tolerance_ids: vec![None; model.cylindricity_tolerances.items.len()],
+            datum_ids: vec![None; model.datums.items.len()],
+            datum_feature_ids: vec![None; model.datum_features.items.len()],
+            datum_reference_ids: vec![None; model.datum_references.items.len()],
+            datum_system_ids: vec![None; model.datum_systems.items.len()],
+            datum_target_ids: vec![None; model.datum_targets.items.len()],
             definitional_representation_ids: vec![
                 None;
                 model.definitional_representations.items.len()
             ],
             derived_unit_ids: vec![None; model.derived_units.items.len()],
             derived_unit_element_ids: vec![None; model.derived_unit_elements.items.len()],
+            dimensional_characteristic_representation_ids: vec![
+                None;
+                model
+                    .dimensional_characteristic_representations
+                    .items
+                    .len()
+            ],
             dimensional_exponent_ids: vec![None; model.dimensional_exponentss.items.len()],
+            dimensional_location_ids: vec![None; model.dimensional_locations.items.len()],
+            dimensional_location_with_path_ids: vec![
+                None;
+                model
+                    .dimensional_location_with_paths
+                    .items
+                    .len()
+            ],
+            dimensional_size_ids: vec![None; model.dimensional_sizes.items.len()],
+            dimensional_size_with_path_ids: vec![
+                None;
+                model.dimensional_size_with_paths.items.len()
+            ],
             direction_ids: vec![None; model.directions.items.len()],
             edge_ids: vec![None; model.edges.items.len()],
             edge_curve_ids: vec![None; model.edge_curves.items.len()],
@@ -194,6 +292,14 @@ impl<'a> Writer<'a> {
             face_bound_ids: vec![None; model.face_bounds.items.len()],
             face_outer_bound_ids: vec![None; model.face_outer_bounds.items.len()],
             face_surface_ids: vec![None; model.face_surfaces.items.len()],
+            flatness_tolerance_ids: vec![None; model.flatness_tolerances.items.len()],
+            generic_product_definition_reference_ids: vec![
+                None;
+                model
+                    .generic_product_definition_references
+                    .items
+                    .len()
+            ],
             geometric_representation_context_ids: vec![
                 None;
                 model
@@ -205,19 +311,61 @@ impl<'a> Writer<'a> {
                 None;
                 model.geometric_representation_items.items.len()
             ],
+            geometric_tolerance_ids: vec![None; model.geometric_tolerances.items.len()],
+            geometric_tolerance_with_datum_reference_ids: vec![
+                None;
+                model
+                    .geometric_tolerance_with_datum_references
+                    .items
+                    .len()
+            ],
+            geometric_tolerance_with_defined_area_unit_ids: vec![
+                None;
+                model
+                    .geometric_tolerance_with_defined_area_units
+                    .items
+                    .len()
+            ],
+            geometric_tolerance_with_defined_unit_ids: vec![
+                None;
+                model
+                    .geometric_tolerance_with_defined_units
+                    .items
+                    .len()
+            ],
+            geometric_tolerance_with_maximum_tolerance_ids: vec![
+                None;
+                model
+                    .geometric_tolerance_with_maximum_tolerances
+                    .items
+                    .len()
+            ],
+            geometric_tolerance_with_modifier_ids: vec![
+                None;
+                model
+                    .geometric_tolerance_with_modifierss
+                    .items
+                    .len()
+            ],
             intersection_curve_ids: vec![None; model.intersection_curves.items.len()],
             length_measure_with_unit_ids: vec![None; model.length_measure_with_units.items.len()],
             length_unit_ids: vec![None; model.length_units.items.len()],
             line_ids: vec![None; model.lines.items.len()],
+            line_profile_tolerance_ids: vec![None; model.line_profile_tolerances.items.len()],
             loop_ids: vec![None; model.loops.items.len()],
             manifold_solid_brep_ids: vec![None; model.manifold_solid_breps.items.len()],
             mass_unit_ids: vec![None; model.mass_units.items.len()],
             measure_with_unit_ids: vec![None; model.measure_with_units.items.len()],
+            modified_geometric_tolerance_ids: vec![
+                None;
+                model.modified_geometric_tolerances.items.len()
+            ],
             named_unit_ids: vec![None; model.named_units.items.len()],
             offset_surface_ids: vec![None; model.offset_surfaces.items.len()],
             open_shell_ids: vec![None; model.open_shells.items.len()],
             oriented_closed_shell_ids: vec![None; model.oriented_closed_shells.items.len()],
             oriented_edge_ids: vec![None; model.oriented_edges.items.len()],
+            parallelism_tolerance_ids: vec![None; model.parallelism_tolerances.items.len()],
             parametric_representation_context_ids: vec![
                 None;
                 model
@@ -227,11 +375,55 @@ impl<'a> Writer<'a> {
             ],
             path_ids: vec![None; model.paths.items.len()],
             pcurve_ids: vec![None; model.pcurves.items.len()],
+            perpendicularity_tolerance_ids: vec![
+                None;
+                model.perpendicularity_tolerances.items.len()
+            ],
+            placed_datum_target_feature_ids: vec![
+                None;
+                model.placed_datum_target_features.items.len()
+            ],
             placement_ids: vec![None; model.placements.items.len()],
             plane_ids: vec![None; model.planes.items.len()],
+            plane_angle_measure_with_unit_ids: vec![
+                None;
+                model.plane_angle_measure_with_units.items.len()
+            ],
             plane_angle_unit_ids: vec![None; model.plane_angle_units.items.len()],
             point_ids: vec![None; model.points.items.len()],
             poly_loop_ids: vec![None; model.poly_loops.items.len()],
+            position_tolerance_ids: vec![None; model.position_tolerances.items.len()],
+            product_ids: vec![None; model.products.items.len()],
+            product_context_ids: vec![None; model.product_contexts.items.len()],
+            product_definition_ids: vec![None; model.product_definitions.items.len()],
+            product_definition_context_ids: vec![
+                None;
+                model.product_definition_contexts.items.len()
+            ],
+            product_definition_formation_ids: vec![
+                None;
+                model.product_definition_formations.items.len()
+            ],
+            product_definition_occurrence_ids: vec![
+                None;
+                model.product_definition_occurrences.items.len()
+            ],
+            product_definition_relationship_ids: vec![
+                None;
+                model
+                    .product_definition_relationships
+                    .items
+                    .len()
+            ],
+            product_definition_relationship_relationship_ids: vec![
+                None;
+                model
+                    .product_definition_relationship_relationships
+                    .items
+                    .len()
+            ],
+            product_definition_shape_ids: vec![None; model.product_definition_shapes.items.len()],
+            property_definition_ids: vec![None; model.property_definitions.items.len()],
             quasi_uniform_curve_ids: vec![None; model.quasi_uniform_curves.items.len()],
             quasi_uniform_surface_ids: vec![None; model.quasi_uniform_surfaces.items.len()],
             rational_b_spline_curve_ids: vec![None; model.rational_b_spline_curves.items.len()],
@@ -239,11 +431,23 @@ impl<'a> Writer<'a> {
             representation_ids: vec![None; model.representations.items.len()],
             representation_context_ids: vec![None; model.representation_contexts.items.len()],
             representation_item_ids: vec![None; model.representation_items.items.len()],
+            roundness_tolerance_ids: vec![None; model.roundness_tolerances.items.len()],
             seam_curve_ids: vec![None; model.seam_curves.items.len()],
+            shape_aspect_ids: vec![None; model.shape_aspects.items.len()],
+            shape_aspect_relationship_ids: vec![None; model.shape_aspect_relationships.items.len()],
+            shape_dimension_representation_ids: vec![
+                None;
+                model
+                    .shape_dimension_representations
+                    .items
+                    .len()
+            ],
+            shape_representation_ids: vec![None; model.shape_representations.items.len()],
             si_unit_ids: vec![None; model.si_units.items.len()],
             solid_angle_unit_ids: vec![None; model.solid_angle_units.items.len()],
             solid_model_ids: vec![None; model.solid_models.items.len()],
             spherical_surface_ids: vec![None; model.spherical_surfaces.items.len()],
+            straightness_tolerance_ids: vec![None; model.straightness_tolerances.items.len()],
             surface_ids: vec![None; model.surfaces.items.len()],
             surface_curve_ids: vec![None; model.surface_curves.items.len()],
             surface_of_linear_extrusion_ids: vec![
@@ -251,8 +455,15 @@ impl<'a> Writer<'a> {
                 model.surface_of_linear_extrusions.items.len()
             ],
             surface_of_revolution_ids: vec![None; model.surface_of_revolutions.items.len()],
+            surface_profile_tolerance_ids: vec![None; model.surface_profile_tolerances.items.len()],
             swept_surface_ids: vec![None; model.swept_surfaces.items.len()],
+            symmetry_tolerance_ids: vec![None; model.symmetry_tolerances.items.len()],
             time_unit_ids: vec![None; model.time_units.items.len()],
+            tolerance_value_ids: vec![None; model.tolerance_values.items.len()],
+            tolerance_zone_ids: vec![None; model.tolerance_zones.items.len()],
+            tolerance_zone_definition_ids: vec![None; model.tolerance_zone_definitions.items.len()],
+            tolerance_zone_form_ids: vec![None; model.tolerance_zone_forms.items.len()],
+            tolerance_zone_with_datum_ids: vec![None; model.tolerance_zone_with_datums.items.len()],
             topological_representation_item_ids: vec![
                 None;
                 model
@@ -261,9 +472,17 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             toroidal_surface_ids: vec![None; model.toroidal_surfaces.items.len()],
+            total_runout_tolerance_ids: vec![None; model.total_runout_tolerances.items.len()],
             uncertainty_measure_with_unit_ids: vec![
                 None;
                 model.uncertainty_measure_with_units.items.len()
+            ],
+            unequally_disposed_geometric_tolerance_ids: vec![
+                None;
+                model
+                    .unequally_disposed_geometric_tolerances
+                    .items
+                    .len()
             ],
             uniform_curve_ids: vec![None; model.uniform_curves.items.len()],
             uniform_surface_ids: vec![None; model.uniform_surfaces.items.len()],
@@ -303,6 +522,79 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = ADVANCED_FACE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_angularity_tolerances(&mut self, id: AngularityToleranceId) -> u64 {
+        if let Some(n) = self.angularity_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.angularity_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.angularity_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ANGULARITY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_application_contexts(&mut self, id: ApplicationContextId) -> u64 {
+        if let Some(n) = self.application_context_ids[id.0] {
+            return n;
+        }
+        let it = self.model.application_contexts.get(id.0).clone();
+        let n = self.fresh();
+        self.application_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.application)];
+        self.out.push_str(&format!(
+            "#{n} = APPLICATION_CONTEXT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_application_context_elements(&mut self, id: ApplicationContextElementId) -> u64 {
+        if let Some(n) = self.application_context_element_ids[id.0] {
+            return n;
+        }
+        let it = self.model.application_context_elements.get(id.0).clone();
+        let n = self.fresh();
+        self.application_context_element_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_application_context(it.frame_of_reference)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = APPLICATION_CONTEXT_ELEMENT({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -734,6 +1026,27 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_characterized_objects(&mut self, id: CharacterizedObjectId) -> u64 {
+        if let Some(n) = self.characterized_object_ids[id.0] {
+            return n;
+        }
+        let it = self.model.characterized_objects.get(id.0).clone();
+        let n = self.fresh();
+        self.characterized_object_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CHARACTERIZED_OBJECT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_circles(&mut self, id: CircleId) -> u64 {
         if let Some(n) = self.circle_ids[id.0] {
             return n;
@@ -748,6 +1061,43 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = CIRCLE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_circular_runout_tolerances(&mut self, id: CircularRunoutToleranceId) -> u64 {
+        if let Some(n) = self.circular_runout_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.circular_runout_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.circular_runout_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CIRCULAR_RUNOUT_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -771,6 +1121,125 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = CLOSED_SHELL({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_coaxiality_tolerances(&mut self, id: CoaxialityToleranceId) -> u64 {
+        if let Some(n) = self.coaxiality_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.coaxiality_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.coaxiality_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = COAXIALITY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_common_datums(&mut self, id: CommonDatumId) -> u64 {
+        if let Some(n) = self.common_datum_ids[id.0] {
+            return n;
+        }
+        let it = self.model.common_datums.get(id.0).clone();
+        let n = self.fresh();
+        self.common_datum_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+            step_str(&it.identification),
+        ];
+        self.out
+            .push_str(&format!("#{n} = COMMON_DATUM({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_composite_shape_aspects(&mut self, id: CompositeShapeAspectId) -> u64 {
+        if let Some(n) = self.composite_shape_aspect_ids[id.0] {
+            return n;
+        }
+        let it = self.model.composite_shape_aspects.get(id.0).clone();
+        let n = self.fresh();
+        self.composite_shape_aspect_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = COMPOSITE_SHAPE_ASPECT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_concentricity_tolerances(&mut self, id: ConcentricityToleranceId) -> u64 {
+        if let Some(n) = self.concentricity_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.concentricity_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.concentricity_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CONCENTRICITY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -904,6 +1373,145 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_cylindricity_tolerances(&mut self, id: CylindricityToleranceId) -> u64 {
+        if let Some(n) = self.cylindricity_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.cylindricity_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.cylindricity_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CYLINDRICITY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_datums(&mut self, id: DatumId) -> u64 {
+        if let Some(n) = self.datum_ids[id.0] {
+            return n;
+        }
+        let it = self.model.datums.get(id.0).clone();
+        let n = self.fresh();
+        self.datum_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+            step_str(&it.identification),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DATUM({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_datum_features(&mut self, id: DatumFeatureId) -> u64 {
+        if let Some(n) = self.datum_feature_ids[id.0] {
+            return n;
+        }
+        let it = self.model.datum_features.get(id.0).clone();
+        let n = self.fresh();
+        self.datum_feature_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DATUM_FEATURE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_datum_references(&mut self, id: DatumReferenceId) -> u64 {
+        if let Some(n) = self.datum_reference_ids[id.0] {
+            return n;
+        }
+        let it = self.model.datum_references.get(id.0).clone();
+        let n = self.fresh();
+        self.datum_reference_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("{}", it.precedence),
+            format!("#{}", self.emit_ref_datum(it.referenced_datum)),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DATUM_REFERENCE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_datum_systems(&mut self, id: DatumSystemId) -> u64 {
+        if let Some(n) = self.datum_system_ids[id.0] {
+            return n;
+        }
+        let it = self.model.datum_systems.get(id.0).clone();
+        let n = self.fresh();
+        self.datum_system_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+            format!(
+                "({})",
+                it.constituents
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_reference_compartment(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DATUM_SYSTEM({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_datum_targets(&mut self, id: DatumTargetId) -> u64 {
+        if let Some(n) = self.datum_target_ids[id.0] {
+            return n;
+        }
+        let it = self.model.datum_targets.get(id.0).clone();
+        let n = self.fresh();
+        self.datum_target_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+            step_str(&it.target_id),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DATUM_TARGET({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_definitional_representations(&mut self, id: DefinitionalRepresentationId) -> u64 {
         if let Some(n) = self.definitional_representation_ids[id.0] {
             return n;
@@ -971,6 +1579,37 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_dimensional_characteristic_representations(
+        &mut self,
+        id: DimensionalCharacteristicRepresentationId,
+    ) -> u64 {
+        if let Some(n) = self.dimensional_characteristic_representation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .dimensional_characteristic_representations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.dimensional_characteristic_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!(
+                "#{}",
+                self.emit_ref_dimensional_characteristic(it.dimension)
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_shape_dimension_representation(it.representation)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DIMENSIONAL_CHARACTERISTIC_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_dimensional_exponentss(&mut self, id: DimensionalExponentsId) -> u64 {
         if let Some(n) = self.dimensional_exponent_ids[id.0] {
             return n;
@@ -989,6 +1628,88 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = DIMENSIONAL_EXPONENTS({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_dimensional_locations(&mut self, id: DimensionalLocationId) -> u64 {
+        if let Some(n) = self.dimensional_location_ids[id.0] {
+            return n;
+        }
+        let it = self.model.dimensional_locations.get(id.0).clone();
+        let n = self.fresh();
+        self.dimensional_location_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_shape_aspect(it.relating_shape_aspect)),
+            format!("#{}", self.emit_ref_shape_aspect(it.related_shape_aspect)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DIMENSIONAL_LOCATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_dimensional_location_with_paths(&mut self, id: DimensionalLocationWithPathId) -> u64 {
+        if let Some(n) = self.dimensional_location_with_path_ids[id.0] {
+            return n;
+        }
+        let it = self.model.dimensional_location_with_paths.get(id.0).clone();
+        let n = self.fresh();
+        self.dimensional_location_with_path_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_shape_aspect(it.relating_shape_aspect)),
+            format!("#{}", self.emit_ref_shape_aspect(it.related_shape_aspect)),
+            format!("#{}", self.emit_ref_shape_aspect(it.path)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DIMENSIONAL_LOCATION_WITH_PATH({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_dimensional_sizes(&mut self, id: DimensionalSizeId) -> u64 {
+        if let Some(n) = self.dimensional_size_ids[id.0] {
+            return n;
+        }
+        let it = self.model.dimensional_sizes.get(id.0).clone();
+        let n = self.fresh();
+        self.dimensional_size_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("#{}", self.emit_ref_shape_aspect(it.applies_to)),
+            step_str(&it.name),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DIMENSIONAL_SIZE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_dimensional_size_with_paths(&mut self, id: DimensionalSizeWithPathId) -> u64 {
+        if let Some(n) = self.dimensional_size_with_path_ids[id.0] {
+            return n;
+        }
+        let it = self.model.dimensional_size_with_paths.get(id.0).clone();
+        let n = self.fresh();
+        self.dimensional_size_with_path_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("#{}", self.emit_ref_shape_aspect(it.applies_to)),
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_shape_aspect(it.path)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DIMENSIONAL_SIZE_WITH_PATH({});\n",
             attrs.join(",")
         ));
         n
@@ -1200,6 +1921,57 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_flatness_tolerances(&mut self, id: FlatnessToleranceId) -> u64 {
+        if let Some(n) = self.flatness_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.flatness_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.flatness_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FLATNESS_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_generic_product_definition_references(
+        &mut self,
+        id: GenericProductDefinitionReferenceId,
+    ) -> u64 {
+        if let Some(n) = self.generic_product_definition_reference_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .generic_product_definition_references
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.generic_product_definition_reference_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!("#{}", self.emit_ref_external_source(it.source))];
+        self.out.push_str(&format!(
+            "#{n} = GENERIC_PRODUCT_DEFINITION_REFERENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_geometric_representation_contexts(
         &mut self,
         id: GeometricRepresentationContextId,
@@ -1236,6 +2008,259 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![step_str(&it.name)];
         self.out.push_str(&format!(
             "#{n} = GEOMETRIC_REPRESENTATION_ITEM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_geometric_tolerances(&mut self, id: GeometricToleranceId) -> u64 {
+        if let Some(n) = self.geometric_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.geometric_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.geometric_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_geometric_tolerance_with_datum_references(
+        &mut self,
+        id: GeometricToleranceWithDatumReferenceId,
+    ) -> u64 {
+        if let Some(n) = self.geometric_tolerance_with_datum_reference_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .geometric_tolerance_with_datum_references
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.geometric_tolerance_with_datum_reference_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_geometric_tolerance_with_defined_area_units(
+        &mut self,
+        id: GeometricToleranceWithDefinedAreaUnitId,
+    ) -> u64 {
+        if let Some(n) = self.geometric_tolerance_with_defined_area_unit_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .geometric_tolerance_with_defined_area_units
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.geometric_tolerance_with_defined_area_unit_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_length_or_plane_angle_measure_with_unit_select(it.unit_size)
+            ),
+            it.area_type.token().to_string(),
+            match &it.second_unit_size {
+                Some(r) => format!(
+                    "#{}",
+                    self.emit_ref_length_or_plane_angle_measure_with_unit_select(*r)
+                ),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_geometric_tolerance_with_defined_units(
+        &mut self,
+        id: GeometricToleranceWithDefinedUnitId,
+    ) -> u64 {
+        if let Some(n) = self.geometric_tolerance_with_defined_unit_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .geometric_tolerance_with_defined_units
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.geometric_tolerance_with_defined_unit_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_length_or_plane_angle_measure_with_unit_select(it.unit_size)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_geometric_tolerance_with_maximum_tolerances(
+        &mut self,
+        id: GeometricToleranceWithMaximumToleranceId,
+    ) -> u64 {
+        if let Some(n) = self.geometric_tolerance_with_maximum_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .geometric_tolerance_with_maximum_tolerances
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.geometric_tolerance_with_maximum_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.modifiers
+                    .iter()
+                    .map(|e| e.token().to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_length_measure_with_unit(it.maximum_upper_tolerance)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_geometric_tolerance_with_modifierss(
+        &mut self,
+        id: GeometricToleranceWithModifiersId,
+    ) -> u64 {
+        if let Some(n) = self.geometric_tolerance_with_modifier_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .geometric_tolerance_with_modifierss
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.geometric_tolerance_with_modifier_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.modifiers
+                    .iter()
+                    .map(|e| e.token().to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_TOLERANCE_WITH_MODIFIERS({});\n",
             attrs.join(",")
         ));
         n
@@ -1319,6 +2344,35 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_line_profile_tolerances(&mut self, id: LineProfileToleranceId) -> u64 {
+        if let Some(n) = self.line_profile_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.line_profile_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.line_profile_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = LINE_PROFILE_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_loops(&mut self, id: LoopId) -> u64 {
         if let Some(n) = self.loop_ids[id.0] {
             return n;
@@ -1379,6 +2433,36 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = MEASURE_WITH_UNIT({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_modified_geometric_tolerances(&mut self, id: ModifiedGeometricToleranceId) -> u64 {
+        if let Some(n) = self.modified_geometric_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.modified_geometric_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.modified_geometric_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            it.modifier.token().to_string(),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = MODIFIED_GEOMETRIC_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -1478,6 +2562,43 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_parallelism_tolerances(&mut self, id: ParallelismToleranceId) -> u64 {
+        if let Some(n) = self.parallelism_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.parallelism_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.parallelism_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PARALLELISM_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_parametric_representation_contexts(
         &mut self,
         id: ParametricRepresentationContextId,
@@ -1543,6 +2664,67 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_perpendicularity_tolerances(&mut self, id: PerpendicularityToleranceId) -> u64 {
+        if let Some(n) = self.perpendicularity_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.perpendicularity_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.perpendicularity_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PERPENDICULARITY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_placed_datum_target_features(&mut self, id: PlacedDatumTargetFeatureId) -> u64 {
+        if let Some(n) = self.placed_datum_target_feature_ids[id.0] {
+            return n;
+        }
+        let it = self.model.placed_datum_target_features.get(id.0).clone();
+        let n = self.fresh();
+        self.placed_datum_target_feature_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+            step_str(&it.target_id),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PLACED_DATUM_TARGET_FEATURE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_placements(&mut self, id: PlacementId) -> u64 {
         if let Some(n) = self.placement_ids[id.0] {
             return n;
@@ -1572,6 +2754,24 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = PLANE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_plane_angle_measure_with_units(&mut self, id: PlaneAngleMeasureWithUnitId) -> u64 {
+        if let Some(n) = self.plane_angle_measure_with_unit_ids[id.0] {
+            return n;
+        }
+        let it = self.model.plane_angle_measure_with_units.get(id.0).clone();
+        let n = self.fresh();
+        self.plane_angle_measure_with_unit_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            measure(&it.value_component),
+            format!("#{}", self.emit_ref_unit(it.unit_component)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PLANE_ANGLE_MEASURE_WITH_UNIT({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -1624,6 +2824,307 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = POLY_LOOP({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_position_tolerances(&mut self, id: PositionToleranceId) -> u64 {
+        if let Some(n) = self.position_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.position_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.position_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = POSITION_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_products(&mut self, id: ProductId) -> u64 {
+        if let Some(n) = self.product_ids[id.0] {
+            return n;
+        }
+        let it = self.model.products.get(id.0).clone();
+        let n = self.fresh();
+        self.product_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.frame_of_reference
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_product_context(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = PRODUCT({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_product_contexts(&mut self, id: ProductContextId) -> u64 {
+        if let Some(n) = self.product_context_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_contexts.get(id.0).clone();
+        let n = self.fresh();
+        self.product_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_application_context(it.frame_of_reference)
+            ),
+            step_str(&it.discipline_type),
+        ];
+        self.out
+            .push_str(&format!("#{n} = PRODUCT_CONTEXT({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_product_definitions(&mut self, id: ProductDefinitionId) -> u64 {
+        if let Some(n) = self.product_definition_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_definitions.get(id.0).clone();
+        let n = self.fresh();
+        self.product_definition_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_formation(it.formation)
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_context(it.frame_of_reference)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_contexts(&mut self, id: ProductDefinitionContextId) -> u64 {
+        if let Some(n) = self.product_definition_context_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_definition_contexts.get(id.0).clone();
+        let n = self.fresh();
+        self.product_definition_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_application_context(it.frame_of_reference)
+            ),
+            step_str(&it.life_cycle_stage),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_CONTEXT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_formations(&mut self, id: ProductDefinitionFormationId) -> u64 {
+        if let Some(n) = self.product_definition_formation_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_definition_formations.get(id.0).clone();
+        let n = self.fresh();
+        self.product_definition_formation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product(it.of_product)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_FORMATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_occurrences(&mut self, id: ProductDefinitionOccurrenceId) -> u64 {
+        if let Some(n) = self.product_definition_occurrence_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_definition_occurrences.get(id.0).clone();
+        let n = self.fresh();
+        self.product_definition_occurrence_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            match &it.name {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.definition {
+                Some(r) => format!("#{}", self.emit_ref_product_definition_or_reference(*r)),
+                None => "$".to_string(),
+            },
+            match &it.quantity {
+                Some(r) => format!("#{}", self.emit_ref_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_OCCURRENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_relationships(
+        &mut self,
+        id: ProductDefinitionRelationshipId,
+    ) -> u64 {
+        if let Some(n) = self.product_definition_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .product_definition_relationships
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.product_definition_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(it.relating_product_definition)
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(it.related_product_definition)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_relationship_relationships(
+        &mut self,
+        id: ProductDefinitionRelationshipRelationshipId,
+    ) -> u64 {
+        if let Some(n) = self.product_definition_relationship_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .product_definition_relationship_relationships
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.product_definition_relationship_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_relationship(it.relating)
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_relationship(it.related)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_shapes(&mut self, id: ProductDefinitionShapeId) -> u64 {
+        if let Some(n) = self.product_definition_shape_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_definition_shapes.get(id.0).clone();
+        let n = self.fresh();
+        self.product_definition_shape_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_characterized_definition(it.definition)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_SHAPE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_property_definitions(&mut self, id: PropertyDefinitionId) -> u64 {
+        if let Some(n) = self.property_definition_ids[id.0] {
+            return n;
+        }
+        let it = self.model.property_definitions.get(id.0).clone();
+        let n = self.fresh();
+        self.property_definition_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_characterized_definition(it.definition)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PROPERTY_DEFINITION({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -1835,6 +3336,35 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_roundness_tolerances(&mut self, id: RoundnessToleranceId) -> u64 {
+        if let Some(n) = self.roundness_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.roundness_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.roundness_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ROUNDNESS_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_seam_curves(&mut self, id: SeamCurveId) -> u64 {
         if let Some(n) = self.seam_curve_ids[id.0] {
             return n;
@@ -1857,6 +3387,108 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = SEAM_CURVE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_shape_aspects(&mut self, id: ShapeAspectId) -> u64 {
+        if let Some(n) = self.shape_aspect_ids[id.0] {
+            return n;
+        }
+        let it = self.model.shape_aspects.get(id.0).clone();
+        let n = self.fresh();
+        self.shape_aspect_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+        ];
+        self.out
+            .push_str(&format!("#{n} = SHAPE_ASPECT({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_shape_aspect_relationships(&mut self, id: ShapeAspectRelationshipId) -> u64 {
+        if let Some(n) = self.shape_aspect_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self.model.shape_aspect_relationships.get(id.0).clone();
+        let n = self.fresh();
+        self.shape_aspect_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_shape_aspect(it.relating_shape_aspect)),
+            format!("#{}", self.emit_ref_shape_aspect(it.related_shape_aspect)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SHAPE_ASPECT_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_shape_dimension_representations(&mut self, id: ShapeDimensionRepresentationId) -> u64 {
+        if let Some(n) = self.shape_dimension_representation_ids[id.0] {
+            return n;
+        }
+        let it = self.model.shape_dimension_representations.get(id.0).clone();
+        let n = self.fresh();
+        self.shape_dimension_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.items
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_context(it.context_of_items)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SHAPE_DIMENSION_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_shape_representations(&mut self, id: ShapeRepresentationId) -> u64 {
+        if let Some(n) = self.shape_representation_ids[id.0] {
+            return n;
+        }
+        let it = self.model.shape_representations.get(id.0).clone();
+        let n = self.fresh();
+        self.shape_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.items
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_context(it.context_of_items)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SHAPE_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -1923,6 +3555,35 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = SPHERICAL_SURFACE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_straightness_tolerances(&mut self, id: StraightnessToleranceId) -> u64 {
+        if let Some(n) = self.straightness_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.straightness_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.straightness_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = STRAIGHTNESS_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -2002,6 +3663,35 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_surface_profile_tolerances(&mut self, id: SurfaceProfileToleranceId) -> u64 {
+        if let Some(n) = self.surface_profile_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_profile_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_profile_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_PROFILE_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_swept_surfaces(&mut self, id: SweptSurfaceId) -> u64 {
         if let Some(n) = self.swept_surface_ids[id.0] {
             return n;
@@ -2018,6 +3708,43 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_symmetry_tolerances(&mut self, id: SymmetryToleranceId) -> u64 {
+        if let Some(n) = self.symmetry_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.symmetry_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.symmetry_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SYMMETRY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_time_units(&mut self, id: TimeUnitId) -> u64 {
         if let Some(n) = self.time_unit_ids[id.0] {
             return n;
@@ -2031,6 +3758,125 @@ impl<'a> Writer<'a> {
         )];
         self.out
             .push_str(&format!("#{n} = TIME_UNIT({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_tolerance_values(&mut self, id: ToleranceValueId) -> u64 {
+        if let Some(n) = self.tolerance_value_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tolerance_values.get(id.0).clone();
+        let n = self.fresh();
+        self.tolerance_value_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("#{}", self.emit_ref_measure_with_unit(it.lower_bound)),
+            format!("#{}", self.emit_ref_measure_with_unit(it.upper_bound)),
+        ];
+        self.out
+            .push_str(&format!("#{n} = TOLERANCE_VALUE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_tolerance_zones(&mut self, id: ToleranceZoneId) -> u64 {
+        if let Some(n) = self.tolerance_zone_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tolerance_zones.get(id.0).clone();
+        let n = self.fresh();
+        self.tolerance_zone_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+            format!(
+                "({})",
+                it.defining_tolerance
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!("#{}", self.emit_ref_tolerance_zone_form(it.form)),
+        ];
+        self.out
+            .push_str(&format!("#{n} = TOLERANCE_ZONE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_tolerance_zone_definitions(&mut self, id: ToleranceZoneDefinitionId) -> u64 {
+        if let Some(n) = self.tolerance_zone_definition_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tolerance_zone_definitions.get(id.0).clone();
+        let n = self.fresh();
+        self.tolerance_zone_definition_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("#{}", self.emit_ref_tolerance_zone(it.zone)),
+            format!(
+                "({})",
+                it.boundaries
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_shape_aspect(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = TOLERANCE_ZONE_DEFINITION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_tolerance_zone_forms(&mut self, id: ToleranceZoneFormId) -> u64 {
+        if let Some(n) = self.tolerance_zone_form_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tolerance_zone_forms.get(id.0).clone();
+        let n = self.fresh();
+        self.tolerance_zone_form_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = TOLERANCE_ZONE_FORM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_tolerance_zone_with_datums(&mut self, id: ToleranceZoneWithDatumId) -> u64 {
+        if let Some(n) = self.tolerance_zone_with_datum_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tolerance_zone_with_datums.get(id.0).clone();
+        let n = self.fresh();
+        self.tolerance_zone_with_datum_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            it.product_definitional.token().to_string(),
+            format!(
+                "({})",
+                it.defining_tolerance
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!("#{}", self.emit_ref_tolerance_zone_form(it.form)),
+            format!("#{}", self.emit_ref_datum_system(it.datum_reference)),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = TOLERANCE_ZONE_WITH_DATUM({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -2074,6 +3920,43 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_total_runout_tolerances(&mut self, id: TotalRunoutToleranceId) -> u64 {
+        if let Some(n) = self.total_runout_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self.model.total_runout_tolerances.get(id.0).clone();
+        let n = self.fresh();
+        self.total_runout_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "({})",
+                it.datum_system
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = TOTAL_RUNOUT_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_uncertainty_measure_with_units(&mut self, id: UncertaintyMeasureWithUnitId) -> u64 {
         if let Some(n) = self.uncertainty_measure_with_unit_ids[id.0] {
             return n;
@@ -2092,6 +3975,46 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = UNCERTAINTY_MEASURE_WITH_UNIT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_unequally_disposed_geometric_tolerances(
+        &mut self,
+        id: UnequallyDisposedGeometricToleranceId,
+    ) -> u64 {
+        if let Some(n) = self.unequally_disposed_geometric_tolerance_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .unequally_disposed_geometric_tolerances
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.unequally_disposed_geometric_tolerance_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            match &it.magnitude {
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_length_measure_with_unit(it.displacement)
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({});\n",
             attrs.join(",")
         ));
         n
@@ -2221,6 +4144,12 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_ref_application_context(&mut self, r: ApplicationContextRef) -> u64 {
+        match r {
+            ApplicationContextRef::ApplicationContext(i) => self.emit_application_contexts(i),
+        }
+    }
+
     fn emit_ref_axis1_placement(&mut self, r: Axis1PlacementRef) -> u64 {
         match r {
             Axis1PlacementRef::Axis1Placement(i) => self.emit_axis1_placements(i),
@@ -2243,6 +4172,116 @@ impl<'a> Writer<'a> {
     fn emit_ref_cartesian_point(&mut self, r: CartesianPointRef) -> u64 {
         match r {
             CartesianPointRef::CartesianPoint(i) => self.emit_cartesian_points(i),
+        }
+    }
+
+    fn emit_ref_characterized_definition(&mut self, r: CharacterizedDefinitionRef) -> u64 {
+        match r {
+            CharacterizedDefinitionRef::AngularityTolerance(i) => {
+                self.emit_angularity_tolerances(i)
+            }
+            CharacterizedDefinitionRef::CharacterizedObject(i) => {
+                self.emit_characterized_objects(i)
+            }
+            CharacterizedDefinitionRef::CircularRunoutTolerance(i) => {
+                self.emit_circular_runout_tolerances(i)
+            }
+            CharacterizedDefinitionRef::CoaxialityTolerance(i) => {
+                self.emit_coaxiality_tolerances(i)
+            }
+            CharacterizedDefinitionRef::CommonDatum(i) => self.emit_common_datums(i),
+            CharacterizedDefinitionRef::CompositeShapeAspect(i) => {
+                self.emit_composite_shape_aspects(i)
+            }
+            CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
+                self.emit_concentricity_tolerances(i)
+            }
+            CharacterizedDefinitionRef::CylindricityTolerance(i) => {
+                self.emit_cylindricity_tolerances(i)
+            }
+            CharacterizedDefinitionRef::Datum(i) => self.emit_datums(i),
+            CharacterizedDefinitionRef::DatumFeature(i) => self.emit_datum_features(i),
+            CharacterizedDefinitionRef::DatumSystem(i) => self.emit_datum_systems(i),
+            CharacterizedDefinitionRef::DatumTarget(i) => self.emit_datum_targets(i),
+            CharacterizedDefinitionRef::DimensionalLocation(i) => {
+                self.emit_dimensional_locations(i)
+            }
+            CharacterizedDefinitionRef::DimensionalLocationWithPath(i) => {
+                self.emit_dimensional_location_with_paths(i)
+            }
+            CharacterizedDefinitionRef::DimensionalSize(i) => self.emit_dimensional_sizes(i),
+            CharacterizedDefinitionRef::DimensionalSizeWithPath(i) => {
+                self.emit_dimensional_size_with_paths(i)
+            }
+            CharacterizedDefinitionRef::FlatnessTolerance(i) => self.emit_flatness_tolerances(i),
+            CharacterizedDefinitionRef::GeometricTolerance(i) => self.emit_geometric_tolerances(i),
+            CharacterizedDefinitionRef::GeometricToleranceWithDatumReference(i) => {
+                self.emit_geometric_tolerance_with_datum_references(i)
+            }
+            CharacterizedDefinitionRef::GeometricToleranceWithDefinedAreaUnit(i) => {
+                self.emit_geometric_tolerance_with_defined_area_units(i)
+            }
+            CharacterizedDefinitionRef::GeometricToleranceWithDefinedUnit(i) => {
+                self.emit_geometric_tolerance_with_defined_units(i)
+            }
+            CharacterizedDefinitionRef::GeometricToleranceWithMaximumTolerance(i) => {
+                self.emit_geometric_tolerance_with_maximum_tolerances(i)
+            }
+            CharacterizedDefinitionRef::GeometricToleranceWithModifiers(i) => {
+                self.emit_geometric_tolerance_with_modifierss(i)
+            }
+            CharacterizedDefinitionRef::LineProfileTolerance(i) => {
+                self.emit_line_profile_tolerances(i)
+            }
+            CharacterizedDefinitionRef::ModifiedGeometricTolerance(i) => {
+                self.emit_modified_geometric_tolerances(i)
+            }
+            CharacterizedDefinitionRef::ParallelismTolerance(i) => {
+                self.emit_parallelism_tolerances(i)
+            }
+            CharacterizedDefinitionRef::PerpendicularityTolerance(i) => {
+                self.emit_perpendicularity_tolerances(i)
+            }
+            CharacterizedDefinitionRef::PlacedDatumTargetFeature(i) => {
+                self.emit_placed_datum_target_features(i)
+            }
+            CharacterizedDefinitionRef::PositionTolerance(i) => self.emit_position_tolerances(i),
+            CharacterizedDefinitionRef::ProductDefinition(i) => self.emit_product_definitions(i),
+            CharacterizedDefinitionRef::ProductDefinitionOccurrence(i) => {
+                self.emit_product_definition_occurrences(i)
+            }
+            CharacterizedDefinitionRef::ProductDefinitionRelationship(i) => {
+                self.emit_product_definition_relationships(i)
+            }
+            CharacterizedDefinitionRef::ProductDefinitionRelationshipRelationship(i) => {
+                self.emit_product_definition_relationship_relationships(i)
+            }
+            CharacterizedDefinitionRef::ProductDefinitionShape(i) => {
+                self.emit_product_definition_shapes(i)
+            }
+            CharacterizedDefinitionRef::RoundnessTolerance(i) => self.emit_roundness_tolerances(i),
+            CharacterizedDefinitionRef::ShapeAspect(i) => self.emit_shape_aspects(i),
+            CharacterizedDefinitionRef::ShapeAspectRelationship(i) => {
+                self.emit_shape_aspect_relationships(i)
+            }
+            CharacterizedDefinitionRef::StraightnessTolerance(i) => {
+                self.emit_straightness_tolerances(i)
+            }
+            CharacterizedDefinitionRef::SurfaceProfileTolerance(i) => {
+                self.emit_surface_profile_tolerances(i)
+            }
+            CharacterizedDefinitionRef::SymmetryTolerance(i) => self.emit_symmetry_tolerances(i),
+            CharacterizedDefinitionRef::ToleranceZone(i) => self.emit_tolerance_zones(i),
+            CharacterizedDefinitionRef::ToleranceZoneWithDatum(i) => {
+                self.emit_tolerance_zone_with_datums(i)
+            }
+            CharacterizedDefinitionRef::TotalRunoutTolerance(i) => {
+                self.emit_total_runout_tolerances(i)
+            }
+            CharacterizedDefinitionRef::UnequallyDisposedGeometricTolerance(i) => {
+                self.emit_unequally_disposed_geometric_tolerances(i)
+            }
+            CharacterizedDefinitionRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2278,6 +4317,35 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_datum(&mut self, r: DatumRef) -> u64 {
+        match r {
+            DatumRef::CommonDatum(i) => self.emit_common_datums(i),
+            DatumRef::Datum(i) => self.emit_datums(i),
+            DatumRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_datum_reference_compartment(&mut self, r: DatumReferenceCompartmentRef) -> u64 {
+        match r {
+            DatumReferenceCompartmentRef::Unresolved => panic!("emit unresolved ref"),
+        }
+    }
+
+    fn emit_ref_datum_system_or_reference(&mut self, r: DatumSystemOrReferenceRef) -> u64 {
+        match r {
+            DatumSystemOrReferenceRef::DatumReference(i) => self.emit_datum_references(i),
+            DatumSystemOrReferenceRef::DatumSystem(i) => self.emit_datum_systems(i),
+            DatumSystemOrReferenceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_datum_system(&mut self, r: DatumSystemRef) -> u64 {
+        match r {
+            DatumSystemRef::DatumSystem(i) => self.emit_datum_systems(i),
+            DatumSystemRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_definitional_representation(&mut self, r: DefinitionalRepresentationRef) -> u64 {
         match r {
             DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
@@ -2290,6 +4358,22 @@ impl<'a> Writer<'a> {
     fn emit_ref_derived_unit_element(&mut self, r: DerivedUnitElementRef) -> u64 {
         match r {
             DerivedUnitElementRef::DerivedUnitElement(i) => self.emit_derived_unit_elements(i),
+        }
+    }
+
+    fn emit_ref_dimensional_characteristic(&mut self, r: DimensionalCharacteristicRef) -> u64 {
+        match r {
+            DimensionalCharacteristicRef::DimensionalLocation(i) => {
+                self.emit_dimensional_locations(i)
+            }
+            DimensionalCharacteristicRef::DimensionalLocationWithPath(i) => {
+                self.emit_dimensional_location_with_paths(i)
+            }
+            DimensionalCharacteristicRef::DimensionalSize(i) => self.emit_dimensional_sizes(i),
+            DimensionalCharacteristicRef::DimensionalSizeWithPath(i) => {
+                self.emit_dimensional_size_with_paths(i)
+            }
+            DimensionalCharacteristicRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2315,6 +4399,12 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_external_source(&mut self, r: ExternalSourceRef) -> u64 {
+        match r {
+            ExternalSourceRef::Unresolved => panic!("emit unresolved ref"),
+        }
+    }
+
     fn emit_ref_face_bound(&mut self, r: FaceBoundRef) -> u64 {
         match r {
             FaceBoundRef::FaceBound(i) => self.emit_face_bounds(i),
@@ -2332,6 +4422,65 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_geometric_tolerance_target(&mut self, r: GeometricToleranceTargetRef) -> u64 {
+        match r {
+            GeometricToleranceTargetRef::CommonDatum(i) => self.emit_common_datums(i),
+            GeometricToleranceTargetRef::CompositeShapeAspect(i) => {
+                self.emit_composite_shape_aspects(i)
+            }
+            GeometricToleranceTargetRef::Datum(i) => self.emit_datums(i),
+            GeometricToleranceTargetRef::DatumFeature(i) => self.emit_datum_features(i),
+            GeometricToleranceTargetRef::DatumSystem(i) => self.emit_datum_systems(i),
+            GeometricToleranceTargetRef::DatumTarget(i) => self.emit_datum_targets(i),
+            GeometricToleranceTargetRef::DimensionalLocation(i) => {
+                self.emit_dimensional_locations(i)
+            }
+            GeometricToleranceTargetRef::DimensionalLocationWithPath(i) => {
+                self.emit_dimensional_location_with_paths(i)
+            }
+            GeometricToleranceTargetRef::DimensionalSize(i) => self.emit_dimensional_sizes(i),
+            GeometricToleranceTargetRef::DimensionalSizeWithPath(i) => {
+                self.emit_dimensional_size_with_paths(i)
+            }
+            GeometricToleranceTargetRef::PlacedDatumTargetFeature(i) => {
+                self.emit_placed_datum_target_features(i)
+            }
+            GeometricToleranceTargetRef::ProductDefinitionShape(i) => {
+                self.emit_product_definition_shapes(i)
+            }
+            GeometricToleranceTargetRef::ShapeAspect(i) => self.emit_shape_aspects(i),
+            GeometricToleranceTargetRef::ToleranceZone(i) => self.emit_tolerance_zones(i),
+            GeometricToleranceTargetRef::ToleranceZoneWithDatum(i) => {
+                self.emit_tolerance_zone_with_datums(i)
+            }
+            GeometricToleranceTargetRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_length_measure_with_unit(&mut self, r: LengthMeasureWithUnitRef) -> u64 {
+        match r {
+            LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
+                self.emit_length_measure_with_units(i)
+            }
+            LengthMeasureWithUnitRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_length_or_plane_angle_measure_with_unit_select(
+        &mut self,
+        r: LengthOrPlaneAngleMeasureWithUnitSelectRef,
+    ) -> u64 {
+        match r {
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(i) => {
+                self.emit_length_measure_with_units(i)
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PlaneAngleMeasureWithUnit(i) => {
+                self.emit_plane_angle_measure_with_units(i)
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_loop(&mut self, r: LoopRef) -> u64 {
         match r {
             LoopRef::EdgeLoop(i) => self.emit_edge_loops(i),
@@ -2346,6 +4495,9 @@ impl<'a> Writer<'a> {
         match r {
             MeasureWithUnitRef::LengthMeasureWithUnit(i) => self.emit_length_measure_with_units(i),
             MeasureWithUnitRef::MeasureWithUnit(i) => self.emit_measure_with_units(i),
+            MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i) => {
+                self.emit_plane_angle_measure_with_units(i)
+            }
             MeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 self.emit_uncertainty_measure_with_units(i)
             }
@@ -2419,6 +4571,77 @@ impl<'a> Writer<'a> {
             PointRef::CartesianPoint(i) => self.emit_cartesian_points(i),
             PointRef::Point(i) => self.emit_points(i),
             PointRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_product_context(&mut self, r: ProductContextRef) -> u64 {
+        match r {
+            ProductContextRef::ProductContext(i) => self.emit_product_contexts(i),
+            ProductContextRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_product_definition_context(&mut self, r: ProductDefinitionContextRef) -> u64 {
+        match r {
+            ProductDefinitionContextRef::ProductDefinitionContext(i) => {
+                self.emit_product_definition_contexts(i)
+            }
+            ProductDefinitionContextRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_product_definition_formation(&mut self, r: ProductDefinitionFormationRef) -> u64 {
+        match r {
+            ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
+                self.emit_product_definition_formations(i)
+            }
+            ProductDefinitionFormationRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_product_definition_or_reference(
+        &mut self,
+        r: ProductDefinitionOrReferenceRef,
+    ) -> u64 {
+        match r {
+            ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(i) => {
+                self.emit_generic_product_definition_references(i)
+            }
+            ProductDefinitionOrReferenceRef::ProductDefinition(i) => {
+                self.emit_product_definitions(i)
+            }
+            ProductDefinitionOrReferenceRef::ProductDefinitionOccurrence(i) => {
+                self.emit_product_definition_occurrences(i)
+            }
+            ProductDefinitionOrReferenceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_product_definition_relationship(
+        &mut self,
+        r: ProductDefinitionRelationshipRef,
+    ) -> u64 {
+        match r {
+            ProductDefinitionRelationshipRef::ProductDefinitionRelationship(i) => {
+                self.emit_product_definition_relationships(i)
+            }
+            ProductDefinitionRelationshipRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_product_definition_shape(&mut self, r: ProductDefinitionShapeRef) -> u64 {
+        match r {
+            ProductDefinitionShapeRef::ProductDefinitionShape(i) => {
+                self.emit_product_definition_shapes(i)
+            }
+            ProductDefinitionShapeRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_product(&mut self, r: ProductRef) -> u64 {
+        match r {
+            ProductRef::Product(i) => self.emit_products(i),
+            ProductRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2524,6 +4747,36 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_shape_aspect(&mut self, r: ShapeAspectRef) -> u64 {
+        match r {
+            ShapeAspectRef::CommonDatum(i) => self.emit_common_datums(i),
+            ShapeAspectRef::CompositeShapeAspect(i) => self.emit_composite_shape_aspects(i),
+            ShapeAspectRef::Datum(i) => self.emit_datums(i),
+            ShapeAspectRef::DatumFeature(i) => self.emit_datum_features(i),
+            ShapeAspectRef::DatumSystem(i) => self.emit_datum_systems(i),
+            ShapeAspectRef::DatumTarget(i) => self.emit_datum_targets(i),
+            ShapeAspectRef::PlacedDatumTargetFeature(i) => {
+                self.emit_placed_datum_target_features(i)
+            }
+            ShapeAspectRef::ShapeAspect(i) => self.emit_shape_aspects(i),
+            ShapeAspectRef::ToleranceZone(i) => self.emit_tolerance_zones(i),
+            ShapeAspectRef::ToleranceZoneWithDatum(i) => self.emit_tolerance_zone_with_datums(i),
+            ShapeAspectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_shape_dimension_representation(
+        &mut self,
+        r: ShapeDimensionRepresentationRef,
+    ) -> u64 {
+        match r {
+            ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(i) => {
+                self.emit_shape_dimension_representations(i)
+            }
+            ShapeDimensionRepresentationRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_surface(&mut self, r: SurfaceRef) -> u64 {
         match r {
             SurfaceRef::BSplineSurface(i) => self.emit_b_spline_surfaces(i),
@@ -2545,6 +4798,83 @@ impl<'a> Writer<'a> {
             SurfaceRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
             SurfaceRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
             SurfaceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_tolerance_zone_form(&mut self, r: ToleranceZoneFormRef) -> u64 {
+        match r {
+            ToleranceZoneFormRef::ToleranceZoneForm(i) => self.emit_tolerance_zone_forms(i),
+        }
+    }
+
+    fn emit_ref_tolerance_zone(&mut self, r: ToleranceZoneRef) -> u64 {
+        match r {
+            ToleranceZoneRef::ToleranceZone(i) => self.emit_tolerance_zones(i),
+            ToleranceZoneRef::ToleranceZoneWithDatum(i) => self.emit_tolerance_zone_with_datums(i),
+            ToleranceZoneRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_tolerance_zone_target(&mut self, r: ToleranceZoneTargetRef) -> u64 {
+        match r {
+            ToleranceZoneTargetRef::AngularityTolerance(i) => self.emit_angularity_tolerances(i),
+            ToleranceZoneTargetRef::CircularRunoutTolerance(i) => {
+                self.emit_circular_runout_tolerances(i)
+            }
+            ToleranceZoneTargetRef::CoaxialityTolerance(i) => self.emit_coaxiality_tolerances(i),
+            ToleranceZoneTargetRef::ConcentricityTolerance(i) => {
+                self.emit_concentricity_tolerances(i)
+            }
+            ToleranceZoneTargetRef::CylindricityTolerance(i) => {
+                self.emit_cylindricity_tolerances(i)
+            }
+            ToleranceZoneTargetRef::DimensionalLocation(i) => self.emit_dimensional_locations(i),
+            ToleranceZoneTargetRef::DimensionalLocationWithPath(i) => {
+                self.emit_dimensional_location_with_paths(i)
+            }
+            ToleranceZoneTargetRef::DimensionalSize(i) => self.emit_dimensional_sizes(i),
+            ToleranceZoneTargetRef::DimensionalSizeWithPath(i) => {
+                self.emit_dimensional_size_with_paths(i)
+            }
+            ToleranceZoneTargetRef::FlatnessTolerance(i) => self.emit_flatness_tolerances(i),
+            ToleranceZoneTargetRef::GeometricTolerance(i) => self.emit_geometric_tolerances(i),
+            ToleranceZoneTargetRef::GeometricToleranceWithDatumReference(i) => {
+                self.emit_geometric_tolerance_with_datum_references(i)
+            }
+            ToleranceZoneTargetRef::GeometricToleranceWithDefinedAreaUnit(i) => {
+                self.emit_geometric_tolerance_with_defined_area_units(i)
+            }
+            ToleranceZoneTargetRef::GeometricToleranceWithDefinedUnit(i) => {
+                self.emit_geometric_tolerance_with_defined_units(i)
+            }
+            ToleranceZoneTargetRef::GeometricToleranceWithMaximumTolerance(i) => {
+                self.emit_geometric_tolerance_with_maximum_tolerances(i)
+            }
+            ToleranceZoneTargetRef::GeometricToleranceWithModifiers(i) => {
+                self.emit_geometric_tolerance_with_modifierss(i)
+            }
+            ToleranceZoneTargetRef::LineProfileTolerance(i) => self.emit_line_profile_tolerances(i),
+            ToleranceZoneTargetRef::ModifiedGeometricTolerance(i) => {
+                self.emit_modified_geometric_tolerances(i)
+            }
+            ToleranceZoneTargetRef::ParallelismTolerance(i) => self.emit_parallelism_tolerances(i),
+            ToleranceZoneTargetRef::PerpendicularityTolerance(i) => {
+                self.emit_perpendicularity_tolerances(i)
+            }
+            ToleranceZoneTargetRef::PositionTolerance(i) => self.emit_position_tolerances(i),
+            ToleranceZoneTargetRef::RoundnessTolerance(i) => self.emit_roundness_tolerances(i),
+            ToleranceZoneTargetRef::StraightnessTolerance(i) => {
+                self.emit_straightness_tolerances(i)
+            }
+            ToleranceZoneTargetRef::SurfaceProfileTolerance(i) => {
+                self.emit_surface_profile_tolerances(i)
+            }
+            ToleranceZoneTargetRef::SymmetryTolerance(i) => self.emit_symmetry_tolerances(i),
+            ToleranceZoneTargetRef::TotalRunoutTolerance(i) => self.emit_total_runout_tolerances(i),
+            ToleranceZoneTargetRef::UnequallyDisposedGeometricTolerance(i) => {
+                self.emit_unequally_disposed_geometric_tolerances(i)
+            }
+            ToleranceZoneTargetRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -2588,6 +4918,20 @@ impl<'a> Writer<'a> {
         for part in &cu.parts {
             part_txt.push(match part {
                 UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
+                UnitPart::ApplicationContextElement {
+                    name,
+                    frame_of_reference,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "#{}",
+                            self.emit_ref_application_context(*frame_of_reference)
+                        ),
+                    ];
+                    format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(","))
+                }
                 UnitPart::BSplineCurve {
                     degree,
                     control_points_list,
@@ -2731,7 +5075,21 @@ impl<'a> Writer<'a> {
                     )];
                     format!("BREP_WITH_VOIDS({})", a.join(","))
                 }
+                UnitPart::CharacterizedObject {
+                    name, description, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("CHARACTERIZED_OBJECT({})", a.join(","))
+                }
                 UnitPart::ClosedShell => "CLOSED_SHELL()".to_string(),
+                UnitPart::CommonDatum => "COMMON_DATUM()".to_string(),
+                UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT()".to_string(),
                 UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
                     let a: Vec<String> = vec![match cfs_faces {
                         Some(v) => format!(
@@ -2761,6 +5119,38 @@ impl<'a> Writer<'a> {
                     format!("CONVERSION_BASED_UNIT({})", a.join(","))
                 }
                 UnitPart::Curve => "CURVE()".to_string(),
+                UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE()".to_string(),
+                UnitPart::Datum { identification, .. } => {
+                    let a: Vec<String> = vec![step_str(identification)];
+                    format!("DATUM({})", a.join(","))
+                }
+                UnitPart::DatumFeature => "DATUM_FEATURE()".to_string(),
+                UnitPart::DatumReference {
+                    precedence,
+                    referenced_datum,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("{}", precedence),
+                        format!("#{}", self.emit_ref_datum(*referenced_datum)),
+                    ];
+                    format!("DATUM_REFERENCE({})", a.join(","))
+                }
+                UnitPart::DatumSystem { constituents, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        constituents
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_datum_reference_compartment(*e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("DATUM_SYSTEM({})", a.join(","))
+                }
+                UnitPart::DatumTarget { target_id, .. } => {
+                    let a: Vec<String> = vec![step_str(target_id)];
+                    format!("DATUM_TARGET({})", a.join(","))
+                }
                 UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION()".to_string(),
                 UnitPart::DerivedUnit { elements, .. } => {
                     let a: Vec<String> = vec![format!(
@@ -2772,6 +5162,15 @@ impl<'a> Writer<'a> {
                             .join(",")
                     )];
                     format!("DERIVED_UNIT({})", a.join(","))
+                }
+                UnitPart::DimensionalSize {
+                    applies_to, name, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_shape_aspect(*applies_to)),
+                        step_str(name),
+                    ];
+                    format!("DIMENSIONAL_SIZE({})", a.join(","))
                 }
                 UnitPart::Direction {
                     direction_ratios, ..
@@ -2852,6 +5251,12 @@ impl<'a> Writer<'a> {
                     ];
                     format!("FACE_SURFACE({})", a.join(","))
                 }
+                UnitPart::FlatnessTolerance => "FLATNESS_TOLERANCE()".to_string(),
+                UnitPart::GenericProductDefinitionReference { source, .. } => {
+                    let a: Vec<String> =
+                        vec![format!("#{}", self.emit_ref_external_source(*source))];
+                    format!("GENERIC_PRODUCT_DEFINITION_REFERENCE({})", a.join(","))
+                }
                 UnitPart::GeometricRepresentationContext {
                     coordinate_space_dimension,
                     ..
@@ -2862,9 +5267,96 @@ impl<'a> Writer<'a> {
                 UnitPart::GeometricRepresentationItem => {
                     "GEOMETRIC_REPRESENTATION_ITEM()".to_string()
                 }
+                UnitPart::GeometricTolerance {
+                    name,
+                    description,
+                    magnitude,
+                    toleranced_shape_aspect,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match magnitude {
+                            Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                            None => "$".to_string(),
+                        },
+                        format!(
+                            "#{}",
+                            self.emit_ref_geometric_tolerance_target(*toleranced_shape_aspect)
+                        ),
+                    ];
+                    format!("GEOMETRIC_TOLERANCE({})", a.join(","))
+                }
+                UnitPart::GeometricToleranceWithDatumReference { datum_system, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        datum_system
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE({})", a.join(","))
+                }
+                UnitPart::GeometricToleranceWithDefinedAreaUnit {
+                    area_type,
+                    second_unit_size,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        area_type.token().to_string(),
+                        match second_unit_size {
+                            Some(r) => format!(
+                                "#{}",
+                                self.emit_ref_length_or_plane_angle_measure_with_unit_select(*r)
+                            ),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!(
+                        "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT({})",
+                        a.join(",")
+                    )
+                }
+                UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_length_or_plane_angle_measure_with_unit_select(*unit_size)
+                    )];
+                    format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({})", a.join(","))
+                }
+                UnitPart::GeometricToleranceWithMaximumTolerance {
+                    maximum_upper_tolerance,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_length_measure_with_unit(*maximum_upper_tolerance)
+                    )];
+                    format!(
+                        "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({})",
+                        a.join(",")
+                    )
+                }
+                UnitPart::GeometricToleranceWithModifiers { modifiers, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        modifiers
+                            .iter()
+                            .map(|e| e.token().to_string())
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS({})", a.join(","))
+                }
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
                 UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
                 UnitPart::LengthUnit => "LENGTH_UNIT()".to_string(),
+                UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE()".to_string(),
                 UnitPart::Loop => "LOOP()".to_string(),
                 UnitPart::ManifoldSolidBrep { outer, .. } => {
                     let a: Vec<String> = vec![format!("#{}", self.emit_ref_closed_shell(*outer))];
@@ -2881,6 +5373,10 @@ impl<'a> Writer<'a> {
                         format!("#{}", self.emit_ref_unit(*unit_component)),
                     ];
                     format!("MEASURE_WITH_UNIT({})", a.join(","))
+                }
+                UnitPart::ModifiedGeometricTolerance { modifier, .. } => {
+                    let a: Vec<String> = vec![modifier.token().to_string()];
+                    format!("MODIFIED_GEOMETRIC_TOLERANCE({})", a.join(","))
                 }
                 UnitPart::NamedUnit { dimensions, .. } => {
                     let a: Vec<String> = vec![match dimensions {
@@ -2940,10 +5436,14 @@ impl<'a> Writer<'a> {
                     ];
                     format!("PCURVE({})", a.join(","))
                 }
+                UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE()".to_string(),
                 UnitPart::Placement { location, .. } => {
                     let a: Vec<String> =
                         vec![format!("#{}", self.emit_ref_cartesian_point(*location))];
                     format!("PLACEMENT({})", a.join(","))
+                }
+                UnitPart::PlaneAngleMeasureWithUnit => {
+                    "PLANE_ANGLE_MEASURE_WITH_UNIT()".to_string()
                 }
                 UnitPart::PlaneAngleUnit => "PLANE_ANGLE_UNIT()".to_string(),
                 UnitPart::Point => "POINT()".to_string(),
@@ -2957,6 +5457,191 @@ impl<'a> Writer<'a> {
                             .join(",")
                     )];
                     format!("POLY_LOOP({})", a.join(","))
+                }
+                UnitPart::PositionTolerance => "POSITION_TOLERANCE()".to_string(),
+                UnitPart::Product {
+                    id,
+                    name,
+                    description,
+                    frame_of_reference,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!(
+                            "({})",
+                            frame_of_reference
+                                .iter()
+                                .map(|e| format!("#{}", self.emit_ref_product_context(*e)))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                    ];
+                    format!("PRODUCT({})", a.join(","))
+                }
+                UnitPart::ProductContext {
+                    discipline_type, ..
+                } => {
+                    let a: Vec<String> = vec![step_str(discipline_type)];
+                    format!("PRODUCT_CONTEXT({})", a.join(","))
+                }
+                UnitPart::ProductDefinition {
+                    id,
+                    description,
+                    formation,
+                    frame_of_reference,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!(
+                            "#{}",
+                            self.emit_ref_product_definition_formation(*formation)
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_product_definition_context(*frame_of_reference)
+                        ),
+                    ];
+                    format!("PRODUCT_DEFINITION({})", a.join(","))
+                }
+                UnitPart::ProductDefinitionContext {
+                    life_cycle_stage, ..
+                } => {
+                    let a: Vec<String> = vec![step_str(life_cycle_stage)];
+                    format!("PRODUCT_DEFINITION_CONTEXT({})", a.join(","))
+                }
+                UnitPart::ProductDefinitionFormation {
+                    id,
+                    description,
+                    of_product,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!("#{}", self.emit_ref_product(*of_product)),
+                    ];
+                    format!("PRODUCT_DEFINITION_FORMATION({})", a.join(","))
+                }
+                UnitPart::ProductDefinitionOccurrence {
+                    id,
+                    name,
+                    description,
+                    definition,
+                    quantity,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        match name {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        match definition {
+                            Some(r) => {
+                                format!("#{}", self.emit_ref_product_definition_or_reference(*r))
+                            }
+                            None => "$".to_string(),
+                        },
+                        match quantity {
+                            Some(r) => format!("#{}", self.emit_ref_measure_with_unit(*r)),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("PRODUCT_DEFINITION_OCCURRENCE({})", a.join(","))
+                }
+                UnitPart::ProductDefinitionRelationship {
+                    id,
+                    name,
+                    description,
+                    relating_product_definition,
+                    related_product_definition,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!(
+                            "#{}",
+                            self.emit_ref_product_definition_or_reference(
+                                *relating_product_definition
+                            )
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_product_definition_or_reference(
+                                *related_product_definition
+                            )
+                        ),
+                    ];
+                    format!("PRODUCT_DEFINITION_RELATIONSHIP({})", a.join(","))
+                }
+                UnitPart::ProductDefinitionRelationshipRelationship {
+                    id,
+                    name,
+                    description,
+                    relating,
+                    related,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!(
+                            "#{}",
+                            self.emit_ref_product_definition_relationship(*relating)
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_product_definition_relationship(*related)
+                        ),
+                    ];
+                    format!(
+                        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP({})",
+                        a.join(",")
+                    )
+                }
+                UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE()".to_string(),
+                UnitPart::PropertyDefinition {
+                    name,
+                    description,
+                    definition,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!("#{}", self.emit_ref_characterized_definition(*definition)),
+                    ];
+                    format!("PROPERTY_DEFINITION({})", a.join(","))
                 }
                 UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE()".to_string(),
                 UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE()".to_string(),
@@ -3020,7 +5705,48 @@ impl<'a> Writer<'a> {
                     let a: Vec<String> = vec![step_str(name)];
                     format!("REPRESENTATION_ITEM({})", a.join(","))
                 }
+                UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE()".to_string(),
                 UnitPart::SeamCurve => "SEAM_CURVE()".to_string(),
+                UnitPart::ShapeAspect {
+                    name,
+                    description,
+                    of_shape,
+                    product_definitional,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!("#{}", self.emit_ref_product_definition_shape(*of_shape)),
+                        product_definitional.token().to_string(),
+                    ];
+                    format!("SHAPE_ASPECT({})", a.join(","))
+                }
+                UnitPart::ShapeAspectRelationship {
+                    name,
+                    description,
+                    relating_shape_aspect,
+                    related_shape_aspect,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!("#{}", self.emit_ref_shape_aspect(*relating_shape_aspect)),
+                        format!("#{}", self.emit_ref_shape_aspect(*related_shape_aspect)),
+                    ];
+                    format!("SHAPE_ASPECT_RELATIONSHIP({})", a.join(","))
+                }
+                UnitPart::ShapeDimensionRepresentation => {
+                    "SHAPE_DIMENSION_REPRESENTATION()".to_string()
+                }
+                UnitPart::ShapeRepresentation => "SHAPE_REPRESENTATION()".to_string(),
                 UnitPart::SiUnit { prefix, name, .. } => {
                     let a: Vec<String> = vec![
                         match prefix {
@@ -3033,6 +5759,7 @@ impl<'a> Writer<'a> {
                 }
                 UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT()".to_string(),
                 UnitPart::SolidModel => "SOLID_MODEL()".to_string(),
+                UnitPart::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE()".to_string(),
                 UnitPart::Surface => "SURFACE()".to_string(),
                 UnitPart::SurfaceCurve {
                     curve_3d,
@@ -3054,7 +5781,49 @@ impl<'a> Writer<'a> {
                     ];
                     format!("SURFACE_CURVE({})", a.join(","))
                 }
+                UnitPart::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE()".to_string(),
                 UnitPart::TimeUnit => "TIME_UNIT()".to_string(),
+                UnitPart::ToleranceZone {
+                    defining_tolerance,
+                    form,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "({})",
+                            defining_tolerance
+                                .iter()
+                                .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target(*e)))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        format!("#{}", self.emit_ref_tolerance_zone_form(*form)),
+                    ];
+                    format!("TOLERANCE_ZONE({})", a.join(","))
+                }
+                UnitPart::ToleranceZoneDefinition {
+                    zone, boundaries, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_tolerance_zone(*zone)),
+                        format!(
+                            "({})",
+                            boundaries
+                                .iter()
+                                .map(|e| format!("#{}", self.emit_ref_shape_aspect(*e)))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                    ];
+                    format!("TOLERANCE_ZONE_DEFINITION({})", a.join(","))
+                }
+                UnitPart::ToleranceZoneWithDatum {
+                    datum_reference, ..
+                } => {
+                    let a: Vec<String> =
+                        vec![format!("#{}", self.emit_ref_datum_system(*datum_reference))];
+                    format!("TOLERANCE_ZONE_WITH_DATUM({})", a.join(","))
+                }
                 UnitPart::TopologicalRepresentationItem => {
                     "TOPOLOGICAL_REPRESENTATION_ITEM()".to_string()
                 }
@@ -3065,6 +5834,13 @@ impl<'a> Writer<'a> {
                 } => {
                     let a: Vec<String> = vec![real(*major_radius), real(*minor_radius)];
                     format!("TOROIDAL_SURFACE({})", a.join(","))
+                }
+                UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_length_measure_with_unit(*displacement)
+                    )];
+                    format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({})", a.join(","))
                 }
                 UnitPart::UniformCurve => "UNIFORM_CURVE()".to_string(),
                 UnitPart::UniformSurface => "UNIFORM_SURFACE()".to_string(),
@@ -3102,6 +5878,15 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.advanced_faces.items.len() {
             self.emit_advanced_faces(AdvancedFaceId(i));
+        }
+        for i in 0..self.model.angularity_tolerances.items.len() {
+            self.emit_angularity_tolerances(AngularityToleranceId(i));
+        }
+        for i in 0..self.model.application_contexts.items.len() {
+            self.emit_application_contexts(ApplicationContextId(i));
+        }
+        for i in 0..self.model.application_context_elements.items.len() {
+            self.emit_application_context_elements(ApplicationContextElementId(i));
         }
         for i in 0..self.model.axis1_placements.items.len() {
             self.emit_axis1_placements(Axis1PlacementId(i));
@@ -3148,11 +5933,29 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.cartesian_points.items.len() {
             self.emit_cartesian_points(CartesianPointId(i));
         }
+        for i in 0..self.model.characterized_objects.items.len() {
+            self.emit_characterized_objects(CharacterizedObjectId(i));
+        }
         for i in 0..self.model.circles.items.len() {
             self.emit_circles(CircleId(i));
         }
+        for i in 0..self.model.circular_runout_tolerances.items.len() {
+            self.emit_circular_runout_tolerances(CircularRunoutToleranceId(i));
+        }
         for i in 0..self.model.closed_shells.items.len() {
             self.emit_closed_shells(ClosedShellId(i));
+        }
+        for i in 0..self.model.coaxiality_tolerances.items.len() {
+            self.emit_coaxiality_tolerances(CoaxialityToleranceId(i));
+        }
+        for i in 0..self.model.common_datums.items.len() {
+            self.emit_common_datums(CommonDatumId(i));
+        }
+        for i in 0..self.model.composite_shape_aspects.items.len() {
+            self.emit_composite_shape_aspects(CompositeShapeAspectId(i));
+        }
+        for i in 0..self.model.concentricity_tolerances.items.len() {
+            self.emit_concentricity_tolerances(ConcentricityToleranceId(i));
         }
         for i in 0..self.model.conics.items.len() {
             self.emit_conics(ConicId(i));
@@ -3175,6 +5978,24 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.cylindrical_surfaces.items.len() {
             self.emit_cylindrical_surfaces(CylindricalSurfaceId(i));
         }
+        for i in 0..self.model.cylindricity_tolerances.items.len() {
+            self.emit_cylindricity_tolerances(CylindricityToleranceId(i));
+        }
+        for i in 0..self.model.datums.items.len() {
+            self.emit_datums(DatumId(i));
+        }
+        for i in 0..self.model.datum_features.items.len() {
+            self.emit_datum_features(DatumFeatureId(i));
+        }
+        for i in 0..self.model.datum_references.items.len() {
+            self.emit_datum_references(DatumReferenceId(i));
+        }
+        for i in 0..self.model.datum_systems.items.len() {
+            self.emit_datum_systems(DatumSystemId(i));
+        }
+        for i in 0..self.model.datum_targets.items.len() {
+            self.emit_datum_targets(DatumTargetId(i));
+        }
         for i in 0..self.model.definitional_representations.items.len() {
             self.emit_definitional_representations(DefinitionalRepresentationId(i));
         }
@@ -3184,8 +6005,30 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.derived_unit_elements.items.len() {
             self.emit_derived_unit_elements(DerivedUnitElementId(i));
         }
+        for i in 0..self
+            .model
+            .dimensional_characteristic_representations
+            .items
+            .len()
+        {
+            self.emit_dimensional_characteristic_representations(
+                DimensionalCharacteristicRepresentationId(i),
+            );
+        }
         for i in 0..self.model.dimensional_exponentss.items.len() {
             self.emit_dimensional_exponentss(DimensionalExponentsId(i));
+        }
+        for i in 0..self.model.dimensional_locations.items.len() {
+            self.emit_dimensional_locations(DimensionalLocationId(i));
+        }
+        for i in 0..self.model.dimensional_location_with_paths.items.len() {
+            self.emit_dimensional_location_with_paths(DimensionalLocationWithPathId(i));
+        }
+        for i in 0..self.model.dimensional_sizes.items.len() {
+            self.emit_dimensional_sizes(DimensionalSizeId(i));
+        }
+        for i in 0..self.model.dimensional_size_with_paths.items.len() {
+            self.emit_dimensional_size_with_paths(DimensionalSizeWithPathId(i));
         }
         for i in 0..self.model.directions.items.len() {
             self.emit_directions(DirectionId(i));
@@ -3217,11 +6060,63 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.face_surfaces.items.len() {
             self.emit_face_surfaces(FaceSurfaceId(i));
         }
+        for i in 0..self.model.flatness_tolerances.items.len() {
+            self.emit_flatness_tolerances(FlatnessToleranceId(i));
+        }
+        for i in 0..self.model.generic_product_definition_references.items.len() {
+            self.emit_generic_product_definition_references(GenericProductDefinitionReferenceId(i));
+        }
         for i in 0..self.model.geometric_representation_contexts.items.len() {
             self.emit_geometric_representation_contexts(GeometricRepresentationContextId(i));
         }
         for i in 0..self.model.geometric_representation_items.items.len() {
             self.emit_geometric_representation_items(GeometricRepresentationItemId(i));
+        }
+        for i in 0..self.model.geometric_tolerances.items.len() {
+            self.emit_geometric_tolerances(GeometricToleranceId(i));
+        }
+        for i in 0..self
+            .model
+            .geometric_tolerance_with_datum_references
+            .items
+            .len()
+        {
+            self.emit_geometric_tolerance_with_datum_references(
+                GeometricToleranceWithDatumReferenceId(i),
+            );
+        }
+        for i in 0..self
+            .model
+            .geometric_tolerance_with_defined_area_units
+            .items
+            .len()
+        {
+            self.emit_geometric_tolerance_with_defined_area_units(
+                GeometricToleranceWithDefinedAreaUnitId(i),
+            );
+        }
+        for i in 0..self
+            .model
+            .geometric_tolerance_with_defined_units
+            .items
+            .len()
+        {
+            self.emit_geometric_tolerance_with_defined_units(GeometricToleranceWithDefinedUnitId(
+                i,
+            ));
+        }
+        for i in 0..self
+            .model
+            .geometric_tolerance_with_maximum_tolerances
+            .items
+            .len()
+        {
+            self.emit_geometric_tolerance_with_maximum_tolerances(
+                GeometricToleranceWithMaximumToleranceId(i),
+            );
+        }
+        for i in 0..self.model.geometric_tolerance_with_modifierss.items.len() {
+            self.emit_geometric_tolerance_with_modifierss(GeometricToleranceWithModifiersId(i));
         }
         for i in 0..self.model.intersection_curves.items.len() {
             self.emit_intersection_curves(IntersectionCurveId(i));
@@ -3235,6 +6130,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.lines.items.len() {
             self.emit_lines(LineId(i));
         }
+        for i in 0..self.model.line_profile_tolerances.items.len() {
+            self.emit_line_profile_tolerances(LineProfileToleranceId(i));
+        }
         for i in 0..self.model.loops.items.len() {
             self.emit_loops(LoopId(i));
         }
@@ -3246,6 +6144,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.measure_with_units.items.len() {
             self.emit_measure_with_units(MeasureWithUnitId(i));
+        }
+        for i in 0..self.model.modified_geometric_tolerances.items.len() {
+            self.emit_modified_geometric_tolerances(ModifiedGeometricToleranceId(i));
         }
         for i in 0..self.model.named_units.items.len() {
             self.emit_named_units(NamedUnitId(i));
@@ -3262,6 +6163,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.oriented_edges.items.len() {
             self.emit_oriented_edges(OrientedEdgeId(i));
         }
+        for i in 0..self.model.parallelism_tolerances.items.len() {
+            self.emit_parallelism_tolerances(ParallelismToleranceId(i));
+        }
         for i in 0..self.model.parametric_representation_contexts.items.len() {
             self.emit_parametric_representation_contexts(ParametricRepresentationContextId(i));
         }
@@ -3271,11 +6175,20 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.pcurves.items.len() {
             self.emit_pcurves(PcurveId(i));
         }
+        for i in 0..self.model.perpendicularity_tolerances.items.len() {
+            self.emit_perpendicularity_tolerances(PerpendicularityToleranceId(i));
+        }
+        for i in 0..self.model.placed_datum_target_features.items.len() {
+            self.emit_placed_datum_target_features(PlacedDatumTargetFeatureId(i));
+        }
         for i in 0..self.model.placements.items.len() {
             self.emit_placements(PlacementId(i));
         }
         for i in 0..self.model.planes.items.len() {
             self.emit_planes(PlaneId(i));
+        }
+        for i in 0..self.model.plane_angle_measure_with_units.items.len() {
+            self.emit_plane_angle_measure_with_units(PlaneAngleMeasureWithUnitId(i));
         }
         for i in 0..self.model.plane_angle_units.items.len() {
             self.emit_plane_angle_units(PlaneAngleUnitId(i));
@@ -3285,6 +6198,46 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.poly_loops.items.len() {
             self.emit_poly_loops(PolyLoopId(i));
+        }
+        for i in 0..self.model.position_tolerances.items.len() {
+            self.emit_position_tolerances(PositionToleranceId(i));
+        }
+        for i in 0..self.model.products.items.len() {
+            self.emit_products(ProductId(i));
+        }
+        for i in 0..self.model.product_contexts.items.len() {
+            self.emit_product_contexts(ProductContextId(i));
+        }
+        for i in 0..self.model.product_definitions.items.len() {
+            self.emit_product_definitions(ProductDefinitionId(i));
+        }
+        for i in 0..self.model.product_definition_contexts.items.len() {
+            self.emit_product_definition_contexts(ProductDefinitionContextId(i));
+        }
+        for i in 0..self.model.product_definition_formations.items.len() {
+            self.emit_product_definition_formations(ProductDefinitionFormationId(i));
+        }
+        for i in 0..self.model.product_definition_occurrences.items.len() {
+            self.emit_product_definition_occurrences(ProductDefinitionOccurrenceId(i));
+        }
+        for i in 0..self.model.product_definition_relationships.items.len() {
+            self.emit_product_definition_relationships(ProductDefinitionRelationshipId(i));
+        }
+        for i in 0..self
+            .model
+            .product_definition_relationship_relationships
+            .items
+            .len()
+        {
+            self.emit_product_definition_relationship_relationships(
+                ProductDefinitionRelationshipRelationshipId(i),
+            );
+        }
+        for i in 0..self.model.product_definition_shapes.items.len() {
+            self.emit_product_definition_shapes(ProductDefinitionShapeId(i));
+        }
+        for i in 0..self.model.property_definitions.items.len() {
+            self.emit_property_definitions(PropertyDefinitionId(i));
         }
         for i in 0..self.model.quasi_uniform_curves.items.len() {
             self.emit_quasi_uniform_curves(QuasiUniformCurveId(i));
@@ -3307,8 +6260,23 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.representation_items.items.len() {
             self.emit_representation_items(RepresentationItemId(i));
         }
+        for i in 0..self.model.roundness_tolerances.items.len() {
+            self.emit_roundness_tolerances(RoundnessToleranceId(i));
+        }
         for i in 0..self.model.seam_curves.items.len() {
             self.emit_seam_curves(SeamCurveId(i));
+        }
+        for i in 0..self.model.shape_aspects.items.len() {
+            self.emit_shape_aspects(ShapeAspectId(i));
+        }
+        for i in 0..self.model.shape_aspect_relationships.items.len() {
+            self.emit_shape_aspect_relationships(ShapeAspectRelationshipId(i));
+        }
+        for i in 0..self.model.shape_dimension_representations.items.len() {
+            self.emit_shape_dimension_representations(ShapeDimensionRepresentationId(i));
+        }
+        for i in 0..self.model.shape_representations.items.len() {
+            self.emit_shape_representations(ShapeRepresentationId(i));
         }
         for i in 0..self.model.si_units.items.len() {
             self.emit_si_units(SiUnitId(i));
@@ -3322,6 +6290,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.spherical_surfaces.items.len() {
             self.emit_spherical_surfaces(SphericalSurfaceId(i));
         }
+        for i in 0..self.model.straightness_tolerances.items.len() {
+            self.emit_straightness_tolerances(StraightnessToleranceId(i));
+        }
         for i in 0..self.model.surfaces.items.len() {
             self.emit_surfaces(SurfaceId(i));
         }
@@ -3334,11 +6305,32 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.surface_of_revolutions.items.len() {
             self.emit_surface_of_revolutions(SurfaceOfRevolutionId(i));
         }
+        for i in 0..self.model.surface_profile_tolerances.items.len() {
+            self.emit_surface_profile_tolerances(SurfaceProfileToleranceId(i));
+        }
         for i in 0..self.model.swept_surfaces.items.len() {
             self.emit_swept_surfaces(SweptSurfaceId(i));
         }
+        for i in 0..self.model.symmetry_tolerances.items.len() {
+            self.emit_symmetry_tolerances(SymmetryToleranceId(i));
+        }
         for i in 0..self.model.time_units.items.len() {
             self.emit_time_units(TimeUnitId(i));
+        }
+        for i in 0..self.model.tolerance_values.items.len() {
+            self.emit_tolerance_values(ToleranceValueId(i));
+        }
+        for i in 0..self.model.tolerance_zones.items.len() {
+            self.emit_tolerance_zones(ToleranceZoneId(i));
+        }
+        for i in 0..self.model.tolerance_zone_definitions.items.len() {
+            self.emit_tolerance_zone_definitions(ToleranceZoneDefinitionId(i));
+        }
+        for i in 0..self.model.tolerance_zone_forms.items.len() {
+            self.emit_tolerance_zone_forms(ToleranceZoneFormId(i));
+        }
+        for i in 0..self.model.tolerance_zone_with_datums.items.len() {
+            self.emit_tolerance_zone_with_datums(ToleranceZoneWithDatumId(i));
         }
         for i in 0..self.model.topological_representation_items.items.len() {
             self.emit_topological_representation_items(TopologicalRepresentationItemId(i));
@@ -3346,8 +6338,21 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.toroidal_surfaces.items.len() {
             self.emit_toroidal_surfaces(ToroidalSurfaceId(i));
         }
+        for i in 0..self.model.total_runout_tolerances.items.len() {
+            self.emit_total_runout_tolerances(TotalRunoutToleranceId(i));
+        }
         for i in 0..self.model.uncertainty_measure_with_units.items.len() {
             self.emit_uncertainty_measure_with_units(UncertaintyMeasureWithUnitId(i));
+        }
+        for i in 0..self
+            .model
+            .unequally_disposed_geometric_tolerances
+            .items
+            .len()
+        {
+            self.emit_unequally_disposed_geometric_tolerances(
+                UnequallyDisposedGeometricToleranceId(i),
+            );
         }
         for i in 0..self.model.uniform_curves.items.len() {
             self.emit_uniform_curves(UniformCurveId(i));

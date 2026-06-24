@@ -5,7 +5,7 @@
 //!   roundtrip <path>          # check one file: PASS/SKIP/FAIL + reason
 //!   roundtrip <path> <TYPE>   # diff one entity type (attrs only) before/after
 
-use codegen::check::{CheckResult, check_roundtrip, dump_type};
+use codegen::check::{CheckResult, check_roundtrip, check_roundtrip_raw, dump_type};
 
 fn main() {
     let mut args = std::env::args().skip(1);
@@ -19,7 +19,12 @@ fn main() {
     let src = String::from_utf8_lossy(&std::fs::read(&path).expect("read file")).into_owned();
 
     // Type-diff mode: list the entities of TYPE that differ before/after.
+    // Special TYPE "RAW" runs read+write uncaught for a backtrace on panics.
     if let Some(ty) = args.next() {
+        if ty == "RAW" {
+            check_roundtrip_raw(&std::fs::read(&path).expect("read file"));
+            return;
+        }
         let (left, right) = dump_type(&src, &ty);
         let lset: std::collections::BTreeSet<_> = left.iter().collect();
         let rset: std::collections::BTreeSet<_> = right.iter().collect();

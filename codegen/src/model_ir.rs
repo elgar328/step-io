@@ -70,11 +70,21 @@ pub struct ModelIr {
 /// resolve to any concrete `loop` subtype (edge_loop / poly_loop / vertex_loop),
 /// so all of them must be generated for the discriminated ref enum + read
 /// dispatch to cover every instance the corpus can write.
-pub fn build_closure(schema: &EarlyToml, res: &Resolver, seeds: &[String]) -> BTreeSet<String> {
+pub fn build_closure(
+    schema: &EarlyToml,
+    res: &Resolver,
+    seeds: &[String],
+    exclude: &BTreeSet<String>,
+) -> BTreeSet<String> {
     let children: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut set: BTreeSet<String> = BTreeSet::new();
     let mut stack: Vec<String> = seeds.to_vec();
     while let Some(name) = stack.pop() {
+        // Excluded entities never enter the closure (not generated); referrers
+        // escape via the round-trip filter. Deferral knob, not a model bend.
+        if exclude.contains(&name) {
+            continue;
+        }
         if !set.insert(name.clone()) {
             continue;
         }

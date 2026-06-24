@@ -925,6 +925,29 @@ variants = { circle = "Circle", dot = "Dot", internal_pair_forward_arrowhead = "
 # the closure as their component part entities (NAMED_UNIT, SI_UNIT, …) which
 # are listed directly so the generic part-bag covers them.
 # ---------------------------------------------------------------------------
+[codegen]
+# Entities kept OUT of the closure (never generated); their referrers escape via
+# the round-trip filter. DEFERRED capability: these own an attribute typed as a
+# SELECT-with-aggregate-arms (e.g. SELECT(X, LIST OF X, SET OF X)), which the
+# generator's ref-enum cannot yet model (the Vec arm breaks the Copy invariant).
+# Tracked for a focused follow-on; excluded here so the GD&T part-bag de-risk can
+# proceed. Measure their escape impact before prioritizing the capability.
+exclude = [
+    "item_identified_representation_usage",
+    # general_datum_reference.base : datum_or_common_datum = SELECT(datum,
+    # LIST OF datum_reference_element) — same aggregate-arm pattern. The whole
+    # subtree inherits `base`, so exclude the supertype + its subtypes. The
+    # simple datum_reference (precedence + referenced_datum) path stays in.
+    "general_datum_reference",
+    "datum_reference_compartment",
+    "datum_reference_element",
+    # external_source.source_id : source_item = SELECT(identifier, message) —
+    # an all-STRING select. classify's is_measure_select treats all-scalar as a
+    # numeric MeasureValue (f64), which can't hold a string. Deferred capability:
+    # select-of-strings model. Peripheral (not GD&T part-bag).
+    "external_source",
+]
+
 [codegen.domains]
 units = [
     "dimensional_exponents",
@@ -1013,6 +1036,65 @@ topology = [
     "oriented_closed_shell",
     "manifold_solid_brep",
     "brep_with_voids",
+]
+# GD&T (geometric tolerance) + datum cluster — expressiveness de-risk spike.
+# Stage 1: minimal vertical. The product-identity backbone (shape_aspect ->
+# product_definition_shape -> ... -> product), the measure/unit subsystem, and
+# representation are pulled in automatically by ref-reachability, so only the
+# complex-only GD&T parts + the datum/shape_aspect entry points are seeded here.
+gdt = [
+    # geometric_tolerance part-bag: abstract base + all complex-part mixins
+    # (two are two-level) + all form-tolerance leaves. The combinatorial
+    # triples/quads ( (with_datum_reference, modified, position), etc.) are the
+    # expressiveness stress test for the generic part-bag model.
+    "geometric_tolerance",
+    "geometric_tolerance_with_datum_reference",
+    "modified_geometric_tolerance",
+    "geometric_tolerance_with_modifiers",
+    "geometric_tolerance_with_maximum_tolerance",
+    "geometric_tolerance_with_defined_unit",
+    "geometric_tolerance_with_defined_area_unit",
+    "unequally_disposed_geometric_tolerance",
+    # form-tolerance leaves (complex parts, own_attrs empty)
+    "position_tolerance",
+    "flatness_tolerance",
+    "cylindricity_tolerance",
+    "straightness_tolerance",
+    "roundness_tolerance",
+    "line_profile_tolerance",
+    "surface_profile_tolerance",
+    # datum-required leaves (single inheritance under with_datum_reference)
+    "angularity_tolerance",
+    "perpendicularity_tolerance",
+    "parallelism_tolerance",
+    "circular_runout_tolerance",
+    "total_runout_tolerance",
+    "coaxiality_tolerance",
+    "concentricity_tolerance",
+    "symmetry_tolerance",
+    # datum cluster (simple datum_reference path; general_datum_reference subtree
+    # is excluded above pending the aggregate-select capability)
+    "datum",
+    "datum_feature",
+    "datum_target",
+    "placed_datum_target_feature",
+    "datum_system",
+    "datum_reference",
+    "common_datum",
+    # shape_aspect / tolerance_zone / dimensional
+    "shape_aspect",
+    "shape_aspect_relationship",
+    "composite_shape_aspect",
+    "tolerance_zone",
+    "tolerance_zone_with_datum",
+    "tolerance_zone_definition",
+    "tolerance_zone_form",
+    "tolerance_value",
+    "dimensional_location",
+    "dimensional_location_with_path",
+    "dimensional_size",
+    "dimensional_size_with_path",
+    "dimensional_characteristic_representation",
 ]
 
 # Entities that appear ONLY as parts of a complex (multi-inheritance) instance

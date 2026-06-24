@@ -226,6 +226,13 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     if re.has_complex {
         writeln!(s, "    Complex(ComplexUnitId),").unwrap();
     }
+    // An enum with no arms (all ref targets out of closure, e.g. excluded) would
+    // be uninhabited and make its referrer unconstructible. Such referrers always
+    // escape the round-trip subset, so this variant is a never-resolved, never-
+    // emitted placeholder that just keeps the generated code constructible.
+    if re.simple_arms.is_empty() && !re.has_complex {
+        writeln!(s, "    Unresolved,").unwrap();
+    }
     writeln!(s, "}}").unwrap();
     // resolve from AnyId
     writeln!(s, "impl {} {{", re.rust).unwrap();
@@ -485,7 +492,8 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
             } else if re.has_complex {
                 format!("{}::Complex(ComplexUnitId(usize::MAX))", re.rust)
             } else {
-                panic!("ref enum {} has no arms", re.rust)
+                // empty ref-enum (all targets excluded): referrer always escapes.
+                format!("{}::Unresolved", re.rust)
             }
         }
         Kind::Vec(_) => "Vec::new()".to_string(),
@@ -1024,6 +1032,16 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
         writeln!(
             s,
             "        {}::Complex(i) => self.emit_complex(i),",
+            re.rust
+        )
+        .unwrap();
+    }
+    if re.simple_arms.is_empty() && !re.has_complex {
+        // empty ref-enum: the Unresolved placeholder is never emitted (referrer
+        // escapes), but the match must be exhaustive.
+        writeln!(
+            s,
+            "        {}::Unresolved => panic!(\"emit unresolved ref\"),",
             re.rust
         )
         .unwrap();

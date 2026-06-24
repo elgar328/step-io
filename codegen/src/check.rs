@@ -166,6 +166,18 @@ pub fn check_roundtrip(src: &str) -> CheckResult {
     check_roundtrip_bytes(src.as_bytes())
 }
 
+/// Debug: run the read+write pipeline WITHOUT catching panics, so a generated-
+/// code panic propagates with a backtrace (the normal path swallows it as Fail).
+pub fn check_roundtrip_raw(src: &[u8]) {
+    let g = parse_bytes(src).expect("source parse");
+    let (normalized, _norm) = crate::generated::normalize::normalize(graph_of(&g));
+    let (a, _escaped) = subset(&normalized);
+    let (model, _idmap) = read(&a);
+    let body = Writer::new(&model).emit_all();
+    let _ = wrap_step(&body);
+    eprintln!("raw roundtrip OK ({} entities)", a.len());
+}
+
 /// Bytes entry point — parses via `parse_bytes` so non-UTF-8 (Latin-1) corpus
 /// files survive (matches the reference-check harness). The regenerated output
 /// is our own UTF-8 text, reparsed with `parse`.

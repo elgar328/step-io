@@ -54,6 +54,36 @@ pub struct MeasureValue {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AreaUnitType {
+    Spherical,
+    Cylindrical,
+    Rectangular,
+    Square,
+    Circular,
+}
+impl AreaUnitType {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "SPHERICAL" => Self::Spherical,
+            "CYLINDRICAL" => Self::Cylindrical,
+            "RECTANGULAR" => Self::Rectangular,
+            "SQUARE" => Self::Square,
+            "CIRCULAR" => Self::Circular,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Spherical => ".SPHERICAL.",
+            Self::Cylindrical => ".CYLINDRICAL.",
+            Self::Rectangular => ".RECTANGULAR.",
+            Self::Square => ".SQUARE.",
+            Self::Circular => ".CIRCULAR.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BSplineCurveForm {
     PolylineForm,
     CircularArc,
@@ -135,6 +165,149 @@ impl BSplineSurfaceForm {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GeometricToleranceModifier {
+    StandardDeviation,
+    ValleyDepth,
+    PeakHeight,
+    TotalRangeDeviations,
+    ReferenceMaximumInscribedFeature,
+    ReferenceMinimumCircumscribedFeature,
+    ReferenceLeastSquareFeatureWithInternalMaterialConstraint,
+    ReferenceLeastSquareFeatureWithExternalMaterialConstraint,
+    ReferenceLeastSquareFeatureWithoutConstraint,
+    ReferenceMinimaxFeatureWithInternalMaterialConstraint,
+    ReferenceMinimaxFeatureWithExternalMaterialConstraint,
+    ReferenceMinimaxFeatureWithoutConstraint,
+    AssociatedMaximumInscribedFeature,
+    AssociatedTangentFeature,
+    AssociatedMinimumInscribedFeature,
+    AssociatedLeastSquareFeature,
+    AssociatedMinmaxFeature,
+    UnitedFeature,
+    SeparateRequirement,
+    EachRadialElement,
+    TangentPlane,
+    StatisticalTolerance,
+    NotConvex,
+    LineElement,
+    PitchDiameter,
+    MajorDiameter,
+    MinorDiameter,
+    CommonZone,
+    FreeState,
+    AnyCrossSection,
+    ReciprocityRequirement,
+    LeastMaterialRequirement,
+    MaximumMaterialRequirement,
+    CircleA,
+}
+impl GeometricToleranceModifier {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "STANDARD_DEVIATION" => Self::StandardDeviation,
+            "VALLEY_DEPTH" => Self::ValleyDepth,
+            "PEAK_HEIGHT" => Self::PeakHeight,
+            "TOTAL_RANGE_DEVIATIONS" => Self::TotalRangeDeviations,
+            "REFERENCE_MAXIMUM_INSCRIBED_FEATURE" => Self::ReferenceMaximumInscribedFeature,
+            "REFERENCE_MINIMUM_CIRCUMSCRIBED_FEATURE" => Self::ReferenceMinimumCircumscribedFeature,
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT" => {
+                Self::ReferenceLeastSquareFeatureWithInternalMaterialConstraint
+            }
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT" => {
+                Self::ReferenceLeastSquareFeatureWithExternalMaterialConstraint
+            }
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITHOUT_CONSTRAINT" => {
+                Self::ReferenceLeastSquareFeatureWithoutConstraint
+            }
+            "REFERENCE_MINIMAX_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT" => {
+                Self::ReferenceMinimaxFeatureWithInternalMaterialConstraint
+            }
+            "REFERENCE_MINIMAX_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT" => {
+                Self::ReferenceMinimaxFeatureWithExternalMaterialConstraint
+            }
+            "REFERENCE_MINIMAX_FEATURE_WITHOUT_CONSTRAINT" => {
+                Self::ReferenceMinimaxFeatureWithoutConstraint
+            }
+            "ASSOCIATED_MAXIMUM_INSCRIBED_FEATURE" => Self::AssociatedMaximumInscribedFeature,
+            "ASSOCIATED_TANGENT_FEATURE" => Self::AssociatedTangentFeature,
+            "ASSOCIATED_MINIMUM_INSCRIBED_FEATURE" => Self::AssociatedMinimumInscribedFeature,
+            "ASSOCIATED_LEAST_SQUARE_FEATURE" => Self::AssociatedLeastSquareFeature,
+            "ASSOCIATED_MINMAX_FEATURE" => Self::AssociatedMinmaxFeature,
+            "UNITED_FEATURE" => Self::UnitedFeature,
+            "SEPARATE_REQUIREMENT" => Self::SeparateRequirement,
+            "EACH_RADIAL_ELEMENT" => Self::EachRadialElement,
+            "TANGENT_PLANE" => Self::TangentPlane,
+            "STATISTICAL_TOLERANCE" => Self::StatisticalTolerance,
+            "NOT_CONVEX" => Self::NotConvex,
+            "LINE_ELEMENT" => Self::LineElement,
+            "PITCH_DIAMETER" => Self::PitchDiameter,
+            "MAJOR_DIAMETER" => Self::MajorDiameter,
+            "MINOR_DIAMETER" => Self::MinorDiameter,
+            "COMMON_ZONE" => Self::CommonZone,
+            "FREE_STATE" => Self::FreeState,
+            "ANY_CROSS_SECTION" => Self::AnyCrossSection,
+            "RECIPROCITY_REQUIREMENT" => Self::ReciprocityRequirement,
+            "LEAST_MATERIAL_REQUIREMENT" => Self::LeastMaterialRequirement,
+            "MAXIMUM_MATERIAL_REQUIREMENT" => Self::MaximumMaterialRequirement,
+            "CIRCLE_A" => Self::CircleA,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::StandardDeviation => ".STANDARD_DEVIATION.",
+            Self::ValleyDepth => ".VALLEY_DEPTH.",
+            Self::PeakHeight => ".PEAK_HEIGHT.",
+            Self::TotalRangeDeviations => ".TOTAL_RANGE_DEVIATIONS.",
+            Self::ReferenceMaximumInscribedFeature => ".REFERENCE_MAXIMUM_INSCRIBED_FEATURE.",
+            Self::ReferenceMinimumCircumscribedFeature => {
+                ".REFERENCE_MINIMUM_CIRCUMSCRIBED_FEATURE."
+            }
+            Self::ReferenceLeastSquareFeatureWithInternalMaterialConstraint => {
+                ".REFERENCE_LEAST_SQUARE_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT."
+            }
+            Self::ReferenceLeastSquareFeatureWithExternalMaterialConstraint => {
+                ".REFERENCE_LEAST_SQUARE_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT."
+            }
+            Self::ReferenceLeastSquareFeatureWithoutConstraint => {
+                ".REFERENCE_LEAST_SQUARE_FEATURE_WITHOUT_CONSTRAINT."
+            }
+            Self::ReferenceMinimaxFeatureWithInternalMaterialConstraint => {
+                ".REFERENCE_MINIMAX_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT."
+            }
+            Self::ReferenceMinimaxFeatureWithExternalMaterialConstraint => {
+                ".REFERENCE_MINIMAX_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT."
+            }
+            Self::ReferenceMinimaxFeatureWithoutConstraint => {
+                ".REFERENCE_MINIMAX_FEATURE_WITHOUT_CONSTRAINT."
+            }
+            Self::AssociatedMaximumInscribedFeature => ".ASSOCIATED_MAXIMUM_INSCRIBED_FEATURE.",
+            Self::AssociatedTangentFeature => ".ASSOCIATED_TANGENT_FEATURE.",
+            Self::AssociatedMinimumInscribedFeature => ".ASSOCIATED_MINIMUM_INSCRIBED_FEATURE.",
+            Self::AssociatedLeastSquareFeature => ".ASSOCIATED_LEAST_SQUARE_FEATURE.",
+            Self::AssociatedMinmaxFeature => ".ASSOCIATED_MINMAX_FEATURE.",
+            Self::UnitedFeature => ".UNITED_FEATURE.",
+            Self::SeparateRequirement => ".SEPARATE_REQUIREMENT.",
+            Self::EachRadialElement => ".EACH_RADIAL_ELEMENT.",
+            Self::TangentPlane => ".TANGENT_PLANE.",
+            Self::StatisticalTolerance => ".STATISTICAL_TOLERANCE.",
+            Self::NotConvex => ".NOT_CONVEX.",
+            Self::LineElement => ".LINE_ELEMENT.",
+            Self::PitchDiameter => ".PITCH_DIAMETER.",
+            Self::MajorDiameter => ".MAJOR_DIAMETER.",
+            Self::MinorDiameter => ".MINOR_DIAMETER.",
+            Self::CommonZone => ".COMMON_ZONE.",
+            Self::FreeState => ".FREE_STATE.",
+            Self::AnyCrossSection => ".ANY_CROSS_SECTION.",
+            Self::ReciprocityRequirement => ".RECIPROCITY_REQUIREMENT.",
+            Self::LeastMaterialRequirement => ".LEAST_MATERIAL_REQUIREMENT.",
+            Self::MaximumMaterialRequirement => ".MAXIMUM_MATERIAL_REQUIREMENT.",
+            Self::CircleA => ".CIRCLE_A.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KnotType {
     UniformKnots,
     QuasiUniformKnots,
@@ -157,6 +330,30 @@ impl KnotType {
             Self::QuasiUniformKnots => ".QUASI_UNIFORM_KNOTS.",
             Self::PiecewiseBezierKnots => ".PIECEWISE_BEZIER_KNOTS.",
             Self::Unspecified => ".UNSPECIFIED.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LimitCondition {
+    MaximumMaterialCondition,
+    LeastMaterialCondition,
+    RegardlessOfFeatureSize,
+}
+impl LimitCondition {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "MAXIMUM_MATERIAL_CONDITION" => Self::MaximumMaterialCondition,
+            "LEAST_MATERIAL_CONDITION" => Self::LeastMaterialCondition,
+            "REGARDLESS_OF_FEATURE_SIZE" => Self::RegardlessOfFeatureSize,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::MaximumMaterialCondition => ".MAXIMUM_MATERIAL_CONDITION.",
+            Self::LeastMaterialCondition => ".LEAST_MATERIAL_CONDITION.",
+            Self::RegardlessOfFeatureSize => ".REGARDLESS_OF_FEATURE_SIZE.",
         }
     }
 }
@@ -350,6 +547,12 @@ impl SiUnitName {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AdvancedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AngularityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ApplicationContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ApplicationContextElementId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Axis1PlacementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Axis2Placement2dId(pub usize);
@@ -380,9 +583,21 @@ pub struct BrepWithVoidsId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CartesianPointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CharacterizedObjectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CircleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CircularRunoutToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ClosedShellId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CoaxialityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CommonDatumId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CompositeShapeAspectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ConcentricityToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ConicId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -398,13 +613,35 @@ pub struct CurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CylindricalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CylindricityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumFeatureId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumReferenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumSystemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumTargetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DefinitionalRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DerivedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DerivedUnitElementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DimensionalCharacteristicRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DimensionalExponentsId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DimensionalLocationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DimensionalLocationWithPathId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DimensionalSizeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DimensionalSizeWithPathId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DirectionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -426,9 +663,25 @@ pub struct FaceOuterBoundId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FaceSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FlatnessToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GenericProductDefinitionReferenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricRepresentationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricToleranceWithDatumReferenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricToleranceWithDefinedAreaUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricToleranceWithDefinedUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricToleranceWithMaximumToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricToleranceWithModifiersId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct IntersectionCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -438,6 +691,8 @@ pub struct LengthUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LineProfileToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ManifoldSolidBrepId(pub usize);
@@ -445,6 +700,8 @@ pub struct ManifoldSolidBrepId(pub usize);
 pub struct MassUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MeasureWithUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ModifiedGeometricToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NamedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -456,21 +713,51 @@ pub struct OrientedClosedShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OrientedEdgeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ParallelismToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ParametricRepresentationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PathId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PcurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PerpendicularityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlacedDatumTargetFeatureId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlacementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlaneId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlaneAngleMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlaneAngleUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PolyLoopId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PositionToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionFormationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionRelationshipRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionShapeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PropertyDefinitionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct QuasiUniformCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -486,7 +773,17 @@ pub struct RepresentationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RoundnessToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SeamCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShapeAspectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShapeAspectRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShapeDimensionRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SiUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -496,6 +793,8 @@ pub struct SolidModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SphericalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StraightnessToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SurfaceCurveId(pub usize);
@@ -504,15 +803,33 @@ pub struct SurfaceOfLinearExtrusionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SurfaceOfRevolutionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceProfileToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SweptSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SymmetryToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TimeUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ToleranceValueId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ToleranceZoneId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ToleranceZoneDefinitionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ToleranceZoneFormId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ToleranceZoneWithDatumId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TopologicalRepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToroidalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TotalRunoutToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UncertaintyMeasureWithUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UnequallyDisposedGeometricToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UniformCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -531,6 +848,9 @@ pub struct ComplexUnitId(pub usize);
 #[derive(Debug, Clone, Copy)]
 pub enum AnyId {
     AdvancedFace(AdvancedFaceId),
+    AngularityTolerance(AngularityToleranceId),
+    ApplicationContext(ApplicationContextId),
+    ApplicationContextElement(ApplicationContextElementId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -546,8 +866,14 @@ pub enum AnyId {
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
     CartesianPoint(CartesianPointId),
+    CharacterizedObject(CharacterizedObjectId),
     Circle(CircleId),
+    CircularRunoutTolerance(CircularRunoutToleranceId),
     ClosedShell(ClosedShellId),
+    CoaxialityTolerance(CoaxialityToleranceId),
+    CommonDatum(CommonDatumId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    ConcentricityTolerance(ConcentricityToleranceId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -555,10 +881,21 @@ pub enum AnyId {
     ConversionBasedUnit(ConversionBasedUnitId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
+    CylindricityTolerance(CylindricityToleranceId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumReference(DatumReferenceId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DerivedUnit(DerivedUnitId),
     DerivedUnitElement(DerivedUnitElementId),
+    DimensionalCharacteristicRepresentation(DimensionalCharacteristicRepresentationId),
     DimensionalExponents(DimensionalExponentsId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSize(DimensionalSizeId),
+    DimensionalSizeWithPath(DimensionalSizeWithPathId),
     Direction(DirectionId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -569,29 +906,54 @@ pub enum AnyId {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FlatnessTolerance(FlatnessToleranceId),
+    GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     GeometricRepresentationContext(GeometricRepresentationContextId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricTolerance(GeometricToleranceId),
+    GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
+    GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
+    GeometricToleranceWithDefinedUnit(GeometricToleranceWithDefinedUnitId),
+    GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
+    GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     IntersectionCurve(IntersectionCurveId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     LengthUnit(LengthUnitId),
     Line(LineId),
+    LineProfileTolerance(LineProfileToleranceId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     MassUnit(MassUnitId),
     MeasureWithUnit(MeasureWithUnitId),
+    ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NamedUnit(NamedUnitId),
     OffsetSurface(OffsetSurfaceId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
+    ParallelismTolerance(ParallelismToleranceId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
     Path(PathId),
     Pcurve(PcurveId),
+    PerpendicularityTolerance(PerpendicularityToleranceId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     Placement(PlacementId),
     Plane(PlaneId),
+    PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     PlaneAngleUnit(PlaneAngleUnitId),
     Point(PointId),
     PolyLoop(PolyLoopId),
+    PositionTolerance(PositionToleranceId),
+    Product(ProductId),
+    ProductContext(ProductContextId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionContext(ProductDefinitionContextId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    PropertyDefinition(PropertyDefinitionId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
@@ -599,20 +961,35 @@ pub enum AnyId {
     Representation(RepresentationId),
     RepresentationContext(RepresentationContextId),
     RepresentationItem(RepresentationItemId),
+    RoundnessTolerance(RoundnessToleranceId),
     SeamCurve(SeamCurveId),
+    ShapeAspect(ShapeAspectId),
+    ShapeAspectRelationship(ShapeAspectRelationshipId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
     SiUnit(SiUnitId),
     SolidAngleUnit(SolidAngleUnitId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
+    StraightnessTolerance(StraightnessToleranceId),
     Surface(SurfaceId),
     SurfaceCurve(SurfaceCurveId),
     SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
     SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SurfaceProfileTolerance(SurfaceProfileToleranceId),
     SweptSurface(SweptSurfaceId),
+    SymmetryTolerance(SymmetryToleranceId),
     TimeUnit(TimeUnitId),
+    ToleranceValue(ToleranceValueId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneDefinition(ToleranceZoneDefinitionId),
+    ToleranceZoneForm(ToleranceZoneFormId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
+    TotalRunoutTolerance(TotalRunoutToleranceId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
+    UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
     Vector(VectorId),
@@ -620,6 +997,19 @@ pub enum AnyId {
     VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
     ComplexUnit(ComplexUnitId),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ApplicationContextRef {
+    ApplicationContext(ApplicationContextId),
+}
+impl ApplicationContextRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
+            other => panic!("ApplicationContextRef ref -> {other:?}"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -672,6 +1062,119 @@ impl CartesianPointRef {
         match a {
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             other => panic!("CartesianPointRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CharacterizedDefinitionRef {
+    AngularityTolerance(AngularityToleranceId),
+    CharacterizedObject(CharacterizedObjectId),
+    CircularRunoutTolerance(CircularRunoutToleranceId),
+    CoaxialityTolerance(CoaxialityToleranceId),
+    CommonDatum(CommonDatumId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    ConcentricityTolerance(ConcentricityToleranceId),
+    CylindricityTolerance(CylindricityToleranceId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSize(DimensionalSizeId),
+    DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    FlatnessTolerance(FlatnessToleranceId),
+    GeometricTolerance(GeometricToleranceId),
+    GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
+    GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
+    GeometricToleranceWithDefinedUnit(GeometricToleranceWithDefinedUnitId),
+    GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
+    GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
+    LineProfileTolerance(LineProfileToleranceId),
+    ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
+    ParallelismTolerance(ParallelismToleranceId),
+    PerpendicularityTolerance(PerpendicularityToleranceId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    PositionTolerance(PositionToleranceId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    RoundnessTolerance(RoundnessToleranceId),
+    ShapeAspect(ShapeAspectId),
+    ShapeAspectRelationship(ShapeAspectRelationshipId),
+    StraightnessTolerance(StraightnessToleranceId),
+    SurfaceProfileTolerance(SurfaceProfileToleranceId),
+    SymmetryTolerance(SymmetryToleranceId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    TotalRunoutTolerance(TotalRunoutToleranceId),
+    UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
+    Complex(ComplexUnitId),
+}
+impl CharacterizedDefinitionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
+            AnyId::CharacterizedObject(i) => Self::CharacterizedObject(i),
+            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
+            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
+            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
+            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
+            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::GeometricToleranceWithDatumReference(i) => {
+                Self::GeometricToleranceWithDatumReference(i)
+            }
+            AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
+                Self::GeometricToleranceWithDefinedAreaUnit(i)
+            }
+            AnyId::GeometricToleranceWithDefinedUnit(i) => {
+                Self::GeometricToleranceWithDefinedUnit(i)
+            }
+            AnyId::GeometricToleranceWithMaximumTolerance(i) => {
+                Self::GeometricToleranceWithMaximumTolerance(i)
+            }
+            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
+            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
+            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
+            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
+            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
+            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
+            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
+            AnyId::ProductDefinitionRelationshipRelationship(i) => {
+                Self::ProductDefinitionRelationshipRelationship(i)
+            }
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
+            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
+            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
+            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
+            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
+            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
+            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
+            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::UnequallyDisposedGeometricTolerance(i) => {
+                Self::UnequallyDisposedGeometricTolerance(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CharacterizedDefinitionRef ref -> {other:?}"),
         }
     }
 }
@@ -743,6 +1246,67 @@ impl CurveRef {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DatumRef {
+    CommonDatum(CommonDatumId),
+    Datum(DatumId),
+    Complex(ComplexUnitId),
+}
+impl DatumRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DatumRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DatumReferenceCompartmentRef {
+    Unresolved,
+}
+impl DatumReferenceCompartmentRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            other => panic!("DatumReferenceCompartmentRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DatumSystemOrReferenceRef {
+    DatumReference(DatumReferenceId),
+    DatumSystem(DatumSystemId),
+    Complex(ComplexUnitId),
+}
+impl DatumSystemOrReferenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DatumReference(i) => Self::DatumReference(i),
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DatumSystemOrReferenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DatumSystemRef {
+    DatumSystem(DatumSystemId),
+    Complex(ComplexUnitId),
+}
+impl DatumSystemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DatumSystemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DefinitionalRepresentationRef {
     DefinitionalRepresentation(DefinitionalRepresentationId),
     Complex(ComplexUnitId),
@@ -766,6 +1330,27 @@ impl DerivedUnitElementRef {
         match a {
             AnyId::DerivedUnitElement(i) => Self::DerivedUnitElement(i),
             other => panic!("DerivedUnitElementRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DimensionalCharacteristicRef {
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSize(DimensionalSizeId),
+    DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    Complex(ComplexUnitId),
+}
+impl DimensionalCharacteristicRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
+            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DimensionalCharacteristicRef ref -> {other:?}"),
         }
     }
 }
@@ -818,6 +1403,18 @@ impl EdgeRef {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExternalSourceRef {
+    Unresolved,
+}
+impl ExternalSourceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            other => panic!("ExternalSourceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FaceBoundRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
@@ -854,6 +1451,81 @@ impl FaceRef {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GeometricToleranceTargetRef {
+    CommonDatum(CommonDatumId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSize(DimensionalSizeId),
+    DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    ShapeAspect(ShapeAspectId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    Complex(ComplexUnitId),
+}
+impl GeometricToleranceTargetRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
+            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
+            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("GeometricToleranceTargetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LengthMeasureWithUnitRef {
+    LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    Complex(ComplexUnitId),
+}
+impl LengthMeasureWithUnitRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("LengthMeasureWithUnitRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
+    LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
+    Complex(ComplexUnitId),
+}
+impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
+            AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("LengthOrPlaneAngleMeasureWithUnitSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LoopRef {
     EdgeLoop(EdgeLoopId),
     Loop(LoopId),
@@ -878,6 +1550,7 @@ impl LoopRef {
 pub enum MeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     MeasureWithUnit(MeasureWithUnitId),
+    PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
     Complex(ComplexUnitId),
 }
@@ -886,6 +1559,7 @@ impl MeasureWithUnitRef {
         match a {
             AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
+            AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
             AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("MeasureWithUnitRef ref -> {other:?}"),
@@ -1020,6 +1694,117 @@ impl PointRef {
             AnyId::Point(i) => Self::Point(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("PointRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductContextRef {
+    ProductContext(ProductContextId),
+    Complex(ComplexUnitId),
+}
+impl ProductContextRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductContext(i) => Self::ProductContext(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductContextRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductDefinitionContextRef {
+    ProductDefinitionContext(ProductDefinitionContextId),
+    Complex(ComplexUnitId),
+}
+impl ProductDefinitionContextRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductDefinitionContextRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductDefinitionFormationRef {
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    Complex(ComplexUnitId),
+}
+impl ProductDefinitionFormationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductDefinitionFormationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductDefinitionOrReferenceRef {
+    GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
+    Complex(ComplexUnitId),
+}
+impl ProductDefinitionOrReferenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::GenericProductDefinitionReference(i) => {
+                Self::GenericProductDefinitionReference(i)
+            }
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductDefinitionOrReferenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductDefinitionRelationshipRef {
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    Complex(ComplexUnitId),
+}
+impl ProductDefinitionRelationshipRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductDefinitionRelationshipRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductDefinitionShapeRef {
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    Complex(ComplexUnitId),
+}
+impl ProductDefinitionShapeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductDefinitionShapeRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductRef {
+    Product(ProductId),
+    Complex(ComplexUnitId),
+}
+impl ProductRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Product(i) => Self::Product(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductRef ref -> {other:?}"),
         }
     }
 }
@@ -1195,6 +1980,54 @@ impl RepresentationItemRef {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShapeAspectRef {
+    CommonDatum(CommonDatumId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    ShapeAspect(ShapeAspectId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    Complex(ComplexUnitId),
+}
+impl ShapeAspectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
+            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
+            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ShapeAspectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShapeDimensionRepresentationRef {
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    Complex(ComplexUnitId),
+}
+impl ShapeDimensionRepresentationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ShapeDimensionRepresentationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
@@ -1239,6 +2072,113 @@ impl SurfaceRef {
             AnyId::UniformSurface(i) => Self::UniformSurface(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("SurfaceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ToleranceZoneFormRef {
+    ToleranceZoneForm(ToleranceZoneFormId),
+}
+impl ToleranceZoneFormRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ToleranceZoneForm(i) => Self::ToleranceZoneForm(i),
+            other => panic!("ToleranceZoneFormRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ToleranceZoneRef {
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    Complex(ComplexUnitId),
+}
+impl ToleranceZoneRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
+            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ToleranceZoneRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ToleranceZoneTargetRef {
+    AngularityTolerance(AngularityToleranceId),
+    CircularRunoutTolerance(CircularRunoutToleranceId),
+    CoaxialityTolerance(CoaxialityToleranceId),
+    ConcentricityTolerance(ConcentricityToleranceId),
+    CylindricityTolerance(CylindricityToleranceId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSize(DimensionalSizeId),
+    DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    FlatnessTolerance(FlatnessToleranceId),
+    GeometricTolerance(GeometricToleranceId),
+    GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
+    GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
+    GeometricToleranceWithDefinedUnit(GeometricToleranceWithDefinedUnitId),
+    GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
+    GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
+    LineProfileTolerance(LineProfileToleranceId),
+    ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
+    ParallelismTolerance(ParallelismToleranceId),
+    PerpendicularityTolerance(PerpendicularityToleranceId),
+    PositionTolerance(PositionToleranceId),
+    RoundnessTolerance(RoundnessToleranceId),
+    StraightnessTolerance(StraightnessToleranceId),
+    SurfaceProfileTolerance(SurfaceProfileToleranceId),
+    SymmetryTolerance(SymmetryToleranceId),
+    TotalRunoutTolerance(TotalRunoutToleranceId),
+    UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
+    Complex(ComplexUnitId),
+}
+impl ToleranceZoneTargetRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
+            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
+            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
+            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
+            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
+            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
+            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::GeometricToleranceWithDatumReference(i) => {
+                Self::GeometricToleranceWithDatumReference(i)
+            }
+            AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
+                Self::GeometricToleranceWithDefinedAreaUnit(i)
+            }
+            AnyId::GeometricToleranceWithDefinedUnit(i) => {
+                Self::GeometricToleranceWithDefinedUnit(i)
+            }
+            AnyId::GeometricToleranceWithMaximumTolerance(i) => {
+                Self::GeometricToleranceWithMaximumTolerance(i)
+            }
+            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
+            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
+            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
+            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
+            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
+            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
+            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
+            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
+            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
+            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::UnequallyDisposedGeometricTolerance(i) => {
+                Self::UnequallyDisposedGeometricTolerance(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ToleranceZoneTargetRef ref -> {other:?}"),
         }
     }
 }
@@ -1314,6 +2254,26 @@ pub struct AdvancedFace {
     pub bounds: Vec<FaceBoundRef>,
     pub face_geometry: SurfaceRef,
     pub same_sense: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AngularityTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApplicationContext {
+    pub application: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApplicationContextElement {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1451,6 +2411,12 @@ pub struct CartesianPoint {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CharacterizedObject {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Circle {
     pub name: String,
     pub position: Axis2PlacementRef,
@@ -1458,9 +2424,53 @@ pub struct Circle {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CircularRunoutTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ClosedShell {
     pub name: String,
     pub cfs_faces: Vec<FaceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CoaxialityTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CommonDatum {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub identification: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeShapeAspect {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConcentricityTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1509,6 +2519,55 @@ pub struct CylindricalSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CylindricityTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Datum {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub identification: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumFeature {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumReference {
+    pub precedence: i64,
+    pub referenced_datum: DatumRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumSystem {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub constituents: Vec<DatumReferenceCompartmentRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumTarget {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub target_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DefinitionalRepresentation {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
@@ -1527,6 +2586,12 @@ pub struct DerivedUnitElement {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalCharacteristicRepresentation {
+    pub dimension: DimensionalCharacteristicRef,
+    pub representation: ShapeDimensionRepresentationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalExponents {
     pub length_exponent: f64,
     pub mass_exponent: f64,
@@ -1535,6 +2600,36 @@ pub struct DimensionalExponents {
     pub thermodynamic_temperature_exponent: f64,
     pub amount_of_substance_exponent: f64,
     pub luminous_intensity_exponent: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalLocation {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalLocationWithPath {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
+    pub path: ShapeAspectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalSize {
+    pub applies_to: ShapeAspectRef,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalSizeWithPath {
+    pub applies_to: ShapeAspectRef,
+    pub name: String,
+    pub path: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1608,6 +2703,19 @@ pub struct FaceSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct FlatnessTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GenericProductDefinitionReference {
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationContext {
     pub context_identifier: String,
     pub context_type: String,
@@ -1617,6 +2725,62 @@ pub struct GeometricRepresentationContext {
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationItem {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceWithDatumReference {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceWithDefinedAreaUnit {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
+    pub area_type: AreaUnitType,
+    pub second_unit_size: Option<LengthOrPlaneAngleMeasureWithUnitSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceWithDefinedUnit {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceWithMaximumTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub modifiers: Vec<GeometricToleranceModifier>,
+    pub maximum_upper_tolerance: LengthMeasureWithUnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceWithModifiers {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub modifiers: Vec<GeometricToleranceModifier>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1646,6 +2810,14 @@ pub struct Line {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct LineProfileTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Loop {
     pub name: String,
 }
@@ -1665,6 +2837,15 @@ pub struct MassUnit {
 pub struct MeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModifiedGeometricTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub modifier: LimitCondition,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1701,6 +2882,15 @@ pub struct OrientedEdge {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ParallelismTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ParametricRepresentationContext {
     pub context_identifier: String,
     pub context_type: String,
@@ -1720,6 +2910,24 @@ pub struct Pcurve {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PerpendicularityTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlacedDatumTargetFeature {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub target_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Placement {
     pub name: String,
     pub location: CartesianPointRef,
@@ -1729,6 +2937,12 @@ pub struct Placement {
 pub struct Plane {
     pub name: String,
     pub position: Axis2Placement3dRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlaneAngleMeasureWithUnit {
+    pub value_component: MeasureValue,
+    pub unit_component: UnitRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1745,6 +2959,92 @@ pub struct Point {
 pub struct PolyLoop {
     pub name: String,
     pub polygon: Vec<CartesianPointRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PositionTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Product {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub frame_of_reference: Vec<ProductContextRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductContext {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextRef,
+    pub discipline_type: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinition {
+    pub id: String,
+    pub description: Option<String>,
+    pub formation: ProductDefinitionFormationRef,
+    pub frame_of_reference: ProductDefinitionContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionContext {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextRef,
+    pub life_cycle_stage: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionFormation {
+    pub id: String,
+    pub description: Option<String>,
+    pub of_product: ProductRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionOccurrence {
+    pub id: String,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub definition: Option<ProductDefinitionOrReferenceRef>,
+    pub quantity: Option<MeasureWithUnitRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionRelationship {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_product_definition: ProductDefinitionOrReferenceRef,
+    pub related_product_definition: ProductDefinitionOrReferenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionRelationshipRelationship {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating: ProductDefinitionRelationshipRef,
+    pub related: ProductDefinitionRelationshipRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionShape {
+    pub name: String,
+    pub description: Option<String>,
+    pub definition: CharacterizedDefinitionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PropertyDefinition {
+    pub name: String,
+    pub description: Option<String>,
+    pub definition: CharacterizedDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1812,11 +3112,49 @@ pub struct RepresentationItem {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct RoundnessTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct SeamCurve {
     pub name: String,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeAspect {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeAspectRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeDimensionRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1840,6 +3178,14 @@ pub struct SphericalSurface {
     pub name: String,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StraightnessTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1870,14 +3216,69 @@ pub struct SurfaceOfRevolution {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceProfileTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct SweptSurface {
     pub name: String,
     pub swept_curve: CurveRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct SymmetryTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TimeUnit {
     pub dimensions: DimensionalExponentsRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToleranceValue {
+    pub lower_bound: MeasureWithUnitRef,
+    pub upper_bound: MeasureWithUnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToleranceZone {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub defining_tolerance: Vec<ToleranceZoneTargetRef>,
+    pub form: ToleranceZoneFormRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToleranceZoneDefinition {
+    pub zone: ToleranceZoneRef,
+    pub boundaries: Vec<ShapeAspectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToleranceZoneForm {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToleranceZoneWithDatum {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub defining_tolerance: Vec<ToleranceZoneTargetRef>,
+    pub form: ToleranceZoneFormRef,
+    pub datum_reference: DatumSystemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1894,11 +3295,29 @@ pub struct ToroidalSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TotalRunoutTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct UncertaintyMeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
     pub name: String,
     pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UnequallyDisposedGeometricTolerance {
+    pub name: String,
+    pub description: Option<String>,
+    pub magnitude: Option<LengthMeasureWithUnitRef>,
+    pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+    pub displacement: LengthMeasureWithUnitRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1950,6 +3369,10 @@ pub struct VertexPoint {
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnitPart {
     AdvancedFace,
+    ApplicationContextElement {
+        name: String,
+        frame_of_reference: ApplicationContextRef,
+    },
     BSplineCurve {
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
@@ -1987,7 +3410,13 @@ pub enum UnitPart {
     BrepWithVoids {
         voids: Vec<OrientedClosedShellRef>,
     },
+    CharacterizedObject {
+        name: String,
+        description: Option<String>,
+    },
     ClosedShell,
+    CommonDatum,
+    CompositeShapeAspect,
     ConnectedFaceSet {
         cfs_faces: Option<Vec<FaceRef>>,
     },
@@ -1999,9 +3428,28 @@ pub enum UnitPart {
         conversion_factor: MeasureWithUnitRef,
     },
     Curve,
+    CylindricityTolerance,
+    Datum {
+        identification: String,
+    },
+    DatumFeature,
+    DatumReference {
+        precedence: i64,
+        referenced_datum: DatumRef,
+    },
+    DatumSystem {
+        constituents: Vec<DatumReferenceCompartmentRef>,
+    },
+    DatumTarget {
+        target_id: String,
+    },
     DefinitionalRepresentation,
     DerivedUnit {
         elements: Vec<DerivedUnitElementRef>,
+    },
+    DimensionalSize {
+        applies_to: ShapeAspectRef,
+        name: String,
     },
     Direction {
         direction_ratios: Vec<f64>,
@@ -2030,13 +3478,40 @@ pub enum UnitPart {
         face_geometry: SurfaceRef,
         same_sense: bool,
     },
+    FlatnessTolerance,
+    GenericProductDefinitionReference {
+        source: ExternalSourceRef,
+    },
     GeometricRepresentationContext {
         coordinate_space_dimension: i64,
     },
     GeometricRepresentationItem,
+    GeometricTolerance {
+        name: String,
+        description: Option<String>,
+        magnitude: Option<LengthMeasureWithUnitRef>,
+        toleranced_shape_aspect: GeometricToleranceTargetRef,
+    },
+    GeometricToleranceWithDatumReference {
+        datum_system: Vec<DatumSystemOrReferenceRef>,
+    },
+    GeometricToleranceWithDefinedAreaUnit {
+        area_type: AreaUnitType,
+        second_unit_size: Option<LengthOrPlaneAngleMeasureWithUnitSelectRef>,
+    },
+    GeometricToleranceWithDefinedUnit {
+        unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
+    },
+    GeometricToleranceWithMaximumTolerance {
+        maximum_upper_tolerance: LengthMeasureWithUnitRef,
+    },
+    GeometricToleranceWithModifiers {
+        modifiers: Vec<GeometricToleranceModifier>,
+    },
     IntersectionCurve,
     LengthMeasureWithUnit,
     LengthUnit,
+    LineProfileTolerance,
     Loop,
     ManifoldSolidBrep {
         outer: ClosedShellRef,
@@ -2045,6 +3520,9 @@ pub enum UnitPart {
     MeasureWithUnit {
         value_component: MeasureValue,
         unit_component: UnitRef,
+    },
+    ModifiedGeometricTolerance {
+        modifier: LimitCondition,
     },
     NamedUnit {
         dimensions: Option<DimensionalExponentsRef>,
@@ -2066,13 +3544,66 @@ pub enum UnitPart {
         basis_surface: SurfaceRef,
         reference_to_curve: DefinitionalRepresentationRef,
     },
+    PlacedDatumTargetFeature,
     Placement {
         location: CartesianPointRef,
     },
+    PlaneAngleMeasureWithUnit,
     PlaneAngleUnit,
     Point,
     PolyLoop {
         polygon: Vec<CartesianPointRef>,
+    },
+    PositionTolerance,
+    Product {
+        id: String,
+        name: String,
+        description: Option<String>,
+        frame_of_reference: Vec<ProductContextRef>,
+    },
+    ProductContext {
+        discipline_type: String,
+    },
+    ProductDefinition {
+        id: String,
+        description: Option<String>,
+        formation: ProductDefinitionFormationRef,
+        frame_of_reference: ProductDefinitionContextRef,
+    },
+    ProductDefinitionContext {
+        life_cycle_stage: String,
+    },
+    ProductDefinitionFormation {
+        id: String,
+        description: Option<String>,
+        of_product: ProductRef,
+    },
+    ProductDefinitionOccurrence {
+        id: String,
+        name: Option<String>,
+        description: Option<String>,
+        definition: Option<ProductDefinitionOrReferenceRef>,
+        quantity: Option<MeasureWithUnitRef>,
+    },
+    ProductDefinitionRelationship {
+        id: String,
+        name: String,
+        description: Option<String>,
+        relating_product_definition: ProductDefinitionOrReferenceRef,
+        related_product_definition: ProductDefinitionOrReferenceRef,
+    },
+    ProductDefinitionRelationshipRelationship {
+        id: String,
+        name: String,
+        description: Option<String>,
+        relating: ProductDefinitionRelationshipRef,
+        related: ProductDefinitionRelationshipRef,
+    },
+    ProductDefinitionShape,
+    PropertyDefinition {
+        name: String,
+        description: Option<String>,
+        definition: CharacterizedDefinitionRef,
     },
     QuasiUniformCurve,
     QuasiUniformSurface,
@@ -2094,24 +3625,55 @@ pub enum UnitPart {
     RepresentationItem {
         name: String,
     },
+    RoundnessTolerance,
     SeamCurve,
+    ShapeAspect {
+        name: String,
+        description: Option<String>,
+        of_shape: ProductDefinitionShapeRef,
+        product_definitional: Logical,
+    },
+    ShapeAspectRelationship {
+        name: String,
+        description: Option<String>,
+        relating_shape_aspect: ShapeAspectRef,
+        related_shape_aspect: ShapeAspectRef,
+    },
+    ShapeDimensionRepresentation,
+    ShapeRepresentation,
     SiUnit {
         prefix: Option<SiPrefix>,
         name: SiUnitName,
     },
     SolidAngleUnit,
     SolidModel,
+    StraightnessTolerance,
     Surface,
     SurfaceCurve {
         curve_3d: CurveRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
     },
+    SurfaceProfileTolerance,
     TimeUnit,
+    ToleranceZone {
+        defining_tolerance: Vec<ToleranceZoneTargetRef>,
+        form: ToleranceZoneFormRef,
+    },
+    ToleranceZoneDefinition {
+        zone: ToleranceZoneRef,
+        boundaries: Vec<ShapeAspectRef>,
+    },
+    ToleranceZoneWithDatum {
+        datum_reference: DatumSystemRef,
+    },
     TopologicalRepresentationItem,
     ToroidalSurface {
         major_radius: f64,
         minor_radius: f64,
+    },
+    UnequallyDisposedGeometricTolerance {
+        displacement: LengthMeasureWithUnitRef,
     },
     UniformCurve,
     UniformSurface,
@@ -2133,6 +3695,9 @@ pub struct ComplexUnit {
 #[derive(Debug, Default)]
 pub struct Model {
     pub advanced_faces: Arena<AdvancedFace>,
+    pub angularity_tolerances: Arena<AngularityTolerance>,
+    pub application_contexts: Arena<ApplicationContext>,
+    pub application_context_elements: Arena<ApplicationContextElement>,
     pub axis1_placements: Arena<Axis1Placement>,
     pub axis2_placement2ds: Arena<Axis2Placement2d>,
     pub axis2_placement3ds: Arena<Axis2Placement3d>,
@@ -2148,8 +3713,14 @@ pub struct Model {
     pub bounded_surface_curves: Arena<BoundedSurfaceCurve>,
     pub brep_with_voidss: Arena<BrepWithVoids>,
     pub cartesian_points: Arena<CartesianPoint>,
+    pub characterized_objects: Arena<CharacterizedObject>,
     pub circles: Arena<Circle>,
+    pub circular_runout_tolerances: Arena<CircularRunoutTolerance>,
     pub closed_shells: Arena<ClosedShell>,
+    pub coaxiality_tolerances: Arena<CoaxialityTolerance>,
+    pub common_datums: Arena<CommonDatum>,
+    pub composite_shape_aspects: Arena<CompositeShapeAspect>,
+    pub concentricity_tolerances: Arena<ConcentricityTolerance>,
     pub conics: Arena<Conic>,
     pub conical_surfaces: Arena<ConicalSurface>,
     pub connected_face_sets: Arena<ConnectedFaceSet>,
@@ -2157,10 +3728,21 @@ pub struct Model {
     pub conversion_based_units: Arena<ConversionBasedUnit>,
     pub curves: Arena<Curve>,
     pub cylindrical_surfaces: Arena<CylindricalSurface>,
+    pub cylindricity_tolerances: Arena<CylindricityTolerance>,
+    pub datums: Arena<Datum>,
+    pub datum_features: Arena<DatumFeature>,
+    pub datum_references: Arena<DatumReference>,
+    pub datum_systems: Arena<DatumSystem>,
+    pub datum_targets: Arena<DatumTarget>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
     pub derived_units: Arena<DerivedUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
+    pub dimensional_characteristic_representations: Arena<DimensionalCharacteristicRepresentation>,
     pub dimensional_exponentss: Arena<DimensionalExponents>,
+    pub dimensional_locations: Arena<DimensionalLocation>,
+    pub dimensional_location_with_paths: Arena<DimensionalLocationWithPath>,
+    pub dimensional_sizes: Arena<DimensionalSize>,
+    pub dimensional_size_with_paths: Arena<DimensionalSizeWithPath>,
     pub directions: Arena<Direction>,
     pub edges: Arena<Edge>,
     pub edge_curves: Arena<EdgeCurve>,
@@ -2171,29 +3753,55 @@ pub struct Model {
     pub face_bounds: Arena<FaceBound>,
     pub face_outer_bounds: Arena<FaceOuterBound>,
     pub face_surfaces: Arena<FaceSurface>,
+    pub flatness_tolerances: Arena<FlatnessTolerance>,
+    pub generic_product_definition_references: Arena<GenericProductDefinitionReference>,
     pub geometric_representation_contexts: Arena<GeometricRepresentationContext>,
     pub geometric_representation_items: Arena<GeometricRepresentationItem>,
+    pub geometric_tolerances: Arena<GeometricTolerance>,
+    pub geometric_tolerance_with_datum_references: Arena<GeometricToleranceWithDatumReference>,
+    pub geometric_tolerance_with_defined_area_units: Arena<GeometricToleranceWithDefinedAreaUnit>,
+    pub geometric_tolerance_with_defined_units: Arena<GeometricToleranceWithDefinedUnit>,
+    pub geometric_tolerance_with_maximum_tolerances: Arena<GeometricToleranceWithMaximumTolerance>,
+    pub geometric_tolerance_with_modifierss: Arena<GeometricToleranceWithModifiers>,
     pub intersection_curves: Arena<IntersectionCurve>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
     pub length_units: Arena<LengthUnit>,
     pub lines: Arena<Line>,
+    pub line_profile_tolerances: Arena<LineProfileTolerance>,
     pub loops: Arena<Loop>,
     pub manifold_solid_breps: Arena<ManifoldSolidBrep>,
     pub mass_units: Arena<MassUnit>,
     pub measure_with_units: Arena<MeasureWithUnit>,
+    pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
     pub offset_surfaces: Arena<OffsetSurface>,
     pub open_shells: Arena<OpenShell>,
     pub oriented_closed_shells: Arena<OrientedClosedShell>,
     pub oriented_edges: Arena<OrientedEdge>,
+    pub parallelism_tolerances: Arena<ParallelismTolerance>,
     pub parametric_representation_contexts: Arena<ParametricRepresentationContext>,
     pub paths: Arena<Path>,
     pub pcurves: Arena<Pcurve>,
+    pub perpendicularity_tolerances: Arena<PerpendicularityTolerance>,
+    pub placed_datum_target_features: Arena<PlacedDatumTargetFeature>,
     pub placements: Arena<Placement>,
     pub planes: Arena<Plane>,
+    pub plane_angle_measure_with_units: Arena<PlaneAngleMeasureWithUnit>,
     pub plane_angle_units: Arena<PlaneAngleUnit>,
     pub points: Arena<Point>,
     pub poly_loops: Arena<PolyLoop>,
+    pub position_tolerances: Arena<PositionTolerance>,
+    pub products: Arena<Product>,
+    pub product_contexts: Arena<ProductContext>,
+    pub product_definitions: Arena<ProductDefinition>,
+    pub product_definition_contexts: Arena<ProductDefinitionContext>,
+    pub product_definition_formations: Arena<ProductDefinitionFormation>,
+    pub product_definition_occurrences: Arena<ProductDefinitionOccurrence>,
+    pub product_definition_relationships: Arena<ProductDefinitionRelationship>,
+    pub product_definition_relationship_relationships:
+        Arena<ProductDefinitionRelationshipRelationship>,
+    pub product_definition_shapes: Arena<ProductDefinitionShape>,
+    pub property_definitions: Arena<PropertyDefinition>,
     pub quasi_uniform_curves: Arena<QuasiUniformCurve>,
     pub quasi_uniform_surfaces: Arena<QuasiUniformSurface>,
     pub rational_b_spline_curves: Arena<RationalBSplineCurve>,
@@ -2201,20 +3809,35 @@ pub struct Model {
     pub representations: Arena<Representation>,
     pub representation_contexts: Arena<RepresentationContext>,
     pub representation_items: Arena<RepresentationItem>,
+    pub roundness_tolerances: Arena<RoundnessTolerance>,
     pub seam_curves: Arena<SeamCurve>,
+    pub shape_aspects: Arena<ShapeAspect>,
+    pub shape_aspect_relationships: Arena<ShapeAspectRelationship>,
+    pub shape_dimension_representations: Arena<ShapeDimensionRepresentation>,
+    pub shape_representations: Arena<ShapeRepresentation>,
     pub si_units: Arena<SiUnit>,
     pub solid_angle_units: Arena<SolidAngleUnit>,
     pub solid_models: Arena<SolidModel>,
     pub spherical_surfaces: Arena<SphericalSurface>,
+    pub straightness_tolerances: Arena<StraightnessTolerance>,
     pub surfaces: Arena<Surface>,
     pub surface_curves: Arena<SurfaceCurve>,
     pub surface_of_linear_extrusions: Arena<SurfaceOfLinearExtrusion>,
     pub surface_of_revolutions: Arena<SurfaceOfRevolution>,
+    pub surface_profile_tolerances: Arena<SurfaceProfileTolerance>,
     pub swept_surfaces: Arena<SweptSurface>,
+    pub symmetry_tolerances: Arena<SymmetryTolerance>,
     pub time_units: Arena<TimeUnit>,
+    pub tolerance_values: Arena<ToleranceValue>,
+    pub tolerance_zones: Arena<ToleranceZone>,
+    pub tolerance_zone_definitions: Arena<ToleranceZoneDefinition>,
+    pub tolerance_zone_forms: Arena<ToleranceZoneForm>,
+    pub tolerance_zone_with_datums: Arena<ToleranceZoneWithDatum>,
     pub topological_representation_items: Arena<TopologicalRepresentationItem>,
     pub toroidal_surfaces: Arena<ToroidalSurface>,
+    pub total_runout_tolerances: Arena<TotalRunoutTolerance>,
     pub uncertainty_measure_with_units: Arena<UncertaintyMeasureWithUnit>,
+    pub unequally_disposed_geometric_tolerances: Arena<UnequallyDisposedGeometricTolerance>,
     pub uniform_curves: Arena<UniformCurve>,
     pub uniform_surfaces: Arena<UniformSurface>,
     pub vectors: Arena<Vector>,

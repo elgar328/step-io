@@ -35,7 +35,8 @@ fn main() {
     for list in mapping.codegen.domains.values() {
         seeds.extend(list.iter().cloned());
     }
-    let closure = build_closure(&schema, &res, &seeds);
+    let exclude: BTreeSet<String> = mapping.codegen.exclude.iter().cloned().collect();
+    let closure = build_closure(&schema, &res, &seeds, &exclude);
 
     // Complex-part entities = closure entities flagged is_complex_part in
     // universal.toml (auto-derived from EXPRESS ANDOR; replaces the former hand
