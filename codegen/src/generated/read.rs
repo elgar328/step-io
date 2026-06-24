@@ -61,6 +61,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "B_SPLINE_CURVE_WITH_KNOTS",
     "B_SPLINE_SURFACE",
     "B_SPLINE_SURFACE_WITH_KNOTS",
+    "BEZIER_CURVE",
+    "BEZIER_SURFACE",
     "BOUNDED_CURVE",
     "BOUNDED_SURFACE",
     "BREP_WITH_VOIDS",
@@ -70,6 +72,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONIC",
     "CONICAL_SURFACE",
     "CONNECTED_FACE_SET",
+    "CONTEXT_DEPENDENT_UNIT",
+    "CONVERSION_BASED_UNIT",
     "CURVE",
     "CYLINDRICAL_SURFACE",
     "DERIVED_UNIT",
@@ -87,10 +91,13 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "FACE_SURFACE",
     "GEOMETRIC_REPRESENTATION_ITEM",
     "LENGTH_MEASURE_WITH_UNIT",
+    "LENGTH_UNIT",
     "LINE",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
+    "MASS_UNIT",
     "MEASURE_WITH_UNIT",
+    "NAMED_UNIT",
     "OFFSET_SURFACE",
     "OPEN_SHELL",
     "ORIENTED_CLOSED_SHELL",
@@ -98,38 +105,82 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PATH",
     "PLACEMENT",
     "PLANE",
+    "PLANE_ANGLE_UNIT",
     "POINT",
     "POLY_LOOP",
+    "QUASI_UNIFORM_CURVE",
+    "QUASI_UNIFORM_SURFACE",
+    "RATIONAL_B_SPLINE_CURVE",
+    "RATIONAL_B_SPLINE_SURFACE",
     "REPRESENTATION_ITEM",
+    "SI_UNIT",
+    "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
     "SPHERICAL_SURFACE",
     "SURFACE",
     "SURFACE_OF_LINEAR_EXTRUSION",
     "SURFACE_OF_REVOLUTION",
     "SWEPT_SURFACE",
+    "TIME_UNIT",
     "TOPOLOGICAL_REPRESENTATION_ITEM",
     "TOROIDAL_SURFACE",
     "UNCERTAINTY_MEASURE_WITH_UNIT",
+    "UNIFORM_CURVE",
+    "UNIFORM_SURFACE",
     "VECTOR",
     "VERTEX",
     "VERTEX_LOOP",
     "VERTEX_POINT",
 ];
 pub const COMPLEX_PART_NAMES: &[&str] = &[
+    "B_SPLINE_CURVE",
+    "B_SPLINE_CURVE_WITH_KNOTS",
+    "B_SPLINE_SURFACE",
+    "B_SPLINE_SURFACE_WITH_KNOTS",
+    "BEZIER_CURVE",
+    "BEZIER_SURFACE",
+    "BOUNDED_CURVE",
+    "BOUNDED_SURFACE",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
+    "CURVE",
+    "DIRECTION",
+    "EDGE",
+    "EDGE_CURVE",
+    "FACE",
+    "FACE_SURFACE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
     "LENGTH_UNIT",
+    "LOOP",
     "MASS_UNIT",
     "NAMED_UNIT",
+    "PATH",
+    "PLACEMENT",
     "PLANE_ANGLE_UNIT",
+    "POINT",
+    "POLY_LOOP",
+    "QUASI_UNIFORM_CURVE",
+    "QUASI_UNIFORM_SURFACE",
+    "RATIONAL_B_SPLINE_CURVE",
+    "RATIONAL_B_SPLINE_SURFACE",
+    "REPRESENTATION_ITEM",
     "SI_UNIT",
     "SOLID_ANGLE_UNIT",
+    "SOLID_MODEL",
+    "SURFACE",
     "TIME_UNIT",
+    "TOPOLOGICAL_REPRESENTATION_ITEM",
+    "UNIFORM_CURVE",
+    "UNIFORM_SURFACE",
+    "VECTOR",
+    "VERTEX",
+    "VERTEX_POINT",
 ];
 pub fn is_complex_unit(parts: &[RawEntityPart]) -> bool {
-    parts
-        .iter()
-        .any(|p| COMPLEX_PART_NAMES.contains(&p.name.as_str()))
+    !parts.is_empty()
+        && parts
+            .iter()
+            .all(|p| COMPLEX_PART_NAMES.contains(&p.name.as_str()))
 }
 
 pub fn in_subset(ent: &RawEntity) -> bool {
@@ -151,12 +202,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_b_spline_surfaces: Vec<(BSplineSurfaceId, u64)> = Vec::new();
     let mut pending_b_spline_surface_with_knotss: Vec<(BSplineSurfaceWithKnotsId, u64)> =
         Vec::new();
+    let mut pending_bezier_curves: Vec<(BezierCurveId, u64)> = Vec::new();
+    let mut pending_bezier_surfaces: Vec<(BezierSurfaceId, u64)> = Vec::new();
     let mut pending_brep_with_voidss: Vec<(BrepWithVoidsId, u64)> = Vec::new();
     let mut pending_circles: Vec<(CircleId, u64)> = Vec::new();
     let mut pending_closed_shells: Vec<(ClosedShellId, u64)> = Vec::new();
     let mut pending_conics: Vec<(ConicId, u64)> = Vec::new();
     let mut pending_conical_surfaces: Vec<(ConicalSurfaceId, u64)> = Vec::new();
     let mut pending_connected_face_sets: Vec<(ConnectedFaceSetId, u64)> = Vec::new();
+    let mut pending_context_dependent_units: Vec<(ContextDependentUnitId, u64)> = Vec::new();
+    let mut pending_conversion_based_units: Vec<(ConversionBasedUnitId, u64)> = Vec::new();
     let mut pending_cylindrical_surfaces: Vec<(CylindricalSurfaceId, u64)> = Vec::new();
     let mut pending_derived_units: Vec<(DerivedUnitId, u64)> = Vec::new();
     let mut pending_derived_unit_elements: Vec<(DerivedUnitElementId, u64)> = Vec::new();
@@ -170,9 +225,12 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_face_outer_bounds: Vec<(FaceOuterBoundId, u64)> = Vec::new();
     let mut pending_face_surfaces: Vec<(FaceSurfaceId, u64)> = Vec::new();
     let mut pending_length_measure_with_units: Vec<(LengthMeasureWithUnitId, u64)> = Vec::new();
+    let mut pending_length_units: Vec<(LengthUnitId, u64)> = Vec::new();
     let mut pending_lines: Vec<(LineId, u64)> = Vec::new();
     let mut pending_manifold_solid_breps: Vec<(ManifoldSolidBrepId, u64)> = Vec::new();
+    let mut pending_mass_units: Vec<(MassUnitId, u64)> = Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
+    let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
     let mut pending_offset_surfaces: Vec<(OffsetSurfaceId, u64)> = Vec::new();
     let mut pending_open_shells: Vec<(OpenShellId, u64)> = Vec::new();
     let mut pending_oriented_closed_shells: Vec<(OrientedClosedShellId, u64)> = Vec::new();
@@ -180,15 +238,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_paths: Vec<(PathId, u64)> = Vec::new();
     let mut pending_placements: Vec<(PlacementId, u64)> = Vec::new();
     let mut pending_planes: Vec<(PlaneId, u64)> = Vec::new();
+    let mut pending_plane_angle_units: Vec<(PlaneAngleUnitId, u64)> = Vec::new();
     let mut pending_poly_loops: Vec<(PolyLoopId, u64)> = Vec::new();
+    let mut pending_quasi_uniform_curves: Vec<(QuasiUniformCurveId, u64)> = Vec::new();
+    let mut pending_quasi_uniform_surfaces: Vec<(QuasiUniformSurfaceId, u64)> = Vec::new();
+    let mut pending_rational_b_spline_curves: Vec<(RationalBSplineCurveId, u64)> = Vec::new();
+    let mut pending_rational_b_spline_surfaces: Vec<(RationalBSplineSurfaceId, u64)> = Vec::new();
+    let mut pending_si_units: Vec<(SiUnitId, u64)> = Vec::new();
+    let mut pending_solid_angle_units: Vec<(SolidAngleUnitId, u64)> = Vec::new();
     let mut pending_spherical_surfaces: Vec<(SphericalSurfaceId, u64)> = Vec::new();
     let mut pending_surface_of_linear_extrusions: Vec<(SurfaceOfLinearExtrusionId, u64)> =
         Vec::new();
     let mut pending_surface_of_revolutions: Vec<(SurfaceOfRevolutionId, u64)> = Vec::new();
     let mut pending_swept_surfaces: Vec<(SweptSurfaceId, u64)> = Vec::new();
+    let mut pending_time_units: Vec<(TimeUnitId, u64)> = Vec::new();
     let mut pending_toroidal_surfaces: Vec<(ToroidalSurfaceId, u64)> = Vec::new();
     let mut pending_uncertainty_measure_with_units: Vec<(UncertaintyMeasureWithUnitId, u64)> =
         Vec::new();
+    let mut pending_uniform_curves: Vec<(UniformCurveId, u64)> = Vec::new();
+    let mut pending_uniform_surfaces: Vec<(UniformSurfaceId, u64)> = Vec::new();
     let mut pending_vectors: Vec<(VectorId, u64)> = Vec::new();
     let mut pending_vertex_loops: Vec<(VertexLoopId, u64)> = Vec::new();
     let mut pending_vertex_points: Vec<(VertexPointId, u64)> = Vec::new();
@@ -369,6 +437,48 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "BEZIER_CURVE" => {
+                let v = BezierCurve {
+                    name: as_str(&attributes[0]),
+                    degree: as_int(&attributes[1]),
+                    control_points_list: Vec::new(),
+                    curve_form: match &attributes[3] {
+                        Attribute::Enum(s) => {
+                            BSplineCurveForm::parse(s).expect("b_spline_curve_form")
+                        }
+                        other => panic!("enum b_spline_curve_form: {other:?}"),
+                    },
+                    closed_curve: as_logical(&attributes[4]),
+                    self_intersect: as_logical(&attributes[5]),
+                };
+                let aid = BezierCurveId(model.bezier_curves.push(v));
+                idmap.insert(id, AnyId::BezierCurve(aid));
+                pending_bezier_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "BEZIER_SURFACE" => {
+                let v = BezierSurface {
+                    name: as_str(&attributes[0]),
+                    u_degree: as_int(&attributes[1]),
+                    v_degree: as_int(&attributes[2]),
+                    control_points_list: Vec::new(),
+                    surface_form: match &attributes[4] {
+                        Attribute::Enum(s) => {
+                            BSplineSurfaceForm::parse(s).expect("b_spline_surface_form")
+                        }
+                        other => panic!("enum b_spline_surface_form: {other:?}"),
+                    },
+                    u_closed: as_logical(&attributes[5]),
+                    v_closed: as_logical(&attributes[6]),
+                    self_intersect: as_logical(&attributes[7]),
+                };
+                let aid = BezierSurfaceId(model.bezier_surfaces.push(v));
+                idmap.insert(id, AnyId::BezierSurface(aid));
+                pending_bezier_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "BOUNDED_CURVE" => {
                 let v = BoundedCurve {
                     name: as_str(&attributes[0]),
@@ -471,6 +581,35 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CONTEXT_DEPENDENT_UNIT" => {
+                let v = ContextDependentUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                    name: as_str(&attributes[1]),
+                };
+                let aid = ContextDependentUnitId(model.context_dependent_units.push(v));
+                idmap.insert(id, AnyId::ContextDependentUnit(aid));
+                pending_context_dependent_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONVERSION_BASED_UNIT" => {
+                let v = ConversionBasedUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                    name: as_str(&attributes[1]),
+                    conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                };
+                let aid = ConversionBasedUnitId(model.conversion_based_units.push(v));
+                idmap.insert(id, AnyId::ConversionBasedUnit(aid));
+                pending_conversion_based_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CURVE" => {
                 let v = Curve {
                     name: as_str(&attributes[0]),
@@ -504,7 +643,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 name, attributes, ..
             } if name == "DERIVED_UNIT_ELEMENT" => {
                 let v = DerivedUnitElement {
-                    unit: NamedUnitRef::Complex(ComplexUnitId(usize::MAX)),
+                    unit: NamedUnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)),
                     exponent: as_real(&attributes[1]),
                 };
                 let aid = DerivedUnitElementId(model.derived_unit_elements.push(v));
@@ -545,8 +684,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "EDGE" => {
                 let v = Edge {
                     name: as_str(&attributes[0]),
-                    edge_start: VertexRef::Vertex(VertexId(usize::MAX)),
-                    edge_end: VertexRef::Vertex(VertexId(usize::MAX)),
+                    edge_start: None,
+                    edge_end: None,
                 };
                 let aid = EdgeId(model.edges.push(v));
                 idmap.insert(id, AnyId::Edge(aid));
@@ -606,7 +745,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "FACE" => {
                 let v = Face {
                     name: as_str(&attributes[0]),
-                    bounds: Vec::new(),
+                    bounds: None,
                 };
                 let aid = FaceId(model.faces.push(v));
                 idmap.insert(id, AnyId::Face(aid));
@@ -664,11 +803,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "LENGTH_MEASURE_WITH_UNIT" => {
                 let v = LengthMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::DerivedUnit(DerivedUnitId(usize::MAX)),
+                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
+                        usize::MAX,
+                    )),
                 };
                 let aid = LengthMeasureWithUnitId(model.length_measure_with_units.push(v));
                 idmap.insert(id, AnyId::LengthMeasureWithUnit(aid));
                 pending_length_measure_with_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "LENGTH_UNIT" => {
+                let v = LengthUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                };
+                let aid = LengthUnitId(model.length_units.push(v));
+                idmap.insert(id, AnyId::LengthUnit(aid));
+                pending_length_units.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -704,14 +857,36 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "MASS_UNIT" => {
+                let v = MassUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                };
+                let aid = MassUnitId(model.mass_units.push(v));
+                idmap.insert(id, AnyId::MassUnit(aid));
+                pending_mass_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "MEASURE_WITH_UNIT" => {
                 let v = MeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::DerivedUnit(DerivedUnitId(usize::MAX)),
+                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
+                        usize::MAX,
+                    )),
                 };
                 let aid = MeasureWithUnitId(model.measure_with_units.push(v));
                 idmap.insert(id, AnyId::MeasureWithUnit(aid));
                 pending_measure_with_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "NAMED_UNIT" => {
+                let v = NamedUnit { dimensions: None };
+                let aid = NamedUnitId(model.named_units.push(v));
+                idmap.insert(id, AnyId::NamedUnit(aid));
+                pending_named_units.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -766,7 +941,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "PATH" => {
                 let v = Path {
                     name: as_str(&attributes[0]),
-                    edge_list: Vec::new(),
+                    edge_list: None,
                 };
                 let aid = PathId(model.paths.push(v));
                 idmap.insert(id, AnyId::Path(aid));
@@ -796,6 +971,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PLANE_ANGLE_UNIT" => {
+                let v = PlaneAngleUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                };
+                let aid = PlaneAngleUnitId(model.plane_angle_units.push(v));
+                idmap.insert(id, AnyId::PlaneAngleUnit(aid));
+                pending_plane_angle_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "POINT" => {
                 let v = Point {
                     name: as_str(&attributes[0]),
@@ -816,12 +1003,147 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "QUASI_UNIFORM_CURVE" => {
+                let v = QuasiUniformCurve {
+                    name: as_str(&attributes[0]),
+                    degree: as_int(&attributes[1]),
+                    control_points_list: Vec::new(),
+                    curve_form: match &attributes[3] {
+                        Attribute::Enum(s) => {
+                            BSplineCurveForm::parse(s).expect("b_spline_curve_form")
+                        }
+                        other => panic!("enum b_spline_curve_form: {other:?}"),
+                    },
+                    closed_curve: as_logical(&attributes[4]),
+                    self_intersect: as_logical(&attributes[5]),
+                };
+                let aid = QuasiUniformCurveId(model.quasi_uniform_curves.push(v));
+                idmap.insert(id, AnyId::QuasiUniformCurve(aid));
+                pending_quasi_uniform_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "QUASI_UNIFORM_SURFACE" => {
+                let v = QuasiUniformSurface {
+                    name: as_str(&attributes[0]),
+                    u_degree: as_int(&attributes[1]),
+                    v_degree: as_int(&attributes[2]),
+                    control_points_list: Vec::new(),
+                    surface_form: match &attributes[4] {
+                        Attribute::Enum(s) => {
+                            BSplineSurfaceForm::parse(s).expect("b_spline_surface_form")
+                        }
+                        other => panic!("enum b_spline_surface_form: {other:?}"),
+                    },
+                    u_closed: as_logical(&attributes[5]),
+                    v_closed: as_logical(&attributes[6]),
+                    self_intersect: as_logical(&attributes[7]),
+                };
+                let aid = QuasiUniformSurfaceId(model.quasi_uniform_surfaces.push(v));
+                idmap.insert(id, AnyId::QuasiUniformSurface(aid));
+                pending_quasi_uniform_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "RATIONAL_B_SPLINE_CURVE" => {
+                let v = RationalBSplineCurve {
+                    name: as_str(&attributes[0]),
+                    degree: as_int(&attributes[1]),
+                    control_points_list: Vec::new(),
+                    curve_form: match &attributes[3] {
+                        Attribute::Enum(s) => {
+                            BSplineCurveForm::parse(s).expect("b_spline_curve_form")
+                        }
+                        other => panic!("enum b_spline_curve_form: {other:?}"),
+                    },
+                    closed_curve: as_logical(&attributes[4]),
+                    self_intersect: as_logical(&attributes[5]),
+                    weights_data: match &attributes[6] {
+                        Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                        Attribute::Unset => Vec::new(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = RationalBSplineCurveId(model.rational_b_spline_curves.push(v));
+                idmap.insert(id, AnyId::RationalBSplineCurve(aid));
+                pending_rational_b_spline_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "RATIONAL_B_SPLINE_SURFACE" => {
+                let v = RationalBSplineSurface {
+                    name: as_str(&attributes[0]),
+                    u_degree: as_int(&attributes[1]),
+                    v_degree: as_int(&attributes[2]),
+                    control_points_list: Vec::new(),
+                    surface_form: match &attributes[4] {
+                        Attribute::Enum(s) => {
+                            BSplineSurfaceForm::parse(s).expect("b_spline_surface_form")
+                        }
+                        other => panic!("enum b_spline_surface_form: {other:?}"),
+                    },
+                    u_closed: as_logical(&attributes[5]),
+                    v_closed: as_logical(&attributes[6]),
+                    self_intersect: as_logical(&attributes[7]),
+                    weights_data: match &attributes[8] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::List(l) => {
+                                    l.iter().map(|e| as_real(e)).collect::<Vec<_>>()
+                                }
+                                Attribute::Unset => Vec::new(),
+                                o => panic!("nested vec: {o:?}"),
+                            })
+                            .collect(),
+                        Attribute::Unset => Vec::new(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = RationalBSplineSurfaceId(model.rational_b_spline_surfaces.push(v));
+                idmap.insert(id, AnyId::RationalBSplineSurface(aid));
+                pending_rational_b_spline_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "REPRESENTATION_ITEM" => {
                 let v = RepresentationItem {
                     name: as_str(&attributes[0]),
                 };
                 let aid = RepresentationItemId(model.representation_items.push(v));
                 idmap.insert(id, AnyId::RepresentationItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SI_UNIT" => {
+                let v = SiUnit {
+                    prefix: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(match &attributes[1] {
+                            Attribute::Enum(s) => SiPrefix::parse(s).expect("si_prefix"),
+                            other => panic!("enum si_prefix: {other:?}"),
+                        }),
+                    },
+                    name: match &attributes[2] {
+                        Attribute::Enum(s) => SiUnitName::parse(s).expect("si_unit_name"),
+                        other => panic!("enum si_unit_name: {other:?}"),
+                    },
+                };
+                let aid = SiUnitId(model.si_units.push(v));
+                idmap.insert(id, AnyId::SiUnit(aid));
+                pending_si_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SOLID_ANGLE_UNIT" => {
+                let v = SolidAngleUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                };
+                let aid = SolidAngleUnitId(model.solid_angle_units.push(v));
+                idmap.insert(id, AnyId::SolidAngleUnit(aid));
+                pending_solid_angle_units.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -890,6 +1212,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TIME_UNIT" => {
+                let v = TimeUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                };
+                let aid = TimeUnitId(model.time_units.push(v));
+                idmap.insert(id, AnyId::TimeUnit(aid));
+                pending_time_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "TOPOLOGICAL_REPRESENTATION_ITEM" => {
                 let v = TopologicalRepresentationItem {
                     name: as_str(&attributes[0]),
@@ -916,7 +1250,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "UNCERTAINTY_MEASURE_WITH_UNIT" => {
                 let v = UncertaintyMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::DerivedUnit(DerivedUnitId(usize::MAX)),
+                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
+                        usize::MAX,
+                    )),
                     name: as_str(&attributes[2]),
                     description: match &attributes[3] {
                         Attribute::Unset => None,
@@ -927,6 +1263,48 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     UncertaintyMeasureWithUnitId(model.uncertainty_measure_with_units.push(v));
                 idmap.insert(id, AnyId::UncertaintyMeasureWithUnit(aid));
                 pending_uncertainty_measure_with_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "UNIFORM_CURVE" => {
+                let v = UniformCurve {
+                    name: as_str(&attributes[0]),
+                    degree: as_int(&attributes[1]),
+                    control_points_list: Vec::new(),
+                    curve_form: match &attributes[3] {
+                        Attribute::Enum(s) => {
+                            BSplineCurveForm::parse(s).expect("b_spline_curve_form")
+                        }
+                        other => panic!("enum b_spline_curve_form: {other:?}"),
+                    },
+                    closed_curve: as_logical(&attributes[4]),
+                    self_intersect: as_logical(&attributes[5]),
+                };
+                let aid = UniformCurveId(model.uniform_curves.push(v));
+                idmap.insert(id, AnyId::UniformCurve(aid));
+                pending_uniform_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "UNIFORM_SURFACE" => {
+                let v = UniformSurface {
+                    name: as_str(&attributes[0]),
+                    u_degree: as_int(&attributes[1]),
+                    v_degree: as_int(&attributes[2]),
+                    control_points_list: Vec::new(),
+                    surface_form: match &attributes[4] {
+                        Attribute::Enum(s) => {
+                            BSplineSurfaceForm::parse(s).expect("b_spline_surface_form")
+                        }
+                        other => panic!("enum b_spline_surface_form: {other:?}"),
+                    },
+                    u_closed: as_logical(&attributes[5]),
+                    v_closed: as_logical(&attributes[6]),
+                    self_intersect: as_logical(&attributes[7]),
+                };
+                let aid = UniformSurfaceId(model.uniform_surfaces.push(v));
+                idmap.insert(id, AnyId::UniformSurface(aid));
+                pending_uniform_surfaces.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1020,6 +1398,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_b_spline_surface_with_knotss(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_bezier_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_bezier_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_bezier_surfaces {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_bezier_surfaces(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_brep_with_voidss {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_brep_with_voidss(&mut model, aid, attributes, &idmap);
@@ -1048,6 +1436,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_connected_face_sets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_connected_face_sets(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_context_dependent_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_context_dependent_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_conversion_based_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_conversion_based_units(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_cylindrical_surfaces {
@@ -1115,6 +1513,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_length_measure_with_units(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_length_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_length_units(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_lines {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_lines(&mut model, aid, attributes, &idmap);
@@ -1125,9 +1528,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_manifold_solid_breps(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_mass_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_mass_units(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_measure_with_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_measure_with_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_named_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_named_units(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_offset_surfaces {
@@ -1165,9 +1578,44 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_planes(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_plane_angle_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_plane_angle_units(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_poly_loops {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_poly_loops(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_quasi_uniform_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_quasi_uniform_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_quasi_uniform_surfaces {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_quasi_uniform_surfaces(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_rational_b_spline_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_rational_b_spline_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_rational_b_spline_surfaces {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_rational_b_spline_surfaces(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_si_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_si_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_solid_angle_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_solid_angle_units(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_spherical_surfaces {
@@ -1190,6 +1638,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_swept_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_time_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_time_units(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_toroidal_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_toroidal_surfaces(&mut model, aid, attributes, &idmap);
@@ -1198,6 +1651,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_uncertainty_measure_with_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_uncertainty_measure_with_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_uniform_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_uniform_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_uniform_surfaces {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_uniform_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_vectors {
@@ -1390,6 +1853,49 @@ fn resolve_b_spline_surface_with_knotss(
     it.control_points_list = control_points_list_v;
 }
 
+fn resolve_bezier_curves(
+    model: &mut Model,
+    aid: BezierCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.bezier_curves.items[aid.0];
+    it.control_points_list = control_points_list_v;
+}
+
+fn resolve_bezier_surfaces(
+    model: &mut Model,
+    aid: BezierSurfaceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| match &e {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                    .collect(),
+                Attribute::Unset => Vec::new(),
+                other => panic!("vec ref: {other:?}"),
+            })
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.bezier_surfaces.items[aid.0];
+    it.control_points_list = control_points_list_v;
+}
+
 fn resolve_brep_with_voidss(
     model: &mut Model,
     aid: BrepWithVoidsId,
@@ -1479,6 +1985,33 @@ fn resolve_connected_face_sets(
     it.cfs_faces = cfs_faces_v;
 }
 
+fn resolve_context_dependent_units(
+    model: &mut Model,
+    aid: ContextDependentUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.context_dependent_units.items[aid.0];
+    it.dimensions = dimensions_v;
+}
+
+fn resolve_conversion_based_units(
+    model: &mut Model,
+    aid: ConversionBasedUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let conversion_factor_v =
+        MeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.conversion_based_units.items[aid.0];
+    it.dimensions = dimensions_v;
+    it.conversion_factor = conversion_factor_v;
+}
+
 fn resolve_cylindrical_surfaces(
     model: &mut Model,
     aid: CylindricalSurfaceId,
@@ -1525,8 +2058,18 @@ fn resolve_edges(
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
 ) {
-    let edge_start_v = VertexRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
-    let edge_end_v = VertexRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let edge_start_v = match &attrs[1] {
+        Attribute::Derived => None,
+        _ => Some(VertexRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[1])).expect("ref"),
+        )),
+    };
+    let edge_end_v = match &attrs[2] {
+        Attribute::Derived => None,
+        _ => Some(VertexRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
     let it = &mut model.edges.items[aid.0];
     it.edge_start = edge_start_v;
     it.edge_end = edge_end_v;
@@ -1593,14 +2136,14 @@ fn resolve_faces(
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
 ) {
-    let bounds_v = match &attrs[1] {
+    let bounds_v = Some(match &attrs[1] {
         Attribute::List(l) => l
             .iter()
             .map(|e| FaceBoundRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
         Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
-    };
+    });
     let it = &mut model.faces.items[aid.0];
     it.bounds = bounds_v;
 }
@@ -1658,6 +2201,18 @@ fn resolve_length_measure_with_units(
     it.unit_component = unit_component_v;
 }
 
+fn resolve_length_units(
+    model: &mut Model,
+    aid: LengthUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.length_units.items[aid.0];
+    it.dimensions = dimensions_v;
+}
+
 fn resolve_lines(
     model: &mut Model,
     aid: LineId,
@@ -1682,6 +2237,18 @@ fn resolve_manifold_solid_breps(
     it.outer = outer_v;
 }
 
+fn resolve_mass_units(
+    model: &mut Model,
+    aid: MassUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.mass_units.items[aid.0];
+    it.dimensions = dimensions_v;
+}
+
 fn resolve_measure_with_units(
     model: &mut Model,
     aid: MeasureWithUnitId,
@@ -1691,6 +2258,22 @@ fn resolve_measure_with_units(
     let unit_component_v = UnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.measure_with_units.items[aid.0];
     it.unit_component = unit_component_v;
+}
+
+fn resolve_named_units(
+    model: &mut Model,
+    aid: NamedUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v = match &attrs[0] {
+        Attribute::Derived => None,
+        _ => Some(DimensionalExponentsRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[0])).expect("ref"),
+        )),
+    };
+    let it = &mut model.named_units.items[aid.0];
+    it.dimensions = dimensions_v;
 }
 
 fn resolve_offset_surfaces(
@@ -1751,14 +2334,14 @@ fn resolve_paths(
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
 ) {
-    let edge_list_v = match &attrs[1] {
+    let edge_list_v = Some(match &attrs[1] {
         Attribute::List(l) => l
             .iter()
             .map(|e| OrientedEdgeRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
         Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
-    };
+    });
     let it = &mut model.paths.items[aid.0];
     it.edge_list = edge_list_v;
 }
@@ -1785,6 +2368,18 @@ fn resolve_planes(
     it.position = position_v;
 }
 
+fn resolve_plane_angle_units(
+    model: &mut Model,
+    aid: PlaneAngleUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.plane_angle_units.items[aid.0];
+    it.dimensions = dimensions_v;
+}
+
 fn resolve_poly_loops(
     model: &mut Model,
     aid: PolyLoopId,
@@ -1801,6 +2396,113 @@ fn resolve_poly_loops(
     };
     let it = &mut model.poly_loops.items[aid.0];
     it.polygon = polygon_v;
+}
+
+fn resolve_quasi_uniform_curves(
+    model: &mut Model,
+    aid: QuasiUniformCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.quasi_uniform_curves.items[aid.0];
+    it.control_points_list = control_points_list_v;
+}
+
+fn resolve_quasi_uniform_surfaces(
+    model: &mut Model,
+    aid: QuasiUniformSurfaceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| match &e {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                    .collect(),
+                Attribute::Unset => Vec::new(),
+                other => panic!("vec ref: {other:?}"),
+            })
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.quasi_uniform_surfaces.items[aid.0];
+    it.control_points_list = control_points_list_v;
+}
+
+fn resolve_rational_b_spline_curves(
+    model: &mut Model,
+    aid: RationalBSplineCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.rational_b_spline_curves.items[aid.0];
+    it.control_points_list = control_points_list_v;
+}
+
+fn resolve_rational_b_spline_surfaces(
+    model: &mut Model,
+    aid: RationalBSplineSurfaceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| match &e {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                    .collect(),
+                Attribute::Unset => Vec::new(),
+                other => panic!("vec ref: {other:?}"),
+            })
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.rational_b_spline_surfaces.items[aid.0];
+    it.control_points_list = control_points_list_v;
+}
+
+fn resolve_si_units(
+    model: &mut Model,
+    aid: SiUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let it = &mut model.si_units.items[aid.0];
+}
+
+fn resolve_solid_angle_units(
+    model: &mut Model,
+    aid: SolidAngleUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.solid_angle_units.items[aid.0];
+    it.dimensions = dimensions_v;
 }
 
 fn resolve_spherical_surfaces(
@@ -1852,6 +2554,18 @@ fn resolve_swept_surfaces(
     it.swept_curve = swept_curve_v;
 }
 
+fn resolve_time_units(
+    model: &mut Model,
+    aid: TimeUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.time_units.items[aid.0];
+    it.dimensions = dimensions_v;
+}
+
 fn resolve_toroidal_surfaces(
     model: &mut Model,
     aid: ToroidalSurfaceId,
@@ -1872,6 +2586,49 @@ fn resolve_uncertainty_measure_with_units(
     let unit_component_v = UnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.uncertainty_measure_with_units.items[aid.0];
     it.unit_component = unit_component_v;
+}
+
+fn resolve_uniform_curves(
+    model: &mut Model,
+    aid: UniformCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.uniform_curves.items[aid.0];
+    it.control_points_list = control_points_list_v;
+}
+
+fn resolve_uniform_surfaces(
+    model: &mut Model,
+    aid: UniformSurfaceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let control_points_list_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| match &e {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                    .collect(),
+                Attribute::Unset => Vec::new(),
+                other => panic!("vec ref: {other:?}"),
+            })
+            .collect(),
+        Attribute::Unset => Vec::new(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.uniform_surfaces.items[aid.0];
+    it.control_points_list = control_points_list_v;
 }
 
 fn resolve_vectors(
@@ -1911,6 +2668,76 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
     parts
         .iter()
         .map(|p| match p.name.as_str() {
+            "B_SPLINE_CURVE" => UnitPart::BSplineCurve {
+                degree: as_int(&p.attributes[0]),
+                control_points_list: Vec::new(),
+                curve_form: match &p.attributes[2] {
+                    Attribute::Enum(s) => BSplineCurveForm::parse(s).expect("b_spline_curve_form"),
+                    other => panic!("enum b_spline_curve_form: {other:?}"),
+                },
+                closed_curve: as_logical(&p.attributes[3]),
+                self_intersect: as_logical(&p.attributes[4]),
+            },
+            "B_SPLINE_CURVE_WITH_KNOTS" => UnitPart::BSplineCurveWithKnots {
+                knot_multiplicities: match &p.attributes[0] {
+                    Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+                knots: match &p.attributes[1] {
+                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+                knot_spec: match &p.attributes[2] {
+                    Attribute::Enum(s) => KnotType::parse(s).expect("knot_type"),
+                    other => panic!("enum knot_type: {other:?}"),
+                },
+            },
+            "B_SPLINE_SURFACE" => UnitPart::BSplineSurface {
+                u_degree: as_int(&p.attributes[0]),
+                v_degree: as_int(&p.attributes[1]),
+                control_points_list: Vec::new(),
+                surface_form: match &p.attributes[3] {
+                    Attribute::Enum(s) => {
+                        BSplineSurfaceForm::parse(s).expect("b_spline_surface_form")
+                    }
+                    other => panic!("enum b_spline_surface_form: {other:?}"),
+                },
+                u_closed: as_logical(&p.attributes[4]),
+                v_closed: as_logical(&p.attributes[5]),
+                self_intersect: as_logical(&p.attributes[6]),
+            },
+            "B_SPLINE_SURFACE_WITH_KNOTS" => UnitPart::BSplineSurfaceWithKnots {
+                u_multiplicities: match &p.attributes[0] {
+                    Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+                v_multiplicities: match &p.attributes[1] {
+                    Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+                u_knots: match &p.attributes[2] {
+                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+                v_knots: match &p.attributes[3] {
+                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+                knot_spec: match &p.attributes[4] {
+                    Attribute::Enum(s) => KnotType::parse(s).expect("knot_type"),
+                    other => panic!("enum knot_type: {other:?}"),
+                },
+            },
+            "BEZIER_CURVE" => UnitPart::BezierCurve,
+            "BEZIER_SURFACE" => UnitPart::BezierSurface,
+            "BOUNDED_CURVE" => UnitPart::BoundedCurve,
+            "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
             "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit {
                 name: as_str(&p.attributes[0]),
             },
@@ -1920,10 +2747,67 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     LengthMeasureWithUnitId(usize::MAX),
                 ),
             },
+            "CURVE" => UnitPart::Curve,
+            "DIRECTION" => UnitPart::Direction {
+                direction_ratios: match &p.attributes[0] {
+                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+            },
+            "EDGE" => UnitPart::Edge {
+                edge_start: None,
+                edge_end: None,
+            },
+            "EDGE_CURVE" => UnitPart::EdgeCurve {
+                edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+                same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
+            },
+            "FACE" => UnitPart::Face { bounds: None },
+            "FACE_SURFACE" => UnitPart::FaceSurface {
+                face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
+                same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
+            },
+            "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
             "LENGTH_UNIT" => UnitPart::LengthUnit,
+            "LOOP" => UnitPart::Loop,
             "MASS_UNIT" => UnitPart::MassUnit,
             "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None },
+            "PATH" => UnitPart::Path { edge_list: None },
+            "PLACEMENT" => UnitPart::Placement {
+                location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+            },
             "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
+            "POINT" => UnitPart::Point,
+            "POLY_LOOP" => UnitPart::PolyLoop {
+                polygon: Vec::new(),
+            },
+            "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
+            "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
+            "RATIONAL_B_SPLINE_CURVE" => UnitPart::RationalBSplineCurve {
+                weights_data: match &p.attributes[0] {
+                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+            },
+            "RATIONAL_B_SPLINE_SURFACE" => UnitPart::RationalBSplineSurface {
+                weights_data: match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| match e {
+                            Attribute::List(l) => l.iter().map(|e| as_real(e)).collect::<Vec<_>>(),
+                            Attribute::Unset => Vec::new(),
+                            o => panic!("nested vec: {o:?}"),
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec: {other:?}"),
+                },
+            },
+            "REPRESENTATION_ITEM" => UnitPart::RepresentationItem {
+                name: as_str(&p.attributes[0]),
+            },
             "SI_UNIT" => UnitPart::SiUnit {
                 prefix: match &p.attributes[0] {
                     Attribute::Unset => None,
@@ -1938,7 +2822,20 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
             },
             "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
+            "SOLID_MODEL" => UnitPart::SolidModel,
+            "SURFACE" => UnitPart::Surface,
             "TIME_UNIT" => UnitPart::TimeUnit,
+            "TOPOLOGICAL_REPRESENTATION_ITEM" => UnitPart::TopologicalRepresentationItem,
+            "UNIFORM_CURVE" => UnitPart::UniformCurve,
+            "UNIFORM_SURFACE" => UnitPart::UniformSurface,
+            "VECTOR" => UnitPart::Vector {
+                orientation: DirectionRef::Direction(DirectionId(usize::MAX)),
+                magnitude: as_real(&p.attributes[1]),
+            },
+            "VERTEX" => UnitPart::Vertex,
+            "VERTEX_POINT" => UnitPart::VertexPoint {
+                vertex_geometry: PointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+            },
             other => panic!("unknown complex part: {other}"),
         })
         .collect()
@@ -1953,12 +2850,87 @@ fn resolve_complex(
     let bag = &mut model.complex_units.items[aid.0];
     for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {
         match slot {
+            UnitPart::BSplineCurve {
+                control_points_list,
+                ..
+            } => {
+                *control_points_list = match &p.attributes[1] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::BSplineSurface {
+                control_points_list,
+                ..
+            } => {
+                *control_points_list = match &p.attributes[2] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| match &e {
+                            Attribute::List(l) => l
+                                .iter()
+                                .map(|e| {
+                                    CartesianPointRef::from_any(
+                                        *idmap.get(&as_ref_id(e)).expect("ref"),
+                                    )
+                                })
+                                .collect(),
+                            Attribute::Unset => Vec::new(),
+                            other => panic!("vec ref: {other:?}"),
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
             UnitPart::ConversionBasedUnit {
                 conversion_factor, ..
             } => {
                 *conversion_factor = MeasureWithUnitRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
+            }
+            UnitPart::Edge {
+                edge_start,
+                edge_end,
+                ..
+            } => {
+                *edge_start = match &p.attributes[0] {
+                    Attribute::Derived => None,
+                    _ => Some(VertexRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                    )),
+                };
+                *edge_end = match &p.attributes[1] {
+                    Attribute::Derived => None,
+                    _ => Some(VertexRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                    )),
+                };
+            }
+            UnitPart::EdgeCurve { edge_geometry, .. } => {
+                *edge_geometry =
+                    CurveRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::Face { bounds, .. } => {
+                *bounds = Some(match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| FaceBoundRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                });
+            }
+            UnitPart::FaceSurface { face_geometry, .. } => {
+                *face_geometry =
+                    SurfaceRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
             }
             UnitPart::NamedUnit { dimensions, .. } => {
                 *dimensions = match &p.attributes[0] {
@@ -1967,6 +2939,43 @@ fn resolve_complex(
                         *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                     )),
                 };
+            }
+            UnitPart::Path { edge_list, .. } => {
+                *edge_list = Some(match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| OrientedEdgeRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                });
+            }
+            UnitPart::Placement { location, .. } => {
+                *location = CartesianPointRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::PolyLoop { polygon, .. } => {
+                *polygon = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    Attribute::Unset => Vec::new(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::Vector { orientation, .. } => {
+                *orientation =
+                    DirectionRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::VertexPoint {
+                vertex_geometry, ..
+            } => {
+                *vertex_geometry =
+                    PointRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
             }
             _ => {}
         }

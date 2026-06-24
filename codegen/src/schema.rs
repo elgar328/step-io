@@ -27,6 +27,12 @@ pub struct Entity {
     #[serde(default)]
     #[allow(dead_code)] // intentionally not used for classification (see note above)
     pub is_abstract: bool,
+    /// True if this entity can appear as a Part21 complex (multiple-inheritance)
+    /// part (ANDOR-combinable leaf or a supertype of one) — auto-derived in
+    /// `universal_export`. Drives the part-bag (`complex_parts`), replacing the
+    /// former hand-written `[codegen].complex_parts`.
+    #[serde(default)]
+    pub is_complex_part: bool,
     #[serde(default)]
     pub own_attrs: Vec<Attr>,
     /// `SELF\super.attr : type` scalar-primitive narrowings, applied in-place.

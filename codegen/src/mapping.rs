@@ -1,10 +1,10 @@
-//! `schema/mapping.toml` model — the subset of hand-hints the schema-faithful
-//! generator consumes: `[codegen].domains.*` seed lists and
-//! `[codegen].complex_parts` (which entities form the generic part-bag).
+//! `schema/mapping.toml` model — the only hand-hint the schema-faithful
+//! generator now consumes: `[codegen].domains.*` closure seed lists.
 //!
-//! DERIVE (`*`) markers are NO LONGER read from mapping — they come from
-//! `schema/universal.toml`'s per-entity `derives` (auto-extracted from EXPRESS).
-//! The mapping.toml `[derived]`/`[complex.*]` sections remain for gen-early.
+//! DERIVE (`*`) markers and complex-part membership are NO LONGER read from
+//! mapping — they come from `schema/universal.toml` (`derives` + `is_complex_part`,
+//! auto-extracted from EXPRESS). The mapping.toml `[derived]`/`[complex.*]`
+//! sections remain for gen-early.
 
 use std::collections::BTreeMap;
 
@@ -18,12 +18,7 @@ pub struct Mapping {
 
 #[derive(Deserialize, Default)]
 pub struct CodegenHints {
-    /// `domains.units` / `domains.geometry` / `domains.topology` seed lists.
+    /// `domains.units` / `domains.geometry` / `domains.topology` closure seeds.
     #[serde(default)]
     pub domains: BTreeMap<String, Vec<String>>,
-    /// Per-domain entity names that appear only as parts of a complex instance
-    /// (collected into one generic part-bag, not given simple arenas). Still
-    /// manual: complex-part membership automation needs dual-appearance (Phase 1/2).
-    #[serde(default)]
-    pub complex_parts: BTreeMap<String, Vec<String>>,
 }

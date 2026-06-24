@@ -139,6 +139,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_report_item_with_measured_value]
 parents = ["data_equivalence_inspection_criterion_report_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.a3m_equivalence_criterion_report_item_with_measured_value.own_attrs]]
 name = "representative_measured_value"
@@ -615,6 +616,7 @@ ty = "executed_action"
 [entity.actuated_kinematic_pair]
 parents = ["kinematic_pair"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.actuated_kinematic_pair.own_attrs]]
 name = "t_x"
@@ -799,6 +801,7 @@ own_attrs = []
 [entity.amount_of_substance_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.analysis_assignment]
@@ -896,6 +899,7 @@ ty = "curve_or_curve_set"
 [entity.annotation_fill_area]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.annotation_fill_area.own_attrs]]
 name = "boundaries"
@@ -1650,6 +1654,7 @@ own_attrs = []
 [entity.assembly_component_usage]
 parents = ["product_definition_usage"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.assembly_component_usage.own_attrs]]
 name = "reference_designator"
@@ -1701,6 +1706,7 @@ own_attrs = []
 [entity.assembly_shape_constraint]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.assembly_shape_constraint_item_relationship]
@@ -1711,6 +1717,7 @@ own_attrs = []
 [entity.assembly_shape_joint]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.assembly_shape_joint_item_relationship]
@@ -1938,6 +1945,7 @@ ty = "LIST OF real"
 [entity.b_spline_curve]
 parents = ["bounded_curve"]
 is_abstract = false
+is_complex_part = true
 derives = [
     "upper_index_on_control_points",
     "control_points",
@@ -1966,6 +1974,7 @@ ty = "logical"
 [entity.b_spline_curve_knot_locator]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.b_spline_curve_knot_locator.own_attrs]]
 name = "basis_curve"
@@ -1978,6 +1987,7 @@ ty = "integer"
 [entity.b_spline_curve_segment]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.b_spline_curve_segment.own_attrs]]
 name = "basis_curve"
@@ -1990,6 +2000,7 @@ ty = "integer"
 [entity.b_spline_curve_with_knots]
 parents = ["b_spline_curve"]
 is_abstract = false
+is_complex_part = true
 derives = ["upper_index_on_knots"]
 
 [[entity.b_spline_curve_with_knots.own_attrs]]
@@ -2019,6 +2030,7 @@ ty = "LIST OF b_spline_basis"
 [entity.b_spline_surface]
 parents = ["bounded_surface"]
 is_abstract = false
+is_complex_part = true
 derives = [
     "u_upper",
     "v_upper",
@@ -2056,6 +2068,7 @@ ty = "logical"
 [entity.b_spline_surface_knot_locator]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.b_spline_surface_knot_locator.own_attrs]]
 name = "basis_surface"
@@ -2072,6 +2085,7 @@ ty = "u_or_v_parameter"
 [entity.b_spline_surface_patch]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.b_spline_surface_patch.own_attrs]]
 name = "basis_surface"
@@ -2088,6 +2102,7 @@ ty = "integer"
 [entity.b_spline_surface_strip]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.b_spline_surface_strip.own_attrs]]
 name = "basis_surface"
@@ -2104,6 +2119,7 @@ ty = "u_or_v_parameter"
 [entity.b_spline_surface_with_knots]
 parents = ["b_spline_surface"]
 is_abstract = false
+is_complex_part = true
 derives = [
     "knot_u_upper",
     "knot_v_upper",
@@ -2132,6 +2148,7 @@ ty = "knot_type"
 [entity.b_spline_volume]
 parents = ["volume"]
 is_abstract = false
+is_complex_part = true
 derives = [
     "u_upper",
     "v_upper",
@@ -2158,6 +2175,7 @@ ty = "LIST OF LIST OF LIST OF cartesian_point"
 [entity.b_spline_volume_with_knots]
 parents = ["b_spline_volume"]
 is_abstract = false
+is_complex_part = true
 derives = [
     "knot_u_upper",
     "knot_v_upper",
@@ -2319,16 +2337,19 @@ own_attrs = []
 [entity.bezier_curve]
 parents = ["b_spline_curve"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.bezier_surface]
 parents = ["b_spline_surface"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.bezier_volume]
 parents = ["b_spline_volume"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.binary_assembly_constraint]
@@ -2355,6 +2376,7 @@ own_attrs = []
 [entity.binary_generic_expression]
 parents = ["generic_expression"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.binary_generic_expression.own_attrs]]
 name = "operands"
@@ -2374,11 +2396,13 @@ parents = [
     "binary_generic_expression",
 ]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.binary_representation_item]
 parents = ["representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.binary_representation_item.own_attrs]]
 name = "binary_value"
@@ -2387,6 +2411,7 @@ ty = "binary"
 [entity.block]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.block.own_attrs]]
 name = "position"
@@ -2430,11 +2455,13 @@ parents = [
     "boolean_expression",
 ]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.boolean_expression]
 parents = ["expression"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.boolean_literal]
@@ -2443,6 +2470,7 @@ parents = [
     "generic_literal",
 ]
 is_abstract = false
+is_complex_part = true
 
 [[entity.boolean_literal.own_attrs]]
 name = "the_value"
@@ -2454,11 +2482,13 @@ parents = [
     "boolean_literal",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.boolean_result]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.boolean_result.own_attrs]]
 name = "operator"
@@ -2527,6 +2557,7 @@ own_attrs = []
 [entity.boundary_curve_of_b_spline_or_rectangular_composite_surface]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.boundary_curve_of_b_spline_or_rectangular_composite_surface.own_attrs]]
 name = "basis_surface"
@@ -2539,6 +2570,7 @@ ty = "surface_boundary_type"
 [entity.bounded_curve]
 parents = ["curve"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.bounded_curve_with_length]
@@ -2561,6 +2593,7 @@ own_attrs = []
 [entity.bounded_surface]
 parents = ["surface"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.bounded_surface_curve]
@@ -2569,11 +2602,13 @@ parents = [
     "bounded_curve",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.box_domain]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.box_domain.own_attrs]]
 name = "corner"
@@ -2676,6 +2711,7 @@ own_attrs = []
 [entity.camera_model]
 parents = ["geometric_representation_item"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.camera_model_d2]
@@ -2714,6 +2750,7 @@ ty = "SET OF camera_model_d3_multi_clipping_intersection_select"
 [entity.camera_model_d3_multi_clipping_intersection]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['shape_clipping: ap203e2: Set(Entity("camera_model_d3_multi_clipping_interection_select")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("camera_model_d3_multi_clipping_intersection_select")) | ap242ed3_mim_lf_v1.152: Set(Entity("camera_model_d3_multi_clipping_intersection_select"))']
 
 [[entity.camera_model_d3_multi_clipping_intersection.own_attrs]]
@@ -2723,6 +2760,7 @@ ty = "SET OF camera_model_d3_multi_clipping_intersection_select"
 [entity.camera_model_d3_multi_clipping_union]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.camera_model_d3_multi_clipping_union.own_attrs]]
 name = "shape_clipping"
@@ -2793,6 +2831,7 @@ parents = [
     "functionally_defined_transformation",
 ]
 is_abstract = false
+is_complex_part = true
 derives = ["scl"]
 
 [[entity.cartesian_transformation_operator.own_attrs]]
@@ -3038,6 +3077,7 @@ ty = "text_font"
 [entity.character_glyph_style_outline]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.character_glyph_style_outline.own_attrs]]
 name = "outline_style"
@@ -3046,6 +3086,7 @@ ty = "curve_style"
 [entity.character_glyph_style_stroke]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.character_glyph_style_stroke.own_attrs]]
 name = "stroke_style"
@@ -3521,6 +3562,7 @@ own_attrs = []
 [entity.complex_area]
 parents = ["primitive_2d"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.complex_clause]
@@ -3645,6 +3687,7 @@ own_attrs = []
 [entity.component_path_shape_aspect]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.component_path_shape_aspect.own_attrs]]
 name = "location"
@@ -3699,6 +3742,7 @@ own_attrs = []
 [entity.composite_curve_segment]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.composite_curve_segment.own_attrs]]
 name = "transition"
@@ -3715,6 +3759,7 @@ ty = "curve"
 [entity.composite_curve_transition_locator]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.composite_curve_transition_locator.own_attrs]]
 name = "basis_curve"
@@ -3752,6 +3797,7 @@ own_attrs = []
 [entity.composite_text]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.composite_text.own_attrs]]
 name = "collected_text"
@@ -3802,6 +3848,7 @@ own_attrs = []
 [entity.compound_representation_item]
 parents = ["representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.compound_representation_item.own_attrs]]
 name = "item_element"
@@ -4125,6 +4172,7 @@ own_attrs = []
 [entity.connectivity_definition]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.connectivity_definition_item_relationship]
@@ -4150,6 +4198,7 @@ ty = "maths_space_or_function"
 [entity.constituent_shape_aspect]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 derives = ["shape_aspect.of_shape"]
 
 [[entity.constituent_shape_aspect.own_attrs]]
@@ -4178,6 +4227,7 @@ ty = "constructive_geometry_representation_or_shape_representation"
 [entity.contact_feature]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.contact_feature_definition]
@@ -4203,6 +4253,7 @@ own_attrs = []
 [entity.contacting_feature]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.containing_message]
@@ -4259,6 +4310,7 @@ ty = "product_definition_shape"
 [entity.context_dependent_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.context_dependent_unit.own_attrs]]
 name = "name"
@@ -4325,6 +4377,7 @@ ty = "label"
 [entity.conversion_based_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.conversion_based_unit.own_attrs]]
 name = "name"
@@ -4524,6 +4577,7 @@ ty = "LIST OF multi_level_reference_designator"
 [entity.criterion_report_item_with_number_of_instances]
 parents = ["data_equivalence_inspection_criterion_report_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.criterion_report_item_with_number_of_instances.own_attrs]]
 name = "statistical_value"
@@ -4536,6 +4590,7 @@ ty = "summary_report_style_type"
 [entity.criterion_report_item_with_value]
 parents = ["data_equivalence_inspection_criterion_report_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.criterion_report_item_with_value.own_attrs]]
 name = "report_value"
@@ -4665,6 +4720,7 @@ ty = "current_element_assignment_select"
 [entity.curve]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.curve_11]
@@ -4765,6 +4821,7 @@ ty = "transition_code"
 [entity.curve_style]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = [
     'curve_colour: ap203e2: Entity("colour") | ap242: Optional(Entity("colour")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("colour")) | ap242ed3_mim_lf_v1.152: Optional(Entity("colour"))',
     'curve_font: ap203e2: Entity("curve_font_or_scaled_curve_font_select") | ap242: Optional(Entity("curve_font_or_scaled_curve_font_select")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("curve_font_or_scaled_curve_font_select")) | ap242ed3_mim_lf_v1.152: Optional(Entity("curve_font_or_scaled_curve_font_select"))',
@@ -4790,6 +4847,7 @@ ty = "OPTIONAL colour"
 [entity.curve_style_font]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.curve_style_font.own_attrs]]
 name = "name"
@@ -4802,6 +4860,7 @@ ty = "LIST OF curve_style_font_pattern"
 [entity.curve_style_font_and_scaling]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.curve_style_font_and_scaling.own_attrs]]
 name = "name"
@@ -4818,6 +4877,7 @@ ty = "real"
 [entity.curve_style_font_pattern]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.curve_style_font_pattern.own_attrs]]
 name = "visible_segment_length"
@@ -4866,6 +4926,7 @@ own_attrs = []
 [entity.cyclide_segment_solid]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.cyclide_segment_solid.own_attrs]]
 name = "position"
@@ -5005,6 +5066,7 @@ ty = "positive_length_measure"
 [entity.cylindricity_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.data_environment]
@@ -5148,6 +5210,7 @@ ty = "SET OF data_equivalence_inspection_criterion_report_item"
 [entity.data_equivalence_inspection_criterion_report_item]
 parents = ["representation_item"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.data_equivalence_inspection_instance_report]
@@ -5394,6 +5457,7 @@ ty = "data_quality_criterion"
 
 [entity.date]
 is_abstract = false
+is_complex_part = true
 
 [[entity.date.own_attrs]]
 name = "year_component"
@@ -5401,6 +5465,7 @@ ty = "year_number"
 
 [entity.date_and_time]
 is_abstract = false
+is_complex_part = true
 
 [[entity.date_and_time.own_attrs]]
 name = "date_component"
@@ -5438,6 +5503,7 @@ parents = [
     "date",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.date_role]
@@ -5454,6 +5520,7 @@ parents = [
     "date_and_time",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.date_time_role]
@@ -5483,6 +5550,7 @@ ty = "OPTIONAL date_time_or_event_occurrence"
 [entity.datum]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.datum.own_attrs]]
 name = "identification"
@@ -5491,6 +5559,7 @@ ty = "identifier"
 [entity.datum_feature]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.datum_feature_callout]
@@ -5534,6 +5603,7 @@ ty = "length_measure_with_unit"
 [entity.datum_system]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.datum_system.own_attrs]]
 name = "constituents"
@@ -5542,6 +5612,7 @@ ty = "LIST OF datum_reference_compartment"
 [entity.datum_target]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.datum_target.own_attrs]]
 name = "target_id"
@@ -5574,6 +5645,7 @@ own_attrs = []
 [entity.defined_character_glyph]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.defined_character_glyph.own_attrs]]
 name = "definition"
@@ -5590,11 +5662,13 @@ own_attrs = []
 
 [entity.defined_function]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.defined_symbol]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.defined_symbol.own_attrs]]
 name = "definition"
@@ -6278,6 +6352,7 @@ ty = "directed_tolerance_zone_type"
 [entity.direction]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.direction.own_attrs]]
 name = "direction_ratios"
@@ -6763,6 +6838,7 @@ ty = "real"
 [entity.edge]
 parents = ["topological_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.edge.own_attrs]]
 name = "edge_start"
@@ -6781,6 +6857,7 @@ own_attrs = []
 [entity.edge_based_wireframe_model]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.edge_based_wireframe_model.own_attrs]]
 name = "ebwm_boundary"
@@ -6794,6 +6871,7 @@ own_attrs = []
 [entity.edge_blended_solid]
 parents = ["modified_solid"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.edge_blended_solid.own_attrs]]
 name = "blended_edges"
@@ -6810,6 +6888,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 
 [[entity.edge_curve.own_attrs]]
 name = "edge_geometry"
@@ -6924,6 +7003,7 @@ own_attrs = []
 [entity.electric_current_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.electric_potential_measure_with_unit]
@@ -6991,6 +7071,7 @@ ty = "positive_length_measure"
 [entity.ellipsoid]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.ellipsoid.own_attrs]]
 name = "position"
@@ -7426,6 +7507,7 @@ ty = "LIST OF positive_integer"
 [entity.expression]
 parents = ["generic_expression"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.expression_conversion_based_unit]
@@ -7664,10 +7746,12 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.externally_defined_item]
 is_abstract = false
+is_complex_part = true
 
 [[entity.externally_defined_item.own_attrs]]
 name = "item_id"
@@ -7744,6 +7828,7 @@ parents = [
     "founded_item",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.externally_defined_symbol]
@@ -7772,6 +7857,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.externally_listed_data]
@@ -7877,6 +7963,7 @@ ty = "non_negative_length_measure"
 [entity.face]
 parents = ["topological_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.face.own_attrs]]
 name = "bounds"
@@ -7885,6 +7972,7 @@ ty = "SET OF face_bound"
 [entity.face_based_surface_model]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.face_based_surface_model.own_attrs]]
 name = "fbsm_faces"
@@ -7923,6 +8011,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 
 [[entity.face_surface.own_attrs]]
 name = "face_geometry"
@@ -7950,6 +8039,7 @@ own_attrs = []
 [entity.faceted_primitive]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.faceted_primitive.own_attrs]]
 name = "points"
@@ -8003,6 +8093,7 @@ own_attrs = []
 [entity.fill_area_style]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.fill_area_style.own_attrs]]
 name = "name"
@@ -8026,6 +8117,7 @@ ty = "colour"
 [entity.fill_area_style_hatching]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.fill_area_style_hatching.own_attrs]]
 name = "hatch_line_appearance"
@@ -8050,6 +8142,7 @@ ty = "plane_angle_measure"
 [entity.fill_area_style_tile_coloured_region]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.fill_area_style_tile_coloured_region.own_attrs]]
 name = "closed_curve"
@@ -8062,6 +8155,7 @@ ty = "colour"
 [entity.fill_area_style_tile_curve_with_style]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.fill_area_style_tile_curve_with_style.own_attrs]]
 name = "styled_curve"
@@ -8070,6 +8164,7 @@ ty = "annotation_curve_occurrence"
 [entity.fill_area_style_tile_symbol_with_style]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.fill_area_style_tile_symbol_with_style.own_attrs]]
 name = "symbol"
@@ -8078,6 +8173,7 @@ ty = "annotation_symbol_occurrence"
 [entity.fill_area_style_tiles]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.fill_area_style_tiles.own_attrs]]
 name = "tiling_pattern"
@@ -8214,6 +8310,7 @@ own_attrs = []
 [entity.flatness_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.force_measure_with_unit]
@@ -8254,6 +8351,7 @@ own_attrs = []
 
 [entity.founded_item]
 is_abstract = true
+is_complex_part = true
 derives = ["users"]
 own_attrs = []
 
@@ -8386,6 +8484,7 @@ own_attrs = []
 
 [entity.functionally_defined_transformation]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
 
 [[entity.functionally_defined_transformation.own_attrs]]
@@ -8542,6 +8641,7 @@ ty = "OPTIONAL plane_angle_measure"
 [entity.general_datum_reference]
 parents = ["shape_aspect"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.general_datum_reference.own_attrs]]
 name = "base"
@@ -8650,15 +8750,18 @@ own_attrs = []
 
 [entity.generic_expression]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.generic_literal]
 parents = ["simple_generic_expression"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.generic_product_definition_reference]
 is_abstract = true
+is_complex_part = true
 
 [[entity.generic_product_definition_reference.own_attrs]]
 name = "source"
@@ -8761,12 +8864,14 @@ ty = "OPTIONAL unit"
 [entity.geometric_representation_item]
 parents = ["representation_item"]
 is_abstract = false
+is_complex_part = true
 derives = ["dim"]
 own_attrs = []
 
 [entity.geometric_set]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.geometric_set.own_attrs]]
 name = "elements"
@@ -8774,6 +8879,7 @@ ty = "SET OF geometric_set_select"
 
 [entity.geometric_tolerance]
 is_abstract = true
+is_complex_part = true
 attr_conflicts = [
     'description: ap203e2: Entity("text") | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))',
     'magnitude: ap203e2: Entity("measure_with_unit") | ap242: Optional(Entity("length_measure_with_unit")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("length_measure_with_unit")) | ap242ed3_mim_lf_v1.152: Optional(Entity("length_measure_with_unit"))',
@@ -8833,6 +8939,7 @@ ty = "geometric_tolerance"
 [entity.geometric_tolerance_with_datum_reference]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['datum_system: ap203e2: Set(Entity("datum_reference")) | ap242: Set(Entity("datum_system_or_reference")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("datum_system_or_reference")) | ap242ed3_mim_lf_v1.152: Set(Entity("datum_system_or_reference"))']
 
 [[entity.geometric_tolerance_with_datum_reference.own_attrs]]
@@ -8855,6 +8962,7 @@ ty = "OPTIONAL length_or_plane_angle_measure_with_unit_select"
 [entity.geometric_tolerance_with_defined_unit]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['unit_size: ap203e2: Entity("measure_with_unit") | ap242: Entity("length_measure_with_unit") | ap242ed2_dis2_mim_lf_v1.101: Entity("length_or_plane_angle_measure_with_unit_select") | ap242ed3_mim_lf_v1.152: Entity("length_or_plane_angle_measure_with_unit_select")']
 
 [[entity.geometric_tolerance_with_defined_unit.own_attrs]]
@@ -8872,6 +8980,7 @@ ty = "length_measure_with_unit"
 [entity.geometric_tolerance_with_modifiers]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.geometric_tolerance_with_modifiers.own_attrs]]
 name = "modifiers"
@@ -9031,6 +9140,7 @@ ty = "boolean"
 [entity.half_space_solid]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.half_space_solid.own_attrs]]
 name = "base_surface"
@@ -9048,11 +9158,13 @@ own_attrs = []
 [entity.harness_node]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.harness_segment]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.hexahedron_volume]
@@ -9108,6 +9220,7 @@ ty = "length_measure"
 [entity.high_order_kinematic_pair]
 parents = ["kinematic_pair"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.hole_bottom]
@@ -9614,6 +9727,7 @@ own_attrs = []
 [entity.int_literal]
 parents = ["literal_number"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [[entity.int_literal.redeclared_attrs]]
@@ -9663,6 +9777,7 @@ parents = [
     "int_literal",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.integer_tuple_literal]
@@ -9756,11 +9871,13 @@ own_attrs = []
 [entity.interpolated_configuration_representation]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.interpolated_configuration_segment]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.interpolated_configuration_segment.own_attrs]]
 name = "state"
@@ -9814,6 +9931,7 @@ ty = "length_measure"
 [entity.intersection_curve]
 parents = ["surface_curve"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.interval_expression]
@@ -9843,6 +9961,7 @@ own_attrs = []
 
 [entity.item_defined_transformation]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
 
 [[entity.item_defined_transformation.own_attrs]]
@@ -9983,6 +10102,7 @@ own_attrs = []
 [entity.kinematic_link_representation]
 parents = ["representation"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.kinematic_link_representation.own_attrs]]
 name = "represented_link"
@@ -10015,6 +10135,7 @@ parents = [
     "item_defined_transformation",
 ]
 is_abstract = true
+is_complex_part = true
 derives = [
     "associated_link_representations_1",
     "associated_link_representations_2",
@@ -10036,6 +10157,7 @@ ty = "rigid_placement"
 [entity.kinematic_path]
 parents = ["geometric_representation_item"]
 is_abstract = true
+is_complex_part = true
 derives = [
     "n_segments",
     "closed_path",
@@ -10065,6 +10187,7 @@ ty = "placement"
 [entity.kinematic_path_segment]
 parents = ["founded_item"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.kinematic_path_segment.own_attrs]]
 name = "t_end"
@@ -10122,6 +10245,7 @@ ty = "SET OF kinematic_joint"
 [entity.kinematic_topology_directed_structure]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.kinematic_topology_directed_structure.own_attrs]]
 name = "parent"
@@ -10130,6 +10254,7 @@ ty = "kinematic_topology_structure"
 [entity.kinematic_topology_network_structure]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.kinematic_topology_network_structure.own_attrs]]
 name = "parent"
@@ -10138,6 +10263,7 @@ ty = "kinematic_topology_structure"
 [entity.kinematic_topology_structure]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.kinematic_topology_substructure]
@@ -10174,6 +10300,7 @@ own_attrs = []
 [entity.laminate_table]
 parents = ["product_definition"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.language]
@@ -10225,11 +10352,13 @@ own_attrs = []
 [entity.length_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.light_source]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.light_source.own_attrs]]
 name = "light_colour"
@@ -10331,6 +10460,7 @@ ty = "vector"
 [entity.line_profile_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.linear_array_component_definition_link]
@@ -10414,6 +10544,7 @@ ty = "link_or_shape_representation"
 [entity.link_motion_representation_along_path]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.link_motion_transformation]
@@ -10528,6 +10659,7 @@ parents = [
     "generic_literal",
 ]
 is_abstract = true
+is_complex_part = true
 
 [[entity.literal_number.own_attrs]]
 name = "the_value"
@@ -10851,6 +10983,7 @@ own_attrs = []
 [entity.logical_literal]
 parents = ["generic_literal"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.logical_literal.own_attrs]]
 name = "lit_value"
@@ -10862,11 +10995,13 @@ parents = [
     "logical_literal",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.loop]
 parents = ["topological_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.loss_tangent_measure_with_unit]
@@ -10889,6 +11024,7 @@ ty = "measure_with_unit"
 [entity.low_order_kinematic_pair]
 parents = ["kinematic_pair"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.low_order_kinematic_pair.own_attrs]]
 name = "t_x"
@@ -10945,6 +11081,7 @@ ty = "plane_angle_measure"
 [entity.low_order_kinematic_pair_with_motion_coupling]
 parents = ["kinematic_pair"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.low_order_kinematic_pair_with_range]
@@ -11007,6 +11144,7 @@ own_attrs = []
 [entity.luminous_flux_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.luminous_intensity_measure_with_unit]
@@ -11017,6 +11155,7 @@ own_attrs = []
 [entity.luminous_intensity_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.machining_process_executable]
@@ -11086,6 +11225,7 @@ own_attrs = []
 [entity.mapped_item]
 parents = ["representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.mapped_item.own_attrs]]
 name = "mapping_source"
@@ -11108,6 +11248,7 @@ own_attrs = []
 [entity.mass_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.mated_part_relationship]
@@ -11403,6 +11544,7 @@ ty = "mechanism"
 [entity.mechanism_representation]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 derives = ["represented_joints"]
 
 [[entity.mechanism_representation.own_attrs]]
@@ -11645,6 +11787,7 @@ own_attrs = []
 [entity.modified_geometric_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.modified_geometric_tolerance.own_attrs]]
 name = "modifier"
@@ -11658,6 +11801,7 @@ own_attrs = []
 [entity.modified_solid]
 parents = ["solid_model"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.modified_solid.own_attrs]]
 name = "rationale"
@@ -11670,6 +11814,7 @@ ty = "base_solid_select"
 [entity.modified_solid_with_placed_configuration]
 parents = ["modified_solid"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.modified_solid_with_placed_configuration.own_attrs]]
 name = "placing"
@@ -11714,6 +11859,7 @@ ty = "SET OF multi_language_attribute_item"
 [entity.multi_level_reference_designator]
 parents = ["assembly_component_usage"]
 is_abstract = false
+is_complex_part = true
 derives = [
     "product_definition_relationship.relating_product_definition",
     "root",
@@ -11828,6 +11974,7 @@ ty = "name_attribute_select"
 
 [entity.named_unit]
 is_abstract = false
+is_complex_part = true
 
 [[entity.named_unit.own_attrs]]
 name = "dimensions"
@@ -11884,6 +12031,7 @@ ty = "curves_or_area"
 [entity.next_assembly_usage_occurrence]
 parents = ["assembly_component_usage"]
 is_abstract = false
+is_complex_part = true
 derives = ["product_definition_occurrence_id"]
 own_attrs = []
 
@@ -11953,11 +12101,13 @@ parents = [
     "defined_function",
 ]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.numeric_expression]
 parents = ["expression"]
 is_abstract = true
+is_complex_part = true
 derives = [
     "is_int",
     "sql_mappable",
@@ -12043,6 +12193,7 @@ ty = "logical"
 [entity.one_direction_repeat_factor]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.one_direction_repeat_factor.own_attrs]]
 name = "repeat_factor"
@@ -12604,6 +12755,7 @@ ty = "length_measure"
 [entity.path]
 parents = ["topological_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.path.own_attrs]]
 name = "edge_list"
@@ -12615,6 +12767,7 @@ parents = [
     "mapped_item",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.path_feature_component]
@@ -12686,6 +12839,7 @@ own_attrs = []
 [entity.percentage_laminate_table]
 parents = ["zone_structural_makeup"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.percentage_ply_definition]
@@ -12872,6 +13026,7 @@ own_attrs = []
 [entity.placement]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.placement.own_attrs]]
 name = "location"
@@ -12888,6 +13043,7 @@ ty = "axis2_placement"
 [entity.planar_curve_pair]
 parents = ["high_order_kinematic_pair"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.planar_curve_pair.own_attrs]]
 name = "curve_1"
@@ -12904,6 +13060,7 @@ ty = "boolean"
 [entity.planar_curve_pair_range]
 parents = ["planar_curve_pair"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.planar_curve_pair_range.own_attrs]]
 name = "range_on_curve_1"
@@ -12916,6 +13073,7 @@ ty = "trimmed_curve"
 [entity.planar_extent]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.planar_extent.own_attrs]]
 name = "size_in_x"
@@ -13023,6 +13181,7 @@ own_attrs = []
 [entity.plane_angle_and_length_pair]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.plane_angle_and_length_pair.own_attrs]]
 name = "plane_angle_value"
@@ -13035,6 +13194,7 @@ ty = "length_measure"
 [entity.plane_angle_and_ratio_pair]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.plane_angle_and_ratio_pair.own_attrs]]
 name = "plane_angle_value"
@@ -13052,6 +13212,7 @@ own_attrs = []
 [entity.plane_angle_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.plus_expression]
@@ -13073,6 +13234,7 @@ ty = "dimensional_characteristic"
 [entity.ply_angle_representation]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.ply_laminate_definition]
@@ -13128,6 +13290,7 @@ ty = "boolean"
 [entity.point]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.point_and_vector]
@@ -13136,6 +13299,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.point_array]
@@ -13144,6 +13308,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.point_cloud_dataset]
@@ -13463,6 +13628,7 @@ ty = "cartesian_transformation_operator"
 [entity.point_style]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = [
     'marker: ap203e2: Entity("marker_select") | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("marker_select")) | ap242ed3_mim_lf_v1.152: Optional(Entity("marker_select"))',
     'marker_colour: ap203e2: Entity("colour") | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("colour")) | ap242ed3_mim_lf_v1.152: Optional(Entity("colour"))',
@@ -13546,6 +13712,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 
 [[entity.poly_loop.own_attrs]]
 name = "polygon"
@@ -13570,6 +13737,7 @@ ty = "LIST OF cartesian_point"
 [entity.position_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.positioned_sketch]
@@ -13758,6 +13926,7 @@ ty = "planar_box"
 [entity.presentation_style_assignment]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.presentation_style_assignment.own_attrs]]
 name = "styles"
@@ -13816,6 +13985,7 @@ ty = "previous_element_assignment_select"
 [entity.primitive_2d]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.primitive_2d_with_inner_boundary]
@@ -13824,6 +13994,7 @@ parents = [
     "compound_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 derives = ["inner_boundary"]
 own_attrs = []
 
@@ -14173,6 +14344,7 @@ ty = "data_quality_definition"
 
 [entity.product_definition]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
 derives = ["name"]
 
@@ -14309,6 +14481,7 @@ own_attrs = []
 
 [entity.product_definition_occurrence]
 is_abstract = false
+is_complex_part = true
 derives = ["descendant_occurrences"]
 
 [[entity.product_definition_occurrence.own_attrs]]
@@ -14345,6 +14518,7 @@ parents = [
     "generic_product_definition_reference",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.product_definition_occurrence_relationship]
@@ -14404,6 +14578,7 @@ own_attrs = []
 
 [entity.product_definition_relationship]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = [
     'description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))',
     'related_product_definition: ap203: Entity("product_definition") | ap242: Entity("product_definition_or_reference") | ap242ed2_dis2_mim_lf_v1.101: Entity("product_definition_or_reference") | ap242ed3_mim_lf_v1.152: Entity("product_definition_or_reference")',
@@ -14474,6 +14649,7 @@ own_attrs = []
 [entity.product_definition_specified_occurrence]
 parents = ["product_definition_occurrence"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.product_definition_specified_occurrence.own_attrs]]
 name = "occurrence_usage"
@@ -14502,6 +14678,7 @@ ty = "product_definition"
 [entity.product_definition_usage]
 parents = ["product_definition_relationship"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.product_definition_usage_relationship]
@@ -14746,6 +14923,7 @@ own_attrs = []
 [entity.promissory_usage_occurrence]
 parents = ["assembly_component_usage"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.property_definition]
@@ -14852,6 +15030,7 @@ ty = "text"
 [entity.quantified_assembly_component_usage]
 parents = ["assembly_component_usage"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.quantified_assembly_component_usage.own_attrs]]
 name = "quantity"
@@ -14868,16 +15047,19 @@ ty = "LIST OF generic_variable"
 [entity.quasi_uniform_curve]
 parents = ["b_spline_curve"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.quasi_uniform_surface]
 parents = ["b_spline_surface"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.quasi_uniform_volume]
 parents = ["b_spline_volume"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.rack_and_pinion_pair]
@@ -14957,11 +15139,13 @@ own_attrs = []
 [entity.ratio_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.rational_b_spline_curve]
 parents = ["b_spline_curve"]
 is_abstract = false
+is_complex_part = true
 derives = ["weights"]
 
 [[entity.rational_b_spline_curve.own_attrs]]
@@ -14971,6 +15155,7 @@ ty = "LIST OF real"
 [entity.rational_b_spline_surface]
 parents = ["b_spline_surface"]
 is_abstract = false
+is_complex_part = true
 derives = ["weights"]
 
 [[entity.rational_b_spline_surface.own_attrs]]
@@ -14980,6 +15165,7 @@ ty = "LIST OF LIST OF real"
 [entity.rational_b_spline_volume]
 parents = ["b_spline_volume"]
 is_abstract = false
+is_complex_part = true
 derives = ["weights"]
 
 [[entity.rational_b_spline_volume.own_attrs]]
@@ -15016,6 +15202,7 @@ parents = [
     "slash_expression",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.rationalize_function]
@@ -15065,6 +15252,7 @@ ty = "open_closed"
 [entity.real_literal]
 parents = ["literal_number"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [[entity.real_literal.redeclared_attrs]]
@@ -15082,6 +15270,7 @@ parents = [
     "real_literal",
 ]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.real_tuple_literal]
@@ -15133,6 +15322,7 @@ ty = "LIST OF LIST OF surface_patch"
 [entity.rectangular_composite_surface_transition_locator]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.rectangular_composite_surface_transition_locator.own_attrs]]
 name = "basis_surface"
@@ -15158,6 +15348,7 @@ own_attrs = []
 [entity.rectangular_pyramid]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.rectangular_pyramid.own_attrs]]
 name = "position"
@@ -15237,6 +15428,7 @@ ty = "LIST OF integer"
 [entity.reinforcement_orientation_basis]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.relative_event_occurrence]
@@ -15315,6 +15507,7 @@ ty = "axis2_placement_3d"
 
 [entity.representation]
 is_abstract = false
+is_complex_part = true
 derives = [
     "id",
     "description",
@@ -15352,6 +15545,7 @@ ty = "identifier"
 
 [entity.representation_item]
 is_abstract = false
+is_complex_part = true
 
 [[entity.representation_item.own_attrs]]
 name = "name"
@@ -15667,6 +15861,7 @@ own_attrs = []
 [entity.right_angular_wedge]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.right_angular_wedge.own_attrs]]
 name = "position"
@@ -15691,6 +15886,7 @@ ty = "length_measure"
 [entity.right_circular_cone]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.right_circular_cone.own_attrs]]
 name = "position"
@@ -15711,6 +15907,7 @@ ty = "plane_angle_measure"
 [entity.right_circular_cylinder]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.right_circular_cylinder.own_attrs]]
 name = "position"
@@ -15757,6 +15954,7 @@ ty = "role_select"
 [entity.rolling_curve_pair]
 parents = ["planar_curve_pair"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.rolling_curve_pair_value]
@@ -15770,6 +15968,7 @@ ty = "point_on_curve"
 [entity.rolling_surface_pair]
 parents = ["surface_pair"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.rolling_surface_pair_value]
@@ -15787,6 +15986,7 @@ ty = "plane_angle_measure"
 [entity.rotation_about_direction]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.rotation_about_direction.own_attrs]]
 name = "direction_of_axis"
@@ -15814,11 +16014,13 @@ own_attrs = []
 [entity.roundness_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.row_representation_item]
 parents = ["compound_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.row_value]
@@ -15957,6 +16159,7 @@ own_attrs = []
 [entity.scanned_data_item]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.scanner_basic_properties]
@@ -16049,6 +16252,7 @@ ty = "non_negative_length_measure"
 [entity.seam_curve]
 parents = ["surface_curve"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.seam_edge]
@@ -16179,6 +16383,7 @@ own_attrs = []
 
 [entity.shape_aspect]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
 derives = ["id"]
 
@@ -16211,6 +16416,7 @@ own_attrs = []
 [entity.shape_aspect_occurrence]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.shape_aspect_occurrence.own_attrs]]
 name = "definition"
@@ -16454,6 +16660,7 @@ ty = "shape_data_quality_value_limit_type_select"
 [entity.shape_representation]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.shape_representation_reference]
@@ -16479,6 +16686,7 @@ own_attrs = []
 [entity.shell_based_surface_model]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.shell_based_surface_model.own_attrs]]
 name = "sbsm_boundary"
@@ -16487,6 +16695,7 @@ ty = "SET OF shell"
 [entity.shell_based_wireframe_model]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.shell_based_wireframe_model.own_attrs]]
 name = "sbwm_boundary"
@@ -16663,6 +16872,7 @@ own_attrs = []
 [entity.si_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 derives = ["named_unit.dimensions"]
 
 [[entity.si_unit.own_attrs]]
@@ -16679,6 +16889,7 @@ parents = [
     "simple_generic_expression",
 ]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.simple_clause]
@@ -16689,6 +16900,7 @@ own_attrs = []
 [entity.simple_generic_expression]
 parents = ["generic_expression"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.simple_numeric_expression]
@@ -16697,6 +16909,7 @@ parents = [
     "simple_generic_expression",
 ]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.simple_pair_range]
@@ -16796,11 +17009,13 @@ ty = "non_negative_length_measure"
 [entity.slash_expression]
 parents = ["binary_numeric_expression"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.sliding_curve_pair]
 parents = ["planar_curve_pair"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.sliding_curve_pair_value]
@@ -16818,6 +17033,7 @@ ty = "point_on_curve"
 [entity.sliding_surface_pair]
 parents = ["surface_pair"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.sliding_surface_pair_value]
@@ -16869,6 +17085,7 @@ own_attrs = []
 [entity.smeared_material_definition]
 parents = ["zone_structural_makeup"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.software_for_data_quality_check]
@@ -16898,6 +17115,7 @@ own_attrs = []
 [entity.solid_angle_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.solid_curve_font]
@@ -16908,6 +17126,7 @@ own_attrs = []
 [entity.solid_model]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.solid_replica]
@@ -16941,6 +17160,7 @@ ty = "positive_plane_angle_measure"
 [entity.solid_with_chamfered_edges]
 parents = ["edge_blended_solid"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.solid_with_circular_pattern]
@@ -16982,6 +17202,7 @@ ty = "positive_length_measure"
 [entity.solid_with_conical_bottom_round_hole]
 parents = ["solid_with_stepped_round_hole"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_conical_bottom_round_hole.own_attrs]]
 name = "semi_apex_angle"
@@ -16994,6 +17215,7 @@ ty = "non_negative_length_measure"
 [entity.solid_with_constant_radius_edge_blend]
 parents = ["edge_blended_solid"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_constant_radius_edge_blend.own_attrs]]
 name = "radius"
@@ -17002,6 +17224,7 @@ ty = "positive_length_measure"
 [entity.solid_with_curved_slot]
 parents = ["solid_with_slot"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_curved_slot.own_attrs]]
 name = "slot_centreline"
@@ -17010,6 +17233,7 @@ ty = "bounded_curve"
 [entity.solid_with_depression]
 parents = ["modified_solid_with_placed_configuration"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.solid_with_depression.own_attrs]]
 name = "depth"
@@ -17035,6 +17259,7 @@ own_attrs = []
 [entity.solid_with_flat_bottom_round_hole]
 parents = ["solid_with_stepped_round_hole"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_flat_bottom_round_hole.own_attrs]]
 name = "fillet_radius"
@@ -17067,6 +17292,7 @@ ty = "point"
 [entity.solid_with_groove]
 parents = ["solid_with_depression"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_groove.own_attrs]]
 name = "groove_radius"
@@ -17091,6 +17317,7 @@ ty = "boolean"
 [entity.solid_with_hole]
 parents = ["solid_with_depression"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.solid_with_incomplete_circular_pattern]
@@ -17112,6 +17339,7 @@ ty = "SET OF LIST OF positive_integer"
 [entity.solid_with_pocket]
 parents = ["solid_with_depression"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.solid_with_pocket.own_attrs]]
 name = "floor_blend_radius"
@@ -17204,6 +17432,7 @@ ty = "positive_length_measure"
 [entity.solid_with_slot]
 parents = ["solid_with_depression"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.solid_with_slot.own_attrs]]
 name = "slot_width"
@@ -17220,6 +17449,7 @@ ty = "LIST OF SET OF face_surface"
 [entity.solid_with_spherical_bottom_round_hole]
 parents = ["solid_with_stepped_round_hole"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_spherical_bottom_round_hole.own_attrs]]
 name = "sphere_radius"
@@ -17228,6 +17458,7 @@ ty = "positive_length_measure"
 [entity.solid_with_stepped_round_hole]
 parents = ["solid_with_hole"]
 is_abstract = false
+is_complex_part = true
 derives = ["solid_with_depression.depth"]
 
 [[entity.solid_with_stepped_round_hole.own_attrs]]
@@ -17245,6 +17476,7 @@ ty = "LIST OF positive_length_measure"
 [entity.solid_with_stepped_round_hole_and_conical_transitions]
 parents = ["solid_with_stepped_round_hole"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_stepped_round_hole_and_conical_transitions.own_attrs]]
 name = "conical_transitions"
@@ -17253,6 +17485,7 @@ ty = "SET OF conical_stepped_hole_transition"
 [entity.solid_with_straight_slot]
 parents = ["solid_with_slot"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_straight_slot.own_attrs]]
 name = "slot_length"
@@ -17261,6 +17494,7 @@ ty = "positive_length_measure"
 [entity.solid_with_tee_section_slot]
 parents = ["solid_with_slot"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_tee_section_slot.own_attrs]]
 name = "tee_section_width"
@@ -17273,6 +17507,7 @@ ty = "positive_length_measure"
 [entity.solid_with_through_depression]
 parents = ["solid_with_depression"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_through_depression.own_attrs]]
 name = "exit_faces"
@@ -17281,6 +17516,7 @@ ty = "SET OF face_surface"
 [entity.solid_with_trapezoidal_section_slot]
 parents = ["solid_with_slot"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.solid_with_trapezoidal_section_slot.own_attrs]]
 name = "draft_angle"
@@ -17335,6 +17571,7 @@ own_attrs = []
 [entity.specified_higher_usage_occurrence]
 parents = ["assembly_component_usage"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.specified_higher_usage_occurrence.own_attrs]]
 name = "upper_usage"
@@ -17347,6 +17584,7 @@ ty = "next_assembly_usage_occurrence"
 [entity.sphere]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.sphere.own_attrs]]
 name = "radius"
@@ -17544,6 +17782,7 @@ own_attrs = []
 [entity.sql_mappable_defined_function]
 parents = ["defined_function"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.square_root_function]
@@ -17776,6 +18015,7 @@ own_attrs = []
 [entity.straightness_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.strict_triangular_matrix]
@@ -17792,11 +18032,13 @@ parents = [
     "string_expression",
 ]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.string_expression]
 parents = ["expression"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.string_literal]
@@ -17841,6 +18083,7 @@ own_attrs = []
 [entity.styled_item]
 parents = ["representation_item"]
 is_abstract = false
+is_complex_part = true
 attr_conflicts = ['item: ap203e2: Entity("representation_item") | ap242: Entity("styled_item_target") | ap242ed2_dis2_mim_lf_v1.101: Entity("styled_item_target") | ap242ed3_mim_lf_v1.152: Entity("styled_item_target")']
 
 [[entity.styled_item.own_attrs]]
@@ -17871,6 +18114,7 @@ ty = "tessellated_surface_item"
 [entity.su_parameters]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.su_parameters.own_attrs]]
 name = "a"
@@ -17969,6 +18213,7 @@ own_attrs = []
 [entity.surface]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.surface_condition_callout]
@@ -17979,6 +18224,7 @@ own_attrs = []
 [entity.surface_curve]
 parents = ["curve"]
 is_abstract = false
+is_complex_part = true
 derives = ["basis_surface"]
 
 [[entity.surface_curve.own_attrs]]
@@ -18061,6 +18307,7 @@ ty = "axis1_placement"
 [entity.surface_pair]
 parents = ["high_order_kinematic_pair"]
 is_abstract = true
+is_complex_part = true
 
 [[entity.surface_pair.own_attrs]]
 name = "surface_1"
@@ -18097,6 +18344,7 @@ ty = "rotational_range_measure"
 [entity.surface_pair_with_range]
 parents = ["surface_pair"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_pair_with_range.own_attrs]]
 name = "range_on_surface_1"
@@ -18117,6 +18365,7 @@ ty = "OPTIONAL plane_angle_measure"
 [entity.surface_patch]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_patch.own_attrs]]
 name = "parent_surface"
@@ -18149,6 +18398,7 @@ ty = "SET OF surface_patch"
 [entity.surface_profile_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.surface_rendering_properties]
@@ -18173,6 +18423,7 @@ ty = "cartesian_transformation_operator_3d"
 [entity.surface_side_style]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_side_style.own_attrs]]
 name = "name"
@@ -18197,6 +18448,7 @@ ty = "transition_code"
 [entity.surface_style_boundary]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_style_boundary.own_attrs]]
 name = "style_of_boundary"
@@ -18205,6 +18457,7 @@ ty = "curve_or_render"
 [entity.surface_style_control_grid]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_style_control_grid.own_attrs]]
 name = "style_of_control_grid"
@@ -18213,6 +18466,7 @@ ty = "curve_or_render"
 [entity.surface_style_fill_area]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_style_fill_area.own_attrs]]
 name = "fill_area"
@@ -18221,6 +18475,7 @@ ty = "fill_area_style"
 [entity.surface_style_parameter_line]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_style_parameter_line.own_attrs]]
 name = "style_of_parameter_lines"
@@ -18283,6 +18538,7 @@ ty = "SET OF rendering_properties_select"
 [entity.surface_style_segmentation_curve]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_style_segmentation_curve.own_attrs]]
 name = "style_of_segmentation_curve"
@@ -18291,6 +18547,7 @@ ty = "curve_or_render"
 [entity.surface_style_silhouette]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_style_silhouette.own_attrs]]
 name = "style_of_silhouette"
@@ -18306,6 +18563,7 @@ ty = "real"
 [entity.surface_style_usage]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.surface_style_usage.own_attrs]]
 name = "side"
@@ -18422,6 +18680,7 @@ ty = "axis2_placement"
 [entity.symbol_style]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.symbol_style.own_attrs]]
 name = "name"
@@ -18434,6 +18693,7 @@ ty = "symbol_style_select"
 [entity.symbol_target]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.symbol_target.own_attrs]]
 name = "placement"
@@ -18506,6 +18766,7 @@ own_attrs = []
 [entity.table_representation_item]
 parents = ["compound_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.tactile_appearance_representation]
@@ -18669,6 +18930,7 @@ ty = "SET OF tessellated_item"
 [entity.tessellated_item]
 parents = ["geometric_representation_item"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.tessellated_point_set]
@@ -18838,6 +19100,7 @@ ty = "text_font_family"
 [entity.text_literal]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.text_literal.own_attrs]]
 name = "literal"
@@ -18899,6 +19162,7 @@ own_attrs = []
 [entity.text_style]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.text_style.own_attrs]]
 name = "name"
@@ -18972,6 +19236,7 @@ own_attrs = []
 [entity.thermodynamic_temperature_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.thickened_face_solid]
@@ -18998,6 +19263,7 @@ own_attrs = []
 [entity.thickness_laminate_table]
 parents = ["zone_structural_makeup"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.thread]
@@ -19098,6 +19364,7 @@ own_attrs = []
 [entity.time_unit]
 parents = ["named_unit"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.tolerance_value]
@@ -19157,6 +19424,7 @@ ty = "datum_system"
 [entity.topological_representation_item]
 parents = ["representation_item"]
 is_abstract = false
+is_complex_part = true
 derives = [
     "permanent_id",
     "permanent_aggregate_id",
@@ -19236,6 +19504,7 @@ ty = "positive_length_measure"
 [entity.torus]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.torus.own_attrs]]
 name = "position"
@@ -19257,6 +19526,7 @@ own_attrs = []
 [entity.track_blended_solid]
 parents = ["edge_blended_solid"]
 is_abstract = true
+is_complex_part = true
 own_attrs = []
 
 [entity.track_blended_solid_with_end_conditions]
@@ -19285,6 +19555,7 @@ own_attrs = []
 [entity.transport_feature]
 parents = ["shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.triangular_matrix]
@@ -19488,6 +19759,7 @@ ty = "axis2_placement_3d"
 [entity.unequally_disposed_geometric_tolerance]
 parents = ["geometric_tolerance"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.unequally_disposed_geometric_tolerance.own_attrs]]
 name = "displacement"
@@ -19496,6 +19768,7 @@ ty = "length_measure_with_unit"
 [entity.uniform_curve]
 parents = ["b_spline_curve"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.uniform_product_space]
@@ -19521,11 +19794,13 @@ own_attrs = []
 [entity.uniform_surface]
 parents = ["b_spline_surface"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.uniform_volume]
 parents = ["b_spline_volume"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.universal_pair]
@@ -19713,6 +19988,7 @@ own_attrs = []
 [entity.value_representation_item]
 parents = ["representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.value_representation_item.own_attrs]]
 name = "value_component"
@@ -19771,6 +20047,7 @@ own_attrs = []
 [entity.vector]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.vector.own_attrs]]
 name = "orientation"
@@ -19862,6 +20139,7 @@ ty = "versioned_action_request"
 [entity.vertex]
 parents = ["topological_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.vertex_loop]
@@ -19890,6 +20168,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = false
+is_complex_part = true
 
 [[entity.vertex_point.own_attrs]]
 name = "vertex_geometry"
@@ -19906,6 +20185,7 @@ ty = "vertex_loop"
 [entity.view_volume]
 parents = ["founded_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.view_volume.own_attrs]]
 name = "projection_type"
@@ -19951,6 +20231,7 @@ own_attrs = []
 [entity.volume]
 parents = ["geometric_representation_item"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.volume_measure_with_unit]
@@ -19969,6 +20250,7 @@ parents = [
     "topological_representation_item",
 ]
 is_abstract = true
+is_complex_part = true
 
 [[entity.volume_with_faces.own_attrs]]
 name = "volume_geometry"
@@ -20085,6 +20367,7 @@ own_attrs = []
 [entity.zone_structural_makeup]
 parents = ["laminate_table"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [type.a3m_accuracy_type_name]

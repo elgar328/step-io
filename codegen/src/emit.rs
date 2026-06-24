@@ -325,7 +325,7 @@ fn read_measure_value(a: &Attribute) -> MeasureValue {
             names.join(", ")
         )
         .unwrap();
-        s.push_str("pub fn is_complex_unit(parts: &[RawEntityPart]) -> bool { parts.iter().any(|p| COMPLEX_PART_NAMES.contains(&p.name.as_str())) }\n\n");
+        s.push_str("pub fn is_complex_unit(parts: &[RawEntityPart]) -> bool { !parts.is_empty() && parts.iter().all(|p| COMPLEX_PART_NAMES.contains(&p.name.as_str())) }\n\n");
     } else {
         s.push_str("pub const COMPLEX_PART_NAMES: &[&str] = &[];\npub fn is_complex_unit(_parts: &[RawEntityPart]) -> bool { false }\n\n");
     }
@@ -482,8 +482,8 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
         Kind::Vec(_) => "Vec::new()".to_string(),
         _ => unreachable!(),
     };
-    if optional && !matches!(k, Kind::Vec(_)) {
-        // Option<Ref>: placeholder None is fine; pass 2 sets it.
+    if optional {
+        // Option<Ref> or Option<Vec<Ref>>: None placeholder; pass 2 sets Some.
         "None".to_string()
     } else {
         inner
@@ -517,7 +517,21 @@ fn bind_scalar(ir: &ModelIr, k: &Kind, optional: bool, attr: &str) -> String {
 }
 
 fn bind_scalar_vec(ir: &ModelIr, inner: &Kind, optional: bool, attr: &str) -> String {
-    let elem = match inner {
+    let elem = scalar_vec_elem(ir, inner);
+    let body = format!(
+        "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), Attribute::Unset => Vec::new(), other => panic!(\"vec: {{other:?}}\") }}"
+    );
+    if optional {
+        format!("Some({body})")
+    } else {
+        body
+    }
+}
+
+/// Read-element expr for a `Vec` inner kind, binding over `e` (an `&Attribute`).
+/// Recurses for nested vecs (e.g. `weights_data: LIST OF LIST OF REAL`).
+fn scalar_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
+    match inner {
         Kind::Real => "as_real(e)".to_string(),
         Kind::Int => "as_int(e)".to_string(),
         Kind::Str => "as_str(e)".to_string(),
@@ -526,15 +540,13 @@ fn bind_scalar_vec(ir: &ModelIr, inner: &Kind, optional: bool, attr: &str) -> St
             "match e {{ Attribute::Enum(s) => {}::parse(s).expect(\"{a}\"), o => panic!(\"{{o:?}}\") }}",
             ir.enums[a].rust
         ),
+        Kind::Vec(inner2) => {
+            let e2 = scalar_vec_elem(ir, inner2);
+            format!(
+                "match e {{ Attribute::List(l) => l.iter().map(|e| {e2}).collect::<Vec<_>>(), Attribute::Unset => Vec::new(), o => panic!(\"nested vec: {{o:?}}\") }}"
+            )
+        }
         _ => "as_real(e)".to_string(),
-    };
-    let body = format!(
-        "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), Attribute::Unset => Vec::new(), other => panic!(\"vec: {{other:?}}\") }}"
-    );
-    if optional {
-        format!("Some({body})")
-    } else {
-        body
     }
 }
 

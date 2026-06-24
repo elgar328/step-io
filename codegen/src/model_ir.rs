@@ -221,14 +221,13 @@ impl ModelIr {
         let children = build_children(schema);
         let has_part_bag = !complex_parts.is_empty();
 
-        // Simple entities = closure entities that are NOT complex-only parts and
-        // are concrete enough to carry an instance. We emit an arena for every
-        // such closure entity (unused ones become empty arenas, harmless).
+        // Simple entities = EVERY closure entity gets a simple arena (flattened
+        // attrs). dual-appearance: a complex-part entity ALSO gets a SimpleEnt
+        // here AND a PartEnt below — the two are no longer mutually exclusive.
+        // always-complex entities (units, rational b_spline) get an unused empty
+        // arena (harmless); they are read via the complex path.
         let mut simples: Vec<SimpleEnt> = Vec::new();
         for name in closure {
-            if complex_parts.contains(name) {
-                continue;
-            }
             // Skip pure synthetic / non-entity names.
             if !schema.entity.contains_key(name) {
                 continue;
@@ -287,10 +286,14 @@ impl ModelIr {
             let mut simple_arms: Vec<(String, String)> = Vec::new();
             let mut has_complex = false;
             for leaf in &leaves {
+                // dual-appearance: a leaf can be BOTH a simple arm (standalone
+                // `#1=FOO(..)`) and resolve to a complex (`#2=(.. FOO(..) ..)`),
+                // so set both independently (not else-if).
+                if schema.entity.contains_key(leaf) {
+                    simple_arms.push((pascal(leaf), pascal(leaf)));
+                }
                 if complex_parts.contains(leaf) {
                     has_complex = true;
-                } else if schema.entity.contains_key(leaf) {
-                    simple_arms.push((pascal(leaf), pascal(leaf)));
                 }
             }
             simple_arms.sort();

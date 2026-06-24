@@ -340,6 +340,10 @@ pub struct BSplineSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BSplineSurfaceWithKnotsId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BezierCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BezierSurfaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BoundedCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BoundedSurfaceId(pub usize);
@@ -357,6 +361,10 @@ pub struct ConicId(pub usize);
 pub struct ConicalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ConnectedFaceSetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ContextDependentUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ConversionBasedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -392,13 +400,19 @@ pub struct GeometricRepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LengthMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LengthUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ManifoldSolidBrepId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MassUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MeasureWithUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NamedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OffsetSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -414,11 +428,25 @@ pub struct PlacementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlaneId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlaneAngleUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PolyLoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct QuasiUniformCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct QuasiUniformSurfaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RationalBSplineCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RationalBSplineSurfaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SiUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SolidAngleUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SolidModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -432,11 +460,17 @@ pub struct SurfaceOfRevolutionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SweptSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TimeUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TopologicalRepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToroidalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UncertaintyMeasureWithUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UniformCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UniformSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct VectorId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -458,6 +492,8 @@ pub enum AnyId {
     BSplineCurveWithKnots(BSplineCurveWithKnotsId),
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
     BoundedCurve(BoundedCurveId),
     BoundedSurface(BoundedSurfaceId),
     BrepWithVoids(BrepWithVoidsId),
@@ -467,6 +503,8 @@ pub enum AnyId {
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ContextDependentUnit(ContextDependentUnitId),
+    ConversionBasedUnit(ConversionBasedUnitId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
     DerivedUnit(DerivedUnitId),
@@ -484,10 +522,13 @@ pub enum AnyId {
     FaceSurface(FaceSurfaceId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    LengthUnit(LengthUnitId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
+    MassUnit(MassUnitId),
     MeasureWithUnit(MeasureWithUnitId),
+    NamedUnit(NamedUnitId),
     OffsetSurface(OffsetSurfaceId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
@@ -495,18 +536,28 @@ pub enum AnyId {
     Path(PathId),
     Placement(PlacementId),
     Plane(PlaneId),
+    PlaneAngleUnit(PlaneAngleUnitId),
     Point(PointId),
     PolyLoop(PolyLoopId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
     RepresentationItem(RepresentationItemId),
+    SiUnit(SiUnitId),
+    SolidAngleUnit(SolidAngleUnitId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
     Surface(SurfaceId),
     SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
+    TimeUnit(TimeUnitId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
     Vector(VectorId),
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
@@ -587,24 +638,34 @@ impl ClosedShellRef {
 pub enum CurveRef {
     BSplineCurve(BSplineCurveId),
     BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BezierCurve(BezierCurveId),
     BoundedCurve(BoundedCurveId),
     Circle(CircleId),
     Conic(ConicId),
     Curve(CurveId),
     Ellipse(EllipseId),
     Line(LineId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    UniformCurve(UniformCurveId),
+    Complex(ComplexUnitId),
 }
 impl CurveRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
             AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
             AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
             AnyId::Line(i) => Self::Line(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("CurveRef ref -> {other:?}"),
         }
     }
@@ -639,11 +700,13 @@ impl DimensionalExponentsRef {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DirectionRef {
     Direction(DirectionId),
+    Complex(ComplexUnitId),
 }
 impl DirectionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DirectionRef ref -> {other:?}"),
         }
     }
@@ -654,6 +717,7 @@ pub enum EdgeRef {
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     OrientedEdge(OrientedEdgeId),
+    Complex(ComplexUnitId),
 }
 impl EdgeRef {
     pub fn from_any(a: AnyId) -> Self {
@@ -661,6 +725,7 @@ impl EdgeRef {
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
             AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("EdgeRef ref -> {other:?}"),
         }
     }
@@ -686,6 +751,7 @@ pub enum FaceRef {
     AdvancedFace(AdvancedFaceId),
     Face(FaceId),
     FaceSurface(FaceSurfaceId),
+    Complex(ComplexUnitId),
 }
 impl FaceRef {
     pub fn from_any(a: AnyId) -> Self {
@@ -693,6 +759,7 @@ impl FaceRef {
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::Face(i) => Self::Face(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("FaceRef ref -> {other:?}"),
         }
     }
@@ -704,6 +771,7 @@ pub enum LoopRef {
     Loop(LoopId),
     PolyLoop(PolyLoopId),
     VertexLoop(VertexLoopId),
+    Complex(ComplexUnitId),
 }
 impl LoopRef {
     pub fn from_any(a: AnyId) -> Self {
@@ -712,6 +780,7 @@ impl LoopRef {
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::PolyLoop(i) => Self::PolyLoop(i),
             AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("LoopRef ref -> {other:?}"),
         }
     }
@@ -736,11 +805,29 @@ impl MeasureWithUnitRef {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NamedUnitRef {
+    ContextDependentUnit(ContextDependentUnitId),
+    ConversionBasedUnit(ConversionBasedUnitId),
+    LengthUnit(LengthUnitId),
+    MassUnit(MassUnitId),
+    NamedUnit(NamedUnitId),
+    PlaneAngleUnit(PlaneAngleUnitId),
+    SiUnit(SiUnitId),
+    SolidAngleUnit(SolidAngleUnitId),
+    TimeUnit(TimeUnitId),
     Complex(ComplexUnitId),
 }
 impl NamedUnitRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::ContextDependentUnit(i) => Self::ContextDependentUnit(i),
+            AnyId::ConversionBasedUnit(i) => Self::ConversionBasedUnit(i),
+            AnyId::LengthUnit(i) => Self::LengthUnit(i),
+            AnyId::MassUnit(i) => Self::MassUnit(i),
+            AnyId::NamedUnit(i) => Self::NamedUnit(i),
+            AnyId::PlaneAngleUnit(i) => Self::PlaneAngleUnit(i),
+            AnyId::SiUnit(i) => Self::SiUnit(i),
+            AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
+            AnyId::TimeUnit(i) => Self::TimeUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("NamedUnitRef ref -> {other:?}"),
         }
@@ -777,12 +864,14 @@ impl OrientedEdgeRef {
 pub enum PointRef {
     CartesianPoint(CartesianPointId),
     Point(PointId),
+    Complex(ComplexUnitId),
 }
 impl PointRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Point(i) => Self::Point(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("PointRef ref -> {other:?}"),
         }
     }
@@ -792,36 +881,46 @@ impl PointRef {
 pub enum SurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierSurface(BezierSurfaceId),
     BoundedSurface(BoundedSurfaceId),
     ConicalSurface(ConicalSurfaceId),
     CylindricalSurface(CylindricalSurfaceId),
     ElementarySurface(ElementarySurfaceId),
     OffsetSurface(OffsetSurfaceId),
     Plane(PlaneId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
     SphericalSurface(SphericalSurfaceId),
     Surface(SurfaceId),
     SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     ToroidalSurface(ToroidalSurfaceId),
+    UniformSurface(UniformSurfaceId),
+    Complex(ComplexUnitId),
 }
 impl SurfaceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
             AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::Plane(i) => Self::Plane(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
             AnyId::Surface(i) => Self::Surface(i),
             AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("SurfaceRef ref -> {other:?}"),
         }
     }
@@ -829,13 +928,31 @@ impl SurfaceRef {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnitRef {
+    ContextDependentUnit(ContextDependentUnitId),
+    ConversionBasedUnit(ConversionBasedUnitId),
     DerivedUnit(DerivedUnitId),
+    LengthUnit(LengthUnitId),
+    MassUnit(MassUnitId),
+    NamedUnit(NamedUnitId),
+    PlaneAngleUnit(PlaneAngleUnitId),
+    SiUnit(SiUnitId),
+    SolidAngleUnit(SolidAngleUnitId),
+    TimeUnit(TimeUnitId),
     Complex(ComplexUnitId),
 }
 impl UnitRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::ContextDependentUnit(i) => Self::ContextDependentUnit(i),
+            AnyId::ConversionBasedUnit(i) => Self::ConversionBasedUnit(i),
             AnyId::DerivedUnit(i) => Self::DerivedUnit(i),
+            AnyId::LengthUnit(i) => Self::LengthUnit(i),
+            AnyId::MassUnit(i) => Self::MassUnit(i),
+            AnyId::NamedUnit(i) => Self::NamedUnit(i),
+            AnyId::PlaneAngleUnit(i) => Self::PlaneAngleUnit(i),
+            AnyId::SiUnit(i) => Self::SiUnit(i),
+            AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
+            AnyId::TimeUnit(i) => Self::TimeUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("UnitRef ref -> {other:?}"),
         }
@@ -845,11 +962,13 @@ impl UnitRef {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VectorRef {
     Vector(VectorId),
+    Complex(ComplexUnitId),
 }
 impl VectorRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::Vector(i) => Self::Vector(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("VectorRef ref -> {other:?}"),
         }
     }
@@ -859,12 +978,14 @@ impl VectorRef {
 pub enum VertexRef {
     Vertex(VertexId),
     VertexPoint(VertexPointId),
+    Complex(ComplexUnitId),
 }
 impl VertexRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::Vertex(i) => Self::Vertex(i),
             AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("VertexRef ref -> {other:?}"),
         }
     }
@@ -953,6 +1074,28 @@ pub struct BSplineSurfaceWithKnots {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct BezierCurve {
+    pub name: String,
+    pub degree: i64,
+    pub control_points_list: Vec<CartesianPointRef>,
+    pub curve_form: BSplineCurveForm,
+    pub closed_curve: Logical,
+    pub self_intersect: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct BezierSurface {
+    pub name: String,
+    pub u_degree: i64,
+    pub v_degree: i64,
+    pub control_points_list: Vec<Vec<CartesianPointRef>>,
+    pub surface_form: BSplineSurfaceForm,
+    pub u_closed: Logical,
+    pub v_closed: Logical,
+    pub self_intersect: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct BoundedCurve {
     pub name: String,
 }
@@ -1009,6 +1152,19 @@ pub struct ConnectedFaceSet {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ContextDependentUnit {
+    pub dimensions: DimensionalExponentsRef,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConversionBasedUnit {
+    pub dimensions: DimensionalExponentsRef,
+    pub name: String,
+    pub conversion_factor: MeasureWithUnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Curve {
     pub name: String,
 }
@@ -1051,8 +1207,8 @@ pub struct Direction {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Edge {
     pub name: String,
-    pub edge_start: VertexRef,
-    pub edge_end: VertexRef,
+    pub edge_start: Option<VertexRef>,
+    pub edge_end: Option<VertexRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1087,7 +1243,7 @@ pub struct Ellipse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Face {
     pub name: String,
-    pub bounds: Vec<FaceBoundRef>,
+    pub bounds: Option<Vec<FaceBoundRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1124,6 +1280,11 @@ pub struct LengthMeasureWithUnit {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct LengthUnit {
+    pub dimensions: DimensionalExponentsRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Line {
     pub name: String,
     pub pnt: CartesianPointRef,
@@ -1142,9 +1303,19 @@ pub struct ManifoldSolidBrep {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct MassUnit {
+    pub dimensions: DimensionalExponentsRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct MeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NamedUnit {
+    pub dimensions: Option<DimensionalExponentsRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1178,7 +1349,7 @@ pub struct OrientedEdge {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Path {
     pub name: String,
-    pub edge_list: Vec<OrientedEdgeRef>,
+    pub edge_list: Option<Vec<OrientedEdgeRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1194,6 +1365,11 @@ pub struct Plane {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PlaneAngleUnit {
+    pub dimensions: DimensionalExponentsRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Point {
     pub name: String,
 }
@@ -1205,8 +1381,65 @@ pub struct PolyLoop {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct QuasiUniformCurve {
+    pub name: String,
+    pub degree: i64,
+    pub control_points_list: Vec<CartesianPointRef>,
+    pub curve_form: BSplineCurveForm,
+    pub closed_curve: Logical,
+    pub self_intersect: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct QuasiUniformSurface {
+    pub name: String,
+    pub u_degree: i64,
+    pub v_degree: i64,
+    pub control_points_list: Vec<Vec<CartesianPointRef>>,
+    pub surface_form: BSplineSurfaceForm,
+    pub u_closed: Logical,
+    pub v_closed: Logical,
+    pub self_intersect: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RationalBSplineCurve {
+    pub name: String,
+    pub degree: i64,
+    pub control_points_list: Vec<CartesianPointRef>,
+    pub curve_form: BSplineCurveForm,
+    pub closed_curve: Logical,
+    pub self_intersect: Logical,
+    pub weights_data: Vec<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RationalBSplineSurface {
+    pub name: String,
+    pub u_degree: i64,
+    pub v_degree: i64,
+    pub control_points_list: Vec<Vec<CartesianPointRef>>,
+    pub surface_form: BSplineSurfaceForm,
+    pub u_closed: Logical,
+    pub v_closed: Logical,
+    pub self_intersect: Logical,
+    pub weights_data: Vec<Vec<f64>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationItem {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SiUnit {
+    pub prefix: Option<SiPrefix>,
+    pub name: SiUnitName,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SolidAngleUnit {
+    pub dimensions: DimensionalExponentsRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1247,6 +1480,11 @@ pub struct SweptSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TimeUnit {
+    pub dimensions: DimensionalExponentsRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TopologicalRepresentationItem {
     pub name: String,
 }
@@ -1265,6 +1503,28 @@ pub struct UncertaintyMeasureWithUnit {
     pub unit_component: UnitRef,
     pub name: String,
     pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UniformCurve {
+    pub name: String,
+    pub degree: i64,
+    pub control_points_list: Vec<CartesianPointRef>,
+    pub curve_form: BSplineCurveForm,
+    pub closed_curve: Logical,
+    pub self_intersect: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UniformSurface {
+    pub name: String,
+    pub u_degree: i64,
+    pub v_degree: i64,
+    pub control_points_list: Vec<Vec<CartesianPointRef>>,
+    pub surface_form: BSplineSurfaceForm,
+    pub u_closed: Logical,
+    pub v_closed: Logical,
+    pub self_intersect: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1293,6 +1553,38 @@ pub struct VertexPoint {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnitPart {
+    BSplineCurve {
+        degree: i64,
+        control_points_list: Vec<CartesianPointRef>,
+        curve_form: BSplineCurveForm,
+        closed_curve: Logical,
+        self_intersect: Logical,
+    },
+    BSplineCurveWithKnots {
+        knot_multiplicities: Vec<i64>,
+        knots: Vec<f64>,
+        knot_spec: KnotType,
+    },
+    BSplineSurface {
+        u_degree: i64,
+        v_degree: i64,
+        control_points_list: Vec<Vec<CartesianPointRef>>,
+        surface_form: BSplineSurfaceForm,
+        u_closed: Logical,
+        v_closed: Logical,
+        self_intersect: Logical,
+    },
+    BSplineSurfaceWithKnots {
+        u_multiplicities: Vec<i64>,
+        v_multiplicities: Vec<i64>,
+        u_knots: Vec<f64>,
+        v_knots: Vec<f64>,
+        knot_spec: KnotType,
+    },
+    BezierCurve,
+    BezierSurface,
+    BoundedCurve,
+    BoundedSurface,
     ContextDependentUnit {
         name: String,
     },
@@ -1300,18 +1592,73 @@ pub enum UnitPart {
         name: String,
         conversion_factor: MeasureWithUnitRef,
     },
+    Curve,
+    Direction {
+        direction_ratios: Vec<f64>,
+    },
+    Edge {
+        edge_start: Option<VertexRef>,
+        edge_end: Option<VertexRef>,
+    },
+    EdgeCurve {
+        edge_geometry: CurveRef,
+        same_sense: bool,
+    },
+    Face {
+        bounds: Option<Vec<FaceBoundRef>>,
+    },
+    FaceSurface {
+        face_geometry: SurfaceRef,
+        same_sense: bool,
+    },
+    GeometricRepresentationItem,
     LengthUnit,
+    Loop,
     MassUnit,
     NamedUnit {
         dimensions: Option<DimensionalExponentsRef>,
     },
+    Path {
+        edge_list: Option<Vec<OrientedEdgeRef>>,
+    },
+    Placement {
+        location: CartesianPointRef,
+    },
     PlaneAngleUnit,
+    Point,
+    PolyLoop {
+        polygon: Vec<CartesianPointRef>,
+    },
+    QuasiUniformCurve,
+    QuasiUniformSurface,
+    RationalBSplineCurve {
+        weights_data: Vec<f64>,
+    },
+    RationalBSplineSurface {
+        weights_data: Vec<Vec<f64>>,
+    },
+    RepresentationItem {
+        name: String,
+    },
     SiUnit {
         prefix: Option<SiPrefix>,
         name: SiUnitName,
     },
     SolidAngleUnit,
+    SolidModel,
+    Surface,
     TimeUnit,
+    TopologicalRepresentationItem,
+    UniformCurve,
+    UniformSurface,
+    Vector {
+        orientation: DirectionRef,
+        magnitude: f64,
+    },
+    Vertex,
+    VertexPoint {
+        vertex_geometry: PointRef,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1329,6 +1676,8 @@ pub struct Model {
     pub b_spline_curve_with_knotss: Arena<BSplineCurveWithKnots>,
     pub b_spline_surfaces: Arena<BSplineSurface>,
     pub b_spline_surface_with_knotss: Arena<BSplineSurfaceWithKnots>,
+    pub bezier_curves: Arena<BezierCurve>,
+    pub bezier_surfaces: Arena<BezierSurface>,
     pub bounded_curves: Arena<BoundedCurve>,
     pub bounded_surfaces: Arena<BoundedSurface>,
     pub brep_with_voidss: Arena<BrepWithVoids>,
@@ -1338,6 +1687,8 @@ pub struct Model {
     pub conics: Arena<Conic>,
     pub conical_surfaces: Arena<ConicalSurface>,
     pub connected_face_sets: Arena<ConnectedFaceSet>,
+    pub context_dependent_units: Arena<ContextDependentUnit>,
+    pub conversion_based_units: Arena<ConversionBasedUnit>,
     pub curves: Arena<Curve>,
     pub cylindrical_surfaces: Arena<CylindricalSurface>,
     pub derived_units: Arena<DerivedUnit>,
@@ -1355,10 +1706,13 @@ pub struct Model {
     pub face_surfaces: Arena<FaceSurface>,
     pub geometric_representation_items: Arena<GeometricRepresentationItem>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
+    pub length_units: Arena<LengthUnit>,
     pub lines: Arena<Line>,
     pub loops: Arena<Loop>,
     pub manifold_solid_breps: Arena<ManifoldSolidBrep>,
+    pub mass_units: Arena<MassUnit>,
     pub measure_with_units: Arena<MeasureWithUnit>,
+    pub named_units: Arena<NamedUnit>,
     pub offset_surfaces: Arena<OffsetSurface>,
     pub open_shells: Arena<OpenShell>,
     pub oriented_closed_shells: Arena<OrientedClosedShell>,
@@ -1366,18 +1720,28 @@ pub struct Model {
     pub paths: Arena<Path>,
     pub placements: Arena<Placement>,
     pub planes: Arena<Plane>,
+    pub plane_angle_units: Arena<PlaneAngleUnit>,
     pub points: Arena<Point>,
     pub poly_loops: Arena<PolyLoop>,
+    pub quasi_uniform_curves: Arena<QuasiUniformCurve>,
+    pub quasi_uniform_surfaces: Arena<QuasiUniformSurface>,
+    pub rational_b_spline_curves: Arena<RationalBSplineCurve>,
+    pub rational_b_spline_surfaces: Arena<RationalBSplineSurface>,
     pub representation_items: Arena<RepresentationItem>,
+    pub si_units: Arena<SiUnit>,
+    pub solid_angle_units: Arena<SolidAngleUnit>,
     pub solid_models: Arena<SolidModel>,
     pub spherical_surfaces: Arena<SphericalSurface>,
     pub surfaces: Arena<Surface>,
     pub surface_of_linear_extrusions: Arena<SurfaceOfLinearExtrusion>,
     pub surface_of_revolutions: Arena<SurfaceOfRevolution>,
     pub swept_surfaces: Arena<SweptSurface>,
+    pub time_units: Arena<TimeUnit>,
     pub topological_representation_items: Arena<TopologicalRepresentationItem>,
     pub toroidal_surfaces: Arena<ToroidalSurface>,
     pub uncertainty_measure_with_units: Arena<UncertaintyMeasureWithUnit>,
+    pub uniform_curves: Arena<UniformCurve>,
+    pub uniform_surfaces: Arena<UniformSurface>,
     pub vectors: Arena<Vector>,
     pub vertexs: Arena<Vertex>,
     pub vertex_loops: Arena<VertexLoop>,
