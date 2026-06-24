@@ -57,6 +57,24 @@ impl<'a> Resolver<'a> {
         self.ref_like(a, depth + 1)
     }
 
+    /// If `m` (a member ty token or alias) resolves to an aggregate
+    /// (`LIST/SET/BAG/ARRAY OF E`), return its element ty `E`. Resolves one alias
+    /// hop (e.g. `list_representation_item` -> `LIST OF representation_item`).
+    pub fn agg_element(&self, m: &str) -> Option<String> {
+        let t = m.trim();
+        if let Some(inner) = agg_inner(t) {
+            return Some(inner.to_string());
+        }
+        let aliased = self.schema.types.get(t)?.aliased.trim().to_string();
+        agg_inner(&aliased).map(str::to_string)
+    }
+
+    /// True when a SELECT member is an aggregate of a ref-like element — the
+    /// aggregate-arm shape (`SELECT(.., LIST OF X, SET OF X)`).
+    pub fn agg_of_ref(&self, m: &str) -> bool {
+        self.agg_element(m).is_some_and(|e| self.ref_like(&e, 0))
+    }
+
     /// True when every member of a SELECT resolves to a scalar primitive (no
     /// entity ref, no nested mixed SELECT) — the select-of-scalars / measure
     /// shape modeled generically as `MeasureValue { type_name, value }`.
@@ -105,11 +123,17 @@ impl<'a> Resolver<'a> {
                 if self.is_measure_select(&members, depth + 1) {
                     return Kind::MeasureSelect(t.to_string());
                 }
-                // All-entity select -> discriminated ref over the SELECT alias.
-                if members.iter().all(|m| self.ref_like(m, 0)) {
+                // All-entity select, OR entity + aggregate-of-entity members
+                // (SELECT(X, LIST OF X, SET OF X)) -> discriminated ref over the
+                // SELECT alias. model_ir splits single arms vs aggregate arms.
+                if members
+                    .iter()
+                    .all(|m| self.ref_like(m, 0) || self.agg_of_ref(m))
+                {
                     return Kind::Ref(t.to_string());
                 }
-                // Mixed select (not needed by units/geometry/topology closure).
+                // Other mixed selects (entity+enum, entity+scalar, all-string)
+                // are separate capabilities, not yet built.
                 panic!("classify: mixed SELECT `{t}` unsupported in Phase 0 closure");
             }
             return self.classify(a, depth + 1);

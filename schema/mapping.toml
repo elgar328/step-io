@@ -933,6 +933,10 @@ variants = { circle = "Circle", dot = "Dot", internal_pair_forward_arrowhead = "
 # Tracked for a focused follow-on; excluded here so the GD&T part-bag de-risk can
 # proceed. Measure their escape impact before prioritizing the capability.
 exclude = [
+    # item_identified_representation_usage: aggregate-arm handles its
+    # identified_item, but its `definition` SELECT drags the entire PLM
+    # applied-assignment subtree (entity+scalar/other gaps) → keep deferred until
+    # PLM domain. (aggregate-arm verified via `transformation` instead.)
     "item_identified_representation_usage",
     # general_datum_reference.base : datum_or_common_datum = SELECT(datum,
     # LIST OF datum_reference_element) — same aggregate-arm pattern. The whole
@@ -1095,6 +1099,13 @@ gdt = [
     "dimensional_size",
     "dimensional_size_with_path",
     "dimensional_characteristic_representation",
+    # aggregate-arm exercise: representation_relationship_with_transformation
+    # .transformation_operator : transformation = SELECT(functionally_defined_
+    # transformation, item_defined_transformation, SET OF item_defined_transformation)
+    # — a single + aggregate-of-entity select (the aggregate-arm capability).
+    "representation_relationship_with_transformation",
+    "item_defined_transformation",
+    "functionally_defined_transformation",
 ]
 
 # Entities that appear ONLY as parts of a complex (multi-inheritance) instance

@@ -111,6 +111,7 @@ pub struct Writer<'a> {
     face_outer_bound_ids: Vec<Option<u64>>,
     face_surface_ids: Vec<Option<u64>>,
     flatness_tolerance_ids: Vec<Option<u64>>,
+    functionally_defined_transformation_ids: Vec<Option<u64>>,
     generic_product_definition_reference_ids: Vec<Option<u64>>,
     geometric_representation_context_ids: Vec<Option<u64>>,
     geometric_representation_item_ids: Vec<Option<u64>>,
@@ -121,6 +122,7 @@ pub struct Writer<'a> {
     geometric_tolerance_with_maximum_tolerance_ids: Vec<Option<u64>>,
     geometric_tolerance_with_modifier_ids: Vec<Option<u64>>,
     intersection_curve_ids: Vec<Option<u64>>,
+    item_defined_transformation_ids: Vec<Option<u64>>,
     length_measure_with_unit_ids: Vec<Option<u64>>,
     length_unit_ids: Vec<Option<u64>>,
     line_ids: Vec<Option<u64>>,
@@ -164,7 +166,11 @@ pub struct Writer<'a> {
     rational_b_spline_surface_ids: Vec<Option<u64>>,
     representation_ids: Vec<Option<u64>>,
     representation_context_ids: Vec<Option<u64>>,
+    representation_context_reference_ids: Vec<Option<u64>>,
     representation_item_ids: Vec<Option<u64>>,
+    representation_reference_ids: Vec<Option<u64>>,
+    representation_relationship_ids: Vec<Option<u64>>,
+    representation_relationship_with_transformation_ids: Vec<Option<u64>>,
     roundness_tolerance_ids: Vec<Option<u64>>,
     seam_curve_ids: Vec<Option<u64>>,
     shape_aspect_ids: Vec<Option<u64>>,
@@ -293,6 +299,13 @@ impl<'a> Writer<'a> {
             face_outer_bound_ids: vec![None; model.face_outer_bounds.items.len()],
             face_surface_ids: vec![None; model.face_surfaces.items.len()],
             flatness_tolerance_ids: vec![None; model.flatness_tolerances.items.len()],
+            functionally_defined_transformation_ids: vec![
+                None;
+                model
+                    .functionally_defined_transformations
+                    .items
+                    .len()
+            ],
             generic_product_definition_reference_ids: vec![
                 None;
                 model
@@ -348,6 +361,10 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             intersection_curve_ids: vec![None; model.intersection_curves.items.len()],
+            item_defined_transformation_ids: vec![
+                None;
+                model.item_defined_transformations.items.len()
+            ],
             length_measure_with_unit_ids: vec![None; model.length_measure_with_units.items.len()],
             length_unit_ids: vec![None; model.length_units.items.len()],
             line_ids: vec![None; model.lines.items.len()],
@@ -430,7 +447,26 @@ impl<'a> Writer<'a> {
             rational_b_spline_surface_ids: vec![None; model.rational_b_spline_surfaces.items.len()],
             representation_ids: vec![None; model.representations.items.len()],
             representation_context_ids: vec![None; model.representation_contexts.items.len()],
+            representation_context_reference_ids: vec![
+                None;
+                model
+                    .representation_context_references
+                    .items
+                    .len()
+            ],
             representation_item_ids: vec![None; model.representation_items.items.len()],
+            representation_reference_ids: vec![None; model.representation_references.items.len()],
+            representation_relationship_ids: vec![
+                None;
+                model.representation_relationships.items.len()
+            ],
+            representation_relationship_with_transformation_ids: vec![
+                None;
+                model
+                    .representation_relationship_with_transformations
+                    .items
+                    .len()
+            ],
             roundness_tolerance_ids: vec![None; model.roundness_tolerances.items.len()],
             seam_curve_ids: vec![None; model.seam_curves.items.len()],
             shape_aspect_ids: vec![None; model.shape_aspects.items.len()],
@@ -513,11 +549,11 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.bounds
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_face_bound((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
-            format!("#{}", self.emit_ref_surface(it.face_geometry)),
+            format!("#{}", self.emit_ref_surface((&it.face_geometry).clone())),
             (if it.same_sense { ".T." } else { ".F." }).to_string(),
         ];
         self.out
@@ -539,18 +575,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -588,7 +624,7 @@ impl<'a> Writer<'a> {
             step_str(&it.name),
             format!(
                 "#{}",
-                self.emit_ref_application_context(it.frame_of_reference)
+                self.emit_ref_application_context((&it.frame_of_reference).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -607,9 +643,9 @@ impl<'a> Writer<'a> {
         self.axis1_placement_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_cartesian_point(it.location)),
+            format!("#{}", self.emit_ref_cartesian_point((&it.location).clone())),
             match &it.axis {
-                Some(r) => format!("#{}", self.emit_ref_direction(*r)),
+                Some(r) => format!("#{}", self.emit_ref_direction((r).clone())),
                 None => "$".to_string(),
             },
         ];
@@ -627,9 +663,9 @@ impl<'a> Writer<'a> {
         self.axis2_placement2d_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_cartesian_point(it.location)),
+            format!("#{}", self.emit_ref_cartesian_point((&it.location).clone())),
             match &it.ref_direction {
-                Some(r) => format!("#{}", self.emit_ref_direction(*r)),
+                Some(r) => format!("#{}", self.emit_ref_direction((r).clone())),
                 None => "$".to_string(),
             },
         ];
@@ -649,13 +685,13 @@ impl<'a> Writer<'a> {
         self.axis2_placement3d_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_cartesian_point(it.location)),
+            format!("#{}", self.emit_ref_cartesian_point((&it.location).clone())),
             match &it.axis {
-                Some(r) => format!("#{}", self.emit_ref_direction(*r)),
+                Some(r) => format!("#{}", self.emit_ref_direction((r).clone())),
                 None => "$".to_string(),
             },
             match &it.ref_direction {
-                Some(r) => format!("#{}", self.emit_ref_direction(*r)),
+                Some(r) => format!("#{}", self.emit_ref_direction((r).clone())),
                 None => "$".to_string(),
             },
         ];
@@ -680,7 +716,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.control_points_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -707,7 +743,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.control_points_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -757,7 +793,7 @@ impl<'a> Writer<'a> {
                     .map(|e| {
                         let row: Vec<String> = e
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                             .collect();
                         format!("({})", row.join(","))
                     })
@@ -792,7 +828,7 @@ impl<'a> Writer<'a> {
                     .map(|e| {
                         let row: Vec<String> = e
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                             .collect();
                         format!("({})", row.join(","))
                     })
@@ -858,7 +894,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.control_points_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -889,7 +925,7 @@ impl<'a> Writer<'a> {
                     .map(|e| {
                         let row: Vec<String> = e
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                             .collect();
                         format!("({})", row.join(","))
                     })
@@ -928,10 +964,10 @@ impl<'a> Writer<'a> {
         self.bounded_pcurve_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_surface(it.basis_surface)),
+            format!("#{}", self.emit_ref_surface((&it.basis_surface).clone())),
             format!(
                 "#{}",
-                self.emit_ref_definitional_representation(it.reference_to_curve)
+                self.emit_ref_definitional_representation((&it.reference_to_curve).clone())
             ),
         ];
         self.out
@@ -961,12 +997,12 @@ impl<'a> Writer<'a> {
         self.bounded_surface_curve_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!("#{}", self.emit_ref_curve((&it.curve_3d).clone())),
             format!(
                 "({})",
                 it.associated_geometry
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -988,12 +1024,12 @@ impl<'a> Writer<'a> {
         self.brep_with_void_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_closed_shell(it.outer)),
+            format!("#{}", self.emit_ref_closed_shell((&it.outer).clone())),
             format!(
                 "({})",
                 it.voids
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_oriented_closed_shell(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_oriented_closed_shell((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1056,7 +1092,7 @@ impl<'a> Writer<'a> {
         self.circle_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement(it.position)),
+            format!("#{}", self.emit_ref_axis2_placement((&it.position).clone())),
             real(it.radius),
         ];
         self.out
@@ -1078,18 +1114,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1114,7 +1150,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.cfs_faces
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_face(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_face((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1138,18 +1174,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1174,7 +1210,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
             step_str(&it.identification),
         ];
@@ -1196,7 +1235,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
         ];
         self.out.push_str(&format!(
@@ -1220,18 +1262,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1252,7 +1294,7 @@ impl<'a> Writer<'a> {
         self.conic_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement(it.position)),
+            format!("#{}", self.emit_ref_axis2_placement((&it.position).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = CONIC({});\n", attrs.join(",")));
@@ -1268,7 +1310,10 @@ impl<'a> Writer<'a> {
         self.conical_surface_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement3d(it.position)),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement3d((&it.position).clone())
+            ),
             real(it.radius),
             real(it.semi_angle),
         ];
@@ -1290,7 +1335,7 @@ impl<'a> Writer<'a> {
                 Some(v) => format!(
                     "({})",
                     v.iter()
-                        .map(|e| format!("#{}", self.emit_ref_face(*e)))
+                        .map(|e| format!("#{}", self.emit_ref_face((e).clone())))
                         .collect::<Vec<_>>()
                         .join(",")
                 ),
@@ -1312,7 +1357,10 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.context_dependent_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
-            format!("#{}", self.emit_ref_dimensional_exponents(it.dimensions)),
+            format!(
+                "#{}",
+                self.emit_ref_dimensional_exponents((&it.dimensions).clone())
+            ),
             step_str(&it.name),
         ];
         self.out.push_str(&format!(
@@ -1330,9 +1378,15 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.conversion_based_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
-            format!("#{}", self.emit_ref_dimensional_exponents(it.dimensions)),
+            format!(
+                "#{}",
+                self.emit_ref_dimensional_exponents((&it.dimensions).clone())
+            ),
             step_str(&it.name),
-            format!("#{}", self.emit_ref_measure_with_unit(it.conversion_factor)),
+            format!(
+                "#{}",
+                self.emit_ref_measure_with_unit((&it.conversion_factor).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = CONVERSION_BASED_UNIT({});\n",
@@ -1363,7 +1417,10 @@ impl<'a> Writer<'a> {
         self.cylindrical_surface_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement3d(it.position)),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement3d((&it.position).clone())
+            ),
             real(it.radius),
         ];
         self.out.push_str(&format!(
@@ -1387,12 +1444,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -1415,7 +1472,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
             step_str(&it.identification),
         ];
@@ -1437,7 +1497,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
         ];
         self.out
@@ -1454,7 +1517,7 @@ impl<'a> Writer<'a> {
         self.datum_reference_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             format!("{}", it.precedence),
-            format!("#{}", self.emit_ref_datum(it.referenced_datum)),
+            format!("#{}", self.emit_ref_datum((&it.referenced_datum).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = DATUM_REFERENCE({});\n", attrs.join(",")));
@@ -1474,13 +1537,19 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
             format!(
                 "({})",
                 it.constituents
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_reference_compartment(*e)))
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_datum_reference_compartment((e).clone())
+                    ))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1503,7 +1572,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
             step_str(&it.target_id),
         ];
@@ -1525,13 +1597,13 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.items
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_representation_item((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
             format!(
                 "#{}",
-                self.emit_ref_representation_context(it.context_of_items)
+                self.emit_ref_representation_context((&it.context_of_items).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -1552,7 +1624,7 @@ impl<'a> Writer<'a> {
             "({})",
             it.elements
                 .iter()
-                .map(|e| format!("#{}", self.emit_ref_derived_unit_element(*e)))
+                .map(|e| format!("#{}", self.emit_ref_derived_unit_element((e).clone())))
                 .collect::<Vec<_>>()
                 .join(",")
         )];
@@ -1569,7 +1641,7 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.derived_unit_element_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
-            format!("#{}", self.emit_ref_named_unit(it.unit)),
+            format!("#{}", self.emit_ref_named_unit((&it.unit).clone())),
             real(it.exponent),
         ];
         self.out.push_str(&format!(
@@ -1596,11 +1668,11 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![
             format!(
                 "#{}",
-                self.emit_ref_dimensional_characteristic(it.dimension)
+                self.emit_ref_dimensional_characteristic((&it.dimension).clone())
             ),
             format!(
                 "#{}",
-                self.emit_ref_shape_dimension_representation(it.representation)
+                self.emit_ref_shape_dimension_representation((&it.representation).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -1646,8 +1718,14 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_shape_aspect(it.relating_shape_aspect)),
-            format!("#{}", self.emit_ref_shape_aspect(it.related_shape_aspect)),
+            format!(
+                "#{}",
+                self.emit_ref_shape_aspect((&it.relating_shape_aspect).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_shape_aspect((&it.related_shape_aspect).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = DIMENSIONAL_LOCATION({});\n",
@@ -1669,9 +1747,15 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_shape_aspect(it.relating_shape_aspect)),
-            format!("#{}", self.emit_ref_shape_aspect(it.related_shape_aspect)),
-            format!("#{}", self.emit_ref_shape_aspect(it.path)),
+            format!(
+                "#{}",
+                self.emit_ref_shape_aspect((&it.relating_shape_aspect).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_shape_aspect((&it.related_shape_aspect).clone())
+            ),
+            format!("#{}", self.emit_ref_shape_aspect((&it.path).clone())),
         ];
         self.out.push_str(&format!(
             "#{n} = DIMENSIONAL_LOCATION_WITH_PATH({});\n",
@@ -1688,7 +1772,7 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.dimensional_size_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
-            format!("#{}", self.emit_ref_shape_aspect(it.applies_to)),
+            format!("#{}", self.emit_ref_shape_aspect((&it.applies_to).clone())),
             step_str(&it.name),
         ];
         self.out
@@ -1704,9 +1788,9 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.dimensional_size_with_path_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
-            format!("#{}", self.emit_ref_shape_aspect(it.applies_to)),
+            format!("#{}", self.emit_ref_shape_aspect((&it.applies_to).clone())),
             step_str(&it.name),
-            format!("#{}", self.emit_ref_shape_aspect(it.path)),
+            format!("#{}", self.emit_ref_shape_aspect((&it.path).clone())),
         ];
         self.out.push_str(&format!(
             "#{n} = DIMENSIONAL_SIZE_WITH_PATH({});\n",
@@ -1748,11 +1832,11 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![
             step_str(&it.name),
             match &it.edge_start {
-                Some(r) => format!("#{}", self.emit_ref_vertex(*r)),
+                Some(r) => format!("#{}", self.emit_ref_vertex((r).clone())),
                 None => "*".to_string(),
             },
             match &it.edge_end {
-                Some(r) => format!("#{}", self.emit_ref_vertex(*r)),
+                Some(r) => format!("#{}", self.emit_ref_vertex((r).clone())),
                 None => "*".to_string(),
             },
         ];
@@ -1770,9 +1854,9 @@ impl<'a> Writer<'a> {
         self.edge_curve_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_vertex(it.edge_start)),
-            format!("#{}", self.emit_ref_vertex(it.edge_end)),
-            format!("#{}", self.emit_ref_curve(it.edge_geometry)),
+            format!("#{}", self.emit_ref_vertex((&it.edge_start).clone())),
+            format!("#{}", self.emit_ref_vertex((&it.edge_end).clone())),
+            format!("#{}", self.emit_ref_curve((&it.edge_geometry).clone())),
             (if it.same_sense { ".T." } else { ".F." }).to_string(),
         ];
         self.out
@@ -1793,7 +1877,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.edge_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_oriented_edge(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_oriented_edge((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1812,7 +1896,10 @@ impl<'a> Writer<'a> {
         self.elementary_surface_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement3d(it.position)),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement3d((&it.position).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = ELEMENTARY_SURFACE({});\n",
@@ -1830,7 +1917,7 @@ impl<'a> Writer<'a> {
         self.ellipse_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement(it.position)),
+            format!("#{}", self.emit_ref_axis2_placement((&it.position).clone())),
             real(it.semi_axis_1),
             real(it.semi_axis_2),
         ];
@@ -1852,7 +1939,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.bounds
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_face_bound((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1871,7 +1958,7 @@ impl<'a> Writer<'a> {
         self.face_bound_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_loop(it.bound)),
+            format!("#{}", self.emit_ref_loop((&it.bound).clone())),
             (if it.orientation { ".T." } else { ".F." }).to_string(),
         ];
         self.out
@@ -1888,7 +1975,7 @@ impl<'a> Writer<'a> {
         self.face_outer_bound_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_loop(it.bound)),
+            format!("#{}", self.emit_ref_loop((&it.bound).clone())),
             (if it.orientation { ".T." } else { ".F." }).to_string(),
         ];
         self.out
@@ -1909,11 +1996,11 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.bounds
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_face_bound((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
-            format!("#{}", self.emit_ref_surface(it.face_geometry)),
+            format!("#{}", self.emit_ref_surface((&it.face_geometry).clone())),
             (if it.same_sense { ".T." } else { ".F." }).to_string(),
         ];
         self.out
@@ -1935,16 +2022,44 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
             "#{n} = FLATNESS_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_functionally_defined_transformations(
+        &mut self,
+        id: FunctionallyDefinedTransformationId,
+    ) -> u64 {
+        if let Some(n) = self.functionally_defined_transformation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .functionally_defined_transformations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.functionally_defined_transformation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FUNCTIONALLY_DEFINED_TRANSFORMATION({});\n",
             attrs.join(",")
         ));
         n
@@ -1964,7 +2079,10 @@ impl<'a> Writer<'a> {
             .clone();
         let n = self.fresh();
         self.generic_product_definition_reference_ids[id.0] = Some(n);
-        let attrs: Vec<String> = vec![format!("#{}", self.emit_ref_external_source(it.source))];
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_external_source((&it.source).clone())
+        )];
         self.out.push_str(&format!(
             "#{n} = GENERIC_PRODUCT_DEFINITION_REFERENCE({});\n",
             attrs.join(",")
@@ -2027,12 +2145,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -2063,18 +2181,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2107,22 +2225,24 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "#{}",
-                self.emit_ref_length_or_plane_angle_measure_with_unit_select(it.unit_size)
+                self.emit_ref_length_or_plane_angle_measure_with_unit_select(
+                    (&it.unit_size).clone()
+                )
             ),
             it.area_type.token().to_string(),
             match &it.second_unit_size {
                 Some(r) => format!(
                     "#{}",
-                    self.emit_ref_length_or_plane_angle_measure_with_unit_select(*r)
+                    self.emit_ref_length_or_plane_angle_measure_with_unit_select((r).clone())
                 ),
                 None => "$".to_string(),
             },
@@ -2155,16 +2275,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "#{}",
-                self.emit_ref_length_or_plane_angle_measure_with_unit_select(it.unit_size)
+                self.emit_ref_length_or_plane_angle_measure_with_unit_select(
+                    (&it.unit_size).clone()
+                )
             ),
         ];
         self.out.push_str(&format!(
@@ -2195,12 +2317,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
@@ -2212,7 +2334,7 @@ impl<'a> Writer<'a> {
             ),
             format!(
                 "#{}",
-                self.emit_ref_length_measure_with_unit(it.maximum_upper_tolerance)
+                self.emit_ref_length_measure_with_unit((&it.maximum_upper_tolerance).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -2243,12 +2365,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
@@ -2275,12 +2397,12 @@ impl<'a> Writer<'a> {
         self.intersection_curve_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!("#{}", self.emit_ref_curve((&it.curve_3d).clone())),
             format!(
                 "({})",
                 it.associated_geometry
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2288,6 +2410,35 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = INTERSECTION_CURVE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_item_defined_transformations(&mut self, id: ItemDefinedTransformationId) -> u64 {
+        if let Some(n) = self.item_defined_transformation_ids[id.0] {
+            return n;
+        }
+        let it = self.model.item_defined_transformations.get(id.0).clone();
+        let n = self.fresh();
+        self.item_defined_transformation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_representation_item((&it.transform_item_1).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_item((&it.transform_item_2).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ITEM_DEFINED_TRANSFORMATION({});\n",
             attrs.join(",")
         ));
         n
@@ -2302,7 +2453,7 @@ impl<'a> Writer<'a> {
         self.length_measure_with_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             measure(&it.value_component),
-            format!("#{}", self.emit_ref_unit(it.unit_component)),
+            format!("#{}", self.emit_ref_unit((&it.unit_component).clone())),
         ];
         self.out.push_str(&format!(
             "#{n} = LENGTH_MEASURE_WITH_UNIT({});\n",
@@ -2320,7 +2471,7 @@ impl<'a> Writer<'a> {
         self.length_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![format!(
             "#{}",
-            self.emit_ref_dimensional_exponents(it.dimensions)
+            self.emit_ref_dimensional_exponents((&it.dimensions).clone())
         )];
         self.out
             .push_str(&format!("#{n} = LENGTH_UNIT({});\n", attrs.join(",")));
@@ -2336,8 +2487,8 @@ impl<'a> Writer<'a> {
         self.line_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_cartesian_point(it.pnt)),
-            format!("#{}", self.emit_ref_vector(it.dir)),
+            format!("#{}", self.emit_ref_cartesian_point((&it.pnt).clone())),
+            format!("#{}", self.emit_ref_vector((&it.dir).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = LINE({});\n", attrs.join(",")));
@@ -2358,12 +2509,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -2395,7 +2546,7 @@ impl<'a> Writer<'a> {
         self.manifold_solid_brep_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_closed_shell(it.outer)),
+            format!("#{}", self.emit_ref_closed_shell((&it.outer).clone())),
         ];
         self.out.push_str(&format!(
             "#{n} = MANIFOLD_SOLID_BREP({});\n",
@@ -2413,7 +2564,7 @@ impl<'a> Writer<'a> {
         self.mass_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![format!(
             "#{}",
-            self.emit_ref_dimensional_exponents(it.dimensions)
+            self.emit_ref_dimensional_exponents((&it.dimensions).clone())
         )];
         self.out
             .push_str(&format!("#{n} = MASS_UNIT({});\n", attrs.join(",")));
@@ -2429,7 +2580,7 @@ impl<'a> Writer<'a> {
         self.measure_with_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             measure(&it.value_component),
-            format!("#{}", self.emit_ref_unit(it.unit_component)),
+            format!("#{}", self.emit_ref_unit((&it.unit_component).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = MEASURE_WITH_UNIT({});\n", attrs.join(",")));
@@ -2450,12 +2601,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             it.modifier.token().to_string(),
         ];
@@ -2474,7 +2625,7 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.named_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![match &it.dimensions {
-            Some(r) => format!("#{}", self.emit_ref_dimensional_exponents(*r)),
+            Some(r) => format!("#{}", self.emit_ref_dimensional_exponents((r).clone())),
             None => "*".to_string(),
         }];
         self.out
@@ -2491,7 +2642,7 @@ impl<'a> Writer<'a> {
         self.offset_surface_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_surface(it.basis_surface)),
+            format!("#{}", self.emit_ref_surface((&it.basis_surface).clone())),
             real(it.distance),
             it.self_intersect.token().to_string(),
         ];
@@ -2513,7 +2664,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.cfs_faces
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_face(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_face((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2533,7 +2684,10 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![
             step_str(&it.name),
             "*".to_string(),
-            format!("#{}", self.emit_ref_closed_shell(it.closed_shell_element)),
+            format!(
+                "#{}",
+                self.emit_ref_closed_shell((&it.closed_shell_element).clone())
+            ),
             (if it.orientation { ".T." } else { ".F." }).to_string(),
         ];
         self.out.push_str(&format!(
@@ -2554,7 +2708,7 @@ impl<'a> Writer<'a> {
             step_str(&it.name),
             "*".to_string(),
             "*".to_string(),
-            format!("#{}", self.emit_ref_edge(it.edge_element)),
+            format!("#{}", self.emit_ref_edge((&it.edge_element).clone())),
             (if it.orientation { ".T." } else { ".F." }).to_string(),
         ];
         self.out
@@ -2576,18 +2730,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2634,7 +2788,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.edge_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_oriented_edge(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_oriented_edge((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2653,10 +2807,10 @@ impl<'a> Writer<'a> {
         self.pcurve_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_surface(it.basis_surface)),
+            format!("#{}", self.emit_ref_surface((&it.basis_surface).clone())),
             format!(
                 "#{}",
-                self.emit_ref_definitional_representation(it.reference_to_curve)
+                self.emit_ref_definitional_representation((&it.reference_to_curve).clone())
             ),
         ];
         self.out
@@ -2678,18 +2832,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2714,7 +2868,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
             step_str(&it.target_id),
         ];
@@ -2734,7 +2891,7 @@ impl<'a> Writer<'a> {
         self.placement_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_cartesian_point(it.location)),
+            format!("#{}", self.emit_ref_cartesian_point((&it.location).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = PLACEMENT({});\n", attrs.join(",")));
@@ -2750,7 +2907,10 @@ impl<'a> Writer<'a> {
         self.plane_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement3d(it.position)),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement3d((&it.position).clone())
+            ),
         ];
         self.out
             .push_str(&format!("#{n} = PLANE({});\n", attrs.join(",")));
@@ -2766,7 +2926,7 @@ impl<'a> Writer<'a> {
         self.plane_angle_measure_with_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             measure(&it.value_component),
-            format!("#{}", self.emit_ref_unit(it.unit_component)),
+            format!("#{}", self.emit_ref_unit((&it.unit_component).clone())),
         ];
         self.out.push_str(&format!(
             "#{n} = PLANE_ANGLE_MEASURE_WITH_UNIT({});\n",
@@ -2784,7 +2944,7 @@ impl<'a> Writer<'a> {
         self.plane_angle_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![format!(
             "#{}",
-            self.emit_ref_dimensional_exponents(it.dimensions)
+            self.emit_ref_dimensional_exponents((&it.dimensions).clone())
         )];
         self.out
             .push_str(&format!("#{n} = PLANE_ANGLE_UNIT({});\n", attrs.join(",")));
@@ -2817,7 +2977,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.polygon
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2841,12 +3001,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -2874,7 +3034,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.frame_of_reference
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_product_context(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_product_context((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2895,7 +3055,7 @@ impl<'a> Writer<'a> {
             step_str(&it.name),
             format!(
                 "#{}",
-                self.emit_ref_application_context(it.frame_of_reference)
+                self.emit_ref_application_context((&it.frame_of_reference).clone())
             ),
             step_str(&it.discipline_type),
         ];
@@ -2919,11 +3079,11 @@ impl<'a> Writer<'a> {
             },
             format!(
                 "#{}",
-                self.emit_ref_product_definition_formation(it.formation)
+                self.emit_ref_product_definition_formation((&it.formation).clone())
             ),
             format!(
                 "#{}",
-                self.emit_ref_product_definition_context(it.frame_of_reference)
+                self.emit_ref_product_definition_context((&it.frame_of_reference).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -2944,7 +3104,7 @@ impl<'a> Writer<'a> {
             step_str(&it.name),
             format!(
                 "#{}",
-                self.emit_ref_application_context(it.frame_of_reference)
+                self.emit_ref_application_context((&it.frame_of_reference).clone())
             ),
             step_str(&it.life_cycle_stage),
         ];
@@ -2968,7 +3128,7 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product(it.of_product)),
+            format!("#{}", self.emit_ref_product((&it.of_product).clone())),
         ];
         self.out.push_str(&format!(
             "#{n} = PRODUCT_DEFINITION_FORMATION({});\n",
@@ -2995,11 +3155,14 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.definition {
-                Some(r) => format!("#{}", self.emit_ref_product_definition_or_reference(*r)),
+                Some(r) => format!(
+                    "#{}",
+                    self.emit_ref_product_definition_or_reference((r).clone())
+                ),
                 None => "$".to_string(),
             },
             match &it.quantity {
-                Some(r) => format!("#{}", self.emit_ref_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
         ];
@@ -3033,11 +3196,15 @@ impl<'a> Writer<'a> {
             },
             format!(
                 "#{}",
-                self.emit_ref_product_definition_or_reference(it.relating_product_definition)
+                self.emit_ref_product_definition_or_reference(
+                    (&it.relating_product_definition).clone()
+                )
             ),
             format!(
                 "#{}",
-                self.emit_ref_product_definition_or_reference(it.related_product_definition)
+                self.emit_ref_product_definition_or_reference(
+                    (&it.related_product_definition).clone()
+                )
             ),
         ];
         self.out.push_str(&format!(
@@ -3070,11 +3237,11 @@ impl<'a> Writer<'a> {
             },
             format!(
                 "#{}",
-                self.emit_ref_product_definition_relationship(it.relating)
+                self.emit_ref_product_definition_relationship((&it.relating).clone())
             ),
             format!(
                 "#{}",
-                self.emit_ref_product_definition_relationship(it.related)
+                self.emit_ref_product_definition_relationship((&it.related).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -3097,7 +3264,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_characterized_definition(it.definition)),
+            format!(
+                "#{}",
+                self.emit_ref_characterized_definition((&it.definition).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = PRODUCT_DEFINITION_SHAPE({});\n",
@@ -3119,7 +3289,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_characterized_definition(it.definition)),
+            format!(
+                "#{}",
+                self.emit_ref_characterized_definition((&it.definition).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = PROPERTY_DEFINITION({});\n",
@@ -3142,7 +3315,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.control_points_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -3175,7 +3348,7 @@ impl<'a> Writer<'a> {
                     .map(|e| {
                         let row: Vec<String> = e
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                             .collect();
                         format!("({})", row.join(","))
                     })
@@ -3208,7 +3381,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.control_points_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -3249,7 +3422,7 @@ impl<'a> Writer<'a> {
                     .map(|e| {
                         let row: Vec<String> = e
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                             .collect();
                         format!("({})", row.join(","))
                     })
@@ -3292,13 +3465,13 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.items
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_representation_item((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
             format!(
                 "#{}",
-                self.emit_ref_representation_context(it.context_of_items)
+                self.emit_ref_representation_context((&it.context_of_items).clone())
             ),
         ];
         self.out
@@ -3321,6 +3494,28 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_representation_context_references(
+        &mut self,
+        id: RepresentationContextReferenceId,
+    ) -> u64 {
+        if let Some(n) = self.representation_context_reference_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .representation_context_references
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.representation_context_reference_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.context_identifier)];
+        self.out.push_str(&format!(
+            "#{n} = REPRESENTATION_CONTEXT_REFERENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_representation_items(&mut self, id: RepresentationItemId) -> u64 {
         if let Some(n) = self.representation_item_ids[id.0] {
             return n;
@@ -3331,6 +3526,105 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![step_str(&it.name)];
         self.out.push_str(&format!(
             "#{n} = REPRESENTATION_ITEM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_representation_references(&mut self, id: RepresentationReferenceId) -> u64 {
+        if let Some(n) = self.representation_reference_ids[id.0] {
+            return n;
+        }
+        let it = self.model.representation_references.get(id.0).clone();
+        let n = self.fresh();
+        self.representation_reference_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            format!(
+                "#{}",
+                self.emit_ref_representation_context_reference((&it.context_of_items).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = REPRESENTATION_REFERENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_representation_relationships(&mut self, id: RepresentationRelationshipId) -> u64 {
+        if let Some(n) = self.representation_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self.model.representation_relationships.get(id.0).clone();
+        let n = self.fresh();
+        self.representation_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_representation_or_representation_reference((&it.rep_1).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_or_representation_reference((&it.rep_2).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = REPRESENTATION_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_representation_relationship_with_transformations(
+        &mut self,
+        id: RepresentationRelationshipWithTransformationId,
+    ) -> u64 {
+        if let Some(n) = self.representation_relationship_with_transformation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .representation_relationship_with_transformations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.representation_relationship_with_transformation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_representation_or_representation_reference((&it.rep_1).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_or_representation_reference((&it.rep_2).clone())
+            ),
+            match &it.transformation_operator {
+                TransformationRef::ItemDefinedTransformationAgg(vs) => format!(
+                    "({})",
+                    vs.iter()
+                        .map(|e| format!(
+                            "#{}",
+                            self.emit_ref_item_defined_transformation(e.clone())
+                        ))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                other => format!("#{}", self.emit_ref_transformation(other.clone())),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({});\n",
             attrs.join(",")
         ));
         n
@@ -3350,12 +3644,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -3374,12 +3668,12 @@ impl<'a> Writer<'a> {
         self.seam_curve_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!("#{}", self.emit_ref_curve((&it.curve_3d).clone())),
             format!(
                 "({})",
                 it.associated_geometry
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -3403,7 +3697,10 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
         ];
         self.out
@@ -3424,8 +3721,14 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_shape_aspect(it.relating_shape_aspect)),
-            format!("#{}", self.emit_ref_shape_aspect(it.related_shape_aspect)),
+            format!(
+                "#{}",
+                self.emit_ref_shape_aspect((&it.relating_shape_aspect).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_shape_aspect((&it.related_shape_aspect).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = SHAPE_ASPECT_RELATIONSHIP({});\n",
@@ -3447,13 +3750,13 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.items
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_representation_item((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
             format!(
                 "#{}",
-                self.emit_ref_representation_context(it.context_of_items)
+                self.emit_ref_representation_context((&it.context_of_items).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -3476,13 +3779,13 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.items
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_representation_item((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
             format!(
                 "#{}",
-                self.emit_ref_representation_context(it.context_of_items)
+                self.emit_ref_representation_context((&it.context_of_items).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -3521,7 +3824,7 @@ impl<'a> Writer<'a> {
         self.solid_angle_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![format!(
             "#{}",
-            self.emit_ref_dimensional_exponents(it.dimensions)
+            self.emit_ref_dimensional_exponents((&it.dimensions).clone())
         )];
         self.out
             .push_str(&format!("#{n} = SOLID_ANGLE_UNIT({});\n", attrs.join(",")));
@@ -3550,7 +3853,10 @@ impl<'a> Writer<'a> {
         self.spherical_surface_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement3d(it.position)),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement3d((&it.position).clone())
+            ),
             real(it.radius),
         ];
         self.out
@@ -3572,12 +3878,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -3609,12 +3915,12 @@ impl<'a> Writer<'a> {
         self.surface_curve_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_curve(it.curve_3d)),
+            format!("#{}", self.emit_ref_curve((&it.curve_3d).clone())),
             format!(
                 "({})",
                 it.associated_geometry
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -3634,8 +3940,8 @@ impl<'a> Writer<'a> {
         self.surface_of_linear_extrusion_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_curve(it.swept_curve)),
-            format!("#{}", self.emit_ref_vector(it.extrusion_axis)),
+            format!("#{}", self.emit_ref_curve((&it.swept_curve).clone())),
+            format!("#{}", self.emit_ref_vector((&it.extrusion_axis).clone())),
         ];
         self.out.push_str(&format!(
             "#{n} = SURFACE_OF_LINEAR_EXTRUSION({});\n",
@@ -3653,8 +3959,11 @@ impl<'a> Writer<'a> {
         self.surface_of_revolution_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_curve(it.swept_curve)),
-            format!("#{}", self.emit_ref_axis1_placement(it.axis_position)),
+            format!("#{}", self.emit_ref_curve((&it.swept_curve).clone())),
+            format!(
+                "#{}",
+                self.emit_ref_axis1_placement((&it.axis_position).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = SURFACE_OF_REVOLUTION({});\n",
@@ -3677,12 +3986,12 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -3701,7 +4010,7 @@ impl<'a> Writer<'a> {
         self.swept_surface_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_curve(it.swept_curve)),
+            format!("#{}", self.emit_ref_curve((&it.swept_curve).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = SWEPT_SURFACE({});\n", attrs.join(",")));
@@ -3722,18 +4031,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -3754,7 +4063,7 @@ impl<'a> Writer<'a> {
         self.time_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![format!(
             "#{}",
-            self.emit_ref_dimensional_exponents(it.dimensions)
+            self.emit_ref_dimensional_exponents((&it.dimensions).clone())
         )];
         self.out
             .push_str(&format!("#{n} = TIME_UNIT({});\n", attrs.join(",")));
@@ -3769,8 +4078,14 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.tolerance_value_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
-            format!("#{}", self.emit_ref_measure_with_unit(it.lower_bound)),
-            format!("#{}", self.emit_ref_measure_with_unit(it.upper_bound)),
+            format!(
+                "#{}",
+                self.emit_ref_measure_with_unit((&it.lower_bound).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_measure_with_unit((&it.upper_bound).clone())
+            ),
         ];
         self.out
             .push_str(&format!("#{n} = TOLERANCE_VALUE({});\n", attrs.join(",")));
@@ -3790,17 +4105,20 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
             format!(
                 "({})",
                 it.defining_tolerance
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
-            format!("#{}", self.emit_ref_tolerance_zone_form(it.form)),
+            format!("#{}", self.emit_ref_tolerance_zone_form((&it.form).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = TOLERANCE_ZONE({});\n", attrs.join(",")));
@@ -3815,12 +4133,12 @@ impl<'a> Writer<'a> {
         let n = self.fresh();
         self.tolerance_zone_definition_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
-            format!("#{}", self.emit_ref_tolerance_zone(it.zone)),
+            format!("#{}", self.emit_ref_tolerance_zone((&it.zone).clone())),
             format!(
                 "({})",
                 it.boundaries
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_shape_aspect(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_shape_aspect((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -3860,18 +4178,24 @@ impl<'a> Writer<'a> {
                 Some(x) => step_str(x),
                 None => "$".to_string(),
             },
-            format!("#{}", self.emit_ref_product_definition_shape(it.of_shape)),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
             it.product_definitional.token().to_string(),
             format!(
                 "({})",
                 it.defining_tolerance
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
-            format!("#{}", self.emit_ref_tolerance_zone_form(it.form)),
-            format!("#{}", self.emit_ref_datum_system(it.datum_reference)),
+            format!("#{}", self.emit_ref_tolerance_zone_form((&it.form).clone())),
+            format!(
+                "#{}",
+                self.emit_ref_datum_system((&it.datum_reference).clone())
+            ),
         ];
         self.out.push_str(&format!(
             "#{n} = TOLERANCE_ZONE_WITH_DATUM({});\n",
@@ -3911,7 +4235,10 @@ impl<'a> Writer<'a> {
         self.toroidal_surface_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_axis2_placement3d(it.position)),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement3d((&it.position).clone())
+            ),
             real(it.major_radius),
             real(it.minor_radius),
         ];
@@ -3934,18 +4261,18 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "({})",
                 it.datum_system
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -3966,7 +4293,7 @@ impl<'a> Writer<'a> {
         self.uncertainty_measure_with_unit_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             measure(&it.value_component),
-            format!("#{}", self.emit_ref_unit(it.unit_component)),
+            format!("#{}", self.emit_ref_unit((&it.unit_component).clone())),
             step_str(&it.name),
             match &it.description {
                 Some(x) => step_str(x),
@@ -4001,16 +4328,16 @@ impl<'a> Writer<'a> {
                 None => "$".to_string(),
             },
             match &it.magnitude {
-                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit((r).clone())),
                 None => "$".to_string(),
             },
             format!(
                 "#{}",
-                self.emit_ref_geometric_tolerance_target(it.toleranced_shape_aspect)
+                self.emit_ref_geometric_tolerance_target((&it.toleranced_shape_aspect).clone())
             ),
             format!(
                 "#{}",
-                self.emit_ref_length_measure_with_unit(it.displacement)
+                self.emit_ref_length_measure_with_unit((&it.displacement).clone())
             ),
         ];
         self.out.push_str(&format!(
@@ -4034,7 +4361,7 @@ impl<'a> Writer<'a> {
                 "({})",
                 it.control_points_list
                     .iter()
-                    .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -4065,7 +4392,7 @@ impl<'a> Writer<'a> {
                     .map(|e| {
                         let row: Vec<String> = e
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                             .collect();
                         format!("({})", row.join(","))
                     })
@@ -4091,7 +4418,7 @@ impl<'a> Writer<'a> {
         self.vector_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_direction(it.orientation)),
+            format!("#{}", self.emit_ref_direction((&it.orientation).clone())),
             real(it.magnitude),
         ];
         self.out
@@ -4121,7 +4448,7 @@ impl<'a> Writer<'a> {
         self.vertex_loop_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_vertex(it.loop_vertex)),
+            format!("#{}", self.emit_ref_vertex((&it.loop_vertex).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = VERTEX_LOOP({});\n", attrs.join(",")));
@@ -4137,7 +4464,7 @@ impl<'a> Writer<'a> {
         self.vertex_point_ids[id.0] = Some(n);
         let attrs: Vec<String> = vec![
             step_str(&it.name),
-            format!("#{}", self.emit_ref_point(it.vertex_geometry)),
+            format!("#{}", self.emit_ref_point((&it.vertex_geometry).clone())),
         ];
         self.out
             .push_str(&format!("#{n} = VERTEX_POINT({});\n", attrs.join(",")));
@@ -4457,6 +4784,15 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_item_defined_transformation(&mut self, r: ItemDefinedTransformationRef) -> u64 {
+        match r {
+            ItemDefinedTransformationRef::ItemDefinedTransformation(i) => {
+                self.emit_item_defined_transformations(i)
+            }
+            ItemDefinedTransformationRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_length_measure_with_unit(&mut self, r: LengthMeasureWithUnitRef) -> u64 {
         match r {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
@@ -4660,6 +4996,17 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_representation_context_reference(
+        &mut self,
+        r: RepresentationContextReferenceRef,
+    ) -> u64 {
+        match r {
+            RepresentationContextReferenceRef::RepresentationContextReference(i) => {
+                self.emit_representation_context_references(i)
+            }
+        }
+    }
+
     fn emit_ref_representation_item(&mut self, r: RepresentationItemRef) -> u64 {
         match r {
             RepresentationItemRef::AdvancedFace(i) => self.emit_advanced_faces(i),
@@ -4744,6 +5091,30 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::VertexLoop(i) => self.emit_vertex_loops(i),
             RepresentationItemRef::VertexPoint(i) => self.emit_vertex_points(i),
             RepresentationItemRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_representation_or_representation_reference(
+        &mut self,
+        r: RepresentationOrRepresentationReferenceRef,
+    ) -> u64 {
+        match r {
+            RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(i) => {
+                self.emit_definitional_representations(i)
+            }
+            RepresentationOrRepresentationReferenceRef::Representation(i) => {
+                self.emit_representations(i)
+            }
+            RepresentationOrRepresentationReferenceRef::RepresentationReference(i) => {
+                self.emit_representation_references(i)
+            }
+            RepresentationOrRepresentationReferenceRef::ShapeDimensionRepresentation(i) => {
+                self.emit_shape_dimension_representations(i)
+            }
+            RepresentationOrRepresentationReferenceRef::ShapeRepresentation(i) => {
+                self.emit_shape_representations(i)
+            }
+            RepresentationOrRepresentationReferenceRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -4878,6 +5249,21 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_transformation(&mut self, r: TransformationRef) -> u64 {
+        match r {
+            TransformationRef::FunctionallyDefinedTransformation(i) => {
+                self.emit_functionally_defined_transformations(i)
+            }
+            TransformationRef::ItemDefinedTransformation(i) => {
+                self.emit_item_defined_transformations(i)
+            }
+            TransformationRef::Complex(i) => self.emit_complex(i),
+            TransformationRef::ItemDefinedTransformationAgg(_) => {
+                panic!("emit aggregate ref via single dispatch")
+            }
+        }
+    }
+
     fn emit_ref_unit(&mut self, r: UnitRef) -> u64 {
         match r {
             UnitRef::ContextDependentUnit(i) => self.emit_context_dependent_units(i),
@@ -4927,7 +5313,7 @@ impl<'a> Writer<'a> {
                         step_str(name),
                         format!(
                             "#{}",
-                            self.emit_ref_application_context(*frame_of_reference)
+                            self.emit_ref_application_context((frame_of_reference).clone())
                         ),
                     ];
                     format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(","))
@@ -4946,7 +5332,7 @@ impl<'a> Writer<'a> {
                             "({})",
                             control_points_list
                                 .iter()
-                                .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                                .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
@@ -4999,7 +5385,12 @@ impl<'a> Writer<'a> {
                                 .map(|e| {
                                     let row: Vec<String> = e
                                         .iter()
-                                        .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                                        .map(|e| {
+                                            format!(
+                                                "#{}",
+                                                self.emit_ref_cartesian_point((e).clone())
+                                            )
+                                        })
                                         .collect();
                                     format!("({})", row.join(","))
                                 })
@@ -5069,7 +5460,10 @@ impl<'a> Writer<'a> {
                         "({})",
                         voids
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_oriented_closed_shell(*e)))
+                            .map(|e| format!(
+                                "#{}",
+                                self.emit_ref_oriented_closed_shell((e).clone())
+                            ))
                             .collect::<Vec<_>>()
                             .join(",")
                     )];
@@ -5095,7 +5489,7 @@ impl<'a> Writer<'a> {
                         Some(v) => format!(
                             "({})",
                             v.iter()
-                                .map(|e| format!("#{}", self.emit_ref_face(*e)))
+                                .map(|e| format!("#{}", self.emit_ref_face((e).clone())))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
@@ -5114,7 +5508,10 @@ impl<'a> Writer<'a> {
                 } => {
                     let a: Vec<String> = vec![
                         step_str(name),
-                        format!("#{}", self.emit_ref_measure_with_unit(*conversion_factor)),
+                        format!(
+                            "#{}",
+                            self.emit_ref_measure_with_unit((conversion_factor).clone())
+                        ),
                     ];
                     format!("CONVERSION_BASED_UNIT({})", a.join(","))
                 }
@@ -5132,7 +5529,7 @@ impl<'a> Writer<'a> {
                 } => {
                     let a: Vec<String> = vec![
                         format!("{}", precedence),
-                        format!("#{}", self.emit_ref_datum(*referenced_datum)),
+                        format!("#{}", self.emit_ref_datum((referenced_datum).clone())),
                     ];
                     format!("DATUM_REFERENCE({})", a.join(","))
                 }
@@ -5141,7 +5538,10 @@ impl<'a> Writer<'a> {
                         "({})",
                         constituents
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_datum_reference_compartment(*e)))
+                            .map(|e| format!(
+                                "#{}",
+                                self.emit_ref_datum_reference_compartment((e).clone())
+                            ))
                             .collect::<Vec<_>>()
                             .join(",")
                     )];
@@ -5157,7 +5557,10 @@ impl<'a> Writer<'a> {
                         "({})",
                         elements
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_derived_unit_element(*e)))
+                            .map(|e| format!(
+                                "#{}",
+                                self.emit_ref_derived_unit_element((e).clone())
+                            ))
                             .collect::<Vec<_>>()
                             .join(",")
                     )];
@@ -5167,7 +5570,7 @@ impl<'a> Writer<'a> {
                     applies_to, name, ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_shape_aspect(*applies_to)),
+                        format!("#{}", self.emit_ref_shape_aspect((applies_to).clone())),
                         step_str(name),
                     ];
                     format!("DIMENSIONAL_SIZE({})", a.join(","))
@@ -5192,11 +5595,11 @@ impl<'a> Writer<'a> {
                 } => {
                     let a: Vec<String> = vec![
                         match edge_start {
-                            Some(r) => format!("#{}", self.emit_ref_vertex(*r)),
+                            Some(r) => format!("#{}", self.emit_ref_vertex((r).clone())),
                             None => "*".to_string(),
                         },
                         match edge_end {
-                            Some(r) => format!("#{}", self.emit_ref_vertex(*r)),
+                            Some(r) => format!("#{}", self.emit_ref_vertex((r).clone())),
                             None => "*".to_string(),
                         },
                     ];
@@ -5208,15 +5611,17 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_curve(*edge_geometry)),
+                        format!("#{}", self.emit_ref_curve((edge_geometry).clone())),
                         (if *same_sense { ".T." } else { ".F." }).to_string(),
                     ];
                     format!("EDGE_CURVE({})", a.join(","))
                 }
                 UnitPart::EdgeLoop => "EDGE_LOOP()".to_string(),
                 UnitPart::ElementarySurface { position, .. } => {
-                    let a: Vec<String> =
-                        vec![format!("#{}", self.emit_ref_axis2_placement3d(*position))];
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_axis2_placement3d((position).clone())
+                    )];
                     format!("ELEMENTARY_SURFACE({})", a.join(","))
                 }
                 UnitPart::Face { bounds, .. } => {
@@ -5224,7 +5629,7 @@ impl<'a> Writer<'a> {
                         "({})",
                         bounds
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_face_bound(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_face_bound((e).clone())))
                             .collect::<Vec<_>>()
                             .join(",")
                     )];
@@ -5234,7 +5639,7 @@ impl<'a> Writer<'a> {
                     bound, orientation, ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_loop(*bound)),
+                        format!("#{}", self.emit_ref_loop((bound).clone())),
                         (if *orientation { ".T." } else { ".F." }).to_string(),
                     ];
                     format!("FACE_BOUND({})", a.join(","))
@@ -5246,15 +5651,29 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_surface(*face_geometry)),
+                        format!("#{}", self.emit_ref_surface((face_geometry).clone())),
                         (if *same_sense { ".T." } else { ".F." }).to_string(),
                     ];
                     format!("FACE_SURFACE({})", a.join(","))
                 }
                 UnitPart::FlatnessTolerance => "FLATNESS_TOLERANCE()".to_string(),
+                UnitPart::FunctionallyDefinedTransformation {
+                    name, description, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("FUNCTIONALLY_DEFINED_TRANSFORMATION({})", a.join(","))
+                }
                 UnitPart::GenericProductDefinitionReference { source, .. } => {
-                    let a: Vec<String> =
-                        vec![format!("#{}", self.emit_ref_external_source(*source))];
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_external_source((source).clone())
+                    )];
                     format!("GENERIC_PRODUCT_DEFINITION_REFERENCE({})", a.join(","))
                 }
                 UnitPart::GeometricRepresentationContext {
@@ -5281,12 +5700,16 @@ impl<'a> Writer<'a> {
                             None => "$".to_string(),
                         },
                         match magnitude {
-                            Some(r) => format!("#{}", self.emit_ref_length_measure_with_unit(*r)),
+                            Some(r) => {
+                                format!("#{}", self.emit_ref_length_measure_with_unit((r).clone()))
+                            }
                             None => "$".to_string(),
                         },
                         format!(
                             "#{}",
-                            self.emit_ref_geometric_tolerance_target(*toleranced_shape_aspect)
+                            self.emit_ref_geometric_tolerance_target(
+                                (toleranced_shape_aspect).clone()
+                            )
                         ),
                     ];
                     format!("GEOMETRIC_TOLERANCE({})", a.join(","))
@@ -5296,7 +5719,10 @@ impl<'a> Writer<'a> {
                         "({})",
                         datum_system
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_datum_system_or_reference(*e)))
+                            .map(|e| format!(
+                                "#{}",
+                                self.emit_ref_datum_system_or_reference((e).clone())
+                            ))
                             .collect::<Vec<_>>()
                             .join(",")
                     )];
@@ -5312,7 +5738,9 @@ impl<'a> Writer<'a> {
                         match second_unit_size {
                             Some(r) => format!(
                                 "#{}",
-                                self.emit_ref_length_or_plane_angle_measure_with_unit_select(*r)
+                                self.emit_ref_length_or_plane_angle_measure_with_unit_select(
+                                    (r).clone()
+                                )
                             ),
                             None => "$".to_string(),
                         },
@@ -5325,7 +5753,9 @@ impl<'a> Writer<'a> {
                 UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
                     let a: Vec<String> = vec![format!(
                         "#{}",
-                        self.emit_ref_length_or_plane_angle_measure_with_unit_select(*unit_size)
+                        self.emit_ref_length_or_plane_angle_measure_with_unit_select(
+                            (unit_size).clone()
+                        )
                     )];
                     format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({})", a.join(","))
                 }
@@ -5335,7 +5765,7 @@ impl<'a> Writer<'a> {
                 } => {
                     let a: Vec<String> = vec![format!(
                         "#{}",
-                        self.emit_ref_length_measure_with_unit(*maximum_upper_tolerance)
+                        self.emit_ref_length_measure_with_unit((maximum_upper_tolerance).clone())
                     )];
                     format!(
                         "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({})",
@@ -5354,12 +5784,37 @@ impl<'a> Writer<'a> {
                     format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS({})", a.join(","))
                 }
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
+                UnitPart::ItemDefinedTransformation {
+                    name,
+                    description,
+                    transform_item_1,
+                    transform_item_2,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_item((transform_item_1).clone())
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_item((transform_item_2).clone())
+                        ),
+                    ];
+                    format!("ITEM_DEFINED_TRANSFORMATION({})", a.join(","))
+                }
                 UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
                 UnitPart::LengthUnit => "LENGTH_UNIT()".to_string(),
                 UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE()".to_string(),
                 UnitPart::Loop => "LOOP()".to_string(),
                 UnitPart::ManifoldSolidBrep { outer, .. } => {
-                    let a: Vec<String> = vec![format!("#{}", self.emit_ref_closed_shell(*outer))];
+                    let a: Vec<String> =
+                        vec![format!("#{}", self.emit_ref_closed_shell((outer).clone()))];
                     format!("MANIFOLD_SOLID_BREP({})", a.join(","))
                 }
                 UnitPart::MassUnit => "MASS_UNIT()".to_string(),
@@ -5370,7 +5825,7 @@ impl<'a> Writer<'a> {
                 } => {
                     let a: Vec<String> = vec![
                         measure(value_component),
-                        format!("#{}", self.emit_ref_unit(*unit_component)),
+                        format!("#{}", self.emit_ref_unit((unit_component).clone())),
                     ];
                     format!("MEASURE_WITH_UNIT({})", a.join(","))
                 }
@@ -5380,7 +5835,7 @@ impl<'a> Writer<'a> {
                 }
                 UnitPart::NamedUnit { dimensions, .. } => {
                     let a: Vec<String> = vec![match dimensions {
-                        Some(r) => format!("#{}", self.emit_ref_dimensional_exponents(*r)),
+                        Some(r) => format!("#{}", self.emit_ref_dimensional_exponents((r).clone())),
                         None => "*".to_string(),
                     }];
                     format!("NAMED_UNIT({})", a.join(","))
@@ -5392,7 +5847,10 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_closed_shell(*closed_shell_element)),
+                        format!(
+                            "#{}",
+                            self.emit_ref_closed_shell((closed_shell_element).clone())
+                        ),
                         (if *orientation { ".T." } else { ".F." }).to_string(),
                     ];
                     format!("ORIENTED_CLOSED_SHELL({})", a.join(","))
@@ -5403,7 +5861,7 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_edge(*edge_element)),
+                        format!("#{}", self.emit_ref_edge((edge_element).clone())),
                         (if *orientation { ".T." } else { ".F." }).to_string(),
                     ];
                     format!("ORIENTED_EDGE({})", a.join(","))
@@ -5416,7 +5874,7 @@ impl<'a> Writer<'a> {
                         "({})",
                         edge_list
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_oriented_edge(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_oriented_edge((e).clone())))
                             .collect::<Vec<_>>()
                             .join(",")
                     )];
@@ -5428,18 +5886,20 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_surface(*basis_surface)),
+                        format!("#{}", self.emit_ref_surface((basis_surface).clone())),
                         format!(
                             "#{}",
-                            self.emit_ref_definitional_representation(*reference_to_curve)
+                            self.emit_ref_definitional_representation((reference_to_curve).clone())
                         ),
                     ];
                     format!("PCURVE({})", a.join(","))
                 }
                 UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE()".to_string(),
                 UnitPart::Placement { location, .. } => {
-                    let a: Vec<String> =
-                        vec![format!("#{}", self.emit_ref_cartesian_point(*location))];
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_cartesian_point((location).clone())
+                    )];
                     format!("PLACEMENT({})", a.join(","))
                 }
                 UnitPart::PlaneAngleMeasureWithUnit => {
@@ -5452,7 +5912,7 @@ impl<'a> Writer<'a> {
                         "({})",
                         polygon
                             .iter()
-                            .map(|e| format!("#{}", self.emit_ref_cartesian_point(*e)))
+                            .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
                             .collect::<Vec<_>>()
                             .join(",")
                     )];
@@ -5477,7 +5937,7 @@ impl<'a> Writer<'a> {
                             "({})",
                             frame_of_reference
                                 .iter()
-                                .map(|e| format!("#{}", self.emit_ref_product_context(*e)))
+                                .map(|e| format!("#{}", self.emit_ref_product_context((e).clone())))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
@@ -5505,11 +5965,11 @@ impl<'a> Writer<'a> {
                         },
                         format!(
                             "#{}",
-                            self.emit_ref_product_definition_formation(*formation)
+                            self.emit_ref_product_definition_formation((formation).clone())
                         ),
                         format!(
                             "#{}",
-                            self.emit_ref_product_definition_context(*frame_of_reference)
+                            self.emit_ref_product_definition_context((frame_of_reference).clone())
                         ),
                     ];
                     format!("PRODUCT_DEFINITION({})", a.join(","))
@@ -5532,7 +5992,7 @@ impl<'a> Writer<'a> {
                             Some(x) => step_str(x),
                             None => "$".to_string(),
                         },
-                        format!("#{}", self.emit_ref_product(*of_product)),
+                        format!("#{}", self.emit_ref_product((of_product).clone())),
                     ];
                     format!("PRODUCT_DEFINITION_FORMATION({})", a.join(","))
                 }
@@ -5555,13 +6015,14 @@ impl<'a> Writer<'a> {
                             None => "$".to_string(),
                         },
                         match definition {
-                            Some(r) => {
-                                format!("#{}", self.emit_ref_product_definition_or_reference(*r))
-                            }
+                            Some(r) => format!(
+                                "#{}",
+                                self.emit_ref_product_definition_or_reference((r).clone())
+                            ),
                             None => "$".to_string(),
                         },
                         match quantity {
-                            Some(r) => format!("#{}", self.emit_ref_measure_with_unit(*r)),
+                            Some(r) => format!("#{}", self.emit_ref_measure_with_unit((r).clone())),
                             None => "$".to_string(),
                         },
                     ];
@@ -5585,13 +6046,13 @@ impl<'a> Writer<'a> {
                         format!(
                             "#{}",
                             self.emit_ref_product_definition_or_reference(
-                                *relating_product_definition
+                                (relating_product_definition).clone()
                             )
                         ),
                         format!(
                             "#{}",
                             self.emit_ref_product_definition_or_reference(
-                                *related_product_definition
+                                (related_product_definition).clone()
                             )
                         ),
                     ];
@@ -5614,11 +6075,11 @@ impl<'a> Writer<'a> {
                         },
                         format!(
                             "#{}",
-                            self.emit_ref_product_definition_relationship(*relating)
+                            self.emit_ref_product_definition_relationship((relating).clone())
                         ),
                         format!(
                             "#{}",
-                            self.emit_ref_product_definition_relationship(*related)
+                            self.emit_ref_product_definition_relationship((related).clone())
                         ),
                     ];
                     format!(
@@ -5639,7 +6100,10 @@ impl<'a> Writer<'a> {
                             Some(x) => step_str(x),
                             None => "$".to_string(),
                         },
-                        format!("#{}", self.emit_ref_characterized_definition(*definition)),
+                        format!(
+                            "#{}",
+                            self.emit_ref_characterized_definition((definition).clone())
+                        ),
                     ];
                     format!("PROPERTY_DEFINITION({})", a.join(","))
                 }
@@ -5682,13 +6146,16 @@ impl<'a> Writer<'a> {
                             "({})",
                             items
                                 .iter()
-                                .map(|e| format!("#{}", self.emit_ref_representation_item(*e)))
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_representation_item((e).clone())
+                                ))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
                         format!(
                             "#{}",
-                            self.emit_ref_representation_context(*context_of_items)
+                            self.emit_ref_representation_context((context_of_items).clone())
                         ),
                     ];
                     format!("REPRESENTATION({})", a.join(","))
@@ -5705,6 +6172,72 @@ impl<'a> Writer<'a> {
                     let a: Vec<String> = vec![step_str(name)];
                     format!("REPRESENTATION_ITEM({})", a.join(","))
                 }
+                UnitPart::RepresentationReference {
+                    id,
+                    context_of_items,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_context_reference(
+                                (context_of_items).clone()
+                            )
+                        ),
+                    ];
+                    format!("REPRESENTATION_REFERENCE({})", a.join(","))
+                }
+                UnitPart::RepresentationRelationship {
+                    name,
+                    description,
+                    rep_1,
+                    rep_2,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_or_representation_reference(
+                                (rep_1).clone()
+                            )
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_or_representation_reference(
+                                (rep_2).clone()
+                            )
+                        ),
+                    ];
+                    format!("REPRESENTATION_RELATIONSHIP({})", a.join(","))
+                }
+                UnitPart::RepresentationRelationshipWithTransformation {
+                    transformation_operator,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![match transformation_operator {
+                        TransformationRef::ItemDefinedTransformationAgg(vs) => format!(
+                            "({})",
+                            vs.iter()
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_item_defined_transformation(e.clone())
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        other => format!("#{}", self.emit_ref_transformation(other.clone())),
+                    }];
+                    format!(
+                        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})",
+                        a.join(",")
+                    )
+                }
                 UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE()".to_string(),
                 UnitPart::SeamCurve => "SEAM_CURVE()".to_string(),
                 UnitPart::ShapeAspect {
@@ -5720,7 +6253,10 @@ impl<'a> Writer<'a> {
                             Some(x) => step_str(x),
                             None => "$".to_string(),
                         },
-                        format!("#{}", self.emit_ref_product_definition_shape(*of_shape)),
+                        format!(
+                            "#{}",
+                            self.emit_ref_product_definition_shape((of_shape).clone())
+                        ),
                         product_definitional.token().to_string(),
                     ];
                     format!("SHAPE_ASPECT({})", a.join(","))
@@ -5738,8 +6274,14 @@ impl<'a> Writer<'a> {
                             Some(x) => step_str(x),
                             None => "$".to_string(),
                         },
-                        format!("#{}", self.emit_ref_shape_aspect(*relating_shape_aspect)),
-                        format!("#{}", self.emit_ref_shape_aspect(*related_shape_aspect)),
+                        format!(
+                            "#{}",
+                            self.emit_ref_shape_aspect((relating_shape_aspect).clone())
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_shape_aspect((related_shape_aspect).clone())
+                        ),
                     ];
                     format!("SHAPE_ASPECT_RELATIONSHIP({})", a.join(","))
                 }
@@ -5768,12 +6310,15 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_curve(*curve_3d)),
+                        format!("#{}", self.emit_ref_curve((curve_3d).clone())),
                         format!(
                             "({})",
                             associated_geometry
                                 .iter()
-                                .map(|e| format!("#{}", self.emit_ref_pcurve_or_surface(*e)))
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_pcurve_or_surface((e).clone())
+                                ))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
@@ -5793,11 +6338,14 @@ impl<'a> Writer<'a> {
                             "({})",
                             defining_tolerance
                                 .iter()
-                                .map(|e| format!("#{}", self.emit_ref_tolerance_zone_target(*e)))
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_tolerance_zone_target((e).clone())
+                                ))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
-                        format!("#{}", self.emit_ref_tolerance_zone_form(*form)),
+                        format!("#{}", self.emit_ref_tolerance_zone_form((form).clone())),
                     ];
                     format!("TOLERANCE_ZONE({})", a.join(","))
                 }
@@ -5805,12 +6353,12 @@ impl<'a> Writer<'a> {
                     zone, boundaries, ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_tolerance_zone(*zone)),
+                        format!("#{}", self.emit_ref_tolerance_zone((zone).clone())),
                         format!(
                             "({})",
                             boundaries
                                 .iter()
-                                .map(|e| format!("#{}", self.emit_ref_shape_aspect(*e)))
+                                .map(|e| format!("#{}", self.emit_ref_shape_aspect((e).clone())))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
@@ -5820,8 +6368,10 @@ impl<'a> Writer<'a> {
                 UnitPart::ToleranceZoneWithDatum {
                     datum_reference, ..
                 } => {
-                    let a: Vec<String> =
-                        vec![format!("#{}", self.emit_ref_datum_system(*datum_reference))];
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_datum_system((datum_reference).clone())
+                    )];
                     format!("TOLERANCE_ZONE_WITH_DATUM({})", a.join(","))
                 }
                 UnitPart::TopologicalRepresentationItem => {
@@ -5838,7 +6388,7 @@ impl<'a> Writer<'a> {
                 UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
                     let a: Vec<String> = vec![format!(
                         "#{}",
-                        self.emit_ref_length_measure_with_unit(*displacement)
+                        self.emit_ref_length_measure_with_unit((displacement).clone())
                     )];
                     format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({})", a.join(","))
                 }
@@ -5850,7 +6400,7 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![
-                        format!("#{}", self.emit_ref_direction(*orientation)),
+                        format!("#{}", self.emit_ref_direction((orientation).clone())),
                         real(*magnitude),
                     ];
                     format!("VECTOR({})", a.join(","))
@@ -5859,8 +6409,10 @@ impl<'a> Writer<'a> {
                 UnitPart::VertexPoint {
                     vertex_geometry, ..
                 } => {
-                    let a: Vec<String> =
-                        vec![format!("#{}", self.emit_ref_point(*vertex_geometry))];
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_point((vertex_geometry).clone())
+                    )];
                     format!("VERTEX_POINT({})", a.join(","))
                 }
             });
@@ -6063,6 +6615,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.flatness_tolerances.items.len() {
             self.emit_flatness_tolerances(FlatnessToleranceId(i));
         }
+        for i in 0..self.model.functionally_defined_transformations.items.len() {
+            self.emit_functionally_defined_transformations(FunctionallyDefinedTransformationId(i));
+        }
         for i in 0..self.model.generic_product_definition_references.items.len() {
             self.emit_generic_product_definition_references(GenericProductDefinitionReferenceId(i));
         }
@@ -6120,6 +6675,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.intersection_curves.items.len() {
             self.emit_intersection_curves(IntersectionCurveId(i));
+        }
+        for i in 0..self.model.item_defined_transformations.items.len() {
+            self.emit_item_defined_transformations(ItemDefinedTransformationId(i));
         }
         for i in 0..self.model.length_measure_with_units.items.len() {
             self.emit_length_measure_with_units(LengthMeasureWithUnitId(i));
@@ -6257,8 +6815,27 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.representation_contexts.items.len() {
             self.emit_representation_contexts(RepresentationContextId(i));
         }
+        for i in 0..self.model.representation_context_references.items.len() {
+            self.emit_representation_context_references(RepresentationContextReferenceId(i));
+        }
         for i in 0..self.model.representation_items.items.len() {
             self.emit_representation_items(RepresentationItemId(i));
+        }
+        for i in 0..self.model.representation_references.items.len() {
+            self.emit_representation_references(RepresentationReferenceId(i));
+        }
+        for i in 0..self.model.representation_relationships.items.len() {
+            self.emit_representation_relationships(RepresentationRelationshipId(i));
+        }
+        for i in 0..self
+            .model
+            .representation_relationship_with_transformations
+            .items
+            .len()
+        {
+            self.emit_representation_relationship_with_transformations(
+                RepresentationRelationshipWithTransformationId(i),
+            );
         }
         for i in 0..self.model.roundness_tolerances.items.len() {
             self.emit_roundness_tolerances(RoundnessToleranceId(i));

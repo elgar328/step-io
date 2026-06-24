@@ -665,6 +665,8 @@ pub struct FaceSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FlatnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FunctionallyDefinedTransformationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GenericProductDefinitionReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricRepresentationContextId(pub usize);
@@ -684,6 +686,8 @@ pub struct GeometricToleranceWithMaximumToleranceId(pub usize);
 pub struct GeometricToleranceWithModifiersId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct IntersectionCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ItemDefinedTransformationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LengthMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -771,7 +775,15 @@ pub struct RepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RepresentationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RepresentationContextReferenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RepresentationReferenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RepresentationRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RepresentationRelationshipWithTransformationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RoundnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -907,6 +919,7 @@ pub enum AnyId {
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
     FlatnessTolerance(FlatnessToleranceId),
+    FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     GeometricRepresentationContext(GeometricRepresentationContextId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
@@ -917,6 +930,7 @@ pub enum AnyId {
     GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     IntersectionCurve(IntersectionCurveId),
+    ItemDefinedTransformation(ItemDefinedTransformationId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     LengthUnit(LengthUnitId),
     Line(LineId),
@@ -960,7 +974,11 @@ pub enum AnyId {
     RationalBSplineSurface(RationalBSplineSurfaceId),
     Representation(RepresentationId),
     RepresentationContext(RepresentationContextId),
+    RepresentationContextReference(RepresentationContextReferenceId),
     RepresentationItem(RepresentationItemId),
+    RepresentationReference(RepresentationReferenceId),
+    RepresentationRelationship(RepresentationRelationshipId),
+    RepresentationRelationshipWithTransformation(RepresentationRelationshipWithTransformationId),
     RoundnessTolerance(RoundnessToleranceId),
     SeamCurve(SeamCurveId),
     ShapeAspect(ShapeAspectId),
@@ -999,7 +1017,7 @@ pub enum AnyId {
     ComplexUnit(ComplexUnitId),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ApplicationContextRef {
     ApplicationContext(ApplicationContextId),
 }
@@ -1012,7 +1030,7 @@ impl ApplicationContextRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Axis1PlacementRef {
     Axis1Placement(Axis1PlacementId),
 }
@@ -1025,7 +1043,7 @@ impl Axis1PlacementRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Axis2Placement3dRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
@@ -1038,7 +1056,7 @@ impl Axis2Placement3dRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Axis2PlacementRef {
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -1053,7 +1071,7 @@ impl Axis2PlacementRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CartesianPointRef {
     CartesianPoint(CartesianPointId),
 }
@@ -1066,7 +1084,7 @@ impl CartesianPointRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CharacterizedDefinitionRef {
     AngularityTolerance(AngularityToleranceId),
     CharacterizedObject(CharacterizedObjectId),
@@ -1179,7 +1197,7 @@ impl CharacterizedDefinitionRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ClosedShellRef {
     ClosedShell(ClosedShellId),
     OrientedClosedShell(OrientedClosedShellId),
@@ -1196,7 +1214,7 @@ impl ClosedShellRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CurveRef {
     BSplineCurve(BSplineCurveId),
     BSplineCurveWithKnots(BSplineCurveWithKnotsId),
@@ -1245,7 +1263,7 @@ impl CurveRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DatumRef {
     CommonDatum(CommonDatumId),
     Datum(DatumId),
@@ -1262,7 +1280,7 @@ impl DatumRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DatumReferenceCompartmentRef {
     Unresolved,
 }
@@ -1274,7 +1292,7 @@ impl DatumReferenceCompartmentRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DatumSystemOrReferenceRef {
     DatumReference(DatumReferenceId),
     DatumSystem(DatumSystemId),
@@ -1291,7 +1309,7 @@ impl DatumSystemOrReferenceRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DatumSystemRef {
     DatumSystem(DatumSystemId),
     Complex(ComplexUnitId),
@@ -1306,7 +1324,7 @@ impl DatumSystemRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DefinitionalRepresentationRef {
     DefinitionalRepresentation(DefinitionalRepresentationId),
     Complex(ComplexUnitId),
@@ -1321,7 +1339,7 @@ impl DefinitionalRepresentationRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DerivedUnitElementRef {
     DerivedUnitElement(DerivedUnitElementId),
 }
@@ -1334,7 +1352,7 @@ impl DerivedUnitElementRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DimensionalCharacteristicRef {
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
@@ -1355,7 +1373,7 @@ impl DimensionalCharacteristicRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DimensionalExponentsRef {
     DimensionalExponents(DimensionalExponentsId),
 }
@@ -1368,7 +1386,7 @@ impl DimensionalExponentsRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DirectionRef {
     Direction(DirectionId),
     Complex(ComplexUnitId),
@@ -1383,7 +1401,7 @@ impl DirectionRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EdgeRef {
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -1402,7 +1420,7 @@ impl EdgeRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ExternalSourceRef {
     Unresolved,
 }
@@ -1414,7 +1432,7 @@ impl ExternalSourceRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FaceBoundRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
@@ -1431,7 +1449,7 @@ impl FaceBoundRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FaceRef {
     AdvancedFace(AdvancedFaceId),
     Face(FaceId),
@@ -1450,7 +1468,7 @@ impl FaceRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GeometricToleranceTargetRef {
     CommonDatum(CommonDatumId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -1493,7 +1511,22 @@ impl GeometricToleranceTargetRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ItemDefinedTransformationRef {
+    ItemDefinedTransformation(ItemDefinedTransformationId),
+    Complex(ComplexUnitId),
+}
+impl ItemDefinedTransformationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ItemDefinedTransformation(i) => Self::ItemDefinedTransformation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ItemDefinedTransformationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LengthMeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     Complex(ComplexUnitId),
@@ -1508,7 +1541,7 @@ impl LengthMeasureWithUnitRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
@@ -1525,7 +1558,7 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LoopRef {
     EdgeLoop(EdgeLoopId),
     Loop(LoopId),
@@ -1546,7 +1579,7 @@ impl LoopRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     MeasureWithUnit(MeasureWithUnitId),
@@ -1567,7 +1600,7 @@ impl MeasureWithUnitRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NamedUnitRef {
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
@@ -1598,7 +1631,7 @@ impl NamedUnitRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OrientedClosedShellRef {
     OrientedClosedShell(OrientedClosedShellId),
     Complex(ComplexUnitId),
@@ -1613,7 +1646,7 @@ impl OrientedClosedShellRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OrientedEdgeRef {
     OrientedEdge(OrientedEdgeId),
     Complex(ComplexUnitId),
@@ -1628,7 +1661,7 @@ impl OrientedEdgeRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PcurveOrSurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
@@ -1681,7 +1714,7 @@ impl PcurveOrSurfaceRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PointRef {
     CartesianPoint(CartesianPointId),
     Point(PointId),
@@ -1698,7 +1731,7 @@ impl PointRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProductContextRef {
     ProductContext(ProductContextId),
     Complex(ComplexUnitId),
@@ -1713,7 +1746,7 @@ impl ProductContextRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProductDefinitionContextRef {
     ProductDefinitionContext(ProductDefinitionContextId),
     Complex(ComplexUnitId),
@@ -1728,7 +1761,7 @@ impl ProductDefinitionContextRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProductDefinitionFormationRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     Complex(ComplexUnitId),
@@ -1743,7 +1776,7 @@ impl ProductDefinitionFormationRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProductDefinitionOrReferenceRef {
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     ProductDefinition(ProductDefinitionId),
@@ -1764,7 +1797,7 @@ impl ProductDefinitionOrReferenceRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProductDefinitionRelationshipRef {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     Complex(ComplexUnitId),
@@ -1779,7 +1812,7 @@ impl ProductDefinitionRelationshipRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProductDefinitionShapeRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
     Complex(ComplexUnitId),
@@ -1794,7 +1827,7 @@ impl ProductDefinitionShapeRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProductRef {
     Product(ProductId),
     Complex(ComplexUnitId),
@@ -1809,7 +1842,7 @@ impl ProductRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RepresentationContextRef {
     GeometricRepresentationContext(GeometricRepresentationContextId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
@@ -1828,7 +1861,20 @@ impl RepresentationContextRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RepresentationContextReferenceRef {
+    RepresentationContextReference(RepresentationContextReferenceId),
+}
+impl RepresentationContextReferenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::RepresentationContextReference(i) => Self::RepresentationContextReference(i),
+            other => panic!("RepresentationContextReferenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RepresentationItemRef {
     AdvancedFace(AdvancedFaceId),
     Axis1Placement(Axis1PlacementId),
@@ -1979,7 +2025,30 @@ impl RepresentationItemRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RepresentationOrRepresentationReferenceRef {
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    Representation(RepresentationId),
+    RepresentationReference(RepresentationReferenceId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    Complex(ComplexUnitId),
+}
+impl RepresentationOrRepresentationReferenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("RepresentationOrRepresentationReferenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ShapeAspectRef {
     CommonDatum(CommonDatumId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -2012,7 +2081,7 @@ impl ShapeAspectRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ShapeDimensionRepresentationRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     Complex(ComplexUnitId),
@@ -2027,7 +2096,7 @@ impl ShapeDimensionRepresentationRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
@@ -2076,7 +2145,7 @@ impl SurfaceRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
 }
@@ -2089,7 +2158,7 @@ impl ToleranceZoneFormRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToleranceZoneRef {
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
@@ -2106,7 +2175,7 @@ impl ToleranceZoneRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToleranceZoneTargetRef {
     AngularityTolerance(AngularityToleranceId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
@@ -2183,7 +2252,27 @@ impl ToleranceZoneTargetRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TransformationRef {
+    FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
+    ItemDefinedTransformation(ItemDefinedTransformationId),
+    ItemDefinedTransformationAgg(Vec<ItemDefinedTransformationRef>),
+    Complex(ComplexUnitId),
+}
+impl TransformationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::FunctionallyDefinedTransformation(i) => {
+                Self::FunctionallyDefinedTransformation(i)
+            }
+            AnyId::ItemDefinedTransformation(i) => Self::ItemDefinedTransformation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("TransformationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UnitRef {
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
@@ -2216,7 +2305,7 @@ impl UnitRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VectorRef {
     Vector(VectorId),
     Complex(ComplexUnitId),
@@ -2231,7 +2320,7 @@ impl VectorRef {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VertexRef {
     Vertex(VertexId),
     VertexPoint(VertexPointId),
@@ -2711,6 +2800,12 @@ pub struct FlatnessTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct FunctionallyDefinedTransformation {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct GenericProductDefinitionReference {
     pub source: ExternalSourceRef,
 }
@@ -2789,6 +2884,14 @@ pub struct IntersectionCurve {
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ItemDefinedTransformation {
+    pub name: String,
+    pub description: Option<String>,
+    pub transform_item_1: RepresentationItemRef,
+    pub transform_item_2: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3107,8 +3210,36 @@ pub struct RepresentationContext {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct RepresentationContextReference {
+    pub context_identifier: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationItem {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepresentationReference {
+    pub id: String,
+    pub context_of_items: RepresentationContextReferenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepresentationRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub rep_1: RepresentationOrRepresentationReferenceRef,
+    pub rep_2: RepresentationOrRepresentationReferenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepresentationRelationshipWithTransformation {
+    pub name: String,
+    pub description: Option<String>,
+    pub rep_1: RepresentationOrRepresentationReferenceRef,
+    pub rep_2: RepresentationOrRepresentationReferenceRef,
+    pub transformation_operator: TransformationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3479,6 +3610,10 @@ pub enum UnitPart {
         same_sense: bool,
     },
     FlatnessTolerance,
+    FunctionallyDefinedTransformation {
+        name: String,
+        description: Option<String>,
+    },
     GenericProductDefinitionReference {
         source: ExternalSourceRef,
     },
@@ -3509,6 +3644,12 @@ pub enum UnitPart {
         modifiers: Vec<GeometricToleranceModifier>,
     },
     IntersectionCurve,
+    ItemDefinedTransformation {
+        name: String,
+        description: Option<String>,
+        transform_item_1: RepresentationItemRef,
+        transform_item_2: RepresentationItemRef,
+    },
     LengthMeasureWithUnit,
     LengthUnit,
     LineProfileTolerance,
@@ -3624,6 +3765,19 @@ pub enum UnitPart {
     },
     RepresentationItem {
         name: String,
+    },
+    RepresentationReference {
+        id: String,
+        context_of_items: RepresentationContextReferenceRef,
+    },
+    RepresentationRelationship {
+        name: String,
+        description: Option<String>,
+        rep_1: RepresentationOrRepresentationReferenceRef,
+        rep_2: RepresentationOrRepresentationReferenceRef,
+    },
+    RepresentationRelationshipWithTransformation {
+        transformation_operator: TransformationRef,
     },
     RoundnessTolerance,
     SeamCurve,
@@ -3754,6 +3908,7 @@ pub struct Model {
     pub face_outer_bounds: Arena<FaceOuterBound>,
     pub face_surfaces: Arena<FaceSurface>,
     pub flatness_tolerances: Arena<FlatnessTolerance>,
+    pub functionally_defined_transformations: Arena<FunctionallyDefinedTransformation>,
     pub generic_product_definition_references: Arena<GenericProductDefinitionReference>,
     pub geometric_representation_contexts: Arena<GeometricRepresentationContext>,
     pub geometric_representation_items: Arena<GeometricRepresentationItem>,
@@ -3764,6 +3919,7 @@ pub struct Model {
     pub geometric_tolerance_with_maximum_tolerances: Arena<GeometricToleranceWithMaximumTolerance>,
     pub geometric_tolerance_with_modifierss: Arena<GeometricToleranceWithModifiers>,
     pub intersection_curves: Arena<IntersectionCurve>,
+    pub item_defined_transformations: Arena<ItemDefinedTransformation>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
     pub length_units: Arena<LengthUnit>,
     pub lines: Arena<Line>,
@@ -3808,7 +3964,12 @@ pub struct Model {
     pub rational_b_spline_surfaces: Arena<RationalBSplineSurface>,
     pub representations: Arena<Representation>,
     pub representation_contexts: Arena<RepresentationContext>,
+    pub representation_context_references: Arena<RepresentationContextReference>,
     pub representation_items: Arena<RepresentationItem>,
+    pub representation_references: Arena<RepresentationReference>,
+    pub representation_relationships: Arena<RepresentationRelationship>,
+    pub representation_relationship_with_transformations:
+        Arena<RepresentationRelationshipWithTransformation>,
     pub roundness_tolerances: Arena<RoundnessTolerance>,
     pub seam_curves: Arena<SeamCurve>,
     pub shape_aspects: Arena<ShapeAspect>,

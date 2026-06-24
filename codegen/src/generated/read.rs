@@ -123,6 +123,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "FACE_OUTER_BOUND",
     "FACE_SURFACE",
     "FLATNESS_TOLERANCE",
+    "FUNCTIONALLY_DEFINED_TRANSFORMATION",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
@@ -133,6 +134,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
     "INTERSECTION_CURVE",
+    "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
     "LINE",
@@ -176,7 +178,11 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "RATIONAL_B_SPLINE_SURFACE",
     "REPRESENTATION",
     "REPRESENTATION_CONTEXT",
+    "REPRESENTATION_CONTEXT_REFERENCE",
     "REPRESENTATION_ITEM",
+    "REPRESENTATION_REFERENCE",
+    "REPRESENTATION_RELATIONSHIP",
+    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
     "ROUNDNESS_TOLERANCE",
     "SEAM_CURVE",
     "SHAPE_ASPECT",
@@ -254,6 +260,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "FACE_OUTER_BOUND",
     "FACE_SURFACE",
     "FLATNESS_TOLERANCE",
+    "FUNCTIONALLY_DEFINED_TRANSFORMATION",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
@@ -264,6 +271,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
     "INTERSECTION_CURVE",
+    "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
     "LINE_PROFILE_TOLERANCE",
@@ -303,6 +311,9 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "REPRESENTATION",
     "REPRESENTATION_CONTEXT",
     "REPRESENTATION_ITEM",
+    "REPRESENTATION_REFERENCE",
+    "REPRESENTATION_RELATIONSHIP",
+    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
     "ROUNDNESS_TOLERANCE",
     "SEAM_CURVE",
     "SHAPE_ASPECT",
@@ -431,6 +442,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_intersection_curves: Vec<(IntersectionCurveId, u64)> = Vec::new();
+    let mut pending_item_defined_transformations: Vec<(ItemDefinedTransformationId, u64)> =
+        Vec::new();
     let mut pending_length_measure_with_units: Vec<(LengthMeasureWithUnitId, u64)> = Vec::new();
     let mut pending_length_units: Vec<(LengthUnitId, u64)> = Vec::new();
     let mut pending_lines: Vec<(LineId, u64)> = Vec::new();
@@ -481,6 +494,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_rational_b_spline_curves: Vec<(RationalBSplineCurveId, u64)> = Vec::new();
     let mut pending_rational_b_spline_surfaces: Vec<(RationalBSplineSurfaceId, u64)> = Vec::new();
     let mut pending_representations: Vec<(RepresentationId, u64)> = Vec::new();
+    let mut pending_representation_references: Vec<(RepresentationReferenceId, u64)> = Vec::new();
+    let mut pending_representation_relationships: Vec<(RepresentationRelationshipId, u64)> =
+        Vec::new();
+    let mut pending_representation_relationship_with_transformations: Vec<(
+        RepresentationRelationshipWithTransformationId,
+        u64,
+    )> = Vec::new();
     let mut pending_roundness_tolerances: Vec<(RoundnessToleranceId, u64)> = Vec::new();
     let mut pending_seam_curves: Vec<(SeamCurveId, u64)> = Vec::new();
     let mut pending_shape_aspects: Vec<(ShapeAspectId, u64)> = Vec::new();
@@ -1428,6 +1448,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "FUNCTIONALLY_DEFINED_TRANSFORMATION" => {
+                let v = FunctionallyDefinedTransformation {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = FunctionallyDefinedTransformationId(
+                    model.functionally_defined_transformations.push(v),
+                );
+                idmap.insert(id, AnyId::FunctionallyDefinedTransformation(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "GENERIC_PRODUCT_DEFINITION_REFERENCE" => {
                 let v = GenericProductDefinitionReference {
                     source: ExternalSourceRef::Unresolved,
@@ -1632,6 +1667,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = IntersectionCurveId(model.intersection_curves.push(v));
                 idmap.insert(id, AnyId::IntersectionCurve(aid));
                 pending_intersection_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ITEM_DEFINED_TRANSFORMATION" => {
+                let v = ItemDefinedTransformation {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(
+                        usize::MAX,
+                    )),
+                    transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = ItemDefinedTransformationId(model.item_defined_transformations.push(v));
+                idmap.insert(id, AnyId::ItemDefinedTransformation(aid));
+                pending_item_defined_transformations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -2297,12 +2352,84 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "REPRESENTATION_CONTEXT_REFERENCE" => {
+                let v = RepresentationContextReference {
+                    context_identifier: as_str(&attributes[0]),
+                };
+                let aid = RepresentationContextReferenceId(
+                    model.representation_context_references.push(v),
+                );
+                idmap.insert(id, AnyId::RepresentationContextReference(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "REPRESENTATION_ITEM" => {
                 let v = RepresentationItem {
                     name: as_str(&attributes[0]),
                 };
                 let aid = RepresentationItemId(model.representation_items.push(v));
                 idmap.insert(id, AnyId::RepresentationItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "REPRESENTATION_REFERENCE" => {
+                let v = RepresentationReference {
+                    id: as_str(&attributes[0]),
+                    context_of_items:
+                        RepresentationContextReferenceRef::RepresentationContextReference(
+                            RepresentationContextReferenceId(usize::MAX),
+                        ),
+                };
+                let aid = RepresentationReferenceId(model.representation_references.push(v));
+                idmap.insert(id, AnyId::RepresentationReference(aid));
+                pending_representation_references.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "REPRESENTATION_RELATIONSHIP" => {
+                let v = RepresentationRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    rep_1: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
+                        DefinitionalRepresentationId(usize::MAX),
+                    ),
+                    rep_2: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
+                        DefinitionalRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = RepresentationRelationshipId(model.representation_relationships.push(v));
+                idmap.insert(id, AnyId::RepresentationRelationship(aid));
+                pending_representation_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => {
+                let v = RepresentationRelationshipWithTransformation {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    rep_1: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
+                        DefinitionalRepresentationId(usize::MAX),
+                    ),
+                    rep_2: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
+                        DefinitionalRepresentationId(usize::MAX),
+                    ),
+                    transformation_operator: TransformationRef::FunctionallyDefinedTransformation(
+                        FunctionallyDefinedTransformationId(usize::MAX),
+                    ),
+                };
+                let aid = RepresentationRelationshipWithTransformationId(
+                    model
+                        .representation_relationship_with_transformations
+                        .push(v),
+                );
+                idmap.insert(id, AnyId::RepresentationRelationshipWithTransformation(aid));
+                pending_representation_relationship_with_transformations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -3141,6 +3268,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_intersection_curves(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_item_defined_transformations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_item_defined_transformations(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_length_measure_with_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_length_measure_with_units(&mut model, aid, attributes, &idmap);
@@ -3336,6 +3468,23 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_representation_references {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_representation_references(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_representation_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_representation_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_representation_relationship_with_transformations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_representation_relationship_with_transformations(
+                &mut model, aid, attributes, &idmap,
+            );
         }
     }
     for (aid, raw) in pending_roundness_tolerances {
@@ -4554,6 +4703,21 @@ fn resolve_intersection_curves(
     it.associated_geometry = associated_geometry_v;
 }
 
+fn resolve_item_defined_transformations(
+    model: &mut Model,
+    aid: ItemDefinedTransformationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let transform_item_1_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let transform_item_2_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.item_defined_transformations.items[aid.0];
+    it.transform_item_1 = transform_item_1_v;
+    it.transform_item_2 = transform_item_2_v;
+}
+
 fn resolve_length_measure_with_units(
     model: &mut Model,
     aid: LengthMeasureWithUnitId,
@@ -5162,6 +5326,64 @@ fn resolve_representations(
     let it = &mut model.representations.items[aid.0];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
+}
+
+fn resolve_representation_references(
+    model: &mut Model,
+    aid: RepresentationReferenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let context_of_items_v = RepresentationContextReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[1])).expect("ref"),
+    );
+    let it = &mut model.representation_references.items[aid.0];
+    it.context_of_items = context_of_items_v;
+}
+
+fn resolve_representation_relationships(
+    model: &mut Model,
+    aid: RepresentationRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rep_1_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let rep_2_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model.representation_relationships.items[aid.0];
+    it.rep_1 = rep_1_v;
+    it.rep_2 = rep_2_v;
+}
+
+fn resolve_representation_relationship_with_transformations(
+    model: &mut Model,
+    aid: RepresentationRelationshipWithTransformationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rep_1_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let rep_2_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let transformation_operator_v = match &attrs[4] {
+        Attribute::List(l) => TransformationRef::ItemDefinedTransformationAgg(
+            l.iter()
+                .map(|e| {
+                    ItemDefinedTransformationRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                })
+                .collect(),
+        ),
+        _ => TransformationRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref")),
+    };
+    let it = &mut model.representation_relationship_with_transformations.items[aid.0];
+    it.rep_1 = rep_1_v;
+    it.rep_2 = rep_2_v;
+    it.transformation_operator = transformation_operator_v;
 }
 
 fn resolve_roundness_tolerances(
@@ -5823,6 +6045,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
             },
             "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
+            "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+            },
             "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference {
                 source: ExternalSourceRef::Unresolved,
             },
@@ -5883,6 +6112,15 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
             },
             "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
+            "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+            },
             "LENGTH_MEASURE_WITH_UNIT" => UnitPart::LengthMeasureWithUnit,
             "LENGTH_UNIT" => UnitPart::LengthUnit,
             "LINE_PROFILE_TOLERANCE" => UnitPart::LineProfileTolerance,
@@ -6058,6 +6296,32 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "REPRESENTATION_ITEM" => UnitPart::RepresentationItem {
                 name: as_str(&p.attributes[0]),
             },
+            "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference {
+                id: as_str(&p.attributes[0]),
+                context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(
+                    RepresentationContextReferenceId(usize::MAX),
+                ),
+            },
+            "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                rep_1: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
+                    DefinitionalRepresentationId(usize::MAX),
+                ),
+                rep_2: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
+                    DefinitionalRepresentationId(usize::MAX),
+                ),
+            },
+            "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => {
+                UnitPart::RepresentationRelationshipWithTransformation {
+                    transformation_operator: TransformationRef::FunctionallyDefinedTransformation(
+                        FunctionallyDefinedTransformationId(usize::MAX),
+                    ),
+                }
+            }
             "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
             "SEAM_CURVE" => UnitPart::SeamCurve,
             "SHAPE_ASPECT" => UnitPart::ShapeAspect {
@@ -6372,6 +6636,18 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
             }
+            UnitPart::ItemDefinedTransformation {
+                transform_item_1,
+                transform_item_2,
+                ..
+            } => {
+                *transform_item_1 = RepresentationItemRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+                *transform_item_2 = RepresentationItemRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
             UnitPart::ManifoldSolidBrep { outer, .. } => {
                 *outer = ClosedShellRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
@@ -6532,6 +6808,40 @@ fn resolve_complex(
                 *context_of_items = RepresentationContextRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
                 );
+            }
+            UnitPart::RepresentationReference {
+                context_of_items, ..
+            } => {
+                *context_of_items = RepresentationContextReferenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
+            UnitPart::RepresentationRelationship { rep_1, rep_2, .. } => {
+                *rep_1 = RepresentationOrRepresentationReferenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+                *rep_2 = RepresentationOrRepresentationReferenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
+            UnitPart::RepresentationRelationshipWithTransformation {
+                transformation_operator,
+                ..
+            } => {
+                *transformation_operator = match &p.attributes[0] {
+                    Attribute::List(l) => TransformationRef::ItemDefinedTransformationAgg(
+                        l.iter()
+                            .map(|e| {
+                                ItemDefinedTransformationRef::from_any(
+                                    *idmap.get(&as_ref_id(e)).expect("ref"),
+                                )
+                            })
+                            .collect(),
+                    ),
+                    _ => TransformationRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                    ),
+                };
             }
             UnitPart::ShapeAspect { of_shape, .. } => {
                 *of_shape = ProductDefinitionShapeRef::from_any(

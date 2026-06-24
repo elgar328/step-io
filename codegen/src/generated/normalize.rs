@@ -1352,6 +1352,18 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 der: false,
             },
         ],
+        "FUNCTIONALLY_DEFINED_TRANSFORMATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -1569,6 +1581,28 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Enum,
+                req: true,
+                der: false,
+            },
+        ],
+        "ITEM_DEFINED_TRANSFORMATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
                 req: true,
                 der: false,
             },
@@ -2377,11 +2411,77 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 der: false,
             },
         ],
+        "REPRESENTATION_CONTEXT_REFERENCE" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+        }],
         "REPRESENTATION_ITEM" => &[Slot {
             k: Sk::Str,
             req: true,
             der: false,
         }],
+        "REPRESENTATION_REFERENCE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
+        "REPRESENTATION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
+        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
         "ROUNDNESS_TOLERANCE" => &[
             Slot {
                 k: Sk::Str,
@@ -3307,6 +3407,18 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "FLATNESS_TOLERANCE" => &[],
+        "FUNCTIONALLY_DEFINED_TRANSFORMATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -3373,6 +3485,28 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
         }],
         "INTERSECTION_CURVE" => &[],
+        "ITEM_DEFINED_TRANSFORMATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
         "LENGTH_MEASURE_WITH_UNIT" => &[],
         "LENGTH_UNIT" => &[],
         "LINE_PROFILE_TOLERANCE" => &[],
@@ -3676,6 +3810,45 @@ fn part_slots(n: &str) -> &'static [Slot] {
         ],
         "REPRESENTATION_ITEM" => &[Slot {
             k: Sk::Str,
+            req: true,
+            der: false,
+        }],
+        "REPRESENTATION_REFERENCE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
+        "REPRESENTATION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
+        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => &[Slot {
+            k: Sk::Ref,
             req: true,
             der: false,
         }],

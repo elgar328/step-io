@@ -44,6 +44,11 @@ pub struct RefEnum {
     pub rust: String, // e.g. CurveRef
     /// (variant ident, target simple-entity rust name) for simple arms.
     pub simple_arms: Vec<(String, String)>,
+    /// Aggregate arms for `SELECT(.., LIST OF E, SET OF E)`: (variant ident,
+    /// element ref-enum rust name e.g. `RepresentationItemRef`). The arm holds
+    /// `Vec<{element}>` (list/set collapse — wire-identical `(...)`). A non-empty
+    /// list makes this enum non-Copy.
+    pub aggregate: Vec<(String, String)>,
     /// True when the target can resolve to a complex part-bag instance.
     pub has_complex: bool,
 }
@@ -167,11 +172,42 @@ fn select_entity_members(res: &Resolver, alias: &str, out: &mut Vec<String>, dep
         for m in members {
             if res.schema.entity.contains_key(m) {
                 out.push(m.to_string());
+            } else if let Some(e) = res.agg_element(m) {
+                // aggregate member (LIST/SET OF E) -> pull E's entities so the
+                // aggregate arm's element ref-enum is generated and non-empty.
+                if res.schema.entity.contains_key(&e) {
+                    out.push(e);
+                } else {
+                    select_entity_members(res, &e, out, depth + 1);
+                }
             } else {
                 select_entity_members(res, m, out, depth + 1);
             }
         }
     }
+}
+
+/// Aggregate arms of a ref-target: for a SELECT with `LIST/SET OF E` members,
+/// one arm per distinct element E -> (variant ident, element ref-enum rust name).
+/// Empty for entities and non-aggregate selects.
+fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String)> {
+    let Some(td) = res.schema.types.get(target) else {
+        return Vec::new();
+    };
+    let Some(members) = crate::schema::select_members(td.aliased.trim()) else {
+        return Vec::new();
+    };
+    let mut seen = BTreeSet::new();
+    let mut out = Vec::new();
+    for m in members {
+        if let Some(e) = res.agg_element(m)
+            && res.ref_like(&e, 0)
+            && seen.insert(e.clone())
+        {
+            out.push((format!("{}Agg", pascal(&e)), format!("{}Ref", pascal(&e))));
+        }
+    }
+    out
 }
 
 /// All closure entities a ref-target ty can name. The target is either an
@@ -290,6 +326,23 @@ impl ModelIr {
                 collect_field_wants(&f.kind, &mut want_refs, &mut want_enums);
             }
         }
+        // Expand: an aggregate-mixed SELECT needs its element E's ref-enum too
+        // (the Agg arm holds Vec<{E}Ref>). Fixpoint in case E is itself such.
+        let mut queue: Vec<String> = want_refs.iter().cloned().collect();
+        while let Some(t) = queue.pop() {
+            if let Some(td) = schema.types.get(&t)
+                && let Some(members) = crate::schema::select_members(td.aliased.trim())
+            {
+                for m in members {
+                    if let Some(e) = res.agg_element(m)
+                        && res.ref_like(&e, 0)
+                        && want_refs.insert(e.clone())
+                    {
+                        queue.push(e);
+                    }
+                }
+            }
+        }
 
         for target in &want_refs {
             let leaves = subtypes_in_closure(schema, res, closure, &children, target);
@@ -313,6 +366,7 @@ impl ModelIr {
                 RefEnum {
                     rust: format!("{}Ref", pascal(target)),
                     simple_arms,
+                    aggregate: aggregate_arms(res, target),
                     has_complex,
                 },
             );
