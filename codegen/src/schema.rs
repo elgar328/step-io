@@ -32,6 +32,11 @@ pub struct Entity {
     /// `SELF\super.attr : type` scalar-primitive narrowings, applied in-place.
     #[serde(default)]
     pub redeclared_attrs: Vec<Attr>,
+    /// Raw EXPRESS DERIVE targets (universal.toml): each `"super.attr"` (a
+    /// `SELF\super.attr` redeclaration) or `"attr"` (own-attr derive). Marks
+    /// `*` slots; the hard/derivable split is computed in `main.rs`.
+    #[serde(default)]
+    pub derives: Vec<String>,
 }
 
 impl EarlyToml {

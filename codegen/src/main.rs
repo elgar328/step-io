@@ -1,4 +1,4 @@
-//! `codegen` generator binary. Reads `schema/early.toml` + `schema/mapping.toml`,
+//! `codegen` generator binary. Reads `schema/universal.toml` + `schema/mapping.toml`,
 //! computes the units/geometry/topology schema closure, and emits a
 //! schema-faithful model + generic 2-pass read + topo write into
 //! `codegen/src/generated/`. Run: `cargo run -p codegen --bin codegen`.
@@ -19,9 +19,10 @@ use schema::EarlyToml;
 fn main() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let schema: EarlyToml = toml::from_str(
-        &std::fs::read_to_string(format!("{root}/schema/early.toml")).expect("read early.toml"),
+        &std::fs::read_to_string(format!("{root}/schema/universal.toml"))
+            .expect("read universal.toml"),
     )
-    .expect("parse early.toml");
+    .expect("parse universal.toml");
     let mapping: mapping::Mapping = toml::from_str(
         &std::fs::read_to_string(format!("{root}/schema/mapping.toml")).expect("read mapping.toml"),
     )
@@ -31,14 +32,14 @@ fn main() {
 
     // Domain seeds -> single combined closure.
     let mut seeds: Vec<String> = Vec::new();
-    for (_dom, list) in &mapping.codegen.domains {
+    for list in mapping.codegen.domains.values() {
         seeds.extend(list.iter().cloned());
     }
     let closure = build_closure(&schema, &res, &seeds);
 
     // Complex-part entities (union across domains, intersect closure).
     let mut complex_parts: BTreeSet<String> = BTreeSet::new();
-    for (_dom, list) in &mapping.codegen.complex_parts {
+    for list in mapping.codegen.complex_parts.values() {
         for n in list {
             if closure.contains(n) {
                 complex_parts.insert(n.clone());
@@ -46,29 +47,35 @@ fn main() {
         }
     }
 
-    // Conditionally-`*` (derivable) attrs from complex cases: a case's
-    // `derived = [attr...]` names an attr that is `*` in that case but a value
-    // in another (e.g. named_unit.dimensions). Attach each to the part entity
-    // that declares it as an own_attr.
+    // DERIVE (`*`) markers from universal.toml `derives` (each "super.attr" or
+    // "attr"), split into hard vs conditional using `complex_parts`:
+    //  - hard `derived`: a non-complex-part (simple-leaf) entity computes the
+    //    attr always (e.g. oriented_edge.edge_start) → drop field, render `*`.
+    //  - conditional `derivable`: a complex-part supertype P's attr is `*` only
+    //    when a deriving sibling part is present (e.g. si_unit derives
+    //    SELF\named_unit.dimensions → named_unit.dimensions). Keyed by P.
+    let mut derived: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
     let mut derivable: std::collections::BTreeMap<String, BTreeSet<String>> =
         std::collections::BTreeMap::new();
-    for hint in mapping.complex.values() {
-        let mut case_derived: Vec<&str> = Vec::new();
-        if let Some(cases) = &hint.cases {
-            for c in cases.values() {
-                for d in &c.derived {
-                    case_derived.push(d);
-                }
+    for (name, ent) in &schema.entity {
+        for d in &ent.derives {
+            let (sup, attr) = d
+                .rsplit_once('.')
+                .map_or((None, d.as_str()), |(s, a)| (Some(s), a));
+            if let Some(s) = sup
+                && complex_parts.contains(s)
+            {
+                derivable
+                    .entry(s.to_string())
+                    .or_default()
+                    .insert(attr.to_string());
             }
-        }
-        for d in case_derived {
-            for part in &complex_parts {
-                if schema.own_attrs(part).iter().any(|a| a.name == d) {
-                    derivable
-                        .entry(part.clone())
-                        .or_default()
-                        .insert(d.to_string());
-                }
+            if !complex_parts.contains(name) {
+                derived
+                    .entry(name.clone())
+                    .or_default()
+                    .push(attr.to_string());
             }
         }
     }
@@ -78,7 +85,7 @@ fn main() {
         &res,
         &closure,
         &complex_parts,
-        &mapping.derived,
+        &derived,
         &derivable,
     );
 
