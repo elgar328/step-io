@@ -945,6 +945,82 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 der: false,
             },
         ],
+        "DATUM_REFERENCE_COMPARTMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Log,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: false,
+                der: false,
+            },
+        ],
+        "DATUM_REFERENCE_ELEMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Log,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: false,
+                der: false,
+            },
+        ],
+        "DATUM_REFERENCE_MODIFIER_WITH_VALUE" => &[
+            Slot {
+                k: Sk::Enum,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+        ],
         "DATUM_SYSTEM" => &[
             Slot {
                 k: Sk::Str,
@@ -1360,6 +1436,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
+        "GENERAL_DATUM_REFERENCE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Log,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
                 req: false,
                 der: false,
             },
@@ -3415,6 +3523,18 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Str,
+                req: false,
+                der: false,
+            },
+        ],
+        "GENERAL_DATUM_REFERENCE" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+            },
+            Slot {
+                k: Sk::Vec,
                 req: false,
                 der: false,
             },

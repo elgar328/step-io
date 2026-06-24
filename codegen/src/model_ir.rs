@@ -44,11 +44,18 @@ pub struct RefEnum {
     pub rust: String, // e.g. CurveRef
     /// (variant ident, target simple-entity rust name) for simple arms.
     pub simple_arms: Vec<(String, String)>,
-    /// Aggregate arms for `SELECT(.., LIST OF E, SET OF E)`: (variant ident,
-    /// element ref-enum rust name e.g. `RepresentationItemRef`). The arm holds
-    /// `Vec<{element}>` (list/set collapse — wire-identical `(...)`). A non-empty
-    /// list makes this enum non-Copy.
-    pub aggregate: Vec<(String, String)>,
+    /// Aggregate arms for `SELECT(.., named_list_type, ..)`: one per aggregate
+    /// MEMBER — (variant ident, element ref-enum rust name e.g.
+    /// `DatumReferenceElementRef`, UPPER wire type name e.g. `COMMON_DATUM_LIST`).
+    /// The arm holds `Vec<{element}>`; on the wire a named aggregate select member
+    /// is a Typed literal `WIRE((#a,#b))`, so the wire name is kept for read
+    /// discrimination + write. A non-empty list makes this enum non-Copy.
+    pub aggregate: Vec<(String, String, String)>,
+    /// Enum arms for `SELECT(.., some_enum)`: (variant ident, generated enum rust
+    /// name, UPPER wire type name e.g. `SIMPLE_DATUM_REFERENCE_MODIFIER`). A named
+    /// enum select member is a Typed literal `WIRE(.TOKEN.)`, so the wire name is
+    /// kept for read discrimination + write. The arm holds the (Copy) enum.
+    pub enum_arms: Vec<(String, String, String)>,
     /// True when the target can resolve to a complex part-bag instance.
     pub has_complex: bool,
 }
@@ -190,7 +197,33 @@ fn select_entity_members(res: &Resolver, alias: &str, out: &mut Vec<String>, dep
 /// Aggregate arms of a ref-target: for a SELECT with `LIST/SET OF E` members,
 /// one arm per distinct element E -> (variant ident, element ref-enum rust name).
 /// Empty for entities and non-aggregate selects.
-fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String)> {
+fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)> {
+    let Some(td) = res.schema.types.get(target) else {
+        return Vec::new();
+    };
+    let Some(members) = crate::schema::select_members(td.aliased.trim()) else {
+        return Vec::new();
+    };
+    // One arm per aggregate MEMBER (named list/set types are wire-distinct via
+    // their Typed literal name, so do NOT collapse by element type).
+    let mut seen = BTreeSet::new();
+    let mut out = Vec::new();
+    for m in members {
+        if let Some(e) = res.agg_element(m)
+            && res.ref_like(&e, 0)
+            && seen.insert(m.to_string())
+        {
+            out.push((pascal(m), format!("{}Ref", pascal(&e)), m.to_uppercase()));
+        }
+    }
+    out
+}
+
+/// Enum arms of a ref-target: for a SELECT with ENUM members, one arm per
+/// distinct enum alias -> (variant ident, generated enum rust name). The enum
+/// alias is also returned so the caller can add it to `want_enums`. Empty for
+/// entities and selects without enum members.
+fn enum_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)> {
     let Some(td) = res.schema.types.get(target) else {
         return Vec::new();
     };
@@ -200,11 +233,11 @@ fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String)> {
     let mut seen = BTreeSet::new();
     let mut out = Vec::new();
     for m in members {
-        if let Some(e) = res.agg_element(m)
-            && res.ref_like(&e, 0)
-            && seen.insert(e.clone())
+        if let Some(alias) = res.enum_alias(m, 0)
+            && seen.insert(alias.clone())
         {
-            out.push((format!("{}Agg", pascal(&e)), format!("{}Ref", pascal(&e))));
+            // (variant ident, enum rust name, enum alias for want_enums)
+            out.push((pascal(&alias), pascal(&alias), alias));
         }
     }
     out
@@ -361,12 +394,22 @@ impl ModelIr {
             }
             simple_arms.sort();
             simple_arms.dedup();
+            // enum arms (SELECT with ENUM members); register each enum for
+            // generation via want_enums.
+            let earms = enum_arms(res, target);
+            for (_, _, alias) in &earms {
+                want_enums.insert(alias.clone());
+            }
             ref_enums.insert(
                 target.clone(),
                 RefEnum {
                     rust: format!("{}Ref", pascal(target)),
                     simple_arms,
                     aggregate: aggregate_arms(res, target),
+                    enum_arms: earms
+                        .into_iter()
+                        .map(|(v, r, alias)| (v, r, alias.to_uppercase()))
+                        .collect(),
                     has_complex,
                 },
             );

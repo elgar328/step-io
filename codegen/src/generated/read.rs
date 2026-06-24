@@ -101,6 +101,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DATUM",
     "DATUM_FEATURE",
     "DATUM_REFERENCE",
+    "DATUM_REFERENCE_COMPARTMENT",
+    "DATUM_REFERENCE_ELEMENT",
+    "DATUM_REFERENCE_MODIFIER_WITH_VALUE",
     "DATUM_SYSTEM",
     "DATUM_TARGET",
     "DEFINITIONAL_REPRESENTATION",
@@ -124,6 +127,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "FACE_SURFACE",
     "FLATNESS_TOLERANCE",
     "FUNCTIONALLY_DEFINED_TRANSFORMATION",
+    "GENERAL_DATUM_REFERENCE",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
@@ -261,6 +265,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "FACE_SURFACE",
     "FLATNESS_TOLERANCE",
     "FUNCTIONALLY_DEFINED_TRANSFORMATION",
+    "GENERAL_DATUM_REFERENCE",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
@@ -391,6 +396,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_datums: Vec<(DatumId, u64)> = Vec::new();
     let mut pending_datum_features: Vec<(DatumFeatureId, u64)> = Vec::new();
     let mut pending_datum_references: Vec<(DatumReferenceId, u64)> = Vec::new();
+    let mut pending_datum_reference_compartments: Vec<(DatumReferenceCompartmentId, u64)> =
+        Vec::new();
+    let mut pending_datum_reference_elements: Vec<(DatumReferenceElementId, u64)> = Vec::new();
+    let mut pending_datum_reference_modifier_with_values: Vec<(
+        DatumReferenceModifierWithValueId,
+        u64,
+    )> = Vec::new();
     let mut pending_datum_systems: Vec<(DatumSystemId, u64)> = Vec::new();
     let mut pending_datum_targets: Vec<(DatumTargetId, u64)> = Vec::new();
     let mut pending_definitional_representations: Vec<(DefinitionalRepresentationId, u64)> =
@@ -416,6 +428,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_face_outer_bounds: Vec<(FaceOuterBoundId, u64)> = Vec::new();
     let mut pending_face_surfaces: Vec<(FaceSurfaceId, u64)> = Vec::new();
     let mut pending_flatness_tolerances: Vec<(FlatnessToleranceId, u64)> = Vec::new();
+    let mut pending_general_datum_references: Vec<(GeneralDatumReferenceId, u64)> = Vec::new();
     let mut pending_generic_product_definition_references: Vec<(
         GenericProductDefinitionReferenceId,
         u64,
@@ -1146,6 +1159,65 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DATUM_REFERENCE_COMPARTMENT" => {
+                let v = DatumReferenceCompartment {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    modifiers: None,
+                };
+                let aid = DatumReferenceCompartmentId(model.datum_reference_compartments.push(v));
+                idmap.insert(id, AnyId::DatumReferenceCompartment(aid));
+                pending_datum_reference_compartments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATUM_REFERENCE_ELEMENT" => {
+                let v = DatumReferenceElement {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    modifiers: None,
+                };
+                let aid = DatumReferenceElementId(model.datum_reference_elements.push(v));
+                idmap.insert(id, AnyId::DatumReferenceElement(aid));
+                pending_datum_reference_elements.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATUM_REFERENCE_MODIFIER_WITH_VALUE" => {
+                let v = DatumReferenceModifierWithValue {
+                    modifier_type: match &attributes[0] {
+                        Attribute::Enum(s) => DatumReferenceModifierType::parse(s)
+                            .expect("datum_reference_modifier_type"),
+                        other => panic!("enum datum_reference_modifier_type: {other:?}"),
+                    },
+                    modifier_value: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                };
+                let aid = DatumReferenceModifierWithValueId(
+                    model.datum_reference_modifier_with_values.push(v),
+                );
+                idmap.insert(id, AnyId::DatumReferenceModifierWithValue(aid));
+                pending_datum_reference_modifier_with_values.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DATUM_SYSTEM" => {
                 let v = DatumSystem {
                     name: as_str(&attributes[0]),
@@ -1460,6 +1532,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     model.functionally_defined_transformations.push(v),
                 );
                 idmap.insert(id, AnyId::FunctionallyDefinedTransformation(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GENERAL_DATUM_REFERENCE" => {
+                let v = GeneralDatumReference {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    modifiers: None,
+                };
+                let aid = GeneralDatumReferenceId(model.general_datum_references.push(v));
+                idmap.insert(id, AnyId::GeneralDatumReference(aid));
+                pending_general_datum_references.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -3124,6 +3216,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_datum_references(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_datum_reference_compartments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datum_reference_compartments(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_datum_reference_elements {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datum_reference_elements(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_datum_reference_modifier_with_values {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_datum_reference_modifier_with_values(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_datum_systems {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_datum_systems(&mut model, aid, attributes, &idmap);
@@ -3222,6 +3329,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_flatness_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_flatness_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_general_datum_references {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_general_datum_references(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_generic_product_definition_references {
@@ -4114,14 +4226,17 @@ fn resolve_connected_face_sets(
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
 ) {
-    let cfs_faces_v = Some(match &attrs[1] {
-        Attribute::List(l) => l
-            .iter()
-            .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
-            .collect(),
-        Attribute::Unset => Vec::new(),
-        other => panic!("vec ref: {other:?}"),
-    });
+    let cfs_faces_v = match &attrs[1] {
+        Attribute::Derived => None,
+        _ => Some(match &attrs[1] {
+            Attribute::List(l) => l
+                .iter()
+                .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                .collect(),
+            Attribute::Unset => Vec::new(),
+            other => panic!("vec ref: {other:?}"),
+        }),
+    };
     let it = &mut model.connected_face_sets.items[aid.0];
     it.cfs_faces = cfs_faces_v;
 }
@@ -4216,6 +4331,126 @@ fn resolve_datum_references(
     let referenced_datum_v = DatumRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.datum_references.items[aid.0];
     it.referenced_datum = referenced_datum_v;
+}
+
+fn resolve_datum_reference_compartments(
+    model: &mut Model,
+    aid: DatumReferenceCompartmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let base_v = match &attrs[4] {
+        Attribute::Typed { type_name, value } if type_name == "COMMON_DATUM_LIST" => {
+            DatumOrCommonDatumRef::CommonDatumList(match value.as_ref() {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| {
+                        DatumReferenceElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                    })
+                    .collect(),
+                other => panic!("agg list COMMON_DATUM_LIST: {other:?}"),
+            })
+        }
+        _ => DatumOrCommonDatumRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref")),
+    };
+    let modifiers_v = match &attrs[5] {
+        Attribute::Unset => None,
+        _ => Some(match &attrs[5] {
+            Attribute::List(l) => l
+                .iter()
+                .map(|e| match e {
+                    Attribute::Typed { type_name, value }
+                        if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" =>
+                    {
+                        DatumReferenceModifierRef::SimpleDatumReferenceModifier(
+                            match value.as_ref() {
+                                Attribute::Enum(s) => SimpleDatumReferenceModifier::parse(s)
+                                    .expect("SimpleDatumReferenceModifier"),
+                                other => panic!("enum SIMPLE_DATUM_REFERENCE_MODIFIER: {other:?}"),
+                            },
+                        )
+                    }
+                    _ => {
+                        DatumReferenceModifierRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                    }
+                })
+                .collect(),
+            Attribute::Unset => Vec::new(),
+            other => panic!("vec ref: {other:?}"),
+        }),
+    };
+    let it = &mut model.datum_reference_compartments.items[aid.0];
+    it.of_shape = of_shape_v;
+    it.base = base_v;
+    it.modifiers = modifiers_v;
+}
+
+fn resolve_datum_reference_elements(
+    model: &mut Model,
+    aid: DatumReferenceElementId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let base_v = match &attrs[4] {
+        Attribute::Typed { type_name, value } if type_name == "COMMON_DATUM_LIST" => {
+            DatumOrCommonDatumRef::CommonDatumList(match value.as_ref() {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| {
+                        DatumReferenceElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                    })
+                    .collect(),
+                other => panic!("agg list COMMON_DATUM_LIST: {other:?}"),
+            })
+        }
+        _ => DatumOrCommonDatumRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref")),
+    };
+    let modifiers_v = match &attrs[5] {
+        Attribute::Unset => None,
+        _ => Some(match &attrs[5] {
+            Attribute::List(l) => l
+                .iter()
+                .map(|e| match e {
+                    Attribute::Typed { type_name, value }
+                        if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" =>
+                    {
+                        DatumReferenceModifierRef::SimpleDatumReferenceModifier(
+                            match value.as_ref() {
+                                Attribute::Enum(s) => SimpleDatumReferenceModifier::parse(s)
+                                    .expect("SimpleDatumReferenceModifier"),
+                                other => panic!("enum SIMPLE_DATUM_REFERENCE_MODIFIER: {other:?}"),
+                            },
+                        )
+                    }
+                    _ => {
+                        DatumReferenceModifierRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                    }
+                })
+                .collect(),
+            Attribute::Unset => Vec::new(),
+            other => panic!("vec ref: {other:?}"),
+        }),
+    };
+    let it = &mut model.datum_reference_elements.items[aid.0];
+    it.of_shape = of_shape_v;
+    it.base = base_v;
+    it.modifiers = modifiers_v;
+}
+
+fn resolve_datum_reference_modifier_with_values(
+    model: &mut Model,
+    aid: DatumReferenceModifierWithValueId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let modifier_value_v =
+        LengthMeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.datum_reference_modifier_with_values.items[aid.0];
+    it.modifier_value = modifier_value_v;
 }
 
 fn resolve_datum_systems(
@@ -4529,6 +4764,60 @@ fn resolve_flatness_tolerances(
     let it = &mut model.flatness_tolerances.items[aid.0];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_general_datum_references(
+    model: &mut Model,
+    aid: GeneralDatumReferenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let base_v = match &attrs[4] {
+        Attribute::Typed { type_name, value } if type_name == "COMMON_DATUM_LIST" => {
+            DatumOrCommonDatumRef::CommonDatumList(match value.as_ref() {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| {
+                        DatumReferenceElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                    })
+                    .collect(),
+                other => panic!("agg list COMMON_DATUM_LIST: {other:?}"),
+            })
+        }
+        _ => DatumOrCommonDatumRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref")),
+    };
+    let modifiers_v = match &attrs[5] {
+        Attribute::Unset => None,
+        _ => Some(match &attrs[5] {
+            Attribute::List(l) => l
+                .iter()
+                .map(|e| match e {
+                    Attribute::Typed { type_name, value }
+                        if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" =>
+                    {
+                        DatumReferenceModifierRef::SimpleDatumReferenceModifier(
+                            match value.as_ref() {
+                                Attribute::Enum(s) => SimpleDatumReferenceModifier::parse(s)
+                                    .expect("SimpleDatumReferenceModifier"),
+                                other => panic!("enum SIMPLE_DATUM_REFERENCE_MODIFIER: {other:?}"),
+                            },
+                        )
+                    }
+                    _ => {
+                        DatumReferenceModifierRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                    }
+                })
+                .collect(),
+            Attribute::Unset => Vec::new(),
+            other => panic!("vec ref: {other:?}"),
+        }),
+    };
+    let it = &mut model.general_datum_references.items[aid.0];
+    it.of_shape = of_shape_v;
+    it.base = base_v;
+    it.modifiers = modifiers_v;
 }
 
 fn resolve_generic_product_definition_references(
@@ -5371,13 +5660,19 @@ fn resolve_representation_relationship_with_transformations(
         *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
     );
     let transformation_operator_v = match &attrs[4] {
-        Attribute::List(l) => TransformationRef::ItemDefinedTransformationAgg(
-            l.iter()
-                .map(|e| {
-                    ItemDefinedTransformationRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
-                })
-                .collect(),
-        ),
+        Attribute::Typed { type_name, value } if type_name == "SET_ITEM_DEFINED_TRANSFORMATION" => {
+            TransformationRef::SetItemDefinedTransformation(match value.as_ref() {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| {
+                        ItemDefinedTransformationRef::from_any(
+                            *idmap.get(&as_ref_id(e)).expect("ref"),
+                        )
+                    })
+                    .collect(),
+                other => panic!("agg list SET_ITEM_DEFINED_TRANSFORMATION: {other:?}"),
+            })
+        }
         _ => TransformationRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref")),
     };
     let it = &mut model.representation_relationship_with_transformations.items[aid.0];
@@ -6052,6 +6347,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     _ => Some(as_str(&p.attributes[1])),
                 },
             },
+            "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference {
+                base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+                modifiers: None,
+            },
             "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference {
                 source: ExternalSourceRef::Unresolved,
             },
@@ -6482,14 +6781,17 @@ fn resolve_complex(
                 };
             }
             UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
-                *cfs_faces = Some(match &p.attributes[0] {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
-                        .collect(),
-                    Attribute::Unset => Vec::new(),
-                    other => panic!("vec ref: {other:?}"),
-                });
+                *cfs_faces = match &p.attributes[0] {
+                    Attribute::Derived => None,
+                    _ => Some(match &p.attributes[0] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                            .collect(),
+                        Attribute::Unset => Vec::new(),
+                        other => panic!("vec ref: {other:?}"),
+                    }),
+                };
             }
             UnitPart::ConversionBasedUnit {
                 conversion_factor, ..
@@ -6578,6 +6880,64 @@ fn resolve_complex(
             UnitPart::FaceSurface { face_geometry, .. } => {
                 *face_geometry =
                     SurfaceRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::GeneralDatumReference {
+                base, modifiers, ..
+            } => {
+                *base = match &p.attributes[0] {
+                    Attribute::Typed { type_name, value } if type_name == "COMMON_DATUM_LIST" => {
+                        DatumOrCommonDatumRef::CommonDatumList(match value.as_ref() {
+                            Attribute::List(l) => l
+                                .iter()
+                                .map(|e| {
+                                    DatumReferenceElementRef::from_any(
+                                        *idmap.get(&as_ref_id(e)).expect("ref"),
+                                    )
+                                })
+                                .collect(),
+                            other => panic!("agg list COMMON_DATUM_LIST: {other:?}"),
+                        })
+                    }
+                    _ => DatumOrCommonDatumRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                    ),
+                };
+                *modifiers =
+                    match &p.attributes[1] {
+                        Attribute::Unset => None,
+                        _ => {
+                            Some(match &p.attributes[1] {
+                                Attribute::List(l) => {
+                                    l.iter()
+                                        .map(|e| {
+                                            match e {
+                                Attribute::Typed { type_name, value }
+                                    if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" =>
+                                {
+                                    DatumReferenceModifierRef::SimpleDatumReferenceModifier(
+                                        match value.as_ref() {
+                                            Attribute::Enum(s) => {
+                                                SimpleDatumReferenceModifier::parse(s)
+                                                    .expect("SimpleDatumReferenceModifier")
+                                            }
+                                            other => panic!(
+                                                "enum SIMPLE_DATUM_REFERENCE_MODIFIER: {other:?}"
+                                            ),
+                                        },
+                                    )
+                                }
+                                _ => DatumReferenceModifierRef::from_any(
+                                    *idmap.get(&as_ref_id(e)).expect("ref"),
+                                ),
+                            }
+                                        })
+                                        .collect()
+                                }
+                                Attribute::Unset => Vec::new(),
+                                other => panic!("vec ref: {other:?}"),
+                            })
+                        }
+                    };
             }
             UnitPart::GenericProductDefinitionReference { source, .. } => {
                 *source = ExternalSourceRef::from_any(
@@ -6829,15 +7189,21 @@ fn resolve_complex(
                 ..
             } => {
                 *transformation_operator = match &p.attributes[0] {
-                    Attribute::List(l) => TransformationRef::ItemDefinedTransformationAgg(
-                        l.iter()
-                            .map(|e| {
-                                ItemDefinedTransformationRef::from_any(
-                                    *idmap.get(&as_ref_id(e)).expect("ref"),
-                                )
-                            })
-                            .collect(),
-                    ),
+                    Attribute::Typed { type_name, value }
+                        if type_name == "SET_ITEM_DEFINED_TRANSFORMATION" =>
+                    {
+                        TransformationRef::SetItemDefinedTransformation(match value.as_ref() {
+                            Attribute::List(l) => l
+                                .iter()
+                                .map(|e| {
+                                    ItemDefinedTransformationRef::from_any(
+                                        *idmap.get(&as_ref_id(e)).expect("ref"),
+                                    )
+                                })
+                                .collect(),
+                            other => panic!("agg list SET_ITEM_DEFINED_TRANSFORMATION: {other:?}"),
+                        })
+                    }
                     _ => TransformationRef::from_any(
                         *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                     ),

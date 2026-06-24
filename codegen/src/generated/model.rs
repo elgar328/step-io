@@ -165,6 +165,33 @@ impl BSplineSurfaceForm {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DatumReferenceModifierType {
+    Projected,
+    Distance,
+    Spherical,
+    CircularOrCylindrical,
+}
+impl DatumReferenceModifierType {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "PROJECTED" => Self::Projected,
+            "DISTANCE" => Self::Distance,
+            "SPHERICAL" => Self::Spherical,
+            "CIRCULAR_OR_CYLINDRICAL" => Self::CircularOrCylindrical,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Projected => ".PROJECTED.",
+            Self::Distance => ".DISTANCE.",
+            Self::Spherical => ".SPHERICAL.",
+            Self::CircularOrCylindrical => ".CIRCULAR_OR_CYLINDRICAL.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GeometricToleranceModifier {
     StandardDeviation,
     ValleyDepth,
@@ -545,6 +572,87 @@ impl SiUnitName {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SimpleDatumReferenceModifier {
+    PitchDiameter,
+    MajorDiameter,
+    MinorDiameter,
+    DegreeOfFreedomConstraintW,
+    DegreeOfFreedomConstraintV,
+    DegreeOfFreedomConstraintU,
+    DegreeOfFreedomConstraintZ,
+    DegreeOfFreedomConstraintY,
+    DegreeOfFreedomConstraintX,
+    DistanceVariable,
+    ContactingFeature,
+    AnyLongitudinalSection,
+    AnyCrossSection,
+    Orientation,
+    Plane,
+    Line,
+    Point,
+    MaximumMaterialRequirement,
+    LeastMaterialRequirement,
+    Translation,
+    Basic,
+    FreeState,
+}
+impl SimpleDatumReferenceModifier {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "PITCH_DIAMETER" => Self::PitchDiameter,
+            "MAJOR_DIAMETER" => Self::MajorDiameter,
+            "MINOR_DIAMETER" => Self::MinorDiameter,
+            "DEGREE_OF_FREEDOM_CONSTRAINT_W" => Self::DegreeOfFreedomConstraintW,
+            "DEGREE_OF_FREEDOM_CONSTRAINT_V" => Self::DegreeOfFreedomConstraintV,
+            "DEGREE_OF_FREEDOM_CONSTRAINT_U" => Self::DegreeOfFreedomConstraintU,
+            "DEGREE_OF_FREEDOM_CONSTRAINT_Z" => Self::DegreeOfFreedomConstraintZ,
+            "DEGREE_OF_FREEDOM_CONSTRAINT_Y" => Self::DegreeOfFreedomConstraintY,
+            "DEGREE_OF_FREEDOM_CONSTRAINT_X" => Self::DegreeOfFreedomConstraintX,
+            "DISTANCE_VARIABLE" => Self::DistanceVariable,
+            "CONTACTING_FEATURE" => Self::ContactingFeature,
+            "ANY_LONGITUDINAL_SECTION" => Self::AnyLongitudinalSection,
+            "ANY_CROSS_SECTION" => Self::AnyCrossSection,
+            "ORIENTATION" => Self::Orientation,
+            "PLANE" => Self::Plane,
+            "LINE" => Self::Line,
+            "POINT" => Self::Point,
+            "MAXIMUM_MATERIAL_REQUIREMENT" => Self::MaximumMaterialRequirement,
+            "LEAST_MATERIAL_REQUIREMENT" => Self::LeastMaterialRequirement,
+            "TRANSLATION" => Self::Translation,
+            "BASIC" => Self::Basic,
+            "FREE_STATE" => Self::FreeState,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::PitchDiameter => ".PITCH_DIAMETER.",
+            Self::MajorDiameter => ".MAJOR_DIAMETER.",
+            Self::MinorDiameter => ".MINOR_DIAMETER.",
+            Self::DegreeOfFreedomConstraintW => ".DEGREE_OF_FREEDOM_CONSTRAINT_W.",
+            Self::DegreeOfFreedomConstraintV => ".DEGREE_OF_FREEDOM_CONSTRAINT_V.",
+            Self::DegreeOfFreedomConstraintU => ".DEGREE_OF_FREEDOM_CONSTRAINT_U.",
+            Self::DegreeOfFreedomConstraintZ => ".DEGREE_OF_FREEDOM_CONSTRAINT_Z.",
+            Self::DegreeOfFreedomConstraintY => ".DEGREE_OF_FREEDOM_CONSTRAINT_Y.",
+            Self::DegreeOfFreedomConstraintX => ".DEGREE_OF_FREEDOM_CONSTRAINT_X.",
+            Self::DistanceVariable => ".DISTANCE_VARIABLE.",
+            Self::ContactingFeature => ".CONTACTING_FEATURE.",
+            Self::AnyLongitudinalSection => ".ANY_LONGITUDINAL_SECTION.",
+            Self::AnyCrossSection => ".ANY_CROSS_SECTION.",
+            Self::Orientation => ".ORIENTATION.",
+            Self::Plane => ".PLANE.",
+            Self::Line => ".LINE.",
+            Self::Point => ".POINT.",
+            Self::MaximumMaterialRequirement => ".MAXIMUM_MATERIAL_REQUIREMENT.",
+            Self::LeastMaterialRequirement => ".LEAST_MATERIAL_REQUIREMENT.",
+            Self::Translation => ".TRANSLATION.",
+            Self::Basic => ".BASIC.",
+            Self::FreeState => ".FREE_STATE.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AdvancedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AngularityToleranceId(pub usize);
@@ -621,6 +729,12 @@ pub struct DatumFeatureId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DatumReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumReferenceCompartmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumReferenceElementId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DatumReferenceModifierWithValueId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DatumSystemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DatumTargetId(pub usize);
@@ -666,6 +780,8 @@ pub struct FaceSurfaceId(pub usize);
 pub struct FlatnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FunctionallyDefinedTransformationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeneralDatumReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GenericProductDefinitionReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -897,6 +1013,9 @@ pub enum AnyId {
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
     DatumReference(DatumReferenceId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
+    DatumReferenceModifierWithValue(DatumReferenceModifierWithValueId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
@@ -920,6 +1039,7 @@ pub enum AnyId {
     FaceSurface(FaceSurfaceId),
     FlatnessTolerance(FlatnessToleranceId),
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
+    GeneralDatumReference(GeneralDatumReferenceId),
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     GeometricRepresentationContext(GeometricRepresentationContextId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
@@ -1096,6 +1216,8 @@ pub enum CharacterizedDefinitionRef {
     CylindricityTolerance(CylindricityToleranceId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
     DimensionalLocation(DimensionalLocationId),
@@ -1103,6 +1225,7 @@ pub enum CharacterizedDefinitionRef {
     DimensionalSize(DimensionalSizeId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     FlatnessTolerance(FlatnessToleranceId),
+    GeneralDatumReference(GeneralDatumReferenceId),
     GeometricTolerance(GeometricToleranceId),
     GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
     GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
@@ -1145,6 +1268,8 @@ impl CharacterizedDefinitionRef {
             AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
@@ -1152,6 +1277,7 @@ impl CharacterizedDefinitionRef {
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
             AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
+            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
             AnyId::GeometricToleranceWithDatumReference(i) => {
                 Self::GeometricToleranceWithDatumReference(i)
@@ -1264,6 +1390,26 @@ impl CurveRef {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DatumOrCommonDatumRef {
+    CommonDatum(CommonDatumId),
+    Datum(DatumId),
+    DatumReferenceElement(DatumReferenceElementId),
+    CommonDatumList(Vec<DatumReferenceElementRef>),
+    Complex(ComplexUnitId),
+}
+impl DatumOrCommonDatumRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DatumOrCommonDatumRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DatumRef {
     CommonDatum(CommonDatumId),
     Datum(DatumId),
@@ -1282,12 +1428,40 @@ impl DatumRef {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DatumReferenceCompartmentRef {
-    Unresolved,
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
 }
 impl DatumReferenceCompartmentRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
             other => panic!("DatumReferenceCompartmentRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DatumReferenceElementRef {
+    DatumReferenceElement(DatumReferenceElementId),
+}
+impl DatumReferenceElementRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
+            other => panic!("DatumReferenceElementRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DatumReferenceModifierRef {
+    DatumReferenceModifierWithValue(DatumReferenceModifierWithValueId),
+    SimpleDatumReferenceModifier(SimpleDatumReferenceModifier),
+}
+impl DatumReferenceModifierRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DatumReferenceModifierWithValue(i) => Self::DatumReferenceModifierWithValue(i),
+            other => panic!("DatumReferenceModifierRef ref -> {other:?}"),
         }
     }
 }
@@ -1474,12 +1648,15 @@ pub enum GeometricToleranceTargetRef {
     CompositeShapeAspect(CompositeShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    GeneralDatumReference(GeneralDatumReferenceId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     ProductDefinitionShape(ProductDefinitionShapeId),
     ShapeAspect(ShapeAspectId),
@@ -1494,12 +1671,15 @@ impl GeometricToleranceTargetRef {
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
             AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
             AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
@@ -2054,8 +2234,11 @@ pub enum ShapeAspectRef {
     CompositeShapeAspect(CompositeShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    GeneralDatumReference(GeneralDatumReferenceId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     ShapeAspect(ShapeAspectId),
     ToleranceZone(ToleranceZoneId),
@@ -2069,8 +2252,11 @@ impl ShapeAspectRef {
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
             AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
@@ -2182,11 +2368,14 @@ pub enum ToleranceZoneTargetRef {
     CoaxialityTolerance(CoaxialityToleranceId),
     ConcentricityTolerance(ConcentricityToleranceId),
     CylindricityTolerance(CylindricityToleranceId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     FlatnessTolerance(FlatnessToleranceId),
+    GeneralDatumReference(GeneralDatumReferenceId),
     GeometricTolerance(GeometricToleranceId),
     GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
     GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
@@ -2214,11 +2403,14 @@ impl ToleranceZoneTargetRef {
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
             AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
             AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
             AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
+            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
             AnyId::GeometricToleranceWithDatumReference(i) => {
                 Self::GeometricToleranceWithDatumReference(i)
@@ -2256,7 +2448,7 @@ impl ToleranceZoneTargetRef {
 pub enum TransformationRef {
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
-    ItemDefinedTransformationAgg(Vec<ItemDefinedTransformationRef>),
+    SetItemDefinedTransformation(Vec<ItemDefinedTransformationRef>),
     Complex(ComplexUnitId),
 }
 impl TransformationRef {
@@ -2639,6 +2831,32 @@ pub struct DatumReference {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DatumReferenceCompartment {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub base: DatumOrCommonDatumRef,
+    pub modifiers: Option<Vec<DatumReferenceModifierRef>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumReferenceElement {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub base: DatumOrCommonDatumRef,
+    pub modifiers: Option<Vec<DatumReferenceModifierRef>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumReferenceModifierWithValue {
+    pub modifier_type: DatumReferenceModifierType,
+    pub modifier_value: LengthMeasureWithUnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DatumSystem {
     pub name: String,
     pub description: Option<String>,
@@ -2803,6 +3021,16 @@ pub struct FlatnessTolerance {
 pub struct FunctionallyDefinedTransformation {
     pub name: String,
     pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeneralDatumReference {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+    pub base: DatumOrCommonDatumRef,
+    pub modifiers: Option<Vec<DatumReferenceModifierRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3614,6 +3842,10 @@ pub enum UnitPart {
         name: String,
         description: Option<String>,
     },
+    GeneralDatumReference {
+        base: DatumOrCommonDatumRef,
+        modifiers: Option<Vec<DatumReferenceModifierRef>>,
+    },
     GenericProductDefinitionReference {
         source: ExternalSourceRef,
     },
@@ -3886,6 +4118,9 @@ pub struct Model {
     pub datums: Arena<Datum>,
     pub datum_features: Arena<DatumFeature>,
     pub datum_references: Arena<DatumReference>,
+    pub datum_reference_compartments: Arena<DatumReferenceCompartment>,
+    pub datum_reference_elements: Arena<DatumReferenceElement>,
+    pub datum_reference_modifier_with_values: Arena<DatumReferenceModifierWithValue>,
     pub datum_systems: Arena<DatumSystem>,
     pub datum_targets: Arena<DatumTarget>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
@@ -3909,6 +4144,7 @@ pub struct Model {
     pub face_surfaces: Arena<FaceSurface>,
     pub flatness_tolerances: Arena<FlatnessTolerance>,
     pub functionally_defined_transformations: Arena<FunctionallyDefinedTransformation>,
+    pub general_datum_references: Arena<GeneralDatumReference>,
     pub generic_product_definition_references: Arena<GenericProductDefinitionReference>,
     pub geometric_representation_contexts: Arena<GeometricRepresentationContext>,
     pub geometric_representation_items: Arena<GeometricRepresentationItem>,

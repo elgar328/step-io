@@ -89,6 +89,9 @@ pub struct Writer<'a> {
     datum_ids: Vec<Option<u64>>,
     datum_feature_ids: Vec<Option<u64>>,
     datum_reference_ids: Vec<Option<u64>>,
+    datum_reference_compartment_ids: Vec<Option<u64>>,
+    datum_reference_element_ids: Vec<Option<u64>>,
+    datum_reference_modifier_with_value_ids: Vec<Option<u64>>,
     datum_system_ids: Vec<Option<u64>>,
     datum_target_ids: Vec<Option<u64>>,
     definitional_representation_ids: Vec<Option<u64>>,
@@ -112,6 +115,7 @@ pub struct Writer<'a> {
     face_surface_ids: Vec<Option<u64>>,
     flatness_tolerance_ids: Vec<Option<u64>>,
     functionally_defined_transformation_ids: Vec<Option<u64>>,
+    general_datum_reference_ids: Vec<Option<u64>>,
     generic_product_definition_reference_ids: Vec<Option<u64>>,
     geometric_representation_context_ids: Vec<Option<u64>>,
     geometric_representation_item_ids: Vec<Option<u64>>,
@@ -259,6 +263,18 @@ impl<'a> Writer<'a> {
             datum_ids: vec![None; model.datums.items.len()],
             datum_feature_ids: vec![None; model.datum_features.items.len()],
             datum_reference_ids: vec![None; model.datum_references.items.len()],
+            datum_reference_compartment_ids: vec![
+                None;
+                model.datum_reference_compartments.items.len()
+            ],
+            datum_reference_element_ids: vec![None; model.datum_reference_elements.items.len()],
+            datum_reference_modifier_with_value_ids: vec![
+                None;
+                model
+                    .datum_reference_modifier_with_values
+                    .items
+                    .len()
+            ],
             datum_system_ids: vec![None; model.datum_systems.items.len()],
             datum_target_ids: vec![None; model.datum_targets.items.len()],
             definitional_representation_ids: vec![
@@ -306,6 +322,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            general_datum_reference_ids: vec![None; model.general_datum_references.items.len()],
             generic_product_definition_reference_ids: vec![
                 None;
                 model
@@ -1524,6 +1541,140 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_datum_reference_compartments(&mut self, id: DatumReferenceCompartmentId) -> u64 {
+        if let Some(n) = self.datum_reference_compartment_ids[id.0] {
+            return n;
+        }
+        let it = self.model.datum_reference_compartments.get(id.0).clone();
+        let n = self.fresh();
+        self.datum_reference_compartment_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
+            it.product_definitional.token().to_string(),
+            match &it.base {
+                DatumOrCommonDatumRef::CommonDatumList(vs) => format!(
+                    "COMMON_DATUM_LIST(({}))",
+                    vs.iter()
+                        .map(|e| format!("#{}", self.emit_ref_datum_reference_element(e.clone())))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                other => format!("#{}", self.emit_ref_datum_or_common_datum(other.clone())),
+            },
+            match &it.modifiers {
+                Some(v) => format!(
+                    "({})",
+                    v.iter()
+                        .map(|e| match e {
+                            DatumReferenceModifierRef::SimpleDatumReferenceModifier(e) =>
+                                format!("SIMPLE_DATUM_REFERENCE_MODIFIER({})", e.token()),
+                            other => format!(
+                                "#{}",
+                                self.emit_ref_datum_reference_modifier(other.clone())
+                            ),
+                        })
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DATUM_REFERENCE_COMPARTMENT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_datum_reference_elements(&mut self, id: DatumReferenceElementId) -> u64 {
+        if let Some(n) = self.datum_reference_element_ids[id.0] {
+            return n;
+        }
+        let it = self.model.datum_reference_elements.get(id.0).clone();
+        let n = self.fresh();
+        self.datum_reference_element_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
+            it.product_definitional.token().to_string(),
+            match &it.base {
+                DatumOrCommonDatumRef::CommonDatumList(vs) => format!(
+                    "COMMON_DATUM_LIST(({}))",
+                    vs.iter()
+                        .map(|e| format!("#{}", self.emit_ref_datum_reference_element(e.clone())))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                other => format!("#{}", self.emit_ref_datum_or_common_datum(other.clone())),
+            },
+            match &it.modifiers {
+                Some(v) => format!(
+                    "({})",
+                    v.iter()
+                        .map(|e| match e {
+                            DatumReferenceModifierRef::SimpleDatumReferenceModifier(e) =>
+                                format!("SIMPLE_DATUM_REFERENCE_MODIFIER({})", e.token()),
+                            other => format!(
+                                "#{}",
+                                self.emit_ref_datum_reference_modifier(other.clone())
+                            ),
+                        })
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DATUM_REFERENCE_ELEMENT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_datum_reference_modifier_with_values(
+        &mut self,
+        id: DatumReferenceModifierWithValueId,
+    ) -> u64 {
+        if let Some(n) = self.datum_reference_modifier_with_value_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .datum_reference_modifier_with_values
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.datum_reference_modifier_with_value_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            it.modifier_type.token().to_string(),
+            format!(
+                "#{}",
+                self.emit_ref_length_measure_with_unit((&it.modifier_value).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = DATUM_REFERENCE_MODIFIER_WITH_VALUE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_datum_systems(&mut self, id: DatumSystemId) -> u64 {
         if let Some(n) = self.datum_system_ids[id.0] {
             return n;
@@ -2060,6 +2211,59 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = FUNCTIONALLY_DEFINED_TRANSFORMATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_general_datum_references(&mut self, id: GeneralDatumReferenceId) -> u64 {
+        if let Some(n) = self.general_datum_reference_ids[id.0] {
+            return n;
+        }
+        let it = self.model.general_datum_references.get(id.0).clone();
+        let n = self.fresh();
+        self.general_datum_reference_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.of_shape).clone())
+            ),
+            it.product_definitional.token().to_string(),
+            match &it.base {
+                DatumOrCommonDatumRef::CommonDatumList(vs) => format!(
+                    "COMMON_DATUM_LIST(({}))",
+                    vs.iter()
+                        .map(|e| format!("#{}", self.emit_ref_datum_reference_element(e.clone())))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                other => format!("#{}", self.emit_ref_datum_or_common_datum(other.clone())),
+            },
+            match &it.modifiers {
+                Some(v) => format!(
+                    "({})",
+                    v.iter()
+                        .map(|e| match e {
+                            DatumReferenceModifierRef::SimpleDatumReferenceModifier(e) =>
+                                format!("SIMPLE_DATUM_REFERENCE_MODIFIER({})", e.token()),
+                            other => format!(
+                                "#{}",
+                                self.emit_ref_datum_reference_modifier(other.clone())
+                            ),
+                        })
+                        .collect::<Vec<_>>()
+                        .join(",")
+                ),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GENERAL_DATUM_REFERENCE({});\n",
             attrs.join(",")
         ));
         n
@@ -3610,8 +3814,8 @@ impl<'a> Writer<'a> {
                 self.emit_ref_representation_or_representation_reference((&it.rep_2).clone())
             ),
             match &it.transformation_operator {
-                TransformationRef::ItemDefinedTransformationAgg(vs) => format!(
-                    "({})",
+                TransformationRef::SetItemDefinedTransformation(vs) => format!(
+                    "SET_ITEM_DEFINED_TRANSFORMATION(({}))",
                     vs.iter()
                         .map(|e| format!(
                             "#{}",
@@ -4528,6 +4732,12 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::Datum(i) => self.emit_datums(i),
             CharacterizedDefinitionRef::DatumFeature(i) => self.emit_datum_features(i),
+            CharacterizedDefinitionRef::DatumReferenceCompartment(i) => {
+                self.emit_datum_reference_compartments(i)
+            }
+            CharacterizedDefinitionRef::DatumReferenceElement(i) => {
+                self.emit_datum_reference_elements(i)
+            }
             CharacterizedDefinitionRef::DatumSystem(i) => self.emit_datum_systems(i),
             CharacterizedDefinitionRef::DatumTarget(i) => self.emit_datum_targets(i),
             CharacterizedDefinitionRef::DimensionalLocation(i) => {
@@ -4541,6 +4751,9 @@ impl<'a> Writer<'a> {
                 self.emit_dimensional_size_with_paths(i)
             }
             CharacterizedDefinitionRef::FlatnessTolerance(i) => self.emit_flatness_tolerances(i),
+            CharacterizedDefinitionRef::GeneralDatumReference(i) => {
+                self.emit_general_datum_references(i)
+            }
             CharacterizedDefinitionRef::GeometricTolerance(i) => self.emit_geometric_tolerances(i),
             CharacterizedDefinitionRef::GeometricToleranceWithDatumReference(i) => {
                 self.emit_geometric_tolerance_with_datum_references(i)
@@ -4644,6 +4857,20 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_datum_or_common_datum(&mut self, r: DatumOrCommonDatumRef) -> u64 {
+        match r {
+            DatumOrCommonDatumRef::CommonDatum(i) => self.emit_common_datums(i),
+            DatumOrCommonDatumRef::Datum(i) => self.emit_datums(i),
+            DatumOrCommonDatumRef::DatumReferenceElement(i) => {
+                self.emit_datum_reference_elements(i)
+            }
+            DatumOrCommonDatumRef::Complex(i) => self.emit_complex(i),
+            DatumOrCommonDatumRef::CommonDatumList(_) => {
+                panic!("emit aggregate ref via single dispatch")
+            }
+        }
+    }
+
     fn emit_ref_datum(&mut self, r: DatumRef) -> u64 {
         match r {
             DatumRef::CommonDatum(i) => self.emit_common_datums(i),
@@ -4654,7 +4881,28 @@ impl<'a> Writer<'a> {
 
     fn emit_ref_datum_reference_compartment(&mut self, r: DatumReferenceCompartmentRef) -> u64 {
         match r {
-            DatumReferenceCompartmentRef::Unresolved => panic!("emit unresolved ref"),
+            DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
+                self.emit_datum_reference_compartments(i)
+            }
+        }
+    }
+
+    fn emit_ref_datum_reference_element(&mut self, r: DatumReferenceElementRef) -> u64 {
+        match r {
+            DatumReferenceElementRef::DatumReferenceElement(i) => {
+                self.emit_datum_reference_elements(i)
+            }
+        }
+    }
+
+    fn emit_ref_datum_reference_modifier(&mut self, r: DatumReferenceModifierRef) -> u64 {
+        match r {
+            DatumReferenceModifierRef::DatumReferenceModifierWithValue(i) => {
+                self.emit_datum_reference_modifier_with_values(i)
+            }
+            DatumReferenceModifierRef::SimpleDatumReferenceModifier(_) => {
+                panic!("emit enum ref via single dispatch")
+            }
         }
     }
 
@@ -4757,6 +5005,12 @@ impl<'a> Writer<'a> {
             }
             GeometricToleranceTargetRef::Datum(i) => self.emit_datums(i),
             GeometricToleranceTargetRef::DatumFeature(i) => self.emit_datum_features(i),
+            GeometricToleranceTargetRef::DatumReferenceCompartment(i) => {
+                self.emit_datum_reference_compartments(i)
+            }
+            GeometricToleranceTargetRef::DatumReferenceElement(i) => {
+                self.emit_datum_reference_elements(i)
+            }
             GeometricToleranceTargetRef::DatumSystem(i) => self.emit_datum_systems(i),
             GeometricToleranceTargetRef::DatumTarget(i) => self.emit_datum_targets(i),
             GeometricToleranceTargetRef::DimensionalLocation(i) => {
@@ -4768,6 +5022,9 @@ impl<'a> Writer<'a> {
             GeometricToleranceTargetRef::DimensionalSize(i) => self.emit_dimensional_sizes(i),
             GeometricToleranceTargetRef::DimensionalSizeWithPath(i) => {
                 self.emit_dimensional_size_with_paths(i)
+            }
+            GeometricToleranceTargetRef::GeneralDatumReference(i) => {
+                self.emit_general_datum_references(i)
             }
             GeometricToleranceTargetRef::PlacedDatumTargetFeature(i) => {
                 self.emit_placed_datum_target_features(i)
@@ -5124,8 +5381,13 @@ impl<'a> Writer<'a> {
             ShapeAspectRef::CompositeShapeAspect(i) => self.emit_composite_shape_aspects(i),
             ShapeAspectRef::Datum(i) => self.emit_datums(i),
             ShapeAspectRef::DatumFeature(i) => self.emit_datum_features(i),
+            ShapeAspectRef::DatumReferenceCompartment(i) => {
+                self.emit_datum_reference_compartments(i)
+            }
+            ShapeAspectRef::DatumReferenceElement(i) => self.emit_datum_reference_elements(i),
             ShapeAspectRef::DatumSystem(i) => self.emit_datum_systems(i),
             ShapeAspectRef::DatumTarget(i) => self.emit_datum_targets(i),
+            ShapeAspectRef::GeneralDatumReference(i) => self.emit_general_datum_references(i),
             ShapeAspectRef::PlacedDatumTargetFeature(i) => {
                 self.emit_placed_datum_target_features(i)
             }
@@ -5199,6 +5461,12 @@ impl<'a> Writer<'a> {
             ToleranceZoneTargetRef::CylindricityTolerance(i) => {
                 self.emit_cylindricity_tolerances(i)
             }
+            ToleranceZoneTargetRef::DatumReferenceCompartment(i) => {
+                self.emit_datum_reference_compartments(i)
+            }
+            ToleranceZoneTargetRef::DatumReferenceElement(i) => {
+                self.emit_datum_reference_elements(i)
+            }
             ToleranceZoneTargetRef::DimensionalLocation(i) => self.emit_dimensional_locations(i),
             ToleranceZoneTargetRef::DimensionalLocationWithPath(i) => {
                 self.emit_dimensional_location_with_paths(i)
@@ -5208,6 +5476,9 @@ impl<'a> Writer<'a> {
                 self.emit_dimensional_size_with_paths(i)
             }
             ToleranceZoneTargetRef::FlatnessTolerance(i) => self.emit_flatness_tolerances(i),
+            ToleranceZoneTargetRef::GeneralDatumReference(i) => {
+                self.emit_general_datum_references(i)
+            }
             ToleranceZoneTargetRef::GeometricTolerance(i) => self.emit_geometric_tolerances(i),
             ToleranceZoneTargetRef::GeometricToleranceWithDatumReference(i) => {
                 self.emit_geometric_tolerance_with_datum_references(i)
@@ -5258,7 +5529,7 @@ impl<'a> Writer<'a> {
                 self.emit_item_defined_transformations(i)
             }
             TransformationRef::Complex(i) => self.emit_complex(i),
-            TransformationRef::ItemDefinedTransformationAgg(_) => {
+            TransformationRef::SetItemDefinedTransformation(_) => {
                 panic!("emit aggregate ref via single dispatch")
             }
         }
@@ -5668,6 +5939,49 @@ impl<'a> Writer<'a> {
                         },
                     ];
                     format!("FUNCTIONALLY_DEFINED_TRANSFORMATION({})", a.join(","))
+                }
+                UnitPart::GeneralDatumReference {
+                    base, modifiers, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        match base {
+                            DatumOrCommonDatumRef::CommonDatumList(vs) => format!(
+                                "COMMON_DATUM_LIST(({}))",
+                                vs.iter()
+                                    .map(|e| format!(
+                                        "#{}",
+                                        self.emit_ref_datum_reference_element(e.clone())
+                                    ))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            ),
+                            other => {
+                                format!("#{}", self.emit_ref_datum_or_common_datum(other.clone()))
+                            }
+                        },
+                        match modifiers {
+                            Some(v) => format!(
+                                "({})",
+                                v.iter()
+                                    .map(|e| match e {
+                                        DatumReferenceModifierRef::SimpleDatumReferenceModifier(
+                                            e,
+                                        ) => format!(
+                                            "SIMPLE_DATUM_REFERENCE_MODIFIER({})",
+                                            e.token()
+                                        ),
+                                        other => format!(
+                                            "#{}",
+                                            self.emit_ref_datum_reference_modifier(other.clone())
+                                        ),
+                                    })
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            ),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("GENERAL_DATUM_REFERENCE({})", a.join(","))
                 }
                 UnitPart::GenericProductDefinitionReference { source, .. } => {
                     let a: Vec<String> = vec![format!(
@@ -6221,8 +6535,8 @@ impl<'a> Writer<'a> {
                     ..
                 } => {
                     let a: Vec<String> = vec![match transformation_operator {
-                        TransformationRef::ItemDefinedTransformationAgg(vs) => format!(
-                            "({})",
+                        TransformationRef::SetItemDefinedTransformation(vs) => format!(
+                            "SET_ITEM_DEFINED_TRANSFORMATION(({}))",
                             vs.iter()
                                 .map(|e| format!(
                                     "#{}",
@@ -6542,6 +6856,15 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.datum_references.items.len() {
             self.emit_datum_references(DatumReferenceId(i));
         }
+        for i in 0..self.model.datum_reference_compartments.items.len() {
+            self.emit_datum_reference_compartments(DatumReferenceCompartmentId(i));
+        }
+        for i in 0..self.model.datum_reference_elements.items.len() {
+            self.emit_datum_reference_elements(DatumReferenceElementId(i));
+        }
+        for i in 0..self.model.datum_reference_modifier_with_values.items.len() {
+            self.emit_datum_reference_modifier_with_values(DatumReferenceModifierWithValueId(i));
+        }
         for i in 0..self.model.datum_systems.items.len() {
             self.emit_datum_systems(DatumSystemId(i));
         }
@@ -6617,6 +6940,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.functionally_defined_transformations.items.len() {
             self.emit_functionally_defined_transformations(FunctionallyDefinedTransformationId(i));
+        }
+        for i in 0..self.model.general_datum_references.items.len() {
+            self.emit_general_datum_references(GeneralDatumReferenceId(i));
         }
         for i in 0..self.model.generic_product_definition_references.items.len() {
             self.emit_generic_product_definition_references(GenericProductDefinitionReferenceId(i));

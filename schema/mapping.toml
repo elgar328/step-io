@@ -938,13 +938,6 @@ exclude = [
     # applied-assignment subtree (entity+scalar/other gaps) → keep deferred until
     # PLM domain. (aggregate-arm verified via `transformation` instead.)
     "item_identified_representation_usage",
-    # general_datum_reference.base : datum_or_common_datum = SELECT(datum,
-    # LIST OF datum_reference_element) — same aggregate-arm pattern. The whole
-    # subtree inherits `base`, so exclude the supertype + its subtypes. The
-    # simple datum_reference (precedence + referenced_datum) path stays in.
-    "general_datum_reference",
-    "datum_reference_compartment",
-    "datum_reference_element",
     # external_source.source_id : source_item = SELECT(identifier, message) —
     # an all-STRING select. classify's is_measure_select treats all-scalar as a
     # numeric MeasureValue (f64), which can't hold a string. Deferred capability:

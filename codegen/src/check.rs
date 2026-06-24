@@ -123,7 +123,8 @@ fn ent_name(e: &RawEntity) -> String {
 /// shapes the generator round-trips wrong.
 pub fn dump_type(src: &str, type_name: &str) -> (Vec<String>, Vec<String>) {
     let g = parse(src).expect("parse");
-    let (a, _) = subset(&graph_of(&g));
+    let (normalized, _) = crate::generated::normalize::normalize(graph_of(&g));
+    let (a, _) = subset(&normalized);
     let mut left: Vec<String> = a
         .values()
         .filter(|e| ent_name(e) == type_name)

@@ -228,8 +228,13 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     }
     // Aggregate arms for SELECT(.., LIST OF E, SET OF E): hold Vec<{E}Ref>
     // (list/set collapse — wire-identical `(...)`).
-    for (variant, elt_ref) in &re.aggregate {
+    for (variant, elt_ref, _wire) in &re.aggregate {
         writeln!(s, "    {variant}(Vec<{elt_ref}>),").unwrap();
+    }
+    // Enum arms for SELECT(.., some_enum): hold the (Copy) generated enum; on the
+    // wire a `.TOKEN.` literal, discriminated from a `#ref` at read time.
+    for (variant, enum_rust, _wire) in &re.enum_arms {
+        writeln!(s, "    {variant}({enum_rust}),").unwrap();
     }
     if re.has_complex {
         writeln!(s, "    Complex(ComplexUnitId),").unwrap();
@@ -238,7 +243,11 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     // would be uninhabited and make its referrer unconstructible. Such referrers
     // always escape the round-trip subset, so this variant is a never-resolved,
     // never-emitted placeholder that just keeps the generated code constructible.
-    if re.simple_arms.is_empty() && re.aggregate.is_empty() && !re.has_complex {
+    if re.simple_arms.is_empty()
+        && re.aggregate.is_empty()
+        && re.enum_arms.is_empty()
+        && !re.has_complex
+    {
         writeln!(s, "    Unresolved,").unwrap();
     }
     writeln!(s, "}}").unwrap();
@@ -499,9 +508,19 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
                 format!("{}::{}({}Id(usize::MAX))", re.rust, variant, target)
             } else if re.has_complex {
                 format!("{}::Complex(ComplexUnitId(usize::MAX))", re.rust)
-            } else if let Some((variant, _)) = re.aggregate.first() {
+            } else if let Some((variant, _, _)) = re.aggregate.first() {
                 // aggregate-only select (no single arm): empty-vec placeholder.
                 format!("{}::{}(Vec::new())", re.rust, variant)
+            } else if let Some((variant, enum_rust, _)) = re.enum_arms.first() {
+                // enum-only select (no single arm): first enum member placeholder.
+                let member = ir
+                    .enums
+                    .values()
+                    .find(|e| &e.rust == enum_rust)
+                    .and_then(|e| e.members.first())
+                    .map(|(_, v)| v.clone())
+                    .expect("enum arm has members");
+                format!("{}::{}({}::{})", re.rust, variant, enum_rust, member)
             } else {
                 // empty ref-enum (all targets excluded): referrer always escapes.
                 format!("{}::Unresolved", re.rust)
@@ -618,30 +637,40 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     s.push_str("}\n\n");
 }
 
+/// Resolve one ref value from an `&Attribute` expression `aref` (already a
+/// reference). Discriminates a named enum/aggregate select member (Typed literal
+/// `WIRE(.TOKEN.)` / `WIRE((#a,#b))`) from a bare entity `#ref`. Shared by
+/// single-ref fields and Vec elements so both handle Typed-wrapped members.
+fn resolve_ref_one(re: &RefEnum, aref: &str) -> String {
+    let single = format!(
+        "{}::from_any(*idmap.get(&as_ref_id({aref})).expect(\"ref\"))",
+        re.rust
+    );
+    let mut arms: Vec<String> = Vec::new();
+    for (ev, enum_rust, wire) in &re.enum_arms {
+        arms.push(format!(
+            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::Enum(s) => {}::parse(s).expect(\"{}\"), other => panic!(\"enum {wire}: {{other:?}}\") }}),",
+            re.rust, ev, enum_rust, enum_rust
+        ));
+    }
+    for (agg_variant, elt_ref, wire) in &re.aggregate {
+        arms.push(format!(
+            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(*idmap.get(&as_ref_id(e)).expect(\"ref\"))).collect(), other => panic!(\"agg list {wire}: {{other:?}}\") }}),",
+            re.rust, agg_variant, elt_ref
+        ));
+    }
+    if arms.is_empty() {
+        single
+    } else {
+        format!("match {aref} {{ {} _ => {single} }}", arms.join(" "))
+    }
+}
+
 fn resolve_ref_expr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, attr: &str) -> String {
     match k {
         Kind::Ref(t) => {
             let re = &ir.ref_enums[t];
-            let single = format!(
-                "{}::from_any(*idmap.get(&as_ref_id(&{attr})).expect(\"ref\"))",
-                re.rust
-            );
-            // aggregate-capable: a `(...)` list resolves to the Agg arm, a bare
-            // `#ref` to a single arm via from_any. (>1 distinct element type would
-            // need element-type discrimination — not present in any current select.)
-            let one = if let Some((agg_variant, elt_ref)) = re.aggregate.first() {
-                assert!(
-                    re.aggregate.len() == 1,
-                    "ref enum {} has >1 aggregate element type (unsupported)",
-                    re.rust
-                );
-                format!(
-                    "match &{attr} {{ Attribute::List(l) => {}::{}(l.iter().map(|e| {}::from_any(*idmap.get(&as_ref_id(e)).expect(\"ref\"))).collect()), _ => {} }}",
-                    re.rust, agg_variant, elt_ref, single
-                )
-            } else {
-                single
-            };
+            let one = resolve_ref_one(re, &format!("&{attr}"));
             if derivable {
                 format!("match &{attr} {{ Attribute::Derived => None, _ => Some({one}) }}")
             } else if optional {
@@ -652,8 +681,13 @@ fn resolve_ref_expr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, att
         }
         Kind::Vec(inner) => {
             let body = resolve_ref_vec(ir, inner, attr);
-            if optional || derivable {
-                format!("Some({body})")
+            // An OPTIONAL ref-list that is `$`/`*` is None (not Some(empty)) — else
+            // `$` round-trips to `()`. (resolve_ref_vec maps a present list/normalized
+            // `$`→[] for the required case.)
+            if derivable {
+                format!("match &{attr} {{ Attribute::Derived => None, _ => Some({body}) }}")
+            } else if optional {
+                format!("match &{attr} {{ Attribute::Unset => None, _ => Some({body}) }}")
             } else {
                 body
             }
@@ -665,10 +699,9 @@ fn resolve_ref_expr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, att
 /// Resolve a (possibly nested) `Vec<...Ref>` from a list attribute expression.
 fn resolve_ref_vec(ir: &ModelIr, inner: &Kind, attr: &str) -> String {
     let elem = match inner {
-        Kind::Ref(t) => format!(
-            "{}::from_any(*idmap.get(&as_ref_id(e)).expect(\"ref\"))",
-            ir.ref_enums[t].rust
-        ),
+        // `e` is already `&Attribute` (from l.iter()); helper handles Typed-
+        // wrapped enum/aggregate members alongside the bare entity ref.
+        Kind::Ref(t) => resolve_ref_one(&ir.ref_enums[t], "e"),
         Kind::Vec(i2) => resolve_ref_vec(ir, i2, "e"),
         _ => unreachable!("non-ref nested vec in ref resolve"),
     };
@@ -975,14 +1008,28 @@ fn render_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, access: 
 /// non-Copy, so the dispatch clones the value it hands to `emit_*`.
 fn render_ref_value(_ir: &ModelIr, re: &RefEnum, v: &str) -> String {
     let m = ref_method(&re.rust);
-    if re.aggregate.is_empty() {
+    let mut arms: Vec<String> = Vec::new();
+    for (aggv, elt_ref, wire) in &re.aggregate {
+        let em = ref_method(elt_ref);
+        // named aggregate -> Typed literal `WIRE((#a,#b))`.
+        arms.push(format!(
+            "{rust}::{aggv}(vs) => format!(\"{wire}(({{}}))\", vs.iter().map(|e| format!(\"#{{}}\", self.emit_{em}(e.clone()))).collect::<Vec<_>>().join(\",\")),",
+            rust = re.rust
+        ));
+    }
+    for (ev, _, wire) in &re.enum_arms {
+        // named enum select member -> Typed literal `WIRE(.TOKEN.)` (token() has dots).
+        arms.push(format!(
+            "{rust}::{ev}(e) => format!(\"{wire}({{}})\", e.token()),",
+            rust = re.rust
+        ));
+    }
+    if arms.is_empty() {
         format!("format!(\"#{{}}\", self.emit_{m}(({v}).clone()))")
     } else {
-        let (aggv, elt_ref) = &re.aggregate[0];
-        let em = ref_method(elt_ref);
         format!(
-            "match {v} {{ {rust}::{aggv}(vs) => format!(\"({{}})\", vs.iter().map(|e| format!(\"#{{}}\", self.emit_{em}(e.clone()))).collect::<Vec<_>>().join(\",\")), other => format!(\"#{{}}\", self.emit_{m}(other.clone())) }}",
-            rust = re.rust
+            "match {v} {{ {} other => format!(\"#{{}}\", self.emit_{m}(other.clone())) }}",
+            arms.join(" ")
         )
     }
 }
@@ -1077,9 +1124,10 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
         )
         .unwrap();
     }
-    // Aggregate arms are rendered as a `(...)` list by render_ref_value before
-    // this single-id dispatch is reached, so they never arrive here.
-    for (variant, _) in &re.aggregate {
+    // Aggregate/enum arms are rendered (as `(...)` / `.TOKEN.`) by
+    // render_ref_value before this single-id dispatch is reached, so they never
+    // arrive here.
+    for (variant, _, _) in &re.aggregate {
         writeln!(
             s,
             "        {}::{variant}(_) => panic!(\"emit aggregate ref via single dispatch\"),",
@@ -1087,7 +1135,19 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
         )
         .unwrap();
     }
-    if re.simple_arms.is_empty() && re.aggregate.is_empty() && !re.has_complex {
+    for (variant, _, _) in &re.enum_arms {
+        writeln!(
+            s,
+            "        {}::{variant}(_) => panic!(\"emit enum ref via single dispatch\"),",
+            re.rust
+        )
+        .unwrap();
+    }
+    if re.simple_arms.is_empty()
+        && re.aggregate.is_empty()
+        && re.enum_arms.is_empty()
+        && !re.has_complex
+    {
         // empty ref-enum: the Unresolved placeholder is never emitted (referrer
         // escapes), but the match must be exhaustive.
         writeln!(

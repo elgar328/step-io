@@ -123,17 +123,17 @@ impl<'a> Resolver<'a> {
                 if self.is_measure_select(&members, depth + 1) {
                     return Kind::MeasureSelect(t.to_string());
                 }
-                // All-entity select, OR entity + aggregate-of-entity members
-                // (SELECT(X, LIST OF X, SET OF X)) -> discriminated ref over the
-                // SELECT alias. model_ir splits single arms vs aggregate arms.
-                if members
-                    .iter()
-                    .all(|m| self.ref_like(m, 0) || self.agg_of_ref(m))
-                {
+                // Discriminated ref over the SELECT alias when every member is an
+                // entity ref, an aggregate-of-entity (SELECT(X, LIST OF X, ..)),
+                // or an ENUM (SELECT(X, some_enum)). model_ir splits single arms
+                // vs aggregate arms vs enum arms.
+                if members.iter().all(|m| {
+                    self.ref_like(m, 0) || self.agg_of_ref(m) || self.enum_alias(m, 0).is_some()
+                }) {
                     return Kind::Ref(t.to_string());
                 }
-                // Other mixed selects (entity+enum, entity+scalar, all-string)
-                // are separate capabilities, not yet built.
+                // Other mixed selects (entity+scalar, all-string) are separate
+                // capabilities, not yet built.
                 panic!("classify: mixed SELECT `{t}` unsupported in Phase 0 closure");
             }
             return self.classify(a, depth + 1);
@@ -142,7 +142,6 @@ impl<'a> Resolver<'a> {
     }
 
     /// Resolve a `ty` to its underlying ENUM alias name, if it is one.
-    #[allow(dead_code)] // helper carried from gen-early; not needed yet
     pub fn enum_alias(&self, ty: &str, depth: u32) -> Option<String> {
         if depth >= MAX_DEPTH {
             return None;
