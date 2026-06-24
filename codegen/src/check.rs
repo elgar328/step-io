@@ -21,14 +21,20 @@ pub enum CheckResult {
     Skip(String),
     /// Round-trip data-equivalent. `validated` = in-scope subset entity count,
     /// `escaped` = closure-typed candidates dropped by the escape filter (their
-    /// transitive refs left the closure) — the coverage gap.
-    Pass { validated: usize, escaped: usize },
+    /// transitive refs left the closure) — the coverage gap. `norm` = NormCase
+    /// notes applied by the pre-read normalize pass (rewrites/drops).
+    Pass {
+        validated: usize,
+        escaped: usize,
+        norm: Vec<&'static str>,
+    },
     /// Generator bug: panic in read/write, output reparse failure, or merkle
     /// mismatch. `validated`/`escaped` carried for coverage accounting.
     Fail {
         reason: String,
         validated: usize,
         escaped: usize,
+        norm: Vec<&'static str>,
     },
 }
 
@@ -169,7 +175,11 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
         Ok(g) => g,
         Err(e) => return CheckResult::Skip(format!("source parse failed: {e}")),
     };
-    let (a, escaped) = subset(&graph_of(&g));
+    // Pre-read normalize: rewrite non-standard values to standard (NormCase
+    // notes) or drop non-normalizable entities (referrers cascade-drop via the
+    // subset escape filter below). The strict model only ever sees standard data.
+    let (normalized, norm) = crate::generated::normalize::normalize(graph_of(&g));
+    let (a, escaped) = subset(&normalized);
     if a.is_empty() {
         return CheckResult::Skip("no in-scope entities".to_string());
     }
@@ -189,6 +199,7 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
                 reason: "panic in generated read/write".to_string(),
                 validated,
                 escaped,
+                norm,
             };
         }
     };
@@ -201,16 +212,22 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
                 reason: format!("output reparse failed: {e}"),
                 validated,
                 escaped,
+                norm,
             };
         }
     };
 
     match merkle_diff_maps(&a, &b) {
-        None => CheckResult::Pass { validated, escaped },
+        None => CheckResult::Pass {
+            validated,
+            escaped,
+            norm,
+        },
         Some(reason) => CheckResult::Fail {
             reason: format!("merkle mismatch: {reason}"),
             validated,
             escaped,
+            norm,
         },
     }
 }

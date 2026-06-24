@@ -5,24 +5,24 @@ use super::model::*;
 use std::collections::BTreeMap;
 use step_io::{Attribute, RawEntity, RawEntityPart};
 
+// Strict scalar readers: the pre-read `normalize` layer has already rewritten
+// non-standard values to their standard form (or dropped the entity), so a
+// reader seeing an off-kind value is a normalize-rule gap (panic, not silent).
 fn as_real(a: &Attribute) -> f64 {
     match a {
         Attribute::Real(r) => *r,
-        Attribute::Integer(i) => *i as f64,
         other => panic!("expected real, got {other:?}"),
     }
 }
 fn as_int(a: &Attribute) -> i64 {
     match a {
         Attribute::Integer(i) => *i,
-        Attribute::Real(r) => *r as i64,
         other => panic!("expected int, got {other:?}"),
     }
 }
 fn as_str(a: &Attribute) -> String {
     match a {
         Attribute::String(s) => s.clone(),
-        Attribute::Unset => String::new(),
         other => panic!("expected string, got {other:?}"),
     }
 }
@@ -39,14 +39,24 @@ fn as_ref_id(a: &Attribute) -> u64 {
     }
 }
 fn read_measure_value(a: &Attribute) -> MeasureValue {
+    // A measure's numeric literal sits nested inside a Typed/bare attribute, so
+    // it is not a top-level slot the normalize layer rewrites; accept the REAL
+    // value written as either a real or an integer literal here.
+    fn measure_real(a: &Attribute) -> f64 {
+        match a {
+            Attribute::Real(r) => *r,
+            Attribute::Integer(i) => *i as f64,
+            other => panic!("expected measure real, got {other:?}"),
+        }
+    }
     match a {
         Attribute::Typed { type_name, value } => MeasureValue {
             type_name: Some(type_name.clone()),
-            value: as_real(value),
+            value: measure_real(value),
         },
         Attribute::Real(_) | Attribute::Integer(_) => MeasureValue {
             type_name: None,
-            value: as_real(a),
+            value: measure_real(a),
         },
         other => panic!("expected measure_value, got {other:?}"),
     }
@@ -397,12 +407,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     self_intersect: as_logical(&attributes[5]),
                     knot_multiplicities: match &attributes[6] {
                         Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                     knots: match &attributes[7] {
                         Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                     knot_spec: match &attributes[8] {
@@ -455,22 +463,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     self_intersect: as_logical(&attributes[7]),
                     u_multiplicities: match &attributes[8] {
                         Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                     v_multiplicities: match &attributes[9] {
                         Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                     u_knots: match &attributes[10] {
                         Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                     v_knots: match &attributes[11] {
                         Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                     knot_spec: match &attributes[12] {
@@ -592,7 +596,6 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     name: as_str(&attributes[0]),
                     coordinates: match &attributes[1] {
                         Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                 };
@@ -764,7 +767,6 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     name: as_str(&attributes[0]),
                     direction_ratios: match &attributes[1] {
                         Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                 };
@@ -1208,7 +1210,6 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     self_intersect: as_logical(&attributes[5]),
                     weights_data: match &attributes[6] {
                         Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                 };
@@ -1240,11 +1241,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                                 Attribute::List(l) => {
                                     l.iter().map(|e| as_real(e)).collect::<Vec<_>>()
                                 }
-                                Attribute::Unset => Vec::new(),
                                 o => panic!("nested vec: {o:?}"),
                             })
                             .collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec: {other:?}"),
                     },
                 };
@@ -3078,12 +3077,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "B_SPLINE_CURVE_WITH_KNOTS" => UnitPart::BSplineCurveWithKnots {
                 knot_multiplicities: match &p.attributes[0] {
                     Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
                 knots: match &p.attributes[1] {
                     Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
                 knot_spec: match &p.attributes[2] {
@@ -3108,22 +3105,18 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "B_SPLINE_SURFACE_WITH_KNOTS" => UnitPart::BSplineSurfaceWithKnots {
                 u_multiplicities: match &p.attributes[0] {
                     Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
                 v_multiplicities: match &p.attributes[1] {
                     Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
                 u_knots: match &p.attributes[2] {
                     Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
                 v_knots: match &p.attributes[3] {
                     Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
                 knot_spec: match &p.attributes[4] {
@@ -3157,7 +3150,6 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "DIRECTION" => UnitPart::Direction {
                 direction_ratios: match &p.attributes[0] {
                     Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
             },
@@ -3232,7 +3224,6 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "RATIONAL_B_SPLINE_CURVE" => UnitPart::RationalBSplineCurve {
                 weights_data: match &p.attributes[0] {
                     Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
             },
@@ -3242,11 +3233,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                         .iter()
                         .map(|e| match e {
                             Attribute::List(l) => l.iter().map(|e| as_real(e)).collect::<Vec<_>>(),
-                            Attribute::Unset => Vec::new(),
                             o => panic!("nested vec: {o:?}"),
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec: {other:?}"),
                 },
             },

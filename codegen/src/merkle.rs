@@ -113,20 +113,13 @@ fn hash_attr(
         }
         Attribute::Real(r) => {
             2u8.hash(h);
-            // Signed-zero canonical: -0.0 and +0.0 are the same value/point, so
-            // `-0.` (raw input) and `0.` (normalized output) compare equal.
-            (r + 0.0).to_bits().hash(h);
+            // Strict bit-comparison. The pre-read `normalize` layer already
+            // canonicalizes -0.0 -> +0.0 on both sides, so no relaxation here.
+            r.to_bits().hash(h);
         }
         Attribute::String(s) => {
-            // Modernizer NORM: a required string supplied as `$` (non-standard)
-            // is normalized to `''` on output. Treat empty-string and Unset as
-            // equivalent so that NORM does not register as a round-trip loss.
-            if s.is_empty() {
-                7u8.hash(h);
-            } else {
-                3u8.hash(h);
-                s.hash(h);
-            }
+            3u8.hash(h);
+            s.hash(h);
         }
         Attribute::Enum(s) => {
             4u8.hash(h);
@@ -143,13 +136,6 @@ fn hash_attr(
         Attribute::Unset => 7u8.hash(h),
         Attribute::Derived => 8u8.hash(h),
         Attribute::List(v) => {
-            // Modernizer NORM: a derived (`*`) field supplied as `()` (a
-            // non-standard empty set, e.g. occt oriented_closed_shell.cfs_faces)
-            // is normalized to `*`. Treat an empty list and Derived as equal.
-            if v.is_empty() {
-                8u8.hash(h);
-                return;
-            }
             9u8.hash(h);
             (v.len() as u64).hash(h);
             for e in v {

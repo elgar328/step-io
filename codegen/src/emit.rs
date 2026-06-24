@@ -277,14 +277,17 @@ pub fn emit_read(ir: &ModelIr) -> String {
 
     // scalar readers
     s.push_str(
-        r#"fn as_real(a: &Attribute) -> f64 {
-    match a { Attribute::Real(r) => *r, Attribute::Integer(i) => *i as f64, other => panic!("expected real, got {other:?}") }
+        r#"// Strict scalar readers: the pre-read `normalize` layer has already rewritten
+// non-standard values to their standard form (or dropped the entity), so a
+// reader seeing an off-kind value is a normalize-rule gap (panic, not silent).
+fn as_real(a: &Attribute) -> f64 {
+    match a { Attribute::Real(r) => *r, other => panic!("expected real, got {other:?}") }
 }
 fn as_int(a: &Attribute) -> i64 {
-    match a { Attribute::Integer(i) => *i, Attribute::Real(r) => *r as i64, other => panic!("expected int, got {other:?}") }
+    match a { Attribute::Integer(i) => *i, other => panic!("expected int, got {other:?}") }
 }
 fn as_str(a: &Attribute) -> String {
-    match a { Attribute::String(s) => s.clone(), Attribute::Unset => String::new(), other => panic!("expected string, got {other:?}") }
+    match a { Attribute::String(s) => s.clone(), other => panic!("expected string, got {other:?}") }
 }
 fn as_logical(a: &Attribute) -> Logical {
     match a { Attribute::Enum(s) => Logical::parse(s).expect("logical"), other => panic!("expected logical, got {other:?}") }
@@ -293,9 +296,15 @@ fn as_ref_id(a: &Attribute) -> u64 {
     match a { Attribute::EntityRef(n) => *n, other => panic!("expected ref, got {other:?}") }
 }
 fn read_measure_value(a: &Attribute) -> MeasureValue {
+    // A measure's numeric literal sits nested inside a Typed/bare attribute, so
+    // it is not a top-level slot the normalize layer rewrites; accept the REAL
+    // value written as either a real or an integer literal here.
+    fn measure_real(a: &Attribute) -> f64 {
+        match a { Attribute::Real(r) => *r, Attribute::Integer(i) => *i as f64, other => panic!("expected measure real, got {other:?}") }
+    }
     match a {
-        Attribute::Typed { type_name, value } => MeasureValue { type_name: Some(type_name.clone()), value: as_real(value) },
-        Attribute::Real(_) | Attribute::Integer(_) => MeasureValue { type_name: None, value: as_real(a) },
+        Attribute::Typed { type_name, value } => MeasureValue { type_name: Some(type_name.clone()), value: measure_real(value) },
+        Attribute::Real(_) | Attribute::Integer(_) => MeasureValue { type_name: None, value: measure_real(a) },
         other => panic!("expected measure_value, got {other:?}"),
     }
 }
@@ -518,13 +527,16 @@ fn bind_scalar(ir: &ModelIr, k: &Kind, optional: bool, attr: &str) -> String {
 
 fn bind_scalar_vec(ir: &ModelIr, inner: &Kind, optional: bool, attr: &str) -> String {
     let elem = scalar_vec_elem(ir, inner);
-    let body = format!(
-        "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), Attribute::Unset => Vec::new(), other => panic!(\"vec: {{other:?}}\") }}"
-    );
+    // Strict: a required list is always a List (normalize rewrote a non-standard
+    // `$` to `()`); an optional list is None on `$`, Some(list) otherwise.
     if optional {
-        format!("Some({body})")
+        format!(
+            "match &{attr} {{ Attribute::Unset => None, Attribute::List(l) => Some(l.iter().map(|e| {elem}).collect()), other => panic!(\"opt vec: {{other:?}}\") }}"
+        )
     } else {
-        body
+        format!(
+            "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), other => panic!(\"vec: {{other:?}}\") }}"
+        )
     }
 }
 
@@ -543,7 +555,7 @@ fn scalar_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
         Kind::Vec(inner2) => {
             let e2 = scalar_vec_elem(ir, inner2);
             format!(
-                "match e {{ Attribute::List(l) => l.iter().map(|e| {e2}).collect::<Vec<_>>(), Attribute::Unset => Vec::new(), o => panic!(\"nested vec: {{o:?}}\") }}"
+                "match e {{ Attribute::List(l) => l.iter().map(|e| {e2}).collect::<Vec<_>>(), o => panic!(\"nested vec: {{o:?}}\") }}"
             )
         }
         _ => "as_real(e)".to_string(),
@@ -670,7 +682,6 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     s.push_str("    let bag = &mut model.complex_units.items[aid.0];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
-    let mut any = false;
     for p in &ir.parts {
         let kept: Vec<_> = idents(&p.fields).into_iter().collect();
         let refkept: Vec<_> = kept
@@ -681,7 +692,6 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
         if refkept.is_empty() {
             continue;
         }
-        any = true;
         // need positional indices into p.attributes (counting derived too)
         let binding: Vec<String> = kept
             .iter()
@@ -715,11 +725,8 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
         }
         s.push_str("            }\n");
     }
-    if !any {
-        s.push_str("            _ => {}\n");
-    } else {
-        s.push_str("            _ => {}\n");
-    }
+    // Catch-all for parts without ref attrs (and the no-arm case): always needed.
+    s.push_str("            _ => {}\n");
     s.push_str("        }\n    }\n}\n");
 }
 
@@ -1115,4 +1122,156 @@ fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id:
             }
         }
     }
+}
+
+// ===========================================================================
+// normalize.rs — strict-input normalization (slot-kind general rules).
+// Runs on the raw graph BEFORE the strict read: rewrites non-standard values to
+// standard (record a NormCase note), or — when not normalizable (required ref =
+// `$`) — drops the entity (its referrers cascade-drop via the round-trip subset
+// escape filter). The model/read stay strict; nothing here bends them.
+// ===========================================================================
+
+/// Top-level slot kind tag for the normalize rule table.
+fn sk_variant(k: &Kind) -> &'static str {
+    match k {
+        Kind::Real => "Real",
+        Kind::Int => "Int",
+        Kind::Str => "Str",
+        Kind::Binary => "Bin",
+        Kind::Bool => "Bool",
+        Kind::Logical => "Log",
+        Kind::Enum(_) => "Enum",
+        Kind::Ref(_) => "Ref",
+        Kind::Vec(_) => "Vec",
+        Kind::MeasureSelect(_) => "Meas",
+    }
+}
+
+fn emit_slot_table<'a>(
+    s: &mut String,
+    fname: &str,
+    ents: impl Iterator<Item = (&'a String, &'a Vec<Field>)>,
+) {
+    writeln!(s, "fn {fname}(n: &str) -> &'static [Slot] {{").unwrap();
+    s.push_str("    match n {\n");
+    for (name, fields) in ents {
+        let slots: Vec<String> = fields
+            .iter()
+            .map(|f| {
+                let k = sk_variant(&f.kind);
+                let req = !(f.optional || f.derivable);
+                format!("Slot{{k:Sk::{k},req:{req},der:{}}}", f.derived)
+            })
+            .collect();
+        writeln!(s, "        \"{}\" => &[{}],", name, slots.join(",")).unwrap();
+    }
+    s.push_str("        _ => &[],\n    }\n}\n\n");
+}
+
+pub fn emit_normalize(ir: &ModelIr) -> String {
+    let mut s = String::from(HEADER);
+    s.push_str("use std::collections::BTreeMap;\nuse step_io::{Attribute, RawEntity};\n\n");
+    s.push_str(
+        r#"#[derive(Clone, Copy)]
+enum Sk { Real, Int, Str, Bin, Bool, Log, Enum, Ref, Vec, Meas }
+#[derive(Clone, Copy)]
+struct Slot { k: Sk, req: bool, der: bool }
+
+/// Value-level canonical: signed-zero -0.0 -> +0.0, recursively (incl. lists).
+fn canon(a: &mut Attribute) {
+    match a {
+        Attribute::Real(r) => { if *r == 0.0 { *r = 0.0_f64; } }
+        Attribute::List(v) => { for e in v.iter_mut() { canon(e); } }
+        Attribute::Typed { value, .. } => canon(value),
+        _ => {}
+    }
+}
+
+enum Na { Keep, Set(Attribute, &'static str), Drop(&'static str) }
+
+/// Slot-kind general rules (single rule per slot, output is the final standard
+/// value). Value rules (int<->real) apply regardless of req; the `$`/`*` rules
+/// apply per req/derived.
+fn norm_attr(s: Slot, a: &Attribute) -> Na {
+    if s.der {
+        // a derived slot is always `*` on the wire; force it (drops a redundant
+        // explicit value or a non-standard `()`/`$`).
+        return if matches!(a, Attribute::Derived) { Na::Keep }
+               else { Na::Set(Attribute::Derived, "derived->*") };
+    }
+    match (s.k, a) {
+        (Sk::Real, Attribute::Integer(i)) => Na::Set(Attribute::Real(*i as f64), "int->real"),
+        (Sk::Int, Attribute::Real(r)) if r.fract() == 0.0 => {
+            Na::Set(Attribute::Integer(*r as i64), "real->int")
+        }
+        (Sk::Int, Attribute::Real(_)) => Na::Drop("int<-fractional-real"),
+        (Sk::Str | Sk::Bin, Attribute::Unset) if s.req => {
+            Na::Set(Attribute::String(String::new()), "req-str<-$")
+        }
+        (Sk::Vec, Attribute::Unset) if s.req => Na::Set(Attribute::List(Vec::new()), "req-vec<-$"),
+        (Sk::Ref, Attribute::Unset) if s.req => Na::Drop("req-ref<-$"),
+        _ => Na::Keep,
+    }
+}
+
+fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'static str>) -> bool {
+    for (i, a) in attrs.iter_mut().enumerate() {
+        canon(a);
+        if let Some(s) = slots.get(i).copied() {
+            match norm_attr(s, a) {
+                Na::Keep => {}
+                Na::Set(na, w) => { *a = na; warns.push(w); }
+                Na::Drop(w) => { warns.push(w); return false; }
+            }
+        }
+    }
+    true
+}
+
+/// Normalize the raw graph in place. Returns the surviving map (non-normalizable
+/// entities removed; their referrers cascade-drop later via the subset escape
+/// filter) and the NormCase notes (one per rewrite/drop).
+pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>, Vec<&'static str>) {
+    let mut warns: Vec<&'static str> = Vec::new();
+    let mut drop_ids: Vec<u64> = Vec::new();
+    for (&id, ent) in map.iter_mut() {
+        let keep = match ent {
+            RawEntity::Simple { name, attributes, .. } => {
+                norm_attrs(simple_slots(name), attributes, &mut warns)
+            }
+            RawEntity::Complex { parts, .. } => {
+                let mut ok = true;
+                for p in parts.iter_mut() {
+                    if !norm_attrs(part_slots(&p.name), &mut p.attributes, &mut warns) {
+                        ok = false;
+                        break;
+                    }
+                }
+                ok
+            }
+        };
+        if !keep {
+            drop_ids.push(id);
+        }
+    }
+    for id in drop_ids {
+        map.remove(&id);
+    }
+    (map, warns)
+}
+
+"#,
+    );
+    emit_slot_table(
+        &mut s,
+        "simple_slots",
+        ir.simples.iter().map(|se| (&se.name, &se.fields)),
+    );
+    emit_slot_table(
+        &mut s,
+        "part_slots",
+        ir.parts.iter().map(|p| (&p.name, &p.fields)),
+    );
+    s
 }

@@ -36,13 +36,22 @@ fn main() {
 
     match check_roundtrip(&src) {
         CheckResult::Skip(why) => println!("SKIP  {path}  ({why})"),
-        CheckResult::Pass { validated, escaped } => {
-            println!("PASS  {path}  ({validated} entities, {escaped} escaped)")
-        }
+        CheckResult::Pass {
+            validated,
+            escaped,
+            norm,
+        } => println!(
+            "PASS  {path}  ({validated} entities, {escaped} escaped, {} normalized)",
+            norm.len()
+        ),
         CheckResult::Fail {
             reason,
             validated,
             escaped,
-        } => println!("FAIL  {path}  ({validated} entities, {escaped} escaped)\n{reason}"),
+            norm,
+        } => println!(
+            "FAIL  {path}  ({validated} entities, {escaped} escaped, {} normalized)\n{reason}",
+            norm.len()
+        ),
     }
 }
