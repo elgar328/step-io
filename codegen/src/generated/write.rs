@@ -32,6 +32,12 @@ fn measure(m: &MeasureValue) -> String {
         None => real(m.value),
     }
 }
+fn string_select(m: &StringSelectValue) -> String {
+    match &m.type_name {
+        Some(t) => format!("{t}({})", step_str(&m.value)),
+        None => step_str(&m.value),
+    }
+}
 /// Part 21 string literal: single-quoted, inner `'` doubled to `''` (matches
 /// step-io `writer/lexical.rs::format_string`). Non-ASCII passes through raw.
 fn step_str(s: &str) -> String {
@@ -109,6 +115,7 @@ pub struct Writer<'a> {
     edge_loop_ids: Vec<Option<u64>>,
     elementary_surface_ids: Vec<Option<u64>>,
     ellipse_ids: Vec<Option<u64>>,
+    external_source_ids: Vec<Option<u64>>,
     face_ids: Vec<Option<u64>>,
     face_bound_ids: Vec<Option<u64>>,
     face_outer_bound_ids: Vec<Option<u64>>,
@@ -310,6 +317,7 @@ impl<'a> Writer<'a> {
             edge_loop_ids: vec![None; model.edge_loops.items.len()],
             elementary_surface_ids: vec![None; model.elementary_surfaces.items.len()],
             ellipse_ids: vec![None; model.ellipses.items.len()],
+            external_source_ids: vec![None; model.external_sources.items.len()],
             face_ids: vec![None; model.faces.items.len()],
             face_bound_ids: vec![None; model.face_bounds.items.len()],
             face_outer_bound_ids: vec![None; model.face_outer_bounds.items.len()],
@@ -2074,6 +2082,19 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = ELLIPSE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_external_sources(&mut self, id: ExternalSourceId) -> u64 {
+        if let Some(n) = self.external_source_ids[id.0] {
+            return n;
+        }
+        let it = self.model.external_sources.get(id.0).clone();
+        let n = self.fresh();
+        self.external_source_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![string_select(&it.source_id)];
+        self.out
+            .push_str(&format!("#{n} = EXTERNAL_SOURCE({});\n", attrs.join(",")));
         n
     }
 
@@ -4976,7 +4997,8 @@ impl<'a> Writer<'a> {
 
     fn emit_ref_external_source(&mut self, r: ExternalSourceRef) -> u64 {
         match r {
-            ExternalSourceRef::Unresolved => panic!("emit unresolved ref"),
+            ExternalSourceRef::ExternalSource(i) => self.emit_external_sources(i),
+            ExternalSourceRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -5894,6 +5916,10 @@ impl<'a> Writer<'a> {
                         self.emit_ref_axis2_placement3d((position).clone())
                     )];
                     format!("ELEMENTARY_SURFACE({})", a.join(","))
+                }
+                UnitPart::ExternalSource { source_id, .. } => {
+                    let a: Vec<String> = vec![string_select(source_id)];
+                    format!("EXTERNAL_SOURCE({})", a.join(","))
                 }
                 UnitPart::Face { bounds, .. } => {
                     let a: Vec<String> = vec![format!(
@@ -6922,6 +6948,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.ellipses.items.len() {
             self.emit_ellipses(EllipseId(i));
+        }
+        for i in 0..self.model.external_sources.items.len() {
+            self.emit_external_sources(ExternalSourceId(i));
         }
         for i in 0..self.model.faces.items.len() {
             self.emit_faces(FaceId(i));

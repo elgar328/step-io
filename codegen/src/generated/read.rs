@@ -61,6 +61,27 @@ fn read_measure_value(a: &Attribute) -> MeasureValue {
         other => panic!("expected measure_value, got {other:?}"),
     }
 }
+fn read_string_select(a: &Attribute) -> StringSelectValue {
+    // A named string select member is a Typed literal `TYPE('s')`; a bare string
+    // is unwrapped. (Mirrors read_measure_value for the string case.)
+    fn str_of(a: &Attribute) -> String {
+        match a {
+            Attribute::String(s) => s.clone(),
+            other => panic!("expected select string, got {other:?}"),
+        }
+    }
+    match a {
+        Attribute::Typed { type_name, value } => StringSelectValue {
+            type_name: Some(type_name.clone()),
+            value: str_of(value),
+        },
+        Attribute::String(s) => StringSelectValue {
+            type_name: None,
+            value: s.clone(),
+        },
+        other => panic!("expected string_select, got {other:?}"),
+    }
+}
 
 pub const SIMPLE_NAMES: &[&str] = &[
     "ADVANCED_FACE",
@@ -121,6 +142,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "EDGE_LOOP",
     "ELEMENTARY_SURFACE",
     "ELLIPSE",
+    "EXTERNAL_SOURCE",
     "FACE",
     "FACE_BOUND",
     "FACE_OUTER_BOUND",
@@ -259,6 +281,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "EDGE_CURVE",
     "EDGE_LOOP",
     "ELEMENTARY_SURFACE",
+    "EXTERNAL_SOURCE",
     "FACE",
     "FACE_BOUND",
     "FACE_OUTER_BOUND",
@@ -1454,6 +1477,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "EXTERNAL_SOURCE" => {
+                let v = ExternalSource {
+                    source_id: read_string_select(&attributes[0]),
+                };
+                let aid = ExternalSourceId(model.external_sources.push(v));
+                idmap.insert(id, AnyId::ExternalSource(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "FACE" => {
                 let v = Face {
                     name: as_str(&attributes[0]),
@@ -1557,7 +1589,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 name, attributes, ..
             } if name == "GENERIC_PRODUCT_DEFINITION_REFERENCE" => {
                 let v = GenericProductDefinitionReference {
-                    source: ExternalSourceRef::Unresolved,
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
                 };
                 let aid = GenericProductDefinitionReferenceId(
                     model.generic_product_definition_references.push(v),
@@ -3768,7 +3800,6 @@ fn resolve_advanced_faces(
             .iter()
             .map(|e| FaceBoundRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let face_geometry_v = SurfaceRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
@@ -3796,7 +3827,6 @@ fn resolve_angularity_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.angularity_tolerances.items[aid.0];
@@ -3889,7 +3919,6 @@ fn resolve_b_spline_curves(
             .iter()
             .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.b_spline_curves.items[aid.0];
@@ -3907,7 +3936,6 @@ fn resolve_b_spline_curve_with_knotss(
             .iter()
             .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.b_spline_curve_with_knotss.items[aid.0];
@@ -3928,11 +3956,9 @@ fn resolve_b_spline_surfaces(
                     .iter()
                     .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                     .collect(),
-                Attribute::Unset => Vec::new(),
                 other => panic!("vec ref: {other:?}"),
             })
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.b_spline_surfaces.items[aid.0];
@@ -3953,11 +3979,9 @@ fn resolve_b_spline_surface_with_knotss(
                     .iter()
                     .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                     .collect(),
-                Attribute::Unset => Vec::new(),
                 other => panic!("vec ref: {other:?}"),
             })
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.b_spline_surface_with_knotss.items[aid.0];
@@ -3975,7 +3999,6 @@ fn resolve_bezier_curves(
             .iter()
             .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.bezier_curves.items[aid.0];
@@ -3996,11 +4019,9 @@ fn resolve_bezier_surfaces(
                     .iter()
                     .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                     .collect(),
-                Attribute::Unset => Vec::new(),
                 other => panic!("vec ref: {other:?}"),
             })
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.bezier_surfaces.items[aid.0];
@@ -4033,7 +4054,6 @@ fn resolve_bounded_surface_curves(
             .iter()
             .map(|e| PcurveOrSurfaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.bounded_surface_curves.items[aid.0];
@@ -4053,7 +4073,6 @@ fn resolve_brep_with_voidss(
             .iter()
             .map(|e| OrientedClosedShellRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.brep_with_voidss.items[aid.0];
@@ -4091,7 +4110,6 @@ fn resolve_circular_runout_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.circular_runout_tolerances.items[aid.0];
@@ -4111,7 +4129,6 @@ fn resolve_closed_shells(
             .iter()
             .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.closed_shells.items[aid.0];
@@ -4137,7 +4154,6 @@ fn resolve_coaxiality_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.coaxiality_tolerances.items[aid.0];
@@ -4189,7 +4205,6 @@ fn resolve_concentricity_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.concentricity_tolerances.items[aid.0];
@@ -4233,7 +4248,6 @@ fn resolve_connected_face_sets(
                 .iter()
                 .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                 .collect(),
-            Attribute::Unset => Vec::new(),
             other => panic!("vec ref: {other:?}"),
         }),
     };
@@ -4377,7 +4391,6 @@ fn resolve_datum_reference_compartments(
                     }
                 })
                 .collect(),
-            Attribute::Unset => Vec::new(),
             other => panic!("vec ref: {other:?}"),
         }),
     };
@@ -4431,7 +4444,6 @@ fn resolve_datum_reference_elements(
                     }
                 })
                 .collect(),
-            Attribute::Unset => Vec::new(),
             other => panic!("vec ref: {other:?}"),
         }),
     };
@@ -4468,7 +4480,6 @@ fn resolve_datum_systems(
                 DatumReferenceCompartmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
             })
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.datum_systems.items[aid.0];
@@ -4499,7 +4510,6 @@ fn resolve_definitional_representations(
             .iter()
             .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let context_of_items_v =
@@ -4520,7 +4530,6 @@ fn resolve_derived_units(
             .iter()
             .map(|e| DerivedUnitElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.derived_units.items[aid.0];
@@ -4658,7 +4667,6 @@ fn resolve_edge_loops(
             .iter()
             .map(|e| OrientedEdgeRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.edge_loops.items[aid.0];
@@ -4698,7 +4706,6 @@ fn resolve_faces(
             .iter()
             .map(|e| FaceBoundRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.faces.items[aid.0];
@@ -4738,7 +4745,6 @@ fn resolve_face_surfaces(
             .iter()
             .map(|e| FaceBoundRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let face_geometry_v = SurfaceRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
@@ -4810,7 +4816,6 @@ fn resolve_general_datum_references(
                     }
                 })
                 .collect(),
-            Attribute::Unset => Vec::new(),
             other => panic!("vec ref: {other:?}"),
         }),
     };
@@ -4869,7 +4874,6 @@ fn resolve_geometric_tolerance_with_datum_references(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.geometric_tolerance_with_datum_references.items[aid.0];
@@ -4984,7 +4988,6 @@ fn resolve_intersection_curves(
             .iter()
             .map(|e| PcurveOrSurfaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.intersection_curves.items[aid.0];
@@ -5153,7 +5156,6 @@ fn resolve_open_shells(
             .iter()
             .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.open_shells.items[aid.0];
@@ -5202,7 +5204,6 @@ fn resolve_parallelism_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.parallelism_tolerances.items[aid.0];
@@ -5222,7 +5223,6 @@ fn resolve_paths(
             .iter()
             .map(|e| OrientedEdgeRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.paths.items[aid.0];
@@ -5262,7 +5262,6 @@ fn resolve_perpendicularity_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.perpendicularity_tolerances.items[aid.0];
@@ -5339,7 +5338,6 @@ fn resolve_poly_loops(
             .iter()
             .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.poly_loops.items[aid.0];
@@ -5376,7 +5374,6 @@ fn resolve_products(
             .iter()
             .map(|e| ProductContextRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.products.items[aid.0];
@@ -5521,7 +5518,6 @@ fn resolve_quasi_uniform_curves(
             .iter()
             .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.quasi_uniform_curves.items[aid.0];
@@ -5542,11 +5538,9 @@ fn resolve_quasi_uniform_surfaces(
                     .iter()
                     .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                     .collect(),
-                Attribute::Unset => Vec::new(),
                 other => panic!("vec ref: {other:?}"),
             })
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.quasi_uniform_surfaces.items[aid.0];
@@ -5564,7 +5558,6 @@ fn resolve_rational_b_spline_curves(
             .iter()
             .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.rational_b_spline_curves.items[aid.0];
@@ -5585,11 +5578,9 @@ fn resolve_rational_b_spline_surfaces(
                     .iter()
                     .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                     .collect(),
-                Attribute::Unset => Vec::new(),
                 other => panic!("vec ref: {other:?}"),
             })
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.rational_b_spline_surfaces.items[aid.0];
@@ -5607,7 +5598,6 @@ fn resolve_representations(
             .iter()
             .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let context_of_items_v =
@@ -5712,7 +5702,6 @@ fn resolve_seam_curves(
             .iter()
             .map(|e| PcurveOrSurfaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.seam_curves.items[aid.0];
@@ -5758,7 +5747,6 @@ fn resolve_shape_dimension_representations(
             .iter()
             .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let context_of_items_v =
@@ -5779,7 +5767,6 @@ fn resolve_shape_representations(
             .iter()
             .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let context_of_items_v =
@@ -5852,7 +5839,6 @@ fn resolve_surface_curves(
             .iter()
             .map(|e| PcurveOrSurfaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.surface_curves.items[aid.0];
@@ -5936,7 +5922,6 @@ fn resolve_symmetry_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.symmetry_tolerances.items[aid.0];
@@ -5985,7 +5970,6 @@ fn resolve_tolerance_zones(
             .iter()
             .map(|e| ToleranceZoneTargetRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let form_v = ToleranceZoneFormRef::from_any(*idmap.get(&as_ref_id(&attrs[5])).expect("ref"));
@@ -6007,7 +5991,6 @@ fn resolve_tolerance_zone_definitions(
             .iter()
             .map(|e| ShapeAspectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.tolerance_zone_definitions.items[aid.0];
@@ -6028,7 +6011,6 @@ fn resolve_tolerance_zone_with_datums(
             .iter()
             .map(|e| ToleranceZoneTargetRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let form_v = ToleranceZoneFormRef::from_any(*idmap.get(&as_ref_id(&attrs[5])).expect("ref"));
@@ -6071,7 +6053,6 @@ fn resolve_total_runout_tolerances(
             .iter()
             .map(|e| DatumSystemOrReferenceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.total_runout_tolerances.items[aid.0];
@@ -6124,7 +6105,6 @@ fn resolve_uniform_curves(
             .iter()
             .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.uniform_curves.items[aid.0];
@@ -6145,11 +6125,9 @@ fn resolve_uniform_surfaces(
                     .iter()
                     .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                     .collect(),
-                Attribute::Unset => Vec::new(),
                 other => panic!("vec ref: {other:?}"),
             })
             .collect(),
-        Attribute::Unset => Vec::new(),
         other => panic!("vec ref: {other:?}"),
     };
     let it = &mut model.uniform_surfaces.items[aid.0];
@@ -6329,6 +6307,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface {
                 position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
             },
+            "EXTERNAL_SOURCE" => UnitPart::ExternalSource {
+                source_id: read_string_select(&p.attributes[0]),
+            },
             "FACE" => UnitPart::Face { bounds: Vec::new() },
             "FACE_BOUND" => UnitPart::FaceBound {
                 bound: LoopRef::EdgeLoop(EdgeLoopId(usize::MAX)),
@@ -6352,7 +6333,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 modifiers: None,
             },
             "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference {
-                source: ExternalSourceRef::Unresolved,
+                source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
             },
             "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext {
                 coordinate_space_dimension: as_int(&p.attributes[0]),
@@ -6738,7 +6719,6 @@ fn resolve_complex(
                             CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -6758,11 +6738,9 @@ fn resolve_complex(
                                     )
                                 })
                                 .collect(),
-                            Attribute::Unset => Vec::new(),
                             other => panic!("vec ref: {other:?}"),
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -6776,7 +6754,6 @@ fn resolve_complex(
                             )
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -6788,7 +6765,6 @@ fn resolve_complex(
                             .iter()
                             .map(|e| FaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                             .collect(),
-                        Attribute::Unset => Vec::new(),
                         other => panic!("vec ref: {other:?}"),
                     }),
                 };
@@ -6816,7 +6792,6 @@ fn resolve_complex(
                             )
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -6828,7 +6803,6 @@ fn resolve_complex(
                             DerivedUnitElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -6870,7 +6844,6 @@ fn resolve_complex(
                         .iter()
                         .map(|e| FaceBoundRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -6933,7 +6906,6 @@ fn resolve_complex(
                                         })
                                         .collect()
                                 }
-                                Attribute::Unset => Vec::new(),
                                 other => panic!("vec ref: {other:?}"),
                             })
                         }
@@ -6969,7 +6941,6 @@ fn resolve_complex(
                             )
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -7043,7 +7014,6 @@ fn resolve_complex(
                         .iter()
                         .map(|e| OrientedEdgeRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -7071,7 +7041,6 @@ fn resolve_complex(
                             CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -7085,7 +7054,6 @@ fn resolve_complex(
                             ProductContextRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -7162,7 +7130,6 @@ fn resolve_complex(
                             RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
                 *context_of_items = RepresentationContextRef::from_any(
@@ -7240,7 +7207,6 @@ fn resolve_complex(
                             PcurveOrSurfaceRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }
@@ -7258,7 +7224,6 @@ fn resolve_complex(
                             )
                         })
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
                 *form = ToleranceZoneFormRef::from_any(
@@ -7276,7 +7241,6 @@ fn resolve_complex(
                         .iter()
                         .map(|e| ShapeAspectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
                         .collect(),
-                    Attribute::Unset => Vec::new(),
                     other => panic!("vec ref: {other:?}"),
                 };
             }

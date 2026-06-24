@@ -31,6 +31,7 @@ fn kind_type(ir: &ModelIr, k: &Kind) -> String {
         Kind::Binary => "String".into(),
         Kind::Enum(a) => ir.enums[a].rust.clone(),
         Kind::MeasureSelect(_) => "MeasureValue".into(),
+        Kind::StringSelect(_) => "StringSelectValue".into(),
     }
 }
 
@@ -87,6 +88,11 @@ impl Logical {
 /// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureValue { pub type_name: Option<String>, pub value: f64 }
+
+/// select-of-named-strings (e.g. SELECT(identifier, message)): `Some(type_name)`
+/// = typed member `TYPE('s')`; `None` = bare string.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StringSelectValue { pub type_name: Option<String>, pub value: String }
 
 "#,
     );
@@ -332,6 +338,18 @@ fn read_measure_value(a: &Attribute) -> MeasureValue {
         other => panic!("expected measure_value, got {other:?}"),
     }
 }
+fn read_string_select(a: &Attribute) -> StringSelectValue {
+    // A named string select member is a Typed literal `TYPE('s')`; a bare string
+    // is unwrapped. (Mirrors read_measure_value for the string case.)
+    fn str_of(a: &Attribute) -> String {
+        match a { Attribute::String(s) => s.clone(), other => panic!("expected select string, got {other:?}") }
+    }
+    match a {
+        Attribute::Typed { type_name, value } => StringSelectValue { type_name: Some(type_name.clone()), value: str_of(value) },
+        Attribute::String(s) => StringSelectValue { type_name: None, value: s.clone() },
+        other => panic!("expected string_select, got {other:?}"),
+    }
+}
 
 "#,
     );
@@ -547,6 +565,7 @@ fn bind_scalar(ir: &ModelIr, k: &Kind, optional: bool, attr: &str) -> String {
         Kind::Logical => format!("as_logical(&{attr})"),
         Kind::Binary => format!("as_str(&{attr})"),
         Kind::MeasureSelect(_) => format!("read_measure_value(&{attr})"),
+        Kind::StringSelect(_) => format!("read_string_select(&{attr})"),
         Kind::Enum(a) => {
             let ty = &ir.enums[a].rust;
             format!(
@@ -705,8 +724,12 @@ fn resolve_ref_vec(ir: &ModelIr, inner: &Kind, attr: &str) -> String {
         Kind::Vec(i2) => resolve_ref_vec(ir, i2, "e"),
         _ => unreachable!("non-ref nested vec in ref resolve"),
     };
+    // No `Unset => Vec::new()`: an optional ref-list is unwrapped to None by the
+    // caller (resolve_ref_expr) and a required one is normalized `$`→`()` before
+    // read, so `$` reaching here is a normalize gap — surface it (panic) rather
+    // than silently producing an empty list.
     format!(
-        "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), Attribute::Unset => Vec::new(), other => panic!(\"vec ref: {{other:?}}\") }}"
+        "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), other => panic!(\"vec ref: {{other:?}}\") }}"
     )
 }
 
@@ -823,6 +846,9 @@ pub fn emit_write(ir: &ModelIr) -> String {
 }
 fn measure(m: &MeasureValue) -> String {
     match &m.type_name { Some(t) => format!("{t}({})", real(m.value)), None => real(m.value) }
+}
+fn string_select(m: &StringSelectValue) -> String {
+    match &m.type_name { Some(t) => format!("{t}({})", step_str(&m.value)), None => step_str(&m.value) }
 }
 /// Part 21 string literal: single-quoted, inner `'` doubled to `''` (matches
 /// step-io `writer/lexical.rs::format_string`). Non-ASCII passes through raw.
@@ -970,10 +996,10 @@ fn render_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, access: 
             if wrapped {
                 format!(
                     "match &{access} {{ Some(r) => {}, None => \"{none_tok}\".to_string() }}",
-                    render_ref_value(ir, re, "r")
+                    render_ref_value(re, "r")
                 )
             } else {
-                render_ref_value(ir, re, &format!("&{access}"))
+                render_ref_value(re, &format!("&{access}"))
             }
         }
         Kind::Vec(inner) => {
@@ -1006,7 +1032,7 @@ fn render_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, access: 
 /// Render a ref-enum value (given by a `&{re.rust}` expression `v`) to a String
 /// expr: `#n` for a single arm; `(#a,#b)` for an aggregate arm. ref-enums are
 /// non-Copy, so the dispatch clones the value it hands to `emit_*`.
-fn render_ref_value(_ir: &ModelIr, re: &RefEnum, v: &str) -> String {
+fn render_ref_value(re: &RefEnum, v: &str) -> String {
     let m = ref_method(&re.rust);
     let mut arms: Vec<String> = Vec::new();
     for (aggv, elt_ref, wire) in &re.aggregate {
@@ -1043,6 +1069,7 @@ fn render_scalar(_ir: &ModelIr, k: &Kind, access: &str) -> String {
         Kind::Logical => format!("{access}.token().to_string()"),
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
         Kind::MeasureSelect(_) => format!("measure(&{access})"),
+        Kind::StringSelect(_) => format!("string_select(&{access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
@@ -1058,6 +1085,7 @@ fn render_scalar_ref(_ir: &ModelIr, k: &Kind, access: &str) -> String {
         Kind::Logical => format!("{access}.token().to_string()"),
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
         Kind::MeasureSelect(_) => format!("measure({access})"),
+        Kind::StringSelect(_) => format!("string_select({access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
@@ -1067,7 +1095,7 @@ fn render_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
     match inner {
         Kind::Ref(t) => {
             let re = &ir.ref_enums[t];
-            render_ref_value(ir, re, "e")
+            render_ref_value(re, "e")
         }
         Kind::Vec(i2) => {
             // nested list (e.g. control_points_list grid). Rebind inner elem to `e`.
@@ -1219,10 +1247,10 @@ fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id:
             if wrapped {
                 format!(
                     "match {id} {{ Some(r) => {}, None => \"{none_tok}\".to_string() }}",
-                    render_ref_value(ir, re, "r")
+                    render_ref_value(re, "r")
                 )
             } else {
-                render_ref_value(ir, re, id)
+                render_ref_value(re, id)
             }
         }
         Kind::Vec(inner) => {
@@ -1271,6 +1299,8 @@ fn sk_variant(k: &Kind) -> &'static str {
         Kind::Ref(_) => "Ref",
         Kind::Vec(_) => "Vec",
         Kind::MeasureSelect(_) => "Meas",
+        // string-select required `$` -> req-str<-$ normalizes to "" (read as bare).
+        Kind::StringSelect(_) => "Str",
     }
 }
 

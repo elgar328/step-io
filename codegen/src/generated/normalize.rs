@@ -1338,6 +1338,11 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 der: false,
             },
         ],
+        "EXTERNAL_SOURCE" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+        }],
         "FACE" => &[
             Slot {
                 k: Sk::Str,
@@ -3481,6 +3486,11 @@ fn part_slots(n: &str) -> &'static [Slot] {
         "EDGE_LOOP" => &[],
         "ELEMENTARY_SURFACE" => &[Slot {
             k: Sk::Ref,
+            req: true,
+            der: false,
+        }],
+        "EXTERNAL_SOURCE" => &[Slot {
+            k: Sk::Str,
             req: true,
             der: false,
         }],

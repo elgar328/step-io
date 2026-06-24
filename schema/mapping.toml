@@ -927,22 +927,14 @@ variants = { circle = "Circle", dot = "Dot", internal_pair_forward_arrowhead = "
 # ---------------------------------------------------------------------------
 [codegen]
 # Entities kept OUT of the closure (never generated); their referrers escape via
-# the round-trip filter. DEFERRED capability: these own an attribute typed as a
-# SELECT-with-aggregate-arms (e.g. SELECT(X, LIST OF X, SET OF X)), which the
-# generator's ref-enum cannot yet model (the Vec arm breaks the Copy invariant).
-# Tracked for a focused follow-on; excluded here so the GD&T part-bag de-risk can
-# proceed. Measure their escape impact before prioritizing the capability.
+# the round-trip filter. The special-select capabilities (aggregate / entity+enum
+# / string) are now all built; the remaining exclusion is deferred for closure
+# SCOPE, not a missing capability.
 exclude = [
-    # item_identified_representation_usage: aggregate-arm handles its
-    # identified_item, but its `definition` SELECT drags the entire PLM
-    # applied-assignment subtree (entity+scalar/other gaps) → keep deferred until
-    # PLM domain. (aggregate-arm verified via `transformation` instead.)
+    # item_identified_representation_usage: its `definition` SELECT drags the
+    # entire PLM applied-assignment subtree (a large domain with its own gaps) →
+    # keep deferred until the PLM domain is brought in as a deliberate step.
     "item_identified_representation_usage",
-    # external_source.source_id : source_item = SELECT(identifier, message) —
-    # an all-STRING select. classify's is_measure_select treats all-scalar as a
-    # numeric MeasureValue (f64), which can't hold a string. Deferred capability:
-    # select-of-strings model. Peripheral (not GD&T part-bag).
-    "external_source",
 ]
 
 [codegen.domains]

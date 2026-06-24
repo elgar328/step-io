@@ -28,6 +28,11 @@ pub enum Kind {
     /// A select-of-named-scalars (all members numeric) -> `MeasureValue`
     /// (`{type_name: Option<String>, value: f64}`). Carries the alias name.
     MeasureSelect(String),
+    /// A select-of-named-strings (all members string, e.g. SELECT(identifier,
+    /// message)) -> `StringSelectValue` (`{type_name: Option<String>, value:
+    /// String}`). Carries the alias name. Named members are Typed-wrapped on the
+    /// wire (`IDENTIFIER('x')`).
+    StringSelect(String),
 }
 
 pub const MAX_DEPTH: u32 = 64;
@@ -75,6 +80,19 @@ impl<'a> Resolver<'a> {
         self.agg_element(m).is_some_and(|e| self.ref_like(&e, 0))
     }
 
+    /// True when every member of a SELECT resolves to a string — the
+    /// select-of-named-strings shape (`StringSelectValue`). Checked before
+    /// `is_measure_select` (which also accepts `Str`) so all-string selects do
+    /// not get mis-modeled as a numeric `MeasureValue`.
+    pub fn is_string_select(&self, members: &[&str], depth: u32) -> bool {
+        if depth >= MAX_DEPTH {
+            return false;
+        }
+        members
+            .iter()
+            .all(|m| matches!(self.classify(m, depth + 1), Kind::Str))
+    }
+
     /// True when every member of a SELECT resolves to a scalar primitive (no
     /// entity ref, no nested mixed SELECT) — the select-of-scalars / measure
     /// shape modeled generically as `MeasureValue { type_name, value }`.
@@ -119,7 +137,12 @@ impl<'a> Resolver<'a> {
                 return Kind::Enum(t.to_string());
             }
             if let Some(members) = select_members(a) {
-                // All-scalar select -> MeasureValue (select-of-scalars).
+                // All-string select -> StringSelectValue (checked first, since the
+                // numeric measure check below also accepts Str).
+                if self.is_string_select(&members, depth + 1) {
+                    return Kind::StringSelect(t.to_string());
+                }
+                // All-scalar (numeric) select -> MeasureValue (select-of-scalars).
                 if self.is_measure_select(&members, depth + 1) {
                     return Kind::MeasureSelect(t.to_string());
                 }

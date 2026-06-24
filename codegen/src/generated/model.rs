@@ -53,6 +53,14 @@ pub struct MeasureValue {
     pub value: f64,
 }
 
+/// select-of-named-strings (e.g. SELECT(identifier, message)): `Some(type_name)`
+/// = typed member `TYPE('s')`; `None` = bare string.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StringSelectValue {
+    pub type_name: Option<String>,
+    pub value: String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AreaUnitType {
     Spherical,
@@ -769,6 +777,8 @@ pub struct ElementarySurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EllipseId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternalSourceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FaceBoundId(pub usize);
@@ -1033,6 +1043,7 @@ pub enum AnyId {
     EdgeLoop(EdgeLoopId),
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
+    ExternalSource(ExternalSourceId),
     Face(FaceId),
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
@@ -1596,11 +1607,14 @@ impl EdgeRef {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ExternalSourceRef {
-    Unresolved,
+    ExternalSource(ExternalSourceId),
+    Complex(ComplexUnitId),
 }
 impl ExternalSourceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::ExternalSource(i) => Self::ExternalSource(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ExternalSourceRef ref -> {other:?}"),
         }
     }
@@ -2982,6 +2996,11 @@ pub struct Ellipse {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ExternalSource {
+    pub source_id: StringSelectValue,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Face {
     pub name: String,
     pub bounds: Vec<FaceBoundRef>,
@@ -3825,6 +3844,9 @@ pub enum UnitPart {
     ElementarySurface {
         position: Axis2Placement3dRef,
     },
+    ExternalSource {
+        source_id: StringSelectValue,
+    },
     Face {
         bounds: Vec<FaceBoundRef>,
     },
@@ -4138,6 +4160,7 @@ pub struct Model {
     pub edge_loops: Arena<EdgeLoop>,
     pub elementary_surfaces: Arena<ElementarySurface>,
     pub ellipses: Arena<Ellipse>,
+    pub external_sources: Arena<ExternalSource>,
     pub faces: Arena<Face>,
     pub face_bounds: Arena<FaceBound>,
     pub face_outer_bounds: Arena<FaceOuterBound>,
