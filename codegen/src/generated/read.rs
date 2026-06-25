@@ -108,6 +108,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "BOUNDED_SURFACE",
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
+    "CALENDAR_DATE",
     "CARTESIAN_POINT",
     "CHARACTER_GLYPH_STYLE_OUTLINE",
     "CHARACTER_GLYPH_STYLE_STROKE",
@@ -127,6 +128,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONNECTED_FACE_SET",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
+    "COORDINATED_UNIVERSAL_TIME_OFFSET",
     "CURVE",
     "CURVE_STYLE",
     "CURVE_STYLE_FONT",
@@ -135,6 +137,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CURVE_STYLE_RENDERING",
     "CYLINDRICAL_SURFACE",
     "CYLINDRICITY_TOLERANCE",
+    "DATE",
+    "DATE_AND_TIME",
     "DATUM",
     "DATUM_FEATURE",
     "DATUM_REFERENCE",
@@ -201,6 +205,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "LENGTH_UNIT",
     "LINE",
     "LINE_PROFILE_TOLERANCE",
+    "LOCAL_TIME",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
     "MAPPED_ITEM",
@@ -368,6 +373,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "CURVE_STYLE_FONT_AND_SCALING",
     "CURVE_STYLE_FONT_PATTERN",
     "CYLINDRICITY_TOLERANCE",
+    "DATE",
+    "DATE_AND_TIME",
     "DATUM",
     "DATUM_FEATURE",
     "DATUM_REFERENCE",
@@ -584,6 +591,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_curve_style_renderings: Vec<(CurveStyleRenderingId, u64)> = Vec::new();
     let mut pending_cylindrical_surfaces: Vec<(CylindricalSurfaceId, u64)> = Vec::new();
     let mut pending_cylindricity_tolerances: Vec<(CylindricityToleranceId, u64)> = Vec::new();
+    let mut pending_date_and_times: Vec<(DateAndTimeId, u64)> = Vec::new();
     let mut pending_datums: Vec<(DatumId, u64)> = Vec::new();
     let mut pending_datum_features: Vec<(DatumFeatureId, u64)> = Vec::new();
     let mut pending_datum_references: Vec<(DatumReferenceId, u64)> = Vec::new();
@@ -687,6 +695,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_length_units: Vec<(LengthUnitId, u64)> = Vec::new();
     let mut pending_lines: Vec<(LineId, u64)> = Vec::new();
     let mut pending_line_profile_tolerances: Vec<(LineProfileToleranceId, u64)> = Vec::new();
+    let mut pending_local_times: Vec<(LocalTimeId, u64)> = Vec::new();
     let mut pending_manifold_solid_breps: Vec<(ManifoldSolidBrepId, u64)> = Vec::new();
     let mut pending_mapped_items: Vec<(MappedItemId, u64)> = Vec::new();
     let mut pending_mass_units: Vec<(MassUnitId, u64)> = Vec::new();
@@ -1261,6 +1270,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CALENDAR_DATE" => {
+                let v = CalendarDate {
+                    year_component: as_int(&attributes[0]),
+                    day_component: as_int(&attributes[1]),
+                    month_component: as_int(&attributes[2]),
+                };
+                let aid = CalendarDateId(model.calendar_dates.push(v));
+                idmap.insert(id, AnyId::CalendarDate(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CARTESIAN_POINT" => {
                 let v = CartesianPoint {
                     name: as_str(&attributes[0]),
@@ -1517,6 +1537,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "COORDINATED_UNIVERSAL_TIME_OFFSET" => {
+                let v = CoordinatedUniversalTimeOffset {
+                    hour_offset: as_int(&attributes[0]),
+                    minute_offset: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_int(&attributes[1])),
+                    },
+                    sense: match &attributes[2] {
+                        Attribute::Enum(s) => AheadOrBehind::parse(s).expect("ahead_or_behind"),
+                        other => panic!("enum ahead_or_behind: {other:?}"),
+                    },
+                };
+                let aid = CoordinatedUniversalTimeOffsetId(
+                    model.coordinated_universal_time_offsets.push(v),
+                );
+                idmap.insert(id, AnyId::CoordinatedUniversalTimeOffset(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CURVE" => {
                 let v = Curve {
                     name: as_str(&attributes[0]),
@@ -1619,6 +1658,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = CylindricityToleranceId(model.cylindricity_tolerances.push(v));
                 idmap.insert(id, AnyId::CylindricityTolerance(aid));
                 pending_cylindricity_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATE" => {
+                let v = Date {
+                    year_component: as_int(&attributes[0]),
+                };
+                let aid = DateId(model.dates.push(v));
+                idmap.insert(id, AnyId::Date(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATE_AND_TIME" => {
+                let v = DateAndTime {
+                    date_component: DateRef::CalendarDate(CalendarDateId(usize::MAX)),
+                    time_component: LocalTimeRef::LocalTime(LocalTimeId(usize::MAX)),
+                };
+                let aid = DateAndTimeId(model.date_and_times.push(v));
+                idmap.insert(id, AnyId::DateAndTime(aid));
+                pending_date_and_times.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -2607,6 +2666,27 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = LineProfileToleranceId(model.line_profile_tolerances.push(v));
                 idmap.insert(id, AnyId::LineProfileTolerance(aid));
                 pending_line_profile_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "LOCAL_TIME" => {
+                let v = LocalTime {
+                    hour_component: as_int(&attributes[0]),
+                    minute_component: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_int(&attributes[1])),
+                    },
+                    second_component: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_real(&attributes[2])),
+                    },
+                    zone: CoordinatedUniversalTimeOffsetRef::CoordinatedUniversalTimeOffset(
+                        CoordinatedUniversalTimeOffsetId(usize::MAX),
+                    ),
+                };
+                let aid = LocalTimeId(model.local_times.push(v));
+                idmap.insert(id, AnyId::LocalTime(aid));
+                pending_local_times.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -4814,6 +4894,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_cylindricity_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_date_and_times {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_date_and_times(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_datums {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_datums(&mut model, aid, attributes, &idmap);
@@ -5111,6 +5196,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_line_profile_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_line_profile_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_local_times {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_local_times(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_manifold_solid_breps {
@@ -6342,6 +6432,19 @@ fn resolve_cylindricity_tolerances(
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
 }
 
+fn resolve_date_and_times(
+    model: &mut Model,
+    aid: DateAndTimeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let date_component_v = DateRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let time_component_v = LocalTimeRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.date_and_times.items[aid.0];
+    it.date_component = date_component_v;
+    it.time_component = time_component_v;
+}
+
 fn resolve_datums(
     model: &mut Model,
     aid: DatumId,
@@ -7364,6 +7467,19 @@ fn resolve_line_profile_tolerances(
     let it = &mut model.line_profile_tolerances.items[aid.0];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_local_times(
+    model: &mut Model,
+    aid: LocalTimeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let zone_v = CoordinatedUniversalTimeOffsetRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model.local_times.items[aid.0];
+    it.zone = zone_v;
 }
 
 fn resolve_manifold_solid_breps(
@@ -9169,6 +9285,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 invisible_segment_length: as_real(&p.attributes[1]),
             },
             "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
+            "DATE" => UnitPart::Date {
+                year_component: as_int(&p.attributes[0]),
+            },
+            "DATE_AND_TIME" => UnitPart::DateAndTime {
+                date_component: DateRef::CalendarDate(CalendarDateId(usize::MAX)),
+                time_component: LocalTimeRef::LocalTime(LocalTimeId(usize::MAX)),
+            },
             "DATUM" => UnitPart::Datum {
                 identification: as_str(&p.attributes[0]),
             },
@@ -9942,6 +10065,16 @@ fn resolve_complex(
                 *curve_font = CurveStyleFontSelectRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
+            }
+            UnitPart::DateAndTime {
+                date_component,
+                time_component,
+                ..
+            } => {
+                *date_component =
+                    DateRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+                *time_component =
+                    LocalTimeRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
             }
             UnitPart::DatumReference {
                 referenced_datum, ..

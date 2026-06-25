@@ -1164,3 +1164,13 @@ presentation = [
     "surface_style_parameter_line",
     "curve_style",
 ]
+# date/time — fully self-contained (scalar/enum + intra-cluster refs only, no
+# external references), so very low escape. date_and_time is dual-appearance
+# (mostly standalone, rarely a complex part). calendar_date is the only date
+# subtype that occurs (DateRef::CalendarDate).
+date_time = [
+    "date_and_time",
+    "calendar_date",
+    "local_time",
+    "coordinated_universal_time_offset",
+]

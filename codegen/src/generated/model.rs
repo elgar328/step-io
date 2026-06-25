@@ -62,6 +62,30 @@ pub struct StringSelectValue {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AheadOrBehind {
+    Ahead,
+    Exact,
+    Behind,
+}
+impl AheadOrBehind {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "AHEAD" => Self::Ahead,
+            "EXACT" => Self::Exact,
+            "BEHIND" => Self::Behind,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Ahead => ".AHEAD.",
+            Self::Exact => ".EXACT.",
+            Self::Behind => ".BEHIND.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AreaUnitType {
     Spherical,
     Cylindrical,
@@ -859,6 +883,8 @@ pub struct BoundedSurfaceCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BrepWithVoidsId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CalendarDateId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CartesianPointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CharacterGlyphStyleOutlineId(pub usize);
@@ -897,6 +923,8 @@ pub struct ContextDependentUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ConversionBasedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CoordinatedUniversalTimeOffsetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CurveStyleId(pub usize);
@@ -912,6 +940,10 @@ pub struct CurveStyleRenderingId(pub usize);
 pub struct CylindricalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CylindricityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DateId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DateAndTimeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DatumId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1044,6 +1076,8 @@ pub struct LengthUnitId(pub usize);
 pub struct LineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LineProfileToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LocalTimeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1331,6 +1365,7 @@ pub enum AnyId {
     BoundedSurface(BoundedSurfaceId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
+    CalendarDate(CalendarDateId),
     CartesianPoint(CartesianPointId),
     CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
     CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
@@ -1350,6 +1385,7 @@ pub enum AnyId {
     ConnectedFaceSet(ConnectedFaceSetId),
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
+    CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
     Curve(CurveId),
     CurveStyle(CurveStyleId),
     CurveStyleFont(CurveStyleFontId),
@@ -1358,6 +1394,8 @@ pub enum AnyId {
     CurveStyleRendering(CurveStyleRenderingId),
     CylindricalSurface(CylindricalSurfaceId),
     CylindricityTolerance(CylindricityToleranceId),
+    Date(DateId),
+    DateAndTime(DateAndTimeId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
     DatumReference(DatumReferenceId),
@@ -1424,6 +1462,7 @@ pub enum AnyId {
     LengthUnit(LengthUnitId),
     Line(LineId),
     LineProfileTolerance(LineProfileToleranceId),
+    LocalTime(LocalTimeId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     MappedItem(MappedItemId),
@@ -1843,6 +1882,19 @@ impl ColourRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum CoordinatedUniversalTimeOffsetRef {
+    CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
+}
+impl CoordinatedUniversalTimeOffsetRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CoordinatedUniversalTimeOffset(i) => Self::CoordinatedUniversalTimeOffset(i),
+            other => panic!("CoordinatedUniversalTimeOffsetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum CurveFontOrScaledCurveFontSelectRef {
     CurveStyleFont(CurveStyleFontId),
     CurveStyleFontAndScaling(CurveStyleFontAndScalingId),
@@ -2082,6 +2134,23 @@ impl CurveStyleRef {
             AnyId::CurveStyle(i) => Self::CurveStyle(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("CurveStyleRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DateRef {
+    CalendarDate(CalendarDateId),
+    Date(DateId),
+    Complex(ComplexUnitId),
+}
+impl DateRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CalendarDate(i) => Self::CalendarDate(i),
+            AnyId::Date(i) => Self::Date(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DateRef ref -> {other:?}"),
         }
     }
 }
@@ -2621,6 +2690,19 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
             AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("LengthOrPlaneAngleMeasureWithUnitSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum LocalTimeRef {
+    LocalTime(LocalTimeId),
+}
+impl LocalTimeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::LocalTime(i) => Self::LocalTime(i),
+            other => panic!("LocalTimeRef ref -> {other:?}"),
         }
     }
 }
@@ -4197,6 +4279,13 @@ pub struct BrepWithVoids {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CalendarDate {
+    pub year_component: i64,
+    pub day_component: i64,
+    pub month_component: i64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CartesianPoint {
     pub name: String,
     pub coordinates: Vec<f64>,
@@ -4325,6 +4414,13 @@ pub struct ConversionBasedUnit {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CoordinatedUniversalTimeOffset {
+    pub hour_offset: i64,
+    pub minute_offset: Option<i64>,
+    pub sense: AheadOrBehind,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Curve {
     pub name: String,
 }
@@ -4375,6 +4471,17 @@ pub struct CylindricityTolerance {
     pub description: Option<String>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Date {
+    pub year_component: i64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DateAndTime {
+    pub date_component: DateRef,
+    pub time_component: LocalTimeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -4850,6 +4957,14 @@ pub struct LineProfileTolerance {
     pub description: Option<String>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LocalTime {
+    pub hour_component: i64,
+    pub minute_component: Option<i64>,
+    pub second_component: Option<f64>,
+    pub zone: CoordinatedUniversalTimeOffsetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5884,6 +5999,13 @@ pub enum UnitPart {
         invisible_segment_length: f64,
     },
     CylindricityTolerance,
+    Date {
+        year_component: i64,
+    },
+    DateAndTime {
+        date_component: DateRef,
+        time_component: LocalTimeRef,
+    },
     Datum {
         identification: String,
     },
@@ -6356,6 +6478,7 @@ pub struct Model {
     pub bounded_surfaces: Arena<BoundedSurface>,
     pub bounded_surface_curves: Arena<BoundedSurfaceCurve>,
     pub brep_with_voidss: Arena<BrepWithVoids>,
+    pub calendar_dates: Arena<CalendarDate>,
     pub cartesian_points: Arena<CartesianPoint>,
     pub character_glyph_style_outlines: Arena<CharacterGlyphStyleOutline>,
     pub character_glyph_style_strokes: Arena<CharacterGlyphStyleStroke>,
@@ -6375,6 +6498,7 @@ pub struct Model {
     pub connected_face_sets: Arena<ConnectedFaceSet>,
     pub context_dependent_units: Arena<ContextDependentUnit>,
     pub conversion_based_units: Arena<ConversionBasedUnit>,
+    pub coordinated_universal_time_offsets: Arena<CoordinatedUniversalTimeOffset>,
     pub curves: Arena<Curve>,
     pub curve_styles: Arena<CurveStyle>,
     pub curve_style_fonts: Arena<CurveStyleFont>,
@@ -6383,6 +6507,8 @@ pub struct Model {
     pub curve_style_renderings: Arena<CurveStyleRendering>,
     pub cylindrical_surfaces: Arena<CylindricalSurface>,
     pub cylindricity_tolerances: Arena<CylindricityTolerance>,
+    pub dates: Arena<Date>,
+    pub date_and_times: Arena<DateAndTime>,
     pub datums: Arena<Datum>,
     pub datum_features: Arena<DatumFeature>,
     pub datum_references: Arena<DatumReference>,
@@ -6449,6 +6575,7 @@ pub struct Model {
     pub length_units: Arena<LengthUnit>,
     pub lines: Arena<Line>,
     pub line_profile_tolerances: Arena<LineProfileTolerance>,
+    pub local_times: Arena<LocalTime>,
     pub loops: Arena<Loop>,
     pub manifold_solid_breps: Arena<ManifoldSolidBrep>,
     pub mapped_items: Arena<MappedItem>,

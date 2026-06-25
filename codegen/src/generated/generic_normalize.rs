@@ -879,6 +879,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "CALENDAR_DATE" => &[
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "CARTESIAN_POINT" => &[
             Slot {
                 k: Sk::Str,
@@ -1228,6 +1248,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "COORDINATED_UNIVERSAL_TIME_OFFSET" => &[
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Enum,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "CURVE" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -1358,6 +1398,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DATE" => &[Slot {
+            k: Sk::Int,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "DATE_AND_TIME" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
                 der: false,
                 swire: None,
             },
@@ -2750,6 +2810,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "LOCAL_TIME" => &[
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Real,
                 req: false,
                 der: false,
                 swire: None,
@@ -5790,6 +5876,26 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "CYLINDRICITY_TOLERANCE" => &[],
+        "DATE" => &[Slot {
+            k: Sk::Int,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "DATE_AND_TIME" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "DATUM" => &[Slot {
             k: Sk::Str,
             req: true,

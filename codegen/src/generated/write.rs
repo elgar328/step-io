@@ -81,6 +81,7 @@ pub struct Writer<'a> {
     bounded_surface_ids: Vec<Option<u64>>,
     bounded_surface_curve_ids: Vec<Option<u64>>,
     brep_with_void_ids: Vec<Option<u64>>,
+    calendar_date_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
     character_glyph_style_outline_ids: Vec<Option<u64>>,
     character_glyph_style_stroke_ids: Vec<Option<u64>>,
@@ -100,6 +101,7 @@ pub struct Writer<'a> {
     connected_face_set_ids: Vec<Option<u64>>,
     context_dependent_unit_ids: Vec<Option<u64>>,
     conversion_based_unit_ids: Vec<Option<u64>>,
+    coordinated_universal_time_offset_ids: Vec<Option<u64>>,
     curve_ids: Vec<Option<u64>>,
     curve_style_ids: Vec<Option<u64>>,
     curve_style_font_ids: Vec<Option<u64>>,
@@ -108,6 +110,8 @@ pub struct Writer<'a> {
     curve_style_rendering_ids: Vec<Option<u64>>,
     cylindrical_surface_ids: Vec<Option<u64>>,
     cylindricity_tolerance_ids: Vec<Option<u64>>,
+    date_ids: Vec<Option<u64>>,
+    date_and_time_ids: Vec<Option<u64>>,
     datum_ids: Vec<Option<u64>>,
     datum_feature_ids: Vec<Option<u64>>,
     datum_reference_ids: Vec<Option<u64>>,
@@ -174,6 +178,7 @@ pub struct Writer<'a> {
     length_unit_ids: Vec<Option<u64>>,
     line_ids: Vec<Option<u64>>,
     line_profile_tolerance_ids: Vec<Option<u64>>,
+    local_time_ids: Vec<Option<u64>>,
     loop_ids: Vec<Option<u64>>,
     manifold_solid_brep_ids: Vec<Option<u64>>,
     mapped_item_ids: Vec<Option<u64>>,
@@ -348,6 +353,7 @@ impl<'a> Writer<'a> {
             bounded_surface_ids: vec![None; model.bounded_surfaces.items.len()],
             bounded_surface_curve_ids: vec![None; model.bounded_surface_curves.items.len()],
             brep_with_void_ids: vec![None; model.brep_with_voidss.items.len()],
+            calendar_date_ids: vec![None; model.calendar_dates.items.len()],
             cartesian_point_ids: vec![None; model.cartesian_points.items.len()],
             character_glyph_style_outline_ids: vec![
                 None;
@@ -373,6 +379,13 @@ impl<'a> Writer<'a> {
             connected_face_set_ids: vec![None; model.connected_face_sets.items.len()],
             context_dependent_unit_ids: vec![None; model.context_dependent_units.items.len()],
             conversion_based_unit_ids: vec![None; model.conversion_based_units.items.len()],
+            coordinated_universal_time_offset_ids: vec![
+                None;
+                model
+                    .coordinated_universal_time_offsets
+                    .items
+                    .len()
+            ],
             curve_ids: vec![None; model.curves.items.len()],
             curve_style_ids: vec![None; model.curve_styles.items.len()],
             curve_style_font_ids: vec![None; model.curve_style_fonts.items.len()],
@@ -384,6 +397,8 @@ impl<'a> Writer<'a> {
             curve_style_rendering_ids: vec![None; model.curve_style_renderings.items.len()],
             cylindrical_surface_ids: vec![None; model.cylindrical_surfaces.items.len()],
             cylindricity_tolerance_ids: vec![None; model.cylindricity_tolerances.items.len()],
+            date_ids: vec![None; model.dates.items.len()],
+            date_and_time_ids: vec![None; model.date_and_times.items.len()],
             datum_ids: vec![None; model.datums.items.len()],
             datum_feature_ids: vec![None; model.datum_features.items.len()],
             datum_reference_ids: vec![None; model.datum_references.items.len()],
@@ -570,6 +585,7 @@ impl<'a> Writer<'a> {
             length_unit_ids: vec![None; model.length_units.items.len()],
             line_ids: vec![None; model.lines.items.len()],
             line_profile_tolerance_ids: vec![None; model.line_profile_tolerances.items.len()],
+            local_time_ids: vec![None; model.local_times.items.len()],
             loop_ids: vec![None; model.loops.items.len()],
             manifold_solid_brep_ids: vec![None; model.manifold_solid_breps.items.len()],
             mapped_item_ids: vec![None; model.mapped_items.items.len()],
@@ -1560,6 +1576,23 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_calendar_dates(&mut self, id: CalendarDateId) -> u64 {
+        if let Some(n) = self.calendar_date_ids[id.0] {
+            return n;
+        }
+        let it = self.model.calendar_dates.get(id.0).clone();
+        let n = self.fresh();
+        self.calendar_date_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("{}", it.year_component),
+            format!("{}", it.day_component),
+            format!("{}", it.month_component),
+        ];
+        self.out
+            .push_str(&format!("#{n} = CALENDAR_DATE({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_cartesian_points(&mut self, id: CartesianPointId) -> u64 {
         if let Some(n) = self.cartesian_point_ids[id.0] {
             return n;
@@ -1998,6 +2031,35 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_coordinated_universal_time_offsets(
+        &mut self,
+        id: CoordinatedUniversalTimeOffsetId,
+    ) -> u64 {
+        if let Some(n) = self.coordinated_universal_time_offset_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .coordinated_universal_time_offsets
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.coordinated_universal_time_offset_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("{}", it.hour_offset),
+            match &it.minute_offset {
+                Some(x) => format!("{}", x),
+                None => "$".to_string(),
+            },
+            it.sense.token().to_string(),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = COORDINATED_UNIVERSAL_TIME_OFFSET({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_curves(&mut self, id: CurveId) -> u64 {
         if let Some(n) = self.curve_ids[id.0] {
             return n;
@@ -2181,6 +2243,38 @@ impl<'a> Writer<'a> {
             "#{n} = CYLINDRICITY_TOLERANCE({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_dates(&mut self, id: DateId) -> u64 {
+        if let Some(n) = self.date_ids[id.0] {
+            return n;
+        }
+        let it = self.model.dates.get(id.0).clone();
+        let n = self.fresh();
+        self.date_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!("{}", it.year_component)];
+        self.out
+            .push_str(&format!("#{n} = DATE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_date_and_times(&mut self, id: DateAndTimeId) -> u64 {
+        if let Some(n) = self.date_and_time_ids[id.0] {
+            return n;
+        }
+        let it = self.model.date_and_times.get(id.0).clone();
+        let n = self.fresh();
+        self.date_and_time_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("#{}", self.emit_ref_date((&it.date_component).clone())),
+            format!(
+                "#{}",
+                self.emit_ref_local_time((&it.time_component).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DATE_AND_TIME({});\n", attrs.join(",")));
         n
     }
 
@@ -3910,6 +4004,33 @@ impl<'a> Writer<'a> {
             "#{n} = LINE_PROFILE_TOLERANCE({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_local_times(&mut self, id: LocalTimeId) -> u64 {
+        if let Some(n) = self.local_time_ids[id.0] {
+            return n;
+        }
+        let it = self.model.local_times.get(id.0).clone();
+        let n = self.fresh();
+        self.local_time_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!("{}", it.hour_component),
+            match &it.minute_component {
+                Some(x) => format!("{}", x),
+                None => "$".to_string(),
+            },
+            match &it.second_component {
+                Some(x) => real(*x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_coordinated_universal_time_offset((&it.zone).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = LOCAL_TIME({});\n", attrs.join(",")));
         n
     }
 
@@ -7343,6 +7464,17 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_coordinated_universal_time_offset(
+        &mut self,
+        r: CoordinatedUniversalTimeOffsetRef,
+    ) -> u64 {
+        match r {
+            CoordinatedUniversalTimeOffsetRef::CoordinatedUniversalTimeOffset(i) => {
+                self.emit_coordinated_universal_time_offsets(i)
+            }
+        }
+    }
+
     fn emit_ref_curve_font_or_scaled_curve_font_select(
         &mut self,
         r: CurveFontOrScaledCurveFontSelectRef,
@@ -7488,6 +7620,14 @@ impl<'a> Writer<'a> {
         match r {
             CurveStyleRef::CurveStyle(i) => self.emit_curve_styles(i),
             CurveStyleRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_date(&mut self, r: DateRef) -> u64 {
+        match r {
+            DateRef::CalendarDate(i) => self.emit_calendar_dates(i),
+            DateRef::Date(i) => self.emit_dates(i),
+            DateRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -7825,6 +7965,12 @@ impl<'a> Writer<'a> {
                 self.emit_plane_angle_measure_with_units(i)
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_local_time(&mut self, r: LocalTimeRef) -> u64 {
+        match r {
+            LocalTimeRef::LocalTime(i) => self.emit_local_times(i),
         }
     }
 
@@ -9104,6 +9250,21 @@ impl<'a> Writer<'a> {
                     format!("CURVE_STYLE_FONT_PATTERN({})", a.join(","))
                 }
                 UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE()".to_string(),
+                UnitPart::Date { year_component, .. } => {
+                    let a: Vec<String> = vec![format!("{}", year_component)];
+                    format!("DATE({})", a.join(","))
+                }
+                UnitPart::DateAndTime {
+                    date_component,
+                    time_component,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_date((date_component).clone())),
+                        format!("#{}", self.emit_ref_local_time((time_component).clone())),
+                    ];
+                    format!("DATE_AND_TIME({})", a.join(","))
+                }
                 UnitPart::Datum { identification, .. } => {
                     let a: Vec<String> = vec![step_str(identification)];
                     format!("DATUM({})", a.join(","))
@@ -10678,6 +10839,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.brep_with_voidss.items.len() {
             self.emit_brep_with_voidss(BrepWithVoidsId(i));
         }
+        for i in 0..self.model.calendar_dates.items.len() {
+            self.emit_calendar_dates(CalendarDateId(i));
+        }
         for i in 0..self.model.cartesian_points.items.len() {
             self.emit_cartesian_points(CartesianPointId(i));
         }
@@ -10735,6 +10899,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.conversion_based_units.items.len() {
             self.emit_conversion_based_units(ConversionBasedUnitId(i));
         }
+        for i in 0..self.model.coordinated_universal_time_offsets.items.len() {
+            self.emit_coordinated_universal_time_offsets(CoordinatedUniversalTimeOffsetId(i));
+        }
         for i in 0..self.model.curves.items.len() {
             self.emit_curves(CurveId(i));
         }
@@ -10758,6 +10925,12 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.cylindricity_tolerances.items.len() {
             self.emit_cylindricity_tolerances(CylindricityToleranceId(i));
+        }
+        for i in 0..self.model.dates.items.len() {
+            self.emit_dates(DateId(i));
+        }
+        for i in 0..self.model.date_and_times.items.len() {
+            self.emit_date_and_times(DateAndTimeId(i));
         }
         for i in 0..self.model.datums.items.len() {
             self.emit_datums(DatumId(i));
@@ -11003,6 +11176,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.line_profile_tolerances.items.len() {
             self.emit_line_profile_tolerances(LineProfileToleranceId(i));
+        }
+        for i in 0..self.model.local_times.items.len() {
+            self.emit_local_times(LocalTimeId(i));
         }
         for i in 0..self.model.loops.items.len() {
             self.emit_loops(LoopId(i));
