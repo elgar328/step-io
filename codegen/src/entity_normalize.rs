@@ -33,8 +33,9 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
         };
         match name.as_str() {
             // NS-surface-style-rendering-method: rendering_method (attr 0, a
-            // required shading_surface_method enum) is `$` in most exports;
-            // normalize to NORMAL_SHADING (matches the 2-layer reader).
+            // required shading_surface_method enum) is `$` or a non-standard token
+            // (corpus uses `.UNSPECIFIED.`) in some exports; normalize to
+            // NORMAL_SHADING (matches the 2-layer reader).
             // NS-surface-style-surface-colour: surface_colour (attr 1, required
             // ref) is `$` in some exports; synthesize a bare COLOUR()
             // (Colour::Itself, the schema's unspecified-colour placeholder) so the
@@ -43,9 +44,10 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
             // surface_style_rendering). Matches the 2-layer reader.
             "SURFACE_STYLE_RENDERING" | "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => {
                 if let Some(a) = attributes.get_mut(0) {
-                    // `$` OR an unrecognized token (mis-spelled method) -> the
-                    // standard NORMAL_SHADING. shading_surface_method's valid
-                    // tokens are the four below; anything else is non-standard.
+                    // `$` OR a non-standard enum token (corpus uses `.UNSPECIFIED.`,
+                    // not a valid shading_surface_method value) -> the standard
+                    // NORMAL_SHADING. The four valid tokens are below; anything
+                    // else (incl. `.UNSPECIFIED.`) is normalized.
                     let needs_default = match a {
                         Attribute::Enum(s) => !matches!(
                             s.as_str(),
