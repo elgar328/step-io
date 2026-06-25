@@ -87,7 +87,7 @@ pub struct ModelIr {
 /// A ref-target is expanded to its FULL subtype tree: a `loop`-typed ref can
 /// resolve to any concrete `loop` subtype (edge_loop / poly_loop / vertex_loop),
 /// so all of them must be generated for the discriminated ref enum + read
-/// dispatch to cover every instance the corpus can write.
+/// dispatch to cover every instance real-world input can write.
 pub fn build_closure(
     schema: &EarlyToml,
     res: &Resolver,
@@ -129,7 +129,7 @@ pub fn build_closure(
 /// Ref-targets are added as the named entity / SELECT members only — NOT their
 /// full subtype trees (blanket subtype expansion of abstract supertypes like
 /// `curve`/`surface` leaks into out-of-domain PMI/maths entities with mixed
-/// SELECTs). Concrete subtypes that actually appear in the corpus (e.g.
+/// SELECTs). Concrete subtypes that actually appear in real-world input (e.g.
 /// vertex_loop) are listed in the committed domain seeds instead — the seed
 /// list IS the scoping mechanism. An instance of an un-seeded subtype panics
 /// loudly at read (surfaced, not silently dropped).

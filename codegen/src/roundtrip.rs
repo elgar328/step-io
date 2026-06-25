@@ -1,5 +1,5 @@
 //! Debug utility for the GENERATED schema-faithful module. The real gate is the
-//! reference-check corpus (`CODEGEN=1`, calls `codegen::check`); this binary
+//! full validation harness (`CODEGEN=1`, calls `codegen::check`); this binary
 //! inspects a single STEP file on disk and has no fixture dependency.
 //!
 //!   roundtrip <path>          # check one file: PASS/SKIP/FAIL + reason
@@ -11,11 +11,11 @@ fn main() {
     let mut args = std::env::args().skip(1);
     let Some(path) = args.next() else {
         eprintln!("usage: roundtrip <path> [TYPE]");
-        eprintln!("  full validation is the reference-check corpus (CODEGEN=1)");
+        eprintln!("  full validation is the harness (CODEGEN=1)");
         std::process::exit(2);
     };
-    // Latin-1 corpus files exist; read bytes and lossy-convert for this debug
-    // tool (the real corpus gate uses parse_bytes via check_roundtrip_bytes).
+    // Latin-1 input files exist; read bytes and lossy-convert for this debug
+    // tool (the real gate uses parse_bytes via check_roundtrip_bytes).
     let src = String::from_utf8_lossy(&std::fs::read(&path).expect("read file")).into_owned();
 
     // Type-diff mode: list the entities of TYPE that differ before/after.

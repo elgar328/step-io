@@ -1,8 +1,7 @@
 //! Order-insensitive (data-equivalence) comparison of two parsed entity maps.
 //!
-//! Copied from step-io-reference-check `src/canonical.rs`, with the two public
-//! entry fns adapted to take `&BTreeMap<u64, RawEntity>` directly (this spike
-//! filters the units subset into a standalone map rather than carrying a whole
+//! The two public entry fns take `&BTreeMap<u64, RawEntity>` directly (the closure
+//! subset is filtered into a standalone map rather than carrying a whole
 //! `EntityGraph`). The keying is part-order-invariant for complex instances
 //! (sorts parts by name) and renumber-invariant (folds referenced keys).
 

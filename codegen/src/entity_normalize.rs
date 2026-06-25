@@ -15,9 +15,10 @@
 use std::collections::BTreeMap;
 use step_io::{Attribute, RawEntity, Span};
 
-/// Apply per-entity non-standard normalizations in place. Mirrors the cases the
-/// 2-layer reader handles in `src/reader/nonstandard.rs` (NsCase), ported to the
-/// raw-entity level.
+/// Apply per-entity non-standard normalizations in place: a specific entity's
+/// required field is `$` or mis-encoded and must become a specific standard
+/// value, a synthetic default ref, etc. — cases too entity-specific for the
+/// generic slot-kind rules in `generic_normalize`.
 pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
     // Synthesized entities (e.g. a placeholder COLOUR()) can't be inserted while
     // iterating the map; collect them here and insert after. Fresh ids start past
@@ -32,22 +33,21 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
             continue;
         };
         match name.as_str() {
-            // NS-surface-style-rendering-method: rendering_method (attr 0, a
-            // required shading_surface_method enum) is `$` or a non-standard token
-            // (corpus uses `.UNSPECIFIED.`) in some exports; normalize to
-            // NORMAL_SHADING (matches the 2-layer reader).
-            // NS-surface-style-surface-colour: surface_colour (attr 1, required
-            // ref) is `$` in some exports; synthesize a bare COLOUR()
-            // (Colour::Itself, the schema's unspecified-colour placeholder) so the
-            // rendering survives instead of being dropped by the generic
-            // req-ref<-$ rule (which runs AFTER this and would delete the whole
-            // surface_style_rendering). Matches the 2-layer reader.
+            // rendering_method (attr 0, a required shading_surface_method enum) is
+            // `$` or a non-standard token (real-world exports use `.UNSPECIFIED.`)
+            // in some files; normalize to NORMAL_SHADING, the standard fallback for
+            // an unspecified/non-standard method.
+            // surface_colour (attr 1, required ref) is `$` in some files;
+            // synthesize a bare COLOUR() (the schema's unspecified-colour
+            // placeholder) so the rendering survives instead of being dropped by
+            // the generic req-ref<-$ rule (which runs AFTER this and would delete
+            // the whole surface_style_rendering).
             "SURFACE_STYLE_RENDERING" | "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => {
                 if let Some(a) = attributes.get_mut(0) {
-                    // `$` OR a non-standard enum token (corpus uses `.UNSPECIFIED.`,
-                    // not a valid shading_surface_method value) -> the standard
-                    // NORMAL_SHADING. The four valid tokens are below; anything
-                    // else (incl. `.UNSPECIFIED.`) is normalized.
+                    // `$` OR a non-standard enum token (real-world exports use
+                    // `.UNSPECIFIED.`, not a valid shading_surface_method value) ->
+                    // the standard NORMAL_SHADING. The four valid tokens are below;
+                    // anything else (incl. `.UNSPECIFIED.`) is normalized.
                     let needs_default = match a {
                         Attribute::Enum(s) => !matches!(
                             s.as_str(),
@@ -86,7 +86,7 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
                     norm.push("entity: surface_style_rendering.surface_colour<-COLOUR()");
                 }
             }
-            // NS-psa-bare-null-style: a styles member (attr 0, SET OF
+            // a styles member (attr 0, SET OF
             // presentation_style_select) written as a bare enum `.NULL.`
             // (null_style) instead of the standard typed `NULL_STYLE(.NULL.)`.
             // The only enum member of presentation_style_select is null_style, so

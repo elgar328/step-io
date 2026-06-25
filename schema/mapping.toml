@@ -574,7 +574,7 @@ parts = [
 
 # Multi-case (units-CBU-② Plan 1): SI vs CONVERSION_BASED_UNIT. L1 enum
 # EarlyLengthUnit{Si, Cbu}. Both cases: NAMED_UNIT.dimensions = `*` (derived) —
-# the complex supertype attr is conventionally Derived (corpus, e.g. NIST
+# the complex supertype attr is conventionally Derived (real-world files, e.g. NIST
 # ctc_05 `NAMED_UNIT(*)`). CBU adds CONVERSION_BASED_UNIT(name, conversion_factor
 # MWU). Part order = each case's emit order (must match the hand emit it replaces).
 [complex.length_unit.cases.si]
@@ -879,7 +879,7 @@ variants = { equal = "Equal", large = "Large", small = "Small" }
 
 # `b_spline_curve_form` (b_spline_curve.curve_form). `default` reproduces the
 # legacy `CurveForm::from_step_enum` `_ => Unspecified` catch-all exactly (behavior
-# preserved; a separate plan will strict-ify forms with a corpus token scan first).
+# preserved; a separate plan will strict-ify forms with a real-world token scan first).
 [enum.b_spline_curve_form]
 rust_type = "crate::ir::geometry::CurveForm"
 variants = { polyline_form = "PolylineForm", circular_arc = "CircularArc", elliptic_arc = "EllipticArc", parabolic_arc = "ParabolicArc", hyperbolic_arc = "HyperbolicArc", unspecified = "Unspecified" }
@@ -1136,7 +1136,7 @@ plm_person_org = [
 # that this big-bang required is also removed, since maths is only reachable
 # through the assignment items mega-select.)
 
-# presentation/style — the largest unmodeled corpus cluster (~25M instances:
+# presentation/style — the largest unmodeled cluster in real-world files (~25M instances:
 # styled_item 4.4M, presentation_style_assignment 4.2M, colour_rgb 4.1M, the
 # fill/surface_style family ~4.1M each). NOT a big-bang: styled_item.item targets
 # geometric/topological_representation_item (already in the geometry/topology

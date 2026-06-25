@@ -1,7 +1,7 @@
 //! Single-file round-trip verification core, exposed as a library.
 //!
-//! The reference-check corpus harness owns the .sqfs reading + parallel
-//! infrastructure; this crate owns "check one file". For one STEP source:
+//! An external harness owns the bulk file reading + parallel infrastructure;
+//! this crate owns "check one file". For one STEP source:
 //! parse -> filter to the closure subset (map A') -> generated read -> Model ->
 //! generated topo write -> reparse -> same filter (map B) ->
 //! `merkle_diff_maps(A', B) == None`.
@@ -17,7 +17,7 @@ use crate::merkle::merkle_diff_maps;
 /// Outcome of checking one STEP file's in-scope subset.
 pub enum CheckResult {
     /// Not applicable to this run, NOT a generator bug (source parse failure on
-    /// a corrupt corpus file, or no in-scope entities).
+    /// a corrupt input file, or no in-scope entities).
     Skip(String),
     /// Round-trip data-equivalent. `validated` = in-scope subset entity count,
     /// `escaped` = closure-typed candidates dropped by the escape filter (their
@@ -192,11 +192,11 @@ pub fn check_roundtrip_raw(src: &[u8]) {
     eprintln!("raw roundtrip OK ({} entities)", a.len());
 }
 
-/// Bytes entry point — parses via `parse_bytes` so non-UTF-8 (Latin-1) corpus
-/// files survive (matches the reference-check harness). The regenerated output
-/// is our own UTF-8 text, reparsed with `parse`.
+/// Bytes entry point — parses via `parse_bytes` so non-UTF-8 (Latin-1) input
+/// files survive (matches the harness). The regenerated output is our own UTF-8
+/// text, reparsed with `parse`.
 pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
-    // Original parse failure = corrupt corpus input, not our bug.
+    // Original parse failure = corrupt input, not our bug.
     let g = match parse_bytes(src) {
         Ok(g) => g,
         Err(e) => return CheckResult::Skip(format!("source parse failed: {e}")),
@@ -212,7 +212,7 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
     let validated = a.len();
 
     // The generator (read/write) may panic on shapes not yet handled; treat a
-    // panic as a generator bug (Fail), not a run-aborting crash at corpus scale.
+    // panic as a generator bug (Fail), not a run-aborting crash at scale.
     let emitted = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let (model, _idmap) = read(&a);
         let body = Writer::new(&model).emit_all();
