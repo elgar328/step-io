@@ -1135,22 +1135,3 @@ plm_person_org = [
 # document identification, etc.) as a redesigned next step. (The maths exclude
 # that this big-bang required is also removed, since maths is only reachable
 # through the assignment items mega-select.)
-
-# Entities that appear ONLY as parts of a complex (multi-inheritance) instance
-# (never as a standalone simple `#N=NAME(..)`). They are collected into a single
-# generic part-bag arena (`ComplexUnit { parts: Vec<UnitPart> }` in the spike),
-# NOT given individual simple arenas. On read, a `RawEntity::Complex` whose parts
-# intersect this set routes to the part-bag; each part keeps its own_attrs.
-# (Mechanical: copied from the spike's COMPLEX_PART_NAMES.)
-[codegen.complex_parts]
-units = [
-    "named_unit",
-    "si_unit",
-    "conversion_based_unit",
-    "context_dependent_unit",
-    "length_unit",
-    "mass_unit",
-    "plane_angle_unit",
-    "solid_angle_unit",
-    "time_unit",
-]
