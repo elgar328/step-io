@@ -402,6 +402,33 @@ fn read_string_select(a: &Attribute) -> StringSelectValue {
     // subset membership predicate used by the round-trip filter.
     s.push_str("pub fn in_subset(ent: &RawEntity) -> bool {\n    match ent {\n        RawEntity::Simple { name, .. } => SIMPLE_NAMES.contains(&name.as_str()),\n        RawEntity::Complex { parts, .. } => is_complex_unit(parts),\n    }\n}\n\n");
 
+    // ---- per-slot ref allow-list (nonstandard-ref detection) ----
+    // For each ref slot of each entity/part: the standard target types this slot
+    // admits (`allowed` = the ref-enum's simple arms as UPPER wire names, plus
+    // `complex_ok` for a part-bag target). A ref whose target type is in the
+    // closure but not in this list sits in a slot that does not admit it = a
+    // schema-violating (nonstandard) reference.
+    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [&'static str], pub complex_ok: bool, pub is_vec: bool }\n\n");
+    let rust_to_name: std::collections::HashMap<&str, &str> = ir
+        .simples
+        .iter()
+        .map(|se| (se.rust.as_str(), se.name.as_str()))
+        .collect();
+    emit_ref_slot_table(
+        &mut s,
+        "ref_slots",
+        ir,
+        &rust_to_name,
+        ir.simples.iter().map(|se| (&se.name, &se.fields)),
+    );
+    emit_ref_slot_table(
+        &mut s,
+        "complex_ref_slots",
+        ir,
+        &rust_to_name,
+        ir.parts.iter().map(|p| (&p.name, &p.fields)),
+    );
+
     // ---- read() ----
     s.push_str("pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {\n");
     s.push_str("    let mut model = Model::default();\n");
@@ -1389,6 +1416,54 @@ fn scalar_wire_of(ir: &ModelIr, k: &Kind) -> Option<String> {
         [(_, _, wire)] => Some(wire.clone()),
         _ => None,
     }
+}
+
+/// Emit a `fn {fname}(n: &str) -> &'static [RefSlot]` table: one RefSlot per ref
+/// slot (`Ref` / `Vec<Ref>`), carrying the slot index, the admitted target type
+/// UPPER names (the ref-enum's simple arms), complex-target flag, and vec flag.
+/// Non-ref slots are omitted.
+fn emit_ref_slot_table<'a>(
+    s: &mut String,
+    fname: &str,
+    ir: &ModelIr,
+    rust_to_name: &std::collections::HashMap<&str, &str>,
+    ents: impl Iterator<Item = (&'a String, &'a Vec<Field>)>,
+) {
+    writeln!(s, "pub fn {fname}(n: &str) -> &'static [RefSlot] {{").unwrap();
+    s.push_str("    match n {\n");
+    for (name, fields) in ents {
+        let slots: Vec<String> = fields
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, f)| {
+                let (target, is_vec) = match &f.kind {
+                    Kind::Ref(t) => (t.as_str(), false),
+                    Kind::Vec(inner) => match inner.as_ref() {
+                        Kind::Ref(t) => (t.as_str(), true),
+                        _ => return None,
+                    },
+                    _ => return None,
+                };
+                let re = ir.ref_enums.get(target)?;
+                let allowed: Vec<String> = re
+                    .simple_arms
+                    .iter()
+                    .filter_map(|(_, rust)| rust_to_name.get(rust.as_str()))
+                    .map(|n| format!("\"{n}\""))
+                    .collect();
+                Some(format!(
+                    "RefSlot{{idx:{idx},name:\"{}\",allowed:&[{}],complex_ok:{},is_vec:{is_vec}}}",
+                    f.name,
+                    allowed.join(","),
+                    re.has_complex,
+                ))
+            })
+            .collect();
+        if !slots.is_empty() {
+            writeln!(s, "        \"{}\" => &[{}],", name, slots.join(",")).unwrap();
+        }
+    }
+    s.push_str("        _ => &[],\n    }\n}\n\n");
 }
 
 fn emit_slot_table<'a>(

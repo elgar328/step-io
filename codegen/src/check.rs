@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use step_io::{Attribute, RawEntity, parse, parse_bytes};
 
-use crate::generated::read::{in_subset, read};
+use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read, ref_slots};
 use crate::generated::write::{Writer, wrap_step};
 use crate::merkle::merkle_diff_maps;
 
@@ -96,10 +96,11 @@ fn entity_refs(ent: &RawEntity) -> Vec<u64> {
 
 /// Filter a parsed graph to the closure subset, recording WHY each entity is
 /// dropped (the reasoned successor to the old `subset` escape filter). An entity
-/// survives iff it is a closure type AND its transitive refs all stay kept.
-/// Drops are classified: `Unimplemented` = non-closure type (`in_subset` false),
-/// `Cascade` = a kept entity referencing a non-kept (dropped/dangling) target,
-/// propagated to a fixpoint. (`Nonstandard` is added in a later stage.)
+/// survives iff it is a closure type, all its transitive refs stay kept, and no
+/// ref slot holds a type the slot does not admit. Drops are classified:
+/// `Unimplemented` = non-closure type (`in_subset` false), `Cascade` = a kept
+/// entity referencing a non-kept (dropped/dangling) target, `Nonstandard` = a
+/// kept in-closure target in a slot whose SELECT rejects it. Fixpoint.
 fn drop_pass(
     graph: &BTreeMap<u64, RawEntity>,
 ) -> (BTreeMap<u64, RawEntity>, BTreeMap<DropReason, usize>) {
@@ -113,21 +114,33 @@ fn drop_pass(
             bump(&mut drops, DropKind::Unimplemented, ent_name(e));
         }
     }
-    // Iteratively drop any candidate that references a non-kept entity (escape)
-    // — fixpoint, so an escape propagates back through dependents. The root
-    // reason lives on the target's own record; cascade just links to it.
+    // Iteratively drop candidates — fixpoint, so a drop propagates to dependents.
     loop {
         let mut removed = false;
         let snapshot: Vec<u64> = keep.iter().copied().collect();
         for id in snapshot {
             let ent = &graph[&id];
+            // cascade (flat): a ref to a non-kept target drops this entity. The
+            // root reason lives on the target's own record; cascade just links.
+            let mut cascaded = false;
             for r in entity_refs(ent) {
                 if !keep.contains(&r) {
                     keep.remove(&id);
                     bump(&mut drops, DropKind::Cascade, "ref-dropped");
                     removed = true;
+                    cascaded = true;
                     break;
                 }
+            }
+            if cascaded {
+                continue;
+            }
+            // nonstandard (slot-aware): a kept, in-closure target sitting in a
+            // slot whose SELECT does not admit its type (schema violation).
+            if let Some(reason) = nonstd_ref(ent, graph) {
+                keep.remove(&id);
+                bump(&mut drops, DropKind::Nonstandard, reason);
+                removed = true;
             }
         }
         if !removed {
@@ -139,6 +152,50 @@ fn drop_pass(
         .map(|id| (id, graph[&id].clone()))
         .collect();
     (map, drops)
+}
+
+/// Slot-aware nonstandard-ref check: does any ref slot of `ent` point at a kept,
+/// in-closure target whose type the slot's SELECT does not admit? Returns the
+/// first `<ENT>.<slot>-><TYPE>` label. Out-of-closure / dangling targets are NOT
+/// flagged here — those are cascade/unimplemented.
+fn nonstd_ref(ent: &RawEntity, graph: &BTreeMap<u64, RawEntity>) -> Option<String> {
+    match ent {
+        RawEntity::Simple {
+            name, attributes, ..
+        } => check_ref_slots(name, attributes, ref_slots(name), graph),
+        RawEntity::Complex { parts, .. } => parts.iter().find_map(|p| {
+            check_ref_slots(&p.name, &p.attributes, complex_ref_slots(&p.name), graph)
+        }),
+    }
+}
+
+fn check_ref_slots(
+    ename: &str,
+    attrs: &[Attribute],
+    slots: &[RefSlot],
+    graph: &BTreeMap<u64, RawEntity>,
+) -> Option<String> {
+    for rs in slots {
+        let Some(a) = attrs.get(rs.idx) else { continue };
+        let mut targets: Vec<u64> = Vec::new();
+        collect_refs(a, &mut targets);
+        for r in targets {
+            let Some(target) = graph.get(&r) else {
+                continue;
+            };
+            if !in_subset(target) {
+                continue; // out-of-closure: cascade / unimplemented handles it
+            }
+            let admitted = match target {
+                RawEntity::Complex { .. } => rs.complex_ok,
+                RawEntity::Simple { name, .. } => rs.allowed.contains(&name.as_str()),
+            };
+            if !admitted {
+                return Some(format!("{ename}.{}->{}", rs.name, ent_name(target)));
+            }
+        }
+    }
+    None
 }
 
 fn graph_of(g: &step_io::EntityGraph) -> BTreeMap<u64, RawEntity> {
