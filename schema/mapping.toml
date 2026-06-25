@@ -1125,6 +1125,16 @@ plm_person_org = [
     "organizational_project_role",
     "person_and_organization_role",
 ]
+# Group (b) applied-assignment: ATTEMPTED, then rolled back. Seeding the
+# applied-*-assignment roots pulled the whole PLM+product+representation graph
+# (the ~90-member `items` mega-select), growing closure 176->569 but adding only
+# ~1.1M validated while escaping ~30M (their refs leave the closure:
+# item_identified / maths / surrounding subtree). Net coverage 99.8%->90.4% — a
+# poor value/escape ratio vs the identification core (+307k validated / +88
+# escaped). Deferred in favor of incremental, low-escape PLM entities (date /
+# document identification, etc.) as a redesigned next step. (The maths exclude
+# that this big-bang required is also removed, since maths is only reachable
+# through the assignment items mega-select.)
 
 # Entities that appear ONLY as parts of a complex (multi-inheritance) instance
 # (never as a standalone simple `#N=NAME(..)`). They are collected into a single

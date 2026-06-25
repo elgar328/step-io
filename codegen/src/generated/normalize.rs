@@ -1044,7 +1044,7 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Vec,
-                req: false,
+                req: true,
                 der: false,
                 swire: None,
             },
@@ -1574,13 +1574,13 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
-                req: false,
+                req: true,
                 der: false,
                 swire: None,
             },
             Slot {
                 k: Sk::Ref,
-                req: false,
+                req: true,
                 der: false,
                 swire: None,
             },
@@ -2263,7 +2263,7 @@ fn simple_slots(n: &str) -> &'static [Slot] {
         ],
         "NAMED_UNIT" => &[Slot {
             k: Sk::Ref,
-            req: false,
+            req: true,
             der: false,
             swire: None,
         }],

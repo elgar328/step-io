@@ -635,6 +635,8 @@ fn scalar_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
             "match e {{ Attribute::Enum(s) => {}::parse(s).expect(\"{a}\"), o => panic!(\"{{o:?}}\") }}",
             ir.enums[a].rust
         ),
+        Kind::MeasureSelect(_) => "read_measure_value(e)".to_string(),
+        Kind::StringSelect(_) => "read_string_select(e)".to_string(),
         Kind::Vec(inner2) => {
             let e2 = scalar_vec_elem(ir, inner2);
             format!(
@@ -1165,6 +1167,8 @@ fn render_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
         Kind::Str => "step_str(e)".to_string(),
         Kind::Logical => "e.token().to_string()".to_string(),
         Kind::Enum(_) => "e.token().to_string()".to_string(),
+        Kind::MeasureSelect(_) => "measure(e)".to_string(),
+        Kind::StringSelect(_) => "string_select(e)".to_string(),
         _ => "real(*e)".to_string(),
     }
 }
@@ -1391,6 +1395,7 @@ fn emit_slot_table<'a>(
     s: &mut String,
     fname: &str,
     ir: &ModelIr,
+    simple: bool,
     ents: impl Iterator<Item = (&'a String, &'a Vec<Field>)>,
 ) {
     writeln!(s, "fn {fname}(n: &str) -> &'static [Slot] {{").unwrap();
@@ -1400,7 +1405,17 @@ fn emit_slot_table<'a>(
             .iter()
             .map(|f| {
                 let k = sk_variant(&f.kind);
-                let req = !(f.optional || f.derivable);
+                // A `derivable` field is `*` only in the COMPLEX (part-bag) form,
+                // where a deriving sibling is present; in the STANDALONE (simple)
+                // form it is an explicit, required value. So in simple_slots a
+                // derivable field is required (a non-standard `$` normalizes like
+                // any required field, e.g. req-str<-$); in part_slots it stays
+                // non-required (the `*` case).
+                let req = if simple {
+                    !f.optional
+                } else {
+                    !(f.optional || f.derivable)
+                };
                 let swire = match scalar_wire_of(ir, &f.kind) {
                     Some(w) => format!("Some(\"{w}\")"),
                     None => "None".to_string(),
@@ -1545,12 +1560,14 @@ pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>
         &mut s,
         "simple_slots",
         ir,
+        true,
         ir.simples.iter().map(|se| (&se.name, &se.fields)),
     );
     emit_slot_table(
         &mut s,
         "part_slots",
         ir,
+        false,
         ir.parts.iter().map(|p| (&p.name, &p.fields)),
     );
     s
