@@ -13,12 +13,17 @@
 //! fixup records a note into `norm`, surfaced like the generic NormCase notes.
 
 use std::collections::BTreeMap;
-use step_io::{Attribute, RawEntity};
+use step_io::{Attribute, RawEntity, Span};
 
 /// Apply per-entity non-standard normalizations in place. Mirrors the cases the
 /// 2-layer reader handles in `src/reader/nonstandard.rs` (NsCase), ported to the
 /// raw-entity level.
 pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
+    // Synthesized entities (e.g. a placeholder COLOUR()) can't be inserted while
+    // iterating the map; collect them here and insert after. Fresh ids start past
+    // the current max to avoid collisions.
+    let mut next_id = map.keys().max().map_or(1, |m| m + 1);
+    let mut synth: Vec<(u64, RawEntity)> = Vec::new();
     for ent in map.values_mut() {
         let RawEntity::Simple {
             name, attributes, ..
@@ -30,12 +35,53 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
             // NS-surface-style-rendering-method: rendering_method (attr 0, a
             // required shading_surface_method enum) is `$` in most exports;
             // normalize to NORMAL_SHADING (matches the 2-layer reader).
+            // NS-surface-style-surface-colour: surface_colour (attr 1, required
+            // ref) is `$` in some exports; synthesize a bare COLOUR()
+            // (Colour::Itself, the schema's unspecified-colour placeholder) so the
+            // rendering survives instead of being dropped by the generic
+            // req-ref<-$ rule (which runs AFTER this and would delete the whole
+            // surface_style_rendering). Matches the 2-layer reader.
             "SURFACE_STYLE_RENDERING" | "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => {
-                if let Some(a) = attributes.get_mut(0)
+                if let Some(a) = attributes.get_mut(0) {
+                    // `$` OR an unrecognized token (mis-spelled method) -> the
+                    // standard NORMAL_SHADING. shading_surface_method's valid
+                    // tokens are the four below; anything else is non-standard.
+                    let needs_default = match a {
+                        Attribute::Enum(s) => !matches!(
+                            s.as_str(),
+                            "CONSTANT_SHADING"
+                                | "COLOUR_SHADING"
+                                | "DOT_SHADING"
+                                | "NORMAL_SHADING"
+                        ),
+                        _ => true,
+                    };
+                    if needs_default {
+                        *a = Attribute::Enum("NORMAL_SHADING".to_string());
+                        norm.push("entity: surface_style_rendering.rendering_method<-default");
+                    }
+                }
+                if let Some(a) = attributes.get_mut(1)
                     && matches!(a, Attribute::Unset)
                 {
-                    *a = Attribute::Enum("NORMAL_SHADING".to_string());
-                    norm.push("entity: surface_style_rendering.rendering_method<-$");
+                    let cid = next_id;
+                    next_id += 1;
+                    synth.push((
+                        cid,
+                        RawEntity::Simple {
+                            id: cid,
+                            name: "COLOUR".to_string(),
+                            attributes: vec![],
+                            span: Span {
+                                start: 0,
+                                end: 0,
+                                line: 0,
+                                column: 0,
+                            },
+                        },
+                    ));
+                    *a = Attribute::EntityRef(cid);
+                    norm.push("entity: surface_style_rendering.surface_colour<-COLOUR()");
                 }
             }
             // NS-psa-bare-null-style: a styles member (attr 0, SET OF
@@ -60,5 +106,8 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
             }
             _ => {}
         }
+    }
+    for (id, e) in synth {
+        map.insert(id, e);
     }
 }
