@@ -68,6 +68,7 @@ pub struct Writer<'a> {
     annotation_text_ids: Vec<Option<u64>>,
     application_context_ids: Vec<Option<u64>>,
     application_context_element_ids: Vec<Option<u64>>,
+    application_protocol_definition_ids: Vec<Option<u64>>,
     axis1_placement_ids: Vec<Option<u64>>,
     axis2_placement2d_ids: Vec<Option<u64>>,
     axis2_placement3d_ids: Vec<Option<u64>>,
@@ -132,6 +133,7 @@ pub struct Writer<'a> {
     dimensional_size_ids: Vec<Option<u64>>,
     dimensional_size_with_path_ids: Vec<Option<u64>>,
     direction_ids: Vec<Option<u64>>,
+    draughting_pre_defined_curve_font_ids: Vec<Option<u64>>,
     edge_ids: Vec<Option<u64>>,
     edge_curve_ids: Vec<Option<u64>>,
     edge_loop_ids: Vec<Option<u64>>,
@@ -357,6 +359,13 @@ impl<'a> Writer<'a> {
                 None;
                 model.application_context_elements.items.len()
             ],
+            application_protocol_definition_ids: vec![
+                None;
+                model
+                    .application_protocol_definitions
+                    .items
+                    .len()
+            ],
             axis1_placement_ids: vec![None; model.axis1_placements.items.len()],
             axis2_placement2d_ids: vec![None; model.axis2_placement2ds.items.len()],
             axis2_placement3d_ids: vec![None; model.axis2_placement3ds.items.len()],
@@ -466,6 +475,13 @@ impl<'a> Writer<'a> {
                 model.dimensional_size_with_paths.items.len()
             ],
             direction_ids: vec![None; model.directions.items.len()],
+            draughting_pre_defined_curve_font_ids: vec![
+                None;
+                model
+                    .draughting_pre_defined_curve_fonts
+                    .items
+                    .len()
+            ],
             edge_ids: vec![None; model.edges.items.len()],
             edge_curve_ids: vec![None; model.edge_curves.items.len()],
             edge_loop_ids: vec![None; model.edge_loops.items.len()],
@@ -1281,6 +1297,36 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = APPLICATION_CONTEXT_ELEMENT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_application_protocol_definitions(
+        &mut self,
+        id: ApplicationProtocolDefinitionId,
+    ) -> u64 {
+        if let Some(n) = self.application_protocol_definition_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .application_protocol_definitions
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.application_protocol_definition_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.status),
+            step_str(&it.application_interpreted_model_schema_name),
+            format!("{}", it.application_protocol_year),
+            format!(
+                "#{}",
+                self.emit_ref_application_context((&it.application).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = APPLICATION_PROTOCOL_DEFINITION({});\n",
             attrs.join(",")
         ));
         n
@@ -2907,6 +2953,28 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = DIRECTION({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_draughting_pre_defined_curve_fonts(
+        &mut self,
+        id: DraughtingPreDefinedCurveFontId,
+    ) -> u64 {
+        if let Some(n) = self.draughting_pre_defined_curve_font_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .draughting_pre_defined_curve_fonts
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.draughting_pre_defined_curve_font_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = DRAUGHTING_PRE_DEFINED_CURVE_FONT({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -7969,6 +8037,9 @@ impl<'a> Writer<'a> {
             CurveFontOrScaledCurveFontSelectRef::CurveStyleFontAndScaling(i) => {
                 self.emit_curve_style_font_and_scalings(i)
             }
+            CurveFontOrScaledCurveFontSelectRef::DraughtingPreDefinedCurveFont(i) => {
+                self.emit_draughting_pre_defined_curve_fonts(i)
+            }
             CurveFontOrScaledCurveFontSelectRef::ExternallyDefinedCurveFont(i) => {
                 self.emit_externally_defined_curve_fonts(i)
             }
@@ -8091,6 +8162,9 @@ impl<'a> Writer<'a> {
     fn emit_ref_curve_style_font_select(&mut self, r: CurveStyleFontSelectRef) -> u64 {
         match r {
             CurveStyleFontSelectRef::CurveStyleFont(i) => self.emit_curve_style_fonts(i),
+            CurveStyleFontSelectRef::DraughtingPreDefinedCurveFont(i) => {
+                self.emit_draughting_pre_defined_curve_fonts(i)
+            }
             CurveStyleFontSelectRef::ExternallyDefinedCurveFont(i) => {
                 self.emit_externally_defined_curve_fonts(i)
             }
@@ -9948,6 +10022,9 @@ impl<'a> Writer<'a> {
                     )];
                     format!("DIRECTION({})", a.join(","))
                 }
+                UnitPart::DraughtingPreDefinedCurveFont => {
+                    "DRAUGHTING_PRE_DEFINED_CURVE_FONT()".to_string()
+                }
                 UnitPart::Edge {
                     edge_start,
                     edge_end,
@@ -11483,6 +11560,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.application_context_elements.items.len() {
             self.emit_application_context_elements(ApplicationContextElementId(i));
         }
+        for i in 0..self.model.application_protocol_definitions.items.len() {
+            self.emit_application_protocol_definitions(ApplicationProtocolDefinitionId(i));
+        }
         for i in 0..self.model.axis1_placements.items.len() {
             self.emit_axis1_placements(Axis1PlacementId(i));
         }
@@ -11681,6 +11761,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.directions.items.len() {
             self.emit_directions(DirectionId(i));
+        }
+        for i in 0..self.model.draughting_pre_defined_curve_fonts.items.len() {
+            self.emit_draughting_pre_defined_curve_fonts(DraughtingPreDefinedCurveFontId(i));
         }
         for i in 0..self.model.edges.items.len() {
             self.emit_edges(EdgeId(i));

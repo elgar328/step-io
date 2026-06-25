@@ -1205,3 +1205,11 @@ shape = [
     "shell_based_surface_model",
     "manifold_surface_shape_representation",
 ]
+# application_protocol_definition: self-contained — its only ref `application`
+# points at application_context (scalar-only leaf, no further refs). escape 0.
+application = ["application_protocol_definition"]
+# draughting_pre_defined_curve_font: parent chain pre_defined_curve_font ->
+# pre_defined_item (name:label, no refs). is_complex_part (part-bag); model_ir
+# handles the part-bag arm + simple read for any standalone appearance. escape 0.
+# (curve_style's font_select referrer is a separate presentation round.)
+draughting = ["draughting_pre_defined_curve_font"]

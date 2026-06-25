@@ -881,6 +881,8 @@ pub struct ApplicationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ApplicationContextElementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ApplicationProtocolDefinitionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Axis1PlacementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Axis2Placement2dId(pub usize);
@@ -1008,6 +1010,8 @@ pub struct DimensionalSizeId(pub usize);
 pub struct DimensionalSizeWithPathId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DirectionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DraughtingPreDefinedCurveFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EdgeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1404,6 +1408,7 @@ pub enum AnyId {
     AnnotationText(AnnotationTextId),
     ApplicationContext(ApplicationContextId),
     ApplicationContextElement(ApplicationContextElementId),
+    ApplicationProtocolDefinition(ApplicationProtocolDefinitionId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -1468,6 +1473,7 @@ pub enum AnyId {
     DimensionalSize(DimensionalSizeId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     Direction(DirectionId),
+    DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
@@ -1964,6 +1970,7 @@ impl CoordinatedUniversalTimeOffsetRef {
 pub enum CurveFontOrScaledCurveFontSelectRef {
     CurveStyleFont(CurveStyleFontId),
     CurveStyleFontAndScaling(CurveStyleFontAndScalingId),
+    DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
     Complex(ComplexUnitId),
@@ -1973,6 +1980,7 @@ impl CurveFontOrScaledCurveFontSelectRef {
         match a {
             AnyId::CurveStyleFont(i) => Self::CurveStyleFont(i),
             AnyId::CurveStyleFontAndScaling(i) => Self::CurveStyleFontAndScaling(i),
+            AnyId::DraughtingPreDefinedCurveFont(i) => Self::DraughtingPreDefinedCurveFont(i),
             AnyId::ExternallyDefinedCurveFont(i) => Self::ExternallyDefinedCurveFont(i),
             AnyId::PreDefinedCurveFont(i) => Self::PreDefinedCurveFont(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -2173,6 +2181,7 @@ impl CurveStyleFontPatternRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleFontSelectRef {
     CurveStyleFont(CurveStyleFontId),
+    DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
     Complex(ComplexUnitId),
@@ -2181,6 +2190,7 @@ impl CurveStyleFontSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::CurveStyleFont(i) => Self::CurveStyleFont(i),
+            AnyId::DraughtingPreDefinedCurveFont(i) => Self::DraughtingPreDefinedCurveFont(i),
             AnyId::ExternallyDefinedCurveFont(i) => Self::ExternallyDefinedCurveFont(i),
             AnyId::PreDefinedCurveFont(i) => Self::PreDefinedCurveFont(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -4381,6 +4391,14 @@ pub struct ApplicationContextElement {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ApplicationProtocolDefinition {
+    pub status: String,
+    pub application_interpreted_model_schema_name: String,
+    pub application_protocol_year: i64,
+    pub application: ApplicationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Axis1Placement {
     pub name: String,
     pub location: CartesianPointRef,
@@ -4857,6 +4875,11 @@ pub struct DimensionalSizeWithPath {
 pub struct Direction {
     pub name: String,
     pub direction_ratios: Vec<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingPreDefinedCurveFont {
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6355,6 +6378,7 @@ pub enum UnitPart {
     Direction {
         direction_ratios: Vec<f64>,
     },
+    DraughtingPreDefinedCurveFont,
     Edge {
         edge_start: Option<VertexRef>,
         edge_end: Option<VertexRef>,
@@ -6810,6 +6834,7 @@ pub struct Model {
     pub annotation_texts: Arena<AnnotationText>,
     pub application_contexts: Arena<ApplicationContext>,
     pub application_context_elements: Arena<ApplicationContextElement>,
+    pub application_protocol_definitions: Arena<ApplicationProtocolDefinition>,
     pub axis1_placements: Arena<Axis1Placement>,
     pub axis2_placement2ds: Arena<Axis2Placement2d>,
     pub axis2_placement3ds: Arena<Axis2Placement3d>,
@@ -6874,6 +6899,7 @@ pub struct Model {
     pub dimensional_sizes: Arena<DimensionalSize>,
     pub dimensional_size_with_paths: Arena<DimensionalSizeWithPath>,
     pub directions: Arena<Direction>,
+    pub draughting_pre_defined_curve_fonts: Arena<DraughtingPreDefinedCurveFont>,
     pub edges: Arena<Edge>,
     pub edge_curves: Arena<EdgeCurve>,
     pub edge_loops: Arena<EdgeLoop>,

@@ -473,6 +473,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "APPLICATION_PROTOCOL_DEFINITION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "AXIS1_PLACEMENT" => &[
             Slot {
                 k: Sk::Str,
@@ -1928,6 +1954,12 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "EDGE" => &[
             Slot {
                 k: Sk::Str,
@@ -6269,6 +6301,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => &[],
         "EDGE" => &[
             Slot {
                 k: Sk::Ref,

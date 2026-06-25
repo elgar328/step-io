@@ -95,6 +95,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ANNOTATION_TEXT",
     "APPLICATION_CONTEXT",
     "APPLICATION_CONTEXT_ELEMENT",
+    "APPLICATION_PROTOCOL_DEFINITION",
     "AXIS1_PLACEMENT",
     "AXIS2_PLACEMENT_2D",
     "AXIS2_PLACEMENT_3D",
@@ -159,6 +160,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DIMENSIONAL_SIZE",
     "DIMENSIONAL_SIZE_WITH_PATH",
     "DIRECTION",
+    "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
     "EDGE",
     "EDGE_CURVE",
     "EDGE_LOOP",
@@ -400,6 +402,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DERIVED_UNIT",
     "DIMENSIONAL_SIZE",
     "DIRECTION",
+    "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
     "EDGE",
     "EDGE_CURVE",
     "EDGE_LOOP",
@@ -1073,6 +1076,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "APPLICATION_PROTOCOL_DEFINITION" => &[RefSlot {
+            idx: 3,
+            name: "application",
+            allowed: &["APPLICATION_CONTEXT"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "AXIS1_PLACEMENT" => &[
             RefSlot {
                 idx: 1,
@@ -1481,6 +1491,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "CURVE_STYLE_FONT",
                     "CURVE_STYLE_FONT_AND_SCALING",
+                    "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
                     "EXTERNALLY_DEFINED_CURVE_FONT",
                     "PRE_DEFINED_CURVE_FONT",
                 ],
@@ -1519,6 +1530,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "curve_font",
             allowed: &[
                 "CURVE_STYLE_FONT",
+                "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
                 "EXTERNALLY_DEFINED_CURVE_FONT",
                 "PRE_DEFINED_CURVE_FONT",
             ],
@@ -5979,6 +5991,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "CURVE_STYLE_FONT",
                     "CURVE_STYLE_FONT_AND_SCALING",
+                    "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
                     "EXTERNALLY_DEFINED_CURVE_FONT",
                     "PRE_DEFINED_CURVE_FONT",
                 ],
@@ -6017,6 +6030,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             name: "curve_font",
             allowed: &[
                 "CURVE_STYLE_FONT",
+                "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
                 "EXTERNALLY_DEFINED_CURVE_FONT",
                 "PRE_DEFINED_CURVE_FONT",
             ],
@@ -7936,6 +7950,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_annotation_texts: Vec<(AnnotationTextId, u64)> = Vec::new();
     let mut pending_application_context_elements: Vec<(ApplicationContextElementId, u64)> =
         Vec::new();
+    let mut pending_application_protocol_definitions: Vec<(ApplicationProtocolDefinitionId, u64)> =
+        Vec::new();
     let mut pending_axis1_placements: Vec<(Axis1PlacementId, u64)> = Vec::new();
     let mut pending_axis2_placement2ds: Vec<(Axis2Placement2dId, u64)> = Vec::new();
     let mut pending_axis2_placement3ds: Vec<(Axis2Placement3dId, u64)> = Vec::new();
@@ -8439,6 +8455,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ApplicationContextElementId(model.application_context_elements.push(v));
                 idmap.insert(id, AnyId::ApplicationContextElement(aid));
                 pending_application_context_elements.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPLICATION_PROTOCOL_DEFINITION" => {
+                let v = ApplicationProtocolDefinition {
+                    status: as_str(&attributes[0]),
+                    application_interpreted_model_schema_name: as_str(&attributes[1]),
+                    application_protocol_year: as_int(&attributes[2]),
+                    application: ApplicationContextRef::ApplicationContext(ApplicationContextId(
+                        usize::MAX,
+                    )),
+                };
+                let aid =
+                    ApplicationProtocolDefinitionId(model.application_protocol_definitions.push(v));
+                idmap.insert(id, AnyId::ApplicationProtocolDefinition(aid));
+                pending_application_protocol_definitions.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -9402,6 +9434,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = DirectionId(model.directions.push(v));
                 idmap.insert(id, AnyId::Direction(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => {
+                let v = DraughtingPreDefinedCurveFont {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = DraughtingPreDefinedCurveFontId(
+                    model.draughting_pre_defined_curve_fonts.push(v),
+                );
+                idmap.insert(id, AnyId::DraughtingPreDefinedCurveFont(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -12383,6 +12426,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_application_context_elements(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_application_protocol_definitions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_application_protocol_definitions(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_axis1_placements {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_axis1_placements(&mut model, aid, attributes, &idmap);
@@ -13592,6 +13640,18 @@ fn resolve_application_context_elements(
         ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.application_context_elements.items[aid.0];
     it.frame_of_reference = frame_of_reference_v;
+}
+
+fn resolve_application_protocol_definitions(
+    model: &mut Model,
+    aid: ApplicationProtocolDefinitionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let application_v =
+        ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.application_protocol_definitions.items[aid.0];
+    it.application = application_v;
 }
 
 fn resolve_axis1_placements(
@@ -17225,6 +17285,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     other => panic!("vec: {other:?}"),
                 },
             },
+            "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
             "EDGE" => UnitPart::Edge {
                 edge_start: None,
                 edge_end: None,
