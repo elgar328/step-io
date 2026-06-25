@@ -128,7 +128,7 @@ pub struct StringSelectValue { pub type_name: Option<String>, pub value: String 
     for se in &ir.simples {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq)]\npub struct {}Id(pub usize);",
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub usize);",
             se.rust
         )
         .unwrap();
@@ -136,14 +136,18 @@ pub struct StringSelectValue { pub type_name: Option<String>, pub value: String 
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq)]\npub struct ComplexUnitId(pub usize);"
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexUnitId(pub usize);"
         )
         .unwrap();
     }
     s.push('\n');
 
     // AnyId: one variant per arena (read idmap value).
-    writeln!(s, "#[derive(Debug, Clone, Copy)]\npub enum AnyId {{").unwrap();
+    writeln!(
+        s,
+        "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub enum AnyId {{"
+    )
+    .unwrap();
     for se in &ir.simples {
         writeln!(s, "    {}({}Id),", se.rust, se.rust).unwrap();
     }
@@ -964,36 +968,52 @@ fn step_str(s: &str) -> String {
     s.push_str("        }\n    }\n\n");
     s.push_str("    fn fresh(&mut self) -> u64 { let n = self.next; self.next += 1; n }\n\n");
 
-    // emit_<entity> per simple
-    for se in &ir.simples {
-        emit_write_simple(&mut s, ir, se);
-    }
-    // ref-enum -> emit dispatch
-    let mut refs: Vec<_> = ir.ref_enums.values().collect();
-    refs.sort_by(|a, b| a.rust.cmp(&b.rust));
-    for re in refs {
-        emit_write_ref(&mut s, re);
-    }
-    if ir.has_part_bag {
-        emit_write_complex(&mut s, ir);
-    }
-
-    // emit_all
-    s.push_str("    pub fn emit_all(mut self) -> String {\n");
-    if ir.has_part_bag {
-        s.push_str("        for i in 0..self.model.complex_units.items.len() { self.emit_complex(ComplexUnitId(i)); }\n");
-    }
+    // AnyId-keyed step_id get/set, reusing the per-arena `_ids` caches.
+    s.push_str("    fn get_id(&self, any: AnyId) -> Option<u64> { match any {\n");
     for se in &ir.simples {
         writeln!(
             s,
-            "        for i in 0..self.model.{}.items.len() {{ self.emit_{}({}Id(i)); }}",
-            arena_field(&se.rust),
-            arena_field(&se.rust),
-            se.rust
+            "        AnyId::{}(i) => self.{}[i.0],",
+            se.rust,
+            ids_field(&se.rust)
         )
         .unwrap();
     }
-    s.push_str("        self.out\n    }\n}\n\n");
+    if ir.has_part_bag {
+        s.push_str("        AnyId::ComplexUnit(i) => self.complex_ids[i.0],\n");
+    }
+    s.push_str("    } }\n\n");
+    s.push_str("    fn set_id(&mut self, any: AnyId, n: u64) { match any {\n");
+    for se in &ir.simples {
+        writeln!(
+            s,
+            "        AnyId::{}(i) => self.{}[i.0] = Some(n),",
+            se.rust,
+            ids_field(&se.rust)
+        )
+        .unwrap();
+    }
+    if ir.has_part_bag {
+        s.push_str("        AnyId::ComplexUnit(i) => self.complex_ids[i.0] = Some(n),\n");
+    }
+    s.push_str("    } }\n\n");
+
+    // id_of_<refenum> (ref-enum -> already-assigned step_id) + deps_<refenum>
+    // (ref-enum -> AnyId deps). Aggregate arms hold a Vec of element refs.
+    let mut refs: Vec<_> = ir.ref_enums.values().collect();
+    refs.sort_by(|a, b| a.rust.cmp(&b.rust));
+    for re in &refs {
+        emit_ref_id_of(&mut s, re);
+        emit_ref_deps(&mut s, re);
+    }
+
+    // deps_of / render_one (per simple + complex).
+    emit_deps_of(&mut s, ir);
+    emit_render_one(&mut s, ir);
+
+    // emit_all: iterative 2-pass (pass1 = post-order id assignment via explicit
+    // stack with self-edge skip; pass2 = render in id order). No recursion.
+    emit_all_iter(&mut s, ir);
 
     // wrap_step
     s.push_str(
@@ -1007,53 +1027,204 @@ fn ids_field(rust: &str) -> String {
     format!("{}_ids", arena_field(rust).trim_end_matches('s'))
 }
 
-/// Emit a simple entity's topo `emit_<entity>` method.
-fn emit_write_simple(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
-    let af = arena_field(&se.rust);
-    let idsf = ids_field(&se.rust);
-    writeln!(
-        s,
-        "    fn emit_{af}(&mut self, id: {}Id) -> u64 {{",
-        se.rust
-    )
-    .unwrap();
-    writeln!(
-        s,
-        "        if let Some(n) = self.{idsf}[id.0] {{ return n; }}"
-    )
-    .unwrap();
-    // Take a clone of the item so we can recurse to emit deps without borrow issues.
-    writeln!(s, "        let it = self.model.{af}.get(id.0).clone();").unwrap();
-    // emit dep refs first; collect rendered attr strings in order
-    let kept = idents(&se.fields);
-    let mut parts: Vec<String> = Vec::new();
-    for (id, f) in &kept {
-        if f.derived {
-            parts.push("\"*\".to_string()".to_string());
-            continue;
+/// Collect the AnyId deps of a single attribute into `out` (pass-1 numbering).
+/// Returns None when the attr holds no entity ref (scalar/enum/measure). When
+/// `by_ref` the accessor is already a reference (a complex part binder); else it
+/// is a field place needing `&`.
+fn collect_deps(
+    ir: &ModelIr,
+    k: &Kind,
+    optional: bool,
+    access: &str,
+    by_ref: bool,
+) -> Option<String> {
+    let amp = if by_ref { "" } else { "&" };
+    match k {
+        Kind::Ref(t) => {
+            let dm = ref_method(&ir.ref_enums[t].rust);
+            Some(if optional {
+                format!("if let Some(r) = {amp}{access} {{ Self::deps_{dm}(r, out); }}")
+            } else {
+                format!("Self::deps_{dm}({amp}{access}, out);")
+            })
         }
-        let access = format!("it.{id}");
-        parts.push(render_attr(ir, &f.kind, f.optional, f.derivable, &access));
+        Kind::Vec(inner) => {
+            let elem = collect_deps_elem(ir, inner)?;
+            Some(if optional {
+                format!("if let Some(v) = {amp}{access} {{ for e in v {{ {elem} }} }}")
+            } else {
+                format!("for e in {amp}{access} {{ {elem} }}")
+            })
+        }
+        _ => None,
     }
-    // Allocate self id AFTER deps (topo).
-    writeln!(s, "        let n = self.fresh();").unwrap();
-    writeln!(s, "        self.{idsf}[id.0] = Some(n);").unwrap();
-    // Build the attr render lines.
-    // We rendered deps inline above as let-bindings appended to `s`; here we
-    // join the pre-stored attr expressions.
-    writeln!(
-        s,
-        "        let attrs: Vec<String> = vec![{}];",
-        parts.join(", ")
-    )
-    .unwrap();
-    writeln!(
-        s,
-        "        self.out.push_str(&format!(\"#{{n}} = {}({{}});\\n\", attrs.join(\",\")));",
-        se.name
-    )
-    .unwrap();
-    s.push_str("        n\n    }\n\n");
+}
+
+/// Collect AnyId deps from a Vec element bound to `e`. None if no ref inside.
+fn collect_deps_elem(ir: &ModelIr, k: &Kind) -> Option<String> {
+    match k {
+        Kind::Ref(t) => {
+            let dm = ref_method(&ir.ref_enums[t].rust);
+            Some(format!("Self::deps_{dm}(e, out);"))
+        }
+        Kind::Vec(inner) => {
+            let inner = collect_deps_elem(ir, inner)?;
+            Some(format!("for e in e {{ {inner} }}"))
+        }
+        _ => None,
+    }
+}
+
+/// Emit `deps_of(any, out)`: push the AnyId deps of an entity (simple or complex
+/// part-bag). Self-edges are filtered by the driver, not here.
+fn emit_deps_of(s: &mut String, ir: &ModelIr) {
+    s.push_str("    fn deps_of(&self, any: AnyId, out: &mut Vec<AnyId>) { match any {\n");
+    for se in &ir.simples {
+        let af = arena_field(&se.rust);
+        let kept = idents(&se.fields);
+        let mut body = String::new();
+        for (id, f) in &kept {
+            if f.derived {
+                continue;
+            }
+            if let Some(stmt) = collect_deps(
+                ir,
+                &f.kind,
+                f.optional || f.derivable,
+                &format!("it.{id}"),
+                false,
+            ) {
+                body.push_str(&stmt);
+                body.push(' ');
+            }
+        }
+        if body.is_empty() {
+            writeln!(s, "        AnyId::{}(_) => {{}},", se.rust).unwrap();
+        } else {
+            writeln!(
+                s,
+                "        AnyId::{}(id) => {{ let it = self.model.{}.get(id.0); {} }},",
+                se.rust, af, body
+            )
+            .unwrap();
+        }
+    }
+    if ir.has_part_bag {
+        s.push_str(
+            "        AnyId::ComplexUnit(id) => { let cu = self.model.complex_units.get(id.0); for part in &cu.parts { match part {\n",
+        );
+        for p in &ir.parts {
+            let kept = idents(&p.fields);
+            let mut binders: Vec<String> = Vec::new();
+            let mut stmts = String::new();
+            for (id, f) in &kept {
+                if f.derived {
+                    continue;
+                }
+                if let Some(stmt) = collect_deps(ir, &f.kind, f.optional || f.derivable, id, true) {
+                    binders.push(id.clone());
+                    stmts.push_str(&stmt);
+                    stmts.push(' ');
+                }
+            }
+            if stmts.is_empty() {
+                continue;
+            }
+            writeln!(
+                s,
+                "            UnitPart::{} {{ {}, .. }} => {{ {} }},",
+                p.rust,
+                binders.join(", "),
+                stmts
+            )
+            .unwrap();
+        }
+        s.push_str("            _ => {}\n        } } },\n");
+    }
+    s.push_str("    } }\n\n");
+}
+
+/// Emit `render_one(any) -> String`: render one entity line, resolving refs by
+/// id-lookup (no recursion; all ids pre-assigned in pass 1).
+fn emit_render_one(s: &mut String, ir: &ModelIr) {
+    s.push_str("    fn render_one(&self, any: AnyId) -> String { match any {\n");
+    for se in &ir.simples {
+        let af = arena_field(&se.rust);
+        let kept = idents(&se.fields);
+        let uses_it = kept.iter().any(|(_, f)| !f.derived);
+        let mut parts: Vec<String> = Vec::new();
+        for (id, f) in &kept {
+            if f.derived {
+                parts.push("\"*\".to_string()".to_string());
+                continue;
+            }
+            parts.push(render_attr(
+                ir,
+                &f.kind,
+                f.optional,
+                f.derivable,
+                &format!("it.{id}"),
+            ));
+        }
+        let binder = if uses_it { "id" } else { "_" };
+        let it_bind = if uses_it {
+            format!("let it = self.model.{af}.get(id.0); ")
+        } else {
+            String::new()
+        };
+        writeln!(
+            s,
+            "        AnyId::{}({binder}) => {{ {it_bind}let n = self.get_id(any).expect(\"id assigned\"); let attrs: Vec<String> = vec![{}]; format!(\"#{{n}} = {}({{}});\\n\", attrs.join(\",\")) }},",
+            se.rust,
+            parts.join(", "),
+            se.name
+        )
+        .unwrap();
+    }
+    if ir.has_part_bag {
+        s.push_str(
+            "        AnyId::ComplexUnit(id) => { let cu = self.model.complex_units.get(id.0); let n = self.get_id(any).expect(\"id assigned\"); let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len()); for part in &cu.parts { part_txt.push(match part {\n",
+        );
+        for p in &ir.parts {
+            let kept = idents(&p.fields);
+            let nonderived: Vec<_> = kept.iter().filter(|(_, f)| !f.derived).collect();
+            if kept.is_empty() {
+                writeln!(
+                    s,
+                    "                UnitPart::{} => \"{}()\".to_string(),",
+                    p.rust, p.name
+                )
+                .unwrap();
+                continue;
+            }
+            let binders: Vec<String> = nonderived.iter().map(|(id, _)| id.clone()).collect();
+            write!(
+                s,
+                "                UnitPart::{} {{ {} }} => {{",
+                p.rust,
+                if binders.is_empty() {
+                    ".. ".to_string()
+                } else {
+                    format!("{}, ..", binders.join(", "))
+                }
+            )
+            .unwrap();
+            let mut rendered: Vec<String> = Vec::new();
+            for (id, f) in &kept {
+                if f.derived {
+                    rendered.push("\"*\".to_string()".to_string());
+                } else {
+                    rendered.push(render_part_attr(ir, &f.kind, f.optional, f.derivable, id));
+                }
+            }
+            write!(s, " let a: Vec<String> = vec![{}];", rendered.join(", ")).unwrap();
+            writeln!(s, " format!(\"{}({{}})\", a.join(\",\")) }},", p.name).unwrap();
+        }
+        s.push_str(
+            "            });\n        } format!(\"#{n} = ( {} );\\n\", part_txt.join(\" \")) },\n",
+        );
+    }
+    s.push_str("    } }\n\n");
 }
 
 /// Render one attribute to a `String` expression. `access` is the field
@@ -1111,7 +1282,7 @@ fn render_ref_value(re: &RefEnum, v: &str) -> String {
         let em = ref_method(elt_ref);
         // named aggregate -> Typed literal `WIRE((#a,#b))`.
         arms.push(format!(
-            "{rust}::{aggv}(vs) => format!(\"{wire}(({{}}))\", vs.iter().map(|e| format!(\"#{{}}\", self.emit_{em}(e.clone()))).collect::<Vec<_>>().join(\",\")),",
+            "{rust}::{aggv}(vs) => format!(\"{wire}(({{}}))\", vs.iter().map(|e| format!(\"#{{}}\", self.id_of_{em}(e))).collect::<Vec<_>>().join(\",\")),",
             rust = re.rust
         ));
     }
@@ -1136,10 +1307,10 @@ fn render_ref_value(re: &RefEnum, v: &str) -> String {
         ));
     }
     if arms.is_empty() {
-        format!("format!(\"#{{}}\", self.emit_{m}(({v}).clone()))")
+        format!("format!(\"#{{}}\", self.id_of_{m}({v}))")
     } else {
         format!(
-            "match {v} {{ {} other => format!(\"#{{}}\", self.emit_{m}(other.clone())) }}",
+            "match {v} {{ {} other => format!(\"#{{}}\", self.id_of_{m}(other)) }}",
             arms.join(" ")
         )
     }
@@ -1213,11 +1384,14 @@ fn ref_method(re_rust: &str) -> String {
     format!("ref_{out}")
 }
 
-/// Emit the ref-enum dispatch method (emit the right arena's item).
-fn emit_write_ref(s: &mut String, re: &RefEnum) {
+/// Emit `id_of_<ref>`: ref-enum -> the step_id already assigned to its target
+/// (lookup in the arena `_ids` caches). The iterative replacement for the old
+/// recursive emit dispatch. Aggregate/enum/scalar arms are rendered inline by
+/// render_ref_value, so they never reach single-id lookup.
+fn emit_ref_id_of(s: &mut String, re: &RefEnum) {
     writeln!(
         s,
-        "    fn emit_{}(&mut self, r: {}) -> u64 {{ match r {{",
+        "    fn id_of_{}(&self, r: &{}) -> u64 {{ match r {{",
         ref_method(&re.rust),
         re.rust
     )
@@ -1225,27 +1399,24 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
     for (variant, target) in &re.simple_arms {
         writeln!(
             s,
-            "        {}::{variant}(i) => self.emit_{}(i),",
+            "        {}::{variant}(i) => self.{}[i.0].expect(\"dep id assigned\"),",
             re.rust,
-            arena_field(target)
+            ids_field(target)
         )
         .unwrap();
     }
     if re.has_complex {
         writeln!(
             s,
-            "        {}::Complex(i) => self.emit_complex(i),",
+            "        {}::Complex(i) => self.complex_ids[i.0].expect(\"dep id assigned\"),",
             re.rust
         )
         .unwrap();
     }
-    // Aggregate/enum arms are rendered (as `(...)` / `.TOKEN.`) by
-    // render_ref_value before this single-id dispatch is reached, so they never
-    // arrive here.
     for (variant, _, _) in &re.aggregate {
         writeln!(
             s,
-            "        {}::{variant}(_) => panic!(\"emit aggregate ref via single dispatch\"),",
+            "        {}::{variant}(_) => panic!(\"aggregate via single id_of\"),",
             re.rust
         )
         .unwrap();
@@ -1253,7 +1424,7 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
     for (variant, _, _) in &re.enum_arms {
         writeln!(
             s,
-            "        {}::{variant}(_) => panic!(\"emit enum ref via single dispatch\"),",
+            "        {}::{variant}(_) => panic!(\"enum via single id_of\"),",
             re.rust
         )
         .unwrap();
@@ -1261,7 +1432,7 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
     for (variant, _, _) in &re.scalar_arms {
         writeln!(
             s,
-            "        {}::{variant}(_) => panic!(\"emit scalar ref via single dispatch\"),",
+            "        {}::{variant}(_) => panic!(\"scalar via single id_of\"),",
             re.rust
         )
         .unwrap();
@@ -1272,11 +1443,9 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
         && re.scalar_arms.is_empty()
         && !re.has_complex
     {
-        // empty ref-enum: the Unresolved placeholder is never emitted (referrer
-        // escapes), but the match must be exhaustive.
         writeln!(
             s,
-            "        {}::Unresolved => panic!(\"emit unresolved ref\"),",
+            "        {}::Unresolved => panic!(\"id_of unresolved\"),",
             re.rust
         )
         .unwrap();
@@ -1284,53 +1453,124 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
     s.push_str("    } }\n\n");
 }
 
-/// Emit the complex part-bag topo method.
-fn emit_write_complex(s: &mut String, ir: &ModelIr) {
-    s.push_str("    fn emit_complex(&mut self, id: ComplexUnitId) -> u64 {\n");
-    s.push_str("        if let Some(n) = self.complex_ids[id.0] { return n; }\n");
-    s.push_str("        let cu = self.model.complex_units.get(id.0).clone();\n");
-    s.push_str("        let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len());\n");
-    s.push_str("        for part in &cu.parts {\n            part_txt.push(match part {\n");
-    for p in &ir.parts {
-        let kept = idents(&p.fields);
-        let nonderived: Vec<_> = kept.iter().filter(|(_, f)| !f.derived).collect();
-        if kept.is_empty() {
-            writeln!(
-                s,
-                "                UnitPart::{} => \"{}()\".to_string(),",
-                p.rust, p.name
-            )
-            .unwrap();
-            continue;
-        }
-        // bind all kept (incl derived rendered as *)
-        let binders: Vec<String> = nonderived.iter().map(|(id, _)| id.clone()).collect();
-        write!(
+/// Emit `deps_<ref>`: ref-enum -> push its AnyId deps (for pass-1 numbering).
+/// Aggregate arms recurse into element refs; enum/scalar arms carry no entity dep.
+fn emit_ref_deps(s: &mut String, re: &RefEnum) {
+    writeln!(
+        s,
+        "    fn deps_{}(r: &{}, out: &mut Vec<AnyId>) {{ match r {{",
+        ref_method(&re.rust),
+        re.rust
+    )
+    .unwrap();
+    for (variant, target) in &re.simple_arms {
+        writeln!(
             s,
-            "                UnitPart::{} {{ {} }} => {{",
-            p.rust,
-            if binders.is_empty() {
-                ".. ".to_string()
-            } else {
-                format!("{}, ..", binders.join(", "))
-            }
+            "        {}::{variant}(i) => out.push(AnyId::{}(*i)),",
+            re.rust, target
         )
         .unwrap();
-        // render each attr in positional order
-        let mut rendered: Vec<String> = Vec::new();
-        for (id, f) in &kept {
-            if f.derived {
-                rendered.push("\"*\".to_string()".to_string());
-            } else {
-                rendered.push(render_part_attr(ir, &f.kind, f.optional, f.derivable, id));
+    }
+    if re.has_complex {
+        writeln!(
+            s,
+            "        {}::Complex(i) => out.push(AnyId::ComplexUnit(*i)),",
+            re.rust
+        )
+        .unwrap();
+    }
+    for (variant, elt_ref, _) in &re.aggregate {
+        writeln!(
+            s,
+            "        {}::{variant}(vs) => {{ for e in vs {{ Self::deps_{}(e, out); }} }},",
+            re.rust,
+            ref_method(elt_ref)
+        )
+        .unwrap();
+    }
+    for (variant, _, _) in &re.enum_arms {
+        writeln!(s, "        {}::{variant}(_) => {{}},", re.rust).unwrap();
+    }
+    for (variant, _, _) in &re.scalar_arms {
+        writeln!(s, "        {}::{variant}(_) => {{}},", re.rust).unwrap();
+    }
+    if re.simple_arms.is_empty()
+        && re.aggregate.is_empty()
+        && re.enum_arms.is_empty()
+        && re.scalar_arms.is_empty()
+        && !re.has_complex
+    {
+        writeln!(s, "        {}::Unresolved => {{}},", re.rust).unwrap();
+    }
+    s.push_str("    } }\n\n");
+}
+
+/// Emit `emit_all`: iterative 2-pass topo write. Pass 1 assigns step_ids by an
+/// explicit-stack post-order DFS (deps before dependents; self-edges skipped;
+/// multi-node cycle back-edges pre-numbered as forward-refs). Pass 2 renders in
+/// id order. No recursion -> stack depth is independent of graph depth.
+fn emit_all_iter(s: &mut String, ir: &ModelIr) {
+    s.push_str("    pub fn emit_all(mut self) -> String {\n");
+    s.push_str("        let mut order: Vec<AnyId> = Vec::new();\n");
+    s.push_str("        let mut roots: Vec<AnyId> = Vec::new();\n");
+    if ir.has_part_bag {
+        s.push_str("        for i in 0..self.model.complex_units.items.len() { roots.push(AnyId::ComplexUnit(ComplexUnitId(i))); }\n");
+    }
+    for se in &ir.simples {
+        writeln!(
+            s,
+            "        for i in 0..self.model.{}.items.len() {{ roots.push(AnyId::{}({}Id(i))); }}",
+            arena_field(&se.rust),
+            se.rust,
+            se.rust
+        )
+        .unwrap();
+    }
+    s.push_str(
+        r#"        let mut stack: Vec<(AnyId, bool)> = Vec::new();
+        let mut on_path: std::collections::HashSet<AnyId> = std::collections::HashSet::new();
+        for root in roots {
+            if self.get_id(root).is_some() { continue; }
+            stack.push((root, false));
+            while let Some((any, post)) = stack.pop() {
+                if post {
+                    on_path.remove(&any);
+                    if self.get_id(any).is_none() {
+                        let n = self.fresh();
+                        self.set_id(any, n);
+                        order.push(any);
+                    }
+                    continue;
+                }
+                if self.get_id(any).is_some() { continue; }
+                if on_path.contains(&any) {
+                    // multi-node cycle back-edge: pre-number as a forward-ref.
+                    let n = self.fresh();
+                    self.set_id(any, n);
+                    order.push(any);
+                    continue;
+                }
+                on_path.insert(any);
+                stack.push((any, true));
+                let mut deps: Vec<AnyId> = Vec::new();
+                self.deps_of(any, &mut deps);
+                for d in deps.into_iter().rev() {
+                    if d == any { continue; }
+                    if self.get_id(d).is_some() { continue; }
+                    stack.push((d, false));
+                }
             }
         }
-        write!(s, " let a: Vec<String> = vec![{}];", rendered.join(", ")).unwrap();
-        writeln!(s, " format!(\"{}({{}})\", a.join(\",\")) }},", p.name).unwrap();
+        for any in &order {
+            let line = self.render_one(*any);
+            self.out.push_str(&line);
+        }
+        self.out
     }
-    s.push_str("            });\n        }\n");
-    s.push_str("        let n = self.fresh();\n        self.complex_ids[id.0] = Some(n);\n");
-    s.push_str("        self.out.push_str(&format!(\"#{n} = ( {} );\\n\", part_txt.join(\" \")));\n        n\n    }\n\n");
+}
+
+"#,
+    );
 }
 
 /// Render a complex part attribute (the binder `id` is a `&T` reference).
