@@ -245,6 +245,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ADVANCED_BREP_SHAPE_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ADVANCED_FACE" => &[
             Slot {
                 k: Sk::Str,
@@ -2867,6 +2887,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "MAPPED_ITEM" => &[
             Slot {
                 k: Sk::Str,
@@ -4223,6 +4263,46 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PROPERTY_DEFINITION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "PROPERTY_DEFINITION_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "QUASI_UNIFORM_CURVE" => &[
             Slot {
                 k: Sk::Str,
@@ -4647,6 +4727,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "SHAPE_DEFINITION_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "SHAPE_DIMENSION_REPRESENTATION" => &[
             Slot {
                 k: Sk::Str,
@@ -4682,6 +4776,46 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "SHAPE_REPRESENTATION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "SHELL_BASED_SURFACE_MODEL" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
                 req: true,
                 der: false,
                 swire: None,
@@ -5565,6 +5699,34 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "VERTEX_SHELL" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "WIRE_SHELL" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         _ => &[],
     }
 }
@@ -5645,6 +5807,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ADVANCED_BREP_SHAPE_REPRESENTATION" => &[],
         "ADVANCED_FACE" => &[],
         "ANNOTATION_OCCURRENCE" => &[],
         "ANNOTATION_SYMBOL" => &[],
@@ -6406,6 +6569,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => &[],
         "MAPPED_ITEM" => &[
             Slot {
                 k: Sk::Ref,
@@ -6839,6 +7003,20 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PROPERTY_DEFINITION_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "QUASI_UNIFORM_CURVE" => &[],
         "QUASI_UNIFORM_SURFACE" => &[],
         "RATIONAL_B_SPLINE_CURVE" => &[Slot {
@@ -7007,8 +7185,16 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "SHAPE_DEFINITION_REPRESENTATION" => &[],
         "SHAPE_DIMENSION_REPRESENTATION" => &[],
         "SHAPE_REPRESENTATION" => &[],
+        "SHAPE_REPRESENTATION_RELATIONSHIP" => &[],
+        "SHELL_BASED_SURFACE_MODEL" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "SI_UNIT" => &[
             Slot {
                 k: Sk::Enum,

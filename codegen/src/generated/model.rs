@@ -861,6 +861,8 @@ impl TrimmingPreference {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AddressId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AdvancedBrepShapeRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AdvancedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AngularityToleranceId(pub usize);
@@ -1107,6 +1109,8 @@ pub struct LoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ManifoldSolidBrepId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ManifoldSurfaceShapeRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MappedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MassUnitId(pub usize);
@@ -1229,6 +1233,10 @@ pub struct ProductRelatedProductCategoryId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PropertyDefinitionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PropertyDefinitionRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PropertyDefinitionRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct QuasiUniformCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct QuasiUniformSurfaceId(pub usize);
@@ -1261,9 +1269,15 @@ pub struct ShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ShapeAspectRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShapeDefinitionRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ShapeDimensionRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ShapeRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShapeRepresentationRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShellBasedSurfaceModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SiUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1369,11 +1383,16 @@ pub struct VertexLoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct VertexPointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct VertexShellId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WireShellId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ComplexUnitId(pub usize);
 
 #[derive(Debug, Clone, Copy)]
 pub enum AnyId {
     Address(AddressId),
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AngularityTolerance(AngularityToleranceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -1497,6 +1516,7 @@ pub enum AnyId {
     LocalTime(LocalTimeId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
     MassUnit(MassUnitId),
     MeasureWithUnit(MeasureWithUnitId),
@@ -1558,6 +1578,8 @@ pub enum AnyId {
     ProductDefinitionShape(ProductDefinitionShapeId),
     ProductRelatedProductCategory(ProductRelatedProductCategoryId),
     PropertyDefinition(PropertyDefinitionId),
+    PropertyDefinitionRelationship(PropertyDefinitionRelationshipId),
+    PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
@@ -1574,8 +1596,11 @@ pub enum AnyId {
     SeamCurve(SeamCurveId),
     ShapeAspect(ShapeAspectId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
+    ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SiUnit(SiUnitId),
     SolidAngleUnit(SolidAngleUnitId),
     SolidModel(SolidModelId),
@@ -1628,6 +1653,8 @@ pub enum AnyId {
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
     ComplexUnit(ComplexUnitId),
 }
 
@@ -3168,6 +3195,23 @@ impl ProductRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum PropertyDefinitionRef {
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    PropertyDefinition(PropertyDefinitionId),
+    Complex(ComplexUnitId),
+}
+impl PropertyDefinitionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("PropertyDefinitionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum RenderingPropertiesSelectRef {
     SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId),
     SurfaceStyleTransparent(SurfaceStyleTransparentId),
@@ -3295,6 +3339,7 @@ pub enum RepresentationItemRef {
     RationalBSplineSurface(RationalBSplineSurfaceId),
     RepresentationItem(RepresentationItemId),
     SeamCurve(SeamCurveId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
     StyledItem(StyledItemId),
@@ -3314,6 +3359,8 @@ pub enum RepresentationItemRef {
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
     Complex(ComplexUnitId),
 }
 impl RepresentationItemRef {
@@ -3392,6 +3439,7 @@ impl RepresentationItemRef {
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
             AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SolidModel(i) => Self::SolidModel(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
             AnyId::StyledItem(i) => Self::StyledItem(i),
@@ -3411,6 +3459,8 @@ impl RepresentationItemRef {
             AnyId::Vertex(i) => Self::Vertex(i),
             AnyId::VertexLoop(i) => Self::VertexLoop(i),
             AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RepresentationItemRef ref -> {other:?}"),
         }
@@ -3434,7 +3484,9 @@ impl RepresentationMapRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationOrRepresentationReferenceRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     Representation(RepresentationId),
     RepresentationReference(RepresentationReferenceId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
@@ -3444,7 +3496,11 @@ pub enum RepresentationOrRepresentationReferenceRef {
 impl RepresentationOrRepresentationReferenceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
@@ -3457,7 +3513,9 @@ impl RepresentationOrRepresentationReferenceRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     Representation(RepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
@@ -3466,12 +3524,67 @@ pub enum RepresentationRef {
 impl RepresentationRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RepresentationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RepresentedDefinitionRef {
+    CommonDatum(CommonDatumId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    GeneralDatumReference(GeneralDatumReferenceId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    PropertyDefinition(PropertyDefinitionId),
+    PropertyDefinitionRelationship(PropertyDefinitionRelationshipId),
+    ShapeAspect(ShapeAspectId),
+    ShapeAspectRelationship(ShapeAspectRelationshipId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    Complex(ComplexUnitId),
+}
+impl RepresentedDefinitionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
+            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
+            AnyId::PropertyDefinitionRelationship(i) => Self::PropertyDefinitionRelationship(i),
+            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
+            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
+            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("RepresentedDefinitionRef ref -> {other:?}"),
         }
     }
 }
@@ -3531,6 +3644,29 @@ impl ShapeDimensionRepresentationRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ShellRef {
+    ClosedShell(ClosedShellId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
+    Complex(ComplexUnitId),
+}
+impl ShellRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ShellRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum SizeSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     MeasureWithUnit(MeasureWithUnitId),
@@ -3555,6 +3691,7 @@ impl SizeSelectRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyledItemTargetRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationText(AnnotationTextId),
@@ -3606,6 +3743,7 @@ pub enum StyledItemTargetRef {
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
@@ -3629,6 +3767,7 @@ pub enum StyledItemTargetRef {
     SeamCurve(SeamCurveId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
     Surface(SurfaceId),
@@ -3647,11 +3786,14 @@ pub enum StyledItemTargetRef {
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
     Complex(ComplexUnitId),
 }
 impl StyledItemTargetRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
@@ -3703,6 +3845,9 @@ impl StyledItemTargetRef {
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
             AnyId::MappedItem(i) => Self::MappedItem(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
@@ -3726,6 +3871,7 @@ impl StyledItemTargetRef {
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SolidModel(i) => Self::SolidModel(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
             AnyId::Surface(i) => Self::Surface(i),
@@ -3744,6 +3890,8 @@ impl StyledItemTargetRef {
             AnyId::Vertex(i) => Self::Vertex(i),
             AnyId::VertexLoop(i) => Self::VertexLoop(i),
             AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("StyledItemTargetRef ref -> {other:?}"),
         }
@@ -4112,6 +4260,19 @@ impl VectorRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum VertexLoopRef {
+    VertexLoop(VertexLoopId),
+}
+impl VertexLoopRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            other => panic!("VertexLoopRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum VertexRef {
     Vertex(VertexId),
     VertexPoint(VertexPointId),
@@ -4142,6 +4303,13 @@ pub struct Address {
     pub telephone_number: Option<String>,
     pub electronic_mail_address: Option<String>,
     pub telex_number: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AdvancedBrepShapeRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5036,6 +5204,13 @@ pub struct ManifoldSolidBrep {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ManifoldSurfaceShapeRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct MappedItem {
     pub name: String,
     pub mapping_source: RepresentationMapRef,
@@ -5487,6 +5662,20 @@ pub struct PropertyDefinition {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PropertyDefinitionRelationship {
+    pub name: String,
+    pub description: String,
+    pub relating_property_definition: PropertyDefinitionRef,
+    pub related_property_definition: PropertyDefinitionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PropertyDefinitionRepresentation {
+    pub definition: RepresentedDefinitionRef,
+    pub used_representation: RepresentationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct QuasiUniformCurve {
     pub name: String,
     pub degree: i64,
@@ -5617,6 +5806,12 @@ pub struct ShapeAspectRelationship {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ShapeDefinitionRepresentation {
+    pub definition: RepresentedDefinitionRef,
+    pub used_representation: RepresentationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDimensionRepresentation {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
@@ -5628,6 +5823,20 @@ pub struct ShapeRepresentation {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeRepresentationRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub rep_1: RepresentationOrRepresentationReferenceRef,
+    pub rep_2: RepresentationOrRepresentationReferenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShellBasedSurfaceModel {
+    pub name: String,
+    pub sbsm_boundary: Vec<ShellRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5971,6 +6180,18 @@ pub struct VertexPoint {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct VertexShell {
+    pub name: String,
+    pub vertex_shell_extent: VertexLoopRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct WireShell {
+    pub name: String,
+    pub wire_shell_extent: Vec<LoopRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum UnitPart {
     Address {
         internal_location: Option<String>,
@@ -5986,6 +6207,7 @@ pub enum UnitPart {
         electronic_mail_address: Option<String>,
         telex_number: Option<String>,
     },
+    AdvancedBrepShapeRepresentation,
     AdvancedFace,
     AnnotationOccurrence,
     AnnotationSymbol,
@@ -6246,6 +6468,7 @@ pub enum UnitPart {
     ManifoldSolidBrep {
         outer: ClosedShellRef,
     },
+    ManifoldSurfaceShapeRepresentation,
     MappedItem {
         mapping_source: RepresentationMapRef,
         mapping_target: RepresentationItemRef,
@@ -6385,6 +6608,10 @@ pub enum UnitPart {
         description: Option<String>,
         definition: CharacterizedDefinitionRef,
     },
+    PropertyDefinitionRepresentation {
+        definition: RepresentedDefinitionRef,
+        used_representation: RepresentationRef,
+    },
     QuasiUniformCurve,
     QuasiUniformSurface,
     RationalBSplineCurve {
@@ -6436,8 +6663,13 @@ pub enum UnitPart {
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     },
+    ShapeDefinitionRepresentation,
     ShapeDimensionRepresentation,
     ShapeRepresentation,
+    ShapeRepresentationRelationship,
+    ShellBasedSurfaceModel {
+        sbsm_boundary: Vec<ShellRef>,
+    },
     SiUnit {
         prefix: Option<SiPrefix>,
         name: SiUnitName,
@@ -6551,6 +6783,7 @@ pub struct ComplexUnit {
 #[derive(Debug, Default)]
 pub struct Model {
     pub addresss: Arena<Address>,
+    pub advanced_brep_shape_representations: Arena<AdvancedBrepShapeRepresentation>,
     pub advanced_faces: Arena<AdvancedFace>,
     pub angularity_tolerances: Arena<AngularityTolerance>,
     pub annotation_curve_occurrences: Arena<AnnotationCurveOccurrence>,
@@ -6674,6 +6907,7 @@ pub struct Model {
     pub local_times: Arena<LocalTime>,
     pub loops: Arena<Loop>,
     pub manifold_solid_breps: Arena<ManifoldSolidBrep>,
+    pub manifold_surface_shape_representations: Arena<ManifoldSurfaceShapeRepresentation>,
     pub mapped_items: Arena<MappedItem>,
     pub mass_units: Arena<MassUnit>,
     pub measure_with_units: Arena<MeasureWithUnit>,
@@ -6737,6 +6971,8 @@ pub struct Model {
     pub product_definition_shapes: Arena<ProductDefinitionShape>,
     pub product_related_product_categorys: Arena<ProductRelatedProductCategory>,
     pub property_definitions: Arena<PropertyDefinition>,
+    pub property_definition_relationships: Arena<PropertyDefinitionRelationship>,
+    pub property_definition_representations: Arena<PropertyDefinitionRepresentation>,
     pub quasi_uniform_curves: Arena<QuasiUniformCurve>,
     pub quasi_uniform_surfaces: Arena<QuasiUniformSurface>,
     pub rational_b_spline_curves: Arena<RationalBSplineCurve>,
@@ -6754,8 +6990,11 @@ pub struct Model {
     pub seam_curves: Arena<SeamCurve>,
     pub shape_aspects: Arena<ShapeAspect>,
     pub shape_aspect_relationships: Arena<ShapeAspectRelationship>,
+    pub shape_definition_representations: Arena<ShapeDefinitionRepresentation>,
     pub shape_dimension_representations: Arena<ShapeDimensionRepresentation>,
     pub shape_representations: Arena<ShapeRepresentation>,
+    pub shape_representation_relationships: Arena<ShapeRepresentationRelationship>,
+    pub shell_based_surface_models: Arena<ShellBasedSurfaceModel>,
     pub si_units: Arena<SiUnit>,
     pub solid_angle_units: Arena<SolidAngleUnit>,
     pub solid_models: Arena<SolidModel>,
@@ -6808,5 +7047,7 @@ pub struct Model {
     pub vertexs: Arena<Vertex>,
     pub vertex_loops: Arena<VertexLoop>,
     pub vertex_points: Arena<VertexPoint>,
+    pub vertex_shells: Arena<VertexShell>,
+    pub wire_shells: Arena<WireShell>,
     pub complex_units: Arena<ComplexUnit>,
 }

@@ -85,6 +85,7 @@ fn read_string_select(a: &Attribute) -> StringSelectValue {
 
 pub const SIMPLE_NAMES: &[&str] = &[
     "ADDRESS",
+    "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
     "ANGULARITY_TOLERANCE",
     "ANNOTATION_CURVE_OCCURRENCE",
@@ -208,6 +209,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "LOCAL_TIME",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
+    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
     "MAPPED_ITEM",
     "MASS_UNIT",
     "MEASURE_WITH_UNIT",
@@ -269,6 +271,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_SHAPE",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
+    "PROPERTY_DEFINITION_RELATIONSHIP",
+    "PROPERTY_DEFINITION_REPRESENTATION",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
     "RATIONAL_B_SPLINE_CURVE",
@@ -285,8 +289,11 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SEAM_CURVE",
     "SHAPE_ASPECT",
     "SHAPE_ASPECT_RELATIONSHIP",
+    "SHAPE_DEFINITION_REPRESENTATION",
     "SHAPE_DIMENSION_REPRESENTATION",
     "SHAPE_REPRESENTATION",
+    "SHAPE_REPRESENTATION_RELATIONSHIP",
+    "SHELL_BASED_SURFACE_MODEL",
     "SI_UNIT",
     "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
@@ -339,9 +346,12 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "VERTEX",
     "VERTEX_LOOP",
     "VERTEX_POINT",
+    "VERTEX_SHELL",
+    "WIRE_SHELL",
 ];
 pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ADDRESS",
+    "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
     "ANNOTATION_OCCURRENCE",
     "ANNOTATION_SYMBOL",
@@ -434,6 +444,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "LINE_PROFILE_TOLERANCE",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
+    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
     "MAPPED_ITEM",
     "MASS_UNIT",
     "MEASURE_WITH_UNIT",
@@ -479,6 +490,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_SHAPE",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
+    "PROPERTY_DEFINITION_REPRESENTATION",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
     "RATIONAL_B_SPLINE_CURVE",
@@ -494,8 +506,11 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SEAM_CURVE",
     "SHAPE_ASPECT",
     "SHAPE_ASPECT_RELATIONSHIP",
+    "SHAPE_DEFINITION_REPRESENTATION",
     "SHAPE_DIMENSION_REPRESENTATION",
     "SHAPE_REPRESENTATION",
+    "SHAPE_REPRESENTATION_RELATIONSHIP",
+    "SHELL_BASED_SURFACE_MODEL",
     "SI_UNIT",
     "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
@@ -551,6 +566,10 @@ pub fn in_subset(ent: &RawEntity) -> bool {
 pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut model = Model::default();
     let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();
+    let mut pending_advanced_brep_shape_representations: Vec<(
+        AdvancedBrepShapeRepresentationId,
+        u64,
+    )> = Vec::new();
     let mut pending_advanced_faces: Vec<(AdvancedFaceId, u64)> = Vec::new();
     let mut pending_angularity_tolerances: Vec<(AngularityToleranceId, u64)> = Vec::new();
     let mut pending_annotation_curve_occurrences: Vec<(AnnotationCurveOccurrenceId, u64)> =
@@ -704,6 +723,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_line_profile_tolerances: Vec<(LineProfileToleranceId, u64)> = Vec::new();
     let mut pending_local_times: Vec<(LocalTimeId, u64)> = Vec::new();
     let mut pending_manifold_solid_breps: Vec<(ManifoldSolidBrepId, u64)> = Vec::new();
+    let mut pending_manifold_surface_shape_representations: Vec<(
+        ManifoldSurfaceShapeRepresentationId,
+        u64,
+    )> = Vec::new();
     let mut pending_mapped_items: Vec<(MappedItemId, u64)> = Vec::new();
     let mut pending_mass_units: Vec<(MassUnitId, u64)> = Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
@@ -770,6 +793,14 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_product_related_product_categorys: Vec<(ProductRelatedProductCategoryId, u64)> =
         Vec::new();
     let mut pending_property_definitions: Vec<(PropertyDefinitionId, u64)> = Vec::new();
+    let mut pending_property_definition_relationships: Vec<(
+        PropertyDefinitionRelationshipId,
+        u64,
+    )> = Vec::new();
+    let mut pending_property_definition_representations: Vec<(
+        PropertyDefinitionRepresentationId,
+        u64,
+    )> = Vec::new();
     let mut pending_quasi_uniform_curves: Vec<(QuasiUniformCurveId, u64)> = Vec::new();
     let mut pending_quasi_uniform_surfaces: Vec<(QuasiUniformSurfaceId, u64)> = Vec::new();
     let mut pending_rational_b_spline_curves: Vec<(RationalBSplineCurveId, u64)> = Vec::new();
@@ -787,9 +818,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_seam_curves: Vec<(SeamCurveId, u64)> = Vec::new();
     let mut pending_shape_aspects: Vec<(ShapeAspectId, u64)> = Vec::new();
     let mut pending_shape_aspect_relationships: Vec<(ShapeAspectRelationshipId, u64)> = Vec::new();
+    let mut pending_shape_definition_representations: Vec<(ShapeDefinitionRepresentationId, u64)> =
+        Vec::new();
     let mut pending_shape_dimension_representations: Vec<(ShapeDimensionRepresentationId, u64)> =
         Vec::new();
     let mut pending_shape_representations: Vec<(ShapeRepresentationId, u64)> = Vec::new();
+    let mut pending_shape_representation_relationships: Vec<(
+        ShapeRepresentationRelationshipId,
+        u64,
+    )> = Vec::new();
+    let mut pending_shell_based_surface_models: Vec<(ShellBasedSurfaceModelId, u64)> = Vec::new();
     let mut pending_si_units: Vec<(SiUnitId, u64)> = Vec::new();
     let mut pending_solid_angle_units: Vec<(SolidAngleUnitId, u64)> = Vec::new();
     let mut pending_spherical_surfaces: Vec<(SphericalSurfaceId, u64)> = Vec::new();
@@ -846,6 +884,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_vectors: Vec<(VectorId, u64)> = Vec::new();
     let mut pending_vertex_loops: Vec<(VertexLoopId, u64)> = Vec::new();
     let mut pending_vertex_points: Vec<(VertexPointId, u64)> = Vec::new();
+    let mut pending_vertex_shells: Vec<(VertexShellId, u64)> = Vec::new();
+    let mut pending_wire_shells: Vec<(WireShellId, u64)> = Vec::new();
     let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();
     for (&id, ent) in map {
         match ent {
@@ -907,6 +947,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "ADVANCED_BREP_SHAPE_REPRESENTATION" => {
+                let v = AdvancedBrepShapeRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = AdvancedBrepShapeRepresentationId(
+                    model.advanced_brep_shape_representations.push(v),
+                );
+                idmap.insert(id, AnyId::AdvancedBrepShapeRepresentation(aid));
+                pending_advanced_brep_shape_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "ADVANCED_FACE" => {
                 let v = AdvancedFace {
                     name: as_str(&attributes[0]),
@@ -955,7 +1011,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let v = AnnotationOccurrence {
                     name: as_str(&attributes[0]),
                     styles: Vec::new(),
-                    item: StyledItemTargetRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
                 };
                 let aid = AnnotationOccurrenceId(model.annotation_occurrences.push(v));
                 idmap.insert(id, AnyId::AnnotationOccurrence(aid));
@@ -2725,6 +2783,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => {
+                let v = ManifoldSurfaceShapeRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = ManifoldSurfaceShapeRepresentationId(
+                    model.manifold_surface_shape_representations.push(v),
+                );
+                idmap.insert(id, AnyId::ManifoldSurfaceShapeRepresentation(aid));
+                pending_manifold_surface_shape_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "MAPPED_ITEM" => {
                 let v = MappedItem {
                     name: as_str(&attributes[0]),
@@ -3756,6 +3830,40 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PROPERTY_DEFINITION_RELATIONSHIP" => {
+                let v = PropertyDefinitionRelationship {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                    relating_property_definition: PropertyDefinitionRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    related_property_definition: PropertyDefinitionRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                };
+                let aid = PropertyDefinitionRelationshipId(
+                    model.property_definition_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::PropertyDefinitionRelationship(aid));
+                pending_property_definition_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PROPERTY_DEFINITION_REPRESENTATION" => {
+                let v = PropertyDefinitionRepresentation {
+                    definition: RepresentedDefinitionRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = PropertyDefinitionRepresentationId(
+                    model.property_definition_representations.push(v),
+                );
+                idmap.insert(id, AnyId::PropertyDefinitionRepresentation(aid));
+                pending_property_definition_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "QUASI_UNIFORM_CURVE" => {
                 let v = QuasiUniformCurve {
                     name: as_str(&attributes[0]),
@@ -3903,8 +4011,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "REPRESENTATION_MAP" => {
                 let v = RepresentationMap {
                     mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-                    mapped_representation: RepresentationRef::DefinitionalRepresentation(
-                        DefinitionalRepresentationId(usize::MAX),
+                    mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
                     ),
                 };
                 let aid = RepresentationMapId(model.representation_maps.push(v));
@@ -3934,12 +4042,14 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    rep_1: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
-                        DefinitionalRepresentationId(usize::MAX),
-                    ),
-                    rep_2: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
-                        DefinitionalRepresentationId(usize::MAX),
-                    ),
+                    rep_1:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                    rep_2:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
                 };
                 let aid = RepresentationRelationshipId(model.representation_relationships.push(v));
                 idmap.insert(id, AnyId::RepresentationRelationship(aid));
@@ -3954,12 +4064,14 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    rep_1: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
-                        DefinitionalRepresentationId(usize::MAX),
-                    ),
-                    rep_2: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
-                        DefinitionalRepresentationId(usize::MAX),
-                    ),
+                    rep_1:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                    rep_2:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
                     transformation_operator: TransformationRef::FunctionallyDefinedTransformation(
                         FunctionallyDefinedTransformationId(usize::MAX),
                     ),
@@ -4043,6 +4155,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "SHAPE_DEFINITION_REPRESENTATION" => {
+                let v = ShapeDefinitionRepresentation {
+                    definition: RepresentedDefinitionRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid =
+                    ShapeDefinitionRepresentationId(model.shape_definition_representations.push(v));
+                idmap.insert(id, AnyId::ShapeDefinitionRepresentation(aid));
+                pending_shape_definition_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SHAPE_DIMENSION_REPRESENTATION" => {
                 let v = ShapeDimensionRepresentation {
                     name: as_str(&attributes[0]),
@@ -4069,6 +4195,41 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ShapeRepresentationId(model.shape_representations.push(v));
                 idmap.insert(id, AnyId::ShapeRepresentation(aid));
                 pending_shape_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SHAPE_REPRESENTATION_RELATIONSHIP" => {
+                let v = ShapeRepresentationRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    rep_1:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                    rep_2:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                };
+                let aid = ShapeRepresentationRelationshipId(
+                    model.shape_representation_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::ShapeRepresentationRelationship(aid));
+                pending_shape_representation_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SHELL_BASED_SURFACE_MODEL" => {
+                let v = ShellBasedSurfaceModel {
+                    name: as_str(&attributes[0]),
+                    sbsm_boundary: Vec::new(),
+                };
+                let aid = ShellBasedSurfaceModelId(model.shell_based_surface_models.push(v));
+                idmap.insert(id, AnyId::ShellBasedSurfaceModel(aid));
+                pending_shell_based_surface_models.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -4147,7 +4308,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let v = StyledItem {
                     name: as_str(&attributes[0]),
                     styles: Vec::new(),
-                    item: StyledItemTargetRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
                 };
                 let aid = StyledItemId(model.styled_items.push(v));
                 idmap.insert(id, AnyId::StyledItem(aid));
@@ -4775,6 +4938,28 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 idmap.insert(id, AnyId::VertexPoint(aid));
                 pending_vertex_points.push((aid, id));
             }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "VERTEX_SHELL" => {
+                let v = VertexShell {
+                    name: as_str(&attributes[0]),
+                    vertex_shell_extent: VertexLoopRef::VertexLoop(VertexLoopId(usize::MAX)),
+                };
+                let aid = VertexShellId(model.vertex_shells.push(v));
+                idmap.insert(id, AnyId::VertexShell(aid));
+                pending_vertex_shells.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "WIRE_SHELL" => {
+                let v = WireShell {
+                    name: as_str(&attributes[0]),
+                    wire_shell_extent: Vec::new(),
+                };
+                let aid = WireShellId(model.wire_shells.push(v));
+                idmap.insert(id, AnyId::WireShell(aid));
+                pending_wire_shells.push((aid, id));
+            }
             RawEntity::Complex { parts, .. } if is_complex_unit(parts) => {
                 let bag = read_complex_parts_norefs(parts);
                 let aid = ComplexUnitId(model.complex_units.push(ComplexUnit { parts: bag }));
@@ -4782,6 +4967,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 pending_complex.push((aid, id));
             }
             _ => {}
+        }
+    }
+    for (aid, raw) in pending_advanced_brep_shape_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_advanced_brep_shape_representations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_advanced_faces {
@@ -5298,6 +5488,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_manifold_solid_breps(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_manifold_surface_shape_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_manifold_surface_shape_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_mapped_items {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_mapped_items(&mut model, aid, attributes, &idmap);
@@ -5522,6 +5717,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_property_definitions(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_property_definition_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_property_definition_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_property_definition_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_property_definition_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_quasi_uniform_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_quasi_uniform_curves(&mut model, aid, attributes, &idmap);
@@ -5589,6 +5794,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_shape_aspect_relationships(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_shape_definition_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_definition_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_shape_dimension_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_shape_dimension_representations(&mut model, aid, attributes, &idmap);
@@ -5597,6 +5807,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_shape_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_shape_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_shape_representation_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_representation_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_shell_based_surface_models {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shell_based_surface_models(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_si_units {
@@ -5814,12 +6034,42 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_vertex_points(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_vertex_shells {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_vertex_shells(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_wire_shells {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_wire_shells(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_complex {
         if let Some(RawEntity::Complex { parts, .. }) = map.get(&raw) {
             resolve_complex(&mut model, aid, parts, &idmap);
         }
     }
     (model, idmap)
+}
+
+fn resolve_advanced_brep_shape_representations(
+    model: &mut Model,
+    aid: AdvancedBrepShapeRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.advanced_brep_shape_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
 }
 
 fn resolve_advanced_faces(
@@ -7600,6 +7850,26 @@ fn resolve_manifold_solid_breps(
     it.outer = outer_v;
 }
 
+fn resolve_manifold_surface_shape_representations(
+    model: &mut Model,
+    aid: ManifoldSurfaceShapeRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.manifold_surface_shape_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
+}
+
 fn resolve_mapped_items(
     model: &mut Model,
     aid: MappedItemId,
@@ -8299,6 +8569,36 @@ fn resolve_property_definitions(
     it.definition = definition_v;
 }
 
+fn resolve_property_definition_relationships(
+    model: &mut Model,
+    aid: PropertyDefinitionRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_property_definition_v =
+        PropertyDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_property_definition_v =
+        PropertyDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.property_definition_relationships.items[aid.0];
+    it.relating_property_definition = relating_property_definition_v;
+    it.related_property_definition = related_property_definition_v;
+}
+
+fn resolve_property_definition_representations(
+    model: &mut Model,
+    aid: PropertyDefinitionRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v =
+        RepresentedDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let used_representation_v =
+        RepresentationRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.property_definition_representations.items[aid.0];
+    it.definition = definition_v;
+    it.used_representation = used_representation_v;
+}
+
 fn resolve_quasi_uniform_curves(
     model: &mut Model,
     aid: QuasiUniformCurveId,
@@ -8543,6 +8843,21 @@ fn resolve_shape_aspect_relationships(
     it.related_shape_aspect = related_shape_aspect_v;
 }
 
+fn resolve_shape_definition_representations(
+    model: &mut Model,
+    aid: ShapeDefinitionRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v =
+        RepresentedDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let used_representation_v =
+        RepresentationRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.shape_definition_representations.items[aid.0];
+    it.definition = definition_v;
+    it.used_representation = used_representation_v;
+}
+
 fn resolve_shape_dimension_representations(
     model: &mut Model,
     aid: ShapeDimensionRepresentationId,
@@ -8581,6 +8896,40 @@ fn resolve_shape_representations(
     let it = &mut model.shape_representations.items[aid.0];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
+}
+
+fn resolve_shape_representation_relationships(
+    model: &mut Model,
+    aid: ShapeRepresentationRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rep_1_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let rep_2_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model.shape_representation_relationships.items[aid.0];
+    it.rep_1 = rep_1_v;
+    it.rep_2 = rep_2_v;
+}
+
+fn resolve_shell_based_surface_models(
+    model: &mut Model,
+    aid: ShellBasedSurfaceModelId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let sbsm_boundary_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ShellRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.shell_based_surface_models.items[aid.0];
+    it.sbsm_boundary = sbsm_boundary_v;
 }
 
 fn resolve_si_units(
@@ -9248,6 +9597,35 @@ fn resolve_vertex_points(
     it.vertex_geometry = vertex_geometry_v;
 }
 
+fn resolve_vertex_shells(
+    model: &mut Model,
+    aid: VertexShellId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let vertex_shell_extent_v =
+        VertexLoopRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.vertex_shells.items[aid.0];
+    it.vertex_shell_extent = vertex_shell_extent_v;
+}
+
+fn resolve_wire_shells(
+    model: &mut Model,
+    aid: WireShellId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let wire_shell_extent_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| LoopRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.wire_shells.items[aid.0];
+    it.wire_shell_extent = wire_shell_extent_v;
+}
+
 fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
     parts
         .iter()
@@ -9302,6 +9680,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     _ => Some(as_str(&p.attributes[11])),
                 },
             },
+            "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
             "ADVANCED_FACE" => UnitPart::AdvancedFace,
             "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
             "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
@@ -9650,6 +10029,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep {
                 outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
             },
+            "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => UnitPart::ManifoldSurfaceShapeRepresentation,
             "MAPPED_ITEM" => UnitPart::MappedItem {
                 mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
                     usize::MAX,
@@ -9850,6 +10230,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     usize::MAX,
                 )),
             },
+            "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation {
+                definition: RepresentedDefinitionRef::CommonDatum(CommonDatumId(usize::MAX)),
+                used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
+                    AdvancedBrepShapeRepresentationId(usize::MAX),
+                ),
+            },
             "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
             "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
             "RATIONAL_B_SPLINE_CURVE" => UnitPart::RationalBSplineCurve {
@@ -9886,8 +10272,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "REPRESENTATION_MAP" => UnitPart::RepresentationMap {
                 mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-                mapped_representation: RepresentationRef::DefinitionalRepresentation(
-                    DefinitionalRepresentationId(usize::MAX),
+                mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
+                    AdvancedBrepShapeRepresentationId(usize::MAX),
                 ),
             },
             "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference {
@@ -9902,11 +10288,11 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     Attribute::Unset => None,
                     _ => Some(as_str(&p.attributes[1])),
                 },
-                rep_1: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
-                    DefinitionalRepresentationId(usize::MAX),
+                rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                    AdvancedBrepShapeRepresentationId(usize::MAX),
                 ),
-                rep_2: RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(
-                    DefinitionalRepresentationId(usize::MAX),
+                rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                    AdvancedBrepShapeRepresentationId(usize::MAX),
                 ),
             },
             "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => {
@@ -9938,8 +10324,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
                 related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
             },
+            "SHAPE_DEFINITION_REPRESENTATION" => UnitPart::ShapeDefinitionRepresentation,
             "SHAPE_DIMENSION_REPRESENTATION" => UnitPart::ShapeDimensionRepresentation,
             "SHAPE_REPRESENTATION" => UnitPart::ShapeRepresentation,
+            "SHAPE_REPRESENTATION_RELATIONSHIP" => UnitPart::ShapeRepresentationRelationship,
+            "SHELL_BASED_SURFACE_MODEL" => UnitPart::ShellBasedSurfaceModel {
+                sbsm_boundary: Vec::new(),
+            },
             "SI_UNIT" => UnitPart::SiUnit {
                 prefix: match &p.attributes[0] {
                     Attribute::Unset => None,
@@ -9958,7 +10349,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
             "STYLED_ITEM" => UnitPart::StyledItem {
                 styles: Vec::new(),
-                item: StyledItemTargetRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                    AdvancedBrepShapeRepresentationId(usize::MAX),
+                ),
             },
             "SURFACE" => UnitPart::Surface,
             "SURFACE_CURVE" => UnitPart::SurfaceCurve {
@@ -10822,6 +11215,18 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
                 );
             }
+            UnitPart::PropertyDefinitionRepresentation {
+                definition,
+                used_representation,
+                ..
+            } => {
+                *definition = RepresentedDefinitionRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *used_representation = RepresentationRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::Representation {
                 items,
                 context_of_items,
@@ -10908,6 +11313,15 @@ fn resolve_complex(
                 *related_shape_aspect = ShapeAspectRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
                 );
+            }
+            UnitPart::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
+                *sbsm_boundary = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| ShellRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::StyledItem { styles, item, .. } => {
                 *styles = match &p.attributes[0] {

@@ -58,6 +58,7 @@ pub struct Writer<'a> {
     next: u64,
     out: String,
     addre_ids: Vec<Option<u64>>,
+    advanced_brep_shape_representation_ids: Vec<Option<u64>>,
     advanced_face_ids: Vec<Option<u64>>,
     angularity_tolerance_ids: Vec<Option<u64>>,
     annotation_curve_occurrence_ids: Vec<Option<u64>>,
@@ -181,6 +182,7 @@ pub struct Writer<'a> {
     local_time_ids: Vec<Option<u64>>,
     loop_ids: Vec<Option<u64>>,
     manifold_solid_brep_ids: Vec<Option<u64>>,
+    manifold_surface_shape_representation_ids: Vec<Option<u64>>,
     mapped_item_ids: Vec<Option<u64>>,
     mass_unit_ids: Vec<Option<u64>>,
     measure_with_unit_ids: Vec<Option<u64>>,
@@ -242,6 +244,8 @@ pub struct Writer<'a> {
     product_definition_shape_ids: Vec<Option<u64>>,
     product_related_product_category_ids: Vec<Option<u64>>,
     property_definition_ids: Vec<Option<u64>>,
+    property_definition_relationship_ids: Vec<Option<u64>>,
+    property_definition_representation_ids: Vec<Option<u64>>,
     quasi_uniform_curve_ids: Vec<Option<u64>>,
     quasi_uniform_surface_ids: Vec<Option<u64>>,
     rational_b_spline_curve_ids: Vec<Option<u64>>,
@@ -258,8 +262,11 @@ pub struct Writer<'a> {
     seam_curve_ids: Vec<Option<u64>>,
     shape_aspect_ids: Vec<Option<u64>>,
     shape_aspect_relationship_ids: Vec<Option<u64>>,
+    shape_definition_representation_ids: Vec<Option<u64>>,
     shape_dimension_representation_ids: Vec<Option<u64>>,
     shape_representation_ids: Vec<Option<u64>>,
+    shape_representation_relationship_ids: Vec<Option<u64>>,
+    shell_based_surface_model_ids: Vec<Option<u64>>,
     si_unit_ids: Vec<Option<u64>>,
     solid_angle_unit_ids: Vec<Option<u64>>,
     solid_model_ids: Vec<Option<u64>>,
@@ -312,6 +319,8 @@ pub struct Writer<'a> {
     vertex_ids: Vec<Option<u64>>,
     vertex_loop_ids: Vec<Option<u64>>,
     vertex_point_ids: Vec<Option<u64>>,
+    vertex_shell_ids: Vec<Option<u64>>,
+    wire_shell_ids: Vec<Option<u64>>,
     complex_ids: Vec<Option<u64>>,
 }
 
@@ -322,6 +331,13 @@ impl<'a> Writer<'a> {
             next: 1,
             out: String::new(),
             addre_ids: vec![None; model.addresss.items.len()],
+            advanced_brep_shape_representation_ids: vec![
+                None;
+                model
+                    .advanced_brep_shape_representations
+                    .items
+                    .len()
+            ],
             advanced_face_ids: vec![None; model.advanced_faces.items.len()],
             angularity_tolerance_ids: vec![None; model.angularity_tolerances.items.len()],
             annotation_curve_occurrence_ids: vec![
@@ -592,6 +608,13 @@ impl<'a> Writer<'a> {
             local_time_ids: vec![None; model.local_times.items.len()],
             loop_ids: vec![None; model.loops.items.len()],
             manifold_solid_brep_ids: vec![None; model.manifold_solid_breps.items.len()],
+            manifold_surface_shape_representation_ids: vec![
+                None;
+                model
+                    .manifold_surface_shape_representations
+                    .items
+                    .len()
+            ],
             mapped_item_ids: vec![None; model.mapped_items.items.len()],
             mass_unit_ids: vec![None; model.mass_units.items.len()],
             measure_with_unit_ids: vec![None; model.measure_with_units.items.len()],
@@ -737,6 +760,20 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             property_definition_ids: vec![None; model.property_definitions.items.len()],
+            property_definition_relationship_ids: vec![
+                None;
+                model
+                    .property_definition_relationships
+                    .items
+                    .len()
+            ],
+            property_definition_representation_ids: vec![
+                None;
+                model
+                    .property_definition_representations
+                    .items
+                    .len()
+            ],
             quasi_uniform_curve_ids: vec![None; model.quasi_uniform_curves.items.len()],
             quasi_uniform_surface_ids: vec![None; model.quasi_uniform_surfaces.items.len()],
             rational_b_spline_curve_ids: vec![None; model.rational_b_spline_curves.items.len()],
@@ -768,6 +805,13 @@ impl<'a> Writer<'a> {
             seam_curve_ids: vec![None; model.seam_curves.items.len()],
             shape_aspect_ids: vec![None; model.shape_aspects.items.len()],
             shape_aspect_relationship_ids: vec![None; model.shape_aspect_relationships.items.len()],
+            shape_definition_representation_ids: vec![
+                None;
+                model
+                    .shape_definition_representations
+                    .items
+                    .len()
+            ],
             shape_dimension_representation_ids: vec![
                 None;
                 model
@@ -776,6 +820,14 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             shape_representation_ids: vec![None; model.shape_representations.items.len()],
+            shape_representation_relationship_ids: vec![
+                None;
+                model
+                    .shape_representation_relationships
+                    .items
+                    .len()
+            ],
+            shell_based_surface_model_ids: vec![None; model.shell_based_surface_models.items.len()],
             si_unit_ids: vec![None; model.si_units.items.len()],
             solid_angle_unit_ids: vec![None; model.solid_angle_units.items.len()],
             solid_model_ids: vec![None; model.solid_models.items.len()],
@@ -888,6 +940,8 @@ impl<'a> Writer<'a> {
             vertex_ids: vec![None; model.vertexs.items.len()],
             vertex_loop_ids: vec![None; model.vertex_loops.items.len()],
             vertex_point_ids: vec![None; model.vertex_points.items.len()],
+            vertex_shell_ids: vec![None; model.vertex_shells.items.len()],
+            wire_shell_ids: vec![None; model.wire_shells.items.len()],
             complex_ids: vec![None; model.complex_units.items.len()],
         }
     }
@@ -957,6 +1011,42 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = ADDRESS({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_advanced_brep_shape_representations(
+        &mut self,
+        id: AdvancedBrepShapeRepresentationId,
+    ) -> u64 {
+        if let Some(n) = self.advanced_brep_shape_representation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .advanced_brep_shape_representations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.advanced_brep_shape_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.items
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_representation_item((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_context((&it.context_of_items).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ADVANCED_BREP_SHAPE_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -4088,6 +4178,42 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_manifold_surface_shape_representations(
+        &mut self,
+        id: ManifoldSurfaceShapeRepresentationId,
+    ) -> u64 {
+        if let Some(n) = self.manifold_surface_shape_representation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .manifold_surface_shape_representations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.manifold_surface_shape_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.items
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_representation_item((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_context((&it.context_of_items).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = MANIFOLD_SURFACE_SHAPE_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_mapped_items(&mut self, id: MappedItemId) -> u64 {
         if let Some(n) = self.mapped_item_ids[id.0] {
             return n;
@@ -5691,6 +5817,70 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_property_definition_relationships(
+        &mut self,
+        id: PropertyDefinitionRelationshipId,
+    ) -> u64 {
+        if let Some(n) = self.property_definition_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .property_definition_relationships
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.property_definition_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            step_str(&it.description),
+            format!(
+                "#{}",
+                self.emit_ref_property_definition((&it.relating_property_definition).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_property_definition((&it.related_property_definition).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PROPERTY_DEFINITION_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_property_definition_representations(
+        &mut self,
+        id: PropertyDefinitionRepresentationId,
+    ) -> u64 {
+        if let Some(n) = self.property_definition_representation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .property_definition_representations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.property_definition_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!(
+                "#{}",
+                self.emit_ref_represented_definition((&it.definition).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation((&it.used_representation).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PROPERTY_DEFINITION_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_quasi_uniform_curves(&mut self, id: QuasiUniformCurveId) -> u64 {
         if let Some(n) = self.quasi_uniform_curve_ids[id.0] {
             return n;
@@ -6151,6 +6341,37 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_shape_definition_representations(
+        &mut self,
+        id: ShapeDefinitionRepresentationId,
+    ) -> u64 {
+        if let Some(n) = self.shape_definition_representation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .shape_definition_representations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.shape_definition_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!(
+                "#{}",
+                self.emit_ref_represented_definition((&it.definition).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation((&it.used_representation).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SHAPE_DEFINITION_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_shape_dimension_representations(&mut self, id: ShapeDimensionRepresentationId) -> u64 {
         if let Some(n) = self.shape_dimension_representation_ids[id.0] {
             return n;
@@ -6204,6 +6425,67 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = SHAPE_REPRESENTATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_shape_representation_relationships(
+        &mut self,
+        id: ShapeRepresentationRelationshipId,
+    ) -> u64 {
+        if let Some(n) = self.shape_representation_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .shape_representation_relationships
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.shape_representation_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_representation_or_representation_reference((&it.rep_1).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_or_representation_reference((&it.rep_2).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SHAPE_REPRESENTATION_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_shell_based_surface_models(&mut self, id: ShellBasedSurfaceModelId) -> u64 {
+        if let Some(n) = self.shell_based_surface_model_ids[id.0] {
+            return n;
+        }
+        let it = self.model.shell_based_surface_models.get(id.0).clone();
+        let n = self.fresh();
+        self.shell_based_surface_model_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.sbsm_boundary
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_shell((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SHELL_BASED_SURFACE_MODEL({});\n",
             attrs.join(",")
         ));
         n
@@ -7389,6 +7671,48 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_vertex_shells(&mut self, id: VertexShellId) -> u64 {
+        if let Some(n) = self.vertex_shell_ids[id.0] {
+            return n;
+        }
+        let it = self.model.vertex_shells.get(id.0).clone();
+        let n = self.fresh();
+        self.vertex_shell_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_vertex_loop((&it.vertex_shell_extent).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = VERTEX_SHELL({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_wire_shells(&mut self, id: WireShellId) -> u64 {
+        if let Some(n) = self.wire_shell_ids[id.0] {
+            return n;
+        }
+        let it = self.model.wire_shells.get(id.0).clone();
+        let n = self.fresh();
+        self.wire_shell_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.wire_shell_extent
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_loop((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = WIRE_SHELL({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_ref_annotation_curve_occurrence(&mut self, r: AnnotationCurveOccurrenceRef) -> u64 {
         match r {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -8356,6 +8680,16 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_property_definition(&mut self, r: PropertyDefinitionRef) -> u64 {
+        match r {
+            PropertyDefinitionRef::ProductDefinitionShape(i) => {
+                self.emit_product_definition_shapes(i)
+            }
+            PropertyDefinitionRef::PropertyDefinition(i) => self.emit_property_definitions(i),
+            PropertyDefinitionRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_rendering_properties_select(&mut self, r: RenderingPropertiesSelectRef) -> u64 {
         match r {
             RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(i) => {
@@ -8501,6 +8835,9 @@ impl<'a> Writer<'a> {
             }
             RepresentationItemRef::RepresentationItem(i) => self.emit_representation_items(i),
             RepresentationItemRef::SeamCurve(i) => self.emit_seam_curves(i),
+            RepresentationItemRef::ShellBasedSurfaceModel(i) => {
+                self.emit_shell_based_surface_models(i)
+            }
             RepresentationItemRef::SolidModel(i) => self.emit_solid_models(i),
             RepresentationItemRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
             RepresentationItemRef::StyledItem(i) => self.emit_styled_items(i),
@@ -8526,6 +8863,8 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Vertex(i) => self.emit_vertexs(i),
             RepresentationItemRef::VertexLoop(i) => self.emit_vertex_loops(i),
             RepresentationItemRef::VertexPoint(i) => self.emit_vertex_points(i),
+            RepresentationItemRef::VertexShell(i) => self.emit_vertex_shells(i),
+            RepresentationItemRef::WireShell(i) => self.emit_wire_shells(i),
             RepresentationItemRef::Complex(i) => self.emit_complex(i),
         }
     }
@@ -8542,8 +8881,14 @@ impl<'a> Writer<'a> {
         r: RepresentationOrRepresentationReferenceRef,
     ) -> u64 {
         match r {
+            RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(i) => {
+                self.emit_advanced_brep_shape_representations(i)
+            }
             RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(i) => {
                 self.emit_definitional_representations(i)
+            }
+            RepresentationOrRepresentationReferenceRef::ManifoldSurfaceShapeRepresentation(i) => {
+                self.emit_manifold_surface_shape_representations(i)
             }
             RepresentationOrRepresentationReferenceRef::Representation(i) => {
                 self.emit_representations(i)
@@ -8563,8 +8908,14 @@ impl<'a> Writer<'a> {
 
     fn emit_ref_representation(&mut self, r: RepresentationRef) -> u64 {
         match r {
+            RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                self.emit_advanced_brep_shape_representations(i)
+            }
             RepresentationRef::DefinitionalRepresentation(i) => {
                 self.emit_definitional_representations(i)
+            }
+            RepresentationRef::ManifoldSurfaceShapeRepresentation(i) => {
+                self.emit_manifold_surface_shape_representations(i)
             }
             RepresentationRef::Representation(i) => self.emit_representations(i),
             RepresentationRef::ShapeDimensionRepresentation(i) => {
@@ -8572,6 +8923,51 @@ impl<'a> Writer<'a> {
             }
             RepresentationRef::ShapeRepresentation(i) => self.emit_shape_representations(i),
             RepresentationRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_represented_definition(&mut self, r: RepresentedDefinitionRef) -> u64 {
+        match r {
+            RepresentedDefinitionRef::CommonDatum(i) => self.emit_common_datums(i),
+            RepresentedDefinitionRef::CompositeShapeAspect(i) => {
+                self.emit_composite_shape_aspects(i)
+            }
+            RepresentedDefinitionRef::Datum(i) => self.emit_datums(i),
+            RepresentedDefinitionRef::DatumFeature(i) => self.emit_datum_features(i),
+            RepresentedDefinitionRef::DatumReferenceCompartment(i) => {
+                self.emit_datum_reference_compartments(i)
+            }
+            RepresentedDefinitionRef::DatumReferenceElement(i) => {
+                self.emit_datum_reference_elements(i)
+            }
+            RepresentedDefinitionRef::DatumSystem(i) => self.emit_datum_systems(i),
+            RepresentedDefinitionRef::DatumTarget(i) => self.emit_datum_targets(i),
+            RepresentedDefinitionRef::DimensionalLocation(i) => self.emit_dimensional_locations(i),
+            RepresentedDefinitionRef::DimensionalLocationWithPath(i) => {
+                self.emit_dimensional_location_with_paths(i)
+            }
+            RepresentedDefinitionRef::GeneralDatumReference(i) => {
+                self.emit_general_datum_references(i)
+            }
+            RepresentedDefinitionRef::PlacedDatumTargetFeature(i) => {
+                self.emit_placed_datum_target_features(i)
+            }
+            RepresentedDefinitionRef::ProductDefinitionShape(i) => {
+                self.emit_product_definition_shapes(i)
+            }
+            RepresentedDefinitionRef::PropertyDefinition(i) => self.emit_property_definitions(i),
+            RepresentedDefinitionRef::PropertyDefinitionRelationship(i) => {
+                self.emit_property_definition_relationships(i)
+            }
+            RepresentedDefinitionRef::ShapeAspect(i) => self.emit_shape_aspects(i),
+            RepresentedDefinitionRef::ShapeAspectRelationship(i) => {
+                self.emit_shape_aspect_relationships(i)
+            }
+            RepresentedDefinitionRef::ToleranceZone(i) => self.emit_tolerance_zones(i),
+            RepresentedDefinitionRef::ToleranceZoneWithDatum(i) => {
+                self.emit_tolerance_zone_with_datums(i)
+            }
+            RepresentedDefinitionRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -8610,6 +9006,17 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_shell(&mut self, r: ShellRef) -> u64 {
+        match r {
+            ShellRef::ClosedShell(i) => self.emit_closed_shells(i),
+            ShellRef::OpenShell(i) => self.emit_open_shells(i),
+            ShellRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
+            ShellRef::VertexShell(i) => self.emit_vertex_shells(i),
+            ShellRef::WireShell(i) => self.emit_wire_shells(i),
+            ShellRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_size_select(&mut self, r: SizeSelectRef) -> u64 {
         match r {
             SizeSelectRef::LengthMeasureWithUnit(i) => self.emit_length_measure_with_units(i),
@@ -8630,6 +9037,9 @@ impl<'a> Writer<'a> {
 
     fn emit_ref_styled_item_target(&mut self, r: StyledItemTargetRef) -> u64 {
         match r {
+            StyledItemTargetRef::AdvancedBrepShapeRepresentation(i) => {
+                self.emit_advanced_brep_shape_representations(i)
+            }
             StyledItemTargetRef::AdvancedFace(i) => self.emit_advanced_faces(i),
             StyledItemTargetRef::AnnotationSymbol(i) => self.emit_annotation_symbols(i),
             StyledItemTargetRef::AnnotationText(i) => self.emit_annotation_texts(i),
@@ -8699,6 +9109,9 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::Line(i) => self.emit_lines(i),
             StyledItemTargetRef::Loop(i) => self.emit_loops(i),
             StyledItemTargetRef::ManifoldSolidBrep(i) => self.emit_manifold_solid_breps(i),
+            StyledItemTargetRef::ManifoldSurfaceShapeRepresentation(i) => {
+                self.emit_manifold_surface_shape_representations(i)
+            }
             StyledItemTargetRef::MappedItem(i) => self.emit_mapped_items(i),
             StyledItemTargetRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
             StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
@@ -8730,6 +9143,9 @@ impl<'a> Writer<'a> {
                 self.emit_shape_dimension_representations(i)
             }
             StyledItemTargetRef::ShapeRepresentation(i) => self.emit_shape_representations(i),
+            StyledItemTargetRef::ShellBasedSurfaceModel(i) => {
+                self.emit_shell_based_surface_models(i)
+            }
             StyledItemTargetRef::SolidModel(i) => self.emit_solid_models(i),
             StyledItemTargetRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
             StyledItemTargetRef::Surface(i) => self.emit_surfaces(i),
@@ -8754,6 +9170,8 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::Vertex(i) => self.emit_vertexs(i),
             StyledItemTargetRef::VertexLoop(i) => self.emit_vertex_loops(i),
             StyledItemTargetRef::VertexPoint(i) => self.emit_vertex_points(i),
+            StyledItemTargetRef::VertexShell(i) => self.emit_vertex_shells(i),
+            StyledItemTargetRef::WireShell(i) => self.emit_wire_shells(i),
             StyledItemTargetRef::Complex(i) => self.emit_complex(i),
         }
     }
@@ -8991,6 +9409,12 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_vertex_loop(&mut self, r: VertexLoopRef) -> u64 {
+        match r {
+            VertexLoopRef::VertexLoop(i) => self.emit_vertex_loops(i),
+        }
+    }
+
     fn emit_ref_vertex(&mut self, r: VertexRef) -> u64 {
         match r {
             VertexRef::Vertex(i) => self.emit_vertexs(i),
@@ -9073,6 +9497,9 @@ impl<'a> Writer<'a> {
                         },
                     ];
                     format!("ADDRESS({})", a.join(","))
+                }
+                UnitPart::AdvancedBrepShapeRepresentation => {
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION()".to_string()
                 }
                 UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
                 UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
@@ -9941,6 +10368,9 @@ impl<'a> Writer<'a> {
                         vec![format!("#{}", self.emit_ref_closed_shell((outer).clone()))];
                     format!("MANIFOLD_SOLID_BREP({})", a.join(","))
                 }
+                UnitPart::ManifoldSurfaceShapeRepresentation => {
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION()".to_string()
+                }
                 UnitPart::MappedItem {
                     mapping_source,
                     mapping_target,
@@ -10411,6 +10841,23 @@ impl<'a> Writer<'a> {
                     ];
                     format!("PROPERTY_DEFINITION({})", a.join(","))
                 }
+                UnitPart::PropertyDefinitionRepresentation {
+                    definition,
+                    used_representation,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_represented_definition((definition).clone())
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation((used_representation).clone())
+                        ),
+                    ];
+                    format!("PROPERTY_DEFINITION_REPRESENTATION({})", a.join(","))
+                }
                 UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE()".to_string(),
                 UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE()".to_string(),
                 UnitPart::RationalBSplineCurve { weights_data, .. } => {
@@ -10606,10 +11053,27 @@ impl<'a> Writer<'a> {
                     ];
                     format!("SHAPE_ASPECT_RELATIONSHIP({})", a.join(","))
                 }
+                UnitPart::ShapeDefinitionRepresentation => {
+                    "SHAPE_DEFINITION_REPRESENTATION()".to_string()
+                }
                 UnitPart::ShapeDimensionRepresentation => {
                     "SHAPE_DIMENSION_REPRESENTATION()".to_string()
                 }
                 UnitPart::ShapeRepresentation => "SHAPE_REPRESENTATION()".to_string(),
+                UnitPart::ShapeRepresentationRelationship => {
+                    "SHAPE_REPRESENTATION_RELATIONSHIP()".to_string()
+                }
+                UnitPart::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        sbsm_boundary
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_shell((e).clone())))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("SHELL_BASED_SURFACE_MODEL({})", a.join(","))
+                }
                 UnitPart::SiUnit { prefix, name, .. } => {
                     let a: Vec<String> = vec![
                         match prefix {
@@ -10949,6 +11413,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.addresss.items.len() {
             self.emit_addresss(AddressId(i));
+        }
+        for i in 0..self.model.advanced_brep_shape_representations.items.len() {
+            self.emit_advanced_brep_shape_representations(AdvancedBrepShapeRepresentationId(i));
         }
         for i in 0..self.model.advanced_faces.items.len() {
             self.emit_advanced_faces(AdvancedFaceId(i));
@@ -11366,6 +11833,16 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.manifold_solid_breps.items.len() {
             self.emit_manifold_solid_breps(ManifoldSolidBrepId(i));
         }
+        for i in 0..self
+            .model
+            .manifold_surface_shape_representations
+            .items
+            .len()
+        {
+            self.emit_manifold_surface_shape_representations(ManifoldSurfaceShapeRepresentationId(
+                i,
+            ));
+        }
         for i in 0..self.model.mapped_items.items.len() {
             self.emit_mapped_items(MappedItemId(i));
         }
@@ -11563,6 +12040,12 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.property_definitions.items.len() {
             self.emit_property_definitions(PropertyDefinitionId(i));
         }
+        for i in 0..self.model.property_definition_relationships.items.len() {
+            self.emit_property_definition_relationships(PropertyDefinitionRelationshipId(i));
+        }
+        for i in 0..self.model.property_definition_representations.items.len() {
+            self.emit_property_definition_representations(PropertyDefinitionRepresentationId(i));
+        }
         for i in 0..self.model.quasi_uniform_curves.items.len() {
             self.emit_quasi_uniform_curves(QuasiUniformCurveId(i));
         }
@@ -11618,11 +12101,20 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.shape_aspect_relationships.items.len() {
             self.emit_shape_aspect_relationships(ShapeAspectRelationshipId(i));
         }
+        for i in 0..self.model.shape_definition_representations.items.len() {
+            self.emit_shape_definition_representations(ShapeDefinitionRepresentationId(i));
+        }
         for i in 0..self.model.shape_dimension_representations.items.len() {
             self.emit_shape_dimension_representations(ShapeDimensionRepresentationId(i));
         }
         for i in 0..self.model.shape_representations.items.len() {
             self.emit_shape_representations(ShapeRepresentationId(i));
+        }
+        for i in 0..self.model.shape_representation_relationships.items.len() {
+            self.emit_shape_representation_relationships(ShapeRepresentationRelationshipId(i));
+        }
+        for i in 0..self.model.shell_based_surface_models.items.len() {
+            self.emit_shell_based_surface_models(ShellBasedSurfaceModelId(i));
         }
         for i in 0..self.model.si_units.items.len() {
             self.emit_si_units(SiUnitId(i));
@@ -11800,6 +12292,12 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.vertex_points.items.len() {
             self.emit_vertex_points(VertexPointId(i));
+        }
+        for i in 0..self.model.vertex_shells.items.len() {
+            self.emit_vertex_shells(VertexShellId(i));
+        }
+        for i in 0..self.model.wire_shells.items.len() {
+            self.emit_wire_shells(WireShellId(i));
         }
         self.out
     }

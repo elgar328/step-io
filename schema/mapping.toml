@@ -935,6 +935,14 @@ exclude = [
     # entire PLM applied-assignment subtree (a large domain with its own gaps) →
     # keep deferred until the PLM domain is brought in as a deliberate step.
     "item_identified_representation_usage",
+    # general_property: a represented_definition member, so it enters the closure
+    # via shape_definition_representation.definition. But it is NOT a
+    # characterized_definition member, and some files non-standardly write
+    # property_definition.definition=#general_property — with it in the closure
+    # that ref dispatches to CharacterizedDefinitionRef::from_any and panics.
+    # Excluding it makes both refs escape cleanly (it carries only scalar attrs,
+    # so no real geometry is lost).
+    "general_property",
 ]
 
 [codegen.domains]
@@ -1185,4 +1193,18 @@ product = [
     "product_category",
     "product_category_relationship",
     "product_definition_formation_with_specified_source",
+]
+# shape representation — geometry/representation based, refs in the backbone
+# closure (shape_representation/representation/representation_relationship/shell;
+# items via the existing RepresentationItemRef). shape_definition_representation
+# .definition=represented_definition: property_definition/shape_aspect closure
+# members; property_definition_representation is the SDR parent (reachable).
+# general_property (a represented_definition member) is kept out via the
+# [codegen].exclude list — see the note there.
+shape = [
+    "shape_definition_representation",
+    "advanced_brep_shape_representation",
+    "shape_representation_relationship",
+    "shell_based_surface_model",
+    "manifold_surface_shape_representation",
 ]
