@@ -22,7 +22,7 @@ mod schema;
 #[cfg(test)]
 mod testutil;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::process::Command;
 
@@ -46,7 +46,7 @@ fn main() {
     .expect("parse mapping.toml");
     let ctx = Ctx { schema, mapping };
 
-    let (targets, skipped) = collect_targets(&ctx);
+    let targets = collect_targets(&ctx);
 
     let head = file_head(ctx.mapping.generate_all);
     let mut out = GenOut::new(&head);
@@ -149,8 +149,6 @@ fn main() {
         ),
     );
     eprintln!("gen-early: wrote {} entities to {dir}", targets.len());
-
-    write_coverage(root, &ctx, &targets, &skipped);
 }
 
 /// The generated-file header: bare for the committed (off) output; under the
@@ -180,23 +178,18 @@ fn file_head(generate_all: bool) -> String {
 }
 
 /// Resolve the generation targets: the wired `generate` list, or (under the
-/// `generate_all` diagnostic flip) every supported entity — the rest recorded
-/// as (entity, reason) for the coverage report.
-fn collect_targets(ctx: &Ctx) -> (Vec<String>, Vec<(String, String)>) {
-    let mut skipped: Vec<(String, String)> = Vec::new();
-    let targets: Vec<String> = if ctx.mapping.generate_all {
-        let mut t = Vec::new();
-        for ent_name in ctx.schema.entity.keys() {
-            match ctx.entity_supported(ent_name) {
-                Ok(()) => t.push(ent_name.clone()),
-                Err(reason) => skipped.push((ent_name.clone(), reason)),
-            }
-        }
-        t
+/// `generate_all` diagnostic flip) every supported entity.
+fn collect_targets(ctx: &Ctx) -> Vec<String> {
+    if ctx.mapping.generate_all {
+        ctx.schema
+            .entity
+            .keys()
+            .filter(|n| ctx.entity_supported(n).is_ok())
+            .cloned()
+            .collect()
     } else {
         ctx.mapping.generate.clone()
-    };
-    (targets, skipped)
+    }
 }
 
 /// Emit the standalone-field ENUM helpers: hint-less ones synthesize an
@@ -285,39 +278,6 @@ fn emit_enum_helpers(
             .unwrap();
         }
         writeln!(serialize, "    }}.into())\n}}\n").unwrap();
-    }
-}
-
-/// Write `schema/coverage.txt` (diagnostic flip only). Deterministic:
-/// `skipped` is built in sorted entity order; reasons tallied into a `BTreeMap`.
-fn write_coverage(root: &str, ctx: &Ctx, targets: &[String], skipped: &[(String, String)]) {
-    if ctx.mapping.generate_all {
-        let total = ctx.schema.entity.len();
-        let supported = targets.len();
-        let mut by_reason: BTreeMap<&str, usize> = BTreeMap::new();
-        for (_, reason) in skipped {
-            *by_reason.entry(reason.as_str()).or_default() += 1;
-        }
-        let mut report = String::new();
-        writeln!(
-            report,
-            "gen-early coverage (generate_all)\nsupported: {supported} / {total}\nskipped:   {}\n",
-            skipped.len()
-        )
-        .unwrap();
-        writeln!(report, "-- skipped by reason --").unwrap();
-        for (reason, n) in &by_reason {
-            writeln!(report, "  {reason:<16} {n}").unwrap();
-        }
-        writeln!(report, "\n-- skipped entities --").unwrap();
-        for (ent, reason) in skipped {
-            writeln!(report, "  {ent:<48} {reason}").unwrap();
-        }
-        std::fs::write(format!("{root}/schema/coverage.txt"), &report).expect("write coverage.txt");
-        eprintln!(
-            "gen-early: coverage {supported}/{total} supported, {} skipped",
-            skipped.len()
-        );
     }
 }
 
