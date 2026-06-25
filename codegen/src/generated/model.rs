@@ -1029,6 +1029,10 @@ pub struct GeometricToleranceWithMaximumToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricToleranceWithModifiersId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GlobalUncertaintyAssignedContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GlobalUnitAssignedContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct IntersectionCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ItemDefinedTransformationId(pub usize);
@@ -1412,6 +1416,8 @@ pub enum AnyId {
     GeometricToleranceWithDefinedUnit(GeometricToleranceWithDefinedUnitId),
     GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
+    GlobalUncertaintyAssignedContext(GlobalUncertaintyAssignedContextId),
+    GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
     IntersectionCurve(IntersectionCurveId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
@@ -3042,6 +3048,8 @@ impl RenderingPropertiesSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationContextRef {
     GeometricRepresentationContext(GeometricRepresentationContextId),
+    GlobalUncertaintyAssignedContext(GlobalUncertaintyAssignedContextId),
+    GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
     RepresentationContext(RepresentationContextId),
     Complex(ComplexUnitId),
@@ -3050,6 +3058,8 @@ impl RepresentationContextRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::GeometricRepresentationContext(i) => Self::GeometricRepresentationContext(i),
+            AnyId::GlobalUncertaintyAssignedContext(i) => Self::GlobalUncertaintyAssignedContext(i),
+            AnyId::GlobalUnitAssignedContext(i) => Self::GlobalUnitAssignedContext(i),
             AnyId::ParametricRepresentationContext(i) => Self::ParametricRepresentationContext(i),
             AnyId::RepresentationContext(i) => Self::RepresentationContext(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -3897,6 +3907,19 @@ impl TwoDirectionRepeatFactorRef {
             AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("TwoDirectionRepeatFactorRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum UncertaintyMeasureWithUnitRef {
+    UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
+}
+impl UncertaintyMeasureWithUnitRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
+            other => panic!("UncertaintyMeasureWithUnitRef ref -> {other:?}"),
         }
     }
 }
@@ -4771,6 +4794,20 @@ pub struct GeometricToleranceWithModifiers {
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub modifiers: Vec<GeometricToleranceModifier>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GlobalUncertaintyAssignedContext {
+    pub context_identifier: String,
+    pub context_type: String,
+    pub uncertainty: Vec<UncertaintyMeasureWithUnitRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GlobalUnitAssignedContext {
+    pub context_identifier: String,
+    pub context_type: String,
+    pub units: Vec<UnitRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5981,6 +6018,12 @@ pub enum UnitPart {
     GeometricToleranceWithModifiers {
         modifiers: Vec<GeometricToleranceModifier>,
     },
+    GlobalUncertaintyAssignedContext {
+        uncertainty: Vec<UncertaintyMeasureWithUnitRef>,
+    },
+    GlobalUnitAssignedContext {
+        units: Vec<UnitRef>,
+    },
     IntersectionCurve,
     ItemDefinedTransformation {
         name: String,
@@ -6398,6 +6441,8 @@ pub struct Model {
     pub geometric_tolerance_with_defined_units: Arena<GeometricToleranceWithDefinedUnit>,
     pub geometric_tolerance_with_maximum_tolerances: Arena<GeometricToleranceWithMaximumTolerance>,
     pub geometric_tolerance_with_modifierss: Arena<GeometricToleranceWithModifiers>,
+    pub global_uncertainty_assigned_contexts: Arena<GlobalUncertaintyAssignedContext>,
+    pub global_unit_assigned_contexts: Arena<GlobalUnitAssignedContext>,
     pub intersection_curves: Arena<IntersectionCurve>,
     pub item_defined_transformations: Arena<ItemDefinedTransformation>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,

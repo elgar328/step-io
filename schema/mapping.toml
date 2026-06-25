@@ -955,6 +955,11 @@ units = [
     "plane_angle_unit",
     "solid_angle_unit",
     "time_unit",
+    # units context: representation_context complex parts (complex-only) carrying
+    # the unit/uncertainty sets. references stay in the units closure (unit =
+    # SELECT(derived_unit, named_unit); uncertainty_measure_with_unit) -> low escape.
+    "global_unit_assigned_context",
+    "global_uncertainty_assigned_context",
 ]
 geometry = [
     "cartesian_point",

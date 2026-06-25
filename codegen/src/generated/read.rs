@@ -193,6 +193,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
     "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
     "INTERSECTION_CURVE",
     "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
@@ -412,6 +414,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
     "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
     "INTERSECTION_CURVE",
     "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
@@ -670,6 +674,12 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         GeometricToleranceWithModifiersId,
         u64,
     )> = Vec::new();
+    let mut pending_global_uncertainty_assigned_contexts: Vec<(
+        GlobalUncertaintyAssignedContextId,
+        u64,
+    )> = Vec::new();
+    let mut pending_global_unit_assigned_contexts: Vec<(GlobalUnitAssignedContextId, u64)> =
+        Vec::new();
     let mut pending_intersection_curves: Vec<(IntersectionCurveId, u64)> = Vec::new();
     let mut pending_item_defined_transformations: Vec<(ItemDefinedTransformationId, u64)> =
         Vec::new();
@@ -2479,6 +2489,32 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 );
                 idmap.insert(id, AnyId::GeometricToleranceWithModifiers(aid));
                 pending_geometric_tolerance_with_modifierss.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => {
+                let v = GlobalUncertaintyAssignedContext {
+                    context_identifier: as_str(&attributes[0]),
+                    context_type: as_str(&attributes[1]),
+                    uncertainty: Vec::new(),
+                };
+                let aid = GlobalUncertaintyAssignedContextId(
+                    model.global_uncertainty_assigned_contexts.push(v),
+                );
+                idmap.insert(id, AnyId::GlobalUncertaintyAssignedContext(aid));
+                pending_global_uncertainty_assigned_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GLOBAL_UNIT_ASSIGNED_CONTEXT" => {
+                let v = GlobalUnitAssignedContext {
+                    context_identifier: as_str(&attributes[0]),
+                    context_type: as_str(&attributes[1]),
+                    units: Vec::new(),
+                };
+                let aid = GlobalUnitAssignedContextId(model.global_unit_assigned_contexts.push(v));
+                idmap.insert(id, AnyId::GlobalUnitAssignedContext(aid));
+                pending_global_unit_assigned_contexts.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -5037,6 +5073,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_geometric_tolerance_with_modifierss(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_global_uncertainty_assigned_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_global_uncertainty_assigned_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_global_unit_assigned_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_global_unit_assigned_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_intersection_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_intersection_curves(&mut model, aid, attributes, &idmap);
@@ -7195,6 +7241,42 @@ fn resolve_geometric_tolerance_with_modifierss(
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
 }
 
+fn resolve_global_uncertainty_assigned_contexts(
+    model: &mut Model,
+    aid: GlobalUncertaintyAssignedContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let uncertainty_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                UncertaintyMeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.global_uncertainty_assigned_contexts.items[aid.0];
+    it.uncertainty = uncertainty_v;
+}
+
+fn resolve_global_unit_assigned_contexts(
+    model: &mut Model,
+    aid: GlobalUnitAssignedContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let units_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| UnitRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.global_unit_assigned_contexts.items[aid.0];
+    it.units = units_v;
+}
+
 fn resolve_intersection_curves(
     model: &mut Model,
     aid: IntersectionCurveId,
@@ -9271,6 +9353,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     other => panic!("vec: {other:?}"),
                 },
             },
+            "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext {
+                uncertainty: Vec::new(),
+            },
+            "GLOBAL_UNIT_ASSIGNED_CONTEXT" => {
+                UnitPart::GlobalUnitAssignedContext { units: Vec::new() }
+            }
             "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
             "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation {
                 name: as_str(&p.attributes[0]),
@@ -10142,6 +10230,28 @@ fn resolve_complex(
                 *maximum_upper_tolerance = LengthMeasureWithUnitRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
+            }
+            UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
+                *uncertainty = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            UncertaintyMeasureWithUnitRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::GlobalUnitAssignedContext { units, .. } => {
+                *units = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| UnitRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::ItemDefinedTransformation {
                 transform_item_1,

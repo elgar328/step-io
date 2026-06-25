@@ -2603,6 +2603,46 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "GLOBAL_UNIT_ASSIGNED_CONTEXT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "INTERSECTION_CURVE" => &[
             Slot {
                 k: Sk::Str,
@@ -6120,6 +6160,18 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "GLOBAL_UNIT_ASSIGNED_CONTEXT" => &[Slot {
             k: Sk::Vec,
             req: true,
             der: false,

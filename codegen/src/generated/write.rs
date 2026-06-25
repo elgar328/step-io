@@ -166,6 +166,8 @@ pub struct Writer<'a> {
     geometric_tolerance_with_defined_unit_ids: Vec<Option<u64>>,
     geometric_tolerance_with_maximum_tolerance_ids: Vec<Option<u64>>,
     geometric_tolerance_with_modifier_ids: Vec<Option<u64>>,
+    global_uncertainty_assigned_context_ids: Vec<Option<u64>>,
+    global_unit_assigned_context_ids: Vec<Option<u64>>,
     intersection_curve_ids: Vec<Option<u64>>,
     item_defined_transformation_ids: Vec<Option<u64>>,
     length_measure_with_unit_ids: Vec<Option<u64>>,
@@ -547,6 +549,17 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_modifierss
                     .items
                     .len()
+            ],
+            global_uncertainty_assigned_context_ids: vec![
+                None;
+                model
+                    .global_uncertainty_assigned_contexts
+                    .items
+                    .len()
+            ],
+            global_unit_assigned_context_ids: vec![
+                None;
+                model.global_unit_assigned_contexts.items.len()
             ],
             intersection_curve_ids: vec![None; model.intersection_curves.items.len()],
             item_defined_transformation_ids: vec![
@@ -3697,6 +3710,68 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = GEOMETRIC_TOLERANCE_WITH_MODIFIERS({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_global_uncertainty_assigned_contexts(
+        &mut self,
+        id: GlobalUncertaintyAssignedContextId,
+    ) -> u64 {
+        if let Some(n) = self.global_uncertainty_assigned_context_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .global_uncertainty_assigned_contexts
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.global_uncertainty_assigned_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.context_identifier),
+            step_str(&it.context_type),
+            format!(
+                "({})",
+                it.uncertainty
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_uncertainty_measure_with_unit((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_global_unit_assigned_contexts(&mut self, id: GlobalUnitAssignedContextId) -> u64 {
+        if let Some(n) = self.global_unit_assigned_context_ids[id.0] {
+            return n;
+        }
+        let it = self.model.global_unit_assigned_contexts.get(id.0).clone();
+        let n = self.fresh();
+        self.global_unit_assigned_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.context_identifier),
+            step_str(&it.context_type),
+            format!(
+                "({})",
+                it.units
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_unit((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GLOBAL_UNIT_ASSIGNED_CONTEXT({});\n",
             attrs.join(",")
         ));
         n
@@ -8002,6 +8077,12 @@ impl<'a> Writer<'a> {
             RepresentationContextRef::GeometricRepresentationContext(i) => {
                 self.emit_geometric_representation_contexts(i)
             }
+            RepresentationContextRef::GlobalUncertaintyAssignedContext(i) => {
+                self.emit_global_uncertainty_assigned_contexts(i)
+            }
+            RepresentationContextRef::GlobalUnitAssignedContext(i) => {
+                self.emit_global_unit_assigned_contexts(i)
+            }
             RepresentationContextRef::ParametricRepresentationContext(i) => {
                 self.emit_parametric_representation_contexts(i)
             }
@@ -8580,6 +8661,14 @@ impl<'a> Writer<'a> {
                 self.emit_two_direction_repeat_factors(i)
             }
             TwoDirectionRepeatFactorRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_uncertainty_measure_with_unit(&mut self, r: UncertaintyMeasureWithUnitRef) -> u64 {
+        match r {
+            UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
+                self.emit_uncertainty_measure_with_units(i)
+            }
         }
     }
 
@@ -9481,6 +9570,31 @@ impl<'a> Writer<'a> {
                             .join(",")
                     )];
                     format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS({})", a.join(","))
+                }
+                UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        uncertainty
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.emit_ref_uncertainty_measure_with_unit((e).clone())
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT({})", a.join(","))
+                }
+                UnitPart::GlobalUnitAssignedContext { units, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        units
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_unit((e).clone())))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("GLOBAL_UNIT_ASSIGNED_CONTEXT({})", a.join(","))
                 }
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
                 UnitPart::ItemDefinedTransformation {
@@ -10865,6 +10979,12 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.geometric_tolerance_with_modifierss.items.len() {
             self.emit_geometric_tolerance_with_modifierss(GeometricToleranceWithModifiersId(i));
+        }
+        for i in 0..self.model.global_uncertainty_assigned_contexts.items.len() {
+            self.emit_global_uncertainty_assigned_contexts(GlobalUncertaintyAssignedContextId(i));
+        }
+        for i in 0..self.model.global_unit_assigned_contexts.items.len() {
+            self.emit_global_unit_assigned_contexts(GlobalUnitAssignedContextId(i));
         }
         for i in 0..self.model.intersection_curves.items.len() {
             self.emit_intersection_curves(IntersectionCurveId(i));
