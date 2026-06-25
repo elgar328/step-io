@@ -126,11 +126,24 @@ fn main() {
 
 fn write_fmt(path: &str, body: &str) {
     std::fs::write(path, body).expect("write generated file");
-    let status = Command::new("rustfmt")
-        .args(["--edition", "2024", path])
-        .status();
-    match status {
-        Ok(st) if st.success() => {}
-        _ => eprintln!("codegen: rustfmt skipped/failed for {path} (kept raw)"),
+    // rustfmt is not idempotent on some deeply-nested generated expressions: one
+    // pass can leave formatting that a second pass changes, so a single pass would
+    // differ from a later `cargo fmt`. Run to a fixpoint so generated output is
+    // already fully formatted (no `cargo fmt` churn on regen).
+    for _ in 0..5 {
+        let before = std::fs::read_to_string(path).unwrap_or_default();
+        match Command::new("rustfmt")
+            .args(["--edition", "2024", path])
+            .status()
+        {
+            Ok(st) if st.success() => {}
+            _ => {
+                eprintln!("codegen: rustfmt skipped/failed for {path} (kept raw)");
+                return;
+            }
+        }
+        if std::fs::read_to_string(path).unwrap_or_default() == before {
+            return;
+        }
     }
 }
