@@ -951,6 +951,8 @@ pub struct ConicalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConnectedFaceSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ContextDependentOverRidingStyledItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentUnitId(pub usize);
@@ -1109,6 +1111,8 @@ pub struct GlobalUncertaintyAssignedContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GlobalUnitAssignedContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GroupId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntersectionCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemDefinedTransformationId(pub usize);
@@ -1138,6 +1142,8 @@ pub struct MeasureRepresentationItemId(pub usize);
 pub struct MeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MechanicalDesignGeometricPresentationRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ModifiedGeometricToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1230,6 +1236,12 @@ pub struct PreDefinedSurfaceSideStyleId(pub usize);
 pub struct PreDefinedSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedTileId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PresentationLayerAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PresentationRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PresentationSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationStyleAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1473,6 +1485,7 @@ pub enum AnyId {
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
@@ -1552,6 +1565,7 @@ pub enum AnyId {
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     GlobalUncertaintyAssignedContext(GlobalUncertaintyAssignedContextId),
     GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
+    Group(GroupId),
     IntersectionCurve(IntersectionCurveId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
@@ -1567,6 +1581,9 @@ pub enum AnyId {
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     MechanicalContext(MechanicalContextId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NamedUnit(NamedUnitId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
@@ -1613,6 +1630,9 @@ pub enum AnyId {
     PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
     PreDefinedSymbol(PreDefinedSymbolId),
     PreDefinedTile(PreDefinedTileId),
+    PresentationLayerAssignment(PresentationLayerAssignmentId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationSet(PresentationSetId),
     PresentationStyleAssignment(PresentationStyleAssignmentId),
     Product(ProductId),
     ProductCategory(ProductCategoryId),
@@ -2864,6 +2884,233 @@ impl ItemDefinedTransformationRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum LayeredItemRef {
+    AdvancedFace(AdvancedFaceId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationSymbol(AnnotationSymbolId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    CoordinatesList(CoordinatesListId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DefinedSymbol(DefinedSymbolId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    Direction(DirectionId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    Loop(LoopId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    MappedItem(MappedItemId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    Path(PathId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
+    PresentationRepresentation(PresentationRepresentationId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    RepresentationItem(RepresentationItemId),
+    SeamCurve(SeamCurveId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    StyledItem(StyledItemId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolTarget(SymbolTargetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    Vector(VectorId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
+    Complex(ComplexUnitId),
+}
+impl LayeredItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
+            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
+            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
+            AnyId::Direction(i) => Self::Direction(i),
+            AnyId::Edge(i) => Self::Edge(i),
+            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
+            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
+            AnyId::Face(i) => Self::Face(i),
+            AnyId::FaceBound(i) => Self::FaceBound(i),
+            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
+            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::Loop(i) => Self::Loop(i),
+            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
+            AnyId::Path(i) => Self::Path(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::Point(i) => Self::Point(i),
+            AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
+            AnyId::SolidModel(i) => Self::SolidModel(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::Vector(i) => Self::Vector(i),
+            AnyId::Vertex(i) => Self::Vertex(i),
+            AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("LayeredItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum LengthMeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     Complex(ComplexUnitId),
@@ -3443,6 +3690,7 @@ pub enum RepresentationItemRef {
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
@@ -3552,6 +3800,9 @@ impl RepresentationItemRef {
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
             AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
@@ -3655,6 +3906,10 @@ pub enum RepresentationOrRepresentationReferenceRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    PresentationRepresentation(PresentationRepresentationId),
     Representation(RepresentationId),
     RepresentationReference(RepresentationReferenceId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
@@ -3669,6 +3924,10 @@ impl RepresentationOrRepresentationReferenceRef {
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
@@ -3684,6 +3943,10 @@ pub enum RepresentationRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    PresentationRepresentation(PresentationRepresentationId),
     Representation(RepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
@@ -3697,6 +3960,10 @@ impl RepresentationRef {
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
@@ -3877,10 +4144,276 @@ impl SizeSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum StyleContextSelectRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AdvancedFace(AdvancedFaceId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationSymbol(AnnotationSymbolId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
+    CoordinatesList(CoordinatesListId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DefinedSymbol(DefinedSymbolId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    Direction(DirectionId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    Group(GroupId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    Loop(LoopId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MappedItem(MappedItemId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    Path(PathId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
+    PresentationLayerAssignment(PresentationLayerAssignmentId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationSet(PresentationSetId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    Representation(RepresentationId),
+    RepresentationItem(RepresentationItemId),
+    RepresentationRelationship(RepresentationRelationshipId),
+    RepresentationRelationshipWithTransformation(RepresentationRelationshipWithTransformationId),
+    SeamCurve(SeamCurveId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    StyledItem(StyledItemId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolTarget(SymbolTargetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    Vector(VectorId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
+    Complex(ComplexUnitId),
+}
+impl StyleContextSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
+            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
+            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
+            AnyId::ContextDependentShapeRepresentation(i) => {
+                Self::ContextDependentShapeRepresentation(i)
+            }
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
+            AnyId::Direction(i) => Self::Direction(i),
+            AnyId::Edge(i) => Self::Edge(i),
+            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
+            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
+            AnyId::Face(i) => Self::Face(i),
+            AnyId::FaceBound(i) => Self::FaceBound(i),
+            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
+            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::Group(i) => Self::Group(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::Loop(i) => Self::Loop(i),
+            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
+            AnyId::Path(i) => Self::Path(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::Point(i) => Self::Point(i),
+            AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
+            AnyId::PresentationLayerAssignment(i) => Self::PresentationLayerAssignment(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::PresentationSet(i) => Self::PresentationSet(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
+            AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
+            AnyId::RepresentationRelationshipWithTransformation(i) => {
+                Self::RepresentationRelationshipWithTransformation(i)
+            }
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
+            AnyId::SolidModel(i) => Self::SolidModel(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::Vector(i) => Self::Vector(i),
+            AnyId::Vertex(i) => Self::Vertex(i),
+            AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("StyleContextSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum StyledItemRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     OverRidingStyledItem(OverRidingStyledItemId),
     StyledItem(StyledItemId),
     Complex(ComplexUnitId),
@@ -3891,6 +4424,9 @@ impl StyledItemRef {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
             AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
             AnyId::StyledItem(i) => Self::StyledItem(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -3957,6 +4493,9 @@ pub enum StyledItemTargetRef {
     ManifoldSolidBrep(ManifoldSolidBrepId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
@@ -3971,6 +4510,7 @@ pub enum StyledItemTargetRef {
     Point(PointId),
     PolyLoop(PolyLoopId),
     Polyline(PolylineId),
+    PresentationRepresentation(PresentationRepresentationId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
@@ -4067,6 +4607,9 @@ impl StyledItemTargetRef {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
             AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
             AnyId::OpenShell(i) => Self::OpenShell(i),
@@ -4081,6 +4624,7 @@ impl StyledItemTargetRef {
             AnyId::Point(i) => Self::Point(i),
             AnyId::PolyLoop(i) => Self::PolyLoop(i),
             AnyId::Polyline(i) => Self::Polyline(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
@@ -4878,6 +5422,15 @@ pub struct ConnectedFaceSet {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ContextDependentOverRidingStyledItem {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+    pub over_ridden_style: StyledItemRef,
+    pub style_context: Vec<StyleContextSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ContextDependentShapeRepresentation {
     pub representation_relation: ShapeRepresentationRelationshipRef,
     pub represented_product_relation: ProductDefinitionShapeRef,
@@ -5433,6 +5986,12 @@ pub struct GlobalUnitAssignedContext {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Group {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct IntersectionCurve {
     pub name: String,
     pub curve_3d: CurveRef,
@@ -5530,6 +6089,13 @@ pub struct MechanicalContext {
     pub name: String,
     pub frame_of_reference: ApplicationContextRef,
     pub discipline_type: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MechanicalDesignGeometricPresentationRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5876,6 +6442,23 @@ pub struct PreDefinedSymbol {
 pub struct PreDefinedTile {
     pub name: String,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationLayerAssignment {
+    pub name: String,
+    pub description: String,
+    pub assigned_items: Vec<LayeredItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationSet {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationStyleAssignment {
@@ -6638,6 +7221,9 @@ pub enum UnitPart {
     ConnectedFaceSet {
         cfs_faces: Option<Vec<FaceRef>>,
     },
+    ContextDependentOverRidingStyledItem {
+        style_context: Vec<StyleContextSelectRef>,
+    },
     ContextDependentUnit {
         name: String,
     },
@@ -6820,6 +7406,10 @@ pub enum UnitPart {
     GlobalUnitAssignedContext {
         units: Vec<UnitRef>,
     },
+    Group {
+        name: String,
+        description: Option<String>,
+    },
     IntersectionCurve,
     ItemDefinedTransformation {
         name: String,
@@ -6917,6 +7507,8 @@ pub enum UnitPart {
     PreDefinedSurfaceSideStyle,
     PreDefinedSymbol,
     PreDefinedTile,
+    PresentationRepresentation,
+    PresentationSet,
     PresentationStyleAssignment {
         styles: Vec<PresentationStyleSelectRef>,
     },
@@ -7203,6 +7795,7 @@ pub struct Model {
     pub conics: Arena<Conic>,
     pub conical_surfaces: Arena<ConicalSurface>,
     pub connected_face_sets: Arena<ConnectedFaceSet>,
+    pub context_dependent_over_riding_styled_items: Arena<ContextDependentOverRidingStyledItem>,
     pub context_dependent_shape_representations: Arena<ContextDependentShapeRepresentation>,
     pub context_dependent_units: Arena<ContextDependentUnit>,
     pub conversion_based_units: Arena<ConversionBasedUnit>,
@@ -7282,6 +7875,7 @@ pub struct Model {
     pub geometric_tolerance_with_modifierss: Arena<GeometricToleranceWithModifiers>,
     pub global_uncertainty_assigned_contexts: Arena<GlobalUncertaintyAssignedContext>,
     pub global_unit_assigned_contexts: Arena<GlobalUnitAssignedContext>,
+    pub groups: Arena<Group>,
     pub intersection_curves: Arena<IntersectionCurve>,
     pub item_defined_transformations: Arena<ItemDefinedTransformation>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
@@ -7297,6 +7891,8 @@ pub struct Model {
     pub measure_representation_items: Arena<MeasureRepresentationItem>,
     pub measure_with_units: Arena<MeasureWithUnit>,
     pub mechanical_contexts: Arena<MechanicalContext>,
+    pub mechanical_design_geometric_presentation_representations:
+        Arena<MechanicalDesignGeometricPresentationRepresentation>,
     pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
     pub next_assembly_usage_occurrences: Arena<NextAssemblyUsageOccurrence>,
@@ -7343,6 +7939,9 @@ pub struct Model {
     pub pre_defined_surface_side_styles: Arena<PreDefinedSurfaceSideStyle>,
     pub pre_defined_symbols: Arena<PreDefinedSymbol>,
     pub pre_defined_tiles: Arena<PreDefinedTile>,
+    pub presentation_layer_assignments: Arena<PresentationLayerAssignment>,
+    pub presentation_representations: Arena<PresentationRepresentation>,
+    pub presentation_sets: Arena<PresentationSet>,
     pub presentation_style_assignments: Arena<PresentationStyleAssignment>,
     pub products: Arena<Product>,
     pub product_categorys: Arena<ProductCategory>,

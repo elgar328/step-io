@@ -130,6 +130,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONIC",
     "CONICAL_SURFACE",
     "CONNECTED_FACE_SET",
+    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
@@ -209,6 +210,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+    "GROUP",
     "INTERSECTION_CURVE",
     "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
@@ -224,6 +226,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "MEASURE_REPRESENTATION_ITEM",
     "MEASURE_WITH_UNIT",
     "MECHANICAL_CONTEXT",
+    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
@@ -270,6 +273,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
     "PRE_DEFINED_TILE",
+    "PRESENTATION_LAYER_ASSIGNMENT",
+    "PRESENTATION_REPRESENTATION",
+    "PRESENTATION_SET",
     "PRESENTATION_STYLE_ASSIGNMENT",
     "PRODUCT",
     "PRODUCT_CATEGORY",
@@ -398,6 +404,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "COMMON_DATUM",
     "COMPOSITE_SHAPE_ASPECT",
     "CONNECTED_FACE_SET",
+    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
     "CURVE",
@@ -459,6 +466,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+    "GROUP",
     "INTERSECTION_CURVE",
     "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
@@ -502,6 +510,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
     "PRE_DEFINED_TILE",
+    "PRESENTATION_REPRESENTATION",
+    "PRESENTATION_SET",
     "PRESENTATION_STYLE_ASSIGNMENT",
     "PRODUCT",
     "PRODUCT_CATEGORY",
@@ -635,6 +645,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -913,6 +924,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SOLID_BREP",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -927,6 +939,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "POINT",
                     "POLY_LOOP",
                     "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -1004,6 +1017,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -1567,6 +1581,270 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_TEXT",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DIRECTION",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "over_ridden_style",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "STYLED_ITEM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "style_context",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GROUP",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRESENTATION_LAYER_ASSIGNMENT",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_SET",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPRESENTATION",
+                    "REPRESENTATION_ITEM",
+                    "REPRESENTATION_RELATIONSHIP",
+                    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHAPE_REPRESENTATION_RELATIONSHIP",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
         "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION" => &[
             RefSlot {
                 idx: 0,
@@ -1876,6 +2154,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -3042,6 +3321,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -3154,6 +3434,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -3358,6 +3639,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -3492,6 +3774,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -3624,6 +3907,134 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "MODIFIED_GEOMETRIC_TOLERANCE" => &[
             RefSlot {
                 idx: 2,
@@ -3883,6 +4294,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SOLID_BREP",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -3897,6 +4309,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "POINT",
                     "POLY_LOOP",
                     "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -3941,6 +4354,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "OVER_RIDING_STYLED_ITEM",
                     "STYLED_ITEM",
                 ],
@@ -4239,6 +4653,248 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_ASPECT",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "PRESENTATION_LAYER_ASSIGNMENT" => &[RefSlot {
+            idx: 2,
+            name: "assigned_items",
+            allowed: &[
+                "ADVANCED_FACE",
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_SYMBOL",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT",
+                "AXIS1_PLACEMENT",
+                "AXIS2_PLACEMENT_2D",
+                "AXIS2_PLACEMENT_3D",
+                "B_SPLINE_CURVE",
+                "B_SPLINE_CURVE_WITH_KNOTS",
+                "B_SPLINE_SURFACE",
+                "B_SPLINE_SURFACE_WITH_KNOTS",
+                "BEZIER_CURVE",
+                "BEZIER_SURFACE",
+                "BOUNDED_CURVE",
+                "BOUNDED_PCURVE",
+                "BOUNDED_SURFACE",
+                "BOUNDED_SURFACE_CURVE",
+                "BREP_WITH_VOIDS",
+                "CARTESIAN_POINT",
+                "CIRCLE",
+                "CLOSED_SHELL",
+                "COMPLEX_TRIANGULATED_FACE",
+                "CONIC",
+                "CONICAL_SURFACE",
+                "CONNECTED_FACE_SET",
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                "COORDINATES_LIST",
+                "CURVE",
+                "CYLINDRICAL_SURFACE",
+                "DEFINED_SYMBOL",
+                "DESCRIPTIVE_REPRESENTATION_ITEM",
+                "DIRECTION",
+                "EDGE",
+                "EDGE_CURVE",
+                "EDGE_LOOP",
+                "ELEMENTARY_SURFACE",
+                "ELLIPSE",
+                "EXTERNALLY_DEFINED_HATCH_STYLE",
+                "EXTERNALLY_DEFINED_TILE_STYLE",
+                "FACE",
+                "FACE_BOUND",
+                "FACE_OUTER_BOUND",
+                "FACE_SURFACE",
+                "FILL_AREA_STYLE_HATCHING",
+                "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                "FILL_AREA_STYLE_TILES",
+                "GEOMETRIC_CURVE_SET",
+                "GEOMETRIC_REPRESENTATION_ITEM",
+                "GEOMETRIC_SET",
+                "INTERSECTION_CURVE",
+                "LINE",
+                "LOOP",
+                "MANIFOLD_SOLID_BREP",
+                "MAPPED_ITEM",
+                "MEASURE_REPRESENTATION_ITEM",
+                "OFFSET_SURFACE",
+                "ONE_DIRECTION_REPEAT_FACTOR",
+                "OPEN_SHELL",
+                "ORIENTED_CLOSED_SHELL",
+                "ORIENTED_EDGE",
+                "OVER_RIDING_STYLED_ITEM",
+                "PATH",
+                "PCURVE",
+                "PLACEMENT",
+                "PLANAR_BOX",
+                "PLANAR_EXTENT",
+                "PLANE",
+                "POINT",
+                "POLY_LOOP",
+                "POLYLINE",
+                "PRESENTATION_REPRESENTATION",
+                "QUASI_UNIFORM_CURVE",
+                "QUASI_UNIFORM_SURFACE",
+                "RATIONAL_B_SPLINE_CURVE",
+                "RATIONAL_B_SPLINE_SURFACE",
+                "REPRESENTATION_ITEM",
+                "SEAM_CURVE",
+                "SHELL_BASED_SURFACE_MODEL",
+                "SOLID_MODEL",
+                "SPHERICAL_SURFACE",
+                "STYLED_ITEM",
+                "SURFACE",
+                "SURFACE_CURVE",
+                "SURFACE_OF_LINEAR_EXTRUSION",
+                "SURFACE_OF_REVOLUTION",
+                "SWEPT_SURFACE",
+                "SYMBOL_TARGET",
+                "TESSELLATED_FACE",
+                "TESSELLATED_ITEM",
+                "TESSELLATED_STRUCTURED_ITEM",
+                "TOPOLOGICAL_REPRESENTATION_ITEM",
+                "TOROIDAL_SURFACE",
+                "TRIMMED_CURVE",
+                "TWO_DIRECTION_REPEAT_FACTOR",
+                "UNIFORM_CURVE",
+                "UNIFORM_SURFACE",
+                "VECTOR",
+                "VERTEX",
+                "VERTEX_LOOP",
+                "VERTEX_POINT",
+                "VERTEX_SHELL",
+                "WIRE_SHELL",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "PRESENTATION_REPRESENTATION" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4605,6 +5261,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
@@ -4659,6 +5317,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -4786,6 +5445,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -4874,6 +5534,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
@@ -4897,6 +5559,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -4912,6 +5576,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -4929,6 +5595,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -4944,6 +5612,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -5143,6 +5813,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
@@ -5183,6 +5855,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -5310,6 +5983,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -5413,6 +6087,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -5428,6 +6104,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -5574,6 +6252,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SOLID_BREP",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -5588,6 +6267,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "POINT",
                     "POLY_LOOP",
                     "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -6476,6 +7156,134 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[RefSlot {
+            idx: 0,
+            name: "style_context",
+            allowed: &[
+                "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                "ADVANCED_FACE",
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_SYMBOL",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT",
+                "AXIS1_PLACEMENT",
+                "AXIS2_PLACEMENT_2D",
+                "AXIS2_PLACEMENT_3D",
+                "B_SPLINE_CURVE",
+                "B_SPLINE_CURVE_WITH_KNOTS",
+                "B_SPLINE_SURFACE",
+                "B_SPLINE_SURFACE_WITH_KNOTS",
+                "BEZIER_CURVE",
+                "BEZIER_SURFACE",
+                "BOUNDED_CURVE",
+                "BOUNDED_PCURVE",
+                "BOUNDED_SURFACE",
+                "BOUNDED_SURFACE_CURVE",
+                "BREP_WITH_VOIDS",
+                "CARTESIAN_POINT",
+                "CIRCLE",
+                "CLOSED_SHELL",
+                "COMPLEX_TRIANGULATED_FACE",
+                "CONIC",
+                "CONICAL_SURFACE",
+                "CONNECTED_FACE_SET",
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+                "COORDINATES_LIST",
+                "CURVE",
+                "CYLINDRICAL_SURFACE",
+                "DEFINED_SYMBOL",
+                "DEFINITIONAL_REPRESENTATION",
+                "DESCRIPTIVE_REPRESENTATION_ITEM",
+                "DIRECTION",
+                "EDGE",
+                "EDGE_CURVE",
+                "EDGE_LOOP",
+                "ELEMENTARY_SURFACE",
+                "ELLIPSE",
+                "EXTERNALLY_DEFINED_HATCH_STYLE",
+                "EXTERNALLY_DEFINED_TILE_STYLE",
+                "FACE",
+                "FACE_BOUND",
+                "FACE_OUTER_BOUND",
+                "FACE_SURFACE",
+                "FILL_AREA_STYLE_HATCHING",
+                "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                "FILL_AREA_STYLE_TILES",
+                "GEOMETRIC_CURVE_SET",
+                "GEOMETRIC_REPRESENTATION_ITEM",
+                "GEOMETRIC_SET",
+                "GROUP",
+                "INTERSECTION_CURVE",
+                "LINE",
+                "LOOP",
+                "MANIFOLD_SOLID_BREP",
+                "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                "MAPPED_ITEM",
+                "MEASURE_REPRESENTATION_ITEM",
+                "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "OFFSET_SURFACE",
+                "ONE_DIRECTION_REPEAT_FACTOR",
+                "OPEN_SHELL",
+                "ORIENTED_CLOSED_SHELL",
+                "ORIENTED_EDGE",
+                "OVER_RIDING_STYLED_ITEM",
+                "PATH",
+                "PCURVE",
+                "PLACEMENT",
+                "PLANAR_BOX",
+                "PLANAR_EXTENT",
+                "PLANE",
+                "POINT",
+                "POLY_LOOP",
+                "POLYLINE",
+                "PRESENTATION_LAYER_ASSIGNMENT",
+                "PRESENTATION_REPRESENTATION",
+                "PRESENTATION_SET",
+                "QUASI_UNIFORM_CURVE",
+                "QUASI_UNIFORM_SURFACE",
+                "RATIONAL_B_SPLINE_CURVE",
+                "RATIONAL_B_SPLINE_SURFACE",
+                "REPRESENTATION",
+                "REPRESENTATION_ITEM",
+                "REPRESENTATION_RELATIONSHIP",
+                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+                "SEAM_CURVE",
+                "SHAPE_DIMENSION_REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "SHAPE_REPRESENTATION_RELATIONSHIP",
+                "SHELL_BASED_SURFACE_MODEL",
+                "SOLID_MODEL",
+                "SPHERICAL_SURFACE",
+                "STYLED_ITEM",
+                "SURFACE",
+                "SURFACE_CURVE",
+                "SURFACE_OF_LINEAR_EXTRUSION",
+                "SURFACE_OF_REVOLUTION",
+                "SWEPT_SURFACE",
+                "SYMBOL_TARGET",
+                "TESSELLATED_FACE",
+                "TESSELLATED_ITEM",
+                "TESSELLATED_STRUCTURED_ITEM",
+                "TOPOLOGICAL_REPRESENTATION_ITEM",
+                "TOROIDAL_SURFACE",
+                "TRIMMED_CURVE",
+                "TWO_DIRECTION_REPEAT_FACTOR",
+                "UNIFORM_CURVE",
+                "UNIFORM_SURFACE",
+                "VECTOR",
+                "VERTEX",
+                "VERTEX_LOOP",
+                "VERTEX_POINT",
+                "VERTEX_SHELL",
+                "WIRE_SHELL",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "CONVERSION_BASED_UNIT" => &[RefSlot {
             idx: 1,
             name: "conversion_factor",
@@ -7031,6 +7839,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -7143,6 +7952,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -7271,6 +8081,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -7413,6 +8224,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_CURVE_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                 "OVER_RIDING_STYLED_ITEM",
                 "STYLED_ITEM",
             ],
@@ -7744,6 +8556,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
@@ -7784,6 +8598,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -7911,6 +8726,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
@@ -7999,6 +8815,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
@@ -8022,6 +8840,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -8037,6 +8857,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_REPRESENTATION",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -8188,6 +9010,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SOLID_BREP",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -8202,6 +9025,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "POINT",
                     "POLY_LOOP",
                     "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -8570,6 +9394,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_conics: Vec<(ConicId, u64)> = Vec::new();
     let mut pending_conical_surfaces: Vec<(ConicalSurfaceId, u64)> = Vec::new();
     let mut pending_connected_face_sets: Vec<(ConnectedFaceSetId, u64)> = Vec::new();
+    let mut pending_context_dependent_over_riding_styled_items: Vec<(
+        ContextDependentOverRidingStyledItemId,
+        u64,
+    )> = Vec::new();
     let mut pending_context_dependent_shape_representations: Vec<(
         ContextDependentShapeRepresentationId,
         u64,
@@ -8700,6 +9528,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
     let mut pending_mechanical_contexts: Vec<(MechanicalContextId, u64)> = Vec::new();
+    let mut pending_mechanical_design_geometric_presentation_representations: Vec<(
+        MechanicalDesignGeometricPresentationRepresentationId,
+        u64,
+    )> = Vec::new();
     let mut pending_modified_geometric_tolerances: Vec<(ModifiedGeometricToleranceId, u64)> =
         Vec::new();
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
@@ -8740,6 +9572,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_poly_loops: Vec<(PolyLoopId, u64)> = Vec::new();
     let mut pending_polylines: Vec<(PolylineId, u64)> = Vec::new();
     let mut pending_position_tolerances: Vec<(PositionToleranceId, u64)> = Vec::new();
+    let mut pending_presentation_layer_assignments: Vec<(PresentationLayerAssignmentId, u64)> =
+        Vec::new();
+    let mut pending_presentation_representations: Vec<(PresentationRepresentationId, u64)> =
+        Vec::new();
     let mut pending_presentation_style_assignments: Vec<(PresentationStyleAssignmentId, u64)> =
         Vec::new();
     let mut pending_products: Vec<(ProductId, u64)> = Vec::new();
@@ -9650,6 +10486,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ConnectedFaceSetId(model.connected_face_sets.push(v));
                 idmap.insert(id, AnyId::ConnectedFaceSet(aid));
                 pending_connected_face_sets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => {
+                let v = ContextDependentOverRidingStyledItem {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                    over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(
+                        AnnotationCurveOccurrenceId(usize::MAX),
+                    ),
+                    style_context: Vec::new(),
+                };
+                let aid = ContextDependentOverRidingStyledItemId(
+                    model.context_dependent_over_riding_styled_items.push(v),
+                );
+                idmap.insert(id, AnyId::ContextDependentOverRidingStyledItem(aid));
+                pending_context_dependent_over_riding_styled_items.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -10812,6 +11668,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "GROUP" => {
+                let v = Group {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = GroupId(model.groups.push(v));
+                idmap.insert(id, AnyId::Group(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "INTERSECTION_CURVE" => {
                 let v = IntersectionCurve {
                     name: as_str(&attributes[0]),
@@ -11025,6 +11894,27 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = MechanicalContextId(model.mechanical_contexts.push(v));
                 idmap.insert(id, AnyId::MechanicalContext(aid));
                 pending_mechanical_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => {
+                let v = MechanicalDesignGeometricPresentationRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = MechanicalDesignGeometricPresentationRepresentationId(
+                    model
+                        .mechanical_design_geometric_presentation_representations
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::MechanicalDesignGeometricPresentationRepresentation(aid),
+                );
+                pending_mechanical_design_geometric_presentation_representations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -11808,6 +12698,40 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = PreDefinedTileId(model.pre_defined_tiles.push(v));
                 idmap.insert(id, AnyId::PreDefinedTile(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRESENTATION_LAYER_ASSIGNMENT" => {
+                let v = PresentationLayerAssignment {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                    assigned_items: Vec::new(),
+                };
+                let aid =
+                    PresentationLayerAssignmentId(model.presentation_layer_assignments.push(v));
+                idmap.insert(id, AnyId::PresentationLayerAssignment(aid));
+                pending_presentation_layer_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRESENTATION_REPRESENTATION" => {
+                let v = PresentationRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = PresentationRepresentationId(model.presentation_representations.push(v));
+                idmap.insert(id, AnyId::PresentationRepresentation(aid));
+                pending_presentation_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRESENTATION_SET" => {
+                let v = PresentationSet {};
+                let aid = PresentationSetId(model.presentation_sets.push(v));
+                idmap.insert(id, AnyId::PresentationSet(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -13461,6 +14385,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_connected_face_sets(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_context_dependent_over_riding_styled_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_context_dependent_over_riding_styled_items(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_context_dependent_shape_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_context_dependent_shape_representations(&mut model, aid, attributes, &idmap);
@@ -13855,6 +14784,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_mechanical_contexts(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_mechanical_design_geometric_presentation_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_mechanical_design_geometric_presentation_representations(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
     for (aid, raw) in pending_modified_geometric_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_modified_geometric_tolerances(&mut model, aid, attributes, &idmap);
@@ -14003,6 +14939,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_position_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_position_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_presentation_layer_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_presentation_layer_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_presentation_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_presentation_representations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_presentation_style_assignments {
@@ -15071,6 +16017,38 @@ fn resolve_connected_face_sets(
     };
     let it = &mut model.connected_face_sets.items[aid.0];
     it.cfs_faces = cfs_faces_v;
+}
+
+fn resolve_context_dependent_over_riding_styled_items(
+    model: &mut Model,
+    aid: ContextDependentOverRidingStyledItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let over_ridden_style_v =
+        StyledItemRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let style_context_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| StyleContextSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.context_dependent_over_riding_styled_items.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+    it.over_ridden_style = over_ridden_style_v;
+    it.style_context = style_context_v;
 }
 
 fn resolve_context_dependent_shape_representations(
@@ -16377,6 +17355,28 @@ fn resolve_mechanical_contexts(
     it.frame_of_reference = frame_of_reference_v;
 }
 
+fn resolve_mechanical_design_geometric_presentation_representations(
+    model: &mut Model,
+    aid: MechanicalDesignGeometricPresentationRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model
+        .mechanical_design_geometric_presentation_representations
+        .items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
+}
+
 fn resolve_modified_geometric_tolerances(
     model: &mut Model,
     aid: ModifiedGeometricToleranceId,
@@ -16879,6 +17879,43 @@ fn resolve_position_tolerances(
     let it = &mut model.position_tolerances.items[aid.0];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_presentation_layer_assignments(
+    model: &mut Model,
+    aid: PresentationLayerAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_items_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| LayeredItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.presentation_layer_assignments.items[aid.0];
+    it.assigned_items = assigned_items_v;
+}
+
+fn resolve_presentation_representations(
+    model: &mut Model,
+    aid: PresentationRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.presentation_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
 }
 
 fn resolve_presentation_style_assignments(
@@ -18350,6 +19387,11 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "COMMON_DATUM" => UnitPart::CommonDatum,
             "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
             "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None },
+            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => {
+                UnitPart::ContextDependentOverRidingStyledItem {
+                    style_context: Vec::new(),
+                }
+            }
             "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit {
                 name: as_str(&p.attributes[0]),
             },
@@ -18587,6 +19629,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "GLOBAL_UNIT_ASSIGNED_CONTEXT" => {
                 UnitPart::GlobalUnitAssignedContext { units: Vec::new() }
             }
+            "GROUP" => UnitPart::Group {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+            },
             "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
             "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation {
                 name: as_str(&p.attributes[0]),
@@ -18700,6 +19749,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
             "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
             "PRE_DEFINED_TILE" => UnitPart::PreDefinedTile,
+            "PRESENTATION_REPRESENTATION" => UnitPart::PresentationRepresentation,
+            "PRESENTATION_SET" => UnitPart::PresentationSet,
             "PRESENTATION_STYLE_ASSIGNMENT" => {
                 UnitPart::PresentationStyleAssignment { styles: Vec::new() }
             }
@@ -19146,6 +20197,17 @@ fn resolve_complex(
                             .collect(),
                         other => panic!("vec ref: {other:?}"),
                     }),
+                };
+            }
+            UnitPart::ContextDependentOverRidingStyledItem { style_context, .. } => {
+                *style_context = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            StyleContextSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
                 };
             }
             UnitPart::ConversionBasedUnit {

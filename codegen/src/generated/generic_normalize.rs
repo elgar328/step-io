@@ -1378,6 +1378,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION" => &[
             Slot {
                 k: Sk::Ref,
@@ -2961,6 +2993,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "GROUP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "INTERSECTION_CURVE" => &[
             Slot {
                 k: Sk::Str,
@@ -3220,6 +3266,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
                 req: true,
                 der: false,
                 swire: None,
@@ -4279,6 +4345,47 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "PRESENTATION_LAYER_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "PRESENTATION_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "PRESENTATION_SET" => &[],
         "PRESENTATION_STYLE_ASSIGNMENT" => &[Slot {
             k: Sk::Vec,
             req: true,
@@ -6467,6 +6574,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "CONTEXT_DEPENDENT_UNIT" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -6992,6 +7105,20 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "GROUP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "INTERSECTION_CURVE" => &[],
         "ITEM_DEFINED_TRANSFORMATION" => &[
             Slot {
@@ -7239,6 +7366,8 @@ fn part_slots(n: &str) -> &'static [Slot] {
         "PRE_DEFINED_SURFACE_SIDE_STYLE" => &[],
         "PRE_DEFINED_SYMBOL" => &[],
         "PRE_DEFINED_TILE" => &[],
+        "PRESENTATION_REPRESENTATION" => &[],
+        "PRESENTATION_SET" => &[],
         "PRESENTATION_STYLE_ASSIGNMENT" => &[Slot {
             k: Sk::Vec,
             req: true,
