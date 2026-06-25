@@ -224,8 +224,8 @@ pub struct StringSelectValue { pub type_name: Option<String>, pub value: String 
 /// form round-trips. (Only Real/Str scalar members occur; others surface here.)
 fn scalar_rust_ty(k: &Kind) -> &'static str {
     match k {
-        Kind::Real => "MeasureValue",
-        Kind::Str => "StringSelectValue",
+        Kind::Real => "f64",
+        Kind::Str => "String",
         _ => unreachable!("unsupported scalar arm kind: {k:?}"),
     }
 }
@@ -253,9 +253,10 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     for (variant, enum_rust, _wire) in &re.enum_arms {
         writeln!(s, "    {variant}({enum_rust}),").unwrap();
     }
-    // Scalar arms for SELECT(.., parameter_value): hold a MeasureValue/
-    // StringSelectValue (carries typed-vs-bare via type_name).
-    for (variant, sk) in &re.scalar_arms {
+    // Scalar arms for SELECT(.., parameter_value): hold the bare scalar value
+    // (f64 / String). The wire form is always the typed literal `WIRE(value)`;
+    // the form is not stored (write re-derives it from the arm's wire name).
+    for (variant, sk, _wire) in &re.scalar_arms {
         writeln!(s, "    {variant}({}),", scalar_rust_ty(sk)).unwrap();
     }
     if re.has_complex {
@@ -556,11 +557,11 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
                     .map(|(_, v)| v.clone())
                     .expect("enum arm has members");
                 format!("{}::{}({}::{})", re.rust, variant, enum_rust, member)
-            } else if let Some((variant, sk)) = re.scalar_arms.first() {
+            } else if let Some((variant, sk, _wire)) = re.scalar_arms.first() {
                 // scalar-only select (no entity arm): default-value placeholder.
                 let dflt = match sk {
-                    Kind::Real => "MeasureValue { type_name: None, value: 0.0 }",
-                    Kind::Str => "StringSelectValue { type_name: None, value: String::new() }",
+                    Kind::Real => "0.0",
+                    Kind::Str => "String::new()",
                     _ => unreachable!("unsupported scalar arm kind"),
                 };
                 format!("{}::{}({dflt})", re.rust, variant)
@@ -703,30 +704,20 @@ fn resolve_ref_one(re: &RefEnum, aref: &str) -> String {
             re.rust, agg_variant, elt_ref
         ));
     }
-    // Scalar arms discriminate by VALUE kind (bare `5.`/`'x'` or Typed
-    // `WIRE(5.)`/`WIRE('x')`); read_measure_value/read_string_select capture the
-    // typed-vs-bare form. (>=2 same-kind scalar arms would be ambiguous on a bare
-    // literal — not present in any current select.)
-    for (sv, sk) in &re.scalar_arms {
-        let (bare, reader) = match sk {
-            Kind::Real => (
-                "Attribute::Real(_) | Attribute::Integer(_)",
-                "read_measure_value",
-            ),
-            Kind::Str => ("Attribute::String(_)", "read_string_select"),
+    // Scalar arms. The standard wire form is the Typed literal `WIRE(value)`,
+    // matched by type_name exactly like the enum/aggregate arms. The non-standard
+    // bare form (`5.` / `'x'`) is rewritten to this typed form by the normalize
+    // pass before read, so the reader is strict: a bare scalar reaching here would
+    // fall through to `_ => single` and panic (a normalize-gap, surfaced). `.value`
+    // discards the wire name (already captured by the arm).
+    for (sv, sk, wire) in &re.scalar_arms {
+        let reader = match sk {
+            Kind::Real => "read_measure_value",
+            Kind::Str => "read_string_select",
             _ => unreachable!("unsupported scalar arm kind"),
         };
-        let inner = match sk {
-            Kind::Real => "Attribute::Real(_) | Attribute::Integer(_)",
-            Kind::Str => "Attribute::String(_)",
-            _ => unreachable!(),
-        };
-        // bare form
-        arms.push(format!("{bare} => {}::{}({reader}({aref})),", re.rust, sv));
-        // typed form `WIRE(value)` — matched by inner value kind (the wire name is
-        // captured into the MeasureValue/StringSelectValue).
         arms.push(format!(
-            "Attribute::Typed {{ value, .. }} if matches!(value.as_ref(), {inner}) => {}::{}({reader}({aref})),",
+            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}).value),",
             re.rust, sv
         ));
     }
@@ -1102,15 +1093,18 @@ fn render_ref_value(re: &RefEnum, v: &str) -> String {
             rust = re.rust
         ));
     }
-    for (sv, sk) in &re.scalar_arms {
-        // measure()/string_select() render the typed (`WIRE(5.)`) or bare (`5.`)
-        // form from the payload's type_name.
-        let render = match sk {
-            Kind::Real => "measure(x)",
-            Kind::Str => "string_select(x)",
+    for (sv, sk, wire) in &re.scalar_arms {
+        // named scalar select member -> always the standard Typed literal
+        // `WIRE(value)` (a bare-on-read value is normalized to this on write).
+        let val = match sk {
+            Kind::Real => "real(*x)",
+            Kind::Str => "step_str(x)",
             _ => unreachable!("unsupported scalar arm kind"),
         };
-        arms.push(format!("{rust}::{sv}(x) => {render},", rust = re.rust));
+        arms.push(format!(
+            "{rust}::{sv}(x) => format!(\"{wire}({{}})\", {val}),",
+            rust = re.rust
+        ));
     }
     if arms.is_empty() {
         format!("format!(\"#{{}}\", self.emit_{m}(({v}).clone()))")
@@ -1233,7 +1227,7 @@ fn emit_write_ref(s: &mut String, re: &RefEnum) {
         )
         .unwrap();
     }
-    for (variant, _) in &re.scalar_arms {
+    for (variant, _, _) in &re.scalar_arms {
         writeln!(
             s,
             "        {}::{variant}(_) => panic!(\"emit scalar ref via single dispatch\"),",
@@ -1375,9 +1369,28 @@ fn sk_variant(k: &Kind) -> &'static str {
     }
 }
 
+/// The UPPER wire name to normalize a bare scalar member to, for a ref/aggregate
+/// slot whose target SELECT has exactly one scalar arm (unambiguous). None
+/// otherwise (no scalar arm, or >=2 — a bare literal would be ambiguous).
+fn scalar_wire_of(ir: &ModelIr, k: &Kind) -> Option<String> {
+    let target = match k {
+        Kind::Ref(t) => t,
+        Kind::Vec(inner) => match inner.as_ref() {
+            Kind::Ref(t) => t,
+            _ => return None,
+        },
+        _ => return None,
+    };
+    match ir.ref_enums.get(target)?.scalar_arms.as_slice() {
+        [(_, _, wire)] => Some(wire.clone()),
+        _ => None,
+    }
+}
+
 fn emit_slot_table<'a>(
     s: &mut String,
     fname: &str,
+    ir: &ModelIr,
     ents: impl Iterator<Item = (&'a String, &'a Vec<Field>)>,
 ) {
     writeln!(s, "fn {fname}(n: &str) -> &'static [Slot] {{").unwrap();
@@ -1388,7 +1401,14 @@ fn emit_slot_table<'a>(
             .map(|f| {
                 let k = sk_variant(&f.kind);
                 let req = !(f.optional || f.derivable);
-                format!("Slot{{k:Sk::{k},req:{req},der:{}}}", f.derived)
+                let swire = match scalar_wire_of(ir, &f.kind) {
+                    Some(w) => format!("Some(\"{w}\")"),
+                    None => "None".to_string(),
+                };
+                format!(
+                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire}}}",
+                    f.derived
+                )
             })
             .collect();
         writeln!(s, "        \"{}\" => &[{}],", name, slots.join(",")).unwrap();
@@ -1403,7 +1423,7 @@ pub fn emit_normalize(ir: &ModelIr) -> String {
         r#"#[derive(Clone, Copy)]
 enum Sk { Real, Int, Str, Bin, Bool, Log, Enum, Ref, Vec, Meas }
 #[derive(Clone, Copy)]
-struct Slot { k: Sk, req: bool, der: bool }
+struct Slot { k: Sk, req: bool, der: bool, swire: Option<&'static str> }
 
 /// Value-level canonical: signed-zero -0.0 -> +0.0, recursively (incl. lists).
 fn canon(a: &mut Attribute) {
@@ -1412,6 +1432,20 @@ fn canon(a: &mut Attribute) {
         Attribute::List(v) => { for e in v.iter_mut() { canon(e); } }
         Attribute::Typed { value, .. } => canon(value),
         _ => {}
+    }
+}
+
+/// A non-standard bare scalar select member (`5.` / `'x'`) -> the standard Typed
+/// literal `WIRE(value)`. Only the single-scalar-arm case (unambiguous wire) is
+/// normalized here; entity refs (`#n`) and already-typed values are left alone.
+fn wrap_bare_scalar(a: &mut Attribute, wire: &'static str) -> bool {
+    match a {
+        Attribute::Real(_) | Attribute::Integer(_) | Attribute::String(_) => {
+            let inner = std::mem::replace(a, Attribute::Unset);
+            *a = Attribute::Typed { type_name: wire.to_string(), value: Box::new(inner) };
+            true
+        }
+        _ => false,
     }
 }
 
@@ -1446,6 +1480,23 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
     for (i, a) in attrs.iter_mut().enumerate() {
         canon(a);
         if let Some(s) = slots.get(i).copied() {
+            // nested select-scalar normalization: a ref/aggregate slot whose target
+            // SELECT has a single scalar arm — rewrite bare members to typed.
+            if let Some(wire) = s.swire {
+                match s.k {
+                    Sk::Vec => {
+                        if let Attribute::List(v) = a {
+                            for e in v.iter_mut() {
+                                if wrap_bare_scalar(e, wire) { warns.push("select-scalar bare->typed"); }
+                            }
+                        }
+                    }
+                    Sk::Ref => {
+                        if wrap_bare_scalar(a, wire) { warns.push("select-scalar bare->typed"); }
+                    }
+                    _ => {}
+                }
+            }
             match norm_attr(s, a) {
                 Na::Keep => {}
                 Na::Set(na, w) => { *a = na; warns.push(w); }
@@ -1493,11 +1544,13 @@ pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>
     emit_slot_table(
         &mut s,
         "simple_slots",
+        ir,
         ir.simples.iter().map(|se| (&se.name, &se.fields)),
     );
     emit_slot_table(
         &mut s,
         "part_slots",
+        ir,
         ir.parts.iter().map(|p| (&p.name, &p.fields)),
     );
     s

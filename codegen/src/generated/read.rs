@@ -6707,13 +6707,8 @@ fn resolve_trimmed_curves(
         Attribute::List(l) => l
             .iter()
             .map(|e| match e {
-                Attribute::Real(_) | Attribute::Integer(_) => {
-                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
-                }
-                Attribute::Typed { value, .. }
-                    if matches!(value.as_ref(), Attribute::Real(_) | Attribute::Integer(_)) =>
-                {
-                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
+                Attribute::Typed { type_name, .. } if type_name == "PARAMETER_VALUE" => {
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e).value)
                 }
                 _ => TrimmingSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")),
             })
@@ -6724,13 +6719,8 @@ fn resolve_trimmed_curves(
         Attribute::List(l) => l
             .iter()
             .map(|e| match e {
-                Attribute::Real(_) | Attribute::Integer(_) => {
-                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
-                }
-                Attribute::Typed { value, .. }
-                    if matches!(value.as_ref(), Attribute::Real(_) | Attribute::Integer(_)) =>
-                {
-                    TrimmingSelectRef::ParameterValue(read_measure_value(e))
+                Attribute::Typed { type_name, .. } if type_name == "PARAMETER_VALUE" => {
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e).value)
                 }
                 _ => TrimmingSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")),
             })

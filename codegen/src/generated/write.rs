@@ -5151,7 +5151,8 @@ impl<'a> Writer<'a> {
                 it.trim_1
                     .iter()
                     .map(|e| match e {
-                        TrimmingSelectRef::ParameterValue(x) => measure(x),
+                        TrimmingSelectRef::ParameterValue(x) =>
+                            format!("PARAMETER_VALUE({})", real(*x)),
                         other => format!("#{}", self.emit_ref_trimming_select(other.clone())),
                     })
                     .collect::<Vec<_>>()
@@ -5162,7 +5163,8 @@ impl<'a> Writer<'a> {
                 it.trim_2
                     .iter()
                     .map(|e| match e {
-                        TrimmingSelectRef::ParameterValue(x) => measure(x),
+                        TrimmingSelectRef::ParameterValue(x) =>
+                            format!("PARAMETER_VALUE({})", real(*x)),
                         other => format!("#{}", self.emit_ref_trimming_select(other.clone())),
                     })
                     .collect::<Vec<_>>()

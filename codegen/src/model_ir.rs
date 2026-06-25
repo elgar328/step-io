@@ -57,10 +57,11 @@ pub struct RefEnum {
     /// kept for read discrimination + write. The arm holds the (Copy) enum.
     pub enum_arms: Vec<(String, String, String)>,
     /// Scalar arms for `SELECT(.., parameter_value)`: (variant ident, scalar Kind
-    /// [Real/Str]). The arm payload is `MeasureValue` (real) / `StringSelectValue`
-    /// (string) — these already carry `type_name: Option` so the typed (`WIRE(5.)`)
-    /// vs bare (`5.`) form round-trips. Read discriminates by value kind.
-    pub scalar_arms: Vec<(String, Kind)>,
+    /// [Real/Str], UPPER wire name). The arm payload is the bare scalar (`f64` /
+    /// `String`) — the standard form is the Typed literal `WIRE(value)`, so write
+    /// always emits typed via the wire name; read accepts both the typed and the
+    /// (non-standard) bare form and keeps only the value (form is normalized).
+    pub scalar_arms: Vec<(String, Kind, String)>,
     /// True when the target can resolve to a complex part-bag instance.
     pub has_complex: bool,
 }
@@ -226,7 +227,7 @@ fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)>
 
 /// Scalar arms of a ref-target: for a SELECT with named-scalar members, one arm
 /// per member -> (variant ident, scalar Kind, UPPER wire name). Empty otherwise.
-fn scalar_arms(res: &Resolver, target: &str) -> Vec<(String, Kind)> {
+fn scalar_arms(res: &Resolver, target: &str) -> Vec<(String, Kind, String)> {
     let Some(td) = res.schema.types.get(target) else {
         return Vec::new();
     };
@@ -236,7 +237,11 @@ fn scalar_arms(res: &Resolver, target: &str) -> Vec<(String, Kind)> {
     let mut out = Vec::new();
     for m in members {
         if res.is_scalar_member(m) {
-            out.push((pascal(m), res.classify(m, 0)));
+            // (variant ident, scalar Kind, UPPER wire name) — same wire rule as
+            // aggregate_arms. A named scalar select member is written as a Typed
+            // literal `WIRE(value)` (the standard form); the bare form `value` is
+            // accepted on read but normalized to typed on write.
+            out.push((pascal(m), res.classify(m, 0), m.to_uppercase()));
         }
     }
     out

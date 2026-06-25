@@ -2596,7 +2596,7 @@ impl TransformationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrimmingSelectRef {
     CartesianPoint(CartesianPointId),
-    ParameterValue(MeasureValue),
+    ParameterValue(f64),
 }
 impl TrimmingSelectRef {
     pub fn from_any(a: AnyId) -> Self {
