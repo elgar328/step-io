@@ -107,6 +107,19 @@ fn graph_of(g: &step_io::EntityGraph) -> BTreeMap<u64, RawEntity> {
     g.entities.iter().map(|(&id, e)| (id, e.clone())).collect()
 }
 
+/// Full pre-read normalization in two stages: `entity_normalize` (hand-written,
+/// per-entity non-standard fixups) then `generic_normalize` (generated, generic
+/// slot-kind rules). Entity-level runs FIRST so a per-entity fixup of a required
+/// ref pre-empts the generic req-ref<-$ drop. Returns the map + combined notes.
+fn normalize_all(g: &step_io::EntityGraph) -> (BTreeMap<u64, RawEntity>, Vec<&'static str>) {
+    let mut raw = graph_of(g);
+    let mut norm: Vec<&'static str> = Vec::new();
+    crate::entity_normalize::apply(&mut raw, &mut norm);
+    let (normalized, gnorm) = crate::generated::generic_normalize::normalize(raw);
+    norm.extend(gnorm);
+    (normalized, norm)
+}
+
 fn ent_name(e: &RawEntity) -> String {
     match e {
         RawEntity::Simple { name, .. } => name.clone(),
@@ -123,7 +136,7 @@ fn ent_name(e: &RawEntity) -> String {
 /// shapes the generator round-trips wrong.
 pub fn dump_type(src: &str, type_name: &str) -> (Vec<String>, Vec<String>) {
     let g = parse(src).expect("parse");
-    let (normalized, _) = crate::generated::normalize::normalize(graph_of(&g));
+    let (normalized, _) = normalize_all(&g);
     let (a, _) = subset(&normalized);
     let mut left: Vec<String> = a
         .values()
@@ -171,7 +184,7 @@ pub fn check_roundtrip(src: &str) -> CheckResult {
 /// code panic propagates with a backtrace (the normal path swallows it as Fail).
 pub fn check_roundtrip_raw(src: &[u8]) {
     let g = parse_bytes(src).expect("source parse");
-    let (normalized, _norm) = crate::generated::normalize::normalize(graph_of(&g));
+    let (normalized, _norm) = normalize_all(&g);
     let (a, _escaped) = subset(&normalized);
     let (model, _idmap) = read(&a);
     let body = Writer::new(&model).emit_all();
@@ -191,7 +204,7 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
     // Pre-read normalize: rewrite non-standard values to standard (NormCase
     // notes) or drop non-normalizable entities (referrers cascade-drop via the
     // subset escape filter below). The strict model only ever sees standard data.
-    let (normalized, norm) = crate::generated::normalize::normalize(graph_of(&g));
+    let (normalized, norm) = normalize_all(&g);
     let (a, escaped) = subset(&normalized);
     if a.is_empty() {
         return CheckResult::Skip("no in-scope entities".to_string());

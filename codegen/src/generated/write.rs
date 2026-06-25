@@ -60,6 +60,11 @@ pub struct Writer<'a> {
     addre_ids: Vec<Option<u64>>,
     advanced_face_ids: Vec<Option<u64>>,
     angularity_tolerance_ids: Vec<Option<u64>>,
+    annotation_curve_occurrence_ids: Vec<Option<u64>>,
+    annotation_occurrence_ids: Vec<Option<u64>>,
+    annotation_symbol_ids: Vec<Option<u64>>,
+    annotation_symbol_occurrence_ids: Vec<Option<u64>>,
+    annotation_text_ids: Vec<Option<u64>>,
     application_context_ids: Vec<Option<u64>>,
     application_context_element_ids: Vec<Option<u64>>,
     axis1_placement_ids: Vec<Option<u64>>,
@@ -77,11 +82,16 @@ pub struct Writer<'a> {
     bounded_surface_curve_ids: Vec<Option<u64>>,
     brep_with_void_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
+    character_glyph_style_outline_ids: Vec<Option<u64>>,
+    character_glyph_style_stroke_ids: Vec<Option<u64>>,
     characterized_object_ids: Vec<Option<u64>>,
     circle_ids: Vec<Option<u64>>,
     circular_runout_tolerance_ids: Vec<Option<u64>>,
     closed_shell_ids: Vec<Option<u64>>,
     coaxiality_tolerance_ids: Vec<Option<u64>>,
+    colour_ids: Vec<Option<u64>>,
+    colour_rgb_ids: Vec<Option<u64>>,
+    colour_specification_ids: Vec<Option<u64>>,
     common_datum_ids: Vec<Option<u64>>,
     composite_shape_aspect_ids: Vec<Option<u64>>,
     concentricity_tolerance_ids: Vec<Option<u64>>,
@@ -91,6 +101,11 @@ pub struct Writer<'a> {
     context_dependent_unit_ids: Vec<Option<u64>>,
     conversion_based_unit_ids: Vec<Option<u64>>,
     curve_ids: Vec<Option<u64>>,
+    curve_style_ids: Vec<Option<u64>>,
+    curve_style_font_ids: Vec<Option<u64>>,
+    curve_style_font_and_scaling_ids: Vec<Option<u64>>,
+    curve_style_font_pattern_ids: Vec<Option<u64>>,
+    curve_style_rendering_ids: Vec<Option<u64>>,
     cylindrical_surface_ids: Vec<Option<u64>>,
     cylindricity_tolerance_ids: Vec<Option<u64>>,
     datum_ids: Vec<Option<u64>>,
@@ -101,6 +116,7 @@ pub struct Writer<'a> {
     datum_reference_modifier_with_value_ids: Vec<Option<u64>>,
     datum_system_ids: Vec<Option<u64>>,
     datum_target_ids: Vec<Option<u64>>,
+    defined_symbol_ids: Vec<Option<u64>>,
     definitional_representation_ids: Vec<Option<u64>>,
     derived_unit_ids: Vec<Option<u64>>,
     derived_unit_element_ids: Vec<Option<u64>>,
@@ -117,16 +133,33 @@ pub struct Writer<'a> {
     elementary_surface_ids: Vec<Option<u64>>,
     ellipse_ids: Vec<Option<u64>>,
     external_source_ids: Vec<Option<u64>>,
+    externally_defined_curve_font_ids: Vec<Option<u64>>,
+    externally_defined_hatch_style_ids: Vec<Option<u64>>,
+    externally_defined_item_ids: Vec<Option<u64>>,
+    externally_defined_style_ids: Vec<Option<u64>>,
+    externally_defined_symbol_ids: Vec<Option<u64>>,
+    externally_defined_tile_ids: Vec<Option<u64>>,
+    externally_defined_tile_style_ids: Vec<Option<u64>>,
     face_ids: Vec<Option<u64>>,
     face_bound_ids: Vec<Option<u64>>,
     face_outer_bound_ids: Vec<Option<u64>>,
     face_surface_ids: Vec<Option<u64>>,
+    fill_area_style_ids: Vec<Option<u64>>,
+    fill_area_style_colour_ids: Vec<Option<u64>>,
+    fill_area_style_hatching_ids: Vec<Option<u64>>,
+    fill_area_style_tile_coloured_region_ids: Vec<Option<u64>>,
+    fill_area_style_tile_curve_with_style_ids: Vec<Option<u64>>,
+    fill_area_style_tile_symbol_with_style_ids: Vec<Option<u64>>,
+    fill_area_style_tile_ids: Vec<Option<u64>>,
     flatness_tolerance_ids: Vec<Option<u64>>,
+    founded_item_ids: Vec<Option<u64>>,
     functionally_defined_transformation_ids: Vec<Option<u64>>,
     general_datum_reference_ids: Vec<Option<u64>>,
     generic_product_definition_reference_ids: Vec<Option<u64>>,
+    geometric_curve_set_ids: Vec<Option<u64>>,
     geometric_representation_context_ids: Vec<Option<u64>>,
     geometric_representation_item_ids: Vec<Option<u64>>,
+    geometric_set_ids: Vec<Option<u64>>,
     geometric_tolerance_ids: Vec<Option<u64>>,
     geometric_tolerance_with_datum_reference_ids: Vec<Option<u64>>,
     geometric_tolerance_with_defined_area_unit_ids: Vec<Option<u64>>,
@@ -141,11 +174,13 @@ pub struct Writer<'a> {
     line_profile_tolerance_ids: Vec<Option<u64>>,
     loop_ids: Vec<Option<u64>>,
     manifold_solid_brep_ids: Vec<Option<u64>>,
+    mapped_item_ids: Vec<Option<u64>>,
     mass_unit_ids: Vec<Option<u64>>,
     measure_with_unit_ids: Vec<Option<u64>>,
     modified_geometric_tolerance_ids: Vec<Option<u64>>,
     named_unit_ids: Vec<Option<u64>>,
     offset_surface_ids: Vec<Option<u64>>,
+    one_direction_repeat_factor_ids: Vec<Option<u64>>,
     open_shell_ids: Vec<Option<u64>>,
     organization_ids: Vec<Option<u64>>,
     organization_relationship_ids: Vec<Option<u64>>,
@@ -170,12 +205,22 @@ pub struct Writer<'a> {
     personal_addre_ids: Vec<Option<u64>>,
     placed_datum_target_feature_ids: Vec<Option<u64>>,
     placement_ids: Vec<Option<u64>>,
+    planar_box_ids: Vec<Option<u64>>,
+    planar_extent_ids: Vec<Option<u64>>,
     plane_ids: Vec<Option<u64>>,
     plane_angle_measure_with_unit_ids: Vec<Option<u64>>,
     plane_angle_unit_ids: Vec<Option<u64>>,
     point_ids: Vec<Option<u64>>,
+    point_style_ids: Vec<Option<u64>>,
     poly_loop_ids: Vec<Option<u64>>,
     position_tolerance_ids: Vec<Option<u64>>,
+    pre_defined_curve_font_ids: Vec<Option<u64>>,
+    pre_defined_item_ids: Vec<Option<u64>>,
+    pre_defined_marker_ids: Vec<Option<u64>>,
+    pre_defined_surface_side_style_ids: Vec<Option<u64>>,
+    pre_defined_symbol_ids: Vec<Option<u64>>,
+    pre_defined_tile_ids: Vec<Option<u64>>,
+    presentation_style_assignment_ids: Vec<Option<u64>>,
     product_ids: Vec<Option<u64>>,
     product_context_ids: Vec<Option<u64>>,
     product_definition_ids: Vec<Option<u64>>,
@@ -194,6 +239,7 @@ pub struct Writer<'a> {
     representation_context_ids: Vec<Option<u64>>,
     representation_context_reference_ids: Vec<Option<u64>>,
     representation_item_ids: Vec<Option<u64>>,
+    representation_map_ids: Vec<Option<u64>>,
     representation_reference_ids: Vec<Option<u64>>,
     representation_relationship_ids: Vec<Option<u64>>,
     representation_relationship_with_transformation_ids: Vec<Option<u64>>,
@@ -208,13 +254,34 @@ pub struct Writer<'a> {
     solid_model_ids: Vec<Option<u64>>,
     spherical_surface_ids: Vec<Option<u64>>,
     straightness_tolerance_ids: Vec<Option<u64>>,
+    styled_item_ids: Vec<Option<u64>>,
     surface_ids: Vec<Option<u64>>,
     surface_curve_ids: Vec<Option<u64>>,
     surface_of_linear_extrusion_ids: Vec<Option<u64>>,
     surface_of_revolution_ids: Vec<Option<u64>>,
     surface_profile_tolerance_ids: Vec<Option<u64>>,
+    surface_rendering_propertie_ids: Vec<Option<u64>>,
+    surface_side_style_ids: Vec<Option<u64>>,
+    surface_style_boundary_ids: Vec<Option<u64>>,
+    surface_style_control_grid_ids: Vec<Option<u64>>,
+    surface_style_fill_area_ids: Vec<Option<u64>>,
+    surface_style_parameter_line_ids: Vec<Option<u64>>,
+    surface_style_reflectance_ambient_ids: Vec<Option<u64>>,
+    surface_style_rendering_ids: Vec<Option<u64>>,
+    surface_style_rendering_with_propertie_ids: Vec<Option<u64>>,
+    surface_style_segmentation_curve_ids: Vec<Option<u64>>,
+    surface_style_silhouette_ids: Vec<Option<u64>>,
+    surface_style_transparent_ids: Vec<Option<u64>>,
+    surface_style_usage_ids: Vec<Option<u64>>,
     swept_surface_ids: Vec<Option<u64>>,
+    symbol_colour_ids: Vec<Option<u64>>,
+    symbol_style_ids: Vec<Option<u64>>,
+    symbol_target_ids: Vec<Option<u64>>,
     symmetry_tolerance_ids: Vec<Option<u64>>,
+    text_style_ids: Vec<Option<u64>>,
+    text_style_for_defined_font_ids: Vec<Option<u64>>,
+    texture_style_specification_ids: Vec<Option<u64>>,
+    texture_style_tessellation_specification_ids: Vec<Option<u64>>,
     time_unit_ids: Vec<Option<u64>>,
     tolerance_value_ids: Vec<Option<u64>>,
     tolerance_zone_ids: Vec<Option<u64>>,
@@ -225,6 +292,7 @@ pub struct Writer<'a> {
     toroidal_surface_ids: Vec<Option<u64>>,
     total_runout_tolerance_ids: Vec<Option<u64>>,
     trimmed_curve_ids: Vec<Option<u64>>,
+    two_direction_repeat_factor_ids: Vec<Option<u64>>,
     uncertainty_measure_with_unit_ids: Vec<Option<u64>>,
     unequally_disposed_geometric_tolerance_ids: Vec<Option<u64>>,
     uniform_curve_ids: Vec<Option<u64>>,
@@ -245,6 +313,17 @@ impl<'a> Writer<'a> {
             addre_ids: vec![None; model.addresss.items.len()],
             advanced_face_ids: vec![None; model.advanced_faces.items.len()],
             angularity_tolerance_ids: vec![None; model.angularity_tolerances.items.len()],
+            annotation_curve_occurrence_ids: vec![
+                None;
+                model.annotation_curve_occurrences.items.len()
+            ],
+            annotation_occurrence_ids: vec![None; model.annotation_occurrences.items.len()],
+            annotation_symbol_ids: vec![None; model.annotation_symbols.items.len()],
+            annotation_symbol_occurrence_ids: vec![
+                None;
+                model.annotation_symbol_occurrences.items.len()
+            ],
+            annotation_text_ids: vec![None; model.annotation_texts.items.len()],
             application_context_ids: vec![None; model.application_contexts.items.len()],
             application_context_element_ids: vec![
                 None;
@@ -268,11 +347,22 @@ impl<'a> Writer<'a> {
             bounded_surface_curve_ids: vec![None; model.bounded_surface_curves.items.len()],
             brep_with_void_ids: vec![None; model.brep_with_voidss.items.len()],
             cartesian_point_ids: vec![None; model.cartesian_points.items.len()],
+            character_glyph_style_outline_ids: vec![
+                None;
+                model.character_glyph_style_outlines.items.len()
+            ],
+            character_glyph_style_stroke_ids: vec![
+                None;
+                model.character_glyph_style_strokes.items.len()
+            ],
             characterized_object_ids: vec![None; model.characterized_objects.items.len()],
             circle_ids: vec![None; model.circles.items.len()],
             circular_runout_tolerance_ids: vec![None; model.circular_runout_tolerances.items.len()],
             closed_shell_ids: vec![None; model.closed_shells.items.len()],
             coaxiality_tolerance_ids: vec![None; model.coaxiality_tolerances.items.len()],
+            colour_ids: vec![None; model.colours.items.len()],
+            colour_rgb_ids: vec![None; model.colour_rgbs.items.len()],
+            colour_specification_ids: vec![None; model.colour_specifications.items.len()],
             common_datum_ids: vec![None; model.common_datums.items.len()],
             composite_shape_aspect_ids: vec![None; model.composite_shape_aspects.items.len()],
             concentricity_tolerance_ids: vec![None; model.concentricity_tolerances.items.len()],
@@ -282,6 +372,14 @@ impl<'a> Writer<'a> {
             context_dependent_unit_ids: vec![None; model.context_dependent_units.items.len()],
             conversion_based_unit_ids: vec![None; model.conversion_based_units.items.len()],
             curve_ids: vec![None; model.curves.items.len()],
+            curve_style_ids: vec![None; model.curve_styles.items.len()],
+            curve_style_font_ids: vec![None; model.curve_style_fonts.items.len()],
+            curve_style_font_and_scaling_ids: vec![
+                None;
+                model.curve_style_font_and_scalings.items.len()
+            ],
+            curve_style_font_pattern_ids: vec![None; model.curve_style_font_patterns.items.len()],
+            curve_style_rendering_ids: vec![None; model.curve_style_renderings.items.len()],
             cylindrical_surface_ids: vec![None; model.cylindrical_surfaces.items.len()],
             cylindricity_tolerance_ids: vec![None; model.cylindricity_tolerances.items.len()],
             datum_ids: vec![None; model.datums.items.len()],
@@ -301,6 +399,7 @@ impl<'a> Writer<'a> {
             ],
             datum_system_ids: vec![None; model.datum_systems.items.len()],
             datum_target_ids: vec![None; model.datum_targets.items.len()],
+            defined_symbol_ids: vec![None; model.defined_symbols.items.len()],
             definitional_representation_ids: vec![
                 None;
                 model.definitional_representations.items.len()
@@ -335,11 +434,56 @@ impl<'a> Writer<'a> {
             elementary_surface_ids: vec![None; model.elementary_surfaces.items.len()],
             ellipse_ids: vec![None; model.ellipses.items.len()],
             external_source_ids: vec![None; model.external_sources.items.len()],
+            externally_defined_curve_font_ids: vec![
+                None;
+                model.externally_defined_curve_fonts.items.len()
+            ],
+            externally_defined_hatch_style_ids: vec![
+                None;
+                model
+                    .externally_defined_hatch_styles
+                    .items
+                    .len()
+            ],
+            externally_defined_item_ids: vec![None; model.externally_defined_items.items.len()],
+            externally_defined_style_ids: vec![None; model.externally_defined_styles.items.len()],
+            externally_defined_symbol_ids: vec![None; model.externally_defined_symbols.items.len()],
+            externally_defined_tile_ids: vec![None; model.externally_defined_tiles.items.len()],
+            externally_defined_tile_style_ids: vec![
+                None;
+                model.externally_defined_tile_styles.items.len()
+            ],
             face_ids: vec![None; model.faces.items.len()],
             face_bound_ids: vec![None; model.face_bounds.items.len()],
             face_outer_bound_ids: vec![None; model.face_outer_bounds.items.len()],
             face_surface_ids: vec![None; model.face_surfaces.items.len()],
+            fill_area_style_ids: vec![None; model.fill_area_styles.items.len()],
+            fill_area_style_colour_ids: vec![None; model.fill_area_style_colours.items.len()],
+            fill_area_style_hatching_ids: vec![None; model.fill_area_style_hatchings.items.len()],
+            fill_area_style_tile_coloured_region_ids: vec![
+                None;
+                model
+                    .fill_area_style_tile_coloured_regions
+                    .items
+                    .len()
+            ],
+            fill_area_style_tile_curve_with_style_ids: vec![
+                None;
+                model
+                    .fill_area_style_tile_curve_with_styles
+                    .items
+                    .len()
+            ],
+            fill_area_style_tile_symbol_with_style_ids: vec![
+                None;
+                model
+                    .fill_area_style_tile_symbol_with_styles
+                    .items
+                    .len()
+            ],
+            fill_area_style_tile_ids: vec![None; model.fill_area_style_tiless.items.len()],
             flatness_tolerance_ids: vec![None; model.flatness_tolerances.items.len()],
+            founded_item_ids: vec![None; model.founded_items.items.len()],
             functionally_defined_transformation_ids: vec![
                 None;
                 model
@@ -355,6 +499,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            geometric_curve_set_ids: vec![None; model.geometric_curve_sets.items.len()],
             geometric_representation_context_ids: vec![
                 None;
                 model
@@ -366,6 +511,7 @@ impl<'a> Writer<'a> {
                 None;
                 model.geometric_representation_items.items.len()
             ],
+            geometric_set_ids: vec![None; model.geometric_sets.items.len()],
             geometric_tolerance_ids: vec![None; model.geometric_tolerances.items.len()],
             geometric_tolerance_with_datum_reference_ids: vec![
                 None;
@@ -413,6 +559,7 @@ impl<'a> Writer<'a> {
             line_profile_tolerance_ids: vec![None; model.line_profile_tolerances.items.len()],
             loop_ids: vec![None; model.loops.items.len()],
             manifold_solid_brep_ids: vec![None; model.manifold_solid_breps.items.len()],
+            mapped_item_ids: vec![None; model.mapped_items.items.len()],
             mass_unit_ids: vec![None; model.mass_units.items.len()],
             measure_with_unit_ids: vec![None; model.measure_with_units.items.len()],
             modified_geometric_tolerance_ids: vec![
@@ -421,6 +568,10 @@ impl<'a> Writer<'a> {
             ],
             named_unit_ids: vec![None; model.named_units.items.len()],
             offset_surface_ids: vec![None; model.offset_surfaces.items.len()],
+            one_direction_repeat_factor_ids: vec![
+                None;
+                model.one_direction_repeat_factors.items.len()
+            ],
             open_shell_ids: vec![None; model.open_shells.items.len()],
             organization_ids: vec![None; model.organizations.items.len()],
             organization_relationship_ids: vec![None; model.organization_relationships.items.len()],
@@ -475,6 +626,8 @@ impl<'a> Writer<'a> {
                 model.placed_datum_target_features.items.len()
             ],
             placement_ids: vec![None; model.placements.items.len()],
+            planar_box_ids: vec![None; model.planar_boxs.items.len()],
+            planar_extent_ids: vec![None; model.planar_extents.items.len()],
             plane_ids: vec![None; model.planes.items.len()],
             plane_angle_measure_with_unit_ids: vec![
                 None;
@@ -482,8 +635,25 @@ impl<'a> Writer<'a> {
             ],
             plane_angle_unit_ids: vec![None; model.plane_angle_units.items.len()],
             point_ids: vec![None; model.points.items.len()],
+            point_style_ids: vec![None; model.point_styles.items.len()],
             poly_loop_ids: vec![None; model.poly_loops.items.len()],
             position_tolerance_ids: vec![None; model.position_tolerances.items.len()],
+            pre_defined_curve_font_ids: vec![None; model.pre_defined_curve_fonts.items.len()],
+            pre_defined_item_ids: vec![None; model.pre_defined_items.items.len()],
+            pre_defined_marker_ids: vec![None; model.pre_defined_markers.items.len()],
+            pre_defined_surface_side_style_ids: vec![
+                None;
+                model
+                    .pre_defined_surface_side_styles
+                    .items
+                    .len()
+            ],
+            pre_defined_symbol_ids: vec![None; model.pre_defined_symbols.items.len()],
+            pre_defined_tile_ids: vec![None; model.pre_defined_tiles.items.len()],
+            presentation_style_assignment_ids: vec![
+                None;
+                model.presentation_style_assignments.items.len()
+            ],
             product_ids: vec![None; model.products.items.len()],
             product_context_ids: vec![None; model.product_contexts.items.len()],
             product_definition_ids: vec![None; model.product_definitions.items.len()],
@@ -529,6 +699,7 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             representation_item_ids: vec![None; model.representation_items.items.len()],
+            representation_map_ids: vec![None; model.representation_maps.items.len()],
             representation_reference_ids: vec![None; model.representation_references.items.len()],
             representation_relationship_ids: vec![
                 None;
@@ -558,6 +729,7 @@ impl<'a> Writer<'a> {
             solid_model_ids: vec![None; model.solid_models.items.len()],
             spherical_surface_ids: vec![None; model.spherical_surfaces.items.len()],
             straightness_tolerance_ids: vec![None; model.straightness_tolerances.items.len()],
+            styled_item_ids: vec![None; model.styled_items.items.len()],
             surface_ids: vec![None; model.surfaces.items.len()],
             surface_curve_ids: vec![None; model.surface_curves.items.len()],
             surface_of_linear_extrusion_ids: vec![
@@ -566,8 +738,67 @@ impl<'a> Writer<'a> {
             ],
             surface_of_revolution_ids: vec![None; model.surface_of_revolutions.items.len()],
             surface_profile_tolerance_ids: vec![None; model.surface_profile_tolerances.items.len()],
+            surface_rendering_propertie_ids: vec![
+                None;
+                model.surface_rendering_propertiess.items.len()
+            ],
+            surface_side_style_ids: vec![None; model.surface_side_styles.items.len()],
+            surface_style_boundary_ids: vec![None; model.surface_style_boundarys.items.len()],
+            surface_style_control_grid_ids: vec![
+                None;
+                model.surface_style_control_grids.items.len()
+            ],
+            surface_style_fill_area_ids: vec![None; model.surface_style_fill_areas.items.len()],
+            surface_style_parameter_line_ids: vec![
+                None;
+                model.surface_style_parameter_lines.items.len()
+            ],
+            surface_style_reflectance_ambient_ids: vec![
+                None;
+                model
+                    .surface_style_reflectance_ambients
+                    .items
+                    .len()
+            ],
+            surface_style_rendering_ids: vec![None; model.surface_style_renderings.items.len()],
+            surface_style_rendering_with_propertie_ids: vec![
+                None;
+                model
+                    .surface_style_rendering_with_propertiess
+                    .items
+                    .len()
+            ],
+            surface_style_segmentation_curve_ids: vec![
+                None;
+                model
+                    .surface_style_segmentation_curves
+                    .items
+                    .len()
+            ],
+            surface_style_silhouette_ids: vec![None; model.surface_style_silhouettes.items.len()],
+            surface_style_transparent_ids: vec![None; model.surface_style_transparents.items.len()],
+            surface_style_usage_ids: vec![None; model.surface_style_usages.items.len()],
             swept_surface_ids: vec![None; model.swept_surfaces.items.len()],
+            symbol_colour_ids: vec![None; model.symbol_colours.items.len()],
+            symbol_style_ids: vec![None; model.symbol_styles.items.len()],
+            symbol_target_ids: vec![None; model.symbol_targets.items.len()],
             symmetry_tolerance_ids: vec![None; model.symmetry_tolerances.items.len()],
+            text_style_ids: vec![None; model.text_styles.items.len()],
+            text_style_for_defined_font_ids: vec![
+                None;
+                model.text_style_for_defined_fonts.items.len()
+            ],
+            texture_style_specification_ids: vec![
+                None;
+                model.texture_style_specifications.items.len()
+            ],
+            texture_style_tessellation_specification_ids: vec![
+                None;
+                model
+                    .texture_style_tessellation_specifications
+                    .items
+                    .len()
+            ],
             time_unit_ids: vec![None; model.time_units.items.len()],
             tolerance_value_ids: vec![None; model.tolerance_values.items.len()],
             tolerance_zone_ids: vec![None; model.tolerance_zones.items.len()],
@@ -584,6 +815,10 @@ impl<'a> Writer<'a> {
             toroidal_surface_ids: vec![None; model.toroidal_surfaces.items.len()],
             total_runout_tolerance_ids: vec![None; model.total_runout_tolerances.items.len()],
             trimmed_curve_ids: vec![None; model.trimmed_curves.items.len()],
+            two_direction_repeat_factor_ids: vec![
+                None;
+                model.two_direction_repeat_factors.items.len()
+            ],
             uncertainty_measure_with_unit_ids: vec![
                 None;
                 model.uncertainty_measure_with_units.items.len()
@@ -732,6 +967,142 @@ impl<'a> Writer<'a> {
             "#{n} = ANGULARITY_TOLERANCE({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_annotation_curve_occurrences(&mut self, id: AnnotationCurveOccurrenceId) -> u64 {
+        if let Some(n) = self.annotation_curve_occurrence_ids[id.0] {
+            return n;
+        }
+        let it = self.model.annotation_curve_occurrences.get(id.0).clone();
+        let n = self.fresh();
+        self.annotation_curve_occurrence_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.styles
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_presentation_style_assignment((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!("#{}", self.emit_ref_curve_or_curve_set((&it.item).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ANNOTATION_CURVE_OCCURRENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_annotation_occurrences(&mut self, id: AnnotationOccurrenceId) -> u64 {
+        if let Some(n) = self.annotation_occurrence_ids[id.0] {
+            return n;
+        }
+        let it = self.model.annotation_occurrences.get(id.0).clone();
+        let n = self.fresh();
+        self.annotation_occurrence_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.styles
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_presentation_style_assignment((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!("#{}", self.emit_ref_styled_item_target((&it.item).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ANNOTATION_OCCURRENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_annotation_symbols(&mut self, id: AnnotationSymbolId) -> u64 {
+        if let Some(n) = self.annotation_symbol_ids[id.0] {
+            return n;
+        }
+        let it = self.model.annotation_symbols.get(id.0).clone();
+        let n = self.fresh();
+        self.annotation_symbol_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_representation_map((&it.mapping_source).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_item((&it.mapping_target).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = ANNOTATION_SYMBOL({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_annotation_symbol_occurrences(&mut self, id: AnnotationSymbolOccurrenceId) -> u64 {
+        if let Some(n) = self.annotation_symbol_occurrence_ids[id.0] {
+            return n;
+        }
+        let it = self.model.annotation_symbol_occurrences.get(id.0).clone();
+        let n = self.fresh();
+        self.annotation_symbol_occurrence_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.styles
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_presentation_style_assignment((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_annotation_symbol_occurrence_item((&it.item).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ANNOTATION_SYMBOL_OCCURRENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_annotation_texts(&mut self, id: AnnotationTextId) -> u64 {
+        if let Some(n) = self.annotation_text_ids[id.0] {
+            return n;
+        }
+        let it = self.model.annotation_texts.get(id.0).clone();
+        let n = self.fresh();
+        self.annotation_text_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_representation_map((&it.mapping_source).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement((&it.mapping_target).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = ANNOTATION_TEXT({});\n", attrs.join(",")));
         n
     }
 
@@ -1199,6 +1570,42 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_character_glyph_style_outlines(&mut self, id: CharacterGlyphStyleOutlineId) -> u64 {
+        if let Some(n) = self.character_glyph_style_outline_ids[id.0] {
+            return n;
+        }
+        let it = self.model.character_glyph_style_outlines.get(id.0).clone();
+        let n = self.fresh();
+        self.character_glyph_style_outline_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_curve_style((&it.outline_style).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = CHARACTER_GLYPH_STYLE_OUTLINE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_character_glyph_style_strokes(&mut self, id: CharacterGlyphStyleStrokeId) -> u64 {
+        if let Some(n) = self.character_glyph_style_stroke_ids[id.0] {
+            return n;
+        }
+        let it = self.model.character_glyph_style_strokes.get(id.0).clone();
+        let n = self.fresh();
+        self.character_glyph_style_stroke_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_curve_style((&it.stroke_style).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = CHARACTER_GLYPH_STYLE_STROKE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_characterized_objects(&mut self, id: CharacterizedObjectId) -> u64 {
         if let Some(n) = self.characterized_object_ids[id.0] {
             return n;
@@ -1329,6 +1736,52 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = COAXIALITY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_colours(&mut self, id: ColourId) -> u64 {
+        if let Some(n) = self.colour_ids[id.0] {
+            return n;
+        }
+        let it = self.model.colours.get(id.0).clone();
+        let n = self.fresh();
+        self.colour_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![];
+        self.out
+            .push_str(&format!("#{n} = COLOUR({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_colour_rgbs(&mut self, id: ColourRgbId) -> u64 {
+        if let Some(n) = self.colour_rgb_ids[id.0] {
+            return n;
+        }
+        let it = self.model.colour_rgbs.get(id.0).clone();
+        let n = self.fresh();
+        self.colour_rgb_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            real(it.red),
+            real(it.green),
+            real(it.blue),
+        ];
+        self.out
+            .push_str(&format!("#{n} = COLOUR_RGB({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_colour_specifications(&mut self, id: ColourSpecificationId) -> u64 {
+        if let Some(n) = self.colour_specification_ids[id.0] {
+            return n;
+        }
+        let it = self.model.colour_specifications.get(id.0).clone();
+        let n = self.fresh();
+        self.colour_specification_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = COLOUR_SPECIFICATION({});\n",
             attrs.join(",")
         ));
         n
@@ -1542,6 +1995,128 @@ impl<'a> Writer<'a> {
         let attrs: Vec<String> = vec![step_str(&it.name)];
         self.out
             .push_str(&format!("#{n} = CURVE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_curve_styles(&mut self, id: CurveStyleId) -> u64 {
+        if let Some(n) = self.curve_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.curve_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.curve_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.curve_font {
+                Some(r) => format!(
+                    "#{}",
+                    self.emit_ref_curve_font_or_scaled_curve_font_select((r).clone())
+                ),
+                None => "$".to_string(),
+            },
+            match &it.curve_width {
+                Some(r) => match r {
+                    SizeSelectRef::DescriptiveMeasure(x) => {
+                        format!("DESCRIPTIVE_MEASURE({})", step_str(x))
+                    }
+                    SizeSelectRef::PositiveLengthMeasure(x) => {
+                        format!("POSITIVE_LENGTH_MEASURE({})", real(*x))
+                    }
+                    other => format!("#{}", self.emit_ref_size_select(other.clone())),
+                },
+                None => "$".to_string(),
+            },
+            match &it.curve_colour {
+                Some(r) => format!("#{}", self.emit_ref_colour((r).clone())),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = CURVE_STYLE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_curve_style_fonts(&mut self, id: CurveStyleFontId) -> u64 {
+        if let Some(n) = self.curve_style_font_ids[id.0] {
+            return n;
+        }
+        let it = self.model.curve_style_fonts.get(id.0).clone();
+        let n = self.fresh();
+        self.curve_style_font_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.pattern_list
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_curve_style_font_pattern((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = CURVE_STYLE_FONT({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_curve_style_font_and_scalings(&mut self, id: CurveStyleFontAndScalingId) -> u64 {
+        if let Some(n) = self.curve_style_font_and_scaling_ids[id.0] {
+            return n;
+        }
+        let it = self.model.curve_style_font_and_scalings.get(id.0).clone();
+        let n = self.fresh();
+        self.curve_style_font_and_scaling_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_curve_style_font_select((&it.curve_font).clone())
+            ),
+            real(it.curve_font_scaling),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CURVE_STYLE_FONT_AND_SCALING({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_curve_style_font_patterns(&mut self, id: CurveStyleFontPatternId) -> u64 {
+        if let Some(n) = self.curve_style_font_pattern_ids[id.0] {
+            return n;
+        }
+        let it = self.model.curve_style_font_patterns.get(id.0).clone();
+        let n = self.fresh();
+        self.curve_style_font_pattern_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            real(it.visible_segment_length),
+            real(it.invisible_segment_length),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CURVE_STYLE_FONT_PATTERN({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_curve_style_renderings(&mut self, id: CurveStyleRenderingId) -> u64 {
+        if let Some(n) = self.curve_style_rendering_ids[id.0] {
+            return n;
+        }
+        let it = self.model.curve_style_renderings.get(id.0).clone();
+        let n = self.fresh();
+        self.curve_style_rendering_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            it.rendering_method.token().to_string(),
+            format!(
+                "#{}",
+                self.emit_ref_surface_rendering_properties((&it.rendering_properties).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CURVE_STYLE_RENDERING({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -1852,6 +2427,26 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = DATUM_TARGET({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_defined_symbols(&mut self, id: DefinedSymbolId) -> u64 {
+        if let Some(n) = self.defined_symbol_ids[id.0] {
+            return n;
+        }
+        let it = self.model.defined_symbols.get(id.0).clone();
+        let n = self.fresh();
+        self.defined_symbol_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_defined_symbol_select((&it.definition).clone())
+            ),
+            format!("#{}", self.emit_ref_symbol_target((&it.target).clone())),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DEFINED_SYMBOL({});\n", attrs.join(",")));
         n
     }
 
@@ -2210,6 +2805,134 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_externally_defined_curve_fonts(&mut self, id: ExternallyDefinedCurveFontId) -> u64 {
+        if let Some(n) = self.externally_defined_curve_font_ids[id.0] {
+            return n;
+        }
+        let it = self.model.externally_defined_curve_fonts.get(id.0).clone();
+        let n = self.fresh();
+        self.externally_defined_curve_font_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            string_select(&it.item_id),
+            format!("#{}", self.emit_ref_external_source((&it.source).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = EXTERNALLY_DEFINED_CURVE_FONT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_externally_defined_hatch_styles(&mut self, id: ExternallyDefinedHatchStyleId) -> u64 {
+        if let Some(n) = self.externally_defined_hatch_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.externally_defined_hatch_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.externally_defined_hatch_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            string_select(&it.item_id),
+            format!("#{}", self.emit_ref_external_source((&it.source).clone())),
+            step_str(&it.name),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = EXTERNALLY_DEFINED_HATCH_STYLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_externally_defined_items(&mut self, id: ExternallyDefinedItemId) -> u64 {
+        if let Some(n) = self.externally_defined_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.externally_defined_items.get(id.0).clone();
+        let n = self.fresh();
+        self.externally_defined_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            string_select(&it.item_id),
+            format!("#{}", self.emit_ref_external_source((&it.source).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = EXTERNALLY_DEFINED_ITEM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_externally_defined_styles(&mut self, id: ExternallyDefinedStyleId) -> u64 {
+        if let Some(n) = self.externally_defined_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.externally_defined_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.externally_defined_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            string_select(&it.item_id),
+            format!("#{}", self.emit_ref_external_source((&it.source).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = EXTERNALLY_DEFINED_STYLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_externally_defined_symbols(&mut self, id: ExternallyDefinedSymbolId) -> u64 {
+        if let Some(n) = self.externally_defined_symbol_ids[id.0] {
+            return n;
+        }
+        let it = self.model.externally_defined_symbols.get(id.0).clone();
+        let n = self.fresh();
+        self.externally_defined_symbol_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            string_select(&it.item_id),
+            format!("#{}", self.emit_ref_external_source((&it.source).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = EXTERNALLY_DEFINED_SYMBOL({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_externally_defined_tiles(&mut self, id: ExternallyDefinedTileId) -> u64 {
+        if let Some(n) = self.externally_defined_tile_ids[id.0] {
+            return n;
+        }
+        let it = self.model.externally_defined_tiles.get(id.0).clone();
+        let n = self.fresh();
+        self.externally_defined_tile_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            string_select(&it.item_id),
+            format!("#{}", self.emit_ref_external_source((&it.source).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = EXTERNALLY_DEFINED_TILE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_externally_defined_tile_styles(&mut self, id: ExternallyDefinedTileStyleId) -> u64 {
+        if let Some(n) = self.externally_defined_tile_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.externally_defined_tile_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.externally_defined_tile_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            string_select(&it.item_id),
+            format!("#{}", self.emit_ref_external_source((&it.source).clone())),
+            step_str(&it.name),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = EXTERNALLY_DEFINED_TILE_STYLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_faces(&mut self, id: FaceId) -> u64 {
         if let Some(n) = self.face_ids[id.0] {
             return n;
@@ -2292,6 +3015,199 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_fill_area_styles(&mut self, id: FillAreaStyleId) -> u64 {
+        if let Some(n) = self.fill_area_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.fill_area_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.fill_area_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.fill_styles
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_fill_style_select((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = FILL_AREA_STYLE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_fill_area_style_colours(&mut self, id: FillAreaStyleColourId) -> u64 {
+        if let Some(n) = self.fill_area_style_colour_ids[id.0] {
+            return n;
+        }
+        let it = self.model.fill_area_style_colours.get(id.0).clone();
+        let n = self.fresh();
+        self.fill_area_style_colour_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_colour((&it.fill_colour).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FILL_AREA_STYLE_COLOUR({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_fill_area_style_hatchings(&mut self, id: FillAreaStyleHatchingId) -> u64 {
+        if let Some(n) = self.fill_area_style_hatching_ids[id.0] {
+            return n;
+        }
+        let it = self.model.fill_area_style_hatchings.get(id.0).clone();
+        let n = self.fresh();
+        self.fill_area_style_hatching_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_curve_style((&it.hatch_line_appearance).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_one_direction_repeat_factor((&it.start_of_next_hatch_line).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_cartesian_point((&it.point_of_reference_hatch_line).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_cartesian_point((&it.pattern_start).clone())
+            ),
+            real(it.hatch_line_angle),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FILL_AREA_STYLE_HATCHING({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_fill_area_style_tile_coloured_regions(
+        &mut self,
+        id: FillAreaStyleTileColouredRegionId,
+    ) -> u64 {
+        if let Some(n) = self.fill_area_style_tile_coloured_region_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .fill_area_style_tile_coloured_regions
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.fill_area_style_tile_coloured_region_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_curve_or_annotation_curve_occurrence((&it.closed_curve).clone())
+            ),
+            format!("#{}", self.emit_ref_colour((&it.region_colour).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FILL_AREA_STYLE_TILE_COLOURED_REGION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_fill_area_style_tile_curve_with_styles(
+        &mut self,
+        id: FillAreaStyleTileCurveWithStyleId,
+    ) -> u64 {
+        if let Some(n) = self.fill_area_style_tile_curve_with_style_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .fill_area_style_tile_curve_with_styles
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.fill_area_style_tile_curve_with_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_annotation_curve_occurrence((&it.styled_curve).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_fill_area_style_tile_symbol_with_styles(
+        &mut self,
+        id: FillAreaStyleTileSymbolWithStyleId,
+    ) -> u64 {
+        if let Some(n) = self.fill_area_style_tile_symbol_with_style_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .fill_area_style_tile_symbol_with_styles
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.fill_area_style_tile_symbol_with_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_annotation_symbol_occurrence((&it.symbol).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_fill_area_style_tiless(&mut self, id: FillAreaStyleTilesId) -> u64 {
+        if let Some(n) = self.fill_area_style_tile_ids[id.0] {
+            return n;
+        }
+        let it = self.model.fill_area_style_tiless.get(id.0).clone();
+        let n = self.fresh();
+        self.fill_area_style_tile_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_two_direction_repeat_factor((&it.tiling_pattern).clone())
+            ),
+            format!(
+                "({})",
+                it.tiles
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_fill_area_style_tile_shape_select((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            real(it.tiling_scale),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = FILL_AREA_STYLE_TILES({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_flatness_tolerances(&mut self, id: FlatnessToleranceId) -> u64 {
         if let Some(n) = self.flatness_tolerance_ids[id.0] {
             return n;
@@ -2318,6 +3234,19 @@ impl<'a> Writer<'a> {
             "#{n} = FLATNESS_TOLERANCE({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_founded_items(&mut self, id: FoundedItemId) -> u64 {
+        if let Some(n) = self.founded_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.founded_items.get(id.0).clone();
+        let n = self.fresh();
+        self.founded_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![];
+        self.out
+            .push_str(&format!("#{n} = FOUNDED_ITEM({});\n", attrs.join(",")));
         n
     }
 
@@ -2427,6 +3356,31 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_geometric_curve_sets(&mut self, id: GeometricCurveSetId) -> u64 {
+        if let Some(n) = self.geometric_curve_set_ids[id.0] {
+            return n;
+        }
+        let it = self.model.geometric_curve_sets.get(id.0).clone();
+        let n = self.fresh();
+        self.geometric_curve_set_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.elements
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_geometric_set_select((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = GEOMETRIC_CURVE_SET({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_geometric_representation_contexts(
         &mut self,
         id: GeometricRepresentationContextId,
@@ -2465,6 +3419,29 @@ impl<'a> Writer<'a> {
             "#{n} = GEOMETRIC_REPRESENTATION_ITEM({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_geometric_sets(&mut self, id: GeometricSetId) -> u64 {
+        if let Some(n) = self.geometric_set_ids[id.0] {
+            return n;
+        }
+        let it = self.model.geometric_sets.get(id.0).clone();
+        let n = self.fresh();
+        self.geometric_set_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.elements
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_geometric_set_select((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = GEOMETRIC_SET({});\n", attrs.join(",")));
         n
     }
 
@@ -2892,6 +3869,29 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_mapped_items(&mut self, id: MappedItemId) -> u64 {
+        if let Some(n) = self.mapped_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.mapped_items.get(id.0).clone();
+        let n = self.fresh();
+        self.mapped_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_representation_map((&it.mapping_source).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation_item((&it.mapping_target).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = MAPPED_ITEM({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_mass_units(&mut self, id: MassUnitId) -> u64 {
         if let Some(n) = self.mass_unit_ids[id.0] {
             return n;
@@ -2985,6 +3985,24 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = OFFSET_SURFACE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_one_direction_repeat_factors(&mut self, id: OneDirectionRepeatFactorId) -> u64 {
+        if let Some(n) = self.one_direction_repeat_factor_ids[id.0] {
+            return n;
+        }
+        let it = self.model.one_direction_repeat_factors.get(id.0).clone();
+        let n = self.fresh();
+        self.one_direction_repeat_factor_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_vector((&it.repeat_factor).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ONE_DIRECTION_REPEAT_FACTOR({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -3750,6 +4768,40 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_planar_boxs(&mut self, id: PlanarBoxId) -> u64 {
+        if let Some(n) = self.planar_box_ids[id.0] {
+            return n;
+        }
+        let it = self.model.planar_boxs.get(id.0).clone();
+        let n = self.fresh();
+        self.planar_box_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            real(it.size_in_x),
+            real(it.size_in_y),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement((&it.placement).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = PLANAR_BOX({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_planar_extents(&mut self, id: PlanarExtentId) -> u64 {
+        if let Some(n) = self.planar_extent_ids[id.0] {
+            return n;
+        }
+        let it = self.model.planar_extents.get(id.0).clone();
+        let n = self.fresh();
+        self.planar_extent_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name), real(it.size_in_x), real(it.size_in_y)];
+        self.out
+            .push_str(&format!("#{n} = PLANAR_EXTENT({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_planes(&mut self, id: PlaneId) -> u64 {
         if let Some(n) = self.plane_ids[id.0] {
             return n;
@@ -3816,6 +4868,44 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_point_styles(&mut self, id: PointStyleId) -> u64 {
+        if let Some(n) = self.point_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.point_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.point_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.marker {
+                Some(r) => match r {
+                    MarkerSelectRef::MarkerType(e) => format!("MARKER_TYPE({})", e.token()),
+                    other => format!("#{}", self.emit_ref_marker_select(other.clone())),
+                },
+                None => "$".to_string(),
+            },
+            match &it.marker_size {
+                Some(r) => match r {
+                    SizeSelectRef::DescriptiveMeasure(x) => {
+                        format!("DESCRIPTIVE_MEASURE({})", step_str(x))
+                    }
+                    SizeSelectRef::PositiveLengthMeasure(x) => {
+                        format!("POSITIVE_LENGTH_MEASURE({})", real(*x))
+                    }
+                    other => format!("#{}", self.emit_ref_size_select(other.clone())),
+                },
+                None => "$".to_string(),
+            },
+            match &it.marker_colour {
+                Some(r) => format!("#{}", self.emit_ref_colour((r).clone())),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = POINT_STYLE({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_poly_loops(&mut self, id: PolyLoopId) -> u64 {
         if let Some(n) = self.poly_loop_ids[id.0] {
             return n;
@@ -3863,6 +4953,121 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = POSITION_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_pre_defined_curve_fonts(&mut self, id: PreDefinedCurveFontId) -> u64 {
+        if let Some(n) = self.pre_defined_curve_font_ids[id.0] {
+            return n;
+        }
+        let it = self.model.pre_defined_curve_fonts.get(id.0).clone();
+        let n = self.fresh();
+        self.pre_defined_curve_font_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = PRE_DEFINED_CURVE_FONT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_pre_defined_items(&mut self, id: PreDefinedItemId) -> u64 {
+        if let Some(n) = self.pre_defined_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.pre_defined_items.get(id.0).clone();
+        let n = self.fresh();
+        self.pre_defined_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out
+            .push_str(&format!("#{n} = PRE_DEFINED_ITEM({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_pre_defined_markers(&mut self, id: PreDefinedMarkerId) -> u64 {
+        if let Some(n) = self.pre_defined_marker_ids[id.0] {
+            return n;
+        }
+        let it = self.model.pre_defined_markers.get(id.0).clone();
+        let n = self.fresh();
+        self.pre_defined_marker_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = PRE_DEFINED_MARKER({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_pre_defined_surface_side_styles(&mut self, id: PreDefinedSurfaceSideStyleId) -> u64 {
+        if let Some(n) = self.pre_defined_surface_side_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.pre_defined_surface_side_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.pre_defined_surface_side_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = PRE_DEFINED_SURFACE_SIDE_STYLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_pre_defined_symbols(&mut self, id: PreDefinedSymbolId) -> u64 {
+        if let Some(n) = self.pre_defined_symbol_ids[id.0] {
+            return n;
+        }
+        let it = self.model.pre_defined_symbols.get(id.0).clone();
+        let n = self.fresh();
+        self.pre_defined_symbol_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = PRE_DEFINED_SYMBOL({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_pre_defined_tiles(&mut self, id: PreDefinedTileId) -> u64 {
+        if let Some(n) = self.pre_defined_tile_ids[id.0] {
+            return n;
+        }
+        let it = self.model.pre_defined_tiles.get(id.0).clone();
+        let n = self.fresh();
+        self.pre_defined_tile_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out
+            .push_str(&format!("#{n} = PRE_DEFINED_TILE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_presentation_style_assignments(&mut self, id: PresentationStyleAssignmentId) -> u64 {
+        if let Some(n) = self.presentation_style_assignment_ids[id.0] {
+            return n;
+        }
+        let it = self.model.presentation_style_assignments.get(id.0).clone();
+        let n = self.fresh();
+        self.presentation_style_assignment_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "({})",
+            it.styles
+                .iter()
+                .map(|e| match e {
+                    PresentationStyleSelectRef::NullStyle(e) =>
+                        format!("NULL_STYLE({})", e.token()),
+                    other => format!(
+                        "#{}",
+                        self.emit_ref_presentation_style_select(other.clone())
+                    ),
+                })
+                .collect::<Vec<_>>()
+                .join(",")
+        )];
+        self.out.push_str(&format!(
+            "#{n} = PRESENTATION_STYLE_ASSIGNMENT({});\n",
             attrs.join(",")
         ));
         n
@@ -4383,6 +5588,30 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_representation_maps(&mut self, id: RepresentationMapId) -> u64 {
+        if let Some(n) = self.representation_map_ids[id.0] {
+            return n;
+        }
+        let it = self.model.representation_maps.get(id.0).clone();
+        let n = self.fresh();
+        self.representation_map_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!(
+                "#{}",
+                self.emit_ref_representation_item((&it.mapping_origin).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_representation((&it.mapped_representation).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = REPRESENTATION_MAP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_representation_references(&mut self, id: RepresentationReferenceId) -> u64 {
         if let Some(n) = self.representation_reference_ids[id.0] {
             return n;
@@ -4745,6 +5974,33 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_styled_items(&mut self, id: StyledItemId) -> u64 {
+        if let Some(n) = self.styled_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.styled_items.get(id.0).clone();
+        let n = self.fresh();
+        self.styled_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.styles
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_presentation_style_assignment((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!("#{}", self.emit_ref_styled_item_target((&it.item).clone())),
+        ];
+        self.out
+            .push_str(&format!("#{n} = STYLED_ITEM({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_surfaces(&mut self, id: SurfaceId) -> u64 {
         if let Some(n) = self.surface_ids[id.0] {
             return n;
@@ -4853,6 +6109,289 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_surface_rendering_propertiess(&mut self, id: SurfaceRenderingPropertiesId) -> u64 {
+        if let Some(n) = self.surface_rendering_propertie_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_rendering_propertiess.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_rendering_propertie_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_colour((&it.rendered_colour).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_RENDERING_PROPERTIES({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_side_styles(&mut self, id: SurfaceSideStyleId) -> u64 {
+        if let Some(n) = self.surface_side_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_side_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_side_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.styles
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_surface_style_element_select((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_SIDE_STYLE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_boundarys(&mut self, id: SurfaceStyleBoundaryId) -> u64 {
+        if let Some(n) = self.surface_style_boundary_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_boundarys.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_boundary_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_curve_or_render((&it.style_of_boundary).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_BOUNDARY({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_control_grids(&mut self, id: SurfaceStyleControlGridId) -> u64 {
+        if let Some(n) = self.surface_style_control_grid_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_control_grids.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_control_grid_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_curve_or_render((&it.style_of_control_grid).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_CONTROL_GRID({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_fill_areas(&mut self, id: SurfaceStyleFillAreaId) -> u64 {
+        if let Some(n) = self.surface_style_fill_area_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_fill_areas.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_fill_area_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_fill_area_style((&it.fill_area).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_FILL_AREA({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_parameter_lines(&mut self, id: SurfaceStyleParameterLineId) -> u64 {
+        if let Some(n) = self.surface_style_parameter_line_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_parameter_lines.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_parameter_line_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!(
+                "#{}",
+                self.emit_ref_curve_or_render((&it.style_of_parameter_lines).clone())
+            ),
+            format!(
+                "({})",
+                it.direction_counts
+                    .iter()
+                    .map(|e| measure(e))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_PARAMETER_LINE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_reflectance_ambients(
+        &mut self,
+        id: SurfaceStyleReflectanceAmbientId,
+    ) -> u64 {
+        if let Some(n) = self.surface_style_reflectance_ambient_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .surface_style_reflectance_ambients
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.surface_style_reflectance_ambient_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![real(it.ambient_reflectance)];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_REFLECTANCE_AMBIENT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_renderings(&mut self, id: SurfaceStyleRenderingId) -> u64 {
+        if let Some(n) = self.surface_style_rendering_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_renderings.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_rendering_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            it.rendering_method.token().to_string(),
+            format!("#{}", self.emit_ref_colour((&it.surface_colour).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_RENDERING({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_rendering_with_propertiess(
+        &mut self,
+        id: SurfaceStyleRenderingWithPropertiesId,
+    ) -> u64 {
+        if let Some(n) = self.surface_style_rendering_with_propertie_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .surface_style_rendering_with_propertiess
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.surface_style_rendering_with_propertie_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            it.rendering_method.token().to_string(),
+            format!("#{}", self.emit_ref_colour((&it.surface_colour).clone())),
+            format!(
+                "({})",
+                it.properties
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_rendering_properties_select((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_RENDERING_WITH_PROPERTIES({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_segmentation_curves(
+        &mut self,
+        id: SurfaceStyleSegmentationCurveId,
+    ) -> u64 {
+        if let Some(n) = self.surface_style_segmentation_curve_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .surface_style_segmentation_curves
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.surface_style_segmentation_curve_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_curve_or_render((&it.style_of_segmentation_curve).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_SEGMENTATION_CURVE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_silhouettes(&mut self, id: SurfaceStyleSilhouetteId) -> u64 {
+        if let Some(n) = self.surface_style_silhouette_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_silhouettes.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_silhouette_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_curve_or_render((&it.style_of_silhouette).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_SILHOUETTE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_transparents(&mut self, id: SurfaceStyleTransparentId) -> u64 {
+        if let Some(n) = self.surface_style_transparent_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_transparents.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_transparent_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![real(it.transparency)];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_TRANSPARENT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_surface_style_usages(&mut self, id: SurfaceStyleUsageId) -> u64 {
+        if let Some(n) = self.surface_style_usage_ids[id.0] {
+            return n;
+        }
+        let it = self.model.surface_style_usages.get(id.0).clone();
+        let n = self.fresh();
+        self.surface_style_usage_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            it.side.token().to_string(),
+            format!(
+                "#{}",
+                self.emit_ref_surface_side_style_select((&it.style).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = SURFACE_STYLE_USAGE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_swept_surfaces(&mut self, id: SweptSurfaceId) -> u64 {
         if let Some(n) = self.swept_surface_ids[id.0] {
             return n;
@@ -4866,6 +6405,62 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = SWEPT_SURFACE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_symbol_colours(&mut self, id: SymbolColourId) -> u64 {
+        if let Some(n) = self.symbol_colour_ids[id.0] {
+            return n;
+        }
+        let it = self.model.symbol_colours.get(id.0).clone();
+        let n = self.fresh();
+        self.symbol_colour_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_colour((&it.colour_of_symbol).clone())
+        )];
+        self.out
+            .push_str(&format!("#{n} = SYMBOL_COLOUR({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_symbol_styles(&mut self, id: SymbolStyleId) -> u64 {
+        if let Some(n) = self.symbol_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.symbol_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.symbol_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_symbol_style_select((&it.style_of_symbol).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = SYMBOL_STYLE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_symbol_targets(&mut self, id: SymbolTargetId) -> u64 {
+        if let Some(n) = self.symbol_target_ids[id.0] {
+            return n;
+        }
+        let it = self.model.symbol_targets.get(id.0).clone();
+        let n = self.fresh();
+        self.symbol_target_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_axis2_placement((&it.placement).clone())
+            ),
+            real(it.x_scale),
+            real(it.y_scale),
+        ];
+        self.out
+            .push_str(&format!("#{n} = SYMBOL_TARGET({});\n", attrs.join(",")));
         n
     }
 
@@ -4901,6 +6496,80 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = SYMMETRY_TOLERANCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_text_styles(&mut self, id: TextStyleId) -> u64 {
+        if let Some(n) = self.text_style_ids[id.0] {
+            return n;
+        }
+        let it = self.model.text_styles.get(id.0).clone();
+        let n = self.fresh();
+        self.text_style_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_character_style_select((&it.character_appearance).clone())
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = TEXT_STYLE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_text_style_for_defined_fonts(&mut self, id: TextStyleForDefinedFontId) -> u64 {
+        if let Some(n) = self.text_style_for_defined_font_ids[id.0] {
+            return n;
+        }
+        let it = self.model.text_style_for_defined_fonts.get(id.0).clone();
+        let n = self.fresh();
+        self.text_style_for_defined_font_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![format!(
+            "#{}",
+            self.emit_ref_colour((&it.text_colour).clone())
+        )];
+        self.out.push_str(&format!(
+            "#{n} = TEXT_STYLE_FOR_DEFINED_FONT({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_texture_style_specifications(&mut self, id: TextureStyleSpecificationId) -> u64 {
+        if let Some(n) = self.texture_style_specification_ids[id.0] {
+            return n;
+        }
+        let it = self.model.texture_style_specifications.get(id.0).clone();
+        let n = self.fresh();
+        self.texture_style_specification_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![];
+        self.out.push_str(&format!(
+            "#{n} = TEXTURE_STYLE_SPECIFICATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_texture_style_tessellation_specifications(
+        &mut self,
+        id: TextureStyleTessellationSpecificationId,
+    ) -> u64 {
+        if let Some(n) = self.texture_style_tessellation_specification_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .texture_style_tessellation_specifications
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.texture_style_tessellation_specification_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![];
+        self.out.push_str(&format!(
+            "#{n} = TEXTURE_STYLE_TESSELLATION_SPECIFICATION({});\n",
             attrs.join(",")
         ));
         n
@@ -5178,6 +6847,28 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_two_direction_repeat_factors(&mut self, id: TwoDirectionRepeatFactorId) -> u64 {
+        if let Some(n) = self.two_direction_repeat_factor_ids[id.0] {
+            return n;
+        }
+        let it = self.model.two_direction_repeat_factors.get(id.0).clone();
+        let n = self.fresh();
+        self.two_direction_repeat_factor_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("#{}", self.emit_ref_vector((&it.repeat_factor).clone())),
+            format!(
+                "#{}",
+                self.emit_ref_vector((&it.second_repeat_factor).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = TWO_DIRECTION_REPEAT_FACTOR({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_uncertainty_measure_with_units(&mut self, id: UncertaintyMeasureWithUnitId) -> u64 {
         if let Some(n) = self.uncertainty_measure_with_unit_ids[id.0] {
             return n;
@@ -5365,6 +7056,36 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_ref_annotation_curve_occurrence(&mut self, r: AnnotationCurveOccurrenceRef) -> u64 {
+        match r {
+            AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
+                self.emit_annotation_curve_occurrences(i)
+            }
+        }
+    }
+
+    fn emit_ref_annotation_symbol_occurrence_item(
+        &mut self,
+        r: AnnotationSymbolOccurrenceItemRef,
+    ) -> u64 {
+        match r {
+            AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
+                self.emit_annotation_symbols(i)
+            }
+            AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => self.emit_defined_symbols(i),
+            AnnotationSymbolOccurrenceItemRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_annotation_symbol_occurrence(&mut self, r: AnnotationSymbolOccurrenceRef) -> u64 {
+        match r {
+            AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(i) => {
+                self.emit_annotation_symbol_occurrences(i)
+            }
+            AnnotationSymbolOccurrenceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_application_context(&mut self, r: ApplicationContextRef) -> u64 {
         match r {
             ApplicationContextRef::ApplicationContext(i) => self.emit_application_contexts(i),
@@ -5393,6 +7114,21 @@ impl<'a> Writer<'a> {
     fn emit_ref_cartesian_point(&mut self, r: CartesianPointRef) -> u64 {
         match r {
             CartesianPointRef::CartesianPoint(i) => self.emit_cartesian_points(i),
+        }
+    }
+
+    fn emit_ref_character_style_select(&mut self, r: CharacterStyleSelectRef) -> u64 {
+        match r {
+            CharacterStyleSelectRef::CharacterGlyphStyleOutline(i) => {
+                self.emit_character_glyph_style_outlines(i)
+            }
+            CharacterStyleSelectRef::CharacterGlyphStyleStroke(i) => {
+                self.emit_character_glyph_style_strokes(i)
+            }
+            CharacterStyleSelectRef::TextStyleForDefinedFont(i) => {
+                self.emit_text_style_for_defined_fonts(i)
+            }
+            CharacterStyleSelectRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -5523,6 +7259,111 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_colour(&mut self, r: ColourRef) -> u64 {
+        match r {
+            ColourRef::Colour(i) => self.emit_colours(i),
+            ColourRef::ColourRgb(i) => self.emit_colour_rgbs(i),
+            ColourRef::ColourSpecification(i) => self.emit_colour_specifications(i),
+            ColourRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_curve_font_or_scaled_curve_font_select(
+        &mut self,
+        r: CurveFontOrScaledCurveFontSelectRef,
+    ) -> u64 {
+        match r {
+            CurveFontOrScaledCurveFontSelectRef::CurveStyleFont(i) => {
+                self.emit_curve_style_fonts(i)
+            }
+            CurveFontOrScaledCurveFontSelectRef::CurveStyleFontAndScaling(i) => {
+                self.emit_curve_style_font_and_scalings(i)
+            }
+            CurveFontOrScaledCurveFontSelectRef::ExternallyDefinedCurveFont(i) => {
+                self.emit_externally_defined_curve_fonts(i)
+            }
+            CurveFontOrScaledCurveFontSelectRef::PreDefinedCurveFont(i) => {
+                self.emit_pre_defined_curve_fonts(i)
+            }
+            CurveFontOrScaledCurveFontSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_curve_or_annotation_curve_occurrence(
+        &mut self,
+        r: CurveOrAnnotationCurveOccurrenceRef,
+    ) -> u64 {
+        match r {
+            CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
+                self.emit_annotation_curve_occurrences(i)
+            }
+            CurveOrAnnotationCurveOccurrenceRef::BSplineCurve(i) => self.emit_b_spline_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::BSplineCurveWithKnots(i) => {
+                self.emit_b_spline_curve_with_knotss(i)
+            }
+            CurveOrAnnotationCurveOccurrenceRef::BezierCurve(i) => self.emit_bezier_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::BoundedCurve(i) => self.emit_bounded_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::BoundedPcurve(i) => self.emit_bounded_pcurves(i),
+            CurveOrAnnotationCurveOccurrenceRef::BoundedSurfaceCurve(i) => {
+                self.emit_bounded_surface_curves(i)
+            }
+            CurveOrAnnotationCurveOccurrenceRef::Circle(i) => self.emit_circles(i),
+            CurveOrAnnotationCurveOccurrenceRef::Conic(i) => self.emit_conics(i),
+            CurveOrAnnotationCurveOccurrenceRef::Curve(i) => self.emit_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::Ellipse(i) => self.emit_ellipses(i),
+            CurveOrAnnotationCurveOccurrenceRef::IntersectionCurve(i) => {
+                self.emit_intersection_curves(i)
+            }
+            CurveOrAnnotationCurveOccurrenceRef::Line(i) => self.emit_lines(i),
+            CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => self.emit_pcurves(i),
+            CurveOrAnnotationCurveOccurrenceRef::QuasiUniformCurve(i) => {
+                self.emit_quasi_uniform_curves(i)
+            }
+            CurveOrAnnotationCurveOccurrenceRef::RationalBSplineCurve(i) => {
+                self.emit_rational_b_spline_curves(i)
+            }
+            CurveOrAnnotationCurveOccurrenceRef::SeamCurve(i) => self.emit_seam_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::SurfaceCurve(i) => self.emit_surface_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::UniformCurve(i) => self.emit_uniform_curves(i),
+            CurveOrAnnotationCurveOccurrenceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_curve_or_curve_set(&mut self, r: CurveOrCurveSetRef) -> u64 {
+        match r {
+            CurveOrCurveSetRef::BSplineCurve(i) => self.emit_b_spline_curves(i),
+            CurveOrCurveSetRef::BSplineCurveWithKnots(i) => self.emit_b_spline_curve_with_knotss(i),
+            CurveOrCurveSetRef::BezierCurve(i) => self.emit_bezier_curves(i),
+            CurveOrCurveSetRef::BoundedCurve(i) => self.emit_bounded_curves(i),
+            CurveOrCurveSetRef::BoundedPcurve(i) => self.emit_bounded_pcurves(i),
+            CurveOrCurveSetRef::BoundedSurfaceCurve(i) => self.emit_bounded_surface_curves(i),
+            CurveOrCurveSetRef::Circle(i) => self.emit_circles(i),
+            CurveOrCurveSetRef::Conic(i) => self.emit_conics(i),
+            CurveOrCurveSetRef::Curve(i) => self.emit_curves(i),
+            CurveOrCurveSetRef::Ellipse(i) => self.emit_ellipses(i),
+            CurveOrCurveSetRef::GeometricCurveSet(i) => self.emit_geometric_curve_sets(i),
+            CurveOrCurveSetRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
+            CurveOrCurveSetRef::Line(i) => self.emit_lines(i),
+            CurveOrCurveSetRef::Pcurve(i) => self.emit_pcurves(i),
+            CurveOrCurveSetRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
+            CurveOrCurveSetRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
+            CurveOrCurveSetRef::SeamCurve(i) => self.emit_seam_curves(i),
+            CurveOrCurveSetRef::SurfaceCurve(i) => self.emit_surface_curves(i),
+            CurveOrCurveSetRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
+            CurveOrCurveSetRef::UniformCurve(i) => self.emit_uniform_curves(i),
+            CurveOrCurveSetRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_curve_or_render(&mut self, r: CurveOrRenderRef) -> u64 {
+        match r {
+            CurveOrRenderRef::CurveStyle(i) => self.emit_curve_styles(i),
+            CurveOrRenderRef::CurveStyleRendering(i) => self.emit_curve_style_renderings(i),
+            CurveOrRenderRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_curve(&mut self, r: CurveRef) -> u64 {
         match r {
             CurveRef::BSplineCurve(i) => self.emit_b_spline_curves(i),
@@ -5545,6 +7386,33 @@ impl<'a> Writer<'a> {
             CurveRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
             CurveRef::UniformCurve(i) => self.emit_uniform_curves(i),
             CurveRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_curve_style_font_pattern(&mut self, r: CurveStyleFontPatternRef) -> u64 {
+        match r {
+            CurveStyleFontPatternRef::CurveStyleFontPattern(i) => {
+                self.emit_curve_style_font_patterns(i)
+            }
+            CurveStyleFontPatternRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_curve_style_font_select(&mut self, r: CurveStyleFontSelectRef) -> u64 {
+        match r {
+            CurveStyleFontSelectRef::CurveStyleFont(i) => self.emit_curve_style_fonts(i),
+            CurveStyleFontSelectRef::ExternallyDefinedCurveFont(i) => {
+                self.emit_externally_defined_curve_fonts(i)
+            }
+            CurveStyleFontSelectRef::PreDefinedCurveFont(i) => self.emit_pre_defined_curve_fonts(i),
+            CurveStyleFontSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_curve_style(&mut self, r: CurveStyleRef) -> u64 {
+        match r {
+            CurveStyleRef::CurveStyle(i) => self.emit_curve_styles(i),
+            CurveStyleRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -5609,6 +7477,16 @@ impl<'a> Writer<'a> {
         match r {
             DatumSystemRef::DatumSystem(i) => self.emit_datum_systems(i),
             DatumSystemRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_defined_symbol_select(&mut self, r: DefinedSymbolSelectRef) -> u64 {
+        match r {
+            DefinedSymbolSelectRef::ExternallyDefinedSymbol(i) => {
+                self.emit_externally_defined_symbols(i)
+            }
+            DefinedSymbolSelectRef::PreDefinedSymbol(i) => self.emit_pre_defined_symbols(i),
+            DefinedSymbolSelectRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -5686,6 +7564,115 @@ impl<'a> Writer<'a> {
             FaceRef::Face(i) => self.emit_faces(i),
             FaceRef::FaceSurface(i) => self.emit_face_surfaces(i),
             FaceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_fill_area_style(&mut self, r: FillAreaStyleRef) -> u64 {
+        match r {
+            FillAreaStyleRef::FillAreaStyle(i) => self.emit_fill_area_styles(i),
+            FillAreaStyleRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_fill_area_style_tile_shape_select(
+        &mut self,
+        r: FillAreaStyleTileShapeSelectRef,
+    ) -> u64 {
+        match r {
+            FillAreaStyleTileShapeSelectRef::ExternallyDefinedTile(i) => {
+                self.emit_externally_defined_tiles(i)
+            }
+            FillAreaStyleTileShapeSelectRef::FillAreaStyleTileColouredRegion(i) => {
+                self.emit_fill_area_style_tile_coloured_regions(i)
+            }
+            FillAreaStyleTileShapeSelectRef::FillAreaStyleTileCurveWithStyle(i) => {
+                self.emit_fill_area_style_tile_curve_with_styles(i)
+            }
+            FillAreaStyleTileShapeSelectRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                self.emit_fill_area_style_tile_symbol_with_styles(i)
+            }
+            FillAreaStyleTileShapeSelectRef::PreDefinedTile(i) => self.emit_pre_defined_tiles(i),
+            FillAreaStyleTileShapeSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_fill_style_select(&mut self, r: FillStyleSelectRef) -> u64 {
+        match r {
+            FillStyleSelectRef::ExternallyDefinedHatchStyle(i) => {
+                self.emit_externally_defined_hatch_styles(i)
+            }
+            FillStyleSelectRef::ExternallyDefinedTileStyle(i) => {
+                self.emit_externally_defined_tile_styles(i)
+            }
+            FillStyleSelectRef::FillAreaStyleColour(i) => self.emit_fill_area_style_colours(i),
+            FillStyleSelectRef::FillAreaStyleHatching(i) => self.emit_fill_area_style_hatchings(i),
+            FillStyleSelectRef::FillAreaStyleTiles(i) => self.emit_fill_area_style_tiless(i),
+            FillStyleSelectRef::TextureStyleSpecification(i) => {
+                self.emit_texture_style_specifications(i)
+            }
+            FillStyleSelectRef::TextureStyleTessellationSpecification(i) => {
+                self.emit_texture_style_tessellation_specifications(i)
+            }
+            FillStyleSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_geometric_set_select(&mut self, r: GeometricSetSelectRef) -> u64 {
+        match r {
+            GeometricSetSelectRef::AnnotationText(i) => self.emit_annotation_texts(i),
+            GeometricSetSelectRef::Axis1Placement(i) => self.emit_axis1_placements(i),
+            GeometricSetSelectRef::Axis2Placement2d(i) => self.emit_axis2_placement2ds(i),
+            GeometricSetSelectRef::Axis2Placement3d(i) => self.emit_axis2_placement3ds(i),
+            GeometricSetSelectRef::BSplineCurve(i) => self.emit_b_spline_curves(i),
+            GeometricSetSelectRef::BSplineCurveWithKnots(i) => {
+                self.emit_b_spline_curve_with_knotss(i)
+            }
+            GeometricSetSelectRef::BSplineSurface(i) => self.emit_b_spline_surfaces(i),
+            GeometricSetSelectRef::BSplineSurfaceWithKnots(i) => {
+                self.emit_b_spline_surface_with_knotss(i)
+            }
+            GeometricSetSelectRef::BezierCurve(i) => self.emit_bezier_curves(i),
+            GeometricSetSelectRef::BezierSurface(i) => self.emit_bezier_surfaces(i),
+            GeometricSetSelectRef::BoundedCurve(i) => self.emit_bounded_curves(i),
+            GeometricSetSelectRef::BoundedPcurve(i) => self.emit_bounded_pcurves(i),
+            GeometricSetSelectRef::BoundedSurface(i) => self.emit_bounded_surfaces(i),
+            GeometricSetSelectRef::BoundedSurfaceCurve(i) => self.emit_bounded_surface_curves(i),
+            GeometricSetSelectRef::CartesianPoint(i) => self.emit_cartesian_points(i),
+            GeometricSetSelectRef::Circle(i) => self.emit_circles(i),
+            GeometricSetSelectRef::Conic(i) => self.emit_conics(i),
+            GeometricSetSelectRef::ConicalSurface(i) => self.emit_conical_surfaces(i),
+            GeometricSetSelectRef::Curve(i) => self.emit_curves(i),
+            GeometricSetSelectRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
+            GeometricSetSelectRef::ElementarySurface(i) => self.emit_elementary_surfaces(i),
+            GeometricSetSelectRef::Ellipse(i) => self.emit_ellipses(i),
+            GeometricSetSelectRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
+            GeometricSetSelectRef::Line(i) => self.emit_lines(i),
+            GeometricSetSelectRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
+            GeometricSetSelectRef::Pcurve(i) => self.emit_pcurves(i),
+            GeometricSetSelectRef::Placement(i) => self.emit_placements(i),
+            GeometricSetSelectRef::PlanarBox(i) => self.emit_planar_boxs(i),
+            GeometricSetSelectRef::Plane(i) => self.emit_planes(i),
+            GeometricSetSelectRef::Point(i) => self.emit_points(i),
+            GeometricSetSelectRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
+            GeometricSetSelectRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
+            GeometricSetSelectRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
+            GeometricSetSelectRef::RationalBSplineSurface(i) => {
+                self.emit_rational_b_spline_surfaces(i)
+            }
+            GeometricSetSelectRef::SeamCurve(i) => self.emit_seam_curves(i),
+            GeometricSetSelectRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
+            GeometricSetSelectRef::Surface(i) => self.emit_surfaces(i),
+            GeometricSetSelectRef::SurfaceCurve(i) => self.emit_surface_curves(i),
+            GeometricSetSelectRef::SurfaceOfLinearExtrusion(i) => {
+                self.emit_surface_of_linear_extrusions(i)
+            }
+            GeometricSetSelectRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
+            GeometricSetSelectRef::SweptSurface(i) => self.emit_swept_surfaces(i),
+            GeometricSetSelectRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
+            GeometricSetSelectRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
+            GeometricSetSelectRef::UniformCurve(i) => self.emit_uniform_curves(i),
+            GeometricSetSelectRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
+            GeometricSetSelectRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -5776,6 +7763,14 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_marker_select(&mut self, r: MarkerSelectRef) -> u64 {
+        match r {
+            MarkerSelectRef::PreDefinedMarker(i) => self.emit_pre_defined_markers(i),
+            MarkerSelectRef::Complex(i) => self.emit_complex(i),
+            MarkerSelectRef::MarkerType(_) => panic!("emit enum ref via single dispatch"),
+        }
+    }
+
     fn emit_ref_measure_with_unit(&mut self, r: MeasureWithUnitRef) -> u64 {
         match r {
             MeasureWithUnitRef::LengthMeasureWithUnit(i) => self.emit_length_measure_with_units(i),
@@ -5802,6 +7797,18 @@ impl<'a> Writer<'a> {
             NamedUnitRef::SolidAngleUnit(i) => self.emit_solid_angle_units(i),
             NamedUnitRef::TimeUnit(i) => self.emit_time_units(i),
             NamedUnitRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_one_direction_repeat_factor(&mut self, r: OneDirectionRepeatFactorRef) -> u64 {
+        match r {
+            OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(i) => {
+                self.emit_one_direction_repeat_factors(i)
+            }
+            OneDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
+                self.emit_two_direction_repeat_factors(i)
+            }
+            OneDirectionRepeatFactorRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -5879,6 +7886,34 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_presentation_style_assignment(&mut self, r: PresentationStyleAssignmentRef) -> u64 {
+        match r {
+            PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
+                self.emit_presentation_style_assignments(i)
+            }
+            PresentationStyleAssignmentRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_presentation_style_select(&mut self, r: PresentationStyleSelectRef) -> u64 {
+        match r {
+            PresentationStyleSelectRef::CurveStyle(i) => self.emit_curve_styles(i),
+            PresentationStyleSelectRef::ExternallyDefinedStyle(i) => {
+                self.emit_externally_defined_styles(i)
+            }
+            PresentationStyleSelectRef::FillAreaStyle(i) => self.emit_fill_area_styles(i),
+            PresentationStyleSelectRef::PointStyle(i) => self.emit_point_styles(i),
+            PresentationStyleSelectRef::SurfaceStyleUsage(i) => self.emit_surface_style_usages(i),
+            PresentationStyleSelectRef::SymbolStyle(i) => self.emit_symbol_styles(i),
+            PresentationStyleSelectRef::TextStyle(i) => self.emit_text_styles(i),
+            PresentationStyleSelectRef::TextureStyleTessellationSpecification(i) => {
+                self.emit_texture_style_tessellation_specifications(i)
+            }
+            PresentationStyleSelectRef::Complex(i) => self.emit_complex(i),
+            PresentationStyleSelectRef::NullStyle(_) => panic!("emit enum ref via single dispatch"),
+        }
+    }
+
     fn emit_ref_product_context(&mut self, r: ProductContextRef) -> u64 {
         match r {
             ProductContextRef::ProductContext(i) => self.emit_product_contexts(i),
@@ -5950,6 +7985,18 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_rendering_properties_select(&mut self, r: RenderingPropertiesSelectRef) -> u64 {
+        match r {
+            RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(i) => {
+                self.emit_surface_style_reflectance_ambients(i)
+            }
+            RenderingPropertiesSelectRef::SurfaceStyleTransparent(i) => {
+                self.emit_surface_style_transparents(i)
+            }
+            RenderingPropertiesSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_representation_context(&mut self, r: RepresentationContextRef) -> u64 {
         match r {
             RepresentationContextRef::GeometricRepresentationContext(i) => {
@@ -5979,6 +8026,15 @@ impl<'a> Writer<'a> {
     fn emit_ref_representation_item(&mut self, r: RepresentationItemRef) -> u64 {
         match r {
             RepresentationItemRef::AdvancedFace(i) => self.emit_advanced_faces(i),
+            RepresentationItemRef::AnnotationCurveOccurrence(i) => {
+                self.emit_annotation_curve_occurrences(i)
+            }
+            RepresentationItemRef::AnnotationOccurrence(i) => self.emit_annotation_occurrences(i),
+            RepresentationItemRef::AnnotationSymbol(i) => self.emit_annotation_symbols(i),
+            RepresentationItemRef::AnnotationSymbolOccurrence(i) => {
+                self.emit_annotation_symbol_occurrences(i)
+            }
+            RepresentationItemRef::AnnotationText(i) => self.emit_annotation_texts(i),
             RepresentationItemRef::Axis1Placement(i) => self.emit_axis1_placements(i),
             RepresentationItemRef::Axis2Placement2d(i) => self.emit_axis2_placement2ds(i),
             RepresentationItemRef::Axis2Placement3d(i) => self.emit_axis2_placement3ds(i),
@@ -6005,30 +8061,58 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::ConnectedFaceSet(i) => self.emit_connected_face_sets(i),
             RepresentationItemRef::Curve(i) => self.emit_curves(i),
             RepresentationItemRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
+            RepresentationItemRef::DefinedSymbol(i) => self.emit_defined_symbols(i),
             RepresentationItemRef::Direction(i) => self.emit_directions(i),
             RepresentationItemRef::Edge(i) => self.emit_edges(i),
             RepresentationItemRef::EdgeCurve(i) => self.emit_edge_curves(i),
             RepresentationItemRef::EdgeLoop(i) => self.emit_edge_loops(i),
             RepresentationItemRef::ElementarySurface(i) => self.emit_elementary_surfaces(i),
             RepresentationItemRef::Ellipse(i) => self.emit_ellipses(i),
+            RepresentationItemRef::ExternallyDefinedHatchStyle(i) => {
+                self.emit_externally_defined_hatch_styles(i)
+            }
+            RepresentationItemRef::ExternallyDefinedTileStyle(i) => {
+                self.emit_externally_defined_tile_styles(i)
+            }
             RepresentationItemRef::Face(i) => self.emit_faces(i),
             RepresentationItemRef::FaceBound(i) => self.emit_face_bounds(i),
             RepresentationItemRef::FaceOuterBound(i) => self.emit_face_outer_bounds(i),
             RepresentationItemRef::FaceSurface(i) => self.emit_face_surfaces(i),
+            RepresentationItemRef::FillAreaStyleHatching(i) => {
+                self.emit_fill_area_style_hatchings(i)
+            }
+            RepresentationItemRef::FillAreaStyleTileColouredRegion(i) => {
+                self.emit_fill_area_style_tile_coloured_regions(i)
+            }
+            RepresentationItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                self.emit_fill_area_style_tile_curve_with_styles(i)
+            }
+            RepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                self.emit_fill_area_style_tile_symbol_with_styles(i)
+            }
+            RepresentationItemRef::FillAreaStyleTiles(i) => self.emit_fill_area_style_tiless(i),
+            RepresentationItemRef::GeometricCurveSet(i) => self.emit_geometric_curve_sets(i),
             RepresentationItemRef::GeometricRepresentationItem(i) => {
                 self.emit_geometric_representation_items(i)
             }
+            RepresentationItemRef::GeometricSet(i) => self.emit_geometric_sets(i),
             RepresentationItemRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
             RepresentationItemRef::Line(i) => self.emit_lines(i),
             RepresentationItemRef::Loop(i) => self.emit_loops(i),
             RepresentationItemRef::ManifoldSolidBrep(i) => self.emit_manifold_solid_breps(i),
+            RepresentationItemRef::MappedItem(i) => self.emit_mapped_items(i),
             RepresentationItemRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
+            RepresentationItemRef::OneDirectionRepeatFactor(i) => {
+                self.emit_one_direction_repeat_factors(i)
+            }
             RepresentationItemRef::OpenShell(i) => self.emit_open_shells(i),
             RepresentationItemRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
             RepresentationItemRef::OrientedEdge(i) => self.emit_oriented_edges(i),
             RepresentationItemRef::Path(i) => self.emit_paths(i),
             RepresentationItemRef::Pcurve(i) => self.emit_pcurves(i),
             RepresentationItemRef::Placement(i) => self.emit_placements(i),
+            RepresentationItemRef::PlanarBox(i) => self.emit_planar_boxs(i),
+            RepresentationItemRef::PlanarExtent(i) => self.emit_planar_extents(i),
             RepresentationItemRef::Plane(i) => self.emit_planes(i),
             RepresentationItemRef::Point(i) => self.emit_points(i),
             RepresentationItemRef::PolyLoop(i) => self.emit_poly_loops(i),
@@ -6042,6 +8126,7 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::SeamCurve(i) => self.emit_seam_curves(i),
             RepresentationItemRef::SolidModel(i) => self.emit_solid_models(i),
             RepresentationItemRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
+            RepresentationItemRef::StyledItem(i) => self.emit_styled_items(i),
             RepresentationItemRef::Surface(i) => self.emit_surfaces(i),
             RepresentationItemRef::SurfaceCurve(i) => self.emit_surface_curves(i),
             RepresentationItemRef::SurfaceOfLinearExtrusion(i) => {
@@ -6049,11 +8134,15 @@ impl<'a> Writer<'a> {
             }
             RepresentationItemRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
             RepresentationItemRef::SweptSurface(i) => self.emit_swept_surfaces(i),
+            RepresentationItemRef::SymbolTarget(i) => self.emit_symbol_targets(i),
             RepresentationItemRef::TopologicalRepresentationItem(i) => {
                 self.emit_topological_representation_items(i)
             }
             RepresentationItemRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
             RepresentationItemRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
+            RepresentationItemRef::TwoDirectionRepeatFactor(i) => {
+                self.emit_two_direction_repeat_factors(i)
+            }
             RepresentationItemRef::UniformCurve(i) => self.emit_uniform_curves(i),
             RepresentationItemRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
             RepresentationItemRef::Vector(i) => self.emit_vectors(i),
@@ -6061,6 +8150,13 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::VertexLoop(i) => self.emit_vertex_loops(i),
             RepresentationItemRef::VertexPoint(i) => self.emit_vertex_points(i),
             RepresentationItemRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_representation_map(&mut self, r: RepresentationMapRef) -> u64 {
+        match r {
+            RepresentationMapRef::RepresentationMap(i) => self.emit_representation_maps(i),
+            RepresentationMapRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -6085,6 +8181,20 @@ impl<'a> Writer<'a> {
                 self.emit_shape_representations(i)
             }
             RepresentationOrRepresentationReferenceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_representation(&mut self, r: RepresentationRef) -> u64 {
+        match r {
+            RepresentationRef::DefinitionalRepresentation(i) => {
+                self.emit_definitional_representations(i)
+            }
+            RepresentationRef::Representation(i) => self.emit_representations(i),
+            RepresentationRef::ShapeDimensionRepresentation(i) => {
+                self.emit_shape_dimension_representations(i)
+            }
+            RepresentationRef::ShapeRepresentation(i) => self.emit_shape_representations(i),
+            RepresentationRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -6123,6 +8233,154 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_size_select(&mut self, r: SizeSelectRef) -> u64 {
+        match r {
+            SizeSelectRef::LengthMeasureWithUnit(i) => self.emit_length_measure_with_units(i),
+            SizeSelectRef::MeasureWithUnit(i) => self.emit_measure_with_units(i),
+            SizeSelectRef::PlaneAngleMeasureWithUnit(i) => {
+                self.emit_plane_angle_measure_with_units(i)
+            }
+            SizeSelectRef::UncertaintyMeasureWithUnit(i) => {
+                self.emit_uncertainty_measure_with_units(i)
+            }
+            SizeSelectRef::Complex(i) => self.emit_complex(i),
+            SizeSelectRef::DescriptiveMeasure(_) => panic!("emit scalar ref via single dispatch"),
+            SizeSelectRef::PositiveLengthMeasure(_) => {
+                panic!("emit scalar ref via single dispatch")
+            }
+        }
+    }
+
+    fn emit_ref_styled_item_target(&mut self, r: StyledItemTargetRef) -> u64 {
+        match r {
+            StyledItemTargetRef::AdvancedFace(i) => self.emit_advanced_faces(i),
+            StyledItemTargetRef::AnnotationSymbol(i) => self.emit_annotation_symbols(i),
+            StyledItemTargetRef::AnnotationText(i) => self.emit_annotation_texts(i),
+            StyledItemTargetRef::Axis1Placement(i) => self.emit_axis1_placements(i),
+            StyledItemTargetRef::Axis2Placement2d(i) => self.emit_axis2_placement2ds(i),
+            StyledItemTargetRef::Axis2Placement3d(i) => self.emit_axis2_placement3ds(i),
+            StyledItemTargetRef::BSplineCurve(i) => self.emit_b_spline_curves(i),
+            StyledItemTargetRef::BSplineCurveWithKnots(i) => {
+                self.emit_b_spline_curve_with_knotss(i)
+            }
+            StyledItemTargetRef::BSplineSurface(i) => self.emit_b_spline_surfaces(i),
+            StyledItemTargetRef::BSplineSurfaceWithKnots(i) => {
+                self.emit_b_spline_surface_with_knotss(i)
+            }
+            StyledItemTargetRef::BezierCurve(i) => self.emit_bezier_curves(i),
+            StyledItemTargetRef::BezierSurface(i) => self.emit_bezier_surfaces(i),
+            StyledItemTargetRef::BoundedCurve(i) => self.emit_bounded_curves(i),
+            StyledItemTargetRef::BoundedPcurve(i) => self.emit_bounded_pcurves(i),
+            StyledItemTargetRef::BoundedSurface(i) => self.emit_bounded_surfaces(i),
+            StyledItemTargetRef::BoundedSurfaceCurve(i) => self.emit_bounded_surface_curves(i),
+            StyledItemTargetRef::BrepWithVoids(i) => self.emit_brep_with_voidss(i),
+            StyledItemTargetRef::CartesianPoint(i) => self.emit_cartesian_points(i),
+            StyledItemTargetRef::Circle(i) => self.emit_circles(i),
+            StyledItemTargetRef::ClosedShell(i) => self.emit_closed_shells(i),
+            StyledItemTargetRef::Conic(i) => self.emit_conics(i),
+            StyledItemTargetRef::ConicalSurface(i) => self.emit_conical_surfaces(i),
+            StyledItemTargetRef::ConnectedFaceSet(i) => self.emit_connected_face_sets(i),
+            StyledItemTargetRef::Curve(i) => self.emit_curves(i),
+            StyledItemTargetRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
+            StyledItemTargetRef::DefinedSymbol(i) => self.emit_defined_symbols(i),
+            StyledItemTargetRef::DefinitionalRepresentation(i) => {
+                self.emit_definitional_representations(i)
+            }
+            StyledItemTargetRef::Direction(i) => self.emit_directions(i),
+            StyledItemTargetRef::Edge(i) => self.emit_edges(i),
+            StyledItemTargetRef::EdgeCurve(i) => self.emit_edge_curves(i),
+            StyledItemTargetRef::EdgeLoop(i) => self.emit_edge_loops(i),
+            StyledItemTargetRef::ElementarySurface(i) => self.emit_elementary_surfaces(i),
+            StyledItemTargetRef::Ellipse(i) => self.emit_ellipses(i),
+            StyledItemTargetRef::ExternallyDefinedHatchStyle(i) => {
+                self.emit_externally_defined_hatch_styles(i)
+            }
+            StyledItemTargetRef::ExternallyDefinedTileStyle(i) => {
+                self.emit_externally_defined_tile_styles(i)
+            }
+            StyledItemTargetRef::Face(i) => self.emit_faces(i),
+            StyledItemTargetRef::FaceBound(i) => self.emit_face_bounds(i),
+            StyledItemTargetRef::FaceOuterBound(i) => self.emit_face_outer_bounds(i),
+            StyledItemTargetRef::FaceSurface(i) => self.emit_face_surfaces(i),
+            StyledItemTargetRef::FillAreaStyleHatching(i) => self.emit_fill_area_style_hatchings(i),
+            StyledItemTargetRef::FillAreaStyleTileColouredRegion(i) => {
+                self.emit_fill_area_style_tile_coloured_regions(i)
+            }
+            StyledItemTargetRef::FillAreaStyleTileCurveWithStyle(i) => {
+                self.emit_fill_area_style_tile_curve_with_styles(i)
+            }
+            StyledItemTargetRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                self.emit_fill_area_style_tile_symbol_with_styles(i)
+            }
+            StyledItemTargetRef::FillAreaStyleTiles(i) => self.emit_fill_area_style_tiless(i),
+            StyledItemTargetRef::GeometricCurveSet(i) => self.emit_geometric_curve_sets(i),
+            StyledItemTargetRef::GeometricRepresentationItem(i) => {
+                self.emit_geometric_representation_items(i)
+            }
+            StyledItemTargetRef::GeometricSet(i) => self.emit_geometric_sets(i),
+            StyledItemTargetRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
+            StyledItemTargetRef::Line(i) => self.emit_lines(i),
+            StyledItemTargetRef::Loop(i) => self.emit_loops(i),
+            StyledItemTargetRef::ManifoldSolidBrep(i) => self.emit_manifold_solid_breps(i),
+            StyledItemTargetRef::MappedItem(i) => self.emit_mapped_items(i),
+            StyledItemTargetRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
+            StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
+                self.emit_one_direction_repeat_factors(i)
+            }
+            StyledItemTargetRef::OpenShell(i) => self.emit_open_shells(i),
+            StyledItemTargetRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
+            StyledItemTargetRef::OrientedEdge(i) => self.emit_oriented_edges(i),
+            StyledItemTargetRef::Path(i) => self.emit_paths(i),
+            StyledItemTargetRef::Pcurve(i) => self.emit_pcurves(i),
+            StyledItemTargetRef::Placement(i) => self.emit_placements(i),
+            StyledItemTargetRef::PlanarBox(i) => self.emit_planar_boxs(i),
+            StyledItemTargetRef::PlanarExtent(i) => self.emit_planar_extents(i),
+            StyledItemTargetRef::Plane(i) => self.emit_planes(i),
+            StyledItemTargetRef::Point(i) => self.emit_points(i),
+            StyledItemTargetRef::PolyLoop(i) => self.emit_poly_loops(i),
+            StyledItemTargetRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
+            StyledItemTargetRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
+            StyledItemTargetRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
+            StyledItemTargetRef::RationalBSplineSurface(i) => {
+                self.emit_rational_b_spline_surfaces(i)
+            }
+            StyledItemTargetRef::Representation(i) => self.emit_representations(i),
+            StyledItemTargetRef::RepresentationReference(i) => {
+                self.emit_representation_references(i)
+            }
+            StyledItemTargetRef::SeamCurve(i) => self.emit_seam_curves(i),
+            StyledItemTargetRef::ShapeDimensionRepresentation(i) => {
+                self.emit_shape_dimension_representations(i)
+            }
+            StyledItemTargetRef::ShapeRepresentation(i) => self.emit_shape_representations(i),
+            StyledItemTargetRef::SolidModel(i) => self.emit_solid_models(i),
+            StyledItemTargetRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
+            StyledItemTargetRef::Surface(i) => self.emit_surfaces(i),
+            StyledItemTargetRef::SurfaceCurve(i) => self.emit_surface_curves(i),
+            StyledItemTargetRef::SurfaceOfLinearExtrusion(i) => {
+                self.emit_surface_of_linear_extrusions(i)
+            }
+            StyledItemTargetRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
+            StyledItemTargetRef::SweptSurface(i) => self.emit_swept_surfaces(i),
+            StyledItemTargetRef::SymbolTarget(i) => self.emit_symbol_targets(i),
+            StyledItemTargetRef::TopologicalRepresentationItem(i) => {
+                self.emit_topological_representation_items(i)
+            }
+            StyledItemTargetRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
+            StyledItemTargetRef::TrimmedCurve(i) => self.emit_trimmed_curves(i),
+            StyledItemTargetRef::TwoDirectionRepeatFactor(i) => {
+                self.emit_two_direction_repeat_factors(i)
+            }
+            StyledItemTargetRef::UniformCurve(i) => self.emit_uniform_curves(i),
+            StyledItemTargetRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
+            StyledItemTargetRef::Vector(i) => self.emit_vectors(i),
+            StyledItemTargetRef::Vertex(i) => self.emit_vertexs(i),
+            StyledItemTargetRef::VertexLoop(i) => self.emit_vertex_loops(i),
+            StyledItemTargetRef::VertexPoint(i) => self.emit_vertex_points(i),
+            StyledItemTargetRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_surface(&mut self, r: SurfaceRef) -> u64 {
         match r {
             SurfaceRef::BSplineSurface(i) => self.emit_b_spline_surfaces(i),
@@ -6144,6 +8402,67 @@ impl<'a> Writer<'a> {
             SurfaceRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
             SurfaceRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
             SurfaceRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_surface_rendering_properties(&mut self, r: SurfaceRenderingPropertiesRef) -> u64 {
+        match r {
+            SurfaceRenderingPropertiesRef::SurfaceRenderingProperties(i) => {
+                self.emit_surface_rendering_propertiess(i)
+            }
+        }
+    }
+
+    fn emit_ref_surface_side_style_select(&mut self, r: SurfaceSideStyleSelectRef) -> u64 {
+        match r {
+            SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(i) => {
+                self.emit_pre_defined_surface_side_styles(i)
+            }
+            SurfaceSideStyleSelectRef::SurfaceSideStyle(i) => self.emit_surface_side_styles(i),
+            SurfaceSideStyleSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_surface_style_element_select(&mut self, r: SurfaceStyleElementSelectRef) -> u64 {
+        match r {
+            SurfaceStyleElementSelectRef::SurfaceStyleBoundary(i) => {
+                self.emit_surface_style_boundarys(i)
+            }
+            SurfaceStyleElementSelectRef::SurfaceStyleControlGrid(i) => {
+                self.emit_surface_style_control_grids(i)
+            }
+            SurfaceStyleElementSelectRef::SurfaceStyleFillArea(i) => {
+                self.emit_surface_style_fill_areas(i)
+            }
+            SurfaceStyleElementSelectRef::SurfaceStyleParameterLine(i) => {
+                self.emit_surface_style_parameter_lines(i)
+            }
+            SurfaceStyleElementSelectRef::SurfaceStyleRendering(i) => {
+                self.emit_surface_style_renderings(i)
+            }
+            SurfaceStyleElementSelectRef::SurfaceStyleRenderingWithProperties(i) => {
+                self.emit_surface_style_rendering_with_propertiess(i)
+            }
+            SurfaceStyleElementSelectRef::SurfaceStyleSegmentationCurve(i) => {
+                self.emit_surface_style_segmentation_curves(i)
+            }
+            SurfaceStyleElementSelectRef::SurfaceStyleSilhouette(i) => {
+                self.emit_surface_style_silhouettes(i)
+            }
+            SurfaceStyleElementSelectRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_symbol_style_select(&mut self, r: SymbolStyleSelectRef) -> u64 {
+        match r {
+            SymbolStyleSelectRef::SymbolColour(i) => self.emit_symbol_colours(i),
+        }
+    }
+
+    fn emit_ref_symbol_target(&mut self, r: SymbolTargetRef) -> u64 {
+        match r {
+            SymbolTargetRef::SymbolTarget(i) => self.emit_symbol_targets(i),
+            SymbolTargetRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -6255,6 +8574,15 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_two_direction_repeat_factor(&mut self, r: TwoDirectionRepeatFactorRef) -> u64 {
+        match r {
+            TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
+                self.emit_two_direction_repeat_factors(i)
+            }
+            TwoDirectionRepeatFactorRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_unit(&mut self, r: UnitRef) -> u64 {
         match r {
             UnitRef::ContextDependentUnit(i) => self.emit_context_dependent_units(i),
@@ -6362,6 +8690,12 @@ impl<'a> Writer<'a> {
                     format!("ADDRESS({})", a.join(","))
                 }
                 UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
+                UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
+                UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL()".to_string(),
+                UnitPart::AnnotationSymbolOccurrence => {
+                    "ANNOTATION_SYMBOL_OCCURRENCE()".to_string()
+                }
+                UnitPart::AnnotationText => "ANNOTATION_TEXT()".to_string(),
                 UnitPart::ApplicationContextElement {
                     name,
                     frame_of_reference,
@@ -6527,6 +8861,20 @@ impl<'a> Writer<'a> {
                     )];
                     format!("BREP_WITH_VOIDS({})", a.join(","))
                 }
+                UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_curve_style((outline_style).clone())
+                    )];
+                    format!("CHARACTER_GLYPH_STYLE_OUTLINE({})", a.join(","))
+                }
+                UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_curve_style((stroke_style).clone())
+                    )];
+                    format!("CHARACTER_GLYPH_STYLE_STROKE({})", a.join(","))
+                }
                 UnitPart::CharacterizedObject {
                     name, description, ..
                 } => {
@@ -6540,6 +8888,17 @@ impl<'a> Writer<'a> {
                     format!("CHARACTERIZED_OBJECT({})", a.join(","))
                 }
                 UnitPart::ClosedShell => "CLOSED_SHELL()".to_string(),
+                UnitPart::Colour => "COLOUR()".to_string(),
+                UnitPart::ColourRgb {
+                    red, green, blue, ..
+                } => {
+                    let a: Vec<String> = vec![real(*red), real(*green), real(*blue)];
+                    format!("COLOUR_RGB({})", a.join(","))
+                }
+                UnitPart::ColourSpecification { name, .. } => {
+                    let a: Vec<String> = vec![step_str(name)];
+                    format!("COLOUR_SPECIFICATION({})", a.join(","))
+                }
                 UnitPart::CommonDatum => "COMMON_DATUM()".to_string(),
                 UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT()".to_string(),
                 UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
@@ -6574,6 +8933,87 @@ impl<'a> Writer<'a> {
                     format!("CONVERSION_BASED_UNIT({})", a.join(","))
                 }
                 UnitPart::Curve => "CURVE()".to_string(),
+                UnitPart::CurveStyle {
+                    name,
+                    curve_font,
+                    curve_width,
+                    curve_colour,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match curve_font {
+                            Some(r) => format!(
+                                "#{}",
+                                self.emit_ref_curve_font_or_scaled_curve_font_select((r).clone())
+                            ),
+                            None => "$".to_string(),
+                        },
+                        match curve_width {
+                            Some(r) => match r {
+                                SizeSelectRef::DescriptiveMeasure(x) => {
+                                    format!("DESCRIPTIVE_MEASURE({})", step_str(x))
+                                }
+                                SizeSelectRef::PositiveLengthMeasure(x) => {
+                                    format!("POSITIVE_LENGTH_MEASURE({})", real(*x))
+                                }
+                                other => format!("#{}", self.emit_ref_size_select(other.clone())),
+                            },
+                            None => "$".to_string(),
+                        },
+                        match curve_colour {
+                            Some(r) => format!("#{}", self.emit_ref_colour((r).clone())),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("CURVE_STYLE({})", a.join(","))
+                }
+                UnitPart::CurveStyleFont {
+                    name, pattern_list, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "({})",
+                            pattern_list
+                                .iter()
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_curve_style_font_pattern((e).clone())
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                    ];
+                    format!("CURVE_STYLE_FONT({})", a.join(","))
+                }
+                UnitPart::CurveStyleFontAndScaling {
+                    name,
+                    curve_font,
+                    curve_font_scaling,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "#{}",
+                            self.emit_ref_curve_style_font_select((curve_font).clone())
+                        ),
+                        real(*curve_font_scaling),
+                    ];
+                    format!("CURVE_STYLE_FONT_AND_SCALING({})", a.join(","))
+                }
+                UnitPart::CurveStyleFontPattern {
+                    visible_segment_length,
+                    invisible_segment_length,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        real(*visible_segment_length),
+                        real(*invisible_segment_length),
+                    ];
+                    format!("CURVE_STYLE_FONT_PATTERN({})", a.join(","))
+                }
                 UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE()".to_string(),
                 UnitPart::Datum { identification, .. } => {
                     let a: Vec<String> = vec![step_str(identification)];
@@ -6608,6 +9048,18 @@ impl<'a> Writer<'a> {
                 UnitPart::DatumTarget { target_id, .. } => {
                     let a: Vec<String> = vec![step_str(target_id)];
                     format!("DATUM_TARGET({})", a.join(","))
+                }
+                UnitPart::DefinedSymbol {
+                    definition, target, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_defined_symbol_select((definition).clone())
+                        ),
+                        format!("#{}", self.emit_ref_symbol_target((target).clone())),
+                    ];
+                    format!("DEFINED_SYMBOL({})", a.join(","))
                 }
                 UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION()".to_string(),
                 UnitPart::DerivedUnit { elements, .. } => {
@@ -6686,6 +9138,27 @@ impl<'a> Writer<'a> {
                     let a: Vec<String> = vec![string_select(source_id)];
                     format!("EXTERNAL_SOURCE({})", a.join(","))
                 }
+                UnitPart::ExternallyDefinedCurveFont => {
+                    "EXTERNALLY_DEFINED_CURVE_FONT()".to_string()
+                }
+                UnitPart::ExternallyDefinedHatchStyle => {
+                    "EXTERNALLY_DEFINED_HATCH_STYLE()".to_string()
+                }
+                UnitPart::ExternallyDefinedItem {
+                    item_id, source, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        string_select(item_id),
+                        format!("#{}", self.emit_ref_external_source((source).clone())),
+                    ];
+                    format!("EXTERNALLY_DEFINED_ITEM({})", a.join(","))
+                }
+                UnitPart::ExternallyDefinedStyle => "EXTERNALLY_DEFINED_STYLE()".to_string(),
+                UnitPart::ExternallyDefinedSymbol => "EXTERNALLY_DEFINED_SYMBOL()".to_string(),
+                UnitPart::ExternallyDefinedTile => "EXTERNALLY_DEFINED_TILE()".to_string(),
+                UnitPart::ExternallyDefinedTileStyle => {
+                    "EXTERNALLY_DEFINED_TILE_STYLE()".to_string()
+                }
                 UnitPart::Face { bounds, .. } => {
                     let a: Vec<String> = vec![format!(
                         "({})",
@@ -6718,7 +9191,114 @@ impl<'a> Writer<'a> {
                     ];
                     format!("FACE_SURFACE({})", a.join(","))
                 }
+                UnitPart::FillAreaStyle {
+                    name, fill_styles, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "({})",
+                            fill_styles
+                                .iter()
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_fill_style_select((e).clone())
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                    ];
+                    format!("FILL_AREA_STYLE({})", a.join(","))
+                }
+                UnitPart::FillAreaStyleHatching {
+                    hatch_line_appearance,
+                    start_of_next_hatch_line,
+                    point_of_reference_hatch_line,
+                    pattern_start,
+                    hatch_line_angle,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_curve_style((hatch_line_appearance).clone())
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_one_direction_repeat_factor(
+                                (start_of_next_hatch_line).clone()
+                            )
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_cartesian_point((point_of_reference_hatch_line).clone())
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_cartesian_point((pattern_start).clone())
+                        ),
+                        real(*hatch_line_angle),
+                    ];
+                    format!("FILL_AREA_STYLE_HATCHING({})", a.join(","))
+                }
+                UnitPart::FillAreaStyleTileColouredRegion {
+                    closed_curve,
+                    region_colour,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_curve_or_annotation_curve_occurrence(
+                                (closed_curve).clone()
+                            )
+                        ),
+                        format!("#{}", self.emit_ref_colour((region_colour).clone())),
+                    ];
+                    format!("FILL_AREA_STYLE_TILE_COLOURED_REGION({})", a.join(","))
+                }
+                UnitPart::FillAreaStyleTileCurveWithStyle { styled_curve, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_annotation_curve_occurrence((styled_curve).clone())
+                    )];
+                    format!("FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE({})", a.join(","))
+                }
+                UnitPart::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_annotation_symbol_occurrence((symbol).clone())
+                    )];
+                    format!("FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE({})", a.join(","))
+                }
+                UnitPart::FillAreaStyleTiles {
+                    tiling_pattern,
+                    tiles,
+                    tiling_scale,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_two_direction_repeat_factor((tiling_pattern).clone())
+                        ),
+                        format!(
+                            "({})",
+                            tiles
+                                .iter()
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_fill_area_style_tile_shape_select((e).clone())
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        real(*tiling_scale),
+                    ];
+                    format!("FILL_AREA_STYLE_TILES({})", a.join(","))
+                }
                 UnitPart::FlatnessTolerance => "FLATNESS_TOLERANCE()".to_string(),
+                UnitPart::FoundedItem => "FOUNDED_ITEM()".to_string(),
                 UnitPart::FunctionallyDefinedTransformation {
                     name, description, ..
                 } => {
@@ -6790,6 +9370,20 @@ impl<'a> Writer<'a> {
                 }
                 UnitPart::GeometricRepresentationItem => {
                     "GEOMETRIC_REPRESENTATION_ITEM()".to_string()
+                }
+                UnitPart::GeometricSet { elements, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        elements
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.emit_ref_geometric_set_select((e).clone())
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("GEOMETRIC_SET({})", a.join(","))
                 }
                 UnitPart::GeometricTolerance {
                     name,
@@ -6922,6 +9516,23 @@ impl<'a> Writer<'a> {
                         vec![format!("#{}", self.emit_ref_closed_shell((outer).clone()))];
                     format!("MANIFOLD_SOLID_BREP({})", a.join(","))
                 }
+                UnitPart::MappedItem {
+                    mapping_source,
+                    mapping_target,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_map((mapping_source).clone())
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_item((mapping_target).clone())
+                        ),
+                    ];
+                    format!("MAPPED_ITEM({})", a.join(","))
+                }
                 UnitPart::MassUnit => "MASS_UNIT()".to_string(),
                 UnitPart::MeasureWithUnit {
                     value_component,
@@ -6944,6 +9555,13 @@ impl<'a> Writer<'a> {
                         None => "*".to_string(),
                     }];
                     format!("NAMED_UNIT({})", a.join(","))
+                }
+                UnitPart::OneDirectionRepeatFactor { repeat_factor, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_vector((repeat_factor).clone())
+                    )];
+                    format!("ONE_DIRECTION_REPEAT_FACTOR({})", a.join(","))
                 }
                 UnitPart::OpenShell => "OPEN_SHELL()".to_string(),
                 UnitPart::OrganizationalAddress {
@@ -7052,11 +9670,63 @@ impl<'a> Writer<'a> {
                     )];
                     format!("PLACEMENT({})", a.join(","))
                 }
+                UnitPart::PlanarBox { placement, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_axis2_placement((placement).clone())
+                    )];
+                    format!("PLANAR_BOX({})", a.join(","))
+                }
+                UnitPart::PlanarExtent {
+                    size_in_x,
+                    size_in_y,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![real(*size_in_x), real(*size_in_y)];
+                    format!("PLANAR_EXTENT({})", a.join(","))
+                }
                 UnitPart::PlaneAngleMeasureWithUnit => {
                     "PLANE_ANGLE_MEASURE_WITH_UNIT()".to_string()
                 }
                 UnitPart::PlaneAngleUnit => "PLANE_ANGLE_UNIT()".to_string(),
                 UnitPart::Point => "POINT()".to_string(),
+                UnitPart::PointStyle {
+                    name,
+                    marker,
+                    marker_size,
+                    marker_colour,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match marker {
+                            Some(r) => match r {
+                                MarkerSelectRef::MarkerType(e) => {
+                                    format!("MARKER_TYPE({})", e.token())
+                                }
+                                other => format!("#{}", self.emit_ref_marker_select(other.clone())),
+                            },
+                            None => "$".to_string(),
+                        },
+                        match marker_size {
+                            Some(r) => match r {
+                                SizeSelectRef::DescriptiveMeasure(x) => {
+                                    format!("DESCRIPTIVE_MEASURE({})", step_str(x))
+                                }
+                                SizeSelectRef::PositiveLengthMeasure(x) => {
+                                    format!("POSITIVE_LENGTH_MEASURE({})", real(*x))
+                                }
+                                other => format!("#{}", self.emit_ref_size_select(other.clone())),
+                            },
+                            None => "$".to_string(),
+                        },
+                        match marker_colour {
+                            Some(r) => format!("#{}", self.emit_ref_colour((r).clone())),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("POINT_STYLE({})", a.join(","))
+                }
                 UnitPart::PolyLoop { polygon, .. } => {
                     let a: Vec<String> = vec![format!(
                         "({})",
@@ -7069,6 +9739,35 @@ impl<'a> Writer<'a> {
                     format!("POLY_LOOP({})", a.join(","))
                 }
                 UnitPart::PositionTolerance => "POSITION_TOLERANCE()".to_string(),
+                UnitPart::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT()".to_string(),
+                UnitPart::PreDefinedItem { name, .. } => {
+                    let a: Vec<String> = vec![step_str(name)];
+                    format!("PRE_DEFINED_ITEM({})", a.join(","))
+                }
+                UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER()".to_string(),
+                UnitPart::PreDefinedSurfaceSideStyle => {
+                    "PRE_DEFINED_SURFACE_SIDE_STYLE()".to_string()
+                }
+                UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL()".to_string(),
+                UnitPart::PreDefinedTile => "PRE_DEFINED_TILE()".to_string(),
+                UnitPart::PresentationStyleAssignment { styles, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        styles
+                            .iter()
+                            .map(|e| match e {
+                                PresentationStyleSelectRef::NullStyle(e) =>
+                                    format!("NULL_STYLE({})", e.token()),
+                                other => format!(
+                                    "#{}",
+                                    self.emit_ref_presentation_style_select(other.clone())
+                                ),
+                            })
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("PRESENTATION_STYLE_ASSIGNMENT({})", a.join(","))
+                }
                 UnitPart::Product {
                     id,
                     name,
@@ -7322,6 +10021,23 @@ impl<'a> Writer<'a> {
                     let a: Vec<String> = vec![step_str(name)];
                     format!("REPRESENTATION_ITEM({})", a.join(","))
                 }
+                UnitPart::RepresentationMap {
+                    mapping_origin,
+                    mapped_representation,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation_item((mapping_origin).clone())
+                        ),
+                        format!(
+                            "#{}",
+                            self.emit_ref_representation((mapped_representation).clone())
+                        ),
+                    ];
+                    format!("REPRESENTATION_MAP({})", a.join(","))
+                }
                 UnitPart::RepresentationReference {
                     id,
                     context_of_items,
@@ -7452,6 +10168,23 @@ impl<'a> Writer<'a> {
                 UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT()".to_string(),
                 UnitPart::SolidModel => "SOLID_MODEL()".to_string(),
                 UnitPart::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE()".to_string(),
+                UnitPart::StyledItem { styles, item, .. } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "({})",
+                            styles
+                                .iter()
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_presentation_style_assignment((e).clone())
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        format!("#{}", self.emit_ref_styled_item_target((item).clone())),
+                    ];
+                    format!("STYLED_ITEM({})", a.join(","))
+                }
                 UnitPart::Surface => "SURFACE()".to_string(),
                 UnitPart::SurfaceCurve {
                     curve_3d,
@@ -7477,6 +10210,177 @@ impl<'a> Writer<'a> {
                     format!("SURFACE_CURVE({})", a.join(","))
                 }
                 UnitPart::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE()".to_string(),
+                UnitPart::SurfaceSideStyle { name, styles, .. } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "({})",
+                            styles
+                                .iter()
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.emit_ref_surface_style_element_select((e).clone())
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                    ];
+                    format!("SURFACE_SIDE_STYLE({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleBoundary {
+                    style_of_boundary, ..
+                } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_curve_or_render((style_of_boundary).clone())
+                    )];
+                    format!("SURFACE_STYLE_BOUNDARY({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleControlGrid {
+                    style_of_control_grid,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_curve_or_render((style_of_control_grid).clone())
+                    )];
+                    format!("SURFACE_STYLE_CONTROL_GRID({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleFillArea { fill_area, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_fill_area_style((fill_area).clone())
+                    )];
+                    format!("SURFACE_STYLE_FILL_AREA({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleParameterLine {
+                    style_of_parameter_lines,
+                    direction_counts,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!(
+                            "#{}",
+                            self.emit_ref_curve_or_render((style_of_parameter_lines).clone())
+                        ),
+                        format!(
+                            "({})",
+                            direction_counts
+                                .iter()
+                                .map(|e| measure(e))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                    ];
+                    format!("SURFACE_STYLE_PARAMETER_LINE({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleReflectanceAmbient {
+                    ambient_reflectance,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![real(*ambient_reflectance)];
+                    format!("SURFACE_STYLE_REFLECTANCE_AMBIENT({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleRendering {
+                    rendering_method,
+                    surface_colour,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        rendering_method.token().to_string(),
+                        format!("#{}", self.emit_ref_colour((surface_colour).clone())),
+                    ];
+                    format!("SURFACE_STYLE_RENDERING({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleRenderingWithProperties { properties, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        properties
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.emit_ref_rendering_properties_select((e).clone())
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleSegmentationCurve {
+                    style_of_segmentation_curve,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_curve_or_render((style_of_segmentation_curve).clone())
+                    )];
+                    format!("SURFACE_STYLE_SEGMENTATION_CURVE({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleSilhouette {
+                    style_of_silhouette,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_curve_or_render((style_of_silhouette).clone())
+                    )];
+                    format!("SURFACE_STYLE_SILHOUETTE({})", a.join(","))
+                }
+                UnitPart::SurfaceStyleUsage { side, style, .. } => {
+                    let a: Vec<String> = vec![
+                        side.token().to_string(),
+                        format!(
+                            "#{}",
+                            self.emit_ref_surface_side_style_select((style).clone())
+                        ),
+                    ];
+                    format!("SURFACE_STYLE_USAGE({})", a.join(","))
+                }
+                UnitPart::SymbolStyle {
+                    name,
+                    style_of_symbol,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "#{}",
+                            self.emit_ref_symbol_style_select((style_of_symbol).clone())
+                        ),
+                    ];
+                    format!("SYMBOL_STYLE({})", a.join(","))
+                }
+                UnitPart::SymbolTarget {
+                    placement,
+                    x_scale,
+                    y_scale,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        format!("#{}", self.emit_ref_axis2_placement((placement).clone())),
+                        real(*x_scale),
+                        real(*y_scale),
+                    ];
+                    format!("SYMBOL_TARGET({})", a.join(","))
+                }
+                UnitPart::TextStyle {
+                    name,
+                    character_appearance,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        format!(
+                            "#{}",
+                            self.emit_ref_character_style_select((character_appearance).clone())
+                        ),
+                    ];
+                    format!("TEXT_STYLE({})", a.join(","))
+                }
+                UnitPart::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION()".to_string(),
+                UnitPart::TextureStyleTessellationSpecification => {
+                    "TEXTURE_STYLE_TESSELLATION_SPECIFICATION()".to_string()
+                }
                 UnitPart::TimeUnit => "TIME_UNIT()".to_string(),
                 UnitPart::ToleranceZone {
                     defining_tolerance,
@@ -7535,6 +10439,16 @@ impl<'a> Writer<'a> {
                     let a: Vec<String> = vec![real(*major_radius), real(*minor_radius)];
                     format!("TOROIDAL_SURFACE({})", a.join(","))
                 }
+                UnitPart::TwoDirectionRepeatFactor {
+                    second_repeat_factor,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_vector((second_repeat_factor).clone())
+                    )];
+                    format!("TWO_DIRECTION_REPEAT_FACTOR({})", a.join(","))
+                }
                 UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
                     let a: Vec<String> = vec![format!(
                         "#{}",
@@ -7587,6 +10501,21 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.angularity_tolerances.items.len() {
             self.emit_angularity_tolerances(AngularityToleranceId(i));
         }
+        for i in 0..self.model.annotation_curve_occurrences.items.len() {
+            self.emit_annotation_curve_occurrences(AnnotationCurveOccurrenceId(i));
+        }
+        for i in 0..self.model.annotation_occurrences.items.len() {
+            self.emit_annotation_occurrences(AnnotationOccurrenceId(i));
+        }
+        for i in 0..self.model.annotation_symbols.items.len() {
+            self.emit_annotation_symbols(AnnotationSymbolId(i));
+        }
+        for i in 0..self.model.annotation_symbol_occurrences.items.len() {
+            self.emit_annotation_symbol_occurrences(AnnotationSymbolOccurrenceId(i));
+        }
+        for i in 0..self.model.annotation_texts.items.len() {
+            self.emit_annotation_texts(AnnotationTextId(i));
+        }
         for i in 0..self.model.application_contexts.items.len() {
             self.emit_application_contexts(ApplicationContextId(i));
         }
@@ -7638,6 +10567,12 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.cartesian_points.items.len() {
             self.emit_cartesian_points(CartesianPointId(i));
         }
+        for i in 0..self.model.character_glyph_style_outlines.items.len() {
+            self.emit_character_glyph_style_outlines(CharacterGlyphStyleOutlineId(i));
+        }
+        for i in 0..self.model.character_glyph_style_strokes.items.len() {
+            self.emit_character_glyph_style_strokes(CharacterGlyphStyleStrokeId(i));
+        }
         for i in 0..self.model.characterized_objects.items.len() {
             self.emit_characterized_objects(CharacterizedObjectId(i));
         }
@@ -7652,6 +10587,15 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.coaxiality_tolerances.items.len() {
             self.emit_coaxiality_tolerances(CoaxialityToleranceId(i));
+        }
+        for i in 0..self.model.colours.items.len() {
+            self.emit_colours(ColourId(i));
+        }
+        for i in 0..self.model.colour_rgbs.items.len() {
+            self.emit_colour_rgbs(ColourRgbId(i));
+        }
+        for i in 0..self.model.colour_specifications.items.len() {
+            self.emit_colour_specifications(ColourSpecificationId(i));
         }
         for i in 0..self.model.common_datums.items.len() {
             self.emit_common_datums(CommonDatumId(i));
@@ -7679,6 +10623,21 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.curves.items.len() {
             self.emit_curves(CurveId(i));
+        }
+        for i in 0..self.model.curve_styles.items.len() {
+            self.emit_curve_styles(CurveStyleId(i));
+        }
+        for i in 0..self.model.curve_style_fonts.items.len() {
+            self.emit_curve_style_fonts(CurveStyleFontId(i));
+        }
+        for i in 0..self.model.curve_style_font_and_scalings.items.len() {
+            self.emit_curve_style_font_and_scalings(CurveStyleFontAndScalingId(i));
+        }
+        for i in 0..self.model.curve_style_font_patterns.items.len() {
+            self.emit_curve_style_font_patterns(CurveStyleFontPatternId(i));
+        }
+        for i in 0..self.model.curve_style_renderings.items.len() {
+            self.emit_curve_style_renderings(CurveStyleRenderingId(i));
         }
         for i in 0..self.model.cylindrical_surfaces.items.len() {
             self.emit_cylindrical_surfaces(CylindricalSurfaceId(i));
@@ -7709,6 +10668,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.datum_targets.items.len() {
             self.emit_datum_targets(DatumTargetId(i));
+        }
+        for i in 0..self.model.defined_symbols.items.len() {
+            self.emit_defined_symbols(DefinedSymbolId(i));
         }
         for i in 0..self.model.definitional_representations.items.len() {
             self.emit_definitional_representations(DefinitionalRepresentationId(i));
@@ -7765,6 +10727,27 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.external_sources.items.len() {
             self.emit_external_sources(ExternalSourceId(i));
         }
+        for i in 0..self.model.externally_defined_curve_fonts.items.len() {
+            self.emit_externally_defined_curve_fonts(ExternallyDefinedCurveFontId(i));
+        }
+        for i in 0..self.model.externally_defined_hatch_styles.items.len() {
+            self.emit_externally_defined_hatch_styles(ExternallyDefinedHatchStyleId(i));
+        }
+        for i in 0..self.model.externally_defined_items.items.len() {
+            self.emit_externally_defined_items(ExternallyDefinedItemId(i));
+        }
+        for i in 0..self.model.externally_defined_styles.items.len() {
+            self.emit_externally_defined_styles(ExternallyDefinedStyleId(i));
+        }
+        for i in 0..self.model.externally_defined_symbols.items.len() {
+            self.emit_externally_defined_symbols(ExternallyDefinedSymbolId(i));
+        }
+        for i in 0..self.model.externally_defined_tiles.items.len() {
+            self.emit_externally_defined_tiles(ExternallyDefinedTileId(i));
+        }
+        for i in 0..self.model.externally_defined_tile_styles.items.len() {
+            self.emit_externally_defined_tile_styles(ExternallyDefinedTileStyleId(i));
+        }
         for i in 0..self.model.faces.items.len() {
             self.emit_faces(FaceId(i));
         }
@@ -7777,8 +10760,44 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.face_surfaces.items.len() {
             self.emit_face_surfaces(FaceSurfaceId(i));
         }
+        for i in 0..self.model.fill_area_styles.items.len() {
+            self.emit_fill_area_styles(FillAreaStyleId(i));
+        }
+        for i in 0..self.model.fill_area_style_colours.items.len() {
+            self.emit_fill_area_style_colours(FillAreaStyleColourId(i));
+        }
+        for i in 0..self.model.fill_area_style_hatchings.items.len() {
+            self.emit_fill_area_style_hatchings(FillAreaStyleHatchingId(i));
+        }
+        for i in 0..self.model.fill_area_style_tile_coloured_regions.items.len() {
+            self.emit_fill_area_style_tile_coloured_regions(FillAreaStyleTileColouredRegionId(i));
+        }
+        for i in 0..self
+            .model
+            .fill_area_style_tile_curve_with_styles
+            .items
+            .len()
+        {
+            self.emit_fill_area_style_tile_curve_with_styles(FillAreaStyleTileCurveWithStyleId(i));
+        }
+        for i in 0..self
+            .model
+            .fill_area_style_tile_symbol_with_styles
+            .items
+            .len()
+        {
+            self.emit_fill_area_style_tile_symbol_with_styles(FillAreaStyleTileSymbolWithStyleId(
+                i,
+            ));
+        }
+        for i in 0..self.model.fill_area_style_tiless.items.len() {
+            self.emit_fill_area_style_tiless(FillAreaStyleTilesId(i));
+        }
         for i in 0..self.model.flatness_tolerances.items.len() {
             self.emit_flatness_tolerances(FlatnessToleranceId(i));
+        }
+        for i in 0..self.model.founded_items.items.len() {
+            self.emit_founded_items(FoundedItemId(i));
         }
         for i in 0..self.model.functionally_defined_transformations.items.len() {
             self.emit_functionally_defined_transformations(FunctionallyDefinedTransformationId(i));
@@ -7789,11 +10808,17 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.generic_product_definition_references.items.len() {
             self.emit_generic_product_definition_references(GenericProductDefinitionReferenceId(i));
         }
+        for i in 0..self.model.geometric_curve_sets.items.len() {
+            self.emit_geometric_curve_sets(GeometricCurveSetId(i));
+        }
         for i in 0..self.model.geometric_representation_contexts.items.len() {
             self.emit_geometric_representation_contexts(GeometricRepresentationContextId(i));
         }
         for i in 0..self.model.geometric_representation_items.items.len() {
             self.emit_geometric_representation_items(GeometricRepresentationItemId(i));
+        }
+        for i in 0..self.model.geometric_sets.items.len() {
+            self.emit_geometric_sets(GeometricSetId(i));
         }
         for i in 0..self.model.geometric_tolerances.items.len() {
             self.emit_geometric_tolerances(GeometricToleranceId(i));
@@ -7865,6 +10890,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.manifold_solid_breps.items.len() {
             self.emit_manifold_solid_breps(ManifoldSolidBrepId(i));
         }
+        for i in 0..self.model.mapped_items.items.len() {
+            self.emit_mapped_items(MappedItemId(i));
+        }
         for i in 0..self.model.mass_units.items.len() {
             self.emit_mass_units(MassUnitId(i));
         }
@@ -7879,6 +10907,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.offset_surfaces.items.len() {
             self.emit_offset_surfaces(OffsetSurfaceId(i));
+        }
+        for i in 0..self.model.one_direction_repeat_factors.items.len() {
+            self.emit_one_direction_repeat_factors(OneDirectionRepeatFactorId(i));
         }
         for i in 0..self.model.open_shells.items.len() {
             self.emit_open_shells(OpenShellId(i));
@@ -7952,6 +10983,12 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.placements.items.len() {
             self.emit_placements(PlacementId(i));
         }
+        for i in 0..self.model.planar_boxs.items.len() {
+            self.emit_planar_boxs(PlanarBoxId(i));
+        }
+        for i in 0..self.model.planar_extents.items.len() {
+            self.emit_planar_extents(PlanarExtentId(i));
+        }
         for i in 0..self.model.planes.items.len() {
             self.emit_planes(PlaneId(i));
         }
@@ -7964,11 +11001,35 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.points.items.len() {
             self.emit_points(PointId(i));
         }
+        for i in 0..self.model.point_styles.items.len() {
+            self.emit_point_styles(PointStyleId(i));
+        }
         for i in 0..self.model.poly_loops.items.len() {
             self.emit_poly_loops(PolyLoopId(i));
         }
         for i in 0..self.model.position_tolerances.items.len() {
             self.emit_position_tolerances(PositionToleranceId(i));
+        }
+        for i in 0..self.model.pre_defined_curve_fonts.items.len() {
+            self.emit_pre_defined_curve_fonts(PreDefinedCurveFontId(i));
+        }
+        for i in 0..self.model.pre_defined_items.items.len() {
+            self.emit_pre_defined_items(PreDefinedItemId(i));
+        }
+        for i in 0..self.model.pre_defined_markers.items.len() {
+            self.emit_pre_defined_markers(PreDefinedMarkerId(i));
+        }
+        for i in 0..self.model.pre_defined_surface_side_styles.items.len() {
+            self.emit_pre_defined_surface_side_styles(PreDefinedSurfaceSideStyleId(i));
+        }
+        for i in 0..self.model.pre_defined_symbols.items.len() {
+            self.emit_pre_defined_symbols(PreDefinedSymbolId(i));
+        }
+        for i in 0..self.model.pre_defined_tiles.items.len() {
+            self.emit_pre_defined_tiles(PreDefinedTileId(i));
+        }
+        for i in 0..self.model.presentation_style_assignments.items.len() {
+            self.emit_presentation_style_assignments(PresentationStyleAssignmentId(i));
         }
         for i in 0..self.model.products.items.len() {
             self.emit_products(ProductId(i));
@@ -8031,6 +11092,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.representation_items.items.len() {
             self.emit_representation_items(RepresentationItemId(i));
         }
+        for i in 0..self.model.representation_maps.items.len() {
+            self.emit_representation_maps(RepresentationMapId(i));
+        }
         for i in 0..self.model.representation_references.items.len() {
             self.emit_representation_references(RepresentationReferenceId(i));
         }
@@ -8080,6 +11144,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.straightness_tolerances.items.len() {
             self.emit_straightness_tolerances(StraightnessToleranceId(i));
         }
+        for i in 0..self.model.styled_items.items.len() {
+            self.emit_styled_items(StyledItemId(i));
+        }
         for i in 0..self.model.surfaces.items.len() {
             self.emit_surfaces(SurfaceId(i));
         }
@@ -8095,11 +11162,85 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.surface_profile_tolerances.items.len() {
             self.emit_surface_profile_tolerances(SurfaceProfileToleranceId(i));
         }
+        for i in 0..self.model.surface_rendering_propertiess.items.len() {
+            self.emit_surface_rendering_propertiess(SurfaceRenderingPropertiesId(i));
+        }
+        for i in 0..self.model.surface_side_styles.items.len() {
+            self.emit_surface_side_styles(SurfaceSideStyleId(i));
+        }
+        for i in 0..self.model.surface_style_boundarys.items.len() {
+            self.emit_surface_style_boundarys(SurfaceStyleBoundaryId(i));
+        }
+        for i in 0..self.model.surface_style_control_grids.items.len() {
+            self.emit_surface_style_control_grids(SurfaceStyleControlGridId(i));
+        }
+        for i in 0..self.model.surface_style_fill_areas.items.len() {
+            self.emit_surface_style_fill_areas(SurfaceStyleFillAreaId(i));
+        }
+        for i in 0..self.model.surface_style_parameter_lines.items.len() {
+            self.emit_surface_style_parameter_lines(SurfaceStyleParameterLineId(i));
+        }
+        for i in 0..self.model.surface_style_reflectance_ambients.items.len() {
+            self.emit_surface_style_reflectance_ambients(SurfaceStyleReflectanceAmbientId(i));
+        }
+        for i in 0..self.model.surface_style_renderings.items.len() {
+            self.emit_surface_style_renderings(SurfaceStyleRenderingId(i));
+        }
+        for i in 0..self
+            .model
+            .surface_style_rendering_with_propertiess
+            .items
+            .len()
+        {
+            self.emit_surface_style_rendering_with_propertiess(
+                SurfaceStyleRenderingWithPropertiesId(i),
+            );
+        }
+        for i in 0..self.model.surface_style_segmentation_curves.items.len() {
+            self.emit_surface_style_segmentation_curves(SurfaceStyleSegmentationCurveId(i));
+        }
+        for i in 0..self.model.surface_style_silhouettes.items.len() {
+            self.emit_surface_style_silhouettes(SurfaceStyleSilhouetteId(i));
+        }
+        for i in 0..self.model.surface_style_transparents.items.len() {
+            self.emit_surface_style_transparents(SurfaceStyleTransparentId(i));
+        }
+        for i in 0..self.model.surface_style_usages.items.len() {
+            self.emit_surface_style_usages(SurfaceStyleUsageId(i));
+        }
         for i in 0..self.model.swept_surfaces.items.len() {
             self.emit_swept_surfaces(SweptSurfaceId(i));
         }
+        for i in 0..self.model.symbol_colours.items.len() {
+            self.emit_symbol_colours(SymbolColourId(i));
+        }
+        for i in 0..self.model.symbol_styles.items.len() {
+            self.emit_symbol_styles(SymbolStyleId(i));
+        }
+        for i in 0..self.model.symbol_targets.items.len() {
+            self.emit_symbol_targets(SymbolTargetId(i));
+        }
         for i in 0..self.model.symmetry_tolerances.items.len() {
             self.emit_symmetry_tolerances(SymmetryToleranceId(i));
+        }
+        for i in 0..self.model.text_styles.items.len() {
+            self.emit_text_styles(TextStyleId(i));
+        }
+        for i in 0..self.model.text_style_for_defined_fonts.items.len() {
+            self.emit_text_style_for_defined_fonts(TextStyleForDefinedFontId(i));
+        }
+        for i in 0..self.model.texture_style_specifications.items.len() {
+            self.emit_texture_style_specifications(TextureStyleSpecificationId(i));
+        }
+        for i in 0..self
+            .model
+            .texture_style_tessellation_specifications
+            .items
+            .len()
+        {
+            self.emit_texture_style_tessellation_specifications(
+                TextureStyleTessellationSpecificationId(i),
+            );
         }
         for i in 0..self.model.time_units.items.len() {
             self.emit_time_units(TimeUnitId(i));
@@ -8130,6 +11271,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.trimmed_curves.items.len() {
             self.emit_trimmed_curves(TrimmedCurveId(i));
+        }
+        for i in 0..self.model.two_direction_repeat_factors.items.len() {
+            self.emit_two_direction_repeat_factors(TwoDirectionRepeatFactorId(i));
         }
         for i in 0..self.model.uncertainty_measure_with_units.items.len() {
             self.emit_uncertainty_measure_with_units(UncertaintyMeasureWithUnitId(i));

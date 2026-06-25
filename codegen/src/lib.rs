@@ -3,6 +3,8 @@
 
 pub mod merkle;
 
+pub mod entity_normalize;
+
 #[path = "generated/mod.rs"]
 pub mod generated;
 

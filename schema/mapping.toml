@@ -1135,3 +1135,27 @@ plm_person_org = [
 # document identification, etc.) as a redesigned next step. (The maths exclude
 # that this big-bang required is also removed, since maths is only reachable
 # through the assignment items mega-select.)
+
+# presentation/style — the largest unmodeled corpus cluster (~25M instances:
+# styled_item 4.4M, presentation_style_assignment 4.2M, colour_rgb 4.1M, the
+# fill/surface_style family ~4.1M each). NOT a big-bang: styled_item.item targets
+# geometric/topological_representation_item (already in the geometry/topology
+# closure), and the style selects are self-contained — so this should LOWER
+# escaped (representation.items currently escapes when it points at unseeded
+# styled_item). Round 1 = pure style cluster only; mddgpr/draughting (which carry
+# the broad representation_item select) are a later, escape-measured round.
+presentation = [
+    "styled_item",
+    "presentation_style_assignment",
+    "colour_rgb",
+    "fill_area_style",
+    "fill_area_style_colour",
+    "surface_style_usage",
+    "surface_side_style",
+    "surface_style_fill_area",
+    "surface_style_rendering",
+    "surface_style_rendering_with_properties",
+    "surface_style_transparent",
+    "surface_style_parameter_line",
+    "curve_style",
+]

@@ -87,6 +87,11 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ADDRESS",
     "ADVANCED_FACE",
     "ANGULARITY_TOLERANCE",
+    "ANNOTATION_CURVE_OCCURRENCE",
+    "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_SYMBOL",
+    "ANNOTATION_SYMBOL_OCCURRENCE",
+    "ANNOTATION_TEXT",
     "APPLICATION_CONTEXT",
     "APPLICATION_CONTEXT_ELEMENT",
     "AXIS1_PLACEMENT",
@@ -104,11 +109,16 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
     "CARTESIAN_POINT",
+    "CHARACTER_GLYPH_STYLE_OUTLINE",
+    "CHARACTER_GLYPH_STYLE_STROKE",
     "CHARACTERIZED_OBJECT",
     "CIRCLE",
     "CIRCULAR_RUNOUT_TOLERANCE",
     "CLOSED_SHELL",
     "COAXIALITY_TOLERANCE",
+    "COLOUR",
+    "COLOUR_RGB",
+    "COLOUR_SPECIFICATION",
     "COMMON_DATUM",
     "COMPOSITE_SHAPE_ASPECT",
     "CONCENTRICITY_TOLERANCE",
@@ -118,6 +128,11 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
     "CURVE",
+    "CURVE_STYLE",
+    "CURVE_STYLE_FONT",
+    "CURVE_STYLE_FONT_AND_SCALING",
+    "CURVE_STYLE_FONT_PATTERN",
+    "CURVE_STYLE_RENDERING",
     "CYLINDRICAL_SURFACE",
     "CYLINDRICITY_TOLERANCE",
     "DATUM",
@@ -128,6 +143,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DATUM_REFERENCE_MODIFIER_WITH_VALUE",
     "DATUM_SYSTEM",
     "DATUM_TARGET",
+    "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
     "DERIVED_UNIT",
     "DERIVED_UNIT_ELEMENT",
@@ -144,16 +160,33 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ELEMENTARY_SURFACE",
     "ELLIPSE",
     "EXTERNAL_SOURCE",
+    "EXTERNALLY_DEFINED_CURVE_FONT",
+    "EXTERNALLY_DEFINED_HATCH_STYLE",
+    "EXTERNALLY_DEFINED_ITEM",
+    "EXTERNALLY_DEFINED_STYLE",
+    "EXTERNALLY_DEFINED_SYMBOL",
+    "EXTERNALLY_DEFINED_TILE",
+    "EXTERNALLY_DEFINED_TILE_STYLE",
     "FACE",
     "FACE_BOUND",
     "FACE_OUTER_BOUND",
     "FACE_SURFACE",
+    "FILL_AREA_STYLE",
+    "FILL_AREA_STYLE_COLOUR",
+    "FILL_AREA_STYLE_HATCHING",
+    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+    "FILL_AREA_STYLE_TILES",
     "FLATNESS_TOLERANCE",
+    "FOUNDED_ITEM",
     "FUNCTIONALLY_DEFINED_TRANSFORMATION",
     "GENERAL_DATUM_REFERENCE",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+    "GEOMETRIC_CURVE_SET",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
+    "GEOMETRIC_SET",
     "GEOMETRIC_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
     "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
@@ -168,11 +201,13 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "LINE_PROFILE_TOLERANCE",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
+    "MAPPED_ITEM",
     "MASS_UNIT",
     "MEASURE_WITH_UNIT",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "OFFSET_SURFACE",
+    "ONE_DIRECTION_REPEAT_FACTOR",
     "OPEN_SHELL",
     "ORGANIZATION",
     "ORGANIZATION_RELATIONSHIP",
@@ -197,12 +232,22 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PERSONAL_ADDRESS",
     "PLACED_DATUM_TARGET_FEATURE",
     "PLACEMENT",
+    "PLANAR_BOX",
+    "PLANAR_EXTENT",
     "PLANE",
     "PLANE_ANGLE_MEASURE_WITH_UNIT",
     "PLANE_ANGLE_UNIT",
     "POINT",
+    "POINT_STYLE",
     "POLY_LOOP",
     "POSITION_TOLERANCE",
+    "PRE_DEFINED_CURVE_FONT",
+    "PRE_DEFINED_ITEM",
+    "PRE_DEFINED_MARKER",
+    "PRE_DEFINED_SURFACE_SIDE_STYLE",
+    "PRE_DEFINED_SYMBOL",
+    "PRE_DEFINED_TILE",
+    "PRESENTATION_STYLE_ASSIGNMENT",
     "PRODUCT",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
@@ -221,6 +266,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "REPRESENTATION_CONTEXT",
     "REPRESENTATION_CONTEXT_REFERENCE",
     "REPRESENTATION_ITEM",
+    "REPRESENTATION_MAP",
     "REPRESENTATION_REFERENCE",
     "REPRESENTATION_RELATIONSHIP",
     "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
@@ -235,13 +281,34 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SOLID_MODEL",
     "SPHERICAL_SURFACE",
     "STRAIGHTNESS_TOLERANCE",
+    "STYLED_ITEM",
     "SURFACE",
     "SURFACE_CURVE",
     "SURFACE_OF_LINEAR_EXTRUSION",
     "SURFACE_OF_REVOLUTION",
     "SURFACE_PROFILE_TOLERANCE",
+    "SURFACE_RENDERING_PROPERTIES",
+    "SURFACE_SIDE_STYLE",
+    "SURFACE_STYLE_BOUNDARY",
+    "SURFACE_STYLE_CONTROL_GRID",
+    "SURFACE_STYLE_FILL_AREA",
+    "SURFACE_STYLE_PARAMETER_LINE",
+    "SURFACE_STYLE_REFLECTANCE_AMBIENT",
+    "SURFACE_STYLE_RENDERING",
+    "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+    "SURFACE_STYLE_SEGMENTATION_CURVE",
+    "SURFACE_STYLE_SILHOUETTE",
+    "SURFACE_STYLE_TRANSPARENT",
+    "SURFACE_STYLE_USAGE",
     "SWEPT_SURFACE",
+    "SYMBOL_COLOUR",
+    "SYMBOL_STYLE",
+    "SYMBOL_TARGET",
     "SYMMETRY_TOLERANCE",
+    "TEXT_STYLE",
+    "TEXT_STYLE_FOR_DEFINED_FONT",
+    "TEXTURE_STYLE_SPECIFICATION",
+    "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
     "TIME_UNIT",
     "TOLERANCE_VALUE",
     "TOLERANCE_ZONE",
@@ -252,6 +319,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "TOROIDAL_SURFACE",
     "TOTAL_RUNOUT_TOLERANCE",
     "TRIMMED_CURVE",
+    "TWO_DIRECTION_REPEAT_FACTOR",
     "UNCERTAINTY_MEASURE_WITH_UNIT",
     "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     "UNIFORM_CURVE",
@@ -264,6 +332,10 @@ pub const SIMPLE_NAMES: &[&str] = &[
 pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ADDRESS",
     "ADVANCED_FACE",
+    "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_SYMBOL",
+    "ANNOTATION_SYMBOL_OCCURRENCE",
+    "ANNOTATION_TEXT",
     "APPLICATION_CONTEXT_ELEMENT",
     "B_SPLINE_CURVE",
     "B_SPLINE_CURVE_WITH_KNOTS",
@@ -276,20 +348,30 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "BOUNDED_SURFACE",
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
+    "CHARACTER_GLYPH_STYLE_OUTLINE",
+    "CHARACTER_GLYPH_STYLE_STROKE",
     "CHARACTERIZED_OBJECT",
     "CLOSED_SHELL",
+    "COLOUR",
+    "COLOUR_RGB",
+    "COLOUR_SPECIFICATION",
     "COMMON_DATUM",
     "COMPOSITE_SHAPE_ASPECT",
     "CONNECTED_FACE_SET",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
     "CURVE",
+    "CURVE_STYLE",
+    "CURVE_STYLE_FONT",
+    "CURVE_STYLE_FONT_AND_SCALING",
+    "CURVE_STYLE_FONT_PATTERN",
     "CYLINDRICITY_TOLERANCE",
     "DATUM",
     "DATUM_FEATURE",
     "DATUM_REFERENCE",
     "DATUM_SYSTEM",
     "DATUM_TARGET",
+    "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
     "DERIVED_UNIT",
     "DIMENSIONAL_SIZE",
@@ -299,16 +381,31 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "EDGE_LOOP",
     "ELEMENTARY_SURFACE",
     "EXTERNAL_SOURCE",
+    "EXTERNALLY_DEFINED_CURVE_FONT",
+    "EXTERNALLY_DEFINED_HATCH_STYLE",
+    "EXTERNALLY_DEFINED_ITEM",
+    "EXTERNALLY_DEFINED_STYLE",
+    "EXTERNALLY_DEFINED_SYMBOL",
+    "EXTERNALLY_DEFINED_TILE",
+    "EXTERNALLY_DEFINED_TILE_STYLE",
     "FACE",
     "FACE_BOUND",
     "FACE_OUTER_BOUND",
     "FACE_SURFACE",
+    "FILL_AREA_STYLE",
+    "FILL_AREA_STYLE_HATCHING",
+    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+    "FILL_AREA_STYLE_TILES",
     "FLATNESS_TOLERANCE",
+    "FOUNDED_ITEM",
     "FUNCTIONALLY_DEFINED_TRANSFORMATION",
     "GENERAL_DATUM_REFERENCE",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
+    "GEOMETRIC_SET",
     "GEOMETRIC_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
     "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
@@ -322,10 +419,12 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "LINE_PROFILE_TOLERANCE",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
+    "MAPPED_ITEM",
     "MASS_UNIT",
     "MEASURE_WITH_UNIT",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
+    "ONE_DIRECTION_REPEAT_FACTOR",
     "OPEN_SHELL",
     "ORGANIZATIONAL_ADDRESS",
     "ORIENTED_CLOSED_SHELL",
@@ -337,11 +436,21 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PERSONAL_ADDRESS",
     "PLACED_DATUM_TARGET_FEATURE",
     "PLACEMENT",
+    "PLANAR_BOX",
+    "PLANAR_EXTENT",
     "PLANE_ANGLE_MEASURE_WITH_UNIT",
     "PLANE_ANGLE_UNIT",
     "POINT",
+    "POINT_STYLE",
     "POLY_LOOP",
     "POSITION_TOLERANCE",
+    "PRE_DEFINED_CURVE_FONT",
+    "PRE_DEFINED_ITEM",
+    "PRE_DEFINED_MARKER",
+    "PRE_DEFINED_SURFACE_SIDE_STYLE",
+    "PRE_DEFINED_SYMBOL",
+    "PRE_DEFINED_TILE",
+    "PRESENTATION_STYLE_ASSIGNMENT",
     "PRODUCT",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
@@ -359,6 +468,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "REPRESENTATION",
     "REPRESENTATION_CONTEXT",
     "REPRESENTATION_ITEM",
+    "REPRESENTATION_MAP",
     "REPRESENTATION_REFERENCE",
     "REPRESENTATION_RELATIONSHIP",
     "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
@@ -372,15 +482,33 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
     "STRAIGHTNESS_TOLERANCE",
+    "STYLED_ITEM",
     "SURFACE",
     "SURFACE_CURVE",
     "SURFACE_PROFILE_TOLERANCE",
+    "SURFACE_SIDE_STYLE",
+    "SURFACE_STYLE_BOUNDARY",
+    "SURFACE_STYLE_CONTROL_GRID",
+    "SURFACE_STYLE_FILL_AREA",
+    "SURFACE_STYLE_PARAMETER_LINE",
+    "SURFACE_STYLE_REFLECTANCE_AMBIENT",
+    "SURFACE_STYLE_RENDERING",
+    "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+    "SURFACE_STYLE_SEGMENTATION_CURVE",
+    "SURFACE_STYLE_SILHOUETTE",
+    "SURFACE_STYLE_USAGE",
+    "SYMBOL_STYLE",
+    "SYMBOL_TARGET",
+    "TEXT_STYLE",
+    "TEXTURE_STYLE_SPECIFICATION",
+    "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
     "TIME_UNIT",
     "TOLERANCE_ZONE",
     "TOLERANCE_ZONE_DEFINITION",
     "TOLERANCE_ZONE_WITH_DATUM",
     "TOPOLOGICAL_REPRESENTATION_ITEM",
     "TOROIDAL_SURFACE",
+    "TWO_DIRECTION_REPEAT_FACTOR",
     "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     "UNIFORM_CURVE",
     "UNIFORM_SURFACE",
@@ -407,6 +535,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();
     let mut pending_advanced_faces: Vec<(AdvancedFaceId, u64)> = Vec::new();
     let mut pending_angularity_tolerances: Vec<(AngularityToleranceId, u64)> = Vec::new();
+    let mut pending_annotation_curve_occurrences: Vec<(AnnotationCurveOccurrenceId, u64)> =
+        Vec::new();
+    let mut pending_annotation_occurrences: Vec<(AnnotationOccurrenceId, u64)> = Vec::new();
+    let mut pending_annotation_symbols: Vec<(AnnotationSymbolId, u64)> = Vec::new();
+    let mut pending_annotation_symbol_occurrences: Vec<(AnnotationSymbolOccurrenceId, u64)> =
+        Vec::new();
+    let mut pending_annotation_texts: Vec<(AnnotationTextId, u64)> = Vec::new();
     let mut pending_application_context_elements: Vec<(ApplicationContextElementId, u64)> =
         Vec::new();
     let mut pending_axis1_placements: Vec<(Axis1PlacementId, u64)> = Vec::new();
@@ -422,6 +557,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_bounded_pcurves: Vec<(BoundedPcurveId, u64)> = Vec::new();
     let mut pending_bounded_surface_curves: Vec<(BoundedSurfaceCurveId, u64)> = Vec::new();
     let mut pending_brep_with_voidss: Vec<(BrepWithVoidsId, u64)> = Vec::new();
+    let mut pending_character_glyph_style_outlines: Vec<(CharacterGlyphStyleOutlineId, u64)> =
+        Vec::new();
+    let mut pending_character_glyph_style_strokes: Vec<(CharacterGlyphStyleStrokeId, u64)> =
+        Vec::new();
     let mut pending_circles: Vec<(CircleId, u64)> = Vec::new();
     let mut pending_circular_runout_tolerances: Vec<(CircularRunoutToleranceId, u64)> = Vec::new();
     let mut pending_closed_shells: Vec<(ClosedShellId, u64)> = Vec::new();
@@ -434,6 +573,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_connected_face_sets: Vec<(ConnectedFaceSetId, u64)> = Vec::new();
     let mut pending_context_dependent_units: Vec<(ContextDependentUnitId, u64)> = Vec::new();
     let mut pending_conversion_based_units: Vec<(ConversionBasedUnitId, u64)> = Vec::new();
+    let mut pending_curve_styles: Vec<(CurveStyleId, u64)> = Vec::new();
+    let mut pending_curve_style_fonts: Vec<(CurveStyleFontId, u64)> = Vec::new();
+    let mut pending_curve_style_font_and_scalings: Vec<(CurveStyleFontAndScalingId, u64)> =
+        Vec::new();
+    let mut pending_curve_style_renderings: Vec<(CurveStyleRenderingId, u64)> = Vec::new();
     let mut pending_cylindrical_surfaces: Vec<(CylindricalSurfaceId, u64)> = Vec::new();
     let mut pending_cylindricity_tolerances: Vec<(CylindricityToleranceId, u64)> = Vec::new();
     let mut pending_datums: Vec<(DatumId, u64)> = Vec::new();
@@ -448,6 +592,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_datum_systems: Vec<(DatumSystemId, u64)> = Vec::new();
     let mut pending_datum_targets: Vec<(DatumTargetId, u64)> = Vec::new();
+    let mut pending_defined_symbols: Vec<(DefinedSymbolId, u64)> = Vec::new();
     let mut pending_definitional_representations: Vec<(DefinitionalRepresentationId, u64)> =
         Vec::new();
     let mut pending_derived_units: Vec<(DerivedUnitId, u64)> = Vec::new();
@@ -466,16 +611,44 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_edge_loops: Vec<(EdgeLoopId, u64)> = Vec::new();
     let mut pending_elementary_surfaces: Vec<(ElementarySurfaceId, u64)> = Vec::new();
     let mut pending_ellipses: Vec<(EllipseId, u64)> = Vec::new();
+    let mut pending_externally_defined_curve_fonts: Vec<(ExternallyDefinedCurveFontId, u64)> =
+        Vec::new();
+    let mut pending_externally_defined_hatch_styles: Vec<(ExternallyDefinedHatchStyleId, u64)> =
+        Vec::new();
+    let mut pending_externally_defined_items: Vec<(ExternallyDefinedItemId, u64)> = Vec::new();
+    let mut pending_externally_defined_styles: Vec<(ExternallyDefinedStyleId, u64)> = Vec::new();
+    let mut pending_externally_defined_symbols: Vec<(ExternallyDefinedSymbolId, u64)> = Vec::new();
+    let mut pending_externally_defined_tiles: Vec<(ExternallyDefinedTileId, u64)> = Vec::new();
+    let mut pending_externally_defined_tile_styles: Vec<(ExternallyDefinedTileStyleId, u64)> =
+        Vec::new();
     let mut pending_faces: Vec<(FaceId, u64)> = Vec::new();
     let mut pending_face_bounds: Vec<(FaceBoundId, u64)> = Vec::new();
     let mut pending_face_outer_bounds: Vec<(FaceOuterBoundId, u64)> = Vec::new();
     let mut pending_face_surfaces: Vec<(FaceSurfaceId, u64)> = Vec::new();
+    let mut pending_fill_area_styles: Vec<(FillAreaStyleId, u64)> = Vec::new();
+    let mut pending_fill_area_style_colours: Vec<(FillAreaStyleColourId, u64)> = Vec::new();
+    let mut pending_fill_area_style_hatchings: Vec<(FillAreaStyleHatchingId, u64)> = Vec::new();
+    let mut pending_fill_area_style_tile_coloured_regions: Vec<(
+        FillAreaStyleTileColouredRegionId,
+        u64,
+    )> = Vec::new();
+    let mut pending_fill_area_style_tile_curve_with_styles: Vec<(
+        FillAreaStyleTileCurveWithStyleId,
+        u64,
+    )> = Vec::new();
+    let mut pending_fill_area_style_tile_symbol_with_styles: Vec<(
+        FillAreaStyleTileSymbolWithStyleId,
+        u64,
+    )> = Vec::new();
+    let mut pending_fill_area_style_tiless: Vec<(FillAreaStyleTilesId, u64)> = Vec::new();
     let mut pending_flatness_tolerances: Vec<(FlatnessToleranceId, u64)> = Vec::new();
     let mut pending_general_datum_references: Vec<(GeneralDatumReferenceId, u64)> = Vec::new();
     let mut pending_generic_product_definition_references: Vec<(
         GenericProductDefinitionReferenceId,
         u64,
     )> = Vec::new();
+    let mut pending_geometric_curve_sets: Vec<(GeometricCurveSetId, u64)> = Vec::new();
+    let mut pending_geometric_sets: Vec<(GeometricSetId, u64)> = Vec::new();
     let mut pending_geometric_tolerances: Vec<(GeometricToleranceId, u64)> = Vec::new();
     let mut pending_geometric_tolerance_with_datum_references: Vec<(
         GeometricToleranceWithDatumReferenceId,
@@ -505,12 +678,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_lines: Vec<(LineId, u64)> = Vec::new();
     let mut pending_line_profile_tolerances: Vec<(LineProfileToleranceId, u64)> = Vec::new();
     let mut pending_manifold_solid_breps: Vec<(ManifoldSolidBrepId, u64)> = Vec::new();
+    let mut pending_mapped_items: Vec<(MappedItemId, u64)> = Vec::new();
     let mut pending_mass_units: Vec<(MassUnitId, u64)> = Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
     let mut pending_modified_geometric_tolerances: Vec<(ModifiedGeometricToleranceId, u64)> =
         Vec::new();
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
     let mut pending_offset_surfaces: Vec<(OffsetSurfaceId, u64)> = Vec::new();
+    let mut pending_one_direction_repeat_factors: Vec<(OneDirectionRepeatFactorId, u64)> =
+        Vec::new();
     let mut pending_open_shells: Vec<(OpenShellId, u64)> = Vec::new();
     let mut pending_organization_relationships: Vec<(OrganizationRelationshipId, u64)> = Vec::new();
     let mut pending_organizational_addresss: Vec<(OrganizationalAddressId, u64)> = Vec::new();
@@ -533,12 +709,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_placed_datum_target_features: Vec<(PlacedDatumTargetFeatureId, u64)> =
         Vec::new();
     let mut pending_placements: Vec<(PlacementId, u64)> = Vec::new();
+    let mut pending_planar_boxs: Vec<(PlanarBoxId, u64)> = Vec::new();
     let mut pending_planes: Vec<(PlaneId, u64)> = Vec::new();
     let mut pending_plane_angle_measure_with_units: Vec<(PlaneAngleMeasureWithUnitId, u64)> =
         Vec::new();
     let mut pending_plane_angle_units: Vec<(PlaneAngleUnitId, u64)> = Vec::new();
+    let mut pending_point_styles: Vec<(PointStyleId, u64)> = Vec::new();
     let mut pending_poly_loops: Vec<(PolyLoopId, u64)> = Vec::new();
     let mut pending_position_tolerances: Vec<(PositionToleranceId, u64)> = Vec::new();
+    let mut pending_presentation_style_assignments: Vec<(PresentationStyleAssignmentId, u64)> =
+        Vec::new();
     let mut pending_products: Vec<(ProductId, u64)> = Vec::new();
     let mut pending_product_contexts: Vec<(ProductContextId, u64)> = Vec::new();
     let mut pending_product_definitions: Vec<(ProductDefinitionId, u64)> = Vec::new();
@@ -561,6 +741,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_rational_b_spline_curves: Vec<(RationalBSplineCurveId, u64)> = Vec::new();
     let mut pending_rational_b_spline_surfaces: Vec<(RationalBSplineSurfaceId, u64)> = Vec::new();
     let mut pending_representations: Vec<(RepresentationId, u64)> = Vec::new();
+    let mut pending_representation_maps: Vec<(RepresentationMapId, u64)> = Vec::new();
     let mut pending_representation_references: Vec<(RepresentationReferenceId, u64)> = Vec::new();
     let mut pending_representation_relationships: Vec<(RepresentationRelationshipId, u64)> =
         Vec::new();
@@ -579,13 +760,37 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_solid_angle_units: Vec<(SolidAngleUnitId, u64)> = Vec::new();
     let mut pending_spherical_surfaces: Vec<(SphericalSurfaceId, u64)> = Vec::new();
     let mut pending_straightness_tolerances: Vec<(StraightnessToleranceId, u64)> = Vec::new();
+    let mut pending_styled_items: Vec<(StyledItemId, u64)> = Vec::new();
     let mut pending_surface_curves: Vec<(SurfaceCurveId, u64)> = Vec::new();
     let mut pending_surface_of_linear_extrusions: Vec<(SurfaceOfLinearExtrusionId, u64)> =
         Vec::new();
     let mut pending_surface_of_revolutions: Vec<(SurfaceOfRevolutionId, u64)> = Vec::new();
     let mut pending_surface_profile_tolerances: Vec<(SurfaceProfileToleranceId, u64)> = Vec::new();
+    let mut pending_surface_rendering_propertiess: Vec<(SurfaceRenderingPropertiesId, u64)> =
+        Vec::new();
+    let mut pending_surface_side_styles: Vec<(SurfaceSideStyleId, u64)> = Vec::new();
+    let mut pending_surface_style_boundarys: Vec<(SurfaceStyleBoundaryId, u64)> = Vec::new();
+    let mut pending_surface_style_control_grids: Vec<(SurfaceStyleControlGridId, u64)> = Vec::new();
+    let mut pending_surface_style_fill_areas: Vec<(SurfaceStyleFillAreaId, u64)> = Vec::new();
+    let mut pending_surface_style_parameter_lines: Vec<(SurfaceStyleParameterLineId, u64)> =
+        Vec::new();
+    let mut pending_surface_style_renderings: Vec<(SurfaceStyleRenderingId, u64)> = Vec::new();
+    let mut pending_surface_style_rendering_with_propertiess: Vec<(
+        SurfaceStyleRenderingWithPropertiesId,
+        u64,
+    )> = Vec::new();
+    let mut pending_surface_style_segmentation_curves: Vec<(SurfaceStyleSegmentationCurveId, u64)> =
+        Vec::new();
+    let mut pending_surface_style_silhouettes: Vec<(SurfaceStyleSilhouetteId, u64)> = Vec::new();
+    let mut pending_surface_style_usages: Vec<(SurfaceStyleUsageId, u64)> = Vec::new();
     let mut pending_swept_surfaces: Vec<(SweptSurfaceId, u64)> = Vec::new();
+    let mut pending_symbol_colours: Vec<(SymbolColourId, u64)> = Vec::new();
+    let mut pending_symbol_styles: Vec<(SymbolStyleId, u64)> = Vec::new();
+    let mut pending_symbol_targets: Vec<(SymbolTargetId, u64)> = Vec::new();
     let mut pending_symmetry_tolerances: Vec<(SymmetryToleranceId, u64)> = Vec::new();
+    let mut pending_text_styles: Vec<(TextStyleId, u64)> = Vec::new();
+    let mut pending_text_style_for_defined_fonts: Vec<(TextStyleForDefinedFontId, u64)> =
+        Vec::new();
     let mut pending_time_units: Vec<(TimeUnitId, u64)> = Vec::new();
     let mut pending_tolerance_values: Vec<(ToleranceValueId, u64)> = Vec::new();
     let mut pending_tolerance_zones: Vec<(ToleranceZoneId, u64)> = Vec::new();
@@ -594,6 +799,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_toroidal_surfaces: Vec<(ToroidalSurfaceId, u64)> = Vec::new();
     let mut pending_total_runout_tolerances: Vec<(TotalRunoutToleranceId, u64)> = Vec::new();
     let mut pending_trimmed_curves: Vec<(TrimmedCurveId, u64)> = Vec::new();
+    let mut pending_two_direction_repeat_factors: Vec<(TwoDirectionRepeatFactorId, u64)> =
+        Vec::new();
     let mut pending_uncertainty_measure_with_units: Vec<(UncertaintyMeasureWithUnitId, u64)> =
         Vec::new();
     let mut pending_unequally_disposed_geometric_tolerances: Vec<(
@@ -695,6 +902,74 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = AngularityToleranceId(model.angularity_tolerances.push(v));
                 idmap.insert(id, AnyId::AngularityTolerance(aid));
                 pending_angularity_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_CURVE_OCCURRENCE" => {
+                let v = AnnotationCurveOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+                };
+                let aid = AnnotationCurveOccurrenceId(model.annotation_curve_occurrences.push(v));
+                idmap.insert(id, AnyId::AnnotationCurveOccurrence(aid));
+                pending_annotation_curve_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_OCCURRENCE" => {
+                let v = AnnotationOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                };
+                let aid = AnnotationOccurrenceId(model.annotation_occurrences.push(v));
+                idmap.insert(id, AnyId::AnnotationOccurrence(aid));
+                pending_annotation_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_SYMBOL" => {
+                let v = AnnotationSymbol {
+                    name: as_str(&attributes[0]),
+                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
+                        usize::MAX,
+                    )),
+                    mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                };
+                let aid = AnnotationSymbolId(model.annotation_symbols.push(v));
+                idmap.insert(id, AnyId::AnnotationSymbol(aid));
+                pending_annotation_symbols.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_SYMBOL_OCCURRENCE" => {
+                let v = AnnotationSymbolOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = AnnotationSymbolOccurrenceId(model.annotation_symbol_occurrences.push(v));
+                idmap.insert(id, AnyId::AnnotationSymbolOccurrence(aid));
+                pending_annotation_symbol_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_TEXT" => {
+                let v = AnnotationText {
+                    name: as_str(&attributes[0]),
+                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
+                        usize::MAX,
+                    )),
+                    mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = AnnotationTextId(model.annotation_texts.push(v));
+                idmap.insert(id, AnyId::AnnotationText(aid));
+                pending_annotation_texts.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -989,6 +1264,27 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CHARACTER_GLYPH_STYLE_OUTLINE" => {
+                let v = CharacterGlyphStyleOutline {
+                    outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+                };
+                let aid =
+                    CharacterGlyphStyleOutlineId(model.character_glyph_style_outlines.push(v));
+                idmap.insert(id, AnyId::CharacterGlyphStyleOutline(aid));
+                pending_character_glyph_style_outlines.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CHARACTER_GLYPH_STYLE_STROKE" => {
+                let v = CharacterGlyphStyleStroke {
+                    stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+                };
+                let aid = CharacterGlyphStyleStrokeId(model.character_glyph_style_strokes.push(v));
+                idmap.insert(id, AnyId::CharacterGlyphStyleStroke(aid));
+                pending_character_glyph_style_strokes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CHARACTERIZED_OBJECT" => {
                 let v = CharacterizedObject {
                     name: as_str(&attributes[0]),
@@ -1060,6 +1356,34 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = CoaxialityToleranceId(model.coaxiality_tolerances.push(v));
                 idmap.insert(id, AnyId::CoaxialityTolerance(aid));
                 pending_coaxiality_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COLOUR" => {
+                let v = Colour {};
+                let aid = ColourId(model.colours.push(v));
+                idmap.insert(id, AnyId::Colour(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COLOUR_RGB" => {
+                let v = ColourRgb {
+                    name: as_str(&attributes[0]),
+                    red: as_real(&attributes[1]),
+                    green: as_real(&attributes[2]),
+                    blue: as_real(&attributes[3]),
+                };
+                let aid = ColourRgbId(model.colour_rgbs.push(v));
+                idmap.insert(id, AnyId::ColourRgb(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COLOUR_SPECIFICATION" => {
+                let v = ColourSpecification {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = ColourSpecificationId(model.colour_specifications.push(v));
+                idmap.insert(id, AnyId::ColourSpecification(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1189,6 +1513,72 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = CurveId(model.curves.push(v));
                 idmap.insert(id, AnyId::Curve(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CURVE_STYLE" => {
+                let v = CurveStyle {
+                    name: as_str(&attributes[0]),
+                    curve_font: None,
+                    curve_width: None,
+                    curve_colour: None,
+                };
+                let aid = CurveStyleId(model.curve_styles.push(v));
+                idmap.insert(id, AnyId::CurveStyle(aid));
+                pending_curve_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CURVE_STYLE_FONT" => {
+                let v = CurveStyleFont {
+                    name: as_str(&attributes[0]),
+                    pattern_list: Vec::new(),
+                };
+                let aid = CurveStyleFontId(model.curve_style_fonts.push(v));
+                idmap.insert(id, AnyId::CurveStyleFont(aid));
+                pending_curve_style_fonts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CURVE_STYLE_FONT_AND_SCALING" => {
+                let v = CurveStyleFontAndScaling {
+                    name: as_str(&attributes[0]),
+                    curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(
+                        usize::MAX,
+                    )),
+                    curve_font_scaling: as_real(&attributes[2]),
+                };
+                let aid = CurveStyleFontAndScalingId(model.curve_style_font_and_scalings.push(v));
+                idmap.insert(id, AnyId::CurveStyleFontAndScaling(aid));
+                pending_curve_style_font_and_scalings.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CURVE_STYLE_FONT_PATTERN" => {
+                let v = CurveStyleFontPattern {
+                    visible_segment_length: as_real(&attributes[0]),
+                    invisible_segment_length: as_real(&attributes[1]),
+                };
+                let aid = CurveStyleFontPatternId(model.curve_style_font_patterns.push(v));
+                idmap.insert(id, AnyId::CurveStyleFontPattern(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CURVE_STYLE_RENDERING" => {
+                let v = CurveStyleRendering {
+                    rendering_method: match &attributes[0] {
+                        Attribute::Enum(s) => {
+                            ShadingCurveMethod::parse(s).expect("shading_curve_method")
+                        }
+                        other => panic!("enum shading_curve_method: {other:?}"),
+                    },
+                    rendering_properties: SurfaceRenderingPropertiesRef::SurfaceRenderingProperties(
+                        SurfaceRenderingPropertiesId(usize::MAX),
+                    ),
+                };
+                let aid = CurveStyleRenderingId(model.curve_style_renderings.push(v));
+                idmap.insert(id, AnyId::CurveStyleRendering(aid));
+                pending_curve_style_renderings.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1364,6 +1754,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = DatumTargetId(model.datum_targets.push(v));
                 idmap.insert(id, AnyId::DatumTarget(aid));
                 pending_datum_targets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DEFINED_SYMBOL" => {
+                let v = DefinedSymbol {
+                    name: as_str(&attributes[0]),
+                    definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(
+                        ExternallyDefinedSymbolId(usize::MAX),
+                    ),
+                    target: SymbolTargetRef::SymbolTarget(SymbolTargetId(usize::MAX)),
+                };
+                let aid = DefinedSymbolId(model.defined_symbols.push(v));
+                idmap.insert(id, AnyId::DefinedSymbol(aid));
+                pending_defined_symbols.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1574,6 +1978,88 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_CURVE_FONT" => {
+                let v = ExternallyDefinedCurveFont {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                };
+                let aid =
+                    ExternallyDefinedCurveFontId(model.externally_defined_curve_fonts.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedCurveFont(aid));
+                pending_externally_defined_curve_fonts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_HATCH_STYLE" => {
+                let v = ExternallyDefinedHatchStyle {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                    name: as_str(&attributes[2]),
+                };
+                let aid =
+                    ExternallyDefinedHatchStyleId(model.externally_defined_hatch_styles.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedHatchStyle(aid));
+                pending_externally_defined_hatch_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_ITEM" => {
+                let v = ExternallyDefinedItem {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                };
+                let aid = ExternallyDefinedItemId(model.externally_defined_items.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedItem(aid));
+                pending_externally_defined_items.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_STYLE" => {
+                let v = ExternallyDefinedStyle {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                };
+                let aid = ExternallyDefinedStyleId(model.externally_defined_styles.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedStyle(aid));
+                pending_externally_defined_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_SYMBOL" => {
+                let v = ExternallyDefinedSymbol {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                };
+                let aid = ExternallyDefinedSymbolId(model.externally_defined_symbols.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedSymbol(aid));
+                pending_externally_defined_symbols.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_TILE" => {
+                let v = ExternallyDefinedTile {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                };
+                let aid = ExternallyDefinedTileId(model.externally_defined_tiles.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedTile(aid));
+                pending_externally_defined_tiles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_TILE_STYLE" => {
+                let v = ExternallyDefinedTileStyle {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                    name: as_str(&attributes[2]),
+                };
+                let aid =
+                    ExternallyDefinedTileStyleId(model.externally_defined_tile_styles.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedTileStyle(aid));
+                pending_externally_defined_tile_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "FACE" => {
                 let v = Face {
                     name: as_str(&attributes[0]),
@@ -1622,6 +2108,108 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "FILL_AREA_STYLE" => {
+                let v = FillAreaStyle {
+                    name: as_str(&attributes[0]),
+                    fill_styles: Vec::new(),
+                };
+                let aid = FillAreaStyleId(model.fill_area_styles.push(v));
+                idmap.insert(id, AnyId::FillAreaStyle(aid));
+                pending_fill_area_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "FILL_AREA_STYLE_COLOUR" => {
+                let v = FillAreaStyleColour {
+                    name: as_str(&attributes[0]),
+                    fill_colour: ColourRef::Colour(ColourId(usize::MAX)),
+                };
+                let aid = FillAreaStyleColourId(model.fill_area_style_colours.push(v));
+                idmap.insert(id, AnyId::FillAreaStyleColour(aid));
+                pending_fill_area_style_colours.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "FILL_AREA_STYLE_HATCHING" => {
+                let v = FillAreaStyleHatching {
+                    name: as_str(&attributes[0]),
+                    hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+                    start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(
+                        OneDirectionRepeatFactorId(usize::MAX),
+                    ),
+                    point_of_reference_hatch_line: CartesianPointRef::CartesianPoint(
+                        CartesianPointId(usize::MAX),
+                    ),
+                    pattern_start: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    hatch_line_angle: as_real(&attributes[5]),
+                };
+                let aid = FillAreaStyleHatchingId(model.fill_area_style_hatchings.push(v));
+                idmap.insert(id, AnyId::FillAreaStyleHatching(aid));
+                pending_fill_area_style_hatchings.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "FILL_AREA_STYLE_TILE_COLOURED_REGION" => {
+                let v = FillAreaStyleTileColouredRegion {
+                    name: as_str(&attributes[0]),
+                    closed_curve: CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
+                        AnnotationCurveOccurrenceId(usize::MAX),
+                    ),
+                    region_colour: ColourRef::Colour(ColourId(usize::MAX)),
+                };
+                let aid = FillAreaStyleTileColouredRegionId(
+                    model.fill_area_style_tile_coloured_regions.push(v),
+                );
+                idmap.insert(id, AnyId::FillAreaStyleTileColouredRegion(aid));
+                pending_fill_area_style_tile_coloured_regions.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => {
+                let v = FillAreaStyleTileCurveWithStyle {
+                    name: as_str(&attributes[0]),
+                    styled_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
+                        AnnotationCurveOccurrenceId(usize::MAX),
+                    ),
+                };
+                let aid = FillAreaStyleTileCurveWithStyleId(
+                    model.fill_area_style_tile_curve_with_styles.push(v),
+                );
+                idmap.insert(id, AnyId::FillAreaStyleTileCurveWithStyle(aid));
+                pending_fill_area_style_tile_curve_with_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => {
+                let v = FillAreaStyleTileSymbolWithStyle {
+                    name: as_str(&attributes[0]),
+                    symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(
+                        AnnotationSymbolOccurrenceId(usize::MAX),
+                    ),
+                };
+                let aid = FillAreaStyleTileSymbolWithStyleId(
+                    model.fill_area_style_tile_symbol_with_styles.push(v),
+                );
+                idmap.insert(id, AnyId::FillAreaStyleTileSymbolWithStyle(aid));
+                pending_fill_area_style_tile_symbol_with_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "FILL_AREA_STYLE_TILES" => {
+                let v = FillAreaStyleTiles {
+                    name: as_str(&attributes[0]),
+                    tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(
+                        TwoDirectionRepeatFactorId(usize::MAX),
+                    ),
+                    tiles: Vec::new(),
+                    tiling_scale: as_real(&attributes[3]),
+                };
+                let aid = FillAreaStyleTilesId(model.fill_area_style_tiless.push(v));
+                idmap.insert(id, AnyId::FillAreaStyleTiles(aid));
+                pending_fill_area_style_tiless.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "FLATNESS_TOLERANCE" => {
                 let v = FlatnessTolerance {
                     name: as_str(&attributes[0]),
@@ -1637,6 +2225,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = FlatnessToleranceId(model.flatness_tolerances.push(v));
                 idmap.insert(id, AnyId::FlatnessTolerance(aid));
                 pending_flatness_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "FOUNDED_ITEM" => {
+                let v = FoundedItem {};
+                let aid = FoundedItemId(model.founded_items.push(v));
+                idmap.insert(id, AnyId::FoundedItem(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1687,6 +2282,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "GEOMETRIC_CURVE_SET" => {
+                let v = GeometricCurveSet {
+                    name: as_str(&attributes[0]),
+                    elements: Vec::new(),
+                };
+                let aid = GeometricCurveSetId(model.geometric_curve_sets.push(v));
+                idmap.insert(id, AnyId::GeometricCurveSet(aid));
+                pending_geometric_curve_sets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "GEOMETRIC_REPRESENTATION_CONTEXT" => {
                 let v = GeometricRepresentationContext {
                     context_identifier: as_str(&attributes[0]),
@@ -1707,6 +2313,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid =
                     GeometricRepresentationItemId(model.geometric_representation_items.push(v));
                 idmap.insert(id, AnyId::GeometricRepresentationItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRIC_SET" => {
+                let v = GeometricSet {
+                    name: as_str(&attributes[0]),
+                    elements: Vec::new(),
+                };
+                let aid = GeometricSetId(model.geometric_sets.push(v));
+                idmap.insert(id, AnyId::GeometricSet(aid));
+                pending_geometric_sets.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -1977,6 +2594,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "MAPPED_ITEM" => {
+                let v = MappedItem {
+                    name: as_str(&attributes[0]),
+                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
+                        usize::MAX,
+                    )),
+                    mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                };
+                let aid = MappedItemId(model.mapped_items.push(v));
+                idmap.insert(id, AnyId::MappedItem(aid));
+                pending_mapped_items.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "MASS_UNIT" => {
                 let v = MassUnit {
                     dimensions: DimensionalExponentsRef::DimensionalExponents(
@@ -2042,6 +2673,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = OffsetSurfaceId(model.offset_surfaces.push(v));
                 idmap.insert(id, AnyId::OffsetSurface(aid));
                 pending_offset_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ONE_DIRECTION_REPEAT_FACTOR" => {
+                let v = OneDirectionRepeatFactor {
+                    name: as_str(&attributes[0]),
+                    repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
+                };
+                let aid = OneDirectionRepeatFactorId(model.one_direction_repeat_factors.push(v));
+                idmap.insert(id, AnyId::OneDirectionRepeatFactor(aid));
+                pending_one_direction_repeat_factors.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -2552,6 +3194,30 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PLANAR_BOX" => {
+                let v = PlanarBox {
+                    name: as_str(&attributes[0]),
+                    size_in_x: as_real(&attributes[1]),
+                    size_in_y: as_real(&attributes[2]),
+                    placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+                };
+                let aid = PlanarBoxId(model.planar_boxs.push(v));
+                idmap.insert(id, AnyId::PlanarBox(aid));
+                pending_planar_boxs.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PLANAR_EXTENT" => {
+                let v = PlanarExtent {
+                    name: as_str(&attributes[0]),
+                    size_in_x: as_real(&attributes[1]),
+                    size_in_y: as_real(&attributes[2]),
+                };
+                let aid = PlanarExtentId(model.planar_extents.push(v));
+                idmap.insert(id, AnyId::PlanarExtent(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PLANE" => {
                 let v = Plane {
                     name: as_str(&attributes[0]),
@@ -2597,6 +3263,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "POINT_STYLE" => {
+                let v = PointStyle {
+                    name: as_str(&attributes[0]),
+                    marker: None,
+                    marker_size: None,
+                    marker_colour: None,
+                };
+                let aid = PointStyleId(model.point_styles.push(v));
+                idmap.insert(id, AnyId::PointStyle(aid));
+                pending_point_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "POLY_LOOP" => {
                 let v = PolyLoop {
                     name: as_str(&attributes[0]),
@@ -2623,6 +3302,70 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = PositionToleranceId(model.position_tolerances.push(v));
                 idmap.insert(id, AnyId::PositionTolerance(aid));
                 pending_position_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_CURVE_FONT" => {
+                let v = PreDefinedCurveFont {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedCurveFontId(model.pre_defined_curve_fonts.push(v));
+                idmap.insert(id, AnyId::PreDefinedCurveFont(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_ITEM" => {
+                let v = PreDefinedItem {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedItemId(model.pre_defined_items.push(v));
+                idmap.insert(id, AnyId::PreDefinedItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_MARKER" => {
+                let v = PreDefinedMarker {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedMarkerId(model.pre_defined_markers.push(v));
+                idmap.insert(id, AnyId::PreDefinedMarker(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_SURFACE_SIDE_STYLE" => {
+                let v = PreDefinedSurfaceSideStyle {
+                    name: as_str(&attributes[0]),
+                };
+                let aid =
+                    PreDefinedSurfaceSideStyleId(model.pre_defined_surface_side_styles.push(v));
+                idmap.insert(id, AnyId::PreDefinedSurfaceSideStyle(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_SYMBOL" => {
+                let v = PreDefinedSymbol {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedSymbolId(model.pre_defined_symbols.push(v));
+                idmap.insert(id, AnyId::PreDefinedSymbol(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_TILE" => {
+                let v = PreDefinedTile {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedTileId(model.pre_defined_tiles.push(v));
+                idmap.insert(id, AnyId::PreDefinedTile(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRESENTATION_STYLE_ASSIGNMENT" => {
+                let v = PresentationStyleAssignment { styles: Vec::new() };
+                let aid =
+                    PresentationStyleAssignmentId(model.presentation_style_assignments.push(v));
+                idmap.insert(id, AnyId::PresentationStyleAssignment(aid));
+                pending_presentation_style_assignments.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -2951,6 +3694,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "REPRESENTATION_MAP" => {
+                let v = RepresentationMap {
+                    mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                    mapped_representation: RepresentationRef::DefinitionalRepresentation(
+                        DefinitionalRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = RepresentationMapId(model.representation_maps.push(v));
+                idmap.insert(id, AnyId::RepresentationMap(aid));
+                pending_representation_maps.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "REPRESENTATION_REFERENCE" => {
                 let v = RepresentationReference {
                     id: as_str(&attributes[0]),
@@ -3181,6 +3937,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "STYLED_ITEM" => {
+                let v = StyledItem {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                };
+                let aid = StyledItemId(model.styled_items.push(v));
+                idmap.insert(id, AnyId::StyledItem(aid));
+                pending_styled_items.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SURFACE" => {
                 let v = Surface {
                     name: as_str(&attributes[0]),
@@ -3249,6 +4017,168 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "SURFACE_RENDERING_PROPERTIES" => {
+                let v = SurfaceRenderingProperties {
+                    rendered_colour: ColourRef::Colour(ColourId(usize::MAX)),
+                };
+                let aid = SurfaceRenderingPropertiesId(model.surface_rendering_propertiess.push(v));
+                idmap.insert(id, AnyId::SurfaceRenderingProperties(aid));
+                pending_surface_rendering_propertiess.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_SIDE_STYLE" => {
+                let v = SurfaceSideStyle {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                };
+                let aid = SurfaceSideStyleId(model.surface_side_styles.push(v));
+                idmap.insert(id, AnyId::SurfaceSideStyle(aid));
+                pending_surface_side_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_BOUNDARY" => {
+                let v = SurfaceStyleBoundary {
+                    style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+                };
+                let aid = SurfaceStyleBoundaryId(model.surface_style_boundarys.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleBoundary(aid));
+                pending_surface_style_boundarys.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_CONTROL_GRID" => {
+                let v = SurfaceStyleControlGrid {
+                    style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+                };
+                let aid = SurfaceStyleControlGridId(model.surface_style_control_grids.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleControlGrid(aid));
+                pending_surface_style_control_grids.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_FILL_AREA" => {
+                let v = SurfaceStyleFillArea {
+                    fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(usize::MAX)),
+                };
+                let aid = SurfaceStyleFillAreaId(model.surface_style_fill_areas.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleFillArea(aid));
+                pending_surface_style_fill_areas.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_PARAMETER_LINE" => {
+                let v = SurfaceStyleParameterLine {
+                    style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(
+                        usize::MAX,
+                    )),
+                    direction_counts: match &attributes[1] {
+                        Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = SurfaceStyleParameterLineId(model.surface_style_parameter_lines.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleParameterLine(aid));
+                pending_surface_style_parameter_lines.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_REFLECTANCE_AMBIENT" => {
+                let v = SurfaceStyleReflectanceAmbient {
+                    ambient_reflectance: as_real(&attributes[0]),
+                };
+                let aid = SurfaceStyleReflectanceAmbientId(
+                    model.surface_style_reflectance_ambients.push(v),
+                );
+                idmap.insert(id, AnyId::SurfaceStyleReflectanceAmbient(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_RENDERING" => {
+                let v = SurfaceStyleRendering {
+                    rendering_method: match &attributes[0] {
+                        Attribute::Enum(s) => {
+                            ShadingSurfaceMethod::parse(s).expect("shading_surface_method")
+                        }
+                        other => panic!("enum shading_surface_method: {other:?}"),
+                    },
+                    surface_colour: ColourRef::Colour(ColourId(usize::MAX)),
+                };
+                let aid = SurfaceStyleRenderingId(model.surface_style_renderings.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleRendering(aid));
+                pending_surface_style_renderings.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => {
+                let v = SurfaceStyleRenderingWithProperties {
+                    rendering_method: match &attributes[0] {
+                        Attribute::Enum(s) => {
+                            ShadingSurfaceMethod::parse(s).expect("shading_surface_method")
+                        }
+                        other => panic!("enum shading_surface_method: {other:?}"),
+                    },
+                    surface_colour: ColourRef::Colour(ColourId(usize::MAX)),
+                    properties: Vec::new(),
+                };
+                let aid = SurfaceStyleRenderingWithPropertiesId(
+                    model.surface_style_rendering_with_propertiess.push(v),
+                );
+                idmap.insert(id, AnyId::SurfaceStyleRenderingWithProperties(aid));
+                pending_surface_style_rendering_with_propertiess.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_SEGMENTATION_CURVE" => {
+                let v = SurfaceStyleSegmentationCurve {
+                    style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = SurfaceStyleSegmentationCurveId(
+                    model.surface_style_segmentation_curves.push(v),
+                );
+                idmap.insert(id, AnyId::SurfaceStyleSegmentationCurve(aid));
+                pending_surface_style_segmentation_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_SILHOUETTE" => {
+                let v = SurfaceStyleSilhouette {
+                    style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+                };
+                let aid = SurfaceStyleSilhouetteId(model.surface_style_silhouettes.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleSilhouette(aid));
+                pending_surface_style_silhouettes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_TRANSPARENT" => {
+                let v = SurfaceStyleTransparent {
+                    transparency: as_real(&attributes[0]),
+                };
+                let aid = SurfaceStyleTransparentId(model.surface_style_transparents.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleTransparent(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SURFACE_STYLE_USAGE" => {
+                let v = SurfaceStyleUsage {
+                    side: match &attributes[0] {
+                        Attribute::Enum(s) => SurfaceSide::parse(s).expect("surface_side"),
+                        other => panic!("enum surface_side: {other:?}"),
+                    },
+                    style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(
+                        PreDefinedSurfaceSideStyleId(usize::MAX),
+                    ),
+                };
+                let aid = SurfaceStyleUsageId(model.surface_style_usages.push(v));
+                idmap.insert(id, AnyId::SurfaceStyleUsage(aid));
+                pending_surface_style_usages.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SWEPT_SURFACE" => {
                 let v = SweptSurface {
                     name: as_str(&attributes[0]),
@@ -3257,6 +4187,40 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = SweptSurfaceId(model.swept_surfaces.push(v));
                 idmap.insert(id, AnyId::SweptSurface(aid));
                 pending_swept_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SYMBOL_COLOUR" => {
+                let v = SymbolColour {
+                    colour_of_symbol: ColourRef::Colour(ColourId(usize::MAX)),
+                };
+                let aid = SymbolColourId(model.symbol_colours.push(v));
+                idmap.insert(id, AnyId::SymbolColour(aid));
+                pending_symbol_colours.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SYMBOL_STYLE" => {
+                let v = SymbolStyle {
+                    name: as_str(&attributes[0]),
+                    style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)),
+                };
+                let aid = SymbolStyleId(model.symbol_styles.push(v));
+                idmap.insert(id, AnyId::SymbolStyle(aid));
+                pending_symbol_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SYMBOL_TARGET" => {
+                let v = SymbolTarget {
+                    name: as_str(&attributes[0]),
+                    placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+                    x_scale: as_real(&attributes[2]),
+                    y_scale: as_real(&attributes[3]),
+                };
+                let aid = SymbolTargetId(model.symbol_targets.push(v));
+                idmap.insert(id, AnyId::SymbolTarget(aid));
+                pending_symbol_targets.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -3276,6 +4240,45 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = SymmetryToleranceId(model.symmetry_tolerances.push(v));
                 idmap.insert(id, AnyId::SymmetryTolerance(aid));
                 pending_symmetry_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TEXT_STYLE" => {
+                let v = TextStyle {
+                    name: as_str(&attributes[0]),
+                    character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
+                        CharacterGlyphStyleOutlineId(usize::MAX),
+                    ),
+                };
+                let aid = TextStyleId(model.text_styles.push(v));
+                idmap.insert(id, AnyId::TextStyle(aid));
+                pending_text_styles.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TEXT_STYLE_FOR_DEFINED_FONT" => {
+                let v = TextStyleForDefinedFont {
+                    text_colour: ColourRef::Colour(ColourId(usize::MAX)),
+                };
+                let aid = TextStyleForDefinedFontId(model.text_style_for_defined_fonts.push(v));
+                idmap.insert(id, AnyId::TextStyleForDefinedFont(aid));
+                pending_text_style_for_defined_fonts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TEXTURE_STYLE_SPECIFICATION" => {
+                let v = TextureStyleSpecification {};
+                let aid = TextureStyleSpecificationId(model.texture_style_specifications.push(v));
+                idmap.insert(id, AnyId::TextureStyleSpecification(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => {
+                let v = TextureStyleTessellationSpecification {};
+                let aid = TextureStyleTessellationSpecificationId(
+                    model.texture_style_tessellation_specifications.push(v),
+                );
+                idmap.insert(id, AnyId::TextureStyleTessellationSpecification(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -3429,6 +4432,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TWO_DIRECTION_REPEAT_FACTOR" => {
+                let v = TwoDirectionRepeatFactor {
+                    name: as_str(&attributes[0]),
+                    repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
+                    second_repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
+                };
+                let aid = TwoDirectionRepeatFactorId(model.two_direction_repeat_factors.push(v));
+                idmap.insert(id, AnyId::TwoDirectionRepeatFactor(aid));
+                pending_two_direction_repeat_factors.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "UNCERTAINTY_MEASURE_WITH_UNIT" => {
                 let v = UncertaintyMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
@@ -3573,6 +4588,31 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_angularity_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_annotation_curve_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_curve_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_symbols {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_symbols(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_symbol_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_symbol_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_texts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_texts(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_application_context_elements {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_application_context_elements(&mut model, aid, attributes, &idmap);
@@ -3638,6 +4678,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_brep_with_voidss(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_character_glyph_style_outlines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_character_glyph_style_outlines(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_character_glyph_style_strokes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_character_glyph_style_strokes(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_circles {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_circles(&mut model, aid, attributes, &idmap);
@@ -3698,6 +4748,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_conversion_based_units(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_curve_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_curve_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_curve_style_fonts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_curve_style_fonts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_curve_style_font_and_scalings {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_curve_style_font_and_scalings(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_curve_style_renderings {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_curve_style_renderings(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_cylindrical_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_cylindrical_surfaces(&mut model, aid, attributes, &idmap);
@@ -3746,6 +4816,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_datum_targets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_datum_targets(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_defined_symbols {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_defined_symbols(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_definitional_representations {
@@ -3813,6 +4888,41 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_ellipses(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_externally_defined_curve_fonts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_curve_fonts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_externally_defined_hatch_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_hatch_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_externally_defined_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_items(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_externally_defined_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_externally_defined_symbols {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_symbols(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_externally_defined_tiles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_tiles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_externally_defined_tile_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_tile_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_faces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_faces(&mut model, aid, attributes, &idmap);
@@ -3833,6 +4943,41 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_face_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_fill_area_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_fill_area_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_fill_area_style_colours {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_fill_area_style_colours(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_fill_area_style_hatchings {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_fill_area_style_hatchings(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_fill_area_style_tile_coloured_regions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_fill_area_style_tile_coloured_regions(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_fill_area_style_tile_curve_with_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_fill_area_style_tile_curve_with_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_fill_area_style_tile_symbol_with_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_fill_area_style_tile_symbol_with_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_fill_area_style_tiless {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_fill_area_style_tiless(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_flatness_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_flatness_tolerances(&mut model, aid, attributes, &idmap);
@@ -3846,6 +4991,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_generic_product_definition_references {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_generic_product_definition_references(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_geometric_curve_sets {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_curve_sets(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_geometric_sets {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_sets(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_geometric_tolerances {
@@ -3917,6 +5072,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_manifold_solid_breps(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_mapped_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_mapped_items(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_mass_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_mass_units(&mut model, aid, attributes, &idmap);
@@ -3940,6 +5100,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_offset_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_offset_surfaces(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_one_direction_repeat_factors {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_one_direction_repeat_factors(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_open_shells {
@@ -4022,6 +5187,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_placements(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_planar_boxs {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_planar_boxs(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_planes {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_planes(&mut model, aid, attributes, &idmap);
@@ -4037,6 +5207,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_plane_angle_units(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_point_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_point_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_poly_loops {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_poly_loops(&mut model, aid, attributes, &idmap);
@@ -4045,6 +5220,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_position_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_position_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_presentation_style_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_presentation_style_assignments(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_products {
@@ -4124,6 +5304,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_representations(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_representation_maps {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_representation_maps(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_representation_references {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_representation_references(&mut model, aid, attributes, &idmap);
@@ -4191,6 +5376,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_straightness_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_styled_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_styled_items(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_surface_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_surface_curves(&mut model, aid, attributes, &idmap);
@@ -4211,14 +5401,94 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_surface_profile_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_surface_rendering_propertiess {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_rendering_propertiess(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_side_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_side_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_boundarys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_boundarys(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_control_grids {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_control_grids(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_fill_areas {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_fill_areas(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_parameter_lines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_parameter_lines(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_renderings {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_renderings(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_rendering_with_propertiess {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_rendering_with_propertiess(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_segmentation_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_segmentation_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_silhouettes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_silhouettes(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_surface_style_usages {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_surface_style_usages(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_swept_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_swept_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_symbol_colours {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_symbol_colours(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_symbol_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_symbol_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_symbol_targets {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_symbol_targets(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_symmetry_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_symmetry_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_text_styles {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_text_styles(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_text_style_for_defined_fonts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_text_style_for_defined_fonts(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_time_units {
@@ -4259,6 +5529,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_trimmed_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_trimmed_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_two_direction_repeat_factors {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_two_direction_repeat_factors(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_uncertainty_measure_with_units {
@@ -4348,6 +5623,101 @@ fn resolve_angularity_tolerances(
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
+}
+
+fn resolve_annotation_curve_occurrences(
+    model: &mut Model,
+    aid: AnnotationCurveOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = CurveOrCurveSetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.annotation_curve_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
+fn resolve_annotation_occurrences(
+    model: &mut Model,
+    aid: AnnotationOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.annotation_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
+fn resolve_annotation_symbols(
+    model: &mut Model,
+    aid: AnnotationSymbolId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_source_v =
+        RepresentationMapRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let mapping_target_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.annotation_symbols.items[aid.0];
+    it.mapping_source = mapping_source_v;
+    it.mapping_target = mapping_target_v;
+}
+
+fn resolve_annotation_symbol_occurrences(
+    model: &mut Model,
+    aid: AnnotationSymbolOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = AnnotationSymbolOccurrenceItemRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let it = &mut model.annotation_symbol_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
+fn resolve_annotation_texts(
+    model: &mut Model,
+    aid: AnnotationTextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_source_v =
+        RepresentationMapRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let mapping_target_v =
+        Axis2PlacementRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.annotation_texts.items[aid.0];
+    it.mapping_source = mapping_source_v;
+    it.mapping_target = mapping_target_v;
 }
 
 fn resolve_application_context_elements(
@@ -4595,6 +5965,28 @@ fn resolve_brep_with_voidss(
     it.voids = voids_v;
 }
 
+fn resolve_character_glyph_style_outlines(
+    model: &mut Model,
+    aid: CharacterGlyphStyleOutlineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let outline_style_v = CurveStyleRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.character_glyph_style_outlines.items[aid.0];
+    it.outline_style = outline_style_v;
+}
+
+fn resolve_character_glyph_style_strokes(
+    model: &mut Model,
+    aid: CharacterGlyphStyleStrokeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let stroke_style_v = CurveStyleRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.character_glyph_style_strokes.items[aid.0];
+    it.stroke_style = stroke_style_v;
+}
+
 fn resolve_circles(
     model: &mut Model,
     aid: CircleId,
@@ -4795,6 +6187,83 @@ fn resolve_conversion_based_units(
     let it = &mut model.conversion_based_units.items[aid.0];
     it.dimensions = dimensions_v;
     it.conversion_factor = conversion_factor_v;
+}
+
+fn resolve_curve_styles(
+    model: &mut Model,
+    aid: CurveStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let curve_font_v = match &attrs[1] {
+        Attribute::Unset => None,
+        _ => Some(CurveFontOrScaledCurveFontSelectRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[1])).expect("ref"),
+        )),
+    };
+    let curve_width_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(match &attrs[2] {
+            Attribute::Typed { type_name, .. } if type_name == "DESCRIPTIVE_MEASURE" => {
+                SizeSelectRef::DescriptiveMeasure(read_string_select(&attrs[2]).value)
+            }
+            Attribute::Typed { type_name, .. } if type_name == "POSITIVE_LENGTH_MEASURE" => {
+                SizeSelectRef::PositiveLengthMeasure(read_measure_value(&attrs[2]).value)
+            }
+            _ => SizeSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref")),
+        }),
+    };
+    let curve_colour_v = match &attrs[3] {
+        Attribute::Unset => None,
+        _ => Some(ColourRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+        )),
+    };
+    let it = &mut model.curve_styles.items[aid.0];
+    it.curve_font = curve_font_v;
+    it.curve_width = curve_width_v;
+    it.curve_colour = curve_colour_v;
+}
+
+fn resolve_curve_style_fonts(
+    model: &mut Model,
+    aid: CurveStyleFontId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let pattern_list_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CurveStyleFontPatternRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.curve_style_fonts.items[aid.0];
+    it.pattern_list = pattern_list_v;
+}
+
+fn resolve_curve_style_font_and_scalings(
+    model: &mut Model,
+    aid: CurveStyleFontAndScalingId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let curve_font_v =
+        CurveStyleFontSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.curve_style_font_and_scalings.items[aid.0];
+    it.curve_font = curve_font_v;
+}
+
+fn resolve_curve_style_renderings(
+    model: &mut Model,
+    aid: CurveStyleRenderingId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rendering_properties_v =
+        SurfaceRenderingPropertiesRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.curve_style_renderings.items[aid.0];
+    it.rendering_properties = rendering_properties_v;
 }
 
 fn resolve_cylindrical_surfaces(
@@ -5014,6 +6483,20 @@ fn resolve_datum_targets(
     it.of_shape = of_shape_v;
 }
 
+fn resolve_defined_symbols(
+    model: &mut Model,
+    aid: DefinedSymbolId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v =
+        DefinedSymbolSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let target_v = SymbolTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.defined_symbols.items[aid.0];
+    it.definition = definition_v;
+    it.target = target_v;
+}
+
 fn resolve_definitional_representations(
     model: &mut Model,
     aid: DefinitionalRepresentationId,
@@ -5210,6 +6693,83 @@ fn resolve_ellipses(
     it.position = position_v;
 }
 
+fn resolve_externally_defined_curve_fonts(
+    model: &mut Model,
+    aid: ExternallyDefinedCurveFontId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_curve_fonts.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_externally_defined_hatch_styles(
+    model: &mut Model,
+    aid: ExternallyDefinedHatchStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_hatch_styles.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_externally_defined_items(
+    model: &mut Model,
+    aid: ExternallyDefinedItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_items.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_externally_defined_styles(
+    model: &mut Model,
+    aid: ExternallyDefinedStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_styles.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_externally_defined_symbols(
+    model: &mut Model,
+    aid: ExternallyDefinedSymbolId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_symbols.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_externally_defined_tiles(
+    model: &mut Model,
+    aid: ExternallyDefinedTileId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_tiles.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_externally_defined_tile_styles(
+    model: &mut Model,
+    aid: ExternallyDefinedTileStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_tile_styles.items[aid.0];
+    it.source = source_v;
+}
+
 fn resolve_faces(
     model: &mut Model,
     aid: FaceId,
@@ -5266,6 +6826,116 @@ fn resolve_face_surfaces(
     let it = &mut model.face_surfaces.items[aid.0];
     it.bounds = bounds_v;
     it.face_geometry = face_geometry_v;
+}
+
+fn resolve_fill_area_styles(
+    model: &mut Model,
+    aid: FillAreaStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let fill_styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| FillStyleSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.fill_area_styles.items[aid.0];
+    it.fill_styles = fill_styles_v;
+}
+
+fn resolve_fill_area_style_colours(
+    model: &mut Model,
+    aid: FillAreaStyleColourId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let fill_colour_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.fill_area_style_colours.items[aid.0];
+    it.fill_colour = fill_colour_v;
+}
+
+fn resolve_fill_area_style_hatchings(
+    model: &mut Model,
+    aid: FillAreaStyleHatchingId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let hatch_line_appearance_v =
+        CurveStyleRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let start_of_next_hatch_line_v =
+        OneDirectionRepeatFactorRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let point_of_reference_hatch_line_v =
+        CartesianPointRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let pattern_start_v =
+        CartesianPointRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.fill_area_style_hatchings.items[aid.0];
+    it.hatch_line_appearance = hatch_line_appearance_v;
+    it.start_of_next_hatch_line = start_of_next_hatch_line_v;
+    it.point_of_reference_hatch_line = point_of_reference_hatch_line_v;
+    it.pattern_start = pattern_start_v;
+}
+
+fn resolve_fill_area_style_tile_coloured_regions(
+    model: &mut Model,
+    aid: FillAreaStyleTileColouredRegionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let closed_curve_v = CurveOrAnnotationCurveOccurrenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[1])).expect("ref"),
+    );
+    let region_colour_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.fill_area_style_tile_coloured_regions.items[aid.0];
+    it.closed_curve = closed_curve_v;
+    it.region_colour = region_colour_v;
+}
+
+fn resolve_fill_area_style_tile_curve_with_styles(
+    model: &mut Model,
+    aid: FillAreaStyleTileCurveWithStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styled_curve_v =
+        AnnotationCurveOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.fill_area_style_tile_curve_with_styles.items[aid.0];
+    it.styled_curve = styled_curve_v;
+}
+
+fn resolve_fill_area_style_tile_symbol_with_styles(
+    model: &mut Model,
+    aid: FillAreaStyleTileSymbolWithStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let symbol_v =
+        AnnotationSymbolOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.fill_area_style_tile_symbol_with_styles.items[aid.0];
+    it.symbol = symbol_v;
+}
+
+fn resolve_fill_area_style_tiless(
+    model: &mut Model,
+    aid: FillAreaStyleTilesId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let tiling_pattern_v =
+        TwoDirectionRepeatFactorRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let tiles_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                FillAreaStyleTileShapeSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.fill_area_style_tiless.items[aid.0];
+    it.tiling_pattern = tiling_pattern_v;
+    it.tiles = tiles_v;
 }
 
 fn resolve_flatness_tolerances(
@@ -5349,6 +7019,40 @@ fn resolve_generic_product_definition_references(
     let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.generic_product_definition_references.items[aid.0];
     it.source = source_v;
+}
+
+fn resolve_geometric_curve_sets(
+    model: &mut Model,
+    aid: GeometricCurveSetId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let elements_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| GeometricSetSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.geometric_curve_sets.items[aid.0];
+    it.elements = elements_v;
+}
+
+fn resolve_geometric_sets(
+    model: &mut Model,
+    aid: GeometricSetId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let elements_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| GeometricSetSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.geometric_sets.items[aid.0];
+    it.elements = elements_v;
 }
 
 fn resolve_geometric_tolerances(
@@ -5591,6 +7295,21 @@ fn resolve_manifold_solid_breps(
     it.outer = outer_v;
 }
 
+fn resolve_mapped_items(
+    model: &mut Model,
+    aid: MappedItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_source_v =
+        RepresentationMapRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let mapping_target_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.mapped_items.items[aid.0];
+    it.mapping_source = mapping_source_v;
+    it.mapping_target = mapping_target_v;
+}
+
 fn resolve_mass_units(
     model: &mut Model,
     aid: MassUnitId,
@@ -5658,6 +7377,17 @@ fn resolve_offset_surfaces(
     let basis_surface_v = SurfaceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.offset_surfaces.items[aid.0];
     it.basis_surface = basis_surface_v;
+}
+
+fn resolve_one_direction_repeat_factors(
+    model: &mut Model,
+    aid: OneDirectionRepeatFactorId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let repeat_factor_v = VectorRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.one_direction_repeat_factors.items[aid.0];
+    it.repeat_factor = repeat_factor_v;
 }
 
 fn resolve_open_shells(
@@ -5928,6 +7658,17 @@ fn resolve_placements(
     it.location = location_v;
 }
 
+fn resolve_planar_boxs(
+    model: &mut Model,
+    aid: PlanarBoxId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let placement_v = Axis2PlacementRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.planar_boxs.items[aid.0];
+    it.placement = placement_v;
+}
+
 fn resolve_planes(
     model: &mut Model,
     aid: PlaneId,
@@ -5960,6 +7701,48 @@ fn resolve_plane_angle_units(
         DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.plane_angle_units.items[aid.0];
     it.dimensions = dimensions_v;
+}
+
+fn resolve_point_styles(
+    model: &mut Model,
+    aid: PointStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let marker_v = match &attrs[1] {
+        Attribute::Unset => None,
+        _ => Some(match &attrs[1] {
+            Attribute::Typed { type_name, value } if type_name == "MARKER_TYPE" => {
+                MarkerSelectRef::MarkerType(match value.as_ref() {
+                    Attribute::Enum(s) => MarkerType::parse(s).expect("MarkerType"),
+                    other => panic!("enum MARKER_TYPE: {other:?}"),
+                })
+            }
+            _ => MarkerSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref")),
+        }),
+    };
+    let marker_size_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(match &attrs[2] {
+            Attribute::Typed { type_name, .. } if type_name == "DESCRIPTIVE_MEASURE" => {
+                SizeSelectRef::DescriptiveMeasure(read_string_select(&attrs[2]).value)
+            }
+            Attribute::Typed { type_name, .. } if type_name == "POSITIVE_LENGTH_MEASURE" => {
+                SizeSelectRef::PositiveLengthMeasure(read_measure_value(&attrs[2]).value)
+            }
+            _ => SizeSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref")),
+        }),
+    };
+    let marker_colour_v = match &attrs[3] {
+        Attribute::Unset => None,
+        _ => Some(ColourRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+        )),
+    };
+    let it = &mut model.point_styles.items[aid.0];
+    it.marker = marker_v;
+    it.marker_size = marker_size_v;
+    it.marker_colour = marker_colour_v;
 }
 
 fn resolve_poly_loops(
@@ -5996,6 +7779,31 @@ fn resolve_position_tolerances(
     let it = &mut model.position_tolerances.items[aid.0];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_presentation_style_assignments(
+    model: &mut Model,
+    aid: PresentationStyleAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[0] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| match e {
+                Attribute::Typed { type_name, value } if type_name == "NULL_STYLE" => {
+                    PresentationStyleSelectRef::NullStyle(match value.as_ref() {
+                        Attribute::Enum(s) => NullStyle::parse(s).expect("NullStyle"),
+                        other => panic!("enum NULL_STYLE: {other:?}"),
+                    })
+                }
+                _ => PresentationStyleSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")),
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.presentation_style_assignments.items[aid.0];
+    it.styles = styles_v;
 }
 
 fn resolve_products(
@@ -6242,6 +8050,21 @@ fn resolve_representations(
     it.context_of_items = context_of_items_v;
 }
 
+fn resolve_representation_maps(
+    model: &mut Model,
+    aid: RepresentationMapId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_origin_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let mapped_representation_v =
+        RepresentationRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.representation_maps.items[aid.0];
+    it.mapping_origin = mapping_origin_v;
+    it.mapped_representation = mapped_representation_v;
+}
+
 fn resolve_representation_references(
     model: &mut Model,
     aid: RepresentationReferenceId,
@@ -6462,6 +8285,27 @@ fn resolve_straightness_tolerances(
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
 }
 
+fn resolve_styled_items(
+    model: &mut Model,
+    aid: StyledItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.styled_items.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
 fn resolve_surface_curves(
     model: &mut Model,
     aid: SurfaceCurveId,
@@ -6527,6 +8371,151 @@ fn resolve_surface_profile_tolerances(
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
 }
 
+fn resolve_surface_rendering_propertiess(
+    model: &mut Model,
+    aid: SurfaceRenderingPropertiesId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rendered_colour_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.surface_rendering_propertiess.items[aid.0];
+    it.rendered_colour = rendered_colour_v;
+}
+
+fn resolve_surface_side_styles(
+    model: &mut Model,
+    aid: SurfaceSideStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                SurfaceStyleElementSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.surface_side_styles.items[aid.0];
+    it.styles = styles_v;
+}
+
+fn resolve_surface_style_boundarys(
+    model: &mut Model,
+    aid: SurfaceStyleBoundaryId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let style_of_boundary_v =
+        CurveOrRenderRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.surface_style_boundarys.items[aid.0];
+    it.style_of_boundary = style_of_boundary_v;
+}
+
+fn resolve_surface_style_control_grids(
+    model: &mut Model,
+    aid: SurfaceStyleControlGridId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let style_of_control_grid_v =
+        CurveOrRenderRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.surface_style_control_grids.items[aid.0];
+    it.style_of_control_grid = style_of_control_grid_v;
+}
+
+fn resolve_surface_style_fill_areas(
+    model: &mut Model,
+    aid: SurfaceStyleFillAreaId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let fill_area_v = FillAreaStyleRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.surface_style_fill_areas.items[aid.0];
+    it.fill_area = fill_area_v;
+}
+
+fn resolve_surface_style_parameter_lines(
+    model: &mut Model,
+    aid: SurfaceStyleParameterLineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let style_of_parameter_lines_v =
+        CurveOrRenderRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.surface_style_parameter_lines.items[aid.0];
+    it.style_of_parameter_lines = style_of_parameter_lines_v;
+}
+
+fn resolve_surface_style_renderings(
+    model: &mut Model,
+    aid: SurfaceStyleRenderingId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let surface_colour_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.surface_style_renderings.items[aid.0];
+    it.surface_colour = surface_colour_v;
+}
+
+fn resolve_surface_style_rendering_with_propertiess(
+    model: &mut Model,
+    aid: SurfaceStyleRenderingWithPropertiesId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let surface_colour_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let properties_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                RenderingPropertiesSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.surface_style_rendering_with_propertiess.items[aid.0];
+    it.surface_colour = surface_colour_v;
+    it.properties = properties_v;
+}
+
+fn resolve_surface_style_segmentation_curves(
+    model: &mut Model,
+    aid: SurfaceStyleSegmentationCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let style_of_segmentation_curve_v =
+        CurveOrRenderRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.surface_style_segmentation_curves.items[aid.0];
+    it.style_of_segmentation_curve = style_of_segmentation_curve_v;
+}
+
+fn resolve_surface_style_silhouettes(
+    model: &mut Model,
+    aid: SurfaceStyleSilhouetteId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let style_of_silhouette_v =
+        CurveOrRenderRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.surface_style_silhouettes.items[aid.0];
+    it.style_of_silhouette = style_of_silhouette_v;
+}
+
+fn resolve_surface_style_usages(
+    model: &mut Model,
+    aid: SurfaceStyleUsageId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let style_v =
+        SurfaceSideStyleSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.surface_style_usages.items[aid.0];
+    it.style = style_v;
+}
+
 fn resolve_swept_surfaces(
     model: &mut Model,
     aid: SweptSurfaceId,
@@ -6536,6 +8525,40 @@ fn resolve_swept_surfaces(
     let swept_curve_v = CurveRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.swept_surfaces.items[aid.0];
     it.swept_curve = swept_curve_v;
+}
+
+fn resolve_symbol_colours(
+    model: &mut Model,
+    aid: SymbolColourId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let colour_of_symbol_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.symbol_colours.items[aid.0];
+    it.colour_of_symbol = colour_of_symbol_v;
+}
+
+fn resolve_symbol_styles(
+    model: &mut Model,
+    aid: SymbolStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let style_of_symbol_v =
+        SymbolStyleSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.symbol_styles.items[aid.0];
+    it.style_of_symbol = style_of_symbol_v;
+}
+
+fn resolve_symbol_targets(
+    model: &mut Model,
+    aid: SymbolTargetId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let placement_v = Axis2PlacementRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.symbol_targets.items[aid.0];
+    it.placement = placement_v;
 }
 
 fn resolve_symmetry_tolerances(
@@ -6563,6 +8586,29 @@ fn resolve_symmetry_tolerances(
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
+}
+
+fn resolve_text_styles(
+    model: &mut Model,
+    aid: TextStyleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let character_appearance_v =
+        CharacterStyleSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.text_styles.items[aid.0];
+    it.character_appearance = character_appearance_v;
+}
+
+fn resolve_text_style_for_defined_fonts(
+    model: &mut Model,
+    aid: TextStyleForDefinedFontId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let text_colour_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.text_style_for_defined_fonts.items[aid.0];
+    it.text_colour = text_colour_v;
 }
 
 fn resolve_time_units(
@@ -6733,6 +8779,20 @@ fn resolve_trimmed_curves(
     it.trim_2 = trim_2_v;
 }
 
+fn resolve_two_direction_repeat_factors(
+    model: &mut Model,
+    aid: TwoDirectionRepeatFactorId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let repeat_factor_v = VectorRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let second_repeat_factor_v =
+        VectorRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.two_direction_repeat_factors.items[aid.0];
+    it.repeat_factor = repeat_factor_v;
+    it.second_repeat_factor = second_repeat_factor_v;
+}
+
 fn resolve_uncertainty_measure_with_units(
     model: &mut Model,
     aid: UncertaintyMeasureWithUnitId,
@@ -6894,6 +8954,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
             },
             "ADVANCED_FACE" => UnitPart::AdvancedFace,
+            "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
+            "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
+            "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
+            "ANNOTATION_TEXT" => UnitPart::AnnotationText,
             "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement {
                 name: as_str(&p.attributes[0]),
                 frame_of_reference: ApplicationContextRef::ApplicationContext(
@@ -6967,6 +9031,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
             "BOUNDED_SURFACE_CURVE" => UnitPart::BoundedSurfaceCurve,
             "BREP_WITH_VOIDS" => UnitPart::BrepWithVoids { voids: Vec::new() },
+            "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline {
+                outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+            },
+            "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke {
+                stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+            },
             "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject {
                 name: as_str(&p.attributes[0]),
                 description: match &p.attributes[1] {
@@ -6975,6 +9045,15 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
             },
             "CLOSED_SHELL" => UnitPart::ClosedShell,
+            "COLOUR" => UnitPart::Colour,
+            "COLOUR_RGB" => UnitPart::ColourRgb {
+                red: as_real(&p.attributes[0]),
+                green: as_real(&p.attributes[1]),
+                blue: as_real(&p.attributes[2]),
+            },
+            "COLOUR_SPECIFICATION" => UnitPart::ColourSpecification {
+                name: as_str(&p.attributes[0]),
+            },
             "COMMON_DATUM" => UnitPart::CommonDatum,
             "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
             "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None },
@@ -6988,6 +9067,25 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 ),
             },
             "CURVE" => UnitPart::Curve,
+            "CURVE_STYLE" => UnitPart::CurveStyle {
+                name: as_str(&p.attributes[0]),
+                curve_font: None,
+                curve_width: None,
+                curve_colour: None,
+            },
+            "CURVE_STYLE_FONT" => UnitPart::CurveStyleFont {
+                name: as_str(&p.attributes[0]),
+                pattern_list: Vec::new(),
+            },
+            "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling {
+                name: as_str(&p.attributes[0]),
+                curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(usize::MAX)),
+                curve_font_scaling: as_real(&p.attributes[2]),
+            },
+            "CURVE_STYLE_FONT_PATTERN" => UnitPart::CurveStyleFontPattern {
+                visible_segment_length: as_real(&p.attributes[0]),
+                invisible_segment_length: as_real(&p.attributes[1]),
+            },
             "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
             "DATUM" => UnitPart::Datum {
                 identification: as_str(&p.attributes[0]),
@@ -7002,6 +9100,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "DATUM_TARGET" => UnitPart::DatumTarget {
                 target_id: as_str(&p.attributes[0]),
+            },
+            "DEFINED_SYMBOL" => UnitPart::DefinedSymbol {
+                definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(
+                    ExternallyDefinedSymbolId(usize::MAX),
+                ),
+                target: SymbolTargetRef::SymbolTarget(SymbolTargetId(usize::MAX)),
             },
             "DEFINITIONAL_REPRESENTATION" => UnitPart::DefinitionalRepresentation,
             "DERIVED_UNIT" => UnitPart::DerivedUnit {
@@ -7032,6 +9136,16 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "EXTERNAL_SOURCE" => UnitPart::ExternalSource {
                 source_id: read_string_select(&p.attributes[0]),
             },
+            "EXTERNALLY_DEFINED_CURVE_FONT" => UnitPart::ExternallyDefinedCurveFont,
+            "EXTERNALLY_DEFINED_HATCH_STYLE" => UnitPart::ExternallyDefinedHatchStyle,
+            "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem {
+                item_id: read_string_select(&p.attributes[0]),
+                source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+            },
+            "EXTERNALLY_DEFINED_STYLE" => UnitPart::ExternallyDefinedStyle,
+            "EXTERNALLY_DEFINED_SYMBOL" => UnitPart::ExternallyDefinedSymbol,
+            "EXTERNALLY_DEFINED_TILE" => UnitPart::ExternallyDefinedTile,
+            "EXTERNALLY_DEFINED_TILE_STYLE" => UnitPart::ExternallyDefinedTileStyle,
             "FACE" => UnitPart::Face { bounds: Vec::new() },
             "FACE_BOUND" => UnitPart::FaceBound {
                 bound: LoopRef::EdgeLoop(EdgeLoopId(usize::MAX)),
@@ -7042,7 +9156,48 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
                 same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
             },
+            "FILL_AREA_STYLE" => UnitPart::FillAreaStyle {
+                name: as_str(&p.attributes[0]),
+                fill_styles: Vec::new(),
+            },
+            "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching {
+                hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+                start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(
+                    OneDirectionRepeatFactorId(usize::MAX),
+                ),
+                point_of_reference_hatch_line: CartesianPointRef::CartesianPoint(CartesianPointId(
+                    usize::MAX,
+                )),
+                pattern_start: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                hatch_line_angle: as_real(&p.attributes[4]),
+            },
+            "FILL_AREA_STYLE_TILE_COLOURED_REGION" => UnitPart::FillAreaStyleTileColouredRegion {
+                closed_curve: CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
+                    AnnotationCurveOccurrenceId(usize::MAX),
+                ),
+                region_colour: ColourRef::Colour(ColourId(usize::MAX)),
+            },
+            "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => UnitPart::FillAreaStyleTileCurveWithStyle {
+                styled_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
+                    AnnotationCurveOccurrenceId(usize::MAX),
+                ),
+            },
+            "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => {
+                UnitPart::FillAreaStyleTileSymbolWithStyle {
+                    symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(
+                        AnnotationSymbolOccurrenceId(usize::MAX),
+                    ),
+                }
+            }
+            "FILL_AREA_STYLE_TILES" => UnitPart::FillAreaStyleTiles {
+                tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(
+                    TwoDirectionRepeatFactorId(usize::MAX),
+                ),
+                tiles: Vec::new(),
+                tiling_scale: as_real(&p.attributes[2]),
+            },
             "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
+            "FOUNDED_ITEM" => UnitPart::FoundedItem,
             "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation {
                 name: as_str(&p.attributes[0]),
                 description: match &p.attributes[1] {
@@ -7061,6 +9216,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 coordinate_space_dimension: as_int(&p.attributes[0]),
             },
             "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
+            "GEOMETRIC_SET" => UnitPart::GeometricSet {
+                elements: Vec::new(),
+            },
             "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance {
                 name: as_str(&p.attributes[0]),
                 description: match &p.attributes[1] {
@@ -7130,6 +9288,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep {
                 outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
             },
+            "MAPPED_ITEM" => UnitPart::MappedItem {
+                mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
+                    usize::MAX,
+                )),
+                mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+            },
             "MASS_UNIT" => UnitPart::MassUnit,
             "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit {
                 value_component: read_measure_value(&p.attributes[0]),
@@ -7142,6 +9306,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
             },
             "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None },
+            "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor {
+                repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
+            },
             "OPEN_SHELL" => UnitPart::OpenShell,
             "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress {
                 organizations: Vec::new(),
@@ -7180,13 +9347,37 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "PLACEMENT" => UnitPart::Placement {
                 location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
             },
+            "PLANAR_BOX" => UnitPart::PlanarBox {
+                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+            },
+            "PLANAR_EXTENT" => UnitPart::PlanarExtent {
+                size_in_x: as_real(&p.attributes[0]),
+                size_in_y: as_real(&p.attributes[1]),
+            },
             "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
             "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
             "POINT" => UnitPart::Point,
+            "POINT_STYLE" => UnitPart::PointStyle {
+                name: as_str(&p.attributes[0]),
+                marker: None,
+                marker_size: None,
+                marker_colour: None,
+            },
             "POLY_LOOP" => UnitPart::PolyLoop {
                 polygon: Vec::new(),
             },
             "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
+            "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
+            "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem {
+                name: as_str(&p.attributes[0]),
+            },
+            "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
+            "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
+            "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
+            "PRE_DEFINED_TILE" => UnitPart::PreDefinedTile,
+            "PRESENTATION_STYLE_ASSIGNMENT" => {
+                UnitPart::PresentationStyleAssignment { styles: Vec::new() }
+            }
             "PRODUCT" => UnitPart::Product {
                 id: as_str(&p.attributes[0]),
                 name: as_str(&p.attributes[1]),
@@ -7313,6 +9504,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "REPRESENTATION_ITEM" => UnitPart::RepresentationItem {
                 name: as_str(&p.attributes[0]),
             },
+            "REPRESENTATION_MAP" => UnitPart::RepresentationMap {
+                mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                mapped_representation: RepresentationRef::DefinitionalRepresentation(
+                    DefinitionalRepresentationId(usize::MAX),
+                ),
+            },
             "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference {
                 id: as_str(&p.attributes[0]),
                 context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(
@@ -7379,6 +9576,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
             "SOLID_MODEL" => UnitPart::SolidModel,
             "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
+            "STYLED_ITEM" => UnitPart::StyledItem {
+                styles: Vec::new(),
+                item: StyledItemTargetRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+            },
             "SURFACE" => UnitPart::Surface,
             "SURFACE_CURVE" => UnitPart::SurfaceCurve {
                 curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
@@ -7390,6 +9591,77 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
             },
             "SURFACE_PROFILE_TOLERANCE" => UnitPart::SurfaceProfileTolerance,
+            "SURFACE_SIDE_STYLE" => UnitPart::SurfaceSideStyle {
+                name: as_str(&p.attributes[0]),
+                styles: Vec::new(),
+            },
+            "SURFACE_STYLE_BOUNDARY" => UnitPart::SurfaceStyleBoundary {
+                style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+            },
+            "SURFACE_STYLE_CONTROL_GRID" => UnitPart::SurfaceStyleControlGrid {
+                style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+            },
+            "SURFACE_STYLE_FILL_AREA" => UnitPart::SurfaceStyleFillArea {
+                fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(usize::MAX)),
+            },
+            "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine {
+                style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+                direction_counts: match &p.attributes[1] {
+                    Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(),
+                    other => panic!("vec: {other:?}"),
+                },
+            },
+            "SURFACE_STYLE_REFLECTANCE_AMBIENT" => UnitPart::SurfaceStyleReflectanceAmbient {
+                ambient_reflectance: as_real(&p.attributes[0]),
+            },
+            "SURFACE_STYLE_RENDERING" => UnitPart::SurfaceStyleRendering {
+                rendering_method: match &p.attributes[0] {
+                    Attribute::Enum(s) => {
+                        ShadingSurfaceMethod::parse(s).expect("shading_surface_method")
+                    }
+                    other => panic!("enum shading_surface_method: {other:?}"),
+                },
+                surface_colour: ColourRef::Colour(ColourId(usize::MAX)),
+            },
+            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => {
+                UnitPart::SurfaceStyleRenderingWithProperties {
+                    properties: Vec::new(),
+                }
+            }
+            "SURFACE_STYLE_SEGMENTATION_CURVE" => UnitPart::SurfaceStyleSegmentationCurve {
+                style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+            },
+            "SURFACE_STYLE_SILHOUETTE" => UnitPart::SurfaceStyleSilhouette {
+                style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+            },
+            "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage {
+                side: match &p.attributes[0] {
+                    Attribute::Enum(s) => SurfaceSide::parse(s).expect("surface_side"),
+                    other => panic!("enum surface_side: {other:?}"),
+                },
+                style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(
+                    PreDefinedSurfaceSideStyleId(usize::MAX),
+                ),
+            },
+            "SYMBOL_STYLE" => UnitPart::SymbolStyle {
+                name: as_str(&p.attributes[0]),
+                style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)),
+            },
+            "SYMBOL_TARGET" => UnitPart::SymbolTarget {
+                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+                x_scale: as_real(&p.attributes[1]),
+                y_scale: as_real(&p.attributes[2]),
+            },
+            "TEXT_STYLE" => UnitPart::TextStyle {
+                name: as_str(&p.attributes[0]),
+                character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
+                    CharacterGlyphStyleOutlineId(usize::MAX),
+                ),
+            },
+            "TEXTURE_STYLE_SPECIFICATION" => UnitPart::TextureStyleSpecification,
+            "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => {
+                UnitPart::TextureStyleTessellationSpecification
+            }
             "TIME_UNIT" => UnitPart::TimeUnit,
             "TOLERANCE_ZONE" => UnitPart::ToleranceZone {
                 defining_tolerance: Vec::new(),
@@ -7406,6 +9678,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "TOROIDAL_SURFACE" => UnitPart::ToroidalSurface {
                 major_radius: as_real(&p.attributes[0]),
                 minor_radius: as_real(&p.attributes[1]),
+            },
+            "TWO_DIRECTION_REPEAT_FACTOR" => UnitPart::TwoDirectionRepeatFactor {
+                second_repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
             },
             "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => {
                 UnitPart::UnequallyDisposedGeometricTolerance {
@@ -7494,6 +9769,14 @@ fn resolve_complex(
                     other => panic!("vec ref: {other:?}"),
                 };
             }
+            UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => {
+                *outline_style =
+                    CurveStyleRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => {
+                *stroke_style =
+                    CurveStyleRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
             UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
                 *cfs_faces = match &p.attributes[0] {
                     Attribute::Derived => None,
@@ -7510,6 +9793,65 @@ fn resolve_complex(
                 conversion_factor, ..
             } => {
                 *conversion_factor = MeasureWithUnitRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
+            UnitPart::CurveStyle {
+                curve_font,
+                curve_width,
+                curve_colour,
+                ..
+            } => {
+                *curve_font = match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(CurveFontOrScaledCurveFontSelectRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                    )),
+                };
+                *curve_width = match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(match &p.attributes[2] {
+                        Attribute::Typed { type_name, .. }
+                            if type_name == "DESCRIPTIVE_MEASURE" =>
+                        {
+                            SizeSelectRef::DescriptiveMeasure(
+                                read_string_select(&p.attributes[2]).value,
+                            )
+                        }
+                        Attribute::Typed { type_name, .. }
+                            if type_name == "POSITIVE_LENGTH_MEASURE" =>
+                        {
+                            SizeSelectRef::PositiveLengthMeasure(
+                                read_measure_value(&p.attributes[2]).value,
+                            )
+                        }
+                        _ => SizeSelectRef::from_any(
+                            *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                        ),
+                    }),
+                };
+                *curve_colour = match &p.attributes[3] {
+                    Attribute::Unset => None,
+                    _ => Some(ColourRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                    )),
+                };
+            }
+            UnitPart::CurveStyleFont { pattern_list, .. } => {
+                *pattern_list = match &p.attributes[1] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            CurveStyleFontPatternRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::CurveStyleFontAndScaling { curve_font, .. } => {
+                *curve_font = CurveStyleFontSelectRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
             }
@@ -7531,6 +9873,16 @@ fn resolve_complex(
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::DefinedSymbol {
+                definition, target, ..
+            } => {
+                *definition = DefinedSymbolSelectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *target = SymbolTargetRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
             }
             UnitPart::DerivedUnit { elements, .. } => {
                 *elements = match &p.attributes[0] {
@@ -7575,6 +9927,11 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
             }
+            UnitPart::ExternallyDefinedItem { source, .. } => {
+                *source = ExternalSourceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::Face { bounds, .. } => {
                 *bounds = match &p.attributes[0] {
                     Attribute::List(l) => l
@@ -7590,6 +9947,77 @@ fn resolve_complex(
             UnitPart::FaceSurface { face_geometry, .. } => {
                 *face_geometry =
                     SurfaceRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::FillAreaStyle { fill_styles, .. } => {
+                *fill_styles = match &p.attributes[1] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            FillStyleSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::FillAreaStyleHatching {
+                hatch_line_appearance,
+                start_of_next_hatch_line,
+                point_of_reference_hatch_line,
+                pattern_start,
+                ..
+            } => {
+                *hatch_line_appearance =
+                    CurveStyleRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+                *start_of_next_hatch_line = OneDirectionRepeatFactorRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+                *point_of_reference_hatch_line = CartesianPointRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+                *pattern_start = CartesianPointRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
+            UnitPart::FillAreaStyleTileColouredRegion {
+                closed_curve,
+                region_colour,
+                ..
+            } => {
+                *closed_curve = CurveOrAnnotationCurveOccurrenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *region_colour =
+                    ColourRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
+            }
+            UnitPart::FillAreaStyleTileCurveWithStyle { styled_curve, .. } => {
+                *styled_curve = AnnotationCurveOccurrenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
+                *symbol = AnnotationSymbolOccurrenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::FillAreaStyleTiles {
+                tiling_pattern,
+                tiles,
+                ..
+            } => {
+                *tiling_pattern = TwoDirectionRepeatFactorRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *tiles = match &p.attributes[1] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            FillAreaStyleTileShapeSelectRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::GeneralDatumReference {
                 base, modifiers, ..
@@ -7652,6 +10080,17 @@ fn resolve_complex(
                 *source = ExternalSourceRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
+            }
+            UnitPart::GeometricSet { elements, .. } => {
+                *elements = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            GeometricSetSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::GeometricTolerance {
                 magnitude,
@@ -7721,6 +10160,18 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
             }
+            UnitPart::MappedItem {
+                mapping_source,
+                mapping_target,
+                ..
+            } => {
+                *mapping_source = RepresentationMapRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *mapping_target = RepresentationItemRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::MeasureWithUnit { unit_component, .. } => {
                 *unit_component =
                     UnitRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
@@ -7732,6 +10183,10 @@ fn resolve_complex(
                         *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                     )),
                 };
+            }
+            UnitPart::OneDirectionRepeatFactor { repeat_factor, .. } => {
+                *repeat_factor =
+                    VectorRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
             }
             UnitPart::OrganizationalAddress { organizations, .. } => {
                 *organizations = match &p.attributes[0] {
@@ -7788,12 +10243,85 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
             }
+            UnitPart::PlanarBox { placement, .. } => {
+                *placement = Axis2PlacementRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::PointStyle {
+                marker,
+                marker_size,
+                marker_colour,
+                ..
+            } => {
+                *marker = match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(match &p.attributes[1] {
+                        Attribute::Typed { type_name, value } if type_name == "MARKER_TYPE" => {
+                            MarkerSelectRef::MarkerType(match value.as_ref() {
+                                Attribute::Enum(s) => MarkerType::parse(s).expect("MarkerType"),
+                                other => panic!("enum MARKER_TYPE: {other:?}"),
+                            })
+                        }
+                        _ => MarkerSelectRef::from_any(
+                            *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                        ),
+                    }),
+                };
+                *marker_size = match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(match &p.attributes[2] {
+                        Attribute::Typed { type_name, .. }
+                            if type_name == "DESCRIPTIVE_MEASURE" =>
+                        {
+                            SizeSelectRef::DescriptiveMeasure(
+                                read_string_select(&p.attributes[2]).value,
+                            )
+                        }
+                        Attribute::Typed { type_name, .. }
+                            if type_name == "POSITIVE_LENGTH_MEASURE" =>
+                        {
+                            SizeSelectRef::PositiveLengthMeasure(
+                                read_measure_value(&p.attributes[2]).value,
+                            )
+                        }
+                        _ => SizeSelectRef::from_any(
+                            *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                        ),
+                    }),
+                };
+                *marker_colour = match &p.attributes[3] {
+                    Attribute::Unset => None,
+                    _ => Some(ColourRef::from_any(
+                        *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                    )),
+                };
+            }
             UnitPart::PolyLoop { polygon, .. } => {
                 *polygon = match &p.attributes[0] {
                     Attribute::List(l) => l
                         .iter()
                         .map(|e| {
                             CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::PresentationStyleAssignment { styles, .. } => {
+                *styles = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| match e {
+                            Attribute::Typed { type_name, value } if type_name == "NULL_STYLE" => {
+                                PresentationStyleSelectRef::NullStyle(match value.as_ref() {
+                                    Attribute::Enum(s) => NullStyle::parse(s).expect("NullStyle"),
+                                    other => panic!("enum NULL_STYLE: {other:?}"),
+                                })
+                            }
+                            _ => PresentationStyleSelectRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            ),
                         })
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
@@ -7891,6 +10419,18 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
                 );
             }
+            UnitPart::RepresentationMap {
+                mapping_origin,
+                mapped_representation,
+                ..
+            } => {
+                *mapping_origin = RepresentationItemRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *mapped_representation = RepresentationRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::RepresentationReference {
                 context_of_items, ..
             } => {
@@ -7948,6 +10488,22 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
                 );
             }
+            UnitPart::StyledItem { styles, item, .. } => {
+                *styles = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            PresentationStyleAssignmentRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+                *item = StyledItemTargetRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::SurfaceCurve {
                 curve_3d,
                 associated_geometry,
@@ -7964,6 +10520,105 @@ fn resolve_complex(
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::SurfaceSideStyle { styles, .. } => {
+                *styles = match &p.attributes[1] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            SurfaceStyleElementSelectRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::SurfaceStyleBoundary {
+                style_of_boundary, ..
+            } => {
+                *style_of_boundary = CurveOrRenderRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::SurfaceStyleControlGrid {
+                style_of_control_grid,
+                ..
+            } => {
+                *style_of_control_grid = CurveOrRenderRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::SurfaceStyleFillArea { fill_area, .. } => {
+                *fill_area = FillAreaStyleRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::SurfaceStyleParameterLine {
+                style_of_parameter_lines,
+                ..
+            } => {
+                *style_of_parameter_lines = CurveOrRenderRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::SurfaceStyleRendering { surface_colour, .. } => {
+                *surface_colour =
+                    ColourRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
+            }
+            UnitPart::SurfaceStyleRenderingWithProperties { properties, .. } => {
+                *properties = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            RenderingPropertiesSelectRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::SurfaceStyleSegmentationCurve {
+                style_of_segmentation_curve,
+                ..
+            } => {
+                *style_of_segmentation_curve = CurveOrRenderRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::SurfaceStyleSilhouette {
+                style_of_silhouette,
+                ..
+            } => {
+                *style_of_silhouette = CurveOrRenderRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::SurfaceStyleUsage { style, .. } => {
+                *style = SurfaceSideStyleSelectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
+            UnitPart::SymbolStyle {
+                style_of_symbol, ..
+            } => {
+                *style_of_symbol = SymbolStyleSelectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
+            UnitPart::SymbolTarget { placement, .. } => {
+                *placement = Axis2PlacementRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::TextStyle {
+                character_appearance,
+                ..
+            } => {
+                *character_appearance = CharacterStyleSelectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
             }
             UnitPart::ToleranceZone {
                 defining_tolerance,
@@ -8005,6 +10660,13 @@ fn resolve_complex(
                 *datum_reference = DatumSystemRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
+            }
+            UnitPart::TwoDirectionRepeatFactor {
+                second_repeat_factor,
+                ..
+            } => {
+                *second_repeat_factor =
+                    VectorRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
             }
             UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
                 *displacement = LengthMeasureWithUnitRef::from_any(

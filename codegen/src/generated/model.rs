@@ -394,6 +394,60 @@ impl LimitCondition {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MarkerType {
+    Dot,
+    X,
+    Plus,
+    Asterisk,
+    Ring,
+    Square,
+    Triangle,
+}
+impl MarkerType {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "DOT" => Self::Dot,
+            "X" => Self::X,
+            "PLUS" => Self::Plus,
+            "ASTERISK" => Self::Asterisk,
+            "RING" => Self::Ring,
+            "SQUARE" => Self::Square,
+            "TRIANGLE" => Self::Triangle,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Dot => ".DOT.",
+            Self::X => ".X.",
+            Self::Plus => ".PLUS.",
+            Self::Asterisk => ".ASTERISK.",
+            Self::Ring => ".RING.",
+            Self::Square => ".SQUARE.",
+            Self::Triangle => ".TRIANGLE.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NullStyle {
+    Null,
+}
+impl NullStyle {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "NULL" => Self::Null,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Null => ".NULL.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PreferredSurfaceCurveRepresentation {
     Curve3d,
     PcurveS1,
@@ -413,6 +467,54 @@ impl PreferredSurfaceCurveRepresentation {
             Self::Curve3d => ".CURVE_3D.",
             Self::PcurveS1 => ".PCURVE_S1.",
             Self::PcurveS2 => ".PCURVE_S2.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShadingCurveMethod {
+    ConstantColour,
+    LinearColour,
+}
+impl ShadingCurveMethod {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "CONSTANT_COLOUR" => Self::ConstantColour,
+            "LINEAR_COLOUR" => Self::LinearColour,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::ConstantColour => ".CONSTANT_COLOUR.",
+            Self::LinearColour => ".LINEAR_COLOUR.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShadingSurfaceMethod {
+    ConstantShading,
+    ColourShading,
+    DotShading,
+    NormalShading,
+}
+impl ShadingSurfaceMethod {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "CONSTANT_SHADING" => Self::ConstantShading,
+            "COLOUR_SHADING" => Self::ColourShading,
+            "DOT_SHADING" => Self::DotShading,
+            "NORMAL_SHADING" => Self::NormalShading,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::ConstantShading => ".CONSTANT_SHADING.",
+            Self::ColourShading => ".COLOUR_SHADING.",
+            Self::DotShading => ".DOT_SHADING.",
+            Self::NormalShading => ".NORMAL_SHADING.",
         }
     }
 }
@@ -661,6 +763,30 @@ impl SimpleDatumReferenceModifier {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SurfaceSide {
+    Positive,
+    Negative,
+    Both,
+}
+impl SurfaceSide {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "POSITIVE" => Self::Positive,
+            "NEGATIVE" => Self::Negative,
+            "BOTH" => Self::Both,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Positive => ".POSITIVE.",
+            Self::Negative => ".NEGATIVE.",
+            Self::Both => ".BOTH.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrimmingPreference {
     Cartesian,
     Parameter,
@@ -690,6 +816,16 @@ pub struct AddressId(pub usize);
 pub struct AdvancedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AngularityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AnnotationCurveOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AnnotationOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AnnotationSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AnnotationSymbolOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AnnotationTextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ApplicationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -725,6 +861,10 @@ pub struct BrepWithVoidsId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CartesianPointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CharacterGlyphStyleOutlineId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CharacterGlyphStyleStrokeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CharacterizedObjectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CircleId(pub usize);
@@ -734,6 +874,12 @@ pub struct CircularRunoutToleranceId(pub usize);
 pub struct ClosedShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CoaxialityToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ColourId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ColourRgbId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ColourSpecificationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CommonDatumId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -752,6 +898,16 @@ pub struct ContextDependentUnitId(pub usize);
 pub struct ConversionBasedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CurveStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CurveStyleFontId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CurveStyleFontAndScalingId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CurveStyleFontPatternId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CurveStyleRenderingId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CylindricalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -772,6 +928,8 @@ pub struct DatumReferenceModifierWithValueId(pub usize);
 pub struct DatumSystemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DatumTargetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DefinedSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DefinitionalRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -805,6 +963,20 @@ pub struct EllipseId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ExternalSourceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternallyDefinedCurveFontId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternallyDefinedHatchStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternallyDefinedItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternallyDefinedStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternallyDefinedSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternallyDefinedTileId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExternallyDefinedTileStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FaceBoundId(pub usize);
@@ -813,7 +985,23 @@ pub struct FaceOuterBoundId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FaceSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FillAreaStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FillAreaStyleColourId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FillAreaStyleHatchingId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FillAreaStyleTileColouredRegionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FillAreaStyleTileCurveWithStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FillAreaStyleTileSymbolWithStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FillAreaStyleTilesId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FlatnessToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FoundedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FunctionallyDefinedTransformationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -821,9 +1009,13 @@ pub struct GeneralDatumReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GenericProductDefinitionReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricCurveSetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricRepresentationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeometricSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -853,6 +1045,8 @@ pub struct LoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ManifoldSolidBrepId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MappedItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MassUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MeasureWithUnitId(pub usize);
@@ -862,6 +1056,8 @@ pub struct ModifiedGeometricToleranceId(pub usize);
 pub struct NamedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OffsetSurfaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OneDirectionRepeatFactorId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OpenShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -911,6 +1107,10 @@ pub struct PlacedDatumTargetFeatureId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlacementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlanarBoxId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlanarExtentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlaneId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlaneAngleMeasureWithUnitId(pub usize);
@@ -919,9 +1119,25 @@ pub struct PlaneAngleUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PointStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PolyLoopId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PositionToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PreDefinedCurveFontId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PreDefinedItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PreDefinedMarkerId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PreDefinedSurfaceSideStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PreDefinedSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PreDefinedTileId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PresentationStyleAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -959,6 +1175,8 @@ pub struct RepresentationContextReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RepresentationMapId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RepresentationReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RepresentationRelationshipId(pub usize);
@@ -987,6 +1205,8 @@ pub struct SphericalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct StraightnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StyledItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SurfaceCurveId(pub usize);
@@ -997,9 +1217,49 @@ pub struct SurfaceOfRevolutionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SurfaceProfileToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceRenderingPropertiesId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceSideStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleBoundaryId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleControlGridId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleFillAreaId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleParameterLineId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleReflectanceAmbientId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleRenderingId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleRenderingWithPropertiesId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleSegmentationCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleSilhouetteId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleTransparentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SurfaceStyleUsageId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SweptSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SymbolColourId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SymbolStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SymbolTargetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SymmetryToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextStyleForDefinedFontId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextureStyleSpecificationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextureStyleTessellationSpecificationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TimeUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1020,6 +1280,8 @@ pub struct ToroidalSurfaceId(pub usize);
 pub struct TotalRunoutToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TrimmedCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TwoDirectionRepeatFactorId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UncertaintyMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1044,6 +1306,11 @@ pub enum AnyId {
     Address(AddressId),
     AdvancedFace(AdvancedFaceId),
     AngularityTolerance(AngularityToleranceId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationSymbol(AnnotationSymbolId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
     ApplicationContext(ApplicationContextId),
     ApplicationContextElement(ApplicationContextElementId),
     Axis1Placement(Axis1PlacementId),
@@ -1061,11 +1328,16 @@ pub enum AnyId {
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
     CartesianPoint(CartesianPointId),
+    CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
+    CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
     CharacterizedObject(CharacterizedObjectId),
     Circle(CircleId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     ClosedShell(ClosedShellId),
     CoaxialityTolerance(CoaxialityToleranceId),
+    Colour(ColourId),
+    ColourRgb(ColourRgbId),
+    ColourSpecification(ColourSpecificationId),
     CommonDatum(CommonDatumId),
     CompositeShapeAspect(CompositeShapeAspectId),
     ConcentricityTolerance(ConcentricityToleranceId),
@@ -1075,6 +1347,11 @@ pub enum AnyId {
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
     Curve(CurveId),
+    CurveStyle(CurveStyleId),
+    CurveStyleFont(CurveStyleFontId),
+    CurveStyleFontAndScaling(CurveStyleFontAndScalingId),
+    CurveStyleFontPattern(CurveStyleFontPatternId),
+    CurveStyleRendering(CurveStyleRenderingId),
     CylindricalSurface(CylindricalSurfaceId),
     CylindricityTolerance(CylindricityToleranceId),
     Datum(DatumId),
@@ -1085,6 +1362,7 @@ pub enum AnyId {
     DatumReferenceModifierWithValue(DatumReferenceModifierWithValueId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DerivedUnit(DerivedUnitId),
     DerivedUnitElement(DerivedUnitElementId),
@@ -1101,16 +1379,33 @@ pub enum AnyId {
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
     ExternalSource(ExternalSourceId),
+    ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedItem(ExternallyDefinedItemId),
+    ExternallyDefinedStyle(ExternallyDefinedStyleId),
+    ExternallyDefinedSymbol(ExternallyDefinedSymbolId),
+    ExternallyDefinedTile(ExternallyDefinedTileId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
     Face(FaceId),
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FillAreaStyle(FillAreaStyleId),
+    FillAreaStyleColour(FillAreaStyleColourId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
     FlatnessTolerance(FlatnessToleranceId),
+    FoundedItem(FoundedItemId),
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
+    GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationContext(GeometricRepresentationContextId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
     GeometricTolerance(GeometricToleranceId),
     GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
     GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
@@ -1125,11 +1420,13 @@ pub enum AnyId {
     LineProfileTolerance(LineProfileToleranceId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
+    MappedItem(MappedItemId),
     MassUnit(MassUnitId),
     MeasureWithUnit(MeasureWithUnitId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NamedUnit(NamedUnitId),
     OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
     Organization(OrganizationId),
     OrganizationRelationship(OrganizationRelationshipId),
@@ -1154,12 +1451,22 @@ pub enum AnyId {
     PersonalAddress(PersonalAddressId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
     Plane(PlaneId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     PlaneAngleUnit(PlaneAngleUnitId),
     Point(PointId),
+    PointStyle(PointStyleId),
     PolyLoop(PolyLoopId),
     PositionTolerance(PositionToleranceId),
+    PreDefinedCurveFont(PreDefinedCurveFontId),
+    PreDefinedItem(PreDefinedItemId),
+    PreDefinedMarker(PreDefinedMarkerId),
+    PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
+    PreDefinedSymbol(PreDefinedSymbolId),
+    PreDefinedTile(PreDefinedTileId),
+    PresentationStyleAssignment(PresentationStyleAssignmentId),
     Product(ProductId),
     ProductContext(ProductContextId),
     ProductDefinition(ProductDefinitionId),
@@ -1178,6 +1485,7 @@ pub enum AnyId {
     RepresentationContext(RepresentationContextId),
     RepresentationContextReference(RepresentationContextReferenceId),
     RepresentationItem(RepresentationItemId),
+    RepresentationMap(RepresentationMapId),
     RepresentationReference(RepresentationReferenceId),
     RepresentationRelationship(RepresentationRelationshipId),
     RepresentationRelationshipWithTransformation(RepresentationRelationshipWithTransformationId),
@@ -1192,13 +1500,34 @@ pub enum AnyId {
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
     StraightnessTolerance(StraightnessToleranceId),
+    StyledItem(StyledItemId),
     Surface(SurfaceId),
     SurfaceCurve(SurfaceCurveId),
     SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SurfaceProfileTolerance(SurfaceProfileToleranceId),
+    SurfaceRenderingProperties(SurfaceRenderingPropertiesId),
+    SurfaceSideStyle(SurfaceSideStyleId),
+    SurfaceStyleBoundary(SurfaceStyleBoundaryId),
+    SurfaceStyleControlGrid(SurfaceStyleControlGridId),
+    SurfaceStyleFillArea(SurfaceStyleFillAreaId),
+    SurfaceStyleParameterLine(SurfaceStyleParameterLineId),
+    SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId),
+    SurfaceStyleRendering(SurfaceStyleRenderingId),
+    SurfaceStyleRenderingWithProperties(SurfaceStyleRenderingWithPropertiesId),
+    SurfaceStyleSegmentationCurve(SurfaceStyleSegmentationCurveId),
+    SurfaceStyleSilhouette(SurfaceStyleSilhouetteId),
+    SurfaceStyleTransparent(SurfaceStyleTransparentId),
+    SurfaceStyleUsage(SurfaceStyleUsageId),
     SweptSurface(SweptSurfaceId),
+    SymbolColour(SymbolColourId),
+    SymbolStyle(SymbolStyleId),
+    SymbolTarget(SymbolTargetId),
     SymmetryTolerance(SymmetryToleranceId),
+    TextStyle(TextStyleId),
+    TextStyleForDefinedFont(TextStyleForDefinedFontId),
+    TextureStyleSpecification(TextureStyleSpecificationId),
+    TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
     TimeUnit(TimeUnitId),
     ToleranceValue(ToleranceValueId),
     ToleranceZone(ToleranceZoneId),
@@ -1209,6 +1538,7 @@ pub enum AnyId {
     ToroidalSurface(ToroidalSurfaceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
     UniformCurve(UniformCurveId),
@@ -1218,6 +1548,51 @@ pub enum AnyId {
     VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
     ComplexUnit(ComplexUnitId),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationCurveOccurrenceRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+}
+impl AnnotationCurveOccurrenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            other => panic!("AnnotationCurveOccurrenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationSymbolOccurrenceItemRef {
+    AnnotationSymbol(AnnotationSymbolId),
+    DefinedSymbol(DefinedSymbolId),
+    Complex(ComplexUnitId),
+}
+impl AnnotationSymbolOccurrenceItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("AnnotationSymbolOccurrenceItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationSymbolOccurrenceRef {
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    Complex(ComplexUnitId),
+}
+impl AnnotationSymbolOccurrenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("AnnotationSymbolOccurrenceRef ref -> {other:?}"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1283,6 +1658,25 @@ impl CartesianPointRef {
         match a {
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             other => panic!("CartesianPointRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CharacterStyleSelectRef {
+    CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
+    CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
+    TextStyleForDefinedFont(TextStyleForDefinedFontId),
+    Complex(ComplexUnitId),
+}
+impl CharacterStyleSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CharacterGlyphStyleOutline(i) => Self::CharacterGlyphStyleOutline(i),
+            AnyId::CharacterGlyphStyleStroke(i) => Self::CharacterGlyphStyleStroke(i),
+            AnyId::TextStyleForDefinedFont(i) => Self::TextStyleForDefinedFont(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CharacterStyleSelectRef ref -> {other:?}"),
         }
     }
 }
@@ -1424,6 +1818,169 @@ impl ClosedShellRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ColourRef {
+    Colour(ColourId),
+    ColourRgb(ColourRgbId),
+    ColourSpecification(ColourSpecificationId),
+    Complex(ComplexUnitId),
+}
+impl ColourRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Colour(i) => Self::Colour(i),
+            AnyId::ColourRgb(i) => Self::ColourRgb(i),
+            AnyId::ColourSpecification(i) => Self::ColourSpecification(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ColourRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveFontOrScaledCurveFontSelectRef {
+    CurveStyleFont(CurveStyleFontId),
+    CurveStyleFontAndScaling(CurveStyleFontAndScalingId),
+    ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
+    PreDefinedCurveFont(PreDefinedCurveFontId),
+    Complex(ComplexUnitId),
+}
+impl CurveFontOrScaledCurveFontSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CurveStyleFont(i) => Self::CurveStyleFont(i),
+            AnyId::CurveStyleFontAndScaling(i) => Self::CurveStyleFontAndScaling(i),
+            AnyId::ExternallyDefinedCurveFont(i) => Self::ExternallyDefinedCurveFont(i),
+            AnyId::PreDefinedCurveFont(i) => Self::PreDefinedCurveFont(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CurveFontOrScaledCurveFontSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveOrAnnotationCurveOccurrenceRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    Circle(CircleId),
+    Conic(ConicId),
+    Curve(CurveId),
+    Ellipse(EllipseId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    Pcurve(PcurveId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    SeamCurve(SeamCurveId),
+    SurfaceCurve(SurfaceCurveId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    Complex(ComplexUnitId),
+}
+impl CurveOrAnnotationCurveOccurrenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CurveOrAnnotationCurveOccurrenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveOrCurveSetRef {
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    Circle(CircleId),
+    Conic(ConicId),
+    Curve(CurveId),
+    Ellipse(EllipseId),
+    GeometricCurveSet(GeometricCurveSetId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    Pcurve(PcurveId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    SeamCurve(SeamCurveId),
+    SurfaceCurve(SurfaceCurveId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    Complex(ComplexUnitId),
+}
+impl CurveOrCurveSetRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CurveOrCurveSetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveOrRenderRef {
+    CurveStyle(CurveStyleId),
+    CurveStyleRendering(CurveStyleRenderingId),
+    Complex(ComplexUnitId),
+}
+impl CurveOrRenderRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CurveStyle(i) => Self::CurveStyle(i),
+            AnyId::CurveStyleRendering(i) => Self::CurveStyleRendering(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CurveOrRenderRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum CurveRef {
     BSplineCurve(BSplineCurveId),
     BSplineCurveWithKnots(BSplineCurveWithKnotsId),
@@ -1470,6 +2027,55 @@ impl CurveRef {
             AnyId::UniformCurve(i) => Self::UniformCurve(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("CurveRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveStyleFontPatternRef {
+    CurveStyleFontPattern(CurveStyleFontPatternId),
+    Complex(ComplexUnitId),
+}
+impl CurveStyleFontPatternRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CurveStyleFontPattern(i) => Self::CurveStyleFontPattern(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CurveStyleFontPatternRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveStyleFontSelectRef {
+    CurveStyleFont(CurveStyleFontId),
+    ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
+    PreDefinedCurveFont(PreDefinedCurveFontId),
+    Complex(ComplexUnitId),
+}
+impl CurveStyleFontSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CurveStyleFont(i) => Self::CurveStyleFont(i),
+            AnyId::ExternallyDefinedCurveFont(i) => Self::ExternallyDefinedCurveFont(i),
+            AnyId::PreDefinedCurveFont(i) => Self::PreDefinedCurveFont(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CurveStyleFontSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveStyleRef {
+    CurveStyle(CurveStyleId),
+    Complex(ComplexUnitId),
+}
+impl CurveStyleRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CurveStyle(i) => Self::CurveStyle(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CurveStyleRef ref -> {other:?}"),
         }
     }
 }
@@ -1579,6 +2185,23 @@ impl DatumSystemRef {
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DatumSystemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DefinedSymbolSelectRef {
+    ExternallyDefinedSymbol(ExternallyDefinedSymbolId),
+    PreDefinedSymbol(PreDefinedSymbolId),
+    Complex(ComplexUnitId),
+}
+impl DefinedSymbolSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ExternallyDefinedSymbol(i) => Self::ExternallyDefinedSymbol(i),
+            AnyId::PreDefinedSymbol(i) => Self::PreDefinedSymbol(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DefinedSymbolSelectRef ref -> {other:?}"),
         }
     }
 }
@@ -1731,6 +2354,176 @@ impl FaceRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum FillAreaStyleRef {
+    FillAreaStyle(FillAreaStyleId),
+    Complex(ComplexUnitId),
+}
+impl FillAreaStyleRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::FillAreaStyle(i) => Self::FillAreaStyle(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("FillAreaStyleRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FillAreaStyleTileShapeSelectRef {
+    ExternallyDefinedTile(ExternallyDefinedTileId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    PreDefinedTile(PreDefinedTileId),
+    Complex(ComplexUnitId),
+}
+impl FillAreaStyleTileShapeSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ExternallyDefinedTile(i) => Self::ExternallyDefinedTile(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::PreDefinedTile(i) => Self::PreDefinedTile(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("FillAreaStyleTileShapeSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FillStyleSelectRef {
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    FillAreaStyleColour(FillAreaStyleColourId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    TextureStyleSpecification(TextureStyleSpecificationId),
+    TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
+    Complex(ComplexUnitId),
+}
+impl FillStyleSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
+            AnyId::FillAreaStyleColour(i) => Self::FillAreaStyleColour(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::TextureStyleSpecification(i) => Self::TextureStyleSpecification(i),
+            AnyId::TextureStyleTessellationSpecification(i) => {
+                Self::TextureStyleTessellationSpecification(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("FillStyleSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeometricSetSelectRef {
+    AnnotationText(AnnotationTextId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    OffsetSurface(OffsetSurfaceId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    Plane(PlaneId),
+    Point(PointId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    SeamCurve(SeamCurveId),
+    SphericalSurface(SphericalSurfaceId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    Complex(ComplexUnitId),
+}
+impl GeometricSetSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
+            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
+            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::Point(i) => Self::Point(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("GeometricSetSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceTargetRef {
     CommonDatum(CommonDatumId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -1848,6 +2641,22 @@ impl LoopRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum MarkerSelectRef {
+    PreDefinedMarker(PreDefinedMarkerId),
+    MarkerType(MarkerType),
+    Complex(ComplexUnitId),
+}
+impl MarkerSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::PreDefinedMarker(i) => Self::PreDefinedMarker(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("MarkerSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum MeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     MeasureWithUnit(MeasureWithUnitId),
@@ -1895,6 +2704,23 @@ impl NamedUnitRef {
             AnyId::TimeUnit(i) => Self::TimeUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("NamedUnitRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum OneDirectionRepeatFactorRef {
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    Complex(ComplexUnitId),
+}
+impl OneDirectionRepeatFactorRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("OneDirectionRepeatFactorRef ref -> {other:?}"),
         }
     }
 }
@@ -2039,6 +2865,53 @@ impl PointRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum PresentationStyleAssignmentRef {
+    PresentationStyleAssignment(PresentationStyleAssignmentId),
+    Complex(ComplexUnitId),
+}
+impl PresentationStyleAssignmentRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::PresentationStyleAssignment(i) => Self::PresentationStyleAssignment(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("PresentationStyleAssignmentRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationStyleSelectRef {
+    CurveStyle(CurveStyleId),
+    ExternallyDefinedStyle(ExternallyDefinedStyleId),
+    FillAreaStyle(FillAreaStyleId),
+    PointStyle(PointStyleId),
+    SurfaceStyleUsage(SurfaceStyleUsageId),
+    SymbolStyle(SymbolStyleId),
+    TextStyle(TextStyleId),
+    TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
+    NullStyle(NullStyle),
+    Complex(ComplexUnitId),
+}
+impl PresentationStyleSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CurveStyle(i) => Self::CurveStyle(i),
+            AnyId::ExternallyDefinedStyle(i) => Self::ExternallyDefinedStyle(i),
+            AnyId::FillAreaStyle(i) => Self::FillAreaStyle(i),
+            AnyId::PointStyle(i) => Self::PointStyle(i),
+            AnyId::SurfaceStyleUsage(i) => Self::SurfaceStyleUsage(i),
+            AnyId::SymbolStyle(i) => Self::SymbolStyle(i),
+            AnyId::TextStyle(i) => Self::TextStyle(i),
+            AnyId::TextureStyleTessellationSpecification(i) => {
+                Self::TextureStyleTessellationSpecification(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("PresentationStyleSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductContextRef {
     ProductContext(ProductContextId),
     Complex(ComplexUnitId),
@@ -2150,6 +3023,23 @@ impl ProductRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum RenderingPropertiesSelectRef {
+    SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId),
+    SurfaceStyleTransparent(SurfaceStyleTransparentId),
+    Complex(ComplexUnitId),
+}
+impl RenderingPropertiesSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::SurfaceStyleReflectanceAmbient(i) => Self::SurfaceStyleReflectanceAmbient(i),
+            AnyId::SurfaceStyleTransparent(i) => Self::SurfaceStyleTransparent(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("RenderingPropertiesSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationContextRef {
     GeometricRepresentationContext(GeometricRepresentationContextId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
@@ -2184,6 +3074,11 @@ impl RepresentationContextReferenceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationItemRef {
     AdvancedFace(AdvancedFaceId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationSymbol(AnnotationSymbolId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -2206,28 +3101,42 @@ pub enum RepresentationItemRef {
     ConnectedFaceSet(ConnectedFaceSetId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
+    DefinedSymbol(DefinedSymbolId),
     Direction(DirectionId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
     Face(FaceId),
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
+    MappedItem(MappedItemId),
     OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
     Plane(PlaneId),
     Point(PointId),
     PolyLoop(PolyLoopId),
@@ -2239,14 +3148,17 @@ pub enum RepresentationItemRef {
     SeamCurve(SeamCurveId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
+    StyledItem(StyledItemId),
     Surface(SurfaceId),
     SurfaceCurve(SurfaceCurveId),
     SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
+    SymbolTarget(SymbolTargetId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
     Vector(VectorId),
@@ -2259,6 +3171,11 @@ impl RepresentationItemRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -2281,28 +3198,42 @@ impl RepresentationItemRef {
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::Direction(i) => Self::Direction(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
             AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
             AnyId::Face(i) => Self::Face(i),
             AnyId::FaceBound(i) => Self::FaceBound(i),
             AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
+            AnyId::GeometricSet(i) => Self::GeometricSet(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::MappedItem(i) => Self::MappedItem(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
             AnyId::OpenShell(i) => Self::OpenShell(i),
             AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
             AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
             AnyId::Path(i) => Self::Path(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
             AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
             AnyId::Plane(i) => Self::Plane(i),
             AnyId::Point(i) => Self::Point(i),
             AnyId::PolyLoop(i) => Self::PolyLoop(i),
@@ -2314,14 +3245,17 @@ impl RepresentationItemRef {
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::SolidModel(i) => Self::SolidModel(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
             AnyId::Surface(i) => Self::Surface(i),
             AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
             AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
             AnyId::UniformCurve(i) => Self::UniformCurve(i),
             AnyId::UniformSurface(i) => Self::UniformSurface(i),
             AnyId::Vector(i) => Self::Vector(i),
@@ -2330,6 +3264,21 @@ impl RepresentationItemRef {
             AnyId::VertexPoint(i) => Self::VertexPoint(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RepresentationItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RepresentationMapRef {
+    RepresentationMap(RepresentationMapId),
+    Complex(ComplexUnitId),
+}
+impl RepresentationMapRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::RepresentationMap(i) => Self::RepresentationMap(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("RepresentationMapRef ref -> {other:?}"),
         }
     }
 }
@@ -2353,6 +3302,27 @@ impl RepresentationOrRepresentationReferenceRef {
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RepresentationOrRepresentationReferenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RepresentationRef {
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    Representation(RepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    Complex(ComplexUnitId),
+}
+impl RepresentationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("RepresentationRef ref -> {other:?}"),
         }
     }
 }
@@ -2412,6 +3382,226 @@ impl ShapeDimensionRepresentationRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum SizeSelectRef {
+    LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    MeasureWithUnit(MeasureWithUnitId),
+    PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
+    UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
+    DescriptiveMeasure(String),
+    PositiveLengthMeasure(f64),
+    Complex(ComplexUnitId),
+}
+impl SizeSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
+            AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
+            AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
+            AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("SizeSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StyledItemTargetRef {
+    AdvancedFace(AdvancedFaceId),
+    AnnotationSymbol(AnnotationSymbolId),
+    AnnotationText(AnnotationTextId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DefinedSymbol(DefinedSymbolId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    Direction(DirectionId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    Loop(LoopId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    MappedItem(MappedItemId),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    Path(PathId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    Representation(RepresentationId),
+    RepresentationReference(RepresentationReferenceId),
+    SeamCurve(SeamCurveId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolTarget(SymbolTargetId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    Vector(VectorId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    Complex(ComplexUnitId),
+}
+impl StyledItemTargetRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
+            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
+            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::Direction(i) => Self::Direction(i),
+            AnyId::Edge(i) => Self::Edge(i),
+            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
+            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
+            AnyId::Face(i) => Self::Face(i),
+            AnyId::FaceBound(i) => Self::FaceBound(i),
+            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
+            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::Loop(i) => Self::Loop(i),
+            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::Path(i) => Self::Path(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::Point(i) => Self::Point(i),
+            AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::SolidModel(i) => Self::SolidModel(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::Vector(i) => Self::Vector(i),
+            AnyId::Vertex(i) => Self::Vertex(i),
+            AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("StyledItemTargetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
@@ -2456,6 +3646,95 @@ impl SurfaceRef {
             AnyId::UniformSurface(i) => Self::UniformSurface(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("SurfaceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SurfaceRenderingPropertiesRef {
+    SurfaceRenderingProperties(SurfaceRenderingPropertiesId),
+}
+impl SurfaceRenderingPropertiesRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::SurfaceRenderingProperties(i) => Self::SurfaceRenderingProperties(i),
+            other => panic!("SurfaceRenderingPropertiesRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SurfaceSideStyleSelectRef {
+    PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
+    SurfaceSideStyle(SurfaceSideStyleId),
+    Complex(ComplexUnitId),
+}
+impl SurfaceSideStyleSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::PreDefinedSurfaceSideStyle(i) => Self::PreDefinedSurfaceSideStyle(i),
+            AnyId::SurfaceSideStyle(i) => Self::SurfaceSideStyle(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("SurfaceSideStyleSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SurfaceStyleElementSelectRef {
+    SurfaceStyleBoundary(SurfaceStyleBoundaryId),
+    SurfaceStyleControlGrid(SurfaceStyleControlGridId),
+    SurfaceStyleFillArea(SurfaceStyleFillAreaId),
+    SurfaceStyleParameterLine(SurfaceStyleParameterLineId),
+    SurfaceStyleRendering(SurfaceStyleRenderingId),
+    SurfaceStyleRenderingWithProperties(SurfaceStyleRenderingWithPropertiesId),
+    SurfaceStyleSegmentationCurve(SurfaceStyleSegmentationCurveId),
+    SurfaceStyleSilhouette(SurfaceStyleSilhouetteId),
+    Complex(ComplexUnitId),
+}
+impl SurfaceStyleElementSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::SurfaceStyleBoundary(i) => Self::SurfaceStyleBoundary(i),
+            AnyId::SurfaceStyleControlGrid(i) => Self::SurfaceStyleControlGrid(i),
+            AnyId::SurfaceStyleFillArea(i) => Self::SurfaceStyleFillArea(i),
+            AnyId::SurfaceStyleParameterLine(i) => Self::SurfaceStyleParameterLine(i),
+            AnyId::SurfaceStyleRendering(i) => Self::SurfaceStyleRendering(i),
+            AnyId::SurfaceStyleRenderingWithProperties(i) => {
+                Self::SurfaceStyleRenderingWithProperties(i)
+            }
+            AnyId::SurfaceStyleSegmentationCurve(i) => Self::SurfaceStyleSegmentationCurve(i),
+            AnyId::SurfaceStyleSilhouette(i) => Self::SurfaceStyleSilhouette(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("SurfaceStyleElementSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SymbolStyleSelectRef {
+    SymbolColour(SymbolColourId),
+}
+impl SymbolStyleSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::SymbolColour(i) => Self::SymbolColour(i),
+            other => panic!("SymbolStyleSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SymbolTargetRef {
+    SymbolTarget(SymbolTargetId),
+    Complex(ComplexUnitId),
+}
+impl SymbolTargetRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("SymbolTargetRef ref -> {other:?}"),
         }
     }
 }
@@ -2608,6 +3887,21 @@ impl TrimmingSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum TwoDirectionRepeatFactorRef {
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    Complex(ComplexUnitId),
+}
+impl TwoDirectionRepeatFactorRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("TwoDirectionRepeatFactorRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum UnitRef {
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
@@ -2703,6 +3997,41 @@ pub struct AngularityTolerance {
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationCurveOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: CurveOrCurveSetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationSymbol {
+    pub name: String,
+    pub mapping_source: RepresentationMapRef,
+    pub mapping_target: RepresentationItemRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationSymbolOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: AnnotationSymbolOccurrenceItemRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationText {
+    pub name: String,
+    pub mapping_source: RepresentationMapRef,
+    pub mapping_target: Axis2PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -2851,6 +4180,16 @@ pub struct CartesianPoint {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CharacterGlyphStyleOutline {
+    pub outline_style: CurveStyleRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CharacterGlyphStyleStroke {
+    pub stroke_style: CurveStyleRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CharacterizedObject {
     pub name: String,
     pub description: Option<String>,
@@ -2885,6 +4224,22 @@ pub struct CoaxialityTolerance {
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Colour {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ColourRgb {
+    pub name: String,
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ColourSpecification {
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -2949,6 +4304,39 @@ pub struct ConversionBasedUnit {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Curve {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveStyle {
+    pub name: String,
+    pub curve_font: Option<CurveFontOrScaledCurveFontSelectRef>,
+    pub curve_width: Option<SizeSelectRef>,
+    pub curve_colour: Option<ColourRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveStyleFont {
+    pub name: String,
+    pub pattern_list: Vec<CurveStyleFontPatternRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveStyleFontAndScaling {
+    pub name: String,
+    pub curve_font: CurveStyleFontSelectRef,
+    pub curve_font_scaling: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveStyleFontPattern {
+    pub visible_segment_length: f64,
+    pub invisible_segment_length: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveStyleRendering {
+    pub rendering_method: ShadingCurveMethod,
+    pub rendering_properties: SurfaceRenderingPropertiesRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3031,6 +4419,13 @@ pub struct DatumTarget {
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub target_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefinedSymbol {
+    pub name: String,
+    pub definition: DefinedSymbolSelectRef,
+    pub target: SymbolTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3146,6 +4541,50 @@ pub struct ExternalSource {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedCurveFont {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedHatchStyle {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedItem {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedStyle {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedSymbol {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedTile {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedTileStyle {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Face {
     pub name: String,
     pub bounds: Vec<FaceBoundRef>,
@@ -3174,12 +4613,64 @@ pub struct FaceSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct FillAreaStyle {
+    pub name: String,
+    pub fill_styles: Vec<FillStyleSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FillAreaStyleColour {
+    pub name: String,
+    pub fill_colour: ColourRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FillAreaStyleHatching {
+    pub name: String,
+    pub hatch_line_appearance: CurveStyleRef,
+    pub start_of_next_hatch_line: OneDirectionRepeatFactorRef,
+    pub point_of_reference_hatch_line: CartesianPointRef,
+    pub pattern_start: CartesianPointRef,
+    pub hatch_line_angle: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FillAreaStyleTileColouredRegion {
+    pub name: String,
+    pub closed_curve: CurveOrAnnotationCurveOccurrenceRef,
+    pub region_colour: ColourRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FillAreaStyleTileCurveWithStyle {
+    pub name: String,
+    pub styled_curve: AnnotationCurveOccurrenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FillAreaStyleTileSymbolWithStyle {
+    pub name: String,
+    pub symbol: AnnotationSymbolOccurrenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FillAreaStyleTiles {
+    pub name: String,
+    pub tiling_pattern: TwoDirectionRepeatFactorRef,
+    pub tiles: Vec<FillAreaStyleTileShapeSelectRef>,
+    pub tiling_scale: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct FlatnessTolerance {
     pub name: String,
     pub description: Option<String>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FoundedItem {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionallyDefinedTransformation {
@@ -3203,6 +4694,12 @@ pub struct GenericProductDefinitionReference {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct GeometricCurveSet {
+    pub name: String,
+    pub elements: Vec<GeometricSetSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationContext {
     pub context_identifier: String,
     pub context_type: String,
@@ -3212,6 +4709,12 @@ pub struct GeometricRepresentationContext {
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationItem {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricSet {
+    pub name: String,
+    pub elements: Vec<GeometricSetSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3324,6 +4827,13 @@ pub struct ManifoldSolidBrep {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct MappedItem {
+    pub name: String,
+    pub mapping_source: RepresentationMapRef,
+    pub mapping_target: RepresentationItemRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct MassUnit {
     pub dimensions: DimensionalExponentsRef,
 }
@@ -3354,6 +4864,12 @@ pub struct OffsetSurface {
     pub basis_surface: SurfaceRef,
     pub distance: f64,
     pub self_intersect: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OneDirectionRepeatFactor {
+    pub name: String,
+    pub repeat_factor: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3561,6 +5077,21 @@ pub struct Placement {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PlanarBox {
+    pub name: String,
+    pub size_in_x: f64,
+    pub size_in_y: f64,
+    pub placement: Axis2PlacementRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanarExtent {
+    pub name: String,
+    pub size_in_x: f64,
+    pub size_in_y: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
     pub name: String,
     pub position: Axis2Placement3dRef,
@@ -3583,6 +5114,14 @@ pub struct Point {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PointStyle {
+    pub name: String,
+    pub marker: Option<MarkerSelectRef>,
+    pub marker_size: Option<SizeSelectRef>,
+    pub marker_colour: Option<ColourRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PolyLoop {
     pub name: String,
     pub polygon: Vec<CartesianPointRef>,
@@ -3594,6 +5133,41 @@ pub struct PositionTolerance {
     pub description: Option<String>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedCurveFont {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedItem {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedMarker {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedSurfaceSideStyle {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedSymbol {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedTile {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationStyleAssignment {
+    pub styles: Vec<PresentationStyleSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3744,6 +5318,12 @@ pub struct RepresentationItem {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct RepresentationMap {
+    pub mapping_origin: RepresentationItemRef,
+    pub mapped_representation: RepresentationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationReference {
     pub id: String,
     pub context_of_items: RepresentationContextReferenceRef,
@@ -3844,6 +5424,13 @@ pub struct StraightnessTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct StyledItem {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Surface {
     pub name: String,
 }
@@ -3879,9 +5466,99 @@ pub struct SurfaceProfileTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceRenderingProperties {
+    pub rendered_colour: ColourRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceSideStyle {
+    pub name: String,
+    pub styles: Vec<SurfaceStyleElementSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleBoundary {
+    pub style_of_boundary: CurveOrRenderRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleControlGrid {
+    pub style_of_control_grid: CurveOrRenderRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleFillArea {
+    pub fill_area: FillAreaStyleRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleParameterLine {
+    pub style_of_parameter_lines: CurveOrRenderRef,
+    pub direction_counts: Vec<MeasureValue>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleReflectanceAmbient {
+    pub ambient_reflectance: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleRendering {
+    pub rendering_method: ShadingSurfaceMethod,
+    pub surface_colour: ColourRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleRenderingWithProperties {
+    pub rendering_method: ShadingSurfaceMethod,
+    pub surface_colour: ColourRef,
+    pub properties: Vec<RenderingPropertiesSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleSegmentationCurve {
+    pub style_of_segmentation_curve: CurveOrRenderRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleSilhouette {
+    pub style_of_silhouette: CurveOrRenderRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleTransparent {
+    pub transparency: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleUsage {
+    pub side: SurfaceSide,
+    pub style: SurfaceSideStyleSelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct SweptSurface {
     pub name: String,
     pub swept_curve: CurveRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SymbolColour {
+    pub colour_of_symbol: ColourRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SymbolStyle {
+    pub name: String,
+    pub style_of_symbol: SymbolStyleSelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SymbolTarget {
+    pub name: String,
+    pub placement: Axis2PlacementRef,
+    pub x_scale: f64,
+    pub y_scale: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -3892,6 +5569,23 @@ pub struct SymmetryTolerance {
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextStyle {
+    pub name: String,
+    pub character_appearance: CharacterStyleSelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextStyleForDefinedFont {
+    pub text_colour: ColourRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextureStyleSpecification {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextureStyleTessellationSpecification {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TimeUnit {
@@ -3966,6 +5660,13 @@ pub struct TrimmedCurve {
     pub trim_2: Vec<TrimmingSelectRef>,
     pub sense_agreement: bool,
     pub master_representation: TrimmingPreference,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TwoDirectionRepeatFactor {
+    pub name: String,
+    pub repeat_factor: VectorRef,
+    pub second_repeat_factor: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -4048,6 +5749,10 @@ pub enum UnitPart {
         telex_number: Option<String>,
     },
     AdvancedFace,
+    AnnotationOccurrence,
+    AnnotationSymbol,
+    AnnotationSymbolOccurrence,
+    AnnotationText,
     ApplicationContextElement {
         name: String,
         frame_of_reference: ApplicationContextRef,
@@ -4089,11 +5794,26 @@ pub enum UnitPart {
     BrepWithVoids {
         voids: Vec<OrientedClosedShellRef>,
     },
+    CharacterGlyphStyleOutline {
+        outline_style: CurveStyleRef,
+    },
+    CharacterGlyphStyleStroke {
+        stroke_style: CurveStyleRef,
+    },
     CharacterizedObject {
         name: String,
         description: Option<String>,
     },
     ClosedShell,
+    Colour,
+    ColourRgb {
+        red: f64,
+        green: f64,
+        blue: f64,
+    },
+    ColourSpecification {
+        name: String,
+    },
     CommonDatum,
     CompositeShapeAspect,
     ConnectedFaceSet {
@@ -4107,6 +5827,25 @@ pub enum UnitPart {
         conversion_factor: MeasureWithUnitRef,
     },
     Curve,
+    CurveStyle {
+        name: String,
+        curve_font: Option<CurveFontOrScaledCurveFontSelectRef>,
+        curve_width: Option<SizeSelectRef>,
+        curve_colour: Option<ColourRef>,
+    },
+    CurveStyleFont {
+        name: String,
+        pattern_list: Vec<CurveStyleFontPatternRef>,
+    },
+    CurveStyleFontAndScaling {
+        name: String,
+        curve_font: CurveStyleFontSelectRef,
+        curve_font_scaling: f64,
+    },
+    CurveStyleFontPattern {
+        visible_segment_length: f64,
+        invisible_segment_length: f64,
+    },
     CylindricityTolerance,
     Datum {
         identification: String,
@@ -4121,6 +5860,10 @@ pub enum UnitPart {
     },
     DatumTarget {
         target_id: String,
+    },
+    DefinedSymbol {
+        definition: DefinedSymbolSelectRef,
+        target: SymbolTargetRef,
     },
     DefinitionalRepresentation,
     DerivedUnit {
@@ -4148,6 +5891,16 @@ pub enum UnitPart {
     ExternalSource {
         source_id: StringSelectValue,
     },
+    ExternallyDefinedCurveFont,
+    ExternallyDefinedHatchStyle,
+    ExternallyDefinedItem {
+        item_id: StringSelectValue,
+        source: ExternalSourceRef,
+    },
+    ExternallyDefinedStyle,
+    ExternallyDefinedSymbol,
+    ExternallyDefinedTile,
+    ExternallyDefinedTileStyle,
     Face {
         bounds: Vec<FaceBoundRef>,
     },
@@ -4160,7 +5913,34 @@ pub enum UnitPart {
         face_geometry: SurfaceRef,
         same_sense: bool,
     },
+    FillAreaStyle {
+        name: String,
+        fill_styles: Vec<FillStyleSelectRef>,
+    },
+    FillAreaStyleHatching {
+        hatch_line_appearance: CurveStyleRef,
+        start_of_next_hatch_line: OneDirectionRepeatFactorRef,
+        point_of_reference_hatch_line: CartesianPointRef,
+        pattern_start: CartesianPointRef,
+        hatch_line_angle: f64,
+    },
+    FillAreaStyleTileColouredRegion {
+        closed_curve: CurveOrAnnotationCurveOccurrenceRef,
+        region_colour: ColourRef,
+    },
+    FillAreaStyleTileCurveWithStyle {
+        styled_curve: AnnotationCurveOccurrenceRef,
+    },
+    FillAreaStyleTileSymbolWithStyle {
+        symbol: AnnotationSymbolOccurrenceRef,
+    },
+    FillAreaStyleTiles {
+        tiling_pattern: TwoDirectionRepeatFactorRef,
+        tiles: Vec<FillAreaStyleTileShapeSelectRef>,
+        tiling_scale: f64,
+    },
     FlatnessTolerance,
+    FoundedItem,
     FunctionallyDefinedTransformation {
         name: String,
         description: Option<String>,
@@ -4176,6 +5956,9 @@ pub enum UnitPart {
         coordinate_space_dimension: i64,
     },
     GeometricRepresentationItem,
+    GeometricSet {
+        elements: Vec<GeometricSetSelectRef>,
+    },
     GeometricTolerance {
         name: String,
         description: Option<String>,
@@ -4212,6 +5995,10 @@ pub enum UnitPart {
     ManifoldSolidBrep {
         outer: ClosedShellRef,
     },
+    MappedItem {
+        mapping_source: RepresentationMapRef,
+        mapping_target: RepresentationItemRef,
+    },
     MassUnit,
     MeasureWithUnit {
         value_component: MeasureValue,
@@ -4222,6 +6009,9 @@ pub enum UnitPart {
     },
     NamedUnit {
         dimensions: Option<DimensionalExponentsRef>,
+    },
+    OneDirectionRepeatFactor {
+        repeat_factor: VectorRef,
     },
     OpenShell,
     OrganizationalAddress {
@@ -4253,13 +6043,37 @@ pub enum UnitPart {
     Placement {
         location: CartesianPointRef,
     },
+    PlanarBox {
+        placement: Axis2PlacementRef,
+    },
+    PlanarExtent {
+        size_in_x: f64,
+        size_in_y: f64,
+    },
     PlaneAngleMeasureWithUnit,
     PlaneAngleUnit,
     Point,
+    PointStyle {
+        name: String,
+        marker: Option<MarkerSelectRef>,
+        marker_size: Option<SizeSelectRef>,
+        marker_colour: Option<ColourRef>,
+    },
     PolyLoop {
         polygon: Vec<CartesianPointRef>,
     },
     PositionTolerance,
+    PreDefinedCurveFont,
+    PreDefinedItem {
+        name: String,
+    },
+    PreDefinedMarker,
+    PreDefinedSurfaceSideStyle,
+    PreDefinedSymbol,
+    PreDefinedTile,
+    PresentationStyleAssignment {
+        styles: Vec<PresentationStyleSelectRef>,
+    },
     Product {
         id: String,
         name: String,
@@ -4330,6 +6144,10 @@ pub enum UnitPart {
     RepresentationItem {
         name: String,
     },
+    RepresentationMap {
+        mapping_origin: RepresentationItemRef,
+        mapped_representation: RepresentationRef,
+    },
     RepresentationReference {
         id: String,
         context_of_items: RepresentationContextReferenceRef,
@@ -4366,6 +6184,10 @@ pub enum UnitPart {
     SolidAngleUnit,
     SolidModel,
     StraightnessTolerance,
+    StyledItem {
+        styles: Vec<PresentationStyleAssignmentRef>,
+        item: StyledItemTargetRef,
+    },
     Surface,
     SurfaceCurve {
         curve_3d: CurveRef,
@@ -4373,6 +6195,58 @@ pub enum UnitPart {
         master_representation: PreferredSurfaceCurveRepresentation,
     },
     SurfaceProfileTolerance,
+    SurfaceSideStyle {
+        name: String,
+        styles: Vec<SurfaceStyleElementSelectRef>,
+    },
+    SurfaceStyleBoundary {
+        style_of_boundary: CurveOrRenderRef,
+    },
+    SurfaceStyleControlGrid {
+        style_of_control_grid: CurveOrRenderRef,
+    },
+    SurfaceStyleFillArea {
+        fill_area: FillAreaStyleRef,
+    },
+    SurfaceStyleParameterLine {
+        style_of_parameter_lines: CurveOrRenderRef,
+        direction_counts: Vec<MeasureValue>,
+    },
+    SurfaceStyleReflectanceAmbient {
+        ambient_reflectance: f64,
+    },
+    SurfaceStyleRendering {
+        rendering_method: ShadingSurfaceMethod,
+        surface_colour: ColourRef,
+    },
+    SurfaceStyleRenderingWithProperties {
+        properties: Vec<RenderingPropertiesSelectRef>,
+    },
+    SurfaceStyleSegmentationCurve {
+        style_of_segmentation_curve: CurveOrRenderRef,
+    },
+    SurfaceStyleSilhouette {
+        style_of_silhouette: CurveOrRenderRef,
+    },
+    SurfaceStyleUsage {
+        side: SurfaceSide,
+        style: SurfaceSideStyleSelectRef,
+    },
+    SymbolStyle {
+        name: String,
+        style_of_symbol: SymbolStyleSelectRef,
+    },
+    SymbolTarget {
+        placement: Axis2PlacementRef,
+        x_scale: f64,
+        y_scale: f64,
+    },
+    TextStyle {
+        name: String,
+        character_appearance: CharacterStyleSelectRef,
+    },
+    TextureStyleSpecification,
+    TextureStyleTessellationSpecification,
     TimeUnit,
     ToleranceZone {
         defining_tolerance: Vec<ToleranceZoneTargetRef>,
@@ -4389,6 +6263,9 @@ pub enum UnitPart {
     ToroidalSurface {
         major_radius: f64,
         minor_radius: f64,
+    },
+    TwoDirectionRepeatFactor {
+        second_repeat_factor: VectorRef,
     },
     UnequallyDisposedGeometricTolerance {
         displacement: LengthMeasureWithUnitRef,
@@ -4415,6 +6292,11 @@ pub struct Model {
     pub addresss: Arena<Address>,
     pub advanced_faces: Arena<AdvancedFace>,
     pub angularity_tolerances: Arena<AngularityTolerance>,
+    pub annotation_curve_occurrences: Arena<AnnotationCurveOccurrence>,
+    pub annotation_occurrences: Arena<AnnotationOccurrence>,
+    pub annotation_symbols: Arena<AnnotationSymbol>,
+    pub annotation_symbol_occurrences: Arena<AnnotationSymbolOccurrence>,
+    pub annotation_texts: Arena<AnnotationText>,
     pub application_contexts: Arena<ApplicationContext>,
     pub application_context_elements: Arena<ApplicationContextElement>,
     pub axis1_placements: Arena<Axis1Placement>,
@@ -4432,11 +6314,16 @@ pub struct Model {
     pub bounded_surface_curves: Arena<BoundedSurfaceCurve>,
     pub brep_with_voidss: Arena<BrepWithVoids>,
     pub cartesian_points: Arena<CartesianPoint>,
+    pub character_glyph_style_outlines: Arena<CharacterGlyphStyleOutline>,
+    pub character_glyph_style_strokes: Arena<CharacterGlyphStyleStroke>,
     pub characterized_objects: Arena<CharacterizedObject>,
     pub circles: Arena<Circle>,
     pub circular_runout_tolerances: Arena<CircularRunoutTolerance>,
     pub closed_shells: Arena<ClosedShell>,
     pub coaxiality_tolerances: Arena<CoaxialityTolerance>,
+    pub colours: Arena<Colour>,
+    pub colour_rgbs: Arena<ColourRgb>,
+    pub colour_specifications: Arena<ColourSpecification>,
     pub common_datums: Arena<CommonDatum>,
     pub composite_shape_aspects: Arena<CompositeShapeAspect>,
     pub concentricity_tolerances: Arena<ConcentricityTolerance>,
@@ -4446,6 +6333,11 @@ pub struct Model {
     pub context_dependent_units: Arena<ContextDependentUnit>,
     pub conversion_based_units: Arena<ConversionBasedUnit>,
     pub curves: Arena<Curve>,
+    pub curve_styles: Arena<CurveStyle>,
+    pub curve_style_fonts: Arena<CurveStyleFont>,
+    pub curve_style_font_and_scalings: Arena<CurveStyleFontAndScaling>,
+    pub curve_style_font_patterns: Arena<CurveStyleFontPattern>,
+    pub curve_style_renderings: Arena<CurveStyleRendering>,
     pub cylindrical_surfaces: Arena<CylindricalSurface>,
     pub cylindricity_tolerances: Arena<CylindricityTolerance>,
     pub datums: Arena<Datum>,
@@ -4456,6 +6348,7 @@ pub struct Model {
     pub datum_reference_modifier_with_values: Arena<DatumReferenceModifierWithValue>,
     pub datum_systems: Arena<DatumSystem>,
     pub datum_targets: Arena<DatumTarget>,
+    pub defined_symbols: Arena<DefinedSymbol>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
     pub derived_units: Arena<DerivedUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
@@ -4472,16 +6365,33 @@ pub struct Model {
     pub elementary_surfaces: Arena<ElementarySurface>,
     pub ellipses: Arena<Ellipse>,
     pub external_sources: Arena<ExternalSource>,
+    pub externally_defined_curve_fonts: Arena<ExternallyDefinedCurveFont>,
+    pub externally_defined_hatch_styles: Arena<ExternallyDefinedHatchStyle>,
+    pub externally_defined_items: Arena<ExternallyDefinedItem>,
+    pub externally_defined_styles: Arena<ExternallyDefinedStyle>,
+    pub externally_defined_symbols: Arena<ExternallyDefinedSymbol>,
+    pub externally_defined_tiles: Arena<ExternallyDefinedTile>,
+    pub externally_defined_tile_styles: Arena<ExternallyDefinedTileStyle>,
     pub faces: Arena<Face>,
     pub face_bounds: Arena<FaceBound>,
     pub face_outer_bounds: Arena<FaceOuterBound>,
     pub face_surfaces: Arena<FaceSurface>,
+    pub fill_area_styles: Arena<FillAreaStyle>,
+    pub fill_area_style_colours: Arena<FillAreaStyleColour>,
+    pub fill_area_style_hatchings: Arena<FillAreaStyleHatching>,
+    pub fill_area_style_tile_coloured_regions: Arena<FillAreaStyleTileColouredRegion>,
+    pub fill_area_style_tile_curve_with_styles: Arena<FillAreaStyleTileCurveWithStyle>,
+    pub fill_area_style_tile_symbol_with_styles: Arena<FillAreaStyleTileSymbolWithStyle>,
+    pub fill_area_style_tiless: Arena<FillAreaStyleTiles>,
     pub flatness_tolerances: Arena<FlatnessTolerance>,
+    pub founded_items: Arena<FoundedItem>,
     pub functionally_defined_transformations: Arena<FunctionallyDefinedTransformation>,
     pub general_datum_references: Arena<GeneralDatumReference>,
     pub generic_product_definition_references: Arena<GenericProductDefinitionReference>,
+    pub geometric_curve_sets: Arena<GeometricCurveSet>,
     pub geometric_representation_contexts: Arena<GeometricRepresentationContext>,
     pub geometric_representation_items: Arena<GeometricRepresentationItem>,
+    pub geometric_sets: Arena<GeometricSet>,
     pub geometric_tolerances: Arena<GeometricTolerance>,
     pub geometric_tolerance_with_datum_references: Arena<GeometricToleranceWithDatumReference>,
     pub geometric_tolerance_with_defined_area_units: Arena<GeometricToleranceWithDefinedAreaUnit>,
@@ -4496,11 +6406,13 @@ pub struct Model {
     pub line_profile_tolerances: Arena<LineProfileTolerance>,
     pub loops: Arena<Loop>,
     pub manifold_solid_breps: Arena<ManifoldSolidBrep>,
+    pub mapped_items: Arena<MappedItem>,
     pub mass_units: Arena<MassUnit>,
     pub measure_with_units: Arena<MeasureWithUnit>,
     pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
     pub offset_surfaces: Arena<OffsetSurface>,
+    pub one_direction_repeat_factors: Arena<OneDirectionRepeatFactor>,
     pub open_shells: Arena<OpenShell>,
     pub organizations: Arena<Organization>,
     pub organization_relationships: Arena<OrganizationRelationship>,
@@ -4525,12 +6437,22 @@ pub struct Model {
     pub personal_addresss: Arena<PersonalAddress>,
     pub placed_datum_target_features: Arena<PlacedDatumTargetFeature>,
     pub placements: Arena<Placement>,
+    pub planar_boxs: Arena<PlanarBox>,
+    pub planar_extents: Arena<PlanarExtent>,
     pub planes: Arena<Plane>,
     pub plane_angle_measure_with_units: Arena<PlaneAngleMeasureWithUnit>,
     pub plane_angle_units: Arena<PlaneAngleUnit>,
     pub points: Arena<Point>,
+    pub point_styles: Arena<PointStyle>,
     pub poly_loops: Arena<PolyLoop>,
     pub position_tolerances: Arena<PositionTolerance>,
+    pub pre_defined_curve_fonts: Arena<PreDefinedCurveFont>,
+    pub pre_defined_items: Arena<PreDefinedItem>,
+    pub pre_defined_markers: Arena<PreDefinedMarker>,
+    pub pre_defined_surface_side_styles: Arena<PreDefinedSurfaceSideStyle>,
+    pub pre_defined_symbols: Arena<PreDefinedSymbol>,
+    pub pre_defined_tiles: Arena<PreDefinedTile>,
+    pub presentation_style_assignments: Arena<PresentationStyleAssignment>,
     pub products: Arena<Product>,
     pub product_contexts: Arena<ProductContext>,
     pub product_definitions: Arena<ProductDefinition>,
@@ -4550,6 +6472,7 @@ pub struct Model {
     pub representation_contexts: Arena<RepresentationContext>,
     pub representation_context_references: Arena<RepresentationContextReference>,
     pub representation_items: Arena<RepresentationItem>,
+    pub representation_maps: Arena<RepresentationMap>,
     pub representation_references: Arena<RepresentationReference>,
     pub representation_relationships: Arena<RepresentationRelationship>,
     pub representation_relationship_with_transformations:
@@ -4565,13 +6488,34 @@ pub struct Model {
     pub solid_models: Arena<SolidModel>,
     pub spherical_surfaces: Arena<SphericalSurface>,
     pub straightness_tolerances: Arena<StraightnessTolerance>,
+    pub styled_items: Arena<StyledItem>,
     pub surfaces: Arena<Surface>,
     pub surface_curves: Arena<SurfaceCurve>,
     pub surface_of_linear_extrusions: Arena<SurfaceOfLinearExtrusion>,
     pub surface_of_revolutions: Arena<SurfaceOfRevolution>,
     pub surface_profile_tolerances: Arena<SurfaceProfileTolerance>,
+    pub surface_rendering_propertiess: Arena<SurfaceRenderingProperties>,
+    pub surface_side_styles: Arena<SurfaceSideStyle>,
+    pub surface_style_boundarys: Arena<SurfaceStyleBoundary>,
+    pub surface_style_control_grids: Arena<SurfaceStyleControlGrid>,
+    pub surface_style_fill_areas: Arena<SurfaceStyleFillArea>,
+    pub surface_style_parameter_lines: Arena<SurfaceStyleParameterLine>,
+    pub surface_style_reflectance_ambients: Arena<SurfaceStyleReflectanceAmbient>,
+    pub surface_style_renderings: Arena<SurfaceStyleRendering>,
+    pub surface_style_rendering_with_propertiess: Arena<SurfaceStyleRenderingWithProperties>,
+    pub surface_style_segmentation_curves: Arena<SurfaceStyleSegmentationCurve>,
+    pub surface_style_silhouettes: Arena<SurfaceStyleSilhouette>,
+    pub surface_style_transparents: Arena<SurfaceStyleTransparent>,
+    pub surface_style_usages: Arena<SurfaceStyleUsage>,
     pub swept_surfaces: Arena<SweptSurface>,
+    pub symbol_colours: Arena<SymbolColour>,
+    pub symbol_styles: Arena<SymbolStyle>,
+    pub symbol_targets: Arena<SymbolTarget>,
     pub symmetry_tolerances: Arena<SymmetryTolerance>,
+    pub text_styles: Arena<TextStyle>,
+    pub text_style_for_defined_fonts: Arena<TextStyleForDefinedFont>,
+    pub texture_style_specifications: Arena<TextureStyleSpecification>,
+    pub texture_style_tessellation_specifications: Arena<TextureStyleTessellationSpecification>,
     pub time_units: Arena<TimeUnit>,
     pub tolerance_values: Arena<ToleranceValue>,
     pub tolerance_zones: Arena<ToleranceZone>,
@@ -4582,6 +6526,7 @@ pub struct Model {
     pub toroidal_surfaces: Arena<ToroidalSurface>,
     pub total_runout_tolerances: Arena<TotalRunoutTolerance>,
     pub trimmed_curves: Arena<TrimmedCurve>,
+    pub two_direction_repeat_factors: Arena<TwoDirectionRepeatFactor>,
     pub uncertainty_measure_with_units: Arena<UncertaintyMeasureWithUnit>,
     pub unequally_disposed_geometric_tolerances: Arena<UnequallyDisposedGeometricTolerance>,
     pub uniform_curves: Arena<UniformCurve>,
