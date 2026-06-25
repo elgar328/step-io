@@ -1219,3 +1219,11 @@ draughting = ["draughting_pre_defined_curve_font"]
 # topology backbone. Only the tessellated_* entities are newly generated. (merkle
 # entity_key is iterative now, so its deep ref chains no longer overflow.)
 tessellation = ["complex_triangulated_face"]
+# assembly tree (NAUO=part usage, CDSR=placement/transform). NAUO is a
+# product_definition_relationship subtype; relating/related = SELECT
+# product_definition_or_reference (3 members all closure). CDSR refs
+# shape_representation_relationship + product_definition_shape (both closure).
+assembly = [
+    "next_assembly_usage_occurrence",
+    "context_dependent_shape_representation",
+]

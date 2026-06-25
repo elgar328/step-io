@@ -883,6 +883,8 @@ pub struct ApplicationContextElementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ApplicationProtocolDefinitionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AssemblyComponentUsageId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Axis1PlacementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Axis2Placement2dId(pub usize);
@@ -948,6 +950,8 @@ pub struct ConicId(pub usize);
 pub struct ConicalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ConnectedFaceSetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ContextDependentShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ContextDependentUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1131,6 +1135,8 @@ pub struct ModifiedGeometricToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NamedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NextAssemblyUsageOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OffsetSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OneDirectionRepeatFactorId(pub usize);
@@ -1238,6 +1244,8 @@ pub struct ProductDefinitionRelationshipId(pub usize);
 pub struct ProductDefinitionRelationshipRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductDefinitionShapeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionUsageId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductRelatedProductCategoryId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1419,6 +1427,7 @@ pub enum AnyId {
     ApplicationContext(ApplicationContextId),
     ApplicationContextElement(ApplicationContextElementId),
     ApplicationProtocolDefinition(ApplicationProtocolDefinitionId),
+    AssemblyComponentUsage(AssemblyComponentUsageId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -1452,6 +1461,7 @@ pub enum AnyId {
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
     CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
@@ -1543,6 +1553,7 @@ pub enum AnyId {
     MeasureWithUnit(MeasureWithUnitId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NamedUnit(NamedUnitId),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
@@ -1597,6 +1608,7 @@ pub enum AnyId {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
     ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
     ProductRelatedProductCategory(ProductRelatedProductCategoryId),
     PropertyDefinition(PropertyDefinitionId),
     PropertyDefinitionRelationship(PropertyDefinitionRelationshipId),
@@ -1816,6 +1828,7 @@ impl CharacterStyleSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedDefinitionRef {
     AngularityTolerance(AngularityToleranceId),
+    AssemblyComponentUsage(AssemblyComponentUsageId),
     CharacterizedObject(CharacterizedObjectId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     CoaxialityTolerance(CoaxialityToleranceId),
@@ -1843,6 +1856,7 @@ pub enum CharacterizedDefinitionRef {
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     LineProfileTolerance(LineProfileToleranceId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ParallelismTolerance(ParallelismToleranceId),
     PerpendicularityTolerance(PerpendicularityToleranceId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
@@ -1852,6 +1866,7 @@ pub enum CharacterizedDefinitionRef {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
     ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
     RoundnessTolerance(RoundnessToleranceId),
     ShapeAspect(ShapeAspectId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
@@ -1868,6 +1883,7 @@ impl CharacterizedDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
+            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
             AnyId::CharacterizedObject(i) => Self::CharacterizedObject(i),
             AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
@@ -1903,6 +1919,7 @@ impl CharacterizedDefinitionRef {
             AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
             AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
             AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
+            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
             AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
             AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
@@ -1914,6 +1931,7 @@ impl CharacterizedDefinitionRef {
                 Self::ProductDefinitionRelationshipRelationship(i)
             }
             AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
             AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
             AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
@@ -3245,13 +3263,19 @@ impl ProductDefinitionOrReferenceRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionRelationshipRef {
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionRelationshipRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
             AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
+            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ProductDefinitionRelationshipRef ref -> {other:?}"),
         }
@@ -3745,6 +3769,21 @@ impl ShapeDimensionRepresentationRef {
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ShapeDimensionRepresentationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ShapeRepresentationRelationshipRef {
+    ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    Complex(ComplexUnitId),
+}
+impl ShapeRepresentationRelationshipRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ShapeRepresentationRelationshipRef ref -> {other:?}"),
         }
     }
 }
@@ -4500,6 +4539,16 @@ pub struct ApplicationProtocolDefinition {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct AssemblyComponentUsage {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_product_definition: ProductDefinitionOrReferenceRef,
+    pub related_product_definition: ProductDefinitionOrReferenceRef,
+    pub reference_designator: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Axis1Placement {
     pub name: String,
     pub location: CartesianPointRef,
@@ -4759,6 +4808,12 @@ pub struct ConicalSurface {
 pub struct ConnectedFaceSet {
     pub name: String,
     pub cfs_faces: Option<Vec<FaceRef>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextDependentShapeRepresentation {
+    pub representation_relation: ShapeRepresentationRelationshipRef,
+    pub represented_product_relation: ProductDefinitionShapeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5398,6 +5453,16 @@ pub struct NamedUnit {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct NextAssemblyUsageOccurrence {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_product_definition: ProductDefinitionOrReferenceRef,
+    pub related_product_definition: ProductDefinitionOrReferenceRef,
+    pub reference_designator: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct OffsetSurface {
     pub name: String,
     pub basis_surface: SurfaceRef,
@@ -5800,6 +5865,15 @@ pub struct ProductDefinitionShape {
     pub name: String,
     pub description: Option<String>,
     pub definition: CharacterizedDefinitionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionUsage {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_product_definition: ProductDefinitionOrReferenceRef,
+    pub related_product_definition: ProductDefinitionOrReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6391,6 +6465,9 @@ pub enum UnitPart {
         name: String,
         frame_of_reference: ApplicationContextRef,
     },
+    AssemblyComponentUsage {
+        reference_designator: Option<String>,
+    },
     BSplineCurve {
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
@@ -6664,6 +6741,7 @@ pub enum UnitPart {
     NamedUnit {
         dimensions: Option<DimensionalExponentsRef>,
     },
+    NextAssemblyUsageOccurrence,
     OneDirectionRepeatFactor {
         repeat_factor: VectorRef,
     },
@@ -6780,6 +6858,7 @@ pub enum UnitPart {
         related: ProductDefinitionRelationshipRef,
     },
     ProductDefinitionShape,
+    ProductDefinitionUsage,
     ProductRelatedProductCategory {
         products: Vec<ProductRef>,
     },
@@ -6976,6 +7055,7 @@ pub struct Model {
     pub application_contexts: Arena<ApplicationContext>,
     pub application_context_elements: Arena<ApplicationContextElement>,
     pub application_protocol_definitions: Arena<ApplicationProtocolDefinition>,
+    pub assembly_component_usages: Arena<AssemblyComponentUsage>,
     pub axis1_placements: Arena<Axis1Placement>,
     pub axis2_placement2ds: Arena<Axis2Placement2d>,
     pub axis2_placement3ds: Arena<Axis2Placement3d>,
@@ -7009,6 +7089,7 @@ pub struct Model {
     pub conics: Arena<Conic>,
     pub conical_surfaces: Arena<ConicalSurface>,
     pub connected_face_sets: Arena<ConnectedFaceSet>,
+    pub context_dependent_shape_representations: Arena<ContextDependentShapeRepresentation>,
     pub context_dependent_units: Arena<ContextDependentUnit>,
     pub conversion_based_units: Arena<ConversionBasedUnit>,
     pub coordinated_universal_time_offsets: Arena<CoordinatedUniversalTimeOffset>,
@@ -7100,6 +7181,7 @@ pub struct Model {
     pub measure_with_units: Arena<MeasureWithUnit>,
     pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
+    pub next_assembly_usage_occurrences: Arena<NextAssemblyUsageOccurrence>,
     pub offset_surfaces: Arena<OffsetSurface>,
     pub one_direction_repeat_factors: Arena<OneDirectionRepeatFactor>,
     pub open_shells: Arena<OpenShell>,
@@ -7156,6 +7238,7 @@ pub struct Model {
     pub product_definition_relationship_relationships:
         Arena<ProductDefinitionRelationshipRelationship>,
     pub product_definition_shapes: Arena<ProductDefinitionShape>,
+    pub product_definition_usages: Arena<ProductDefinitionUsage>,
     pub product_related_product_categorys: Arena<ProductRelatedProductCategory>,
     pub property_definitions: Arena<PropertyDefinition>,
     pub property_definition_relationships: Arena<PropertyDefinitionRelationship>,

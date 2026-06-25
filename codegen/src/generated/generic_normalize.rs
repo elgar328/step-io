@@ -499,6 +499,44 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ASSEMBLY_COMPONENT_USAGE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "AXIS1_PLACEMENT" => &[
             Slot {
                 k: Sk::Str,
@@ -1335,6 +1373,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
                 req: true,
                 der: false,
                 swire: None,
@@ -3137,6 +3189,44 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "OFFSET_SURFACE" => &[
             Slot {
                 k: Sk::Str,
@@ -4365,6 +4455,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Str,
                 req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "PRODUCT_DEFINITION_USAGE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
                 der: false,
                 swire: None,
             },
@@ -6023,6 +6145,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ASSEMBLY_COMPONENT_USAGE" => &[Slot {
+            k: Sk::Str,
+            req: false,
+            der: false,
+            swire: None,
+        }],
         "B_SPLINE_CURVE" => &[
             Slot {
                 k: Sk::Int,
@@ -6828,6 +6956,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => &[],
         "ONE_DIRECTION_REPEAT_FACTOR" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -7194,6 +7323,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "PRODUCT_DEFINITION_SHAPE" => &[],
+        "PRODUCT_DEFINITION_USAGE" => &[],
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[Slot {
             k: Sk::Vec,
             req: true,

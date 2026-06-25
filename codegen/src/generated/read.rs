@@ -96,6 +96,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "APPLICATION_CONTEXT",
     "APPLICATION_CONTEXT_ELEMENT",
     "APPLICATION_PROTOCOL_DEFINITION",
+    "ASSEMBLY_COMPONENT_USAGE",
     "AXIS1_PLACEMENT",
     "AXIS2_PLACEMENT_2D",
     "AXIS2_PLACEMENT_3D",
@@ -129,6 +130,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONIC",
     "CONICAL_SURFACE",
     "CONNECTED_FACE_SET",
+    "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
     "COORDINATED_UNIVERSAL_TIME_OFFSET",
@@ -220,6 +222,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "MEASURE_WITH_UNIT",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
+    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
     "OFFSET_SURFACE",
     "ONE_DIRECTION_REPEAT_FACTOR",
     "OPEN_SHELL",
@@ -274,6 +277,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_RELATIONSHIP",
     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
     "PRODUCT_DEFINITION_SHAPE",
+    "PRODUCT_DEFINITION_USAGE",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
     "PROPERTY_DEFINITION_RELATIONSHIP",
@@ -366,6 +370,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
     "APPLICATION_CONTEXT_ELEMENT",
+    "ASSEMBLY_COMPONENT_USAGE",
     "B_SPLINE_CURVE",
     "B_SPLINE_CURVE_WITH_KNOTS",
     "B_SPLINE_SURFACE",
@@ -460,6 +465,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "MEASURE_WITH_UNIT",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
+    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
     "ONE_DIRECTION_REPEAT_FACTOR",
     "OPEN_SHELL",
     "ORGANIZATIONAL_ADDRESS",
@@ -498,6 +504,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_RELATIONSHIP",
     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
     "PRODUCT_DEFINITION_SHAPE",
+    "PRODUCT_DEFINITION_USAGE",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
     "PROPERTY_DEFINITION_REPRESENTATION",
@@ -1105,6 +1112,30 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "ASSEMBLY_COMPONENT_USAGE" => &[
+            RefSlot {
+                idx: 3,
+                name: "relating_product_definition",
+                allowed: &[
+                    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "related_product_definition",
+                allowed: &[
+                    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "AXIS1_PLACEMENT" => &[
             RefSlot {
                 idx: 1,
@@ -1515,6 +1546,22 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION" => &[
+            RefSlot {
+                idx: 0,
+                name: "representation_relation",
+                allowed: &["SHAPE_REPRESENTATION_RELATIONSHIP"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "represented_product_relation",
+                allowed: &["PRODUCT_DEFINITION_SHAPE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "CONTEXT_DEPENDENT_UNIT" => &[RefSlot {
             idx: 0,
             name: "dimensions",
@@ -3539,6 +3586,30 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => &[
+            RefSlot {
+                idx: 3,
+                name: "relating_product_definition",
+                allowed: &[
+                    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "related_product_definition",
+                allowed: &[
+                    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "OFFSET_SURFACE" => &[RefSlot {
             idx: 1,
             name: "basis_surface",
@@ -4091,14 +4162,24 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "relating",
-                allowed: &["PRODUCT_DEFINITION_RELATIONSHIP"],
+                allowed: &[
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_USAGE",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related",
-                allowed: &["PRODUCT_DEFINITION_RELATIONSHIP"],
+                allowed: &[
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_USAGE",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4108,6 +4189,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "definition",
             allowed: &[
                 "ANGULARITY_TOLERANCE",
+                "ASSEMBLY_COMPONENT_USAGE",
                 "CHARACTERIZED_OBJECT",
                 "CIRCULAR_RUNOUT_TOLERANCE",
                 "COAXIALITY_TOLERANCE",
@@ -4135,6 +4217,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
                 "LINE_PROFILE_TOLERANCE",
                 "MODIFIED_GEOMETRIC_TOLERANCE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "PARALLELISM_TOLERANCE",
                 "PERPENDICULARITY_TOLERANCE",
                 "PLACED_DATUM_TARGET_FEATURE",
@@ -4144,6 +4227,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP",
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
+                "PRODUCT_DEFINITION_USAGE",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_RELATIONSHIP",
@@ -4158,6 +4242,30 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "PRODUCT_DEFINITION_USAGE" => &[
+            RefSlot {
+                idx: 3,
+                name: "relating_product_definition",
+                allowed: &[
+                    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "related_product_definition",
+                allowed: &[
+                    "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[RefSlot {
             idx: 2,
             name: "products",
@@ -4170,6 +4278,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "definition",
             allowed: &[
                 "ANGULARITY_TOLERANCE",
+                "ASSEMBLY_COMPONENT_USAGE",
                 "CHARACTERIZED_OBJECT",
                 "CIRCULAR_RUNOUT_TOLERANCE",
                 "COAXIALITY_TOLERANCE",
@@ -4197,6 +4306,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
                 "LINE_PROFILE_TOLERANCE",
                 "MODIFIED_GEOMETRIC_TOLERANCE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "PARALLELISM_TOLERANCE",
                 "PERPENDICULARITY_TOLERANCE",
                 "PLACED_DATUM_TARGET_FEATURE",
@@ -4206,6 +4316,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP",
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
+                "PRODUCT_DEFINITION_USAGE",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_RELATIONSHIP",
@@ -7231,14 +7342,24 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "relating",
-                allowed: &["PRODUCT_DEFINITION_RELATIONSHIP"],
+                allowed: &[
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_USAGE",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related",
-                allowed: &["PRODUCT_DEFINITION_RELATIONSHIP"],
+                allowed: &[
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_USAGE",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7255,6 +7376,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             name: "definition",
             allowed: &[
                 "ANGULARITY_TOLERANCE",
+                "ASSEMBLY_COMPONENT_USAGE",
                 "CHARACTERIZED_OBJECT",
                 "CIRCULAR_RUNOUT_TOLERANCE",
                 "COAXIALITY_TOLERANCE",
@@ -7282,6 +7404,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
                 "LINE_PROFILE_TOLERANCE",
                 "MODIFIED_GEOMETRIC_TOLERANCE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "PARALLELISM_TOLERANCE",
                 "PERPENDICULARITY_TOLERANCE",
                 "PLACED_DATUM_TARGET_FEATURE",
@@ -7291,6 +7414,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP",
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
+                "PRODUCT_DEFINITION_USAGE",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_RELATIONSHIP",
@@ -8128,6 +8252,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_application_protocol_definitions: Vec<(ApplicationProtocolDefinitionId, u64)> =
         Vec::new();
+    let mut pending_assembly_component_usages: Vec<(AssemblyComponentUsageId, u64)> = Vec::new();
     let mut pending_axis1_placements: Vec<(Axis1PlacementId, u64)> = Vec::new();
     let mut pending_axis2_placement2ds: Vec<(Axis2Placement2dId, u64)> = Vec::new();
     let mut pending_axis2_placement3ds: Vec<(Axis2Placement3dId, u64)> = Vec::new();
@@ -8156,6 +8281,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_conics: Vec<(ConicId, u64)> = Vec::new();
     let mut pending_conical_surfaces: Vec<(ConicalSurfaceId, u64)> = Vec::new();
     let mut pending_connected_face_sets: Vec<(ConnectedFaceSetId, u64)> = Vec::new();
+    let mut pending_context_dependent_shape_representations: Vec<(
+        ContextDependentShapeRepresentationId,
+        u64,
+    )> = Vec::new();
     let mut pending_context_dependent_units: Vec<(ContextDependentUnitId, u64)> = Vec::new();
     let mut pending_conversion_based_units: Vec<(ConversionBasedUnitId, u64)> = Vec::new();
     let mut pending_curve_styles: Vec<(CurveStyleId, u64)> = Vec::new();
@@ -8281,6 +8410,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_modified_geometric_tolerances: Vec<(ModifiedGeometricToleranceId, u64)> =
         Vec::new();
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
+    let mut pending_next_assembly_usage_occurrences: Vec<(NextAssemblyUsageOccurrenceId, u64)> =
+        Vec::new();
     let mut pending_offset_surfaces: Vec<(OffsetSurfaceId, u64)> = Vec::new();
     let mut pending_one_direction_repeat_factors: Vec<(OneDirectionRepeatFactorId, u64)> =
         Vec::new();
@@ -8338,6 +8469,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_product_definition_shapes: Vec<(ProductDefinitionShapeId, u64)> = Vec::new();
+    let mut pending_product_definition_usages: Vec<(ProductDefinitionUsageId, u64)> = Vec::new();
     let mut pending_product_related_product_categorys: Vec<(ProductRelatedProductCategoryId, u64)> =
         Vec::new();
     let mut pending_property_definitions: Vec<(PropertyDefinitionId, u64)> = Vec::new();
@@ -8649,6 +8781,33 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     ApplicationProtocolDefinitionId(model.application_protocol_definitions.push(v));
                 idmap.insert(id, AnyId::ApplicationProtocolDefinition(aid));
                 pending_application_protocol_definitions.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ASSEMBLY_COMPONENT_USAGE" => {
+                let v = AssemblyComponentUsage {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    relating_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                    related_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                    reference_designator: match &attributes[5] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[5])),
+                    },
+                };
+                let aid = AssemblyComponentUsageId(model.assembly_component_usages.push(v));
+                idmap.insert(id, AnyId::AssemblyComponentUsage(aid));
+                pending_assembly_component_usages.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -9196,6 +9355,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ConnectedFaceSetId(model.connected_face_sets.push(v));
                 idmap.insert(id, AnyId::ConnectedFaceSet(aid));
                 pending_connected_face_sets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION" => {
+                let v = ContextDependentShapeRepresentation {
+                    representation_relation:
+                        ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(
+                            ShapeRepresentationRelationshipId(usize::MAX),
+                        ),
+                    represented_product_relation: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                };
+                let aid = ContextDependentShapeRepresentationId(
+                    model.context_dependent_shape_representations.push(v),
+                );
+                idmap.insert(id, AnyId::ContextDependentShapeRepresentation(aid));
+                pending_context_dependent_shape_representations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -10533,6 +10710,34 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => {
+                let v = NextAssemblyUsageOccurrence {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    relating_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                    related_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                    reference_designator: match &attributes[5] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[5])),
+                    },
+                };
+                let aid =
+                    NextAssemblyUsageOccurrenceId(model.next_assembly_usage_occurrences.push(v));
+                idmap.insert(id, AnyId::NextAssemblyUsageOccurrence(aid));
+                pending_next_assembly_usage_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "OFFSET_SURFACE" => {
                 let v = OffsetSurface {
                     name: as_str(&attributes[0]),
@@ -11429,11 +11634,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[2])),
                     },
-                    relating: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
-                        ProductDefinitionRelationshipId(usize::MAX),
+                    relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                        AssemblyComponentUsageId(usize::MAX),
                     ),
-                    related: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
-                        ProductDefinitionRelationshipId(usize::MAX),
+                    related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                        AssemblyComponentUsageId(usize::MAX),
                     ),
                 };
                 let aid = ProductDefinitionRelationshipRelationshipId(
@@ -11458,6 +11663,29 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ProductDefinitionShapeId(model.product_definition_shapes.push(v));
                 idmap.insert(id, AnyId::ProductDefinitionShape(aid));
                 pending_product_definition_shapes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_USAGE" => {
+                let v = ProductDefinitionUsage {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    relating_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                    related_product_definition:
+                        ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
+                            GenericProductDefinitionReferenceId(usize::MAX),
+                        ),
+                };
+                let aid = ProductDefinitionUsageId(model.product_definition_usages.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionUsage(aid));
+                pending_product_definition_usages.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -12727,6 +12955,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_application_protocol_definitions(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_assembly_component_usages {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_assembly_component_usages(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_axis1_placements {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_axis1_placements(&mut model, aid, attributes, &idmap);
@@ -12850,6 +13083,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_connected_face_sets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_connected_face_sets(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_context_dependent_shape_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_context_dependent_shape_representations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_context_dependent_units {
@@ -13236,6 +13474,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_named_units(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_next_assembly_usage_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_next_assembly_usage_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_offset_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_offset_surfaces(&mut model, aid, attributes, &idmap);
@@ -13423,6 +13666,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_product_definition_shapes {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_definition_shapes(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_usages {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_usages(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_product_related_product_categorys {
@@ -13960,6 +14208,21 @@ fn resolve_application_protocol_definitions(
     it.application = application_v;
 }
 
+fn resolve_assembly_component_usages(
+    model: &mut Model,
+    aid: AssemblyComponentUsageId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let related_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.assembly_component_usages.items[aid.0];
+    it.relating_product_definition = relating_product_definition_v;
+    it.related_product_definition = related_product_definition_v;
+}
+
 fn resolve_axis1_placements(
     model: &mut Model,
     aid: Axis1PlacementId,
@@ -14407,6 +14670,22 @@ fn resolve_connected_face_sets(
     };
     let it = &mut model.connected_face_sets.items[aid.0];
     it.cfs_faces = cfs_faces_v;
+}
+
+fn resolve_context_dependent_shape_representations(
+    model: &mut Model,
+    aid: ContextDependentShapeRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let representation_relation_v = ShapeRepresentationRelationshipRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[0])).expect("ref"),
+    );
+    let represented_product_relation_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.context_dependent_shape_representations.items[aid.0];
+    it.representation_relation = representation_relation_v;
+    it.represented_product_relation = represented_product_relation_v;
 }
 
 fn resolve_context_dependent_units(
@@ -15697,6 +15976,21 @@ fn resolve_named_units(
     it.dimensions = dimensions_v;
 }
 
+fn resolve_next_assembly_usage_occurrences(
+    model: &mut Model,
+    aid: NextAssemblyUsageOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let related_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.next_assembly_usage_occurrences.items[aid.0];
+    it.relating_product_definition = relating_product_definition_v;
+    it.related_product_definition = related_product_definition_v;
+}
+
 fn resolve_offset_surfaces(
     model: &mut Model,
     aid: OffsetSurfaceId,
@@ -16292,6 +16586,21 @@ fn resolve_product_definition_shapes(
         CharacterizedDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
     let it = &mut model.product_definition_shapes.items[aid.0];
     it.definition = definition_v;
+}
+
+fn resolve_product_definition_usages(
+    model: &mut Model,
+    aid: ProductDefinitionUsageId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let related_product_definition_v =
+        ProductDefinitionOrReferenceRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.product_definition_usages.items[aid.0];
+    it.relating_product_definition = relating_product_definition_v;
+    it.related_product_definition = related_product_definition_v;
 }
 
 fn resolve_product_related_product_categorys(
@@ -17465,6 +17774,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     ApplicationContextId(usize::MAX),
                 ),
             },
+            "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage {
+                reference_designator: match &p.attributes[0] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[0])),
+                },
+            },
             "B_SPLINE_CURVE" => UnitPart::BSplineCurve {
                 degree: as_int(&p.attributes[0]),
                 control_points_list: Vec::new(),
@@ -17830,6 +18145,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
             },
             "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None },
+            "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => UnitPart::NextAssemblyUsageOccurrence,
             "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor {
                 repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
             },
@@ -17990,15 +18306,16 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                         Attribute::Unset => None,
                         _ => Some(as_str(&p.attributes[2])),
                     },
-                    relating: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
-                        ProductDefinitionRelationshipId(usize::MAX),
+                    relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                        AssemblyComponentUsageId(usize::MAX),
                     ),
-                    related: ProductDefinitionRelationshipRef::ProductDefinitionRelationship(
-                        ProductDefinitionRelationshipId(usize::MAX),
+                    related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                        AssemblyComponentUsageId(usize::MAX),
                     ),
                 }
             }
             "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
+            "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
             "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory {
                 products: Vec::new(),
             },

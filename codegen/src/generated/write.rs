@@ -69,6 +69,7 @@ pub struct Writer<'a> {
     application_context_ids: Vec<Option<u64>>,
     application_context_element_ids: Vec<Option<u64>>,
     application_protocol_definition_ids: Vec<Option<u64>>,
+    assembly_component_usage_ids: Vec<Option<u64>>,
     axis1_placement_ids: Vec<Option<u64>>,
     axis2_placement2d_ids: Vec<Option<u64>>,
     axis2_placement3d_ids: Vec<Option<u64>>,
@@ -102,6 +103,7 @@ pub struct Writer<'a> {
     conic_ids: Vec<Option<u64>>,
     conical_surface_ids: Vec<Option<u64>>,
     connected_face_set_ids: Vec<Option<u64>>,
+    context_dependent_shape_representation_ids: Vec<Option<u64>>,
     context_dependent_unit_ids: Vec<Option<u64>>,
     conversion_based_unit_ids: Vec<Option<u64>>,
     coordinated_universal_time_offset_ids: Vec<Option<u64>>,
@@ -193,6 +195,7 @@ pub struct Writer<'a> {
     measure_with_unit_ids: Vec<Option<u64>>,
     modified_geometric_tolerance_ids: Vec<Option<u64>>,
     named_unit_ids: Vec<Option<u64>>,
+    next_assembly_usage_occurrence_ids: Vec<Option<u64>>,
     offset_surface_ids: Vec<Option<u64>>,
     one_direction_repeat_factor_ids: Vec<Option<u64>>,
     open_shell_ids: Vec<Option<u64>>,
@@ -247,6 +250,7 @@ pub struct Writer<'a> {
     product_definition_relationship_ids: Vec<Option<u64>>,
     product_definition_relationship_relationship_ids: Vec<Option<u64>>,
     product_definition_shape_ids: Vec<Option<u64>>,
+    product_definition_usage_ids: Vec<Option<u64>>,
     product_related_product_category_ids: Vec<Option<u64>>,
     property_definition_ids: Vec<Option<u64>>,
     property_definition_relationship_ids: Vec<Option<u64>>,
@@ -371,6 +375,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            assembly_component_usage_ids: vec![None; model.assembly_component_usages.items.len()],
             axis1_placement_ids: vec![None; model.axis1_placements.items.len()],
             axis2_placement2d_ids: vec![None; model.axis2_placement2ds.items.len()],
             axis2_placement3d_ids: vec![None; model.axis2_placement3ds.items.len()],
@@ -413,6 +418,13 @@ impl<'a> Writer<'a> {
             conic_ids: vec![None; model.conics.items.len()],
             conical_surface_ids: vec![None; model.conical_surfaces.items.len()],
             connected_face_set_ids: vec![None; model.connected_face_sets.items.len()],
+            context_dependent_shape_representation_ids: vec![
+                None;
+                model
+                    .context_dependent_shape_representations
+                    .items
+                    .len()
+            ],
             context_dependent_unit_ids: vec![None; model.context_dependent_units.items.len()],
             conversion_based_unit_ids: vec![None; model.conversion_based_units.items.len()],
             coordinated_universal_time_offset_ids: vec![
@@ -648,6 +660,13 @@ impl<'a> Writer<'a> {
                 model.modified_geometric_tolerances.items.len()
             ],
             named_unit_ids: vec![None; model.named_units.items.len()],
+            next_assembly_usage_occurrence_ids: vec![
+                None;
+                model
+                    .next_assembly_usage_occurrences
+                    .items
+                    .len()
+            ],
             offset_surface_ids: vec![None; model.offset_surfaces.items.len()],
             one_direction_repeat_factor_ids: vec![
                 None;
@@ -777,6 +796,7 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             product_definition_shape_ids: vec![None; model.product_definition_shapes.items.len()],
+            product_definition_usage_ids: vec![None; model.product_definition_usages.items.len()],
             product_related_product_category_ids: vec![
                 None;
                 model
@@ -1340,6 +1360,44 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = APPLICATION_PROTOCOL_DEFINITION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_assembly_component_usages(&mut self, id: AssemblyComponentUsageId) -> u64 {
+        if let Some(n) = self.assembly_component_usage_ids[id.0] {
+            return n;
+        }
+        let it = self.model.assembly_component_usages.get(id.0).clone();
+        let n = self.fresh();
+        self.assembly_component_usage_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(
+                    (&it.relating_product_definition).clone()
+                )
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(
+                    (&it.related_product_definition).clone()
+                )
+            ),
+            match &it.reference_designator {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = ASSEMBLY_COMPONENT_USAGE({});\n",
             attrs.join(",")
         ));
         n
@@ -2221,6 +2279,39 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = CONNECTED_FACE_SET({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_context_dependent_shape_representations(
+        &mut self,
+        id: ContextDependentShapeRepresentationId,
+    ) -> u64 {
+        if let Some(n) = self.context_dependent_shape_representation_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .context_dependent_shape_representations
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.context_dependent_shape_representation_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            format!(
+                "#{}",
+                self.emit_ref_shape_representation_relationship(
+                    (&it.representation_relation).clone()
+                )
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_shape((&it.represented_product_relation).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = CONTEXT_DEPENDENT_SHAPE_REPRESENTATION({});\n",
             attrs.join(",")
         ));
         n
@@ -4512,6 +4603,44 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_next_assembly_usage_occurrences(&mut self, id: NextAssemblyUsageOccurrenceId) -> u64 {
+        if let Some(n) = self.next_assembly_usage_occurrence_ids[id.0] {
+            return n;
+        }
+        let it = self.model.next_assembly_usage_occurrences.get(id.0).clone();
+        let n = self.fresh();
+        self.next_assembly_usage_occurrence_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(
+                    (&it.relating_product_definition).clone()
+                )
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(
+                    (&it.related_product_definition).clone()
+                )
+            ),
+            match &it.reference_designator {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out.push_str(&format!(
+            "#{n} = NEXT_ASSEMBLY_USAGE_OCCURRENCE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_offset_surfaces(&mut self, id: OffsetSurfaceId) -> u64 {
         if let Some(n) = self.offset_surface_ids[id.0] {
             return n;
@@ -5948,6 +6077,40 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = PRODUCT_DEFINITION_SHAPE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_usages(&mut self, id: ProductDefinitionUsageId) -> u64 {
+        if let Some(n) = self.product_definition_usage_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_definition_usages.get(id.0).clone();
+        let n = self.fresh();
+        self.product_definition_usage_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(
+                    (&it.relating_product_definition).clone()
+                )
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_definition_or_reference(
+                    (&it.related_product_definition).clone()
+                )
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_USAGE({});\n",
             attrs.join(",")
         ));
         n
@@ -8054,6 +8217,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::AngularityTolerance(i) => {
                 self.emit_angularity_tolerances(i)
             }
+            CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
+                self.emit_assembly_component_usages(i)
+            }
             CharacterizedDefinitionRef::CharacterizedObject(i) => {
                 self.emit_characterized_objects(i)
             }
@@ -8119,6 +8285,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::ModifiedGeometricTolerance(i) => {
                 self.emit_modified_geometric_tolerances(i)
             }
+            CharacterizedDefinitionRef::NextAssemblyUsageOccurrence(i) => {
+                self.emit_next_assembly_usage_occurrences(i)
+            }
             CharacterizedDefinitionRef::ParallelismTolerance(i) => {
                 self.emit_parallelism_tolerances(i)
             }
@@ -8141,6 +8310,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::ProductDefinitionShape(i) => {
                 self.emit_product_definition_shapes(i)
+            }
+            CharacterizedDefinitionRef::ProductDefinitionUsage(i) => {
+                self.emit_product_definition_usages(i)
             }
             CharacterizedDefinitionRef::RoundnessTolerance(i) => self.emit_roundness_tolerances(i),
             CharacterizedDefinitionRef::ShapeAspect(i) => self.emit_shape_aspects(i),
@@ -8959,8 +9131,17 @@ impl<'a> Writer<'a> {
         r: ProductDefinitionRelationshipRef,
     ) -> u64 {
         match r {
+            ProductDefinitionRelationshipRef::AssemblyComponentUsage(i) => {
+                self.emit_assembly_component_usages(i)
+            }
+            ProductDefinitionRelationshipRef::NextAssemblyUsageOccurrence(i) => {
+                self.emit_next_assembly_usage_occurrences(i)
+            }
             ProductDefinitionRelationshipRef::ProductDefinitionRelationship(i) => {
                 self.emit_product_definition_relationships(i)
+            }
+            ProductDefinitionRelationshipRef::ProductDefinitionUsage(i) => {
+                self.emit_product_definition_usages(i)
             }
             ProductDefinitionRelationshipRef::Complex(i) => self.emit_complex(i),
         }
@@ -9315,6 +9496,18 @@ impl<'a> Writer<'a> {
                 self.emit_shape_dimension_representations(i)
             }
             ShapeDimensionRepresentationRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_shape_representation_relationship(
+        &mut self,
+        r: ShapeRepresentationRelationshipRef,
+    ) -> u64 {
+        match r {
+            ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(i) => {
+                self.emit_shape_representation_relationships(i)
+            }
+            ShapeRepresentationRelationshipRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -9842,6 +10035,16 @@ impl<'a> Writer<'a> {
                         ),
                     ];
                     format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(","))
+                }
+                UnitPart::AssemblyComponentUsage {
+                    reference_designator,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![match reference_designator {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    }];
+                    format!("ASSEMBLY_COMPONENT_USAGE({})", a.join(","))
                 }
                 UnitPart::BSplineCurve {
                     degree,
@@ -10751,6 +10954,9 @@ impl<'a> Writer<'a> {
                     }];
                     format!("NAMED_UNIT({})", a.join(","))
                 }
+                UnitPart::NextAssemblyUsageOccurrence => {
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE()".to_string()
+                }
                 UnitPart::OneDirectionRepeatFactor { repeat_factor, .. } => {
                     let a: Vec<String> = vec![format!(
                         "#{}",
@@ -11151,6 +11357,7 @@ impl<'a> Writer<'a> {
                     )
                 }
                 UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE()".to_string(),
+                UnitPart::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE()".to_string(),
                 UnitPart::ProductRelatedProductCategory { products, .. } => {
                     let a: Vec<String> = vec![format!(
                         "({})",
@@ -11789,6 +11996,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.application_protocol_definitions.items.len() {
             self.emit_application_protocol_definitions(ApplicationProtocolDefinitionId(i));
         }
+        for i in 0..self.model.assembly_component_usages.items.len() {
+            self.emit_assembly_component_usages(AssemblyComponentUsageId(i));
+        }
         for i in 0..self.model.axis1_placements.items.len() {
             self.emit_axis1_placements(Axis1PlacementId(i));
         }
@@ -11887,6 +12097,16 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.connected_face_sets.items.len() {
             self.emit_connected_face_sets(ConnectedFaceSetId(i));
+        }
+        for i in 0..self
+            .model
+            .context_dependent_shape_representations
+            .items
+            .len()
+        {
+            self.emit_context_dependent_shape_representations(
+                ContextDependentShapeRepresentationId(i),
+            );
         }
         for i in 0..self.model.context_dependent_units.items.len() {
             self.emit_context_dependent_units(ContextDependentUnitId(i));
@@ -12215,6 +12435,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.named_units.items.len() {
             self.emit_named_units(NamedUnitId(i));
         }
+        for i in 0..self.model.next_assembly_usage_occurrences.items.len() {
+            self.emit_next_assembly_usage_occurrences(NextAssemblyUsageOccurrenceId(i));
+        }
         for i in 0..self.model.offset_surfaces.items.len() {
             self.emit_offset_surfaces(OffsetSurfaceId(i));
         }
@@ -12390,6 +12613,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.product_definition_shapes.items.len() {
             self.emit_product_definition_shapes(ProductDefinitionShapeId(i));
+        }
+        for i in 0..self.model.product_definition_usages.items.len() {
+            self.emit_product_definition_usages(ProductDefinitionUsageId(i));
         }
         for i in 0..self.model.product_related_product_categorys.items.len() {
             self.emit_product_related_product_categorys(ProductRelatedProductCategoryId(i));
