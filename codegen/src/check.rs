@@ -14,26 +14,59 @@ use crate::generated::read::{in_subset, read};
 use crate::generated::write::{Writer, wrap_step};
 use crate::merkle::merkle_diff_maps;
 
+/// Why an entity was dropped before round-trip comparison. SlotLocal = a slot
+/// value could not be normalized to standard (req-ref<-$, int<-fractional-real).
+/// Unimplemented = the entity type is outside the generated closure (not yet
+/// modeled, or an unknown/non-schema name). Nonstandard = a known closure type
+/// sits in a SELECT slot that does not admit it (schema violation). Cascade = a
+/// referrer whose target was dropped/dangling (root reason lives on the target's
+/// own record, not duplicated here).
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum DropKind {
+    SlotLocal,
+    Unimplemented,
+    Nonstandard,
+    Cascade,
+}
+
+/// A drop reason aggregation key: kind + a human label (`<TYPE>` /
+/// `<ENT>.<slot>-><TYPE>` / a slot-rule name / `ref-dropped`). Aggregated as
+/// `BTreeMap<DropReason, usize>` (instance count per kind+label, no explosion).
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct DropReason {
+    pub kind: DropKind,
+    pub key: String,
+}
+
+fn bump(drops: &mut BTreeMap<DropReason, usize>, kind: DropKind, key: impl Into<String>) {
+    *drops
+        .entry(DropReason {
+            kind,
+            key: key.into(),
+        })
+        .or_insert(0) += 1;
+}
+
 /// Outcome of checking one STEP file's in-scope subset.
 pub enum CheckResult {
     /// Not applicable to this run, NOT a generator bug (source parse failure on
     /// a corrupt input file, or no in-scope entities).
     Skip(String),
     /// Round-trip data-equivalent. `validated` = in-scope subset entity count,
-    /// `escaped` = closure-typed candidates dropped by the escape filter (their
-    /// transitive refs left the closure) — the coverage gap. `norm` = NormCase
-    /// notes applied by the pre-read normalize pass (rewrites/drops).
+    /// `drops` = entities removed before comparison, keyed by reason (the coverage
+    /// gap, formerly a single `escaped` count). `norm` = rewrite (fix) notes from
+    /// the pre-read normalize pass.
     Pass {
         validated: usize,
-        escaped: usize,
+        drops: BTreeMap<DropReason, usize>,
         norm: Vec<&'static str>,
     },
     /// Generator bug: panic in read/write, output reparse failure, or merkle
-    /// mismatch. `validated`/`escaped` carried for coverage accounting.
+    /// mismatch. `validated`/`drops` carried for coverage accounting.
     Fail {
         reason: String,
         validated: usize,
-        escaped: usize,
+        drops: BTreeMap<DropReason, usize>,
         norm: Vec<&'static str>,
     },
 }
@@ -61,31 +94,37 @@ fn entity_refs(ent: &RawEntity) -> Vec<u64> {
     out
 }
 
-/// Filter a parsed graph to the schema-closure subset. An entity qualifies iff
-/// it is a closure entity AND its transitive reference set stays entirely within
-/// the closure (no escape into out-of-scope subsystems). Returns the kept subset
-/// and the count of closure-typed candidates dropped by the escape filter.
-fn subset(graph: &BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>, usize) {
-    // Candidate set: closure-typed entities.
-    let mut keep: BTreeSet<u64> = graph
-        .iter()
-        .filter(|(_, e)| in_subset(e))
-        .map(|(&id, _)| id)
-        .collect();
-    let candidates = keep.len();
-    // Iteratively drop any candidate that references a non-candidate entity
-    // (escape) — fixpoint, so an escape propagates back through dependents.
+/// Filter a parsed graph to the closure subset, recording WHY each entity is
+/// dropped (the reasoned successor to the old `subset` escape filter). An entity
+/// survives iff it is a closure type AND its transitive refs all stay kept.
+/// Drops are classified: `Unimplemented` = non-closure type (`in_subset` false),
+/// `Cascade` = a kept entity referencing a non-kept (dropped/dangling) target,
+/// propagated to a fixpoint. (`Nonstandard` is added in a later stage.)
+fn drop_pass(
+    graph: &BTreeMap<u64, RawEntity>,
+) -> (BTreeMap<u64, RawEntity>, BTreeMap<DropReason, usize>) {
+    let mut drops: BTreeMap<DropReason, usize> = BTreeMap::new();
+    // Candidate set: closure-typed entities. Non-closure types are unimplemented.
+    let mut keep: BTreeSet<u64> = BTreeSet::new();
+    for (&id, e) in graph {
+        if in_subset(e) {
+            keep.insert(id);
+        } else {
+            bump(&mut drops, DropKind::Unimplemented, ent_name(e));
+        }
+    }
+    // Iteratively drop any candidate that references a non-kept entity (escape)
+    // — fixpoint, so an escape propagates back through dependents. The root
+    // reason lives on the target's own record; cascade just links to it.
     loop {
         let mut removed = false;
         let snapshot: Vec<u64> = keep.iter().copied().collect();
         for id in snapshot {
             let ent = &graph[&id];
             for r in entity_refs(ent) {
-                // A ref is in-scope iff its target is still kept. A target that
-                // is non-closure-typed, dangling, or already dropped (escape
-                // propagation) disqualifies this entity too.
                 if !keep.contains(&r) {
                     keep.remove(&id);
+                    bump(&mut drops, DropKind::Cascade, "ref-dropped");
                     removed = true;
                     break;
                 }
@@ -95,12 +134,11 @@ fn subset(graph: &BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>, usize)
             break;
         }
     }
-    let escaped = candidates - keep.len();
     let map = keep
         .into_iter()
         .map(|id| (id, graph[&id].clone()))
         .collect();
-    (map, escaped)
+    (map, drops)
 }
 
 fn graph_of(g: &step_io::EntityGraph) -> BTreeMap<u64, RawEntity> {
@@ -110,14 +148,22 @@ fn graph_of(g: &step_io::EntityGraph) -> BTreeMap<u64, RawEntity> {
 /// Full pre-read normalization in two stages: `entity_normalize` (hand-written,
 /// per-entity non-standard fixups) then `generic_normalize` (generated, generic
 /// slot-kind rules). Entity-level runs FIRST so a per-entity fixup of a required
-/// ref pre-empts the generic req-ref<-$ drop. Returns the map + combined notes.
-fn normalize_all(g: &step_io::EntityGraph) -> (BTreeMap<u64, RawEntity>, Vec<&'static str>) {
+/// ref pre-empts the generic req-ref<-$ drop. Returns the map, the rewrite (fix)
+/// notes, and the slot-local drop reasons (entities removed by generic_normalize,
+/// surfaced on the drops channel — separate from the fix notes).
+fn normalize_all(
+    g: &step_io::EntityGraph,
+) -> (
+    BTreeMap<u64, RawEntity>,
+    Vec<&'static str>,
+    Vec<&'static str>,
+) {
     let mut raw = graph_of(g);
     let mut norm: Vec<&'static str> = Vec::new();
     crate::entity_normalize::apply(&mut raw, &mut norm);
-    let (normalized, gnorm) = crate::generated::generic_normalize::normalize(raw);
+    let (normalized, gnorm, slot_drops) = crate::generated::generic_normalize::normalize(raw);
     norm.extend(gnorm);
-    (normalized, norm)
+    (normalized, norm, slot_drops)
 }
 
 fn ent_name(e: &RawEntity) -> String {
@@ -136,8 +182,8 @@ fn ent_name(e: &RawEntity) -> String {
 /// shapes the generator round-trips wrong.
 pub fn dump_type(src: &str, type_name: &str) -> (Vec<String>, Vec<String>) {
     let g = parse(src).expect("parse");
-    let (normalized, _) = normalize_all(&g);
-    let (a, _) = subset(&normalized);
+    let (normalized, _, _) = normalize_all(&g);
+    let (a, _) = drop_pass(&normalized);
     let mut left: Vec<String> = a
         .values()
         .filter(|e| ent_name(e) == type_name)
@@ -148,7 +194,7 @@ pub fn dump_type(src: &str, type_name: &str) -> (Vec<String>, Vec<String>) {
     let (model, _) = read(&a);
     let file = wrap_step(&Writer::new(&model).emit_all());
     let bg = parse(&file).expect("reparse output");
-    let (b, _) = subset(&graph_of(&bg));
+    let (b, _) = drop_pass(&graph_of(&bg));
     let mut right: Vec<String> = b
         .values()
         .filter(|e| ent_name(e) == type_name)
@@ -184,8 +230,8 @@ pub fn check_roundtrip(src: &str) -> CheckResult {
 /// code panic propagates with a backtrace (the normal path swallows it as Fail).
 pub fn check_roundtrip_raw(src: &[u8]) {
     let g = parse_bytes(src).expect("source parse");
-    let (normalized, _norm) = normalize_all(&g);
-    let (a, _escaped) = subset(&normalized);
+    let (normalized, _norm, _slot_drops) = normalize_all(&g);
+    let (a, _drops) = drop_pass(&normalized);
     let (model, _idmap) = read(&a);
     let body = Writer::new(&model).emit_all();
     let _ = wrap_step(&body);
@@ -201,11 +247,16 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
         Ok(g) => g,
         Err(e) => return CheckResult::Skip(format!("source parse failed: {e}")),
     };
-    // Pre-read normalize: rewrite non-standard values to standard (NormCase
-    // notes) or drop non-normalizable entities (referrers cascade-drop via the
-    // subset escape filter below). The strict model only ever sees standard data.
-    let (normalized, norm) = normalize_all(&g);
-    let (a, escaped) = subset(&normalized);
+    // Pre-read normalize: rewrite non-standard values to standard (norm notes)
+    // or drop non-normalizable entities. Slot-local drops come back separately;
+    // the drop pass below adds unimplemented/cascade. The strict model only ever
+    // sees standard data.
+    let (normalized, norm, slot_drops) = normalize_all(&g);
+    let (a, mut drops) = drop_pass(&normalized);
+    // Fold the slot-local drops (from generic_normalize) into the same channel.
+    for r in slot_drops {
+        bump(&mut drops, DropKind::SlotLocal, r);
+    }
     if a.is_empty() {
         return CheckResult::Skip("no in-scope entities".to_string());
     }
@@ -224,7 +275,7 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
             return CheckResult::Fail {
                 reason: "panic in generated read/write".to_string(),
                 validated,
-                escaped,
+                drops,
                 norm,
             };
         }
@@ -232,12 +283,12 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
 
     // Output reparse failure = generator produced malformed text = our bug.
     let b = match parse(&file) {
-        Ok(bg) => subset(&graph_of(&bg)).0,
+        Ok(bg) => drop_pass(&graph_of(&bg)).0,
         Err(e) => {
             return CheckResult::Fail {
                 reason: format!("output reparse failed: {e}"),
                 validated,
-                escaped,
+                drops,
                 norm,
             };
         }
@@ -246,13 +297,13 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
     match merkle_diff_maps(&a, &b) {
         None => CheckResult::Pass {
             validated,
-            escaped,
+            drops,
             norm,
         },
         Some(reason) => CheckResult::Fail {
             reason: format!("merkle mismatch: {reason}"),
             validated,
-            escaped,
+            drops,
             norm,
         },
     }

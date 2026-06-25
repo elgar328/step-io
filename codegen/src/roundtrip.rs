@@ -5,7 +5,29 @@
 //!   roundtrip <path>          # check one file: PASS/SKIP/FAIL + reason
 //!   roundtrip <path> <TYPE>   # diff one entity type (attrs only) before/after
 
-use codegen::check::{CheckResult, check_roundtrip, check_roundtrip_raw, dump_type};
+use std::collections::BTreeMap;
+
+use codegen::check::{
+    CheckResult, DropKind, DropReason, check_roundtrip, check_roundtrip_raw, dump_type,
+};
+
+/// One line per (kind, label) drop bucket with its instance count.
+fn fmt_drops(drops: &BTreeMap<DropReason, usize>) -> String {
+    if drops.is_empty() {
+        return String::new();
+    }
+    let mut lines: Vec<String> = Vec::new();
+    for (r, n) in drops {
+        let kind = match r.kind {
+            DropKind::SlotLocal => "slot",
+            DropKind::Unimplemented => "unimpl",
+            DropKind::Nonstandard => "nonstd",
+            DropKind::Cascade => "cascade",
+        };
+        lines.push(format!("  [{kind}] {} ({n})", r.key));
+    }
+    format!("{}\n", lines.join("\n"))
+}
 
 fn main() {
     let mut args = std::env::args().skip(1);
@@ -43,20 +65,24 @@ fn main() {
         CheckResult::Skip(why) => println!("SKIP  {path}  ({why})"),
         CheckResult::Pass {
             validated,
-            escaped,
+            drops,
             norm,
         } => println!(
-            "PASS  {path}  ({validated} entities, {escaped} escaped, {} normalized)",
-            norm.len()
+            "PASS  {path}  ({validated} entities, {} dropped, {} normalized)\n{}",
+            drops.values().sum::<usize>(),
+            norm.len(),
+            fmt_drops(&drops)
         ),
         CheckResult::Fail {
             reason,
             validated,
-            escaped,
+            drops,
             norm,
         } => println!(
-            "FAIL  {path}  ({validated} entities, {escaped} escaped, {} normalized)\n{reason}",
-            norm.len()
+            "FAIL  {path}  ({validated} entities, {} dropped, {} normalized)\n{}{reason}",
+            drops.values().sum::<usize>(),
+            norm.len(),
+            fmt_drops(&drops)
         ),
     }
 }

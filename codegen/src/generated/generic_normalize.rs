@@ -60,41 +60,56 @@ fn wrap_bare_scalar(a: &mut Attribute, wire: &'static str) -> bool {
     }
 }
 
-enum Na {
-    Keep,
-    Set(Attribute, &'static str),
+/// Result of normalizing one slot value. Unchanged = already standard; Rewrite =
+/// fixed to a standard value (kept, "fix"); Drop = non-normalizable (entity removed,
+/// "drop"). The fix/drop split feeds the two surface channels (norm vs drops).
+enum NormAction {
+    Unchanged,
+    Rewrite(Attribute, &'static str),
     Drop(&'static str),
 }
 
 /// Slot-kind general rules (single rule per slot, output is the final standard
 /// value). Value rules (int<->real) apply regardless of req; the `$`/`*` rules
 /// apply per req/derived.
-fn norm_attr(s: Slot, a: &Attribute) -> Na {
+fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
     if s.der {
         // a derived slot is always `*` on the wire; force it (drops a redundant
         // explicit value or a non-standard `()`/`$`).
         return if matches!(a, Attribute::Derived) {
-            Na::Keep
+            NormAction::Unchanged
         } else {
-            Na::Set(Attribute::Derived, "derived->*")
+            NormAction::Rewrite(Attribute::Derived, "derived->*")
         };
     }
     match (s.k, a) {
-        (Sk::Real, Attribute::Integer(i)) => Na::Set(Attribute::Real(*i as f64), "int->real"),
+        (Sk::Real, Attribute::Integer(i)) => {
+            NormAction::Rewrite(Attribute::Real(*i as f64), "int->real")
+        }
         (Sk::Int, Attribute::Real(r)) if r.fract() == 0.0 => {
-            Na::Set(Attribute::Integer(*r as i64), "real->int")
+            NormAction::Rewrite(Attribute::Integer(*r as i64), "real->int")
         }
-        (Sk::Int, Attribute::Real(_)) => Na::Drop("int<-fractional-real"),
+        (Sk::Int, Attribute::Real(_)) => NormAction::Drop("int<-fractional-real"),
         (Sk::Str | Sk::Bin, Attribute::Unset) if s.req => {
-            Na::Set(Attribute::String(String::new()), "req-str<-$")
+            NormAction::Rewrite(Attribute::String(String::new()), "req-str<-$")
         }
-        (Sk::Vec, Attribute::Unset) if s.req => Na::Set(Attribute::List(Vec::new()), "req-vec<-$"),
-        (Sk::Ref, Attribute::Unset) if s.req => Na::Drop("req-ref<-$"),
-        _ => Na::Keep,
+        (Sk::Vec, Attribute::Unset) if s.req => {
+            NormAction::Rewrite(Attribute::List(Vec::new()), "req-vec<-$")
+        }
+        (Sk::Ref, Attribute::Unset) if s.req => NormAction::Drop("req-ref<-$"),
+        _ => NormAction::Unchanged,
     }
 }
 
-fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'static str>) -> bool {
+/// Normalize one entity's attrs. Rewrites push to `warns` (norm channel); a
+/// non-normalizable slot sets `drop_out` to its reason and returns false (the
+/// entity is removed — slot-local drop, surfaced on the drops channel).
+fn norm_attrs(
+    slots: &[Slot],
+    attrs: &mut Vec<Attribute>,
+    warns: &mut Vec<&'static str>,
+    drop_out: &mut Option<&'static str>,
+) -> bool {
     for (i, a) in attrs.iter_mut().enumerate() {
         canon(a);
         if let Some(s) = slots.get(i).copied() {
@@ -120,13 +135,13 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
                 }
             }
             match norm_attr(s, a) {
-                Na::Keep => {}
-                Na::Set(na, w) => {
+                NormAction::Unchanged => {}
+                NormAction::Rewrite(na, w) => {
                     *a = na;
                     warns.push(w);
                 }
-                Na::Drop(w) => {
-                    warns.push(w);
+                NormAction::Drop(w) => {
+                    *drop_out = Some(w);
                     return false;
                 }
             }
@@ -136,22 +151,34 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
 }
 
 /// Normalize the raw graph in place. Returns the surviving map (non-normalizable
-/// entities removed; their referrers cascade-drop later via the subset escape
-/// filter) and the NormCase notes (one per rewrite/drop).
+/// entities removed; their referrers cascade-drop later via the drop pass) plus
+/// two separate channels: `warns` = rewrite notes (fix, kept), `slot_drops` =
+/// slot-local drop reasons (one per entity removed here, surfaced as drops).
 pub fn normalize(
     mut map: BTreeMap<u64, RawEntity>,
-) -> (BTreeMap<u64, RawEntity>, Vec<&'static str>) {
+) -> (
+    BTreeMap<u64, RawEntity>,
+    Vec<&'static str>,
+    Vec<&'static str>,
+) {
     let mut warns: Vec<&'static str> = Vec::new();
+    let mut slot_drops: Vec<&'static str> = Vec::new();
     let mut drop_ids: Vec<u64> = Vec::new();
     for (&id, ent) in map.iter_mut() {
+        let mut drop_reason: Option<&'static str> = None;
         let keep = match ent {
             RawEntity::Simple {
                 name, attributes, ..
-            } => norm_attrs(simple_slots(name), attributes, &mut warns),
+            } => norm_attrs(simple_slots(name), attributes, &mut warns, &mut drop_reason),
             RawEntity::Complex { parts, .. } => {
                 let mut ok = true;
                 for p in parts.iter_mut() {
-                    if !norm_attrs(part_slots(&p.name), &mut p.attributes, &mut warns) {
+                    if !norm_attrs(
+                        part_slots(&p.name),
+                        &mut p.attributes,
+                        &mut warns,
+                        &mut drop_reason,
+                    ) {
                         ok = false;
                         break;
                     }
@@ -161,12 +188,15 @@ pub fn normalize(
         };
         if !keep {
             drop_ids.push(id);
+            if let Some(r) = drop_reason {
+                slot_drops.push(r);
+            }
         }
     }
     for id in drop_ids {
         map.remove(&id);
     }
-    (map, warns)
+    (map, warns, slot_drops)
 }
 
 fn simple_slots(n: &str) -> &'static [Slot] {
