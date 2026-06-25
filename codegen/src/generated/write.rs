@@ -229,14 +229,18 @@ pub struct Writer<'a> {
     pre_defined_tile_ids: Vec<Option<u64>>,
     presentation_style_assignment_ids: Vec<Option<u64>>,
     product_ids: Vec<Option<u64>>,
+    product_category_ids: Vec<Option<u64>>,
+    product_category_relationship_ids: Vec<Option<u64>>,
     product_context_ids: Vec<Option<u64>>,
     product_definition_ids: Vec<Option<u64>>,
     product_definition_context_ids: Vec<Option<u64>>,
     product_definition_formation_ids: Vec<Option<u64>>,
+    product_definition_formation_with_specified_source_ids: Vec<Option<u64>>,
     product_definition_occurrence_ids: Vec<Option<u64>>,
     product_definition_relationship_ids: Vec<Option<u64>>,
     product_definition_relationship_relationship_ids: Vec<Option<u64>>,
     product_definition_shape_ids: Vec<Option<u64>>,
+    product_related_product_category_ids: Vec<Option<u64>>,
     property_definition_ids: Vec<Option<u64>>,
     quasi_uniform_curve_ids: Vec<Option<u64>>,
     quasi_uniform_surface_ids: Vec<Option<u64>>,
@@ -684,6 +688,11 @@ impl<'a> Writer<'a> {
                 model.presentation_style_assignments.items.len()
             ],
             product_ids: vec![None; model.products.items.len()],
+            product_category_ids: vec![None; model.product_categorys.items.len()],
+            product_category_relationship_ids: vec![
+                None;
+                model.product_category_relationships.items.len()
+            ],
             product_context_ids: vec![None; model.product_contexts.items.len()],
             product_definition_ids: vec![None; model.product_definitions.items.len()],
             product_definition_context_ids: vec![
@@ -693,6 +702,13 @@ impl<'a> Writer<'a> {
             product_definition_formation_ids: vec![
                 None;
                 model.product_definition_formations.items.len()
+            ],
+            product_definition_formation_with_specified_source_ids: vec![
+                None;
+                model
+                    .product_definition_formation_with_specified_sources
+                    .items
+                    .len()
             ],
             product_definition_occurrence_ids: vec![
                 None;
@@ -713,6 +729,13 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             product_definition_shape_ids: vec![None; model.product_definition_shapes.items.len()],
+            product_related_product_category_ids: vec![
+                None;
+                model
+                    .product_related_product_categorys
+                    .items
+                    .len()
+            ],
             property_definition_ids: vec![None; model.property_definitions.items.len()],
             quasi_uniform_curve_ids: vec![None; model.quasi_uniform_curves.items.len()],
             quasi_uniform_surface_ids: vec![None; model.quasi_uniform_surfaces.items.len()],
@@ -5297,6 +5320,54 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_product_categorys(&mut self, id: ProductCategoryId) -> u64 {
+        if let Some(n) = self.product_category_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_categorys.get(id.0).clone();
+        let n = self.fresh();
+        self.product_category_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = PRODUCT_CATEGORY({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_product_category_relationships(&mut self, id: ProductCategoryRelationshipId) -> u64 {
+        if let Some(n) = self.product_category_relationship_ids[id.0] {
+            return n;
+        }
+        let it = self.model.product_category_relationships.get(id.0).clone();
+        let n = self.fresh();
+        self.product_category_relationship_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "#{}",
+                self.emit_ref_product_category((&it.category).clone())
+            ),
+            format!(
+                "#{}",
+                self.emit_ref_product_category((&it.sub_category).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_CATEGORY_RELATIONSHIP({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_product_contexts(&mut self, id: ProductContextId) -> u64 {
         if let Some(n) = self.product_context_ids[id.0] {
             return n;
@@ -5385,6 +5456,36 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = PRODUCT_DEFINITION_FORMATION({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_definition_formation_with_specified_sources(
+        &mut self,
+        id: ProductDefinitionFormationWithSpecifiedSourceId,
+    ) -> u64 {
+        if let Some(n) = self.product_definition_formation_with_specified_source_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .product_definition_formation_with_specified_sources
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.product_definition_formation_with_specified_source_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!("#{}", self.emit_ref_product((&it.of_product).clone())),
+            it.make_or_buy.token().to_string(),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE({});\n",
             attrs.join(",")
         ));
         n
@@ -5524,6 +5625,42 @@ impl<'a> Writer<'a> {
         ];
         self.out.push_str(&format!(
             "#{n} = PRODUCT_DEFINITION_SHAPE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_product_related_product_categorys(
+        &mut self,
+        id: ProductRelatedProductCategoryId,
+    ) -> u64 {
+        if let Some(n) = self.product_related_product_category_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .product_related_product_categorys
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.product_related_product_category_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.products
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_product((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = PRODUCT_RELATED_PRODUCT_CATEGORY({});\n",
             attrs.join(",")
         ));
         n
@@ -8135,6 +8272,16 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_product_category(&mut self, r: ProductCategoryRef) -> u64 {
+        match r {
+            ProductCategoryRef::ProductCategory(i) => self.emit_product_categorys(i),
+            ProductCategoryRef::ProductRelatedProductCategory(i) => {
+                self.emit_product_related_product_categorys(i)
+            }
+            ProductCategoryRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
     fn emit_ref_product_context(&mut self, r: ProductContextRef) -> u64 {
         match r {
             ProductContextRef::ProductContext(i) => self.emit_product_contexts(i),
@@ -8155,6 +8302,9 @@ impl<'a> Writer<'a> {
         match r {
             ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
                 self.emit_product_definition_formations(i)
+            }
+            ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                self.emit_product_definition_formation_with_specified_sources(i)
             }
             ProductDefinitionFormationRef::Complex(i) => self.emit_complex(i),
         }
@@ -10068,6 +10218,18 @@ impl<'a> Writer<'a> {
                     ];
                     format!("PRODUCT({})", a.join(","))
                 }
+                UnitPart::ProductCategory {
+                    name, description, ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("PRODUCT_CATEGORY({})", a.join(","))
+                }
                 UnitPart::ProductContext {
                     discipline_type, ..
                 } => {
@@ -10119,6 +10281,13 @@ impl<'a> Writer<'a> {
                         format!("#{}", self.emit_ref_product((of_product).clone())),
                     ];
                     format!("PRODUCT_DEFINITION_FORMATION({})", a.join(","))
+                }
+                UnitPart::ProductDefinitionFormationWithSpecifiedSource { make_or_buy, .. } => {
+                    let a: Vec<String> = vec![make_or_buy.token().to_string()];
+                    format!(
+                        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE({})",
+                        a.join(",")
+                    )
                 }
                 UnitPart::ProductDefinitionOccurrence {
                     id,
@@ -10212,6 +10381,17 @@ impl<'a> Writer<'a> {
                     )
                 }
                 UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE()".to_string(),
+                UnitPart::ProductRelatedProductCategory { products, .. } => {
+                    let a: Vec<String> = vec![format!(
+                        "({})",
+                        products
+                            .iter()
+                            .map(|e| format!("#{}", self.emit_ref_product((e).clone())))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )];
+                    format!("PRODUCT_RELATED_PRODUCT_CATEGORY({})", a.join(","))
+                }
                 UnitPart::PropertyDefinition {
                     name,
                     description,
@@ -11330,6 +11510,12 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.products.items.len() {
             self.emit_products(ProductId(i));
         }
+        for i in 0..self.model.product_categorys.items.len() {
+            self.emit_product_categorys(ProductCategoryId(i));
+        }
+        for i in 0..self.model.product_category_relationships.items.len() {
+            self.emit_product_category_relationships(ProductCategoryRelationshipId(i));
+        }
         for i in 0..self.model.product_contexts.items.len() {
             self.emit_product_contexts(ProductContextId(i));
         }
@@ -11341,6 +11527,16 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.product_definition_formations.items.len() {
             self.emit_product_definition_formations(ProductDefinitionFormationId(i));
+        }
+        for i in 0..self
+            .model
+            .product_definition_formation_with_specified_sources
+            .items
+            .len()
+        {
+            self.emit_product_definition_formation_with_specified_sources(
+                ProductDefinitionFormationWithSpecifiedSourceId(i),
+            );
         }
         for i in 0..self.model.product_definition_occurrences.items.len() {
             self.emit_product_definition_occurrences(ProductDefinitionOccurrenceId(i));
@@ -11360,6 +11556,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.product_definition_shapes.items.len() {
             self.emit_product_definition_shapes(ProductDefinitionShapeId(i));
+        }
+        for i in 0..self.model.product_related_product_categorys.items.len() {
+            self.emit_product_related_product_categorys(ProductRelatedProductCategoryId(i));
         }
         for i in 0..self.model.property_definitions.items.len() {
             self.emit_property_definitions(PropertyDefinitionId(i));

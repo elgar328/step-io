@@ -256,14 +256,18 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRE_DEFINED_TILE",
     "PRESENTATION_STYLE_ASSIGNMENT",
     "PRODUCT",
+    "PRODUCT_CATEGORY",
+    "PRODUCT_CATEGORY_RELATIONSHIP",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
     "PRODUCT_DEFINITION_CONTEXT",
     "PRODUCT_DEFINITION_FORMATION",
+    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
     "PRODUCT_DEFINITION_OCCURRENCE",
     "PRODUCT_DEFINITION_RELATIONSHIP",
     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
     "PRODUCT_DEFINITION_SHAPE",
+    "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
@@ -463,14 +467,17 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRE_DEFINED_TILE",
     "PRESENTATION_STYLE_ASSIGNMENT",
     "PRODUCT",
+    "PRODUCT_CATEGORY",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
     "PRODUCT_DEFINITION_CONTEXT",
     "PRODUCT_DEFINITION_FORMATION",
+    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
     "PRODUCT_DEFINITION_OCCURRENCE",
     "PRODUCT_DEFINITION_RELATIONSHIP",
     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
     "PRODUCT_DEFINITION_SHAPE",
+    "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
@@ -739,12 +746,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_presentation_style_assignments: Vec<(PresentationStyleAssignmentId, u64)> =
         Vec::new();
     let mut pending_products: Vec<(ProductId, u64)> = Vec::new();
+    let mut pending_product_category_relationships: Vec<(ProductCategoryRelationshipId, u64)> =
+        Vec::new();
     let mut pending_product_contexts: Vec<(ProductContextId, u64)> = Vec::new();
     let mut pending_product_definitions: Vec<(ProductDefinitionId, u64)> = Vec::new();
     let mut pending_product_definition_contexts: Vec<(ProductDefinitionContextId, u64)> =
         Vec::new();
     let mut pending_product_definition_formations: Vec<(ProductDefinitionFormationId, u64)> =
         Vec::new();
+    let mut pending_product_definition_formation_with_specified_sources: Vec<(
+        ProductDefinitionFormationWithSpecifiedSourceId,
+        u64,
+    )> = Vec::new();
     let mut pending_product_definition_occurrences: Vec<(ProductDefinitionOccurrenceId, u64)> =
         Vec::new();
     let mut pending_product_definition_relationships: Vec<(ProductDefinitionRelationshipId, u64)> =
@@ -754,6 +767,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_product_definition_shapes: Vec<(ProductDefinitionShapeId, u64)> = Vec::new();
+    let mut pending_product_related_product_categorys: Vec<(ProductRelatedProductCategoryId, u64)> =
+        Vec::new();
     let mut pending_property_definitions: Vec<(PropertyDefinitionId, u64)> = Vec::new();
     let mut pending_quasi_uniform_curves: Vec<(QuasiUniformCurveId, u64)> = Vec::new();
     let mut pending_quasi_uniform_surfaces: Vec<(QuasiUniformSurfaceId, u64)> = Vec::new();
@@ -3501,6 +3516,38 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRODUCT_CATEGORY" => {
+                let v = ProductCategory {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = ProductCategoryId(model.product_categorys.push(v));
+                idmap.insert(id, AnyId::ProductCategory(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_CATEGORY_RELATIONSHIP" => {
+                let v = ProductCategoryRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    category: ProductCategoryRef::ProductCategory(ProductCategoryId(usize::MAX)),
+                    sub_category: ProductCategoryRef::ProductCategory(ProductCategoryId(
+                        usize::MAX,
+                    )),
+                };
+                let aid =
+                    ProductCategoryRelationshipId(model.product_category_relationships.push(v));
+                idmap.insert(id, AnyId::ProductCategoryRelationship(aid));
+                pending_product_category_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRODUCT_CONTEXT" => {
                 let v = ProductContext {
                     name: as_str(&attributes[0]),
@@ -3561,6 +3608,32 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ProductDefinitionFormationId(model.product_definition_formations.push(v));
                 idmap.insert(id, AnyId::ProductDefinitionFormation(aid));
                 pending_product_definition_formations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => {
+                let v = ProductDefinitionFormationWithSpecifiedSource {
+                    id: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_product: ProductRef::Product(ProductId(usize::MAX)),
+                    make_or_buy: match &attributes[3] {
+                        Attribute::Enum(s) => Source::parse(s).expect("source"),
+                        other => panic!("enum source: {other:?}"),
+                    },
+                };
+                let aid = ProductDefinitionFormationWithSpecifiedSourceId(
+                    model
+                        .product_definition_formation_with_specified_sources
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::ProductDefinitionFormationWithSpecifiedSource(aid),
+                );
+                pending_product_definition_formation_with_specified_sources.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -3646,6 +3719,23 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ProductDefinitionShapeId(model.product_definition_shapes.push(v));
                 idmap.insert(id, AnyId::ProductDefinitionShape(aid));
                 pending_product_definition_shapes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_RELATED_PRODUCT_CATEGORY" => {
+                let v = ProductRelatedProductCategory {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    products: Vec::new(),
+                };
+                let aid = ProductRelatedProductCategoryId(
+                    model.product_related_product_categorys.push(v),
+                );
+                idmap.insert(id, AnyId::ProductRelatedProductCategory(aid));
+                pending_product_related_product_categorys.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -5368,6 +5458,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_products(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_product_category_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_category_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_product_contexts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_contexts(&mut model, aid, attributes, &idmap);
@@ -5386,6 +5481,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_product_definition_formations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_definition_formations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_formation_with_specified_sources {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_formation_with_specified_sources(
+                &mut model, aid, attributes, &idmap,
+            );
         }
     }
     for (aid, raw) in pending_product_definition_occurrences {
@@ -5408,6 +5510,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_product_definition_shapes {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_definition_shapes(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_related_product_categorys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_related_product_categorys(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_property_definitions {
@@ -8021,6 +8128,20 @@ fn resolve_products(
     it.frame_of_reference = frame_of_reference_v;
 }
 
+fn resolve_product_category_relationships(
+    model: &mut Model,
+    aid: ProductCategoryRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let category_v = ProductCategoryRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let sub_category_v =
+        ProductCategoryRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.product_category_relationships.items[aid.0];
+    it.category = category_v;
+    it.sub_category = sub_category_v;
+}
+
 fn resolve_product_contexts(
     model: &mut Model,
     aid: ProductContextId,
@@ -8068,6 +8189,19 @@ fn resolve_product_definition_formations(
 ) {
     let of_product_v = ProductRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
     let it = &mut model.product_definition_formations.items[aid.0];
+    it.of_product = of_product_v;
+}
+
+fn resolve_product_definition_formation_with_specified_sources(
+    model: &mut Model,
+    aid: ProductDefinitionFormationWithSpecifiedSourceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_product_v = ProductRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model
+        .product_definition_formation_with_specified_sources
+        .items[aid.0];
     it.of_product = of_product_v;
 }
 
@@ -8134,6 +8268,23 @@ fn resolve_product_definition_shapes(
         CharacterizedDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
     let it = &mut model.product_definition_shapes.items[aid.0];
     it.definition = definition_v;
+}
+
+fn resolve_product_related_product_categorys(
+    model: &mut Model,
+    aid: ProductRelatedProductCategoryId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let products_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ProductRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.product_related_product_categorys.items[aid.0];
+    it.products = products_v;
 }
 
 fn resolve_property_definitions(
@@ -9598,6 +9749,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
                 frame_of_reference: Vec::new(),
             },
+            "PRODUCT_CATEGORY" => UnitPart::ProductCategory {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+            },
             "PRODUCT_CONTEXT" => UnitPart::ProductContext {
                 discipline_type: as_str(&p.attributes[0]),
             },
@@ -9625,6 +9783,14 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 },
                 of_product: ProductRef::Product(ProductId(usize::MAX)),
             },
+            "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => {
+                UnitPart::ProductDefinitionFormationWithSpecifiedSource {
+                    make_or_buy: match &p.attributes[0] {
+                        Attribute::Enum(s) => Source::parse(s).expect("source"),
+                        other => panic!("enum source: {other:?}"),
+                    },
+                }
+            }
             "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence {
                 id: as_str(&p.attributes[0]),
                 name: match &p.attributes[1] {
@@ -9671,6 +9837,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 }
             }
             "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
+            "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory {
+                products: Vec::new(),
+            },
             "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition {
                 name: as_str(&p.attributes[0]),
                 description: match &p.attributes[1] {
@@ -10638,6 +10807,15 @@ fn resolve_complex(
                 *related = ProductDefinitionRelationshipRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[4])).expect("ref"),
                 );
+            }
+            UnitPart::ProductRelatedProductCategory { products, .. } => {
+                *products = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| ProductRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::PropertyDefinition { definition, .. } => {
                 *definition = CharacterizedDefinitionRef::from_any(

@@ -3915,6 +3915,46 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PRODUCT_CATEGORY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
+        "PRODUCT_CATEGORY_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "PRODUCT_CONTEXT" => &[
             Slot {
                 k: Sk::Str,
@@ -3996,6 +4036,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Enum,
                 req: true,
                 der: false,
                 swire: None,
@@ -4112,6 +4178,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
                 req: true,
                 der: false,
                 swire: None,
@@ -6552,6 +6638,20 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PRODUCT_CATEGORY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "PRODUCT_CONTEXT" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -6610,6 +6710,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => &[Slot {
+            k: Sk::Enum,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "PRODUCT_DEFINITION_OCCURRENCE" => &[
             Slot {
                 k: Sk::Str,
@@ -6707,6 +6813,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "PRODUCT_DEFINITION_SHAPE" => &[],
+        "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "PROPERTY_DEFINITION" => &[
             Slot {
                 k: Sk::Str,

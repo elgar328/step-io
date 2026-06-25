@@ -787,6 +787,30 @@ impl SimpleDatumReferenceModifier {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Source {
+    Made,
+    Bought,
+    NotKnown,
+}
+impl Source {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "MADE" => Self::Made,
+            "BOUGHT" => Self::Bought,
+            "NOT_KNOWN" => Self::NotKnown,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Made => ".MADE.",
+            Self::Bought => ".BOUGHT.",
+            Self::NotKnown => ".NOT_KNOWN.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SurfaceSide {
     Positive,
     Negative,
@@ -1179,6 +1203,10 @@ pub struct PresentationStyleAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductCategoryId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductCategoryRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductDefinitionId(pub usize);
@@ -1187,6 +1215,8 @@ pub struct ProductDefinitionContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductDefinitionFormationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionFormationWithSpecifiedSourceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductDefinitionOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductDefinitionRelationshipId(pub usize);
@@ -1194,6 +1224,8 @@ pub struct ProductDefinitionRelationshipId(pub usize);
 pub struct ProductDefinitionRelationshipRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProductDefinitionShapeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductRelatedProductCategoryId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PropertyDefinitionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1513,14 +1545,18 @@ pub enum AnyId {
     PreDefinedTile(PreDefinedTileId),
     PresentationStyleAssignment(PresentationStyleAssignmentId),
     Product(ProductId),
+    ProductCategory(ProductCategoryId),
+    ProductCategoryRelationship(ProductCategoryRelationshipId),
     ProductContext(ProductContextId),
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionContext(ProductDefinitionContextId),
     ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
     ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductRelatedProductCategory(ProductRelatedProductCategoryId),
     PropertyDefinition(PropertyDefinitionId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
@@ -3000,6 +3036,23 @@ impl PresentationStyleSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ProductCategoryRef {
+    ProductCategory(ProductCategoryId),
+    ProductRelatedProductCategory(ProductRelatedProductCategoryId),
+    Complex(ComplexUnitId),
+}
+impl ProductCategoryRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductCategory(i) => Self::ProductCategory(i),
+            AnyId::ProductRelatedProductCategory(i) => Self::ProductRelatedProductCategory(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductCategoryRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductContextRef {
     ProductContext(ProductContextId),
     Complex(ComplexUnitId),
@@ -3032,12 +3085,16 @@ impl ProductDefinitionContextRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionFormationRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionFormationRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ProductDefinitionFormationRef ref -> {other:?}"),
         }
@@ -5331,6 +5388,20 @@ pub struct Product {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ProductCategory {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductCategoryRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub category: ProductCategoryRef,
+    pub sub_category: ProductCategoryRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ProductContext {
     pub name: String,
     pub frame_of_reference: ApplicationContextRef,
@@ -5357,6 +5428,14 @@ pub struct ProductDefinitionFormation {
     pub id: String,
     pub description: Option<String>,
     pub of_product: ProductRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionFormationWithSpecifiedSource {
+    pub id: String,
+    pub description: Option<String>,
+    pub of_product: ProductRef,
+    pub make_or_buy: Source,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5391,6 +5470,13 @@ pub struct ProductDefinitionShape {
     pub name: String,
     pub description: Option<String>,
     pub definition: CharacterizedDefinitionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductRelatedProductCategory {
+    pub name: String,
+    pub description: Option<String>,
+    pub products: Vec<ProductRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6245,6 +6331,10 @@ pub enum UnitPart {
         description: Option<String>,
         frame_of_reference: Vec<ProductContextRef>,
     },
+    ProductCategory {
+        name: String,
+        description: Option<String>,
+    },
     ProductContext {
         discipline_type: String,
     },
@@ -6261,6 +6351,9 @@ pub enum UnitPart {
         id: String,
         description: Option<String>,
         of_product: ProductRef,
+    },
+    ProductDefinitionFormationWithSpecifiedSource {
+        make_or_buy: Source,
     },
     ProductDefinitionOccurrence {
         id: String,
@@ -6284,6 +6377,9 @@ pub enum UnitPart {
         related: ProductDefinitionRelationshipRef,
     },
     ProductDefinitionShape,
+    ProductRelatedProductCategory {
+        products: Vec<ProductRef>,
+    },
     PropertyDefinition {
         name: String,
         description: Option<String>,
@@ -6626,15 +6722,20 @@ pub struct Model {
     pub pre_defined_tiles: Arena<PreDefinedTile>,
     pub presentation_style_assignments: Arena<PresentationStyleAssignment>,
     pub products: Arena<Product>,
+    pub product_categorys: Arena<ProductCategory>,
+    pub product_category_relationships: Arena<ProductCategoryRelationship>,
     pub product_contexts: Arena<ProductContext>,
     pub product_definitions: Arena<ProductDefinition>,
     pub product_definition_contexts: Arena<ProductDefinitionContext>,
     pub product_definition_formations: Arena<ProductDefinitionFormation>,
+    pub product_definition_formation_with_specified_sources:
+        Arena<ProductDefinitionFormationWithSpecifiedSource>,
     pub product_definition_occurrences: Arena<ProductDefinitionOccurrence>,
     pub product_definition_relationships: Arena<ProductDefinitionRelationship>,
     pub product_definition_relationship_relationships:
         Arena<ProductDefinitionRelationshipRelationship>,
     pub product_definition_shapes: Arena<ProductDefinitionShape>,
+    pub product_related_product_categorys: Arena<ProductRelatedProductCategory>,
     pub property_definitions: Arena<PropertyDefinition>,
     pub quasi_uniform_curves: Arena<QuasiUniformCurve>,
     pub quasi_uniform_surfaces: Arena<QuasiUniformSurface>,

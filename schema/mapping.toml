@@ -1174,3 +1174,15 @@ date_time = [
     "local_time",
     "coordinated_universal_time_offset",
 ]
+# product/category — refs stay in the product backbone closure (products : SET OF
+# product; product_definition_formation_with_specified_source inherits
+# product_definition_formation) or are seeded here (product_category). source is
+# an ENUM. product_related_product_category / product_category /
+# product_definition_formation_with_specified_source are dual-appearance
+# (mostly standalone). product_category is a concrete supertype (ProductCategoryRef).
+product = [
+    "product_related_product_category",
+    "product_category",
+    "product_category_relationship",
+    "product_definition_formation_with_specified_source",
+]
