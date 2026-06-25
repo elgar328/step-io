@@ -2449,6 +2449,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "GENERAL_PROPERTY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -6462,6 +6482,26 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Vec,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
+        "GENERAL_PROPERTY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
                 req: false,
                 der: false,
                 swire: None,

@@ -1065,6 +1065,8 @@ pub struct FunctionallyDefinedTransformationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeneralDatumReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GeneralPropertyId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GenericProductDefinitionReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GeometricCurveSetId(pub usize);
@@ -1494,6 +1496,7 @@ pub enum AnyId {
     FoundedItem(FoundedItemId),
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
     GeneralDatumReference(GeneralDatumReferenceId),
+    GeneralProperty(GeneralPropertyId),
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationContext(GeometricRepresentationContextId),
@@ -3551,6 +3554,7 @@ pub enum RepresentedDefinitionRef {
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     GeneralDatumReference(GeneralDatumReferenceId),
+    GeneralProperty(GeneralPropertyId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     ProductDefinitionShape(ProductDefinitionShapeId),
     PropertyDefinition(PropertyDefinitionId),
@@ -3575,6 +3579,7 @@ impl RepresentedDefinitionRef {
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
+            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
             AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
             AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
@@ -5044,6 +5049,13 @@ pub struct GeneralDatumReference {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct GeneralProperty {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct GenericProductDefinitionReference {
     pub source: ExternalSourceRef,
 }
@@ -6416,6 +6428,11 @@ pub enum UnitPart {
         base: DatumOrCommonDatumRef,
         modifiers: Option<Vec<DatumReferenceModifierRef>>,
     },
+    GeneralProperty {
+        id: String,
+        name: String,
+        description: Option<String>,
+    },
     GenericProductDefinitionReference {
         source: ExternalSourceRef,
     },
@@ -6885,6 +6902,7 @@ pub struct Model {
     pub founded_items: Arena<FoundedItem>,
     pub functionally_defined_transformations: Arena<FunctionallyDefinedTransformation>,
     pub general_datum_references: Arena<GeneralDatumReference>,
+    pub general_propertys: Arena<GeneralProperty>,
     pub generic_product_definition_references: Arena<GenericProductDefinitionReference>,
     pub geometric_curve_sets: Arena<GeometricCurveSet>,
     pub geometric_representation_contexts: Arena<GeometricRepresentationContext>,

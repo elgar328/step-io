@@ -160,6 +160,7 @@ pub struct Writer<'a> {
     founded_item_ids: Vec<Option<u64>>,
     functionally_defined_transformation_ids: Vec<Option<u64>>,
     general_datum_reference_ids: Vec<Option<u64>>,
+    general_property_ids: Vec<Option<u64>>,
     generic_product_definition_reference_ids: Vec<Option<u64>>,
     geometric_curve_set_ids: Vec<Option<u64>>,
     geometric_representation_context_ids: Vec<Option<u64>>,
@@ -529,6 +530,7 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             general_datum_reference_ids: vec![None; model.general_datum_references.items.len()],
+            general_property_ids: vec![None; model.general_propertys.items.len()],
             generic_product_definition_reference_ids: vec![
                 None;
                 model
@@ -3548,6 +3550,26 @@ impl<'a> Writer<'a> {
             "#{n} = GENERAL_DATUM_REFERENCE({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_general_propertys(&mut self, id: GeneralPropertyId) -> u64 {
+        if let Some(n) = self.general_property_ids[id.0] {
+            return n;
+        }
+        let it = self.model.general_propertys.get(id.0).clone();
+        let n = self.fresh();
+        self.general_property_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.id),
+            step_str(&it.name),
+            match &it.description {
+                Some(x) => step_str(x),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = GENERAL_PROPERTY({});\n", attrs.join(",")));
         n
     }
 
@@ -8949,6 +8971,7 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::GeneralDatumReference(i) => {
                 self.emit_general_datum_references(i)
             }
+            RepresentedDefinitionRef::GeneralProperty(i) => self.emit_general_propertys(i),
             RepresentedDefinitionRef::PlacedDatumTargetFeature(i) => {
                 self.emit_placed_datum_target_features(i)
             }
@@ -10180,6 +10203,22 @@ impl<'a> Writer<'a> {
                         },
                     ];
                     format!("GENERAL_DATUM_REFERENCE({})", a.join(","))
+                }
+                UnitPart::GeneralProperty {
+                    id,
+                    name,
+                    description,
+                    ..
+                } => {
+                    let a: Vec<String> = vec![
+                        step_str(id),
+                        step_str(name),
+                        match description {
+                            Some(x) => step_str(x),
+                            None => "$".to_string(),
+                        },
+                    ];
+                    format!("GENERAL_PROPERTY({})", a.join(","))
                 }
                 UnitPart::GenericProductDefinitionReference { source, .. } => {
                     let a: Vec<String> = vec![format!(
@@ -11738,6 +11777,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.general_datum_references.items.len() {
             self.emit_general_datum_references(GeneralDatumReferenceId(i));
+        }
+        for i in 0..self.model.general_propertys.items.len() {
+            self.emit_general_propertys(GeneralPropertyId(i));
         }
         for i in 0..self.model.generic_product_definition_references.items.len() {
             self.emit_generic_product_definition_references(GenericProductDefinitionReferenceId(i));

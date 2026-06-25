@@ -187,6 +187,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "FOUNDED_ITEM",
     "FUNCTIONALLY_DEFINED_TRANSFORMATION",
     "GENERAL_DATUM_REFERENCE",
+    "GENERAL_PROPERTY",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_CURVE_SET",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
@@ -425,6 +426,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "FOUNDED_ITEM",
     "FUNCTIONALLY_DEFINED_TRANSFORMATION",
     "GENERAL_DATUM_REFERENCE",
+    "GENERAL_PROPERTY",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
@@ -4154,6 +4156,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "GENERAL_DATUM_REFERENCE",
+                    "GENERAL_PROPERTY",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
                     "PROPERTY_DEFINITION",
@@ -4672,6 +4675,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "GENERAL_DATUM_REFERENCE",
+                    "GENERAL_PROPERTY",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
                     "PROPERTY_DEFINITION",
@@ -7142,6 +7146,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "GENERAL_DATUM_REFERENCE",
+                    "GENERAL_PROPERTY",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
                     "PROPERTY_DEFINITION",
@@ -9759,6 +9764,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = GeneralDatumReferenceId(model.general_datum_references.push(v));
                 idmap.insert(id, AnyId::GeneralDatumReference(aid));
                 pending_general_datum_references.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GENERAL_PROPERTY" => {
+                let v = GeneralProperty {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                };
+                let aid = GeneralPropertyId(model.general_propertys.push(v));
+                idmap.insert(id, AnyId::GeneralProperty(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -17293,6 +17312,14 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference {
                 base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
                 modifiers: None,
+            },
+            "GENERAL_PROPERTY" => UnitPart::GeneralProperty {
+                id: as_str(&p.attributes[0]),
+                name: as_str(&p.attributes[1]),
+                description: match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[2])),
+                },
             },
             "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference {
                 source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
