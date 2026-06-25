@@ -1227,3 +1227,12 @@ assembly = [
     "next_assembly_usage_occurrence",
     "context_dependent_shape_representation",
 ]
+# low-escape subtypes on the existing closure (all escape 0): over_riding_styled
+# _item=styled_item subtype, mechanical/design_context=product(_definition)_context
+# subtypes (frame_of_reference=application_context), polyline=bounded_curve subtype
+# (points=cartesian_point), descriptive/measure_representation_item=representation
+# _item subtypes (measure also has a complex-part variant — dual appearance).
+presentation_styling = ["over_riding_styled_item"]
+product_context = ["mechanical_context", "design_context"]
+curve = ["polyline"]
+repr_items = ["descriptive_representation_item", "measure_representation_item"]

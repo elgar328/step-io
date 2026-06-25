@@ -1005,6 +1005,10 @@ pub struct DerivedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DerivedUnitElementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DescriptiveRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DesignContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DimensionalCharacteristicRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DimensionalExponentsId(pub usize);
@@ -1129,7 +1133,11 @@ pub struct MappedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MassUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MeasureRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MeasureWithUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MechanicalContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ModifiedGeometricToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1164,6 +1172,8 @@ pub struct OrganizationalProjectRoleId(pub usize);
 pub struct OrientedClosedShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OrientedEdgeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OverRidingStyledItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ParallelismToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1204,6 +1214,8 @@ pub struct PointId(pub usize);
 pub struct PointStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PolyLoopId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PolylineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PositionToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1488,6 +1500,8 @@ pub enum AnyId {
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DerivedUnit(DerivedUnitId),
     DerivedUnitElement(DerivedUnitElementId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    DesignContext(DesignContextId),
     DimensionalCharacteristicRepresentation(DimensionalCharacteristicRepresentationId),
     DimensionalExponents(DimensionalExponentsId),
     DimensionalLocation(DimensionalLocationId),
@@ -1550,7 +1564,9 @@ pub enum AnyId {
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
     MassUnit(MassUnitId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
+    MechanicalContext(MechanicalContextId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NamedUnit(NamedUnitId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
@@ -1568,6 +1584,7 @@ pub enum AnyId {
     OrganizationalProjectRole(OrganizationalProjectRoleId),
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
+    OverRidingStyledItem(OverRidingStyledItemId),
     ParallelismTolerance(ParallelismToleranceId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
     Path(PathId),
@@ -1588,6 +1605,7 @@ pub enum AnyId {
     Point(PointId),
     PointStyle(PointStyleId),
     PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
     PositionTolerance(PositionToleranceId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
     PreDefinedItem(PreDefinedItemId),
@@ -2051,6 +2069,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Pcurve(PcurveId),
+    Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
     RationalBSplineCurve(RationalBSplineCurveId),
     SeamCurve(SeamCurveId),
@@ -2076,6 +2095,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
@@ -2104,6 +2124,7 @@ pub enum CurveOrCurveSetRef {
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Pcurve(PcurveId),
+    Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
     RationalBSplineCurve(RationalBSplineCurveId),
     SeamCurve(SeamCurveId),
@@ -2129,6 +2150,7 @@ impl CurveOrCurveSetRef {
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
@@ -2173,6 +2195,7 @@ pub enum CurveRef {
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Pcurve(PcurveId),
+    Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
     RationalBSplineCurve(RationalBSplineCurveId),
     SeamCurve(SeamCurveId),
@@ -2197,6 +2220,7 @@ impl CurveRef {
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
@@ -2702,6 +2726,7 @@ pub enum GeometricSetSelectRef {
     PlanarBox(PlanarBoxId),
     Plane(PlaneId),
     Point(PointId),
+    Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
@@ -2752,6 +2777,7 @@ impl GeometricSetSelectRef {
             AnyId::PlanarBox(i) => Self::PlanarBox(i),
             AnyId::Plane(i) => Self::Plane(i),
             AnyId::Point(i) => Self::Point(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
@@ -2922,6 +2948,7 @@ impl MarkerSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum MeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
@@ -2931,6 +2958,7 @@ impl MeasureWithUnitRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
+            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
             AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
             AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
@@ -3193,12 +3221,14 @@ impl ProductCategoryRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductContextRef {
+    MechanicalContext(MechanicalContextId),
     ProductContext(ProductContextId),
     Complex(ComplexUnitId),
 }
 impl ProductContextRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::MechanicalContext(i) => Self::MechanicalContext(i),
             AnyId::ProductContext(i) => Self::ProductContext(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ProductContextRef ref -> {other:?}"),
@@ -3208,12 +3238,14 @@ impl ProductContextRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionContextRef {
+    DesignContext(DesignContextId),
     ProductDefinitionContext(ProductDefinitionContextId),
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionContextRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::DesignContext(i) => Self::DesignContext(i),
             AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ProductDefinitionContextRef ref -> {other:?}"),
@@ -3415,6 +3447,7 @@ pub enum RepresentationItemRef {
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
     DefinedSymbol(DefinedSymbolId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -3440,11 +3473,13 @@ pub enum RepresentationItemRef {
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     MappedItem(MappedItemId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
+    OverRidingStyledItem(OverRidingStyledItemId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
@@ -3453,6 +3488,7 @@ pub enum RepresentationItemRef {
     Plane(PlaneId),
     Point(PointId),
     PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
@@ -3520,6 +3556,7 @@ impl RepresentationItemRef {
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
@@ -3545,11 +3582,13 @@ impl RepresentationItemRef {
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
             AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
             AnyId::OpenShell(i) => Self::OpenShell(i),
             AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
             AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
             AnyId::Path(i) => Self::Path(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
             AnyId::Placement(i) => Self::Placement(i),
@@ -3558,6 +3597,7 @@ impl RepresentationItemRef {
             AnyId::Plane(i) => Self::Plane(i),
             AnyId::Point(i) => Self::Point(i),
             AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
@@ -3814,6 +3854,7 @@ impl ShellRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum SizeSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
@@ -3825,11 +3866,35 @@ impl SizeSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
+            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
             AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
             AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("SizeSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StyledItemRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    StyledItem(StyledItemId),
+    Complex(ComplexUnitId),
+}
+impl StyledItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("StyledItemRef ref -> {other:?}"),
         }
     }
 }
@@ -3905,6 +3970,7 @@ pub enum StyledItemTargetRef {
     Plane(PlaneId),
     Point(PointId),
     PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
@@ -4014,6 +4080,7 @@ impl StyledItemTargetRef {
             AnyId::Plane(i) => Self::Plane(i),
             AnyId::Point(i) => Self::Point(i),
             AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
@@ -5000,6 +5067,19 @@ pub struct DerivedUnitElement {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DescriptiveRepresentationItem {
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DesignContext {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextRef,
+    pub life_cycle_stage: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalCharacteristicRepresentation {
     pub dimension: DimensionalCharacteristicRef,
     pub representation: ShapeDimensionRepresentationRef,
@@ -5433,9 +5513,23 @@ pub struct MassUnit {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct MeasureRepresentationItem {
+    pub name: String,
+    pub value_component: MeasureValue,
+    pub unit_component: UnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct MeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MechanicalContext {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextRef,
+    pub discipline_type: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5567,6 +5661,14 @@ pub struct OrientedEdge {
     pub name: String,
     pub edge_element: EdgeRef,
     pub orientation: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OverRidingStyledItem {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+    pub over_ridden_style: StyledItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5729,6 +5831,12 @@ pub struct PointStyle {
 pub struct PolyLoop {
     pub name: String,
     pub polygon: Vec<CartesianPointRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Polyline {
+    pub name: String,
+    pub points: Vec<CartesianPointRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6587,6 +6695,7 @@ pub enum UnitPart {
     DerivedUnit {
         elements: Vec<DerivedUnitElementRef>,
     },
+    DesignContext,
     DimensionalSize {
         applies_to: ShapeAspectRef,
         name: String,
@@ -6731,10 +6840,12 @@ pub enum UnitPart {
         mapping_target: RepresentationItemRef,
     },
     MassUnit,
+    MeasureRepresentationItem,
     MeasureWithUnit {
         value_component: MeasureValue,
         unit_component: UnitRef,
     },
+    MechanicalContext,
     ModifiedGeometricTolerance {
         modifier: LimitCondition,
     },
@@ -6757,6 +6868,9 @@ pub enum UnitPart {
     OrientedEdge {
         edge_element: EdgeRef,
         orientation: bool,
+    },
+    OverRidingStyledItem {
+        over_ridden_style: StyledItemRef,
     },
     ParametricRepresentationContext,
     Path {
@@ -7116,6 +7230,8 @@ pub struct Model {
     pub definitional_representations: Arena<DefinitionalRepresentation>,
     pub derived_units: Arena<DerivedUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
+    pub descriptive_representation_items: Arena<DescriptiveRepresentationItem>,
+    pub design_contexts: Arena<DesignContext>,
     pub dimensional_characteristic_representations: Arena<DimensionalCharacteristicRepresentation>,
     pub dimensional_exponentss: Arena<DimensionalExponents>,
     pub dimensional_locations: Arena<DimensionalLocation>,
@@ -7178,7 +7294,9 @@ pub struct Model {
     pub manifold_surface_shape_representations: Arena<ManifoldSurfaceShapeRepresentation>,
     pub mapped_items: Arena<MappedItem>,
     pub mass_units: Arena<MassUnit>,
+    pub measure_representation_items: Arena<MeasureRepresentationItem>,
     pub measure_with_units: Arena<MeasureWithUnit>,
+    pub mechanical_contexts: Arena<MechanicalContext>,
     pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
     pub next_assembly_usage_occurrences: Arena<NextAssemblyUsageOccurrence>,
@@ -7196,6 +7314,7 @@ pub struct Model {
     pub organizational_project_roles: Arena<OrganizationalProjectRole>,
     pub oriented_closed_shells: Arena<OrientedClosedShell>,
     pub oriented_edges: Arena<OrientedEdge>,
+    pub over_riding_styled_items: Arena<OverRidingStyledItem>,
     pub parallelism_tolerances: Arena<ParallelismTolerance>,
     pub parametric_representation_contexts: Arena<ParametricRepresentationContext>,
     pub paths: Arena<Path>,
@@ -7216,6 +7335,7 @@ pub struct Model {
     pub points: Arena<Point>,
     pub point_styles: Arena<PointStyle>,
     pub poly_loops: Arena<PolyLoop>,
+    pub polylines: Arena<Polyline>,
     pub position_tolerances: Arena<PositionTolerance>,
     pub pre_defined_curve_fonts: Arena<PreDefinedCurveFont>,
     pub pre_defined_items: Arena<PreDefinedItem>,

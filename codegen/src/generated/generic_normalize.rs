@@ -1912,6 +1912,40 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "DESCRIPTIVE_REPRESENTATION_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DESIGN_CONTEXT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION" => &[
             Slot {
                 k: Sk::Ref,
@@ -3137,6 +3171,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "MEASURE_REPRESENTATION_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Meas,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "MEASURE_WITH_UNIT" => &[
             Slot {
                 k: Sk::Meas,
@@ -3146,6 +3200,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "MECHANICAL_CONTEXT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
                 req: true,
                 der: false,
                 swire: None,
@@ -3572,6 +3646,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Bool,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "OVER_RIDING_STYLED_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
                 req: true,
                 der: false,
                 swire: None,
@@ -4090,6 +4190,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "POLY_LOOP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "POLYLINE" => &[
             Slot {
                 k: Sk::Str,
                 req: true,
@@ -6523,6 +6637,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "DESIGN_CONTEXT" => &[],
         "DIMENSIONAL_SIZE" => &[
             Slot {
                 k: Sk::Ref,
@@ -6930,6 +7045,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "MASS_UNIT" => &[],
+        "MEASURE_REPRESENTATION_ITEM" => &[],
         "MEASURE_WITH_UNIT" => &[
             Slot {
                 k: Sk::Meas,
@@ -6944,6 +7060,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "MECHANICAL_CONTEXT" => &[],
         "MODIFIED_GEOMETRIC_TOLERANCE" => &[Slot {
             k: Sk::Enum,
             req: true,
@@ -7006,6 +7123,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "OVER_RIDING_STYLED_ITEM" => &[Slot {
+            k: Sk::Ref,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "PARAMETRIC_REPRESENTATION_CONTEXT" => &[],
         "PATH" => &[Slot {
             k: Sk::Vec,

@@ -157,6 +157,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DEFINITIONAL_REPRESENTATION",
     "DERIVED_UNIT",
     "DERIVED_UNIT_ELEMENT",
+    "DESCRIPTIVE_REPRESENTATION_ITEM",
+    "DESIGN_CONTEXT",
     "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
     "DIMENSIONAL_EXPONENTS",
     "DIMENSIONAL_LOCATION",
@@ -219,7 +221,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
     "MAPPED_ITEM",
     "MASS_UNIT",
+    "MEASURE_REPRESENTATION_ITEM",
     "MEASURE_WITH_UNIT",
+    "MECHANICAL_CONTEXT",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
@@ -237,6 +241,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ORGANIZATIONAL_PROJECT_ROLE",
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
+    "OVER_RIDING_STYLED_ITEM",
     "PARALLELISM_TOLERANCE",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "PATH",
@@ -257,6 +262,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "POINT",
     "POINT_STYLE",
     "POLY_LOOP",
+    "POLYLINE",
     "POSITION_TOLERANCE",
     "PRE_DEFINED_CURVE_FONT",
     "PRE_DEFINED_ITEM",
@@ -410,6 +416,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
     "DERIVED_UNIT",
+    "DESIGN_CONTEXT",
     "DIMENSIONAL_SIZE",
     "DIRECTION",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
@@ -462,7 +469,9 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
     "MAPPED_ITEM",
     "MASS_UNIT",
+    "MEASURE_REPRESENTATION_ITEM",
     "MEASURE_WITH_UNIT",
+    "MECHANICAL_CONTEXT",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
@@ -471,6 +480,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ORGANIZATIONAL_ADDRESS",
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
+    "OVER_RIDING_STYLED_ITEM",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "PATH",
     "PCURVE",
@@ -629,6 +639,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -654,11 +665,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -667,6 +680,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -819,6 +833,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -911,6 +926,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -992,6 +1008,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -1017,11 +1034,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -1030,6 +1049,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -1265,6 +1285,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -1582,6 +1603,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "conversion_factor",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -1609,6 +1631,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "curve_width",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -1857,6 +1880,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -1882,11 +1906,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -1895,6 +1921,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -1966,6 +1993,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "TIME_UNIT",
             ],
             complex_ok: true,
+            is_vec: false,
+        }],
+        "DESIGN_CONTEXT" => &[RefSlot {
+            idx: 1,
+            name: "frame_of_reference",
+            allowed: &["APPLICATION_CONTEXT"],
+            complex_ok: false,
             is_vec: false,
         }],
         "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION" => &[
@@ -2211,6 +2245,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -2419,6 +2454,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -2572,6 +2608,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PLANAR_BOX",
                 "PLANE",
                 "POINT",
+                "POLYLINE",
                 "QUASI_UNIFORM_CURVE",
                 "QUASI_UNIFORM_SURFACE",
                 "RATIONAL_B_SPLINE_CURVE",
@@ -2625,6 +2662,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PLANAR_BOX",
                 "PLANE",
                 "POINT",
+                "POLYLINE",
                 "QUASI_UNIFORM_CURVE",
                 "QUASI_UNIFORM_SURFACE",
                 "RATIONAL_B_SPLINE_CURVE",
@@ -2932,6 +2970,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -3007,6 +3046,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -3032,11 +3072,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -3045,6 +3087,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -3115,6 +3158,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -3140,11 +3184,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -3153,6 +3199,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -3315,6 +3362,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -3340,11 +3388,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -3353,6 +3403,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -3445,6 +3496,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -3470,11 +3522,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -3483,6 +3537,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -3526,6 +3581,24 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "MEASURE_REPRESENTATION_ITEM" => &[RefSlot {
+            idx: 2,
+            name: "unit_component",
+            allowed: &[
+                "CONTEXT_DEPENDENT_UNIT",
+                "CONVERSION_BASED_UNIT",
+                "DERIVED_UNIT",
+                "LENGTH_UNIT",
+                "MASS_UNIT",
+                "NAMED_UNIT",
+                "PLANE_ANGLE_UNIT",
+                "SI_UNIT",
+                "SOLID_ANGLE_UNIT",
+                "TIME_UNIT",
+            ],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "MEASURE_WITH_UNIT" => &[RefSlot {
             idx: 1,
             name: "unit_component",
@@ -3542,6 +3615,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "TIME_UNIT",
             ],
             complex_ok: true,
+            is_vec: false,
+        }],
+        "MECHANICAL_CONTEXT" => &[RefSlot {
+            idx: 1,
+            name: "frame_of_reference",
+            allowed: &["APPLICATION_CONTEXT"],
+            complex_ok: false,
             is_vec: false,
         }],
         "MODIFIED_GEOMETRIC_TOLERANCE" => &[
@@ -3731,6 +3811,139 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "edge_element",
                 allowed: &["EDGE", "EDGE_CURVE", "ORIENTED_EDGE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "OVER_RIDING_STYLED_ITEM" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_TEXT",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DIRECTION",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "over_ridden_style",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "STYLED_ITEM",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3966,6 +4179,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "marker_size",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -3984,6 +4198,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "POLY_LOOP" => &[RefSlot {
             idx: 1,
             name: "polygon",
+            allowed: &["CARTESIAN_POINT"],
+            complex_ok: false,
+            is_vec: true,
+        }],
+        "POLYLINE" => &[RefSlot {
+            idx: 1,
+            name: "points",
             allowed: &["CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
@@ -4042,7 +4263,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "PRODUCT" => &[RefSlot {
             idx: 3,
             name: "frame_of_reference",
-            allowed: &["PRODUCT_CONTEXT"],
+            allowed: &["MECHANICAL_CONTEXT", "PRODUCT_CONTEXT"],
             complex_ok: true,
             is_vec: true,
         }],
@@ -4083,7 +4304,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "frame_of_reference",
-                allowed: &["PRODUCT_DEFINITION_CONTEXT"],
+                allowed: &["DESIGN_CONTEXT", "PRODUCT_DEFINITION_CONTEXT"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4126,6 +4347,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "quantity",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -4441,6 +4663,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -4466,11 +4689,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -4479,6 +4704,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -4564,6 +4790,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -4589,11 +4816,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -4602,6 +4831,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -4786,6 +5016,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -4956,6 +5187,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -4981,11 +5213,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -4994,6 +5228,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -5079,6 +5314,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -5104,11 +5340,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -5117,6 +5355,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -5348,6 +5587,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -5404,6 +5644,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -5461,6 +5702,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -5497,6 +5739,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -5665,6 +5908,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "INTERSECTION_CURVE",
                 "LINE",
                 "PCURVE",
+                "POLYLINE",
                 "QUASI_UNIFORM_CURVE",
                 "RATIONAL_B_SPLINE_CURVE",
                 "SEAM_CURVE",
@@ -5806,6 +6050,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "lower_bound",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -5818,6 +6063,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "upper_bound",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -6038,6 +6284,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -6234,6 +6481,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             name: "conversion_factor",
             allowed: &[
                 "LENGTH_MEASURE_WITH_UNIT",
+                "MEASURE_REPRESENTATION_ITEM",
                 "MEASURE_WITH_UNIT",
                 "PLANE_ANGLE_MEASURE_WITH_UNIT",
                 "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -6260,6 +6508,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "curve_width",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -6401,6 +6650,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "INTERSECTION_CURVE",
                 "LINE",
                 "PCURVE",
+                "POLYLINE",
                 "QUASI_UNIFORM_CURVE",
                 "RATIONAL_B_SPLINE_CURVE",
                 "SEAM_CURVE",
@@ -6529,6 +6779,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -6640,6 +6891,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PLANAR_BOX",
                 "PLANE",
                 "POINT",
+                "POLYLINE",
                 "QUASI_UNIFORM_CURVE",
                 "QUASI_UNIFORM_SURFACE",
                 "RATIONAL_B_SPLINE_CURVE",
@@ -6783,6 +7035,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -6808,11 +7061,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -6821,6 +7076,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -6891,6 +7147,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -6916,11 +7173,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -6929,6 +7188,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -7015,6 +7275,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -7040,11 +7301,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -7053,6 +7316,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -7142,6 +7406,19 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "OVER_RIDING_STYLED_ITEM" => &[RefSlot {
+            idx: 0,
+            name: "over_ridden_style",
+            allowed: &[
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "OVER_RIDING_STYLED_ITEM",
+                "STYLED_ITEM",
+            ],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "PATH" => &[RefSlot {
             idx: 0,
             name: "edge_list",
@@ -7218,6 +7495,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "marker_size",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -7259,7 +7537,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "PRODUCT" => &[RefSlot {
             idx: 3,
             name: "frame_of_reference",
-            allowed: &["PRODUCT_CONTEXT"],
+            allowed: &["MECHANICAL_CONTEXT", "PRODUCT_CONTEXT"],
             complex_ok: true,
             is_vec: true,
         }],
@@ -7277,7 +7555,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "frame_of_reference",
-                allowed: &["PRODUCT_DEFINITION_CONTEXT"],
+                allowed: &["DESIGN_CONTEXT", "PRODUCT_DEFINITION_CONTEXT"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7306,6 +7584,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "quantity",
                 allowed: &[
                     "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
                     "PLANE_ANGLE_MEASURE_WITH_UNIT",
                     "UNCERTAINTY_MEASURE_WITH_UNIT",
@@ -7509,6 +7788,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -7534,11 +7814,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -7547,6 +7829,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -7632,6 +7915,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
                     "EDGE",
                     "EDGE_CURVE",
@@ -7657,11 +7941,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
                     "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
                     "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
                     "PATH",
                     "PCURVE",
                     "PLACEMENT",
@@ -7670,6 +7956,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -7914,6 +8201,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PLANE",
                     "POINT",
                     "POLY_LOOP",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
@@ -7970,6 +8258,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
+                    "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "SEAM_CURVE",
@@ -8312,6 +8601,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_derived_units: Vec<(DerivedUnitId, u64)> = Vec::new();
     let mut pending_derived_unit_elements: Vec<(DerivedUnitElementId, u64)> = Vec::new();
+    let mut pending_design_contexts: Vec<(DesignContextId, u64)> = Vec::new();
     let mut pending_dimensional_characteristic_representations: Vec<(
         DimensionalCharacteristicRepresentationId,
         u64,
@@ -8406,7 +8696,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_mapped_items: Vec<(MappedItemId, u64)> = Vec::new();
     let mut pending_mass_units: Vec<(MassUnitId, u64)> = Vec::new();
+    let mut pending_measure_representation_items: Vec<(MeasureRepresentationItemId, u64)> =
+        Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
+    let mut pending_mechanical_contexts: Vec<(MechanicalContextId, u64)> = Vec::new();
     let mut pending_modified_geometric_tolerances: Vec<(ModifiedGeometricToleranceId, u64)> =
         Vec::new();
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
@@ -8425,6 +8718,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_oriented_closed_shells: Vec<(OrientedClosedShellId, u64)> = Vec::new();
     let mut pending_oriented_edges: Vec<(OrientedEdgeId, u64)> = Vec::new();
+    let mut pending_over_riding_styled_items: Vec<(OverRidingStyledItemId, u64)> = Vec::new();
     let mut pending_parallelism_tolerances: Vec<(ParallelismToleranceId, u64)> = Vec::new();
     let mut pending_paths: Vec<(PathId, u64)> = Vec::new();
     let mut pending_pcurves: Vec<(PcurveId, u64)> = Vec::new();
@@ -8444,6 +8738,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_plane_angle_units: Vec<(PlaneAngleUnitId, u64)> = Vec::new();
     let mut pending_point_styles: Vec<(PointStyleId, u64)> = Vec::new();
     let mut pending_poly_loops: Vec<(PolyLoopId, u64)> = Vec::new();
+    let mut pending_polylines: Vec<(PolylineId, u64)> = Vec::new();
     let mut pending_position_tolerances: Vec<(PositionToleranceId, u64)> = Vec::new();
     let mut pending_presentation_style_assignments: Vec<(PresentationStyleAssignmentId, u64)> =
         Vec::new();
@@ -9765,6 +10060,31 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DESCRIPTIVE_REPRESENTATION_ITEM" => {
+                let v = DescriptiveRepresentationItem {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                };
+                let aid =
+                    DescriptiveRepresentationItemId(model.descriptive_representation_items.push(v));
+                idmap.insert(id, AnyId::DescriptiveRepresentationItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DESIGN_CONTEXT" => {
+                let v = DesignContext {
+                    name: as_str(&attributes[0]),
+                    frame_of_reference: ApplicationContextRef::ApplicationContext(
+                        ApplicationContextId(usize::MAX),
+                    ),
+                    life_cycle_stage: as_str(&attributes[2]),
+                };
+                let aid = DesignContextId(model.design_contexts.push(v));
+                idmap.insert(id, AnyId::DesignContext(aid));
+                pending_design_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION" => {
                 let v = DimensionalCharacteristicRepresentation {
                     dimension: DimensionalCharacteristicRef::DimensionalLocation(
@@ -10667,6 +10987,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "MEASURE_REPRESENTATION_ITEM" => {
+                let v = MeasureRepresentationItem {
+                    name: as_str(&attributes[0]),
+                    value_component: read_measure_value(&attributes[1]),
+                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = MeasureRepresentationItemId(model.measure_representation_items.push(v));
+                idmap.insert(id, AnyId::MeasureRepresentationItem(aid));
+                pending_measure_representation_items.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "MEASURE_WITH_UNIT" => {
                 let v = MeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
@@ -10677,6 +11011,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = MeasureWithUnitId(model.measure_with_units.push(v));
                 idmap.insert(id, AnyId::MeasureWithUnit(aid));
                 pending_measure_with_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "MECHANICAL_CONTEXT" => {
+                let v = MechanicalContext {
+                    name: as_str(&attributes[0]),
+                    frame_of_reference: ApplicationContextRef::ApplicationContext(
+                        ApplicationContextId(usize::MAX),
+                    ),
+                    discipline_type: as_str(&attributes[2]),
+                };
+                let aid = MechanicalContextId(model.mechanical_contexts.push(v));
+                idmap.insert(id, AnyId::MechanicalContext(aid));
+                pending_mechanical_contexts.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -10979,6 +11327,23 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = OrientedEdgeId(model.oriented_edges.push(v));
                 idmap.insert(id, AnyId::OrientedEdge(aid));
                 pending_oriented_edges.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "OVER_RIDING_STYLED_ITEM" => {
+                let v = OverRidingStyledItem {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                    over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(
+                        AnnotationCurveOccurrenceId(usize::MAX),
+                    ),
+                };
+                let aid = OverRidingStyledItemId(model.over_riding_styled_items.push(v));
+                idmap.insert(id, AnyId::OverRidingStyledItem(aid));
+                pending_over_riding_styled_items.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -11362,6 +11727,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "POLYLINE" => {
+                let v = Polyline {
+                    name: as_str(&attributes[0]),
+                    points: Vec::new(),
+                };
+                let aid = PolylineId(model.polylines.push(v));
+                idmap.insert(id, AnyId::Polyline(aid));
+                pending_polylines.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "POSITION_TOLERANCE" => {
                 let v = PositionTolerance {
                     name: as_str(&attributes[0]),
@@ -11516,8 +11892,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
                         ProductDefinitionFormationId(usize::MAX),
                     ),
-                    frame_of_reference: ProductDefinitionContextRef::ProductDefinitionContext(
-                        ProductDefinitionContextId(usize::MAX),
+                    frame_of_reference: ProductDefinitionContextRef::DesignContext(
+                        DesignContextId(usize::MAX),
                     ),
                 };
                 let aid = ProductDefinitionId(model.product_definitions.push(v));
@@ -13195,6 +13571,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_derived_unit_elements(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_design_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_design_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_dimensional_characteristic_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_dimensional_characteristic_representations(&mut model, aid, attributes, &idmap);
@@ -13459,9 +13840,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_mass_units(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_measure_representation_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_measure_representation_items(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_measure_with_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_measure_with_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_mechanical_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_mechanical_contexts(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_modified_geometric_tolerances {
@@ -13522,6 +13913,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_oriented_edges {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_oriented_edges(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_over_riding_styled_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_over_riding_styled_items(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_parallelism_tolerances {
@@ -13597,6 +13993,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_poly_loops {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_poly_loops(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_polylines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_polylines(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_position_tolerances {
@@ -15084,6 +15485,18 @@ fn resolve_derived_unit_elements(
     it.unit = unit_v;
 }
 
+fn resolve_design_contexts(
+    model: &mut Model,
+    aid: DesignContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let frame_of_reference_v =
+        ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.design_contexts.items[aid.0];
+    it.frame_of_reference = frame_of_reference_v;
+}
+
 fn resolve_dimensional_characteristic_representations(
     model: &mut Model,
     aid: DimensionalCharacteristicRepresentationId,
@@ -15930,6 +16343,17 @@ fn resolve_mass_units(
     it.dimensions = dimensions_v;
 }
 
+fn resolve_measure_representation_items(
+    model: &mut Model,
+    aid: MeasureRepresentationItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let unit_component_v = UnitRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.measure_representation_items.items[aid.0];
+    it.unit_component = unit_component_v;
+}
+
 fn resolve_measure_with_units(
     model: &mut Model,
     aid: MeasureWithUnitId,
@@ -15939,6 +16363,18 @@ fn resolve_measure_with_units(
     let unit_component_v = UnitRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.measure_with_units.items[aid.0];
     it.unit_component = unit_component_v;
+}
+
+fn resolve_mechanical_contexts(
+    model: &mut Model,
+    aid: MechanicalContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let frame_of_reference_v =
+        ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.mechanical_contexts.items[aid.0];
+    it.frame_of_reference = frame_of_reference_v;
 }
 
 fn resolve_modified_geometric_tolerances(
@@ -16115,6 +16551,30 @@ fn resolve_oriented_edges(
     let edge_element_v = EdgeRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
     let it = &mut model.oriented_edges.items[aid.0];
     it.edge_element = edge_element_v;
+}
+
+fn resolve_over_riding_styled_items(
+    model: &mut Model,
+    aid: OverRidingStyledItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let over_ridden_style_v =
+        StyledItemRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.over_riding_styled_items.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+    it.over_ridden_style = over_ridden_style_v;
 }
 
 fn resolve_parallelism_tolerances(
@@ -16383,6 +16843,23 @@ fn resolve_poly_loops(
     };
     let it = &mut model.poly_loops.items[aid.0];
     it.polygon = polygon_v;
+}
+
+fn resolve_polylines(
+    model: &mut Model,
+    aid: PolylineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let points_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CartesianPointRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.polylines.items[aid.0];
+    it.points = points_v;
 }
 
 fn resolve_position_tolerances(
@@ -17934,6 +18411,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "DERIVED_UNIT" => UnitPart::DerivedUnit {
                 elements: Vec::new(),
             },
+            "DESIGN_CONTEXT" => UnitPart::DesignContext,
             "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize {
                 applies_to: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
                 name: as_str(&p.attributes[1]),
@@ -18134,10 +18612,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
             },
             "MASS_UNIT" => UnitPart::MassUnit,
+            "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
             "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit {
                 value_component: read_measure_value(&p.attributes[0]),
                 unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)),
             },
+            "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
             "MODIFIED_GEOMETRIC_TOLERANCE" => UnitPart::ModifiedGeometricTolerance {
                 modifier: match &p.attributes[0] {
                     Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"),
@@ -18164,6 +18644,11 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "ORIENTED_EDGE" => UnitPart::OrientedEdge {
                 edge_element: EdgeRef::Edge(EdgeId(usize::MAX)),
                 orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
+            },
+            "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem {
+                over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(
+                    AnnotationCurveOccurrenceId(usize::MAX),
+                ),
             },
             "PARAMETRIC_REPRESENTATION_CONTEXT" => UnitPart::ParametricRepresentationContext,
             "PATH" => UnitPart::Path {
@@ -18246,9 +18731,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
                     ProductDefinitionFormationId(usize::MAX),
                 ),
-                frame_of_reference: ProductDefinitionContextRef::ProductDefinitionContext(
-                    ProductDefinitionContextId(usize::MAX),
-                ),
+                frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(
+                    usize::MAX,
+                )),
             },
             "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext {
                 life_cycle_stage: as_str(&p.attributes[0]),
@@ -19114,6 +19599,12 @@ fn resolve_complex(
             UnitPart::OrientedEdge { edge_element, .. } => {
                 *edge_element =
                     EdgeRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::OverRidingStyledItem {
+                over_ridden_style, ..
+            } => {
+                *over_ridden_style =
+                    StyledItemRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
             }
             UnitPart::Path { edge_list, .. } => {
                 *edge_list = match &p.attributes[0] {

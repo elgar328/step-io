@@ -130,6 +130,8 @@ pub struct Writer<'a> {
     definitional_representation_ids: Vec<Option<u64>>,
     derived_unit_ids: Vec<Option<u64>>,
     derived_unit_element_ids: Vec<Option<u64>>,
+    descriptive_representation_item_ids: Vec<Option<u64>>,
+    design_context_ids: Vec<Option<u64>>,
     dimensional_characteristic_representation_ids: Vec<Option<u64>>,
     dimensional_exponent_ids: Vec<Option<u64>>,
     dimensional_location_ids: Vec<Option<u64>>,
@@ -192,7 +194,9 @@ pub struct Writer<'a> {
     manifold_surface_shape_representation_ids: Vec<Option<u64>>,
     mapped_item_ids: Vec<Option<u64>>,
     mass_unit_ids: Vec<Option<u64>>,
+    measure_representation_item_ids: Vec<Option<u64>>,
     measure_with_unit_ids: Vec<Option<u64>>,
+    mechanical_context_ids: Vec<Option<u64>>,
     modified_geometric_tolerance_ids: Vec<Option<u64>>,
     named_unit_ids: Vec<Option<u64>>,
     next_assembly_usage_occurrence_ids: Vec<Option<u64>>,
@@ -210,6 +214,7 @@ pub struct Writer<'a> {
     organizational_project_role_ids: Vec<Option<u64>>,
     oriented_closed_shell_ids: Vec<Option<u64>>,
     oriented_edge_ids: Vec<Option<u64>>,
+    over_riding_styled_item_ids: Vec<Option<u64>>,
     parallelism_tolerance_ids: Vec<Option<u64>>,
     parametric_representation_context_ids: Vec<Option<u64>>,
     path_ids: Vec<Option<u64>>,
@@ -230,6 +235,7 @@ pub struct Writer<'a> {
     point_ids: Vec<Option<u64>>,
     point_style_ids: Vec<Option<u64>>,
     poly_loop_ids: Vec<Option<u64>>,
+    polyline_ids: Vec<Option<u64>>,
     position_tolerance_ids: Vec<Option<u64>>,
     pre_defined_curve_font_ids: Vec<Option<u64>>,
     pre_defined_item_ids: Vec<Option<u64>>,
@@ -472,6 +478,14 @@ impl<'a> Writer<'a> {
             ],
             derived_unit_ids: vec![None; model.derived_units.items.len()],
             derived_unit_element_ids: vec![None; model.derived_unit_elements.items.len()],
+            descriptive_representation_item_ids: vec![
+                None;
+                model
+                    .descriptive_representation_items
+                    .items
+                    .len()
+            ],
+            design_context_ids: vec![None; model.design_contexts.items.len()],
             dimensional_characteristic_representation_ids: vec![
                 None;
                 model
@@ -654,7 +668,12 @@ impl<'a> Writer<'a> {
             ],
             mapped_item_ids: vec![None; model.mapped_items.items.len()],
             mass_unit_ids: vec![None; model.mass_units.items.len()],
+            measure_representation_item_ids: vec![
+                None;
+                model.measure_representation_items.items.len()
+            ],
             measure_with_unit_ids: vec![None; model.measure_with_units.items.len()],
+            mechanical_context_ids: vec![None; model.mechanical_contexts.items.len()],
             modified_geometric_tolerance_ids: vec![
                 None;
                 model.modified_geometric_tolerances.items.len()
@@ -693,6 +712,7 @@ impl<'a> Writer<'a> {
             ],
             oriented_closed_shell_ids: vec![None; model.oriented_closed_shells.items.len()],
             oriented_edge_ids: vec![None; model.oriented_edges.items.len()],
+            over_riding_styled_item_ids: vec![None; model.over_riding_styled_items.items.len()],
             parallelism_tolerance_ids: vec![None; model.parallelism_tolerances.items.len()],
             parametric_representation_context_ids: vec![
                 None;
@@ -737,6 +757,7 @@ impl<'a> Writer<'a> {
             point_ids: vec![None; model.points.items.len()],
             point_style_ids: vec![None; model.point_styles.items.len()],
             poly_loop_ids: vec![None; model.poly_loops.items.len()],
+            polyline_ids: vec![None; model.polylines.items.len()],
             position_tolerance_ids: vec![None; model.position_tolerances.items.len()],
             pre_defined_curve_font_ids: vec![None; model.pre_defined_curve_fonts.items.len()],
             pre_defined_item_ids: vec![None; model.pre_defined_items.items.len()],
@@ -2983,6 +3004,48 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_descriptive_representation_items(
+        &mut self,
+        id: DescriptiveRepresentationItemId,
+    ) -> u64 {
+        if let Some(n) = self.descriptive_representation_item_ids[id.0] {
+            return n;
+        }
+        let it = self
+            .model
+            .descriptive_representation_items
+            .get(id.0)
+            .clone();
+        let n = self.fresh();
+        self.descriptive_representation_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name), step_str(&it.description)];
+        self.out.push_str(&format!(
+            "#{n} = DESCRIPTIVE_REPRESENTATION_ITEM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
+    fn emit_design_contexts(&mut self, id: DesignContextId) -> u64 {
+        if let Some(n) = self.design_context_ids[id.0] {
+            return n;
+        }
+        let it = self.model.design_contexts.get(id.0).clone();
+        let n = self.fresh();
+        self.design_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_application_context((&it.frame_of_reference).clone())
+            ),
+            step_str(&it.life_cycle_stage),
+        ];
+        self.out
+            .push_str(&format!("#{n} = DESIGN_CONTEXT({});\n", attrs.join(",")));
+        n
+    }
+
     fn emit_dimensional_characteristic_representations(
         &mut self,
         id: DimensionalCharacteristicRepresentationId,
@@ -4541,6 +4604,25 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_measure_representation_items(&mut self, id: MeasureRepresentationItemId) -> u64 {
+        if let Some(n) = self.measure_representation_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.measure_representation_items.get(id.0).clone();
+        let n = self.fresh();
+        self.measure_representation_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            measure(&it.value_component),
+            format!("#{}", self.emit_ref_unit((&it.unit_component).clone())),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = MEASURE_REPRESENTATION_ITEM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_measure_with_units(&mut self, id: MeasureWithUnitId) -> u64 {
         if let Some(n) = self.measure_with_unit_ids[id.0] {
             return n;
@@ -4554,6 +4636,28 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = MEASURE_WITH_UNIT({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_mechanical_contexts(&mut self, id: MechanicalContextId) -> u64 {
+        if let Some(n) = self.mechanical_context_ids[id.0] {
+            return n;
+        }
+        let it = self.model.mechanical_contexts.get(id.0).clone();
+        let n = self.fresh();
+        self.mechanical_context_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_application_context((&it.frame_of_reference).clone())
+            ),
+            step_str(&it.discipline_type),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = MECHANICAL_CONTEXT({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -5008,6 +5112,39 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = ORIENTED_EDGE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_over_riding_styled_items(&mut self, id: OverRidingStyledItemId) -> u64 {
+        if let Some(n) = self.over_riding_styled_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.over_riding_styled_items.get(id.0).clone();
+        let n = self.fresh();
+        self.over_riding_styled_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.styles
+                    .iter()
+                    .map(|e| format!(
+                        "#{}",
+                        self.emit_ref_presentation_style_assignment((e).clone())
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!("#{}", self.emit_ref_styled_item_target((&it.item).clone())),
+            format!(
+                "#{}",
+                self.emit_ref_styled_item((&it.over_ridden_style).clone())
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = OVER_RIDING_STYLED_ITEM({});\n",
+            attrs.join(",")
+        ));
         n
     }
 
@@ -5597,6 +5734,29 @@ impl<'a> Writer<'a> {
         ];
         self.out
             .push_str(&format!("#{n} = POLY_LOOP({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_polylines(&mut self, id: PolylineId) -> u64 {
+        if let Some(n) = self.polyline_ids[id.0] {
+            return n;
+        }
+        let it = self.model.polylines.get(id.0).clone();
+        let n = self.fresh();
+        self.polyline_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "({})",
+                it.points
+                    .iter()
+                    .map(|e| format!("#{}", self.emit_ref_cartesian_point((e).clone())))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = POLYLINE({});\n", attrs.join(",")));
         n
     }
 
@@ -8425,6 +8585,7 @@ impl<'a> Writer<'a> {
             }
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => self.emit_lines(i),
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => self.emit_pcurves(i),
+            CurveOrAnnotationCurveOccurrenceRef::Polyline(i) => self.emit_polylines(i),
             CurveOrAnnotationCurveOccurrenceRef::QuasiUniformCurve(i) => {
                 self.emit_quasi_uniform_curves(i)
             }
@@ -8455,6 +8616,7 @@ impl<'a> Writer<'a> {
             CurveOrCurveSetRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
             CurveOrCurveSetRef::Line(i) => self.emit_lines(i),
             CurveOrCurveSetRef::Pcurve(i) => self.emit_pcurves(i),
+            CurveOrCurveSetRef::Polyline(i) => self.emit_polylines(i),
             CurveOrCurveSetRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
             CurveOrCurveSetRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
             CurveOrCurveSetRef::SeamCurve(i) => self.emit_seam_curves(i),
@@ -8488,6 +8650,7 @@ impl<'a> Writer<'a> {
             CurveRef::IntersectionCurve(i) => self.emit_intersection_curves(i),
             CurveRef::Line(i) => self.emit_lines(i),
             CurveRef::Pcurve(i) => self.emit_pcurves(i),
+            CurveRef::Polyline(i) => self.emit_polylines(i),
             CurveRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
             CurveRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
             CurveRef::SeamCurve(i) => self.emit_seam_curves(i),
@@ -8803,6 +8966,7 @@ impl<'a> Writer<'a> {
             GeometricSetSelectRef::PlanarBox(i) => self.emit_planar_boxs(i),
             GeometricSetSelectRef::Plane(i) => self.emit_planes(i),
             GeometricSetSelectRef::Point(i) => self.emit_points(i),
+            GeometricSetSelectRef::Polyline(i) => self.emit_polylines(i),
             GeometricSetSelectRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
             GeometricSetSelectRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
             GeometricSetSelectRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
@@ -8930,6 +9094,9 @@ impl<'a> Writer<'a> {
     fn emit_ref_measure_with_unit(&mut self, r: MeasureWithUnitRef) -> u64 {
         match r {
             MeasureWithUnitRef::LengthMeasureWithUnit(i) => self.emit_length_measure_with_units(i),
+            MeasureWithUnitRef::MeasureRepresentationItem(i) => {
+                self.emit_measure_representation_items(i)
+            }
             MeasureWithUnitRef::MeasureWithUnit(i) => self.emit_measure_with_units(i),
             MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i) => {
                 self.emit_plane_angle_measure_with_units(i)
@@ -9082,6 +9249,7 @@ impl<'a> Writer<'a> {
 
     fn emit_ref_product_context(&mut self, r: ProductContextRef) -> u64 {
         match r {
+            ProductContextRef::MechanicalContext(i) => self.emit_mechanical_contexts(i),
             ProductContextRef::ProductContext(i) => self.emit_product_contexts(i),
             ProductContextRef::Complex(i) => self.emit_complex(i),
         }
@@ -9089,6 +9257,7 @@ impl<'a> Writer<'a> {
 
     fn emit_ref_product_definition_context(&mut self, r: ProductDefinitionContextRef) -> u64 {
         match r {
+            ProductDefinitionContextRef::DesignContext(i) => self.emit_design_contexts(i),
             ProductDefinitionContextRef::ProductDefinitionContext(i) => {
                 self.emit_product_definition_contexts(i)
             }
@@ -9260,6 +9429,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Curve(i) => self.emit_curves(i),
             RepresentationItemRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
             RepresentationItemRef::DefinedSymbol(i) => self.emit_defined_symbols(i),
+            RepresentationItemRef::DescriptiveRepresentationItem(i) => {
+                self.emit_descriptive_representation_items(i)
+            }
             RepresentationItemRef::Direction(i) => self.emit_directions(i),
             RepresentationItemRef::Edge(i) => self.emit_edges(i),
             RepresentationItemRef::EdgeCurve(i) => self.emit_edge_curves(i),
@@ -9299,6 +9471,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Loop(i) => self.emit_loops(i),
             RepresentationItemRef::ManifoldSolidBrep(i) => self.emit_manifold_solid_breps(i),
             RepresentationItemRef::MappedItem(i) => self.emit_mapped_items(i),
+            RepresentationItemRef::MeasureRepresentationItem(i) => {
+                self.emit_measure_representation_items(i)
+            }
             RepresentationItemRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
             RepresentationItemRef::OneDirectionRepeatFactor(i) => {
                 self.emit_one_direction_repeat_factors(i)
@@ -9306,6 +9481,7 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::OpenShell(i) => self.emit_open_shells(i),
             RepresentationItemRef::OrientedClosedShell(i) => self.emit_oriented_closed_shells(i),
             RepresentationItemRef::OrientedEdge(i) => self.emit_oriented_edges(i),
+            RepresentationItemRef::OverRidingStyledItem(i) => self.emit_over_riding_styled_items(i),
             RepresentationItemRef::Path(i) => self.emit_paths(i),
             RepresentationItemRef::Pcurve(i) => self.emit_pcurves(i),
             RepresentationItemRef::Placement(i) => self.emit_placements(i),
@@ -9314,6 +9490,7 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Plane(i) => self.emit_planes(i),
             RepresentationItemRef::Point(i) => self.emit_points(i),
             RepresentationItemRef::PolyLoop(i) => self.emit_poly_loops(i),
+            RepresentationItemRef::Polyline(i) => self.emit_polylines(i),
             RepresentationItemRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
             RepresentationItemRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
             RepresentationItemRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
@@ -9525,6 +9702,9 @@ impl<'a> Writer<'a> {
     fn emit_ref_size_select(&mut self, r: SizeSelectRef) -> u64 {
         match r {
             SizeSelectRef::LengthMeasureWithUnit(i) => self.emit_length_measure_with_units(i),
+            SizeSelectRef::MeasureRepresentationItem(i) => {
+                self.emit_measure_representation_items(i)
+            }
             SizeSelectRef::MeasureWithUnit(i) => self.emit_measure_with_units(i),
             SizeSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 self.emit_plane_angle_measure_with_units(i)
@@ -9537,6 +9717,21 @@ impl<'a> Writer<'a> {
             SizeSelectRef::PositiveLengthMeasure(_) => {
                 panic!("emit scalar ref via single dispatch")
             }
+        }
+    }
+
+    fn emit_ref_styled_item(&mut self, r: StyledItemRef) -> u64 {
+        match r {
+            StyledItemRef::AnnotationCurveOccurrence(i) => {
+                self.emit_annotation_curve_occurrences(i)
+            }
+            StyledItemRef::AnnotationOccurrence(i) => self.emit_annotation_occurrences(i),
+            StyledItemRef::AnnotationSymbolOccurrence(i) => {
+                self.emit_annotation_symbol_occurrences(i)
+            }
+            StyledItemRef::OverRidingStyledItem(i) => self.emit_over_riding_styled_items(i),
+            StyledItemRef::StyledItem(i) => self.emit_styled_items(i),
+            StyledItemRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -9637,6 +9832,7 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::Plane(i) => self.emit_planes(i),
             StyledItemTargetRef::Point(i) => self.emit_points(i),
             StyledItemTargetRef::PolyLoop(i) => self.emit_poly_loops(i),
+            StyledItemTargetRef::Polyline(i) => self.emit_polylines(i),
             StyledItemTargetRef::QuasiUniformCurve(i) => self.emit_quasi_uniform_curves(i),
             StyledItemTargetRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
             StyledItemTargetRef::RationalBSplineCurve(i) => self.emit_rational_b_spline_curves(i),
@@ -10427,6 +10623,7 @@ impl<'a> Writer<'a> {
                     )];
                     format!("DERIVED_UNIT({})", a.join(","))
                 }
+                UnitPart::DesignContext => "DESIGN_CONTEXT()".to_string(),
                 UnitPart::DimensionalSize {
                     applies_to, name, ..
                 } => {
@@ -10932,6 +11129,7 @@ impl<'a> Writer<'a> {
                     format!("MAPPED_ITEM({})", a.join(","))
                 }
                 UnitPart::MassUnit => "MASS_UNIT()".to_string(),
+                UnitPart::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM()".to_string(),
                 UnitPart::MeasureWithUnit {
                     value_component,
                     unit_component,
@@ -10943,6 +11141,7 @@ impl<'a> Writer<'a> {
                     ];
                     format!("MEASURE_WITH_UNIT({})", a.join(","))
                 }
+                UnitPart::MechanicalContext => "MECHANICAL_CONTEXT()".to_string(),
                 UnitPart::ModifiedGeometricTolerance { modifier, .. } => {
                     let a: Vec<String> = vec![modifier.token().to_string()];
                     format!("MODIFIED_GEOMETRIC_TOLERANCE({})", a.join(","))
@@ -11010,6 +11209,15 @@ impl<'a> Writer<'a> {
                         (if *orientation { ".T." } else { ".F." }).to_string(),
                     ];
                     format!("ORIENTED_EDGE({})", a.join(","))
+                }
+                UnitPart::OverRidingStyledItem {
+                    over_ridden_style, ..
+                } => {
+                    let a: Vec<String> = vec![format!(
+                        "#{}",
+                        self.emit_ref_styled_item((over_ridden_style).clone())
+                    )];
+                    format!("OVER_RIDING_STYLED_ITEM({})", a.join(","))
                 }
                 UnitPart::ParametricRepresentationContext => {
                     "PARAMETRIC_REPRESENTATION_CONTEXT()".to_string()
@@ -12186,6 +12394,12 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.derived_unit_elements.items.len() {
             self.emit_derived_unit_elements(DerivedUnitElementId(i));
         }
+        for i in 0..self.model.descriptive_representation_items.items.len() {
+            self.emit_descriptive_representation_items(DescriptiveRepresentationItemId(i));
+        }
+        for i in 0..self.model.design_contexts.items.len() {
+            self.emit_design_contexts(DesignContextId(i));
+        }
         for i in 0..self
             .model
             .dimensional_characteristic_representations
@@ -12426,8 +12640,14 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.mass_units.items.len() {
             self.emit_mass_units(MassUnitId(i));
         }
+        for i in 0..self.model.measure_representation_items.items.len() {
+            self.emit_measure_representation_items(MeasureRepresentationItemId(i));
+        }
         for i in 0..self.model.measure_with_units.items.len() {
             self.emit_measure_with_units(MeasureWithUnitId(i));
+        }
+        for i in 0..self.model.mechanical_contexts.items.len() {
+            self.emit_mechanical_contexts(MechanicalContextId(i));
         }
         for i in 0..self.model.modified_geometric_tolerances.items.len() {
             self.emit_modified_geometric_tolerances(ModifiedGeometricToleranceId(i));
@@ -12479,6 +12699,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.oriented_edges.items.len() {
             self.emit_oriented_edges(OrientedEdgeId(i));
+        }
+        for i in 0..self.model.over_riding_styled_items.items.len() {
+            self.emit_over_riding_styled_items(OverRidingStyledItemId(i));
         }
         for i in 0..self.model.parallelism_tolerances.items.len() {
             self.emit_parallelism_tolerances(ParallelismToleranceId(i));
@@ -12539,6 +12762,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.poly_loops.items.len() {
             self.emit_poly_loops(PolyLoopId(i));
+        }
+        for i in 0..self.model.polylines.items.len() {
+            self.emit_polylines(PolylineId(i));
         }
         for i in 0..self.model.position_tolerances.items.len() {
             self.emit_position_tolerances(PositionToleranceId(i));
