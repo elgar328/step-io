@@ -123,6 +123,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "COLOUR_RGB",
     "COLOUR_SPECIFICATION",
     "COMMON_DATUM",
+    "COMPLEX_TRIANGULATED_FACE",
     "COMPOSITE_SHAPE_ASPECT",
     "CONCENTRICITY_TOLERANCE",
     "CONIC",
@@ -131,6 +132,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
     "COORDINATED_UNIVERSAL_TIME_OFFSET",
+    "COORDINATES_LIST",
     "CURVE",
     "CURVE_STYLE",
     "CURVE_STYLE_FONT",
@@ -326,6 +328,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SYMBOL_STYLE",
     "SYMBOL_TARGET",
     "SYMMETRY_TOLERANCE",
+    "TESSELLATED_FACE",
+    "TESSELLATED_ITEM",
+    "TESSELLATED_STRUCTURED_ITEM",
     "TEXT_STYLE",
     "TEXT_STYLE_FOR_DEFINED_FONT",
     "TEXTURE_STYLE_SPECIFICATION",
@@ -537,6 +542,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SURFACE_STYLE_USAGE",
     "SYMBOL_STYLE",
     "SYMBOL_TARGET",
+    "TESSELLATED_ITEM",
+    "TESSELLATED_STRUCTURED_ITEM",
     "TEXT_STYLE",
     "TEXTURE_STYLE_SPECIFICATION",
     "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
@@ -607,9 +614,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -667,6 +676,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -844,9 +856,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -908,6 +922,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -960,9 +977,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -1020,6 +1039,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -1386,6 +1408,43 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "COMPLEX_TRIANGULATED_FACE" => &[
+            RefSlot {
+                idx: 1,
+                name: "coordinates",
+                allowed: &["COORDINATES_LIST"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "geometric_link",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_SURFACE",
+                    "CONICAL_SURFACE",
+                    "CYLINDRICAL_SURFACE",
+                    "ELEMENTARY_SURFACE",
+                    "FACE_SURFACE",
+                    "OFFSET_SURFACE",
+                    "PLANE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "TOROIDAL_SURFACE",
+                    "UNIFORM_SURFACE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "COMPOSITE_SHAPE_ASPECT" => &[RefSlot {
             idx: 2,
             name: "of_shape",
@@ -1743,9 +1802,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -1803,6 +1864,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -2888,9 +2952,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -2948,6 +3014,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -2991,9 +3060,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -3051,6 +3122,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -3186,9 +3260,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -3246,6 +3322,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -3311,9 +3390,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -3371,6 +3452,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -4238,9 +4322,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -4298,6 +4384,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -4356,9 +4445,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -4416,6 +4507,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -4743,9 +4837,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -4803,6 +4899,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -4861,9 +4960,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -4921,6 +5022,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -5085,9 +5189,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -5149,6 +5255,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -5516,6 +5625,43 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &["DATUM_REFERENCE", "DATUM_SYSTEM"],
                 complex_ok: true,
                 is_vec: true,
+            },
+        ],
+        "TESSELLATED_FACE" => &[
+            RefSlot {
+                idx: 1,
+                name: "coordinates",
+                allowed: &["COORDINATES_LIST"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "geometric_link",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_SURFACE",
+                    "CONICAL_SURFACE",
+                    "CYLINDRICAL_SURFACE",
+                    "ELEMENTARY_SURFACE",
+                    "FACE_SURFACE",
+                    "OFFSET_SURFACE",
+                    "PLANE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "TOROIDAL_SURFACE",
+                    "UNIFORM_SURFACE",
+                ],
+                complex_ok: true,
+                is_vec: false,
             },
         ],
         "TEXT_STYLE" => &[RefSlot {
@@ -6518,9 +6664,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -6578,6 +6726,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -6621,9 +6772,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -6681,6 +6834,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -6740,9 +6896,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -6800,6 +6958,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -7216,9 +7377,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -7276,6 +7439,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -7334,9 +7500,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -7394,6 +7562,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -7571,9 +7742,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
                     "DEFINED_SYMBOL",
@@ -7635,6 +7808,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -7974,6 +8150,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_closed_shells: Vec<(ClosedShellId, u64)> = Vec::new();
     let mut pending_coaxiality_tolerances: Vec<(CoaxialityToleranceId, u64)> = Vec::new();
     let mut pending_common_datums: Vec<(CommonDatumId, u64)> = Vec::new();
+    let mut pending_complex_triangulated_faces: Vec<(ComplexTriangulatedFaceId, u64)> = Vec::new();
     let mut pending_composite_shape_aspects: Vec<(CompositeShapeAspectId, u64)> = Vec::new();
     let mut pending_concentricity_tolerances: Vec<(ConcentricityToleranceId, u64)> = Vec::new();
     let mut pending_conics: Vec<(ConicId, u64)> = Vec::new();
@@ -8231,6 +8408,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_symbol_styles: Vec<(SymbolStyleId, u64)> = Vec::new();
     let mut pending_symbol_targets: Vec<(SymbolTargetId, u64)> = Vec::new();
     let mut pending_symmetry_tolerances: Vec<(SymmetryToleranceId, u64)> = Vec::new();
+    let mut pending_tessellated_faces: Vec<(TessellatedFaceId, u64)> = Vec::new();
     let mut pending_text_styles: Vec<(TextStyleId, u64)> = Vec::new();
     let mut pending_text_style_for_defined_fonts: Vec<(TextStyleForDefinedFontId, u64)> =
         Vec::new();
@@ -8896,6 +9074,59 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "COMPLEX_TRIANGULATED_FACE" => {
+                let v = ComplexTriangulatedFace {
+                    name: as_str(&attributes[0]),
+                    coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(usize::MAX)),
+                    pnmax: as_int(&attributes[2]),
+                    normals: match &attributes[3] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::List(l) => {
+                                    l.iter().map(|e| as_real(e)).collect::<Vec<_>>()
+                                }
+                                o => panic!("nested vec: {o:?}"),
+                            })
+                            .collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    geometric_link: None,
+                    pnindex: match &attributes[5] {
+                        Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    triangle_strips: match &attributes[6] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::List(l) => {
+                                    l.iter().map(|e| as_int(e)).collect::<Vec<_>>()
+                                }
+                                o => panic!("nested vec: {o:?}"),
+                            })
+                            .collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    triangle_fans: match &attributes[7] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::List(l) => {
+                                    l.iter().map(|e| as_int(e)).collect::<Vec<_>>()
+                                }
+                                o => panic!("nested vec: {o:?}"),
+                            })
+                            .collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = ComplexTriangulatedFaceId(model.complex_triangulated_faces.push(v));
+                idmap.insert(id, AnyId::ComplexTriangulatedFace(aid));
+                pending_complex_triangulated_faces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "COMPOSITE_SHAPE_ASPECT" => {
                 let v = CompositeShapeAspect {
                     name: as_str(&attributes[0]),
@@ -9013,6 +9244,28 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     model.coordinated_universal_time_offsets.push(v),
                 );
                 idmap.insert(id, AnyId::CoordinatedUniversalTimeOffset(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COORDINATES_LIST" => {
+                let v = CoordinatesList {
+                    name: as_str(&attributes[0]),
+                    npoints: as_int(&attributes[1]),
+                    position_coords: match &attributes[2] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::List(l) => {
+                                    l.iter().map(|e| as_real(e)).collect::<Vec<_>>()
+                                }
+                                o => panic!("nested vec: {o:?}"),
+                            })
+                            .collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = CoordinatesListId(model.coordinates_lists.push(v));
+                idmap.insert(id, AnyId::CoordinatesList(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -12024,6 +12277,49 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TESSELLATED_FACE" => {
+                let v = TessellatedFace {
+                    name: as_str(&attributes[0]),
+                    coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(usize::MAX)),
+                    pnmax: as_int(&attributes[2]),
+                    normals: match &attributes[3] {
+                        Attribute::List(l) => l
+                            .iter()
+                            .map(|e| match e {
+                                Attribute::List(l) => {
+                                    l.iter().map(|e| as_real(e)).collect::<Vec<_>>()
+                                }
+                                o => panic!("nested vec: {o:?}"),
+                            })
+                            .collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    geometric_link: None,
+                };
+                let aid = TessellatedFaceId(model.tessellated_faces.push(v));
+                idmap.insert(id, AnyId::TessellatedFace(aid));
+                pending_tessellated_faces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TESSELLATED_ITEM" => {
+                let v = TessellatedItem {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = TessellatedItemId(model.tessellated_items.push(v));
+                idmap.insert(id, AnyId::TessellatedItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TESSELLATED_STRUCTURED_ITEM" => {
+                let v = TessellatedStructuredItem {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = TessellatedStructuredItemId(model.tessellated_structured_items.push(v));
+                idmap.insert(id, AnyId::TessellatedStructuredItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "TEXT_STYLE" => {
                 let v = TextStyle {
                     name: as_str(&attributes[0]),
@@ -12524,6 +12820,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_common_datums {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_common_datums(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_complex_triangulated_faces {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_complex_triangulated_faces(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_composite_shape_aspects {
@@ -13361,6 +13662,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_symmetry_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_tessellated_faces {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tessellated_faces(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_text_styles {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_text_styles(&mut model, aid, attributes, &idmap);
@@ -14001,6 +14307,25 @@ fn resolve_common_datums(
         ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
     let it = &mut model.common_datums.items[aid.0];
     it.of_shape = of_shape_v;
+}
+
+fn resolve_complex_triangulated_faces(
+    model: &mut Model,
+    aid: ComplexTriangulatedFaceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let coordinates_v =
+        CoordinatesListRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let geometric_link_v = match &attrs[4] {
+        Attribute::Unset => None,
+        _ => Some(FaceOrSurfaceRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[4])).expect("ref"),
+        )),
+    };
+    let it = &mut model.complex_triangulated_faces.items[aid.0];
+    it.coordinates = coordinates_v;
+    it.geometric_link = geometric_link_v;
 }
 
 fn resolve_composite_shape_aspects(
@@ -16715,6 +17040,25 @@ fn resolve_symmetry_tolerances(
     it.datum_system = datum_system_v;
 }
 
+fn resolve_tessellated_faces(
+    model: &mut Model,
+    aid: TessellatedFaceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let coordinates_v =
+        CoordinatesListRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let geometric_link_v = match &attrs[4] {
+        Attribute::Unset => None,
+        _ => Some(FaceOrSurfaceRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[4])).expect("ref"),
+        )),
+    };
+    let it = &mut model.tessellated_faces.items[aid.0];
+    it.coordinates = coordinates_v;
+    it.geometric_link = geometric_link_v;
+}
+
 fn resolve_text_styles(
     model: &mut Model,
     aid: TextStyleId,
@@ -17863,6 +18207,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 x_scale: as_real(&p.attributes[1]),
                 y_scale: as_real(&p.attributes[2]),
             },
+            "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
+            "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
             "TEXT_STYLE" => UnitPart::TextStyle {
                 name: as_str(&p.attributes[0]),
                 character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(

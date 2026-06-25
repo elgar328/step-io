@@ -96,6 +96,7 @@ pub struct Writer<'a> {
     colour_rgb_ids: Vec<Option<u64>>,
     colour_specification_ids: Vec<Option<u64>>,
     common_datum_ids: Vec<Option<u64>>,
+    complex_triangulated_face_ids: Vec<Option<u64>>,
     composite_shape_aspect_ids: Vec<Option<u64>>,
     concentricity_tolerance_ids: Vec<Option<u64>>,
     conic_ids: Vec<Option<u64>>,
@@ -104,6 +105,7 @@ pub struct Writer<'a> {
     context_dependent_unit_ids: Vec<Option<u64>>,
     conversion_based_unit_ids: Vec<Option<u64>>,
     coordinated_universal_time_offset_ids: Vec<Option<u64>>,
+    coordinates_list_ids: Vec<Option<u64>>,
     curve_ids: Vec<Option<u64>>,
     curve_style_ids: Vec<Option<u64>>,
     curve_style_font_ids: Vec<Option<u64>>,
@@ -299,6 +301,9 @@ pub struct Writer<'a> {
     symbol_style_ids: Vec<Option<u64>>,
     symbol_target_ids: Vec<Option<u64>>,
     symmetry_tolerance_ids: Vec<Option<u64>>,
+    tessellated_face_ids: Vec<Option<u64>>,
+    tessellated_item_ids: Vec<Option<u64>>,
+    tessellated_structured_item_ids: Vec<Option<u64>>,
     text_style_ids: Vec<Option<u64>>,
     text_style_for_defined_font_ids: Vec<Option<u64>>,
     texture_style_specification_ids: Vec<Option<u64>>,
@@ -402,6 +407,7 @@ impl<'a> Writer<'a> {
             colour_rgb_ids: vec![None; model.colour_rgbs.items.len()],
             colour_specification_ids: vec![None; model.colour_specifications.items.len()],
             common_datum_ids: vec![None; model.common_datums.items.len()],
+            complex_triangulated_face_ids: vec![None; model.complex_triangulated_faces.items.len()],
             composite_shape_aspect_ids: vec![None; model.composite_shape_aspects.items.len()],
             concentricity_tolerance_ids: vec![None; model.concentricity_tolerances.items.len()],
             conic_ids: vec![None; model.conics.items.len()],
@@ -416,6 +422,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            coordinates_list_ids: vec![None; model.coordinates_lists.items.len()],
             curve_ids: vec![None; model.curves.items.len()],
             curve_style_ids: vec![None; model.curve_styles.items.len()],
             curve_style_font_ids: vec![None; model.curve_style_fonts.items.len()],
@@ -905,6 +912,12 @@ impl<'a> Writer<'a> {
             symbol_style_ids: vec![None; model.symbol_styles.items.len()],
             symbol_target_ids: vec![None; model.symbol_targets.items.len()],
             symmetry_tolerance_ids: vec![None; model.symmetry_tolerances.items.len()],
+            tessellated_face_ids: vec![None; model.tessellated_faces.items.len()],
+            tessellated_item_ids: vec![None; model.tessellated_items.items.len()],
+            tessellated_structured_item_ids: vec![
+                None;
+                model.tessellated_structured_items.items.len()
+            ],
             text_style_ids: vec![None; model.text_styles.items.len()],
             text_style_for_defined_font_ids: vec![
                 None;
@@ -2019,6 +2032,73 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_complex_triangulated_faces(&mut self, id: ComplexTriangulatedFaceId) -> u64 {
+        if let Some(n) = self.complex_triangulated_face_ids[id.0] {
+            return n;
+        }
+        let it = self.model.complex_triangulated_faces.get(id.0).clone();
+        let n = self.fresh();
+        self.complex_triangulated_face_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_coordinates_list((&it.coordinates).clone())
+            ),
+            format!("{}", it.pnmax),
+            format!(
+                "({})",
+                it.normals
+                    .iter()
+                    .map(|e| {
+                        let row: Vec<String> = e.iter().map(|e| real(*e)).collect();
+                        format!("({})", row.join(","))
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            match &it.geometric_link {
+                Some(r) => format!("#{}", self.emit_ref_face_or_surface((r).clone())),
+                None => "$".to_string(),
+            },
+            format!(
+                "({})",
+                it.pnindex
+                    .iter()
+                    .map(|e| format!("{e}"))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "({})",
+                it.triangle_strips
+                    .iter()
+                    .map(|e| {
+                        let row: Vec<String> = e.iter().map(|e| format!("{e}")).collect();
+                        format!("({})", row.join(","))
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            format!(
+                "({})",
+                it.triangle_fans
+                    .iter()
+                    .map(|e| {
+                        let row: Vec<String> = e.iter().map(|e| format!("{e}")).collect();
+                        format!("({})", row.join(","))
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out.push_str(&format!(
+            "#{n} = COMPLEX_TRIANGULATED_FACE({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_composite_shape_aspects(&mut self, id: CompositeShapeAspectId) -> u64 {
         if let Some(n) = self.composite_shape_aspect_ids[id.0] {
             return n;
@@ -2218,6 +2298,33 @@ impl<'a> Writer<'a> {
             "#{n} = COORDINATED_UNIVERSAL_TIME_OFFSET({});\n",
             attrs.join(",")
         ));
+        n
+    }
+
+    fn emit_coordinates_lists(&mut self, id: CoordinatesListId) -> u64 {
+        if let Some(n) = self.coordinates_list_ids[id.0] {
+            return n;
+        }
+        let it = self.model.coordinates_lists.get(id.0).clone();
+        let n = self.fresh();
+        self.coordinates_list_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!("{}", it.npoints),
+            format!(
+                "({})",
+                it.position_coords
+                    .iter()
+                    .map(|e| {
+                        let row: Vec<String> = e.iter().map(|e| real(*e)).collect();
+                        format!("({})", row.join(","))
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        ];
+        self.out
+            .push_str(&format!("#{n} = COORDINATES_LIST({});\n", attrs.join(",")));
         n
     }
 
@@ -7206,6 +7313,69 @@ impl<'a> Writer<'a> {
         n
     }
 
+    fn emit_tessellated_faces(&mut self, id: TessellatedFaceId) -> u64 {
+        if let Some(n) = self.tessellated_face_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tessellated_faces.get(id.0).clone();
+        let n = self.fresh();
+        self.tessellated_face_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![
+            step_str(&it.name),
+            format!(
+                "#{}",
+                self.emit_ref_coordinates_list((&it.coordinates).clone())
+            ),
+            format!("{}", it.pnmax),
+            format!(
+                "({})",
+                it.normals
+                    .iter()
+                    .map(|e| {
+                        let row: Vec<String> = e.iter().map(|e| real(*e)).collect();
+                        format!("({})", row.join(","))
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            match &it.geometric_link {
+                Some(r) => format!("#{}", self.emit_ref_face_or_surface((r).clone())),
+                None => "$".to_string(),
+            },
+        ];
+        self.out
+            .push_str(&format!("#{n} = TESSELLATED_FACE({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_tessellated_items(&mut self, id: TessellatedItemId) -> u64 {
+        if let Some(n) = self.tessellated_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tessellated_items.get(id.0).clone();
+        let n = self.fresh();
+        self.tessellated_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out
+            .push_str(&format!("#{n} = TESSELLATED_ITEM({});\n", attrs.join(",")));
+        n
+    }
+
+    fn emit_tessellated_structured_items(&mut self, id: TessellatedStructuredItemId) -> u64 {
+        if let Some(n) = self.tessellated_structured_item_ids[id.0] {
+            return n;
+        }
+        let it = self.model.tessellated_structured_items.get(id.0).clone();
+        let n = self.fresh();
+        self.tessellated_structured_item_ids[id.0] = Some(n);
+        let attrs: Vec<String> = vec![step_str(&it.name)];
+        self.out.push_str(&format!(
+            "#{n} = TESSELLATED_STRUCTURED_ITEM({});\n",
+            attrs.join(",")
+        ));
+        n
+    }
+
     fn emit_text_styles(&mut self, id: TextStyleId) -> u64 {
         if let Some(n) = self.text_style_ids[id.0] {
             return n;
@@ -8026,6 +8196,12 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn emit_ref_coordinates_list(&mut self, r: CoordinatesListRef) -> u64 {
+        match r {
+            CoordinatesListRef::CoordinatesList(i) => self.emit_coordinates_lists(i),
+        }
+    }
+
     fn emit_ref_curve_font_or_scaled_curve_font_select(
         &mut self,
         r: CurveFontOrScaledCurveFontSelectRef,
@@ -8327,6 +8503,36 @@ impl<'a> Writer<'a> {
             FaceBoundRef::FaceBound(i) => self.emit_face_bounds(i),
             FaceBoundRef::FaceOuterBound(i) => self.emit_face_outer_bounds(i),
             FaceBoundRef::Complex(i) => self.emit_complex(i),
+        }
+    }
+
+    fn emit_ref_face_or_surface(&mut self, r: FaceOrSurfaceRef) -> u64 {
+        match r {
+            FaceOrSurfaceRef::AdvancedFace(i) => self.emit_advanced_faces(i),
+            FaceOrSurfaceRef::BSplineSurface(i) => self.emit_b_spline_surfaces(i),
+            FaceOrSurfaceRef::BSplineSurfaceWithKnots(i) => {
+                self.emit_b_spline_surface_with_knotss(i)
+            }
+            FaceOrSurfaceRef::BezierSurface(i) => self.emit_bezier_surfaces(i),
+            FaceOrSurfaceRef::BoundedSurface(i) => self.emit_bounded_surfaces(i),
+            FaceOrSurfaceRef::ConicalSurface(i) => self.emit_conical_surfaces(i),
+            FaceOrSurfaceRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
+            FaceOrSurfaceRef::ElementarySurface(i) => self.emit_elementary_surfaces(i),
+            FaceOrSurfaceRef::FaceSurface(i) => self.emit_face_surfaces(i),
+            FaceOrSurfaceRef::OffsetSurface(i) => self.emit_offset_surfaces(i),
+            FaceOrSurfaceRef::Plane(i) => self.emit_planes(i),
+            FaceOrSurfaceRef::QuasiUniformSurface(i) => self.emit_quasi_uniform_surfaces(i),
+            FaceOrSurfaceRef::RationalBSplineSurface(i) => self.emit_rational_b_spline_surfaces(i),
+            FaceOrSurfaceRef::SphericalSurface(i) => self.emit_spherical_surfaces(i),
+            FaceOrSurfaceRef::Surface(i) => self.emit_surfaces(i),
+            FaceOrSurfaceRef::SurfaceOfLinearExtrusion(i) => {
+                self.emit_surface_of_linear_extrusions(i)
+            }
+            FaceOrSurfaceRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
+            FaceOrSurfaceRef::SweptSurface(i) => self.emit_swept_surfaces(i),
+            FaceOrSurfaceRef::ToroidalSurface(i) => self.emit_toroidal_surfaces(i),
+            FaceOrSurfaceRef::UniformSurface(i) => self.emit_uniform_surfaces(i),
+            FaceOrSurfaceRef::Complex(i) => self.emit_complex(i),
         }
     }
 
@@ -8863,9 +9069,13 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::CartesianPoint(i) => self.emit_cartesian_points(i),
             RepresentationItemRef::Circle(i) => self.emit_circles(i),
             RepresentationItemRef::ClosedShell(i) => self.emit_closed_shells(i),
+            RepresentationItemRef::ComplexTriangulatedFace(i) => {
+                self.emit_complex_triangulated_faces(i)
+            }
             RepresentationItemRef::Conic(i) => self.emit_conics(i),
             RepresentationItemRef::ConicalSurface(i) => self.emit_conical_surfaces(i),
             RepresentationItemRef::ConnectedFaceSet(i) => self.emit_connected_face_sets(i),
+            RepresentationItemRef::CoordinatesList(i) => self.emit_coordinates_lists(i),
             RepresentationItemRef::Curve(i) => self.emit_curves(i),
             RepresentationItemRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
             RepresentationItemRef::DefinedSymbol(i) => self.emit_defined_symbols(i),
@@ -8945,6 +9155,11 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
             RepresentationItemRef::SweptSurface(i) => self.emit_swept_surfaces(i),
             RepresentationItemRef::SymbolTarget(i) => self.emit_symbol_targets(i),
+            RepresentationItemRef::TessellatedFace(i) => self.emit_tessellated_faces(i),
+            RepresentationItemRef::TessellatedItem(i) => self.emit_tessellated_items(i),
+            RepresentationItemRef::TessellatedStructuredItem(i) => {
+                self.emit_tessellated_structured_items(i)
+            }
             RepresentationItemRef::TopologicalRepresentationItem(i) => {
                 self.emit_topological_representation_items(i)
             }
@@ -9161,9 +9376,13 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::CartesianPoint(i) => self.emit_cartesian_points(i),
             StyledItemTargetRef::Circle(i) => self.emit_circles(i),
             StyledItemTargetRef::ClosedShell(i) => self.emit_closed_shells(i),
+            StyledItemTargetRef::ComplexTriangulatedFace(i) => {
+                self.emit_complex_triangulated_faces(i)
+            }
             StyledItemTargetRef::Conic(i) => self.emit_conics(i),
             StyledItemTargetRef::ConicalSurface(i) => self.emit_conical_surfaces(i),
             StyledItemTargetRef::ConnectedFaceSet(i) => self.emit_connected_face_sets(i),
+            StyledItemTargetRef::CoordinatesList(i) => self.emit_coordinates_lists(i),
             StyledItemTargetRef::Curve(i) => self.emit_curves(i),
             StyledItemTargetRef::CylindricalSurface(i) => self.emit_cylindrical_surfaces(i),
             StyledItemTargetRef::DefinedSymbol(i) => self.emit_defined_symbols(i),
@@ -9253,6 +9472,11 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::SurfaceOfRevolution(i) => self.emit_surface_of_revolutions(i),
             StyledItemTargetRef::SweptSurface(i) => self.emit_swept_surfaces(i),
             StyledItemTargetRef::SymbolTarget(i) => self.emit_symbol_targets(i),
+            StyledItemTargetRef::TessellatedFace(i) => self.emit_tessellated_faces(i),
+            StyledItemTargetRef::TessellatedItem(i) => self.emit_tessellated_items(i),
+            StyledItemTargetRef::TessellatedStructuredItem(i) => {
+                self.emit_tessellated_structured_items(i)
+            }
             StyledItemTargetRef::TopologicalRepresentationItem(i) => {
                 self.emit_topological_representation_items(i)
             }
@@ -11398,6 +11622,8 @@ impl<'a> Writer<'a> {
                     ];
                     format!("SYMBOL_TARGET({})", a.join(","))
                 }
+                UnitPart::TessellatedItem => "TESSELLATED_ITEM()".to_string(),
+                UnitPart::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM()".to_string(),
                 UnitPart::TextStyle {
                     name,
                     character_appearance,
@@ -11644,6 +11870,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.common_datums.items.len() {
             self.emit_common_datums(CommonDatumId(i));
         }
+        for i in 0..self.model.complex_triangulated_faces.items.len() {
+            self.emit_complex_triangulated_faces(ComplexTriangulatedFaceId(i));
+        }
         for i in 0..self.model.composite_shape_aspects.items.len() {
             self.emit_composite_shape_aspects(CompositeShapeAspectId(i));
         }
@@ -11667,6 +11896,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.coordinated_universal_time_offsets.items.len() {
             self.emit_coordinated_universal_time_offsets(CoordinatedUniversalTimeOffsetId(i));
+        }
+        for i in 0..self.model.coordinates_lists.items.len() {
+            self.emit_coordinates_lists(CoordinatesListId(i));
         }
         for i in 0..self.model.curves.items.len() {
             self.emit_curves(CurveId(i));
@@ -12334,6 +12566,15 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.symmetry_tolerances.items.len() {
             self.emit_symmetry_tolerances(SymmetryToleranceId(i));
+        }
+        for i in 0..self.model.tessellated_faces.items.len() {
+            self.emit_tessellated_faces(TessellatedFaceId(i));
+        }
+        for i in 0..self.model.tessellated_items.items.len() {
+            self.emit_tessellated_items(TessellatedItemId(i));
+        }
+        for i in 0..self.model.tessellated_structured_items.items.len() {
+            self.emit_tessellated_structured_items(TessellatedStructuredItemId(i));
         }
         for i in 0..self.model.text_styles.items.len() {
             self.emit_text_styles(TextStyleId(i));

@@ -937,6 +937,8 @@ pub struct ColourSpecificationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CommonDatumId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ComplexTriangulatedFaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CompositeShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ConcentricityToleranceId(pub usize);
@@ -952,6 +954,8 @@ pub struct ContextDependentUnitId(pub usize);
 pub struct ConversionBasedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CoordinatedUniversalTimeOffsetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CoordinatesListId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1343,6 +1347,12 @@ pub struct SymbolTargetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SymmetryToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TessellatedFaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TessellatedItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TessellatedStructuredItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TextStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TextStyleForDefinedFontId(pub usize);
@@ -1436,6 +1446,7 @@ pub enum AnyId {
     ColourRgb(ColourRgbId),
     ColourSpecification(ColourSpecificationId),
     CommonDatum(CommonDatumId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     CompositeShapeAspect(CompositeShapeAspectId),
     ConcentricityTolerance(ConcentricityToleranceId),
     Conic(ConicId),
@@ -1444,6 +1455,7 @@ pub enum AnyId {
     ContextDependentUnit(ContextDependentUnitId),
     ConversionBasedUnit(ConversionBasedUnitId),
     CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
+    CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CurveStyle(CurveStyleId),
     CurveStyleFont(CurveStyleFontId),
@@ -1639,6 +1651,9 @@ pub enum AnyId {
     SymbolStyle(SymbolStyleId),
     SymbolTarget(SymbolTargetId),
     SymmetryTolerance(SymmetryToleranceId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
     TextStyle(TextStyleId),
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
     TextureStyleSpecification(TextureStyleSpecificationId),
@@ -1962,6 +1977,19 @@ impl CoordinatedUniversalTimeOffsetRef {
         match a {
             AnyId::CoordinatedUniversalTimeOffset(i) => Self::CoordinatedUniversalTimeOffset(i),
             other => panic!("CoordinatedUniversalTimeOffsetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CoordinatesListRef {
+    CoordinatesList(CoordinatesListId),
+}
+impl CoordinatesListRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
+            other => panic!("CoordinatesListRef ref -> {other:?}"),
         }
     }
 }
@@ -2481,6 +2509,59 @@ impl FaceBoundRef {
             AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("FaceBoundRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FaceOrSurfaceRef {
+    AdvancedFace(AdvancedFaceId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierSurface(BezierSurfaceId),
+    BoundedSurface(BoundedSurfaceId),
+    ConicalSurface(ConicalSurfaceId),
+    CylindricalSurface(CylindricalSurfaceId),
+    ElementarySurface(ElementarySurfaceId),
+    FaceSurface(FaceSurfaceId),
+    OffsetSurface(OffsetSurfaceId),
+    Plane(PlaneId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    SphericalSurface(SphericalSurfaceId),
+    Surface(SurfaceId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    ToroidalSurface(ToroidalSurfaceId),
+    UniformSurface(UniformSurfaceId),
+    Complex(ComplexUnitId),
+}
+impl FaceOrSurfaceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("FaceOrSurfaceRef ref -> {other:?}"),
         }
     }
 }
@@ -3302,9 +3383,11 @@ pub enum RepresentationItemRef {
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
     DefinedSymbol(DefinedSymbolId),
@@ -3362,6 +3445,9 @@ pub enum RepresentationItemRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -3402,9 +3488,11 @@ impl RepresentationItemRef {
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
@@ -3462,6 +3550,9 @@ impl RepresentationItemRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -3727,9 +3818,11 @@ pub enum StyledItemTargetRef {
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
     DefinedSymbol(DefinedSymbolId),
@@ -3791,6 +3884,9 @@ pub enum StyledItemTargetRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -3829,9 +3925,11 @@ impl StyledItemTargetRef {
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
@@ -3895,6 +3993,9 @@ impl StyledItemTargetRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -4612,6 +4713,18 @@ pub struct CommonDatum {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ComplexTriangulatedFace {
+    pub name: String,
+    pub coordinates: CoordinatesListRef,
+    pub pnmax: i64,
+    pub normals: Vec<Vec<f64>>,
+    pub geometric_link: Option<FaceOrSurfaceRef>,
+    pub pnindex: Vec<i64>,
+    pub triangle_strips: Vec<Vec<i64>>,
+    pub triangle_fans: Vec<Vec<i64>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompositeShapeAspect {
     pub name: String,
     pub description: Option<String>,
@@ -4666,6 +4779,13 @@ pub struct CoordinatedUniversalTimeOffset {
     pub hour_offset: i64,
     pub minute_offset: Option<i64>,
     pub sense: AheadOrBehind,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CoordinatesList {
+    pub name: String,
+    pub npoints: i64,
+    pub position_coords: Vec<Vec<f64>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6053,6 +6173,25 @@ pub struct SymmetryTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedFace {
+    pub name: String,
+    pub coordinates: CoordinatesListRef,
+    pub pnmax: i64,
+    pub normals: Vec<Vec<f64>>,
+    pub geometric_link: Option<FaceOrSurfaceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedItem {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedStructuredItem {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TextStyle {
     pub name: String,
     pub character_appearance: CharacterStyleSelectRef,
@@ -6775,6 +6914,8 @@ pub enum UnitPart {
         x_scale: f64,
         y_scale: f64,
     },
+    TessellatedItem,
+    TessellatedStructuredItem,
     TextStyle {
         name: String,
         character_appearance: CharacterStyleSelectRef,
@@ -6862,6 +7003,7 @@ pub struct Model {
     pub colour_rgbs: Arena<ColourRgb>,
     pub colour_specifications: Arena<ColourSpecification>,
     pub common_datums: Arena<CommonDatum>,
+    pub complex_triangulated_faces: Arena<ComplexTriangulatedFace>,
     pub composite_shape_aspects: Arena<CompositeShapeAspect>,
     pub concentricity_tolerances: Arena<ConcentricityTolerance>,
     pub conics: Arena<Conic>,
@@ -6870,6 +7012,7 @@ pub struct Model {
     pub context_dependent_units: Arena<ContextDependentUnit>,
     pub conversion_based_units: Arena<ConversionBasedUnit>,
     pub coordinated_universal_time_offsets: Arena<CoordinatedUniversalTimeOffset>,
+    pub coordinates_lists: Arena<CoordinatesList>,
     pub curves: Arena<Curve>,
     pub curve_styles: Arena<CurveStyle>,
     pub curve_style_fonts: Arena<CurveStyleFont>,
@@ -7068,6 +7211,9 @@ pub struct Model {
     pub symbol_styles: Arena<SymbolStyle>,
     pub symbol_targets: Arena<SymbolTarget>,
     pub symmetry_tolerances: Arena<SymmetryTolerance>,
+    pub tessellated_faces: Arena<TessellatedFace>,
+    pub tessellated_items: Arena<TessellatedItem>,
+    pub tessellated_structured_items: Arena<TessellatedStructuredItem>,
     pub text_styles: Arena<TextStyle>,
     pub text_style_for_defined_fonts: Arena<TextStyleForDefinedFont>,
     pub texture_style_specifications: Arena<TextureStyleSpecification>,

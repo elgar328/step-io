@@ -1213,3 +1213,9 @@ application = ["application_protocol_definition"]
 # handles the part-bag arm + simple read for any standalone appearance. escape 0.
 # (curve_style's font_select referrer is a separate presentation round.)
 draughting = ["draughting_pre_defined_curve_font"]
+# complex_triangulated_face: tessellated_* chain (scalar aggregates) on the
+# geometric_representation_item/representation_item closure; geometric_link =
+# face_or_surface SELECT(face_surface, surface), both already in the geometry/
+# topology backbone. Only the tessellated_* entities are newly generated. (merkle
+# entity_key is iterative now, so its deep ref chains no longer overflow.)
+tessellation = ["complex_triangulated_face"]
