@@ -84,6 +84,10 @@ fn read_string_select(a: &Attribute) -> StringSelectValue {
 }
 
 pub const SIMPLE_NAMES: &[&str] = &[
+    "ACTION",
+    "ACTION_ASSIGNMENT",
+    "ACTION_METHOD",
+    "ACTION_REQUEST_ASSIGNMENT",
     "ADDRESS",
     "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
@@ -96,6 +100,12 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "APPLICATION_CONTEXT",
     "APPLICATION_CONTEXT_ELEMENT",
     "APPLICATION_PROTOCOL_DEFINITION",
+    "APPROVAL",
+    "APPROVAL_ASSIGNMENT",
+    "APPROVAL_DATE_TIME",
+    "APPROVAL_PERSON_ORGANIZATION",
+    "APPROVAL_ROLE",
+    "APPROVAL_STATUS",
     "ASSEMBLY_COMPONENT_USAGE",
     "AXIS1_PLACEMENT",
     "AXIS2_PLACEMENT_2D",
@@ -113,6 +123,14 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "BREP_WITH_VOIDS",
     "CALENDAR_DATE",
     "CARTESIAN_POINT",
+    "CC_DESIGN_APPROVAL",
+    "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+    "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
+    "CC_DESIGN_SECURITY_CLASSIFICATION",
+    "CERTIFICATION",
+    "CERTIFICATION_TYPE",
+    "CHANGE",
+    "CHANGE_REQUEST",
     "CHARACTER_GLYPH_STYLE_OUTLINE",
     "CHARACTER_GLYPH_STYLE_STROKE",
     "CHARACTERIZED_OBJECT",
@@ -127,12 +145,17 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "COMPLEX_TRIANGULATED_FACE",
     "COMPOSITE_SHAPE_ASPECT",
     "CONCENTRICITY_TOLERANCE",
+    "CONFIGURATION_DESIGN",
+    "CONFIGURATION_EFFECTIVITY",
+    "CONFIGURATION_ITEM",
     "CONIC",
     "CONICAL_SURFACE",
     "CONNECTED_FACE_SET",
     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
     "CONTEXT_DEPENDENT_UNIT",
+    "CONTRACT",
+    "CONTRACT_TYPE",
     "CONVERSION_BASED_UNIT",
     "COORDINATED_UNIVERSAL_TIME_OFFSET",
     "COORDINATES_LIST",
@@ -146,6 +169,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CYLINDRICITY_TOLERANCE",
     "DATE",
     "DATE_AND_TIME",
+    "DATE_AND_TIME_ASSIGNMENT",
+    "DATE_TIME_ROLE",
     "DATUM",
     "DATUM_FEATURE",
     "DATUM_REFERENCE",
@@ -171,6 +196,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "EDGE",
     "EDGE_CURVE",
     "EDGE_LOOP",
+    "EFFECTIVITY",
     "ELEMENTARY_SURFACE",
     "ELLIPSE",
     "EXTERNAL_SOURCE",
@@ -253,6 +279,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PERSON",
     "PERSON_AND_ORGANIZATION",
     "PERSON_AND_ORGANIZATION_ADDRESS",
+    "PERSON_AND_ORGANIZATION_ASSIGNMENT",
     "PERSON_AND_ORGANIZATION_ROLE",
     "PERSONAL_ADDRESS",
     "PLACED_DATUM_TARGET_FEATURE",
@@ -280,9 +307,12 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRODUCT",
     "PRODUCT_CATEGORY",
     "PRODUCT_CATEGORY_RELATIONSHIP",
+    "PRODUCT_CONCEPT",
+    "PRODUCT_CONCEPT_CONTEXT",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
     "PRODUCT_DEFINITION_CONTEXT",
+    "PRODUCT_DEFINITION_EFFECTIVITY",
     "PRODUCT_DEFINITION_FORMATION",
     "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
     "PRODUCT_DEFINITION_OCCURRENCE",
@@ -308,6 +338,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
     "ROUNDNESS_TOLERANCE",
     "SEAM_CURVE",
+    "SECURITY_CLASSIFICATION",
+    "SECURITY_CLASSIFICATION_ASSIGNMENT",
+    "SECURITY_CLASSIFICATION_LEVEL",
     "SHAPE_ASPECT",
     "SHAPE_ASPECT_RELATIONSHIP",
     "SHAPE_DEFINITION_REPRESENTATION",
@@ -319,6 +352,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
     "SPHERICAL_SURFACE",
+    "START_REQUEST",
+    "START_WORK",
     "STRAIGHTNESS_TOLERANCE",
     "STYLED_ITEM",
     "SURFACE",
@@ -367,6 +402,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "UNIFORM_CURVE",
     "UNIFORM_SURFACE",
     "VECTOR",
+    "VERSIONED_ACTION_REQUEST",
     "VERTEX",
     "VERTEX_LOOP",
     "VERTEX_POINT",
@@ -374,6 +410,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "WIRE_SHELL",
 ];
 pub const COMPLEX_PART_NAMES: &[&str] = &[
+    "ACTION",
+    "ACTION_METHOD",
+    "ACTION_REQUEST_ASSIGNMENT",
     "ADDRESS",
     "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
@@ -382,6 +421,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
     "APPLICATION_CONTEXT_ELEMENT",
+    "APPROVAL_ASSIGNMENT",
     "ASSEMBLY_COMPONENT_USAGE",
     "B_SPLINE_CURVE",
     "B_SPLINE_CURVE_WITH_KNOTS",
@@ -394,6 +434,11 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "BOUNDED_SURFACE",
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
+    "CC_DESIGN_APPROVAL",
+    "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+    "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
+    "CC_DESIGN_SECURITY_CLASSIFICATION",
+    "CHANGE_REQUEST",
     "CHARACTER_GLYPH_STYLE_OUTLINE",
     "CHARACTER_GLYPH_STYLE_STROKE",
     "CHARACTERIZED_OBJECT",
@@ -403,6 +448,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "COLOUR_SPECIFICATION",
     "COMMON_DATUM",
     "COMPOSITE_SHAPE_ASPECT",
+    "CONFIGURATION_EFFECTIVITY",
+    "CONFIGURATION_ITEM",
     "CONNECTED_FACE_SET",
     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_UNIT",
@@ -415,6 +462,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "CYLINDRICITY_TOLERANCE",
     "DATE",
     "DATE_AND_TIME",
+    "DATE_AND_TIME_ASSIGNMENT",
     "DATUM",
     "DATUM_FEATURE",
     "DATUM_REFERENCE",
@@ -430,6 +478,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "EDGE",
     "EDGE_CURVE",
     "EDGE_LOOP",
+    "EFFECTIVITY",
     "ELEMENTARY_SURFACE",
     "EXTERNAL_SOURCE",
     "EXTERNALLY_DEFINED_CURVE_FONT",
@@ -493,6 +542,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PATH",
     "PCURVE",
     "PERSON_AND_ORGANIZATION_ADDRESS",
+    "PERSON_AND_ORGANIZATION_ASSIGNMENT",
     "PERSONAL_ADDRESS",
     "PLACED_DATUM_TARGET_FEATURE",
     "PLACEMENT",
@@ -515,9 +565,11 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRESENTATION_STYLE_ASSIGNMENT",
     "PRODUCT",
     "PRODUCT_CATEGORY",
+    "PRODUCT_CONCEPT",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
     "PRODUCT_DEFINITION_CONTEXT",
+    "PRODUCT_DEFINITION_EFFECTIVITY",
     "PRODUCT_DEFINITION_FORMATION",
     "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
     "PRODUCT_DEFINITION_OCCURRENCE",
@@ -541,6 +593,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
     "ROUNDNESS_TOLERANCE",
     "SEAM_CURVE",
+    "SECURITY_CLASSIFICATION_ASSIGNMENT",
     "SHAPE_ASPECT",
     "SHAPE_ASPECT_RELATIONSHIP",
     "SHAPE_DEFINITION_REPRESENTATION",
@@ -551,6 +604,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SI_UNIT",
     "SOLID_ANGLE_UNIT",
     "SOLID_MODEL",
+    "START_REQUEST",
     "STRAIGHTNESS_TOLERANCE",
     "STYLED_ITEM",
     "SURFACE",
@@ -613,6 +667,27 @@ pub struct RefSlot {
 
 pub fn ref_slots(n: &str) -> &'static [RefSlot] {
     match n {
+        "ACTION" => &[RefSlot {
+            idx: 2,
+            name: "chosen_method",
+            allowed: &["ACTION_METHOD"],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        "ACTION_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_action",
+            allowed: &["ACTION"],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        "ACTION_REQUEST_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_action_request",
+            allowed: &["VERSIONED_ACTION_REQUEST"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "ADVANCED_BREP_SHAPE_REPRESENTATION" => &[
             RefSlot {
                 idx: 1,
@@ -1146,6 +1221,59 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "APPROVAL" => &[RefSlot {
+            idx: 0,
+            name: "status",
+            allowed: &["APPROVAL_STATUS"],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        "APPROVAL_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_approval",
+            allowed: &["APPROVAL"],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        "APPROVAL_DATE_TIME" => &[
+            RefSlot {
+                idx: 0,
+                name: "date_time",
+                allowed: &["CALENDAR_DATE", "DATE", "DATE_AND_TIME", "LOCAL_TIME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "dated_approval",
+                allowed: &["APPROVAL"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
+        "APPROVAL_PERSON_ORGANIZATION" => &[
+            RefSlot {
+                idx: 0,
+                name: "person_organization",
+                allowed: &["ORGANIZATION", "PERSON", "PERSON_AND_ORGANIZATION"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "authorized_approval",
+                allowed: &["APPROVAL"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "role",
+                allowed: &["APPROVAL_ROLE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "ASSEMBLY_COMPONENT_USAGE" => &[
             RefSlot {
                 idx: 3,
@@ -1355,6 +1483,167 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "CC_DESIGN_APPROVAL" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_approval",
+                allowed: &["APPROVAL"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "CERTIFICATION",
+                    "CHANGE",
+                    "CHANGE_REQUEST",
+                    "CONFIGURATION_EFFECTIVITY",
+                    "CONFIGURATION_ITEM",
+                    "CONTRACT",
+                    "PRODUCT",
+                    "SECURITY_CLASSIFICATION",
+                    "START_REQUEST",
+                    "START_WORK",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_date_and_time",
+                allowed: &["DATE_AND_TIME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "role",
+                allowed: &["DATE_TIME_ROLE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "items",
+                allowed: &[
+                    "APPROVAL_PERSON_ORGANIZATION",
+                    "CERTIFICATION",
+                    "CHANGE",
+                    "CHANGE_REQUEST",
+                    "CONTRACT",
+                    "PRODUCT_DEFINITION",
+                    "SECURITY_CLASSIFICATION",
+                    "START_REQUEST",
+                    "START_WORK",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_person_and_organization",
+                allowed: &["PERSON_AND_ORGANIZATION"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "role",
+                allowed: &["PERSON_AND_ORGANIZATION_ROLE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "items",
+                allowed: &[
+                    "CHANGE",
+                    "CHANGE_REQUEST",
+                    "CONFIGURATION_ITEM",
+                    "CONTRACT",
+                    "PRODUCT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "SECURITY_CLASSIFICATION",
+                    "START_REQUEST",
+                    "START_WORK",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "CC_DESIGN_SECURITY_CLASSIFICATION" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_security_classification",
+                allowed: &["SECURITY_CLASSIFICATION"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "CERTIFICATION" => &[RefSlot {
+            idx: 2,
+            name: "kind",
+            allowed: &["CERTIFICATION_TYPE"],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        "CHANGE" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_action",
+                allowed: &["ACTION"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "CHANGE_REQUEST" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_action_request",
+                allowed: &["VERSIONED_ACTION_REQUEST"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
         "CHARACTER_GLYPH_STYLE_OUTLINE" => &[RefSlot {
             idx: 0,
             name: "outline_style",
@@ -1560,6 +1849,55 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "CONFIGURATION_DESIGN" => &[
+            RefSlot {
+                idx: 0,
+                name: "configuration",
+                allowed: &["CONFIGURATION_ITEM"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "design",
+                allowed: &[
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "CONFIGURATION_EFFECTIVITY" => &[
+            RefSlot {
+                idx: 1,
+                name: "usage",
+                allowed: &[
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_USAGE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "configuration",
+                allowed: &["CONFIGURATION_DESIGN"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
+        "CONFIGURATION_ITEM" => &[RefSlot {
+            idx: 3,
+            name: "item_concept",
+            allowed: &["PRODUCT_CONCEPT"],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "CONIC" => &[RefSlot {
             idx: 1,
             name: "position",
@@ -1868,6 +2206,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "CONTRACT" => &[RefSlot {
+            idx: 2,
+            name: "kind",
+            allowed: &["CONTRACT_TYPE"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "CONVERSION_BASED_UNIT" => &[
             RefSlot {
                 idx: 0,
@@ -2005,6 +2350,22 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 1,
                 name: "time_component",
                 allowed: &["LOCAL_TIME"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
+        "DATE_AND_TIME_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_date_and_time",
+                allowed: &["DATE_AND_TIME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "role",
+                allowed: &["DATE_TIME_ROLE"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -4520,6 +4881,22 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "PERSON_AND_ORGANIZATION_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_person_and_organization",
+                allowed: &["PERSON_AND_ORGANIZATION"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "role",
+                allowed: &["PERSON_AND_ORGANIZATION_ROLE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "PERSONAL_ADDRESS" => &[RefSlot {
             idx: 12,
             name: "people",
@@ -4939,6 +5316,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "PRODUCT_CONCEPT" => &[RefSlot {
+            idx: 3,
+            name: "market_context",
+            allowed: &["PRODUCT_CONCEPT_CONTEXT"],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        "PRODUCT_CONCEPT_CONTEXT" => &[RefSlot {
+            idx: 1,
+            name: "frame_of_reference",
+            allowed: &["APPLICATION_CONTEXT"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "PRODUCT_CONTEXT" => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
@@ -4970,6 +5361,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "frame_of_reference",
             allowed: &["APPLICATION_CONTEXT"],
             complex_ok: false,
+            is_vec: false,
+        }],
+        "PRODUCT_DEFINITION_EFFECTIVITY" => &[RefSlot {
+            idx: 1,
+            name: "usage",
+            allowed: &[
+                "ASSEMBLY_COMPONENT_USAGE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "PRODUCT_DEFINITION_RELATIONSHIP",
+                "PRODUCT_DEFINITION_USAGE",
+            ],
+            complex_ok: true,
             is_vec: false,
         }],
         "PRODUCT_DEFINITION_FORMATION" => &[RefSlot {
@@ -5726,6 +6129,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "SECURITY_CLASSIFICATION" => &[RefSlot {
+            idx: 2,
+            name: "security_level",
+            allowed: &["SECURITY_CLASSIFICATION_LEVEL"],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        "SECURITY_CLASSIFICATION_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_security_classification",
+            allowed: &["SECURITY_CLASSIFICATION"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "SHAPE_ASPECT" => &[RefSlot {
             idx: 2,
             name: "of_shape",
@@ -6149,6 +6566,44 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "START_REQUEST" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_action_request",
+                allowed: &["VERSIONED_ACTION_REQUEST"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "START_WORK" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_action",
+                allowed: &["ACTION"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
         "STRAIGHTNESS_TOLERANCE" => &[
             RefSlot {
                 idx: 2,
@@ -7114,10 +7569,31 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
 
 pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
     match n {
+        "ACTION" => &[RefSlot {
+            idx: 2,
+            name: "chosen_method",
+            allowed: &["ACTION_METHOD"],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        "ACTION_REQUEST_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_action_request",
+            allowed: &["VERSIONED_ACTION_REQUEST"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "APPLICATION_CONTEXT_ELEMENT" => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
             allowed: &["APPLICATION_CONTEXT"],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        "APPROVAL_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_approval",
+            allowed: &["APPROVAL"],
             complex_ok: false,
             is_vec: false,
         }],
@@ -7135,6 +7611,82 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "CC_DESIGN_APPROVAL" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "CERTIFICATION",
+                "CHANGE",
+                "CHANGE_REQUEST",
+                "CONFIGURATION_EFFECTIVITY",
+                "CONFIGURATION_ITEM",
+                "CONTRACT",
+                "PRODUCT",
+                "SECURITY_CLASSIFICATION",
+                "START_REQUEST",
+                "START_WORK",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "APPROVAL_PERSON_ORGANIZATION",
+                "CERTIFICATION",
+                "CHANGE",
+                "CHANGE_REQUEST",
+                "CONTRACT",
+                "PRODUCT_DEFINITION",
+                "SECURITY_CLASSIFICATION",
+                "START_REQUEST",
+                "START_WORK",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "CHANGE",
+                "CHANGE_REQUEST",
+                "CONFIGURATION_ITEM",
+                "CONTRACT",
+                "PRODUCT",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "SECURITY_CLASSIFICATION",
+                "START_REQUEST",
+                "START_WORK",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "CC_DESIGN_SECURITY_CLASSIFICATION" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "ASSEMBLY_COMPONENT_USAGE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "CHANGE_REQUEST" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "CHARACTER_GLYPH_STYLE_OUTLINE" => &[RefSlot {
             idx: 0,
             name: "outline_style",
@@ -7146,6 +7698,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 0,
             name: "stroke_style",
             allowed: &["CURVE_STYLE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        "CONFIGURATION_EFFECTIVITY" => &[RefSlot {
+            idx: 0,
+            name: "configuration",
+            allowed: &["CONFIGURATION_DESIGN"],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        "CONFIGURATION_ITEM" => &[RefSlot {
+            idx: 3,
+            name: "item_concept",
+            allowed: &["PRODUCT_CONCEPT"],
             complex_ok: true,
             is_vec: false,
         }],
@@ -7363,6 +7929,22 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 1,
                 name: "time_component",
                 allowed: &["LOCAL_TIME"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
+        "DATE_AND_TIME_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_date_and_time",
+                allowed: &["DATE_AND_TIME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "role",
+                allowed: &["DATE_TIME_ROLE"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -8273,6 +8855,22 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "PERSON_AND_ORGANIZATION_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_person_and_organization",
+                allowed: &["PERSON_AND_ORGANIZATION"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "role",
+                allowed: &["PERSON_AND_ORGANIZATION_ROLE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "PERSONAL_ADDRESS" => &[RefSlot {
             idx: 0,
             name: "people",
@@ -8353,6 +8951,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "PRODUCT_CONCEPT" => &[RefSlot {
+            idx: 3,
+            name: "market_context",
+            allowed: &["PRODUCT_CONCEPT_CONTEXT"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "PRODUCT_DEFINITION" => &[
             RefSlot {
                 idx: 2,
@@ -8372,6 +8977,18 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "PRODUCT_DEFINITION_EFFECTIVITY" => &[RefSlot {
+            idx: 0,
+            name: "usage",
+            allowed: &[
+                "ASSEMBLY_COMPONENT_USAGE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "PRODUCT_DEFINITION_RELATIONSHIP",
+                "PRODUCT_DEFINITION_USAGE",
+            ],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "PRODUCT_DEFINITION_FORMATION" => &[RefSlot {
             idx: 2,
             name: "of_product",
@@ -8878,6 +9495,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "SECURITY_CLASSIFICATION_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_security_classification",
+            allowed: &["SECURITY_CLASSIFICATION"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "SHAPE_ASPECT" => &[RefSlot {
             idx: 2,
             name: "of_shape",
@@ -8938,6 +9562,16 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ORIENTED_CLOSED_SHELL",
                 "VERTEX_SHELL",
                 "WIRE_SHELL",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "START_REQUEST" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
             ],
             complex_ok: true,
             is_vec: true,
@@ -9348,6 +9982,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
 pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut model = Model::default();
     let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();
+    let mut pending_actions: Vec<(ActionId, u64)> = Vec::new();
+    let mut pending_action_assignments: Vec<(ActionAssignmentId, u64)> = Vec::new();
+    let mut pending_action_request_assignments: Vec<(ActionRequestAssignmentId, u64)> = Vec::new();
     let mut pending_advanced_brep_shape_representations: Vec<(
         AdvancedBrepShapeRepresentationId,
         u64,
@@ -9365,6 +10002,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_application_protocol_definitions: Vec<(ApplicationProtocolDefinitionId, u64)> =
         Vec::new();
+    let mut pending_approvals: Vec<(ApprovalId, u64)> = Vec::new();
+    let mut pending_approval_assignments: Vec<(ApprovalAssignmentId, u64)> = Vec::new();
+    let mut pending_approval_date_times: Vec<(ApprovalDateTimeId, u64)> = Vec::new();
+    let mut pending_approval_person_organizations: Vec<(ApprovalPersonOrganizationId, u64)> =
+        Vec::new();
     let mut pending_assembly_component_usages: Vec<(AssemblyComponentUsageId, u64)> = Vec::new();
     let mut pending_axis1_placements: Vec<(Axis1PlacementId, u64)> = Vec::new();
     let mut pending_axis2_placement2ds: Vec<(Axis2Placement2dId, u64)> = Vec::new();
@@ -9379,6 +10021,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_bounded_pcurves: Vec<(BoundedPcurveId, u64)> = Vec::new();
     let mut pending_bounded_surface_curves: Vec<(BoundedSurfaceCurveId, u64)> = Vec::new();
     let mut pending_brep_with_voidss: Vec<(BrepWithVoidsId, u64)> = Vec::new();
+    let mut pending_cc_design_approvals: Vec<(CcDesignApprovalId, u64)> = Vec::new();
+    let mut pending_cc_design_date_and_time_assignments: Vec<(
+        CcDesignDateAndTimeAssignmentId,
+        u64,
+    )> = Vec::new();
+    let mut pending_cc_design_person_and_organization_assignments: Vec<(
+        CcDesignPersonAndOrganizationAssignmentId,
+        u64,
+    )> = Vec::new();
+    let mut pending_cc_design_security_classifications: Vec<(
+        CcDesignSecurityClassificationId,
+        u64,
+    )> = Vec::new();
+    let mut pending_certifications: Vec<(CertificationId, u64)> = Vec::new();
+    let mut pending_changes: Vec<(ChangeId, u64)> = Vec::new();
+    let mut pending_change_requests: Vec<(ChangeRequestId, u64)> = Vec::new();
     let mut pending_character_glyph_style_outlines: Vec<(CharacterGlyphStyleOutlineId, u64)> =
         Vec::new();
     let mut pending_character_glyph_style_strokes: Vec<(CharacterGlyphStyleStrokeId, u64)> =
@@ -9391,6 +10049,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_complex_triangulated_faces: Vec<(ComplexTriangulatedFaceId, u64)> = Vec::new();
     let mut pending_composite_shape_aspects: Vec<(CompositeShapeAspectId, u64)> = Vec::new();
     let mut pending_concentricity_tolerances: Vec<(ConcentricityToleranceId, u64)> = Vec::new();
+    let mut pending_configuration_designs: Vec<(ConfigurationDesignId, u64)> = Vec::new();
+    let mut pending_configuration_effectivitys: Vec<(ConfigurationEffectivityId, u64)> = Vec::new();
+    let mut pending_configuration_items: Vec<(ConfigurationItemId, u64)> = Vec::new();
     let mut pending_conics: Vec<(ConicId, u64)> = Vec::new();
     let mut pending_conical_surfaces: Vec<(ConicalSurfaceId, u64)> = Vec::new();
     let mut pending_connected_face_sets: Vec<(ConnectedFaceSetId, u64)> = Vec::new();
@@ -9403,6 +10064,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_context_dependent_units: Vec<(ContextDependentUnitId, u64)> = Vec::new();
+    let mut pending_contracts: Vec<(ContractId, u64)> = Vec::new();
     let mut pending_conversion_based_units: Vec<(ConversionBasedUnitId, u64)> = Vec::new();
     let mut pending_curve_styles: Vec<(CurveStyleId, u64)> = Vec::new();
     let mut pending_curve_style_fonts: Vec<(CurveStyleFontId, u64)> = Vec::new();
@@ -9412,6 +10074,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_cylindrical_surfaces: Vec<(CylindricalSurfaceId, u64)> = Vec::new();
     let mut pending_cylindricity_tolerances: Vec<(CylindricityToleranceId, u64)> = Vec::new();
     let mut pending_date_and_times: Vec<(DateAndTimeId, u64)> = Vec::new();
+    let mut pending_date_and_time_assignments: Vec<(DateAndTimeAssignmentId, u64)> = Vec::new();
     let mut pending_datums: Vec<(DatumId, u64)> = Vec::new();
     let mut pending_datum_features: Vec<(DatumFeatureId, u64)> = Vec::new();
     let mut pending_datum_references: Vec<(DatumReferenceId, u64)> = Vec::new();
@@ -9559,6 +10222,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_person_and_organizations: Vec<(PersonAndOrganizationId, u64)> = Vec::new();
     let mut pending_person_and_organization_addresss: Vec<(PersonAndOrganizationAddressId, u64)> =
         Vec::new();
+    let mut pending_person_and_organization_assignments: Vec<(
+        PersonAndOrganizationAssignmentId,
+        u64,
+    )> = Vec::new();
     let mut pending_personal_addresss: Vec<(PersonalAddressId, u64)> = Vec::new();
     let mut pending_placed_datum_target_features: Vec<(PlacedDatumTargetFeatureId, u64)> =
         Vec::new();
@@ -9581,9 +10248,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_products: Vec<(ProductId, u64)> = Vec::new();
     let mut pending_product_category_relationships: Vec<(ProductCategoryRelationshipId, u64)> =
         Vec::new();
+    let mut pending_product_concepts: Vec<(ProductConceptId, u64)> = Vec::new();
+    let mut pending_product_concept_contexts: Vec<(ProductConceptContextId, u64)> = Vec::new();
     let mut pending_product_contexts: Vec<(ProductContextId, u64)> = Vec::new();
     let mut pending_product_definitions: Vec<(ProductDefinitionId, u64)> = Vec::new();
     let mut pending_product_definition_contexts: Vec<(ProductDefinitionContextId, u64)> =
+        Vec::new();
+    let mut pending_product_definition_effectivitys: Vec<(ProductDefinitionEffectivityId, u64)> =
         Vec::new();
     let mut pending_product_definition_formations: Vec<(ProductDefinitionFormationId, u64)> =
         Vec::new();
@@ -9627,6 +10298,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_roundness_tolerances: Vec<(RoundnessToleranceId, u64)> = Vec::new();
     let mut pending_seam_curves: Vec<(SeamCurveId, u64)> = Vec::new();
+    let mut pending_security_classifications: Vec<(SecurityClassificationId, u64)> = Vec::new();
+    let mut pending_security_classification_assignments: Vec<(
+        SecurityClassificationAssignmentId,
+        u64,
+    )> = Vec::new();
     let mut pending_shape_aspects: Vec<(ShapeAspectId, u64)> = Vec::new();
     let mut pending_shape_aspect_relationships: Vec<(ShapeAspectRelationshipId, u64)> = Vec::new();
     let mut pending_shape_definition_representations: Vec<(ShapeDefinitionRepresentationId, u64)> =
@@ -9642,6 +10318,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_si_units: Vec<(SiUnitId, u64)> = Vec::new();
     let mut pending_solid_angle_units: Vec<(SolidAngleUnitId, u64)> = Vec::new();
     let mut pending_spherical_surfaces: Vec<(SphericalSurfaceId, u64)> = Vec::new();
+    let mut pending_start_requests: Vec<(StartRequestId, u64)> = Vec::new();
+    let mut pending_start_works: Vec<(StartWorkId, u64)> = Vec::new();
     let mut pending_straightness_tolerances: Vec<(StraightnessToleranceId, u64)> = Vec::new();
     let mut pending_styled_items: Vec<(StyledItemId, u64)> = Vec::new();
     let mut pending_surface_curves: Vec<(SurfaceCurveId, u64)> = Vec::new();
@@ -9701,6 +10379,58 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();
     for (&id, ent) in map {
         match ent {
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ACTION" => {
+                let v = Action {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
+                };
+                let aid = ActionId(model.actions.push(v));
+                idmap.insert(id, AnyId::Action(aid));
+                pending_actions.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ACTION_ASSIGNMENT" => {
+                let v = ActionAssignment {
+                    assigned_action: ActionRef::Action(ActionId(usize::MAX)),
+                };
+                let aid = ActionAssignmentId(model.action_assignments.push(v));
+                idmap.insert(id, AnyId::ActionAssignment(aid));
+                pending_action_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ACTION_METHOD" => {
+                let v = ActionMethod {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    consequence: as_str(&attributes[2]),
+                    purpose: as_str(&attributes[3]),
+                };
+                let aid = ActionMethodId(model.action_methods.push(v));
+                idmap.insert(id, AnyId::ActionMethod(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ACTION_REQUEST_ASSIGNMENT" => {
+                let v = ActionRequestAssignment {
+                    assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
+                        VersionedActionRequestId(usize::MAX),
+                    ),
+                };
+                let aid = ActionRequestAssignmentId(model.action_request_assignments.push(v));
+                idmap.insert(id, AnyId::ActionRequestAssignment(aid));
+                pending_action_request_assignments.push((aid, id));
+            }
             RawEntity::Simple {
                 name, attributes, ..
             } if name == "ADDRESS" => {
@@ -9912,6 +10642,70 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     ApplicationProtocolDefinitionId(model.application_protocol_definitions.push(v));
                 idmap.insert(id, AnyId::ApplicationProtocolDefinition(aid));
                 pending_application_protocol_definitions.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROVAL" => {
+                let v = Approval {
+                    status: ApprovalStatusRef::ApprovalStatus(ApprovalStatusId(usize::MAX)),
+                    level: as_str(&attributes[1]),
+                };
+                let aid = ApprovalId(model.approvals.push(v));
+                idmap.insert(id, AnyId::Approval(aid));
+                pending_approvals.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROVAL_ASSIGNMENT" => {
+                let v = ApprovalAssignment {
+                    assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+                };
+                let aid = ApprovalAssignmentId(model.approval_assignments.push(v));
+                idmap.insert(id, AnyId::ApprovalAssignment(aid));
+                pending_approval_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROVAL_DATE_TIME" => {
+                let v = ApprovalDateTime {
+                    date_time: DateTimeSelectRef::CalendarDate(CalendarDateId(usize::MAX)),
+                    dated_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+                };
+                let aid = ApprovalDateTimeId(model.approval_date_times.push(v));
+                idmap.insert(id, AnyId::ApprovalDateTime(aid));
+                pending_approval_date_times.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROVAL_PERSON_ORGANIZATION" => {
+                let v = ApprovalPersonOrganization {
+                    person_organization: PersonOrganizationSelectRef::Organization(OrganizationId(
+                        usize::MAX,
+                    )),
+                    authorized_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+                    role: ApprovalRoleRef::ApprovalRole(ApprovalRoleId(usize::MAX)),
+                };
+                let aid = ApprovalPersonOrganizationId(model.approval_person_organizations.push(v));
+                idmap.insert(id, AnyId::ApprovalPersonOrganization(aid));
+                pending_approval_person_organizations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROVAL_ROLE" => {
+                let v = ApprovalRole {
+                    role: as_str(&attributes[0]),
+                };
+                let aid = ApprovalRoleId(model.approval_roles.push(v));
+                idmap.insert(id, AnyId::ApprovalRole(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROVAL_STATUS" => {
+                let v = ApprovalStatus {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = ApprovalStatusId(model.approval_statuss.push(v));
+                idmap.insert(id, AnyId::ApprovalStatus(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -10222,6 +11016,111 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CC_DESIGN_APPROVAL" => {
+                let v = CcDesignApproval {
+                    assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+                    items: Vec::new(),
+                };
+                let aid = CcDesignApprovalId(model.cc_design_approvals.push(v));
+                idmap.insert(id, AnyId::CcDesignApproval(aid));
+                pending_cc_design_approvals.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => {
+                let v = CcDesignDateAndTimeAssignment {
+                    assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
+                    role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
+                    items: Vec::new(),
+                };
+                let aid = CcDesignDateAndTimeAssignmentId(
+                    model.cc_design_date_and_time_assignments.push(v),
+                );
+                idmap.insert(id, AnyId::CcDesignDateAndTimeAssignment(aid));
+                pending_cc_design_date_and_time_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => {
+                let v = CcDesignPersonAndOrganizationAssignment {
+                    assigned_person_and_organization:
+                        PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(
+                            usize::MAX,
+                        )),
+                    role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(
+                        PersonAndOrganizationRoleId(usize::MAX),
+                    ),
+                    items: Vec::new(),
+                };
+                let aid = CcDesignPersonAndOrganizationAssignmentId(
+                    model.cc_design_person_and_organization_assignments.push(v),
+                );
+                idmap.insert(id, AnyId::CcDesignPersonAndOrganizationAssignment(aid));
+                pending_cc_design_person_and_organization_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CC_DESIGN_SECURITY_CLASSIFICATION" => {
+                let v = CcDesignSecurityClassification {
+                    assigned_security_classification:
+                        SecurityClassificationRef::SecurityClassification(SecurityClassificationId(
+                            usize::MAX,
+                        )),
+                    items: Vec::new(),
+                };
+                let aid = CcDesignSecurityClassificationId(
+                    model.cc_design_security_classifications.push(v),
+                );
+                idmap.insert(id, AnyId::CcDesignSecurityClassification(aid));
+                pending_cc_design_security_classifications.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CERTIFICATION" => {
+                let v = Certification {
+                    name: as_str(&attributes[0]),
+                    purpose: as_str(&attributes[1]),
+                    kind: CertificationTypeRef::CertificationType(CertificationTypeId(usize::MAX)),
+                };
+                let aid = CertificationId(model.certifications.push(v));
+                idmap.insert(id, AnyId::Certification(aid));
+                pending_certifications.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CERTIFICATION_TYPE" => {
+                let v = CertificationType {
+                    description: as_str(&attributes[0]),
+                };
+                let aid = CertificationTypeId(model.certification_types.push(v));
+                idmap.insert(id, AnyId::CertificationType(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CHANGE" => {
+                let v = Change {
+                    assigned_action: ActionRef::Action(ActionId(usize::MAX)),
+                    items: Vec::new(),
+                };
+                let aid = ChangeId(model.changes.push(v));
+                idmap.insert(id, AnyId::Change(aid));
+                pending_changes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CHANGE_REQUEST" => {
+                let v = ChangeRequest {
+                    assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
+                        VersionedActionRequestId(usize::MAX),
+                    ),
+                    items: Vec::new(),
+                };
+                let aid = ChangeRequestId(model.change_requests.push(v));
+                idmap.insert(id, AnyId::ChangeRequest(aid));
+                pending_change_requests.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CHARACTER_GLYPH_STYLE_OUTLINE" => {
                 let v = CharacterGlyphStyleOutline {
                     outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
@@ -10454,6 +11353,57 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CONFIGURATION_DESIGN" => {
+                let v = ConfigurationDesign {
+                    configuration: ConfigurationItemRef::ConfigurationItem(ConfigurationItemId(
+                        usize::MAX,
+                    )),
+                    design: ConfigurationDesignItemRef::ProductDefinition(ProductDefinitionId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = ConfigurationDesignId(model.configuration_designs.push(v));
+                idmap.insert(id, AnyId::ConfigurationDesign(aid));
+                pending_configuration_designs.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONFIGURATION_EFFECTIVITY" => {
+                let v = ConfigurationEffectivity {
+                    id: as_str(&attributes[0]),
+                    usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                        AssemblyComponentUsageId(usize::MAX),
+                    ),
+                    configuration: ConfigurationDesignRef::ConfigurationDesign(
+                        ConfigurationDesignId(usize::MAX),
+                    ),
+                };
+                let aid = ConfigurationEffectivityId(model.configuration_effectivitys.push(v));
+                idmap.insert(id, AnyId::ConfigurationEffectivity(aid));
+                pending_configuration_effectivitys.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONFIGURATION_ITEM" => {
+                let v = ConfigurationItem {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    item_concept: ProductConceptRef::ProductConcept(ProductConceptId(usize::MAX)),
+                    purpose: match &attributes[4] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[4])),
+                    },
+                };
+                let aid = ConfigurationItemId(model.configuration_items.push(v));
+                idmap.insert(id, AnyId::ConfigurationItem(aid));
+                pending_configuration_items.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CONIC" => {
                 let v = Conic {
                     name: as_str(&attributes[0]),
@@ -10537,6 +11487,27 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ContextDependentUnitId(model.context_dependent_units.push(v));
                 idmap.insert(id, AnyId::ContextDependentUnit(aid));
                 pending_context_dependent_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONTRACT" => {
+                let v = Contract {
+                    name: as_str(&attributes[0]),
+                    purpose: as_str(&attributes[1]),
+                    kind: ContractTypeRef::ContractType(ContractTypeId(usize::MAX)),
+                };
+                let aid = ContractId(model.contracts.push(v));
+                idmap.insert(id, AnyId::Contract(aid));
+                pending_contracts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONTRACT_TYPE" => {
+                let v = ContractType {
+                    description: as_str(&attributes[0]),
+                };
+                let aid = ContractTypeId(model.contract_types.push(v));
+                idmap.insert(id, AnyId::ContractType(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -10719,6 +11690,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = DateAndTimeId(model.date_and_times.push(v));
                 idmap.insert(id, AnyId::DateAndTime(aid));
                 pending_date_and_times.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATE_AND_TIME_ASSIGNMENT" => {
+                let v = DateAndTimeAssignment {
+                    assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
+                    role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
+                };
+                let aid = DateAndTimeAssignmentId(model.date_and_time_assignments.push(v));
+                idmap.insert(id, AnyId::DateAndTimeAssignment(aid));
+                pending_date_and_time_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DATE_TIME_ROLE" => {
+                let v = DateTimeRole {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = DateTimeRoleId(model.date_time_roles.push(v));
+                idmap.insert(id, AnyId::DateTimeRole(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -11088,6 +12079,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = EdgeLoopId(model.edge_loops.push(v));
                 idmap.insert(id, AnyId::EdgeLoop(aid));
                 pending_edge_loops.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EFFECTIVITY" => {
+                let v = Effectivity {
+                    id: as_str(&attributes[0]),
+                };
+                let aid = EffectivityId(model.effectivitys.push(v));
+                idmap.insert(id, AnyId::Effectivity(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -12423,6 +13423,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PERSON_AND_ORGANIZATION_ASSIGNMENT" => {
+                let v = PersonAndOrganizationAssignment {
+                    assigned_person_and_organization:
+                        PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(
+                            usize::MAX,
+                        )),
+                    role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(
+                        PersonAndOrganizationRoleId(usize::MAX),
+                    ),
+                };
+                let aid = PersonAndOrganizationAssignmentId(
+                    model.person_and_organization_assignments.push(v),
+                );
+                idmap.insert(id, AnyId::PersonAndOrganizationAssignment(aid));
+                pending_person_and_organization_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PERSON_AND_ORGANIZATION_ROLE" => {
                 let v = PersonAndOrganizationRole {
                     name: as_str(&attributes[0]),
@@ -12792,6 +13810,38 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRODUCT_CONCEPT" => {
+                let v = ProductConcept {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                    market_context: ProductConceptContextRef::ProductConceptContext(
+                        ProductConceptContextId(usize::MAX),
+                    ),
+                };
+                let aid = ProductConceptId(model.product_concepts.push(v));
+                idmap.insert(id, AnyId::ProductConcept(aid));
+                pending_product_concepts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_CONCEPT_CONTEXT" => {
+                let v = ProductConceptContext {
+                    name: as_str(&attributes[0]),
+                    frame_of_reference: ApplicationContextRef::ApplicationContext(
+                        ApplicationContextId(usize::MAX),
+                    ),
+                    market_segment_type: as_str(&attributes[2]),
+                };
+                let aid = ProductConceptContextId(model.product_concept_contexts.push(v));
+                idmap.insert(id, AnyId::ProductConceptContext(aid));
+                pending_product_concept_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRODUCT_CONTEXT" => {
                 let v = ProductContext {
                     name: as_str(&attributes[0]),
@@ -12837,6 +13887,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ProductDefinitionContextId(model.product_definition_contexts.push(v));
                 idmap.insert(id, AnyId::ProductDefinitionContext(aid));
                 pending_product_definition_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_EFFECTIVITY" => {
+                let v = ProductDefinitionEffectivity {
+                    id: as_str(&attributes[0]),
+                    usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                        AssemblyComponentUsageId(usize::MAX),
+                    ),
+                };
+                let aid =
+                    ProductDefinitionEffectivityId(model.product_definition_effectivitys.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionEffectivity(aid));
+                pending_product_definition_effectivitys.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -13314,6 +14378,45 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "SECURITY_CLASSIFICATION" => {
+                let v = SecurityClassification {
+                    name: as_str(&attributes[0]),
+                    purpose: as_str(&attributes[1]),
+                    security_level: SecurityClassificationLevelRef::SecurityClassificationLevel(
+                        SecurityClassificationLevelId(usize::MAX),
+                    ),
+                };
+                let aid = SecurityClassificationId(model.security_classifications.push(v));
+                idmap.insert(id, AnyId::SecurityClassification(aid));
+                pending_security_classifications.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SECURITY_CLASSIFICATION_ASSIGNMENT" => {
+                let v = SecurityClassificationAssignment {
+                    assigned_security_classification:
+                        SecurityClassificationRef::SecurityClassification(SecurityClassificationId(
+                            usize::MAX,
+                        )),
+                };
+                let aid = SecurityClassificationAssignmentId(
+                    model.security_classification_assignments.push(v),
+                );
+                idmap.insert(id, AnyId::SecurityClassificationAssignment(aid));
+                pending_security_classification_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SECURITY_CLASSIFICATION_LEVEL" => {
+                let v = SecurityClassificationLevel {
+                    name: as_str(&attributes[0]),
+                };
+                let aid =
+                    SecurityClassificationLevelId(model.security_classification_levels.push(v));
+                idmap.insert(id, AnyId::SecurityClassificationLevel(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SHAPE_ASPECT" => {
                 let v = ShapeAspect {
                     name: as_str(&attributes[0]),
@@ -13476,6 +14579,30 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = SphericalSurfaceId(model.spherical_surfaces.push(v));
                 idmap.insert(id, AnyId::SphericalSurface(aid));
                 pending_spherical_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "START_REQUEST" => {
+                let v = StartRequest {
+                    assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
+                        VersionedActionRequestId(usize::MAX),
+                    ),
+                    items: Vec::new(),
+                };
+                let aid = StartRequestId(model.start_requests.push(v));
+                idmap.insert(id, AnyId::StartRequest(aid));
+                pending_start_requests.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "START_WORK" => {
+                let v = StartWork {
+                    assigned_action: ActionRef::Action(ActionId(usize::MAX)),
+                    items: Vec::new(),
+                };
+                let aid = StartWorkId(model.start_works.push(v));
+                idmap.insert(id, AnyId::StartWork(aid));
+                pending_start_works.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -14145,6 +15272,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "VERSIONED_ACTION_REQUEST" => {
+                let v = VersionedActionRequest {
+                    id: as_str(&attributes[0]),
+                    version: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    purpose: as_str(&attributes[2]),
+                    description: match &attributes[3] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[3])),
+                    },
+                };
+                let aid = VersionedActionRequestId(model.versioned_action_requests.push(v));
+                idmap.insert(id, AnyId::VersionedActionRequest(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "VERTEX" => {
                 let v = Vertex {
                     name: as_str(&attributes[0]),
@@ -14205,6 +15350,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             _ => {}
         }
     }
+    for (aid, raw) in pending_actions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_actions(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_action_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_action_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_action_request_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_action_request_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_advanced_brep_shape_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_advanced_brep_shape_representations(&mut model, aid, attributes, &idmap);
@@ -14253,6 +15413,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_application_protocol_definitions {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_application_protocol_definitions(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_approvals {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_approvals(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_approval_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_approval_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_approval_date_times {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_approval_date_times(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_approval_person_organizations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_approval_person_organizations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_assembly_component_usages {
@@ -14320,6 +15500,43 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_brep_with_voidss(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_cc_design_approvals {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_cc_design_approvals(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_cc_design_date_and_time_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_cc_design_date_and_time_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_cc_design_person_and_organization_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_cc_design_person_and_organization_assignments(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
+    for (aid, raw) in pending_cc_design_security_classifications {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_cc_design_security_classifications(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_certifications {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_certifications(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_changes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_changes(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_change_requests {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_change_requests(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_character_glyph_style_outlines {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_character_glyph_style_outlines(&mut model, aid, attributes, &idmap);
@@ -14370,6 +15587,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_concentricity_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_configuration_designs {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_configuration_designs(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_configuration_effectivitys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_configuration_effectivitys(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_configuration_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_configuration_items(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_conics {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_conics(&mut model, aid, attributes, &idmap);
@@ -14398,6 +15630,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_context_dependent_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_context_dependent_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_contracts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_contracts(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_conversion_based_units {
@@ -14438,6 +15675,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_date_and_times {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_date_and_times(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_date_and_time_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_date_and_time_assignments(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_datums {
@@ -14886,6 +16128,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_person_and_organization_addresss(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_person_and_organization_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_person_and_organization_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_personal_addresss {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_personal_addresss(&mut model, aid, attributes, &idmap);
@@ -14966,6 +16213,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_product_category_relationships(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_product_concepts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_concepts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_concept_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_concept_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_product_contexts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_contexts(&mut model, aid, attributes, &idmap);
@@ -14979,6 +16236,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_product_definition_contexts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_definition_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_effectivitys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_effectivitys(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_product_definition_formations {
@@ -15097,6 +16359,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_seam_curves(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_security_classifications {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_security_classifications(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_security_classification_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_security_classification_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_shape_aspects {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_shape_aspects(&mut model, aid, attributes, &idmap);
@@ -15145,6 +16417,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_spherical_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_spherical_surfaces(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_start_requests {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_start_requests(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_start_works {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_start_works(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_straightness_tolerances {
@@ -15370,6 +16652,41 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     (model, idmap)
 }
 
+fn resolve_actions(
+    model: &mut Model,
+    aid: ActionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let chosen_method_v =
+        ActionMethodRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.actions.items[aid.0];
+    it.chosen_method = chosen_method_v;
+}
+
+fn resolve_action_assignments(
+    model: &mut Model,
+    aid: ActionAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_action_v = ActionRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.action_assignments.items[aid.0];
+    it.assigned_action = assigned_action_v;
+}
+
+fn resolve_action_request_assignments(
+    model: &mut Model,
+    aid: ActionRequestAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_action_request_v =
+        VersionedActionRequestRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.action_request_assignments.items[aid.0];
+    it.assigned_action_request = assigned_action_request_v;
+}
+
 fn resolve_advanced_brep_shape_representations(
     model: &mut Model,
     aid: AdvancedBrepShapeRepresentationId,
@@ -15553,6 +16870,59 @@ fn resolve_application_protocol_definitions(
         ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
     let it = &mut model.application_protocol_definitions.items[aid.0];
     it.application = application_v;
+}
+
+fn resolve_approvals(
+    model: &mut Model,
+    aid: ApprovalId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let status_v = ApprovalStatusRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.approvals.items[aid.0];
+    it.status = status_v;
+}
+
+fn resolve_approval_assignments(
+    model: &mut Model,
+    aid: ApprovalAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_approval_v =
+        ApprovalRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.approval_assignments.items[aid.0];
+    it.assigned_approval = assigned_approval_v;
+}
+
+fn resolve_approval_date_times(
+    model: &mut Model,
+    aid: ApprovalDateTimeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let date_time_v = DateTimeSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let dated_approval_v = ApprovalRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.approval_date_times.items[aid.0];
+    it.date_time = date_time_v;
+    it.dated_approval = dated_approval_v;
+}
+
+fn resolve_approval_person_organizations(
+    model: &mut Model,
+    aid: ApprovalPersonOrganizationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let person_organization_v =
+        PersonOrganizationSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let authorized_approval_v =
+        ApprovalRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let role_v = ApprovalRoleRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.approval_person_organizations.items[aid.0];
+    it.person_organization = person_organization_v;
+    it.authorized_approval = authorized_approval_v;
+    it.role = role_v;
 }
 
 fn resolve_assembly_component_usages(
@@ -15803,6 +17173,141 @@ fn resolve_brep_with_voidss(
     it.voids = voids_v;
 }
 
+fn resolve_cc_design_approvals(
+    model: &mut Model,
+    aid: CcDesignApprovalId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_approval_v =
+        ApprovalRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ApprovedItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.cc_design_approvals.items[aid.0];
+    it.assigned_approval = assigned_approval_v;
+    it.items = items_v;
+}
+
+fn resolve_cc_design_date_and_time_assignments(
+    model: &mut Model,
+    aid: CcDesignDateAndTimeAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_date_and_time_v =
+        DateAndTimeRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let role_v = DateTimeRoleRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let items_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DateTimeItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.cc_design_date_and_time_assignments.items[aid.0];
+    it.assigned_date_and_time = assigned_date_and_time_v;
+    it.role = role_v;
+    it.items = items_v;
+}
+
+fn resolve_cc_design_person_and_organization_assignments(
+    model: &mut Model,
+    aid: CcDesignPersonAndOrganizationAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_person_and_organization_v =
+        PersonAndOrganizationRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let role_v =
+        PersonAndOrganizationRoleRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let items_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CcPersonOrganizationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.cc_design_person_and_organization_assignments.items[aid.0];
+    it.assigned_person_and_organization = assigned_person_and_organization_v;
+    it.role = role_v;
+    it.items = items_v;
+}
+
+fn resolve_cc_design_security_classifications(
+    model: &mut Model,
+    aid: CcDesignSecurityClassificationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_security_classification_v =
+        SecurityClassificationRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CcClassifiedItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.cc_design_security_classifications.items[aid.0];
+    it.assigned_security_classification = assigned_security_classification_v;
+    it.items = items_v;
+}
+
+fn resolve_certifications(
+    model: &mut Model,
+    aid: CertificationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let kind_v = CertificationTypeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.certifications.items[aid.0];
+    it.kind = kind_v;
+}
+
+fn resolve_changes(
+    model: &mut Model,
+    aid: ChangeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_action_v = ActionRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| WorkItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.changes.items[aid.0];
+    it.assigned_action = assigned_action_v;
+    it.items = items_v;
+}
+
+fn resolve_change_requests(
+    model: &mut Model,
+    aid: ChangeRequestId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_action_request_v =
+        VersionedActionRequestRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ChangeRequestItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.change_requests.items[aid.0];
+    it.assigned_action_request = assigned_action_request_v;
+    it.items = items_v;
+}
+
 fn resolve_character_glyph_style_outlines(
     model: &mut Model,
     aid: CharacterGlyphStyleOutlineId,
@@ -15977,6 +17482,48 @@ fn resolve_concentricity_tolerances(
     it.datum_system = datum_system_v;
 }
 
+fn resolve_configuration_designs(
+    model: &mut Model,
+    aid: ConfigurationDesignId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let configuration_v =
+        ConfigurationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let design_v =
+        ConfigurationDesignItemRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.configuration_designs.items[aid.0];
+    it.configuration = configuration_v;
+    it.design = design_v;
+}
+
+fn resolve_configuration_effectivitys(
+    model: &mut Model,
+    aid: ConfigurationEffectivityId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let usage_v =
+        ProductDefinitionRelationshipRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let configuration_v =
+        ConfigurationDesignRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.configuration_effectivitys.items[aid.0];
+    it.usage = usage_v;
+    it.configuration = configuration_v;
+}
+
+fn resolve_configuration_items(
+    model: &mut Model,
+    aid: ConfigurationItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let item_concept_v =
+        ProductConceptRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.configuration_items.items[aid.0];
+    it.item_concept = item_concept_v;
+}
+
 fn resolve_conics(
     model: &mut Model,
     aid: ConicId,
@@ -16077,6 +17624,17 @@ fn resolve_context_dependent_units(
         DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.context_dependent_units.items[aid.0];
     it.dimensions = dimensions_v;
+}
+
+fn resolve_contracts(
+    model: &mut Model,
+    aid: ContractId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let kind_v = ContractTypeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.contracts.items[aid.0];
+    it.kind = kind_v;
 }
 
 fn resolve_conversion_based_units(
@@ -16212,6 +17770,20 @@ fn resolve_date_and_times(
     let it = &mut model.date_and_times.items[aid.0];
     it.date_component = date_component_v;
     it.time_component = time_component_v;
+}
+
+fn resolve_date_and_time_assignments(
+    model: &mut Model,
+    aid: DateAndTimeAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_date_and_time_v =
+        DateAndTimeRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let role_v = DateTimeRoleRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.date_and_time_assignments.items[aid.0];
+    it.assigned_date_and_time = assigned_date_and_time_v;
+    it.role = role_v;
 }
 
 fn resolve_datums(
@@ -17701,6 +19273,21 @@ fn resolve_person_and_organization_addresss(
     it.people = people_v;
 }
 
+fn resolve_person_and_organization_assignments(
+    model: &mut Model,
+    aid: PersonAndOrganizationAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_person_and_organization_v =
+        PersonAndOrganizationRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let role_v =
+        PersonAndOrganizationRoleRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.person_and_organization_assignments.items[aid.0];
+    it.assigned_person_and_organization = assigned_person_and_organization_v;
+    it.role = role_v;
+}
+
 fn resolve_personal_addresss(
     model: &mut Model,
     aid: PersonalAddressId,
@@ -17974,6 +19561,30 @@ fn resolve_product_category_relationships(
     it.sub_category = sub_category_v;
 }
 
+fn resolve_product_concepts(
+    model: &mut Model,
+    aid: ProductConceptId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let market_context_v =
+        ProductConceptContextRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.product_concepts.items[aid.0];
+    it.market_context = market_context_v;
+}
+
+fn resolve_product_concept_contexts(
+    model: &mut Model,
+    aid: ProductConceptContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let frame_of_reference_v =
+        ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.product_concept_contexts.items[aid.0];
+    it.frame_of_reference = frame_of_reference_v;
+}
+
 fn resolve_product_contexts(
     model: &mut Model,
     aid: ProductContextId,
@@ -18011,6 +19622,18 @@ fn resolve_product_definition_contexts(
         ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.product_definition_contexts.items[aid.0];
     it.frame_of_reference = frame_of_reference_v;
+}
+
+fn resolve_product_definition_effectivitys(
+    model: &mut Model,
+    aid: ProductDefinitionEffectivityId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let usage_v =
+        ProductDefinitionRelationshipRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.product_definition_effectivitys.items[aid.0];
+    it.usage = usage_v;
 }
 
 fn resolve_product_definition_formations(
@@ -18393,6 +20016,30 @@ fn resolve_seam_curves(
     it.associated_geometry = associated_geometry_v;
 }
 
+fn resolve_security_classifications(
+    model: &mut Model,
+    aid: SecurityClassificationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let security_level_v =
+        SecurityClassificationLevelRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.security_classifications.items[aid.0];
+    it.security_level = security_level_v;
+}
+
+fn resolve_security_classification_assignments(
+    model: &mut Model,
+    aid: SecurityClassificationAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_security_classification_v =
+        SecurityClassificationRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.security_classification_assignments.items[aid.0];
+    it.assigned_security_classification = assigned_security_classification_v;
+}
+
 fn resolve_shape_aspects(
     model: &mut Model,
     aid: ShapeAspectId,
@@ -18539,6 +20186,45 @@ fn resolve_spherical_surfaces(
     let position_v = Axis2Placement3dRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.spherical_surfaces.items[aid.0];
     it.position = position_v;
+}
+
+fn resolve_start_requests(
+    model: &mut Model,
+    aid: StartRequestId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_action_request_v =
+        VersionedActionRequestRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| StartRequestItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.start_requests.items[aid.0];
+    it.assigned_action_request = assigned_action_request_v;
+    it.items = items_v;
+}
+
+fn resolve_start_works(
+    model: &mut Model,
+    aid: StartWorkId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_action_v = ActionRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| WorkItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.start_works.items[aid.0];
+    it.assigned_action = assigned_action_v;
+    it.items = items_v;
 }
 
 fn resolve_straightness_tolerances(
@@ -19226,6 +20912,28 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
     parts
         .iter()
         .map(|p| match p.name.as_str() {
+            "ACTION" => UnitPart::Action {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
+            },
+            "ACTION_METHOD" => UnitPart::ActionMethod {
+                name: as_str(&p.attributes[0]),
+                description: match &p.attributes[1] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[1])),
+                },
+                consequence: as_str(&p.attributes[2]),
+                purpose: as_str(&p.attributes[3]),
+            },
+            "ACTION_REQUEST_ASSIGNMENT" => UnitPart::ActionRequestAssignment {
+                assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
+                    VersionedActionRequestId(usize::MAX),
+                ),
+            },
             "ADDRESS" => UnitPart::Address {
                 internal_location: match &p.attributes[0] {
                     Attribute::Unset => None,
@@ -19287,6 +20995,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 frame_of_reference: ApplicationContextRef::ApplicationContext(
                     ApplicationContextId(usize::MAX),
                 ),
+            },
+            "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment {
+                assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
             },
             "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage {
                 reference_designator: match &p.attributes[0] {
@@ -19361,6 +21072,17 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
             "BOUNDED_SURFACE_CURVE" => UnitPart::BoundedSurfaceCurve,
             "BREP_WITH_VOIDS" => UnitPart::BrepWithVoids { voids: Vec::new() },
+            "CC_DESIGN_APPROVAL" => UnitPart::CcDesignApproval { items: Vec::new() },
+            "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => {
+                UnitPart::CcDesignDateAndTimeAssignment { items: Vec::new() }
+            }
+            "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => {
+                UnitPart::CcDesignPersonAndOrganizationAssignment { items: Vec::new() }
+            }
+            "CC_DESIGN_SECURITY_CLASSIFICATION" => {
+                UnitPart::CcDesignSecurityClassification { items: Vec::new() }
+            }
+            "CHANGE_REQUEST" => UnitPart::ChangeRequest { items: Vec::new() },
             "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline {
                 outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
             },
@@ -19386,6 +21108,24 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "COMMON_DATUM" => UnitPart::CommonDatum,
             "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
+            "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity {
+                configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(
+                    usize::MAX,
+                )),
+            },
+            "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem {
+                id: as_str(&p.attributes[0]),
+                name: as_str(&p.attributes[1]),
+                description: match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[2])),
+                },
+                item_concept: ProductConceptRef::ProductConcept(ProductConceptId(usize::MAX)),
+                purpose: match &p.attributes[4] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[4])),
+                },
+            },
             "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None },
             "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => {
                 UnitPart::ContextDependentOverRidingStyledItem {
@@ -19428,6 +21168,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "DATE_AND_TIME" => UnitPart::DateAndTime {
                 date_component: DateRef::CalendarDate(CalendarDateId(usize::MAX)),
                 time_component: LocalTimeRef::LocalTime(LocalTimeId(usize::MAX)),
+            },
+            "DATE_AND_TIME_ASSIGNMENT" => UnitPart::DateAndTimeAssignment {
+                assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
+                role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
             },
             "DATUM" => UnitPart::Datum {
                 identification: as_str(&p.attributes[0]),
@@ -19474,6 +21218,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
             },
             "EDGE_LOOP" => UnitPart::EdgeLoop,
+            "EFFECTIVITY" => UnitPart::Effectivity {
+                id: as_str(&p.attributes[0]),
+            },
             "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface {
                 position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
             },
@@ -19710,6 +21457,14 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 ),
             },
             "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
+            "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment {
+                assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
+                    PersonAndOrganizationId(usize::MAX),
+                ),
+                role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(
+                    PersonAndOrganizationRoleId(usize::MAX),
+                ),
+            },
             "PERSONAL_ADDRESS" => UnitPart::PersonalAddress {
                 people: Vec::new(),
                 description: match &p.attributes[1] {
@@ -19770,6 +21525,17 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     _ => Some(as_str(&p.attributes[1])),
                 },
             },
+            "PRODUCT_CONCEPT" => UnitPart::ProductConcept {
+                id: as_str(&p.attributes[0]),
+                name: as_str(&p.attributes[1]),
+                description: match &p.attributes[2] {
+                    Attribute::Unset => None,
+                    _ => Some(as_str(&p.attributes[2])),
+                },
+                market_context: ProductConceptContextRef::ProductConceptContext(
+                    ProductConceptContextId(usize::MAX),
+                ),
+            },
             "PRODUCT_CONTEXT" => UnitPart::ProductContext {
                 discipline_type: as_str(&p.attributes[0]),
             },
@@ -19788,6 +21554,11 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext {
                 life_cycle_stage: as_str(&p.attributes[0]),
+            },
+            "PRODUCT_DEFINITION_EFFECTIVITY" => UnitPart::ProductDefinitionEffectivity {
+                usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                    AssemblyComponentUsageId(usize::MAX),
+                ),
             },
             "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation {
                 id: as_str(&p.attributes[0]),
@@ -19939,6 +21710,11 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             }
             "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
             "SEAM_CURVE" => UnitPart::SeamCurve,
+            "SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::SecurityClassificationAssignment {
+                assigned_security_classification: SecurityClassificationRef::SecurityClassification(
+                    SecurityClassificationId(usize::MAX),
+                ),
+            },
             "SHAPE_ASPECT" => UnitPart::ShapeAspect {
                 name: as_str(&p.attributes[0]),
                 description: match &p.attributes[1] {
@@ -19981,6 +21757,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
             "SOLID_MODEL" => UnitPart::SolidModel,
+            "START_REQUEST" => UnitPart::StartRequest { items: Vec::new() },
             "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
             "STYLED_ITEM" => UnitPart::StyledItem {
                 styles: Vec::new(),
@@ -20123,12 +21900,31 @@ fn resolve_complex(
     let bag = &mut model.complex_units.items[aid.0];
     for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {
         match slot {
+            UnitPart::Action { chosen_method, .. } => {
+                *chosen_method = ActionMethodRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+            }
+            UnitPart::ActionRequestAssignment {
+                assigned_action_request,
+                ..
+            } => {
+                *assigned_action_request = VersionedActionRequestRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
             UnitPart::ApplicationContextElement {
                 frame_of_reference, ..
             } => {
                 *frame_of_reference = ApplicationContextRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
+            }
+            UnitPart::ApprovalAssignment {
+                assigned_approval, ..
+            } => {
+                *assigned_approval =
+                    ApprovalRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
             }
             UnitPart::BSplineCurve {
                 control_points_list,
@@ -20179,6 +21975,59 @@ fn resolve_complex(
                     other => panic!("vec ref: {other:?}"),
                 };
             }
+            UnitPart::CcDesignApproval { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| ApprovedItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::CcDesignDateAndTimeAssignment { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| DateTimeItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            CcPersonOrganizationItemRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::CcDesignSecurityClassification { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            CcClassifiedItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::ChangeRequest { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            ChangeRequestItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
             UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => {
                 *outline_style =
                     CurveStyleRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
@@ -20186,6 +22035,16 @@ fn resolve_complex(
             UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => {
                 *stroke_style =
                     CurveStyleRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::ConfigurationEffectivity { configuration, .. } => {
+                *configuration = ConfigurationDesignRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::ConfigurationItem { item_concept, .. } => {
+                *item_concept = ProductConceptRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
             }
             UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
                 *cfs_faces = match &p.attributes[0] {
@@ -20285,6 +22144,18 @@ fn resolve_complex(
                     DateRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
                 *time_component =
                     LocalTimeRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
+            }
+            UnitPart::DateAndTimeAssignment {
+                assigned_date_and_time,
+                role,
+                ..
+            } => {
+                *assigned_date_and_time = DateAndTimeRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *role = DateTimeRoleRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
             }
             UnitPart::DatumReference {
                 referenced_datum, ..
@@ -20688,6 +22559,18 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
             }
+            UnitPart::PersonAndOrganizationAssignment {
+                assigned_person_and_organization,
+                role,
+                ..
+            } => {
+                *assigned_person_and_organization = PersonAndOrganizationRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *role = PersonAndOrganizationRoleRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::PersonalAddress { people, .. } => {
                 *people = match &p.attributes[0] {
                     Attribute::List(l) => l
@@ -20799,6 +22682,11 @@ fn resolve_complex(
                     other => panic!("vec ref: {other:?}"),
                 };
             }
+            UnitPart::ProductConcept { market_context, .. } => {
+                *market_context = ProductConceptContextRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
             UnitPart::ProductDefinition {
                 formation,
                 frame_of_reference,
@@ -20809,6 +22697,11 @@ fn resolve_complex(
                 );
                 *frame_of_reference = ProductDefinitionContextRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
+            UnitPart::ProductDefinitionEffectivity { usage, .. } => {
+                *usage = ProductDefinitionRelationshipRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
             }
             UnitPart::ProductDefinitionFormation { of_product, .. } => {
@@ -20951,6 +22844,14 @@ fn resolve_complex(
                     ),
                 };
             }
+            UnitPart::SecurityClassificationAssignment {
+                assigned_security_classification,
+                ..
+            } => {
+                *assigned_security_classification = SecurityClassificationRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
             UnitPart::ShapeAspect { of_shape, .. } => {
                 *of_shape = ProductDefinitionShapeRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
@@ -20973,6 +22874,17 @@ fn resolve_complex(
                     Attribute::List(l) => l
                         .iter()
                         .map(|e| ShellRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::StartRequest { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            StartRequestItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };

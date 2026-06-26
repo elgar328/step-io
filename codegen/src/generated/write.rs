@@ -57,6 +57,10 @@ pub struct Writer<'a> {
     model: &'a Model,
     next: u64,
     out: String,
+    action_ids: Vec<Option<u64>>,
+    action_assignment_ids: Vec<Option<u64>>,
+    action_method_ids: Vec<Option<u64>>,
+    action_request_assignment_ids: Vec<Option<u64>>,
     addre_ids: Vec<Option<u64>>,
     advanced_brep_shape_representation_ids: Vec<Option<u64>>,
     advanced_face_ids: Vec<Option<u64>>,
@@ -69,6 +73,12 @@ pub struct Writer<'a> {
     application_context_ids: Vec<Option<u64>>,
     application_context_element_ids: Vec<Option<u64>>,
     application_protocol_definition_ids: Vec<Option<u64>>,
+    approval_ids: Vec<Option<u64>>,
+    approval_assignment_ids: Vec<Option<u64>>,
+    approval_date_time_ids: Vec<Option<u64>>,
+    approval_person_organization_ids: Vec<Option<u64>>,
+    approval_role_ids: Vec<Option<u64>>,
+    approval_statu_ids: Vec<Option<u64>>,
     assembly_component_usage_ids: Vec<Option<u64>>,
     axis1_placement_ids: Vec<Option<u64>>,
     axis2_placement2d_ids: Vec<Option<u64>>,
@@ -86,6 +96,14 @@ pub struct Writer<'a> {
     brep_with_void_ids: Vec<Option<u64>>,
     calendar_date_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
+    cc_design_approval_ids: Vec<Option<u64>>,
+    cc_design_date_and_time_assignment_ids: Vec<Option<u64>>,
+    cc_design_person_and_organization_assignment_ids: Vec<Option<u64>>,
+    cc_design_security_classification_ids: Vec<Option<u64>>,
+    certification_ids: Vec<Option<u64>>,
+    certification_type_ids: Vec<Option<u64>>,
+    change_ids: Vec<Option<u64>>,
+    change_request_ids: Vec<Option<u64>>,
     character_glyph_style_outline_ids: Vec<Option<u64>>,
     character_glyph_style_stroke_ids: Vec<Option<u64>>,
     characterized_object_ids: Vec<Option<u64>>,
@@ -100,12 +118,17 @@ pub struct Writer<'a> {
     complex_triangulated_face_ids: Vec<Option<u64>>,
     composite_shape_aspect_ids: Vec<Option<u64>>,
     concentricity_tolerance_ids: Vec<Option<u64>>,
+    configuration_design_ids: Vec<Option<u64>>,
+    configuration_effectivity_ids: Vec<Option<u64>>,
+    configuration_item_ids: Vec<Option<u64>>,
     conic_ids: Vec<Option<u64>>,
     conical_surface_ids: Vec<Option<u64>>,
     connected_face_set_ids: Vec<Option<u64>>,
     context_dependent_over_riding_styled_item_ids: Vec<Option<u64>>,
     context_dependent_shape_representation_ids: Vec<Option<u64>>,
     context_dependent_unit_ids: Vec<Option<u64>>,
+    contract_ids: Vec<Option<u64>>,
+    contract_type_ids: Vec<Option<u64>>,
     conversion_based_unit_ids: Vec<Option<u64>>,
     coordinated_universal_time_offset_ids: Vec<Option<u64>>,
     coordinates_list_ids: Vec<Option<u64>>,
@@ -119,6 +142,8 @@ pub struct Writer<'a> {
     cylindricity_tolerance_ids: Vec<Option<u64>>,
     date_ids: Vec<Option<u64>>,
     date_and_time_ids: Vec<Option<u64>>,
+    date_and_time_assignment_ids: Vec<Option<u64>>,
+    date_time_role_ids: Vec<Option<u64>>,
     datum_ids: Vec<Option<u64>>,
     datum_feature_ids: Vec<Option<u64>>,
     datum_reference_ids: Vec<Option<u64>>,
@@ -144,6 +169,7 @@ pub struct Writer<'a> {
     edge_ids: Vec<Option<u64>>,
     edge_curve_ids: Vec<Option<u64>>,
     edge_loop_ids: Vec<Option<u64>>,
+    effectivity_ids: Vec<Option<u64>>,
     elementary_surface_ids: Vec<Option<u64>>,
     ellipse_ids: Vec<Option<u64>>,
     external_source_ids: Vec<Option<u64>>,
@@ -226,6 +252,7 @@ pub struct Writer<'a> {
     person_ids: Vec<Option<u64>>,
     person_and_organization_ids: Vec<Option<u64>>,
     person_and_organization_addre_ids: Vec<Option<u64>>,
+    person_and_organization_assignment_ids: Vec<Option<u64>>,
     person_and_organization_role_ids: Vec<Option<u64>>,
     personal_addre_ids: Vec<Option<u64>>,
     placed_datum_target_feature_ids: Vec<Option<u64>>,
@@ -253,9 +280,12 @@ pub struct Writer<'a> {
     product_ids: Vec<Option<u64>>,
     product_category_ids: Vec<Option<u64>>,
     product_category_relationship_ids: Vec<Option<u64>>,
+    product_concept_ids: Vec<Option<u64>>,
+    product_concept_context_ids: Vec<Option<u64>>,
     product_context_ids: Vec<Option<u64>>,
     product_definition_ids: Vec<Option<u64>>,
     product_definition_context_ids: Vec<Option<u64>>,
+    product_definition_effectivity_ids: Vec<Option<u64>>,
     product_definition_formation_ids: Vec<Option<u64>>,
     product_definition_formation_with_specified_source_ids: Vec<Option<u64>>,
     product_definition_occurrence_ids: Vec<Option<u64>>,
@@ -281,6 +311,9 @@ pub struct Writer<'a> {
     representation_relationship_with_transformation_ids: Vec<Option<u64>>,
     roundness_tolerance_ids: Vec<Option<u64>>,
     seam_curve_ids: Vec<Option<u64>>,
+    security_classification_ids: Vec<Option<u64>>,
+    security_classification_assignment_ids: Vec<Option<u64>>,
+    security_classification_level_ids: Vec<Option<u64>>,
     shape_aspect_ids: Vec<Option<u64>>,
     shape_aspect_relationship_ids: Vec<Option<u64>>,
     shape_definition_representation_ids: Vec<Option<u64>>,
@@ -292,6 +325,8 @@ pub struct Writer<'a> {
     solid_angle_unit_ids: Vec<Option<u64>>,
     solid_model_ids: Vec<Option<u64>>,
     spherical_surface_ids: Vec<Option<u64>>,
+    start_request_ids: Vec<Option<u64>>,
+    start_work_ids: Vec<Option<u64>>,
     straightness_tolerance_ids: Vec<Option<u64>>,
     styled_item_ids: Vec<Option<u64>>,
     surface_ids: Vec<Option<u64>>,
@@ -340,6 +375,7 @@ pub struct Writer<'a> {
     uniform_curve_ids: Vec<Option<u64>>,
     uniform_surface_ids: Vec<Option<u64>>,
     vector_ids: Vec<Option<u64>>,
+    versioned_action_request_ids: Vec<Option<u64>>,
     vertex_ids: Vec<Option<u64>>,
     vertex_loop_ids: Vec<Option<u64>>,
     vertex_point_ids: Vec<Option<u64>>,
@@ -354,6 +390,10 @@ impl<'a> Writer<'a> {
             model,
             next: 1,
             out: String::new(),
+            action_ids: vec![None; model.actions.items.len()],
+            action_assignment_ids: vec![None; model.action_assignments.items.len()],
+            action_method_ids: vec![None; model.action_methods.items.len()],
+            action_request_assignment_ids: vec![None; model.action_request_assignments.items.len()],
             addre_ids: vec![None; model.addresss.items.len()],
             advanced_brep_shape_representation_ids: vec![
                 None;
@@ -387,6 +427,15 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            approval_ids: vec![None; model.approvals.items.len()],
+            approval_assignment_ids: vec![None; model.approval_assignments.items.len()],
+            approval_date_time_ids: vec![None; model.approval_date_times.items.len()],
+            approval_person_organization_ids: vec![
+                None;
+                model.approval_person_organizations.items.len()
+            ],
+            approval_role_ids: vec![None; model.approval_roles.items.len()],
+            approval_statu_ids: vec![None; model.approval_statuss.items.len()],
             assembly_component_usage_ids: vec![None; model.assembly_component_usages.items.len()],
             axis1_placement_ids: vec![None; model.axis1_placements.items.len()],
             axis2_placement2d_ids: vec![None; model.axis2_placement2ds.items.len()],
@@ -407,6 +456,32 @@ impl<'a> Writer<'a> {
             brep_with_void_ids: vec![None; model.brep_with_voidss.items.len()],
             calendar_date_ids: vec![None; model.calendar_dates.items.len()],
             cartesian_point_ids: vec![None; model.cartesian_points.items.len()],
+            cc_design_approval_ids: vec![None; model.cc_design_approvals.items.len()],
+            cc_design_date_and_time_assignment_ids: vec![
+                None;
+                model
+                    .cc_design_date_and_time_assignments
+                    .items
+                    .len()
+            ],
+            cc_design_person_and_organization_assignment_ids: vec![
+                None;
+                model
+                    .cc_design_person_and_organization_assignments
+                    .items
+                    .len()
+            ],
+            cc_design_security_classification_ids: vec![
+                None;
+                model
+                    .cc_design_security_classifications
+                    .items
+                    .len()
+            ],
+            certification_ids: vec![None; model.certifications.items.len()],
+            certification_type_ids: vec![None; model.certification_types.items.len()],
+            change_ids: vec![None; model.changes.items.len()],
+            change_request_ids: vec![None; model.change_requests.items.len()],
             character_glyph_style_outline_ids: vec![
                 None;
                 model.character_glyph_style_outlines.items.len()
@@ -427,6 +502,9 @@ impl<'a> Writer<'a> {
             complex_triangulated_face_ids: vec![None; model.complex_triangulated_faces.items.len()],
             composite_shape_aspect_ids: vec![None; model.composite_shape_aspects.items.len()],
             concentricity_tolerance_ids: vec![None; model.concentricity_tolerances.items.len()],
+            configuration_design_ids: vec![None; model.configuration_designs.items.len()],
+            configuration_effectivity_ids: vec![None; model.configuration_effectivitys.items.len()],
+            configuration_item_ids: vec![None; model.configuration_items.items.len()],
             conic_ids: vec![None; model.conics.items.len()],
             conical_surface_ids: vec![None; model.conical_surfaces.items.len()],
             connected_face_set_ids: vec![None; model.connected_face_sets.items.len()],
@@ -445,6 +523,8 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             context_dependent_unit_ids: vec![None; model.context_dependent_units.items.len()],
+            contract_ids: vec![None; model.contracts.items.len()],
+            contract_type_ids: vec![None; model.contract_types.items.len()],
             conversion_based_unit_ids: vec![None; model.conversion_based_units.items.len()],
             coordinated_universal_time_offset_ids: vec![
                 None;
@@ -467,6 +547,8 @@ impl<'a> Writer<'a> {
             cylindricity_tolerance_ids: vec![None; model.cylindricity_tolerances.items.len()],
             date_ids: vec![None; model.dates.items.len()],
             date_and_time_ids: vec![None; model.date_and_times.items.len()],
+            date_and_time_assignment_ids: vec![None; model.date_and_time_assignments.items.len()],
+            date_time_role_ids: vec![None; model.date_time_roles.items.len()],
             datum_ids: vec![None; model.datums.items.len()],
             datum_feature_ids: vec![None; model.datum_features.items.len()],
             datum_reference_ids: vec![None; model.datum_references.items.len()],
@@ -531,6 +613,7 @@ impl<'a> Writer<'a> {
             edge_ids: vec![None; model.edges.items.len()],
             edge_curve_ids: vec![None; model.edge_curves.items.len()],
             edge_loop_ids: vec![None; model.edge_loops.items.len()],
+            effectivity_ids: vec![None; model.effectivitys.items.len()],
             elementary_surface_ids: vec![None; model.elementary_surfaces.items.len()],
             ellipse_ids: vec![None; model.ellipses.items.len()],
             external_source_ids: vec![None; model.external_sources.items.len()],
@@ -757,6 +840,13 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            person_and_organization_assignment_ids: vec![
+                None;
+                model
+                    .person_and_organization_assignments
+                    .items
+                    .len()
+            ],
             person_and_organization_role_ids: vec![
                 None;
                 model.person_and_organization_roles.items.len()
@@ -811,11 +901,20 @@ impl<'a> Writer<'a> {
                 None;
                 model.product_category_relationships.items.len()
             ],
+            product_concept_ids: vec![None; model.product_concepts.items.len()],
+            product_concept_context_ids: vec![None; model.product_concept_contexts.items.len()],
             product_context_ids: vec![None; model.product_contexts.items.len()],
             product_definition_ids: vec![None; model.product_definitions.items.len()],
             product_definition_context_ids: vec![
                 None;
                 model.product_definition_contexts.items.len()
+            ],
+            product_definition_effectivity_ids: vec![
+                None;
+                model
+                    .product_definition_effectivitys
+                    .items
+                    .len()
             ],
             product_definition_formation_ids: vec![
                 None;
@@ -899,6 +998,18 @@ impl<'a> Writer<'a> {
             ],
             roundness_tolerance_ids: vec![None; model.roundness_tolerances.items.len()],
             seam_curve_ids: vec![None; model.seam_curves.items.len()],
+            security_classification_ids: vec![None; model.security_classifications.items.len()],
+            security_classification_assignment_ids: vec![
+                None;
+                model
+                    .security_classification_assignments
+                    .items
+                    .len()
+            ],
+            security_classification_level_ids: vec![
+                None;
+                model.security_classification_levels.items.len()
+            ],
             shape_aspect_ids: vec![None; model.shape_aspects.items.len()],
             shape_aspect_relationship_ids: vec![None; model.shape_aspect_relationships.items.len()],
             shape_definition_representation_ids: vec![
@@ -928,6 +1039,8 @@ impl<'a> Writer<'a> {
             solid_angle_unit_ids: vec![None; model.solid_angle_units.items.len()],
             solid_model_ids: vec![None; model.solid_models.items.len()],
             spherical_surface_ids: vec![None; model.spherical_surfaces.items.len()],
+            start_request_ids: vec![None; model.start_requests.items.len()],
+            start_work_ids: vec![None; model.start_works.items.len()],
             straightness_tolerance_ids: vec![None; model.straightness_tolerances.items.len()],
             styled_item_ids: vec![None; model.styled_items.items.len()],
             surface_ids: vec![None; model.surfaces.items.len()],
@@ -1039,6 +1152,7 @@ impl<'a> Writer<'a> {
             uniform_curve_ids: vec![None; model.uniform_curves.items.len()],
             uniform_surface_ids: vec![None; model.uniform_surfaces.items.len()],
             vector_ids: vec![None; model.vectors.items.len()],
+            versioned_action_request_ids: vec![None; model.versioned_action_requests.items.len()],
             vertex_ids: vec![None; model.vertexs.items.len()],
             vertex_loop_ids: vec![None; model.vertex_loops.items.len()],
             vertex_point_ids: vec![None; model.vertex_points.items.len()],
@@ -1056,6 +1170,10 @@ impl<'a> Writer<'a> {
 
     fn get_id(&self, any: AnyId) -> Option<u64> {
         match any {
+            AnyId::Action(i) => self.action_ids[i.0],
+            AnyId::ActionAssignment(i) => self.action_assignment_ids[i.0],
+            AnyId::ActionMethod(i) => self.action_method_ids[i.0],
+            AnyId::ActionRequestAssignment(i) => self.action_request_assignment_ids[i.0],
             AnyId::Address(i) => self.addre_ids[i.0],
             AnyId::AdvancedBrepShapeRepresentation(i) => {
                 self.advanced_brep_shape_representation_ids[i.0]
@@ -1072,6 +1190,12 @@ impl<'a> Writer<'a> {
             AnyId::ApplicationProtocolDefinition(i) => {
                 self.application_protocol_definition_ids[i.0]
             }
+            AnyId::Approval(i) => self.approval_ids[i.0],
+            AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0],
+            AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0],
+            AnyId::ApprovalPersonOrganization(i) => self.approval_person_organization_ids[i.0],
+            AnyId::ApprovalRole(i) => self.approval_role_ids[i.0],
+            AnyId::ApprovalStatus(i) => self.approval_statu_ids[i.0],
             AnyId::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0],
             AnyId::Axis1Placement(i) => self.axis1_placement_ids[i.0],
             AnyId::Axis2Placement2d(i) => self.axis2_placement2d_ids[i.0],
@@ -1089,6 +1213,20 @@ impl<'a> Writer<'a> {
             AnyId::BrepWithVoids(i) => self.brep_with_void_ids[i.0],
             AnyId::CalendarDate(i) => self.calendar_date_ids[i.0],
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0],
+            AnyId::CcDesignApproval(i) => self.cc_design_approval_ids[i.0],
+            AnyId::CcDesignDateAndTimeAssignment(i) => {
+                self.cc_design_date_and_time_assignment_ids[i.0]
+            }
+            AnyId::CcDesignPersonAndOrganizationAssignment(i) => {
+                self.cc_design_person_and_organization_assignment_ids[i.0]
+            }
+            AnyId::CcDesignSecurityClassification(i) => {
+                self.cc_design_security_classification_ids[i.0]
+            }
+            AnyId::Certification(i) => self.certification_ids[i.0],
+            AnyId::CertificationType(i) => self.certification_type_ids[i.0],
+            AnyId::Change(i) => self.change_ids[i.0],
+            AnyId::ChangeRequest(i) => self.change_request_ids[i.0],
             AnyId::CharacterGlyphStyleOutline(i) => self.character_glyph_style_outline_ids[i.0],
             AnyId::CharacterGlyphStyleStroke(i) => self.character_glyph_style_stroke_ids[i.0],
             AnyId::CharacterizedObject(i) => self.characterized_object_ids[i.0],
@@ -1103,6 +1241,9 @@ impl<'a> Writer<'a> {
             AnyId::ComplexTriangulatedFace(i) => self.complex_triangulated_face_ids[i.0],
             AnyId::CompositeShapeAspect(i) => self.composite_shape_aspect_ids[i.0],
             AnyId::ConcentricityTolerance(i) => self.concentricity_tolerance_ids[i.0],
+            AnyId::ConfigurationDesign(i) => self.configuration_design_ids[i.0],
+            AnyId::ConfigurationEffectivity(i) => self.configuration_effectivity_ids[i.0],
+            AnyId::ConfigurationItem(i) => self.configuration_item_ids[i.0],
             AnyId::Conic(i) => self.conic_ids[i.0],
             AnyId::ConicalSurface(i) => self.conical_surface_ids[i.0],
             AnyId::ConnectedFaceSet(i) => self.connected_face_set_ids[i.0],
@@ -1113,6 +1254,8 @@ impl<'a> Writer<'a> {
                 self.context_dependent_shape_representation_ids[i.0]
             }
             AnyId::ContextDependentUnit(i) => self.context_dependent_unit_ids[i.0],
+            AnyId::Contract(i) => self.contract_ids[i.0],
+            AnyId::ContractType(i) => self.contract_type_ids[i.0],
             AnyId::ConversionBasedUnit(i) => self.conversion_based_unit_ids[i.0],
             AnyId::CoordinatedUniversalTimeOffset(i) => {
                 self.coordinated_universal_time_offset_ids[i.0]
@@ -1128,6 +1271,8 @@ impl<'a> Writer<'a> {
             AnyId::CylindricityTolerance(i) => self.cylindricity_tolerance_ids[i.0],
             AnyId::Date(i) => self.date_ids[i.0],
             AnyId::DateAndTime(i) => self.date_and_time_ids[i.0],
+            AnyId::DateAndTimeAssignment(i) => self.date_and_time_assignment_ids[i.0],
+            AnyId::DateTimeRole(i) => self.date_time_role_ids[i.0],
             AnyId::Datum(i) => self.datum_ids[i.0],
             AnyId::DatumFeature(i) => self.datum_feature_ids[i.0],
             AnyId::DatumReference(i) => self.datum_reference_ids[i.0],
@@ -1161,6 +1306,7 @@ impl<'a> Writer<'a> {
             AnyId::Edge(i) => self.edge_ids[i.0],
             AnyId::EdgeCurve(i) => self.edge_curve_ids[i.0],
             AnyId::EdgeLoop(i) => self.edge_loop_ids[i.0],
+            AnyId::Effectivity(i) => self.effectivity_ids[i.0],
             AnyId::ElementarySurface(i) => self.elementary_surface_ids[i.0],
             AnyId::Ellipse(i) => self.ellipse_ids[i.0],
             AnyId::ExternalSource(i) => self.external_source_ids[i.0],
@@ -1275,6 +1421,9 @@ impl<'a> Writer<'a> {
             AnyId::Person(i) => self.person_ids[i.0],
             AnyId::PersonAndOrganization(i) => self.person_and_organization_ids[i.0],
             AnyId::PersonAndOrganizationAddress(i) => self.person_and_organization_addre_ids[i.0],
+            AnyId::PersonAndOrganizationAssignment(i) => {
+                self.person_and_organization_assignment_ids[i.0]
+            }
             AnyId::PersonAndOrganizationRole(i) => self.person_and_organization_role_ids[i.0],
             AnyId::PersonalAddress(i) => self.personal_addre_ids[i.0],
             AnyId::PlacedDatumTargetFeature(i) => self.placed_datum_target_feature_ids[i.0],
@@ -1302,9 +1451,12 @@ impl<'a> Writer<'a> {
             AnyId::Product(i) => self.product_ids[i.0],
             AnyId::ProductCategory(i) => self.product_category_ids[i.0],
             AnyId::ProductCategoryRelationship(i) => self.product_category_relationship_ids[i.0],
+            AnyId::ProductConcept(i) => self.product_concept_ids[i.0],
+            AnyId::ProductConceptContext(i) => self.product_concept_context_ids[i.0],
             AnyId::ProductContext(i) => self.product_context_ids[i.0],
             AnyId::ProductDefinition(i) => self.product_definition_ids[i.0],
             AnyId::ProductDefinitionContext(i) => self.product_definition_context_ids[i.0],
+            AnyId::ProductDefinitionEffectivity(i) => self.product_definition_effectivity_ids[i.0],
             AnyId::ProductDefinitionFormation(i) => self.product_definition_formation_ids[i.0],
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 self.product_definition_formation_with_specified_source_ids[i.0]
@@ -1346,6 +1498,11 @@ impl<'a> Writer<'a> {
             }
             AnyId::RoundnessTolerance(i) => self.roundness_tolerance_ids[i.0],
             AnyId::SeamCurve(i) => self.seam_curve_ids[i.0],
+            AnyId::SecurityClassification(i) => self.security_classification_ids[i.0],
+            AnyId::SecurityClassificationAssignment(i) => {
+                self.security_classification_assignment_ids[i.0]
+            }
+            AnyId::SecurityClassificationLevel(i) => self.security_classification_level_ids[i.0],
             AnyId::ShapeAspect(i) => self.shape_aspect_ids[i.0],
             AnyId::ShapeAspectRelationship(i) => self.shape_aspect_relationship_ids[i.0],
             AnyId::ShapeDefinitionRepresentation(i) => {
@@ -1361,6 +1518,8 @@ impl<'a> Writer<'a> {
             AnyId::SolidAngleUnit(i) => self.solid_angle_unit_ids[i.0],
             AnyId::SolidModel(i) => self.solid_model_ids[i.0],
             AnyId::SphericalSurface(i) => self.spherical_surface_ids[i.0],
+            AnyId::StartRequest(i) => self.start_request_ids[i.0],
+            AnyId::StartWork(i) => self.start_work_ids[i.0],
             AnyId::StraightnessTolerance(i) => self.straightness_tolerance_ids[i.0],
             AnyId::StyledItem(i) => self.styled_item_ids[i.0],
             AnyId::Surface(i) => self.surface_ids[i.0],
@@ -1421,6 +1580,7 @@ impl<'a> Writer<'a> {
             AnyId::UniformCurve(i) => self.uniform_curve_ids[i.0],
             AnyId::UniformSurface(i) => self.uniform_surface_ids[i.0],
             AnyId::Vector(i) => self.vector_ids[i.0],
+            AnyId::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0],
             AnyId::Vertex(i) => self.vertex_ids[i.0],
             AnyId::VertexLoop(i) => self.vertex_loop_ids[i.0],
             AnyId::VertexPoint(i) => self.vertex_point_ids[i.0],
@@ -1432,6 +1592,10 @@ impl<'a> Writer<'a> {
 
     fn set_id(&mut self, any: AnyId, n: u64) {
         match any {
+            AnyId::Action(i) => self.action_ids[i.0] = Some(n),
+            AnyId::ActionAssignment(i) => self.action_assignment_ids[i.0] = Some(n),
+            AnyId::ActionMethod(i) => self.action_method_ids[i.0] = Some(n),
+            AnyId::ActionRequestAssignment(i) => self.action_request_assignment_ids[i.0] = Some(n),
             AnyId::Address(i) => self.addre_ids[i.0] = Some(n),
             AnyId::AdvancedBrepShapeRepresentation(i) => {
                 self.advanced_brep_shape_representation_ids[i.0] = Some(n)
@@ -1454,6 +1618,14 @@ impl<'a> Writer<'a> {
             AnyId::ApplicationProtocolDefinition(i) => {
                 self.application_protocol_definition_ids[i.0] = Some(n)
             }
+            AnyId::Approval(i) => self.approval_ids[i.0] = Some(n),
+            AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0] = Some(n),
+            AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0] = Some(n),
+            AnyId::ApprovalPersonOrganization(i) => {
+                self.approval_person_organization_ids[i.0] = Some(n)
+            }
+            AnyId::ApprovalRole(i) => self.approval_role_ids[i.0] = Some(n),
+            AnyId::ApprovalStatus(i) => self.approval_statu_ids[i.0] = Some(n),
             AnyId::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0] = Some(n),
             AnyId::Axis1Placement(i) => self.axis1_placement_ids[i.0] = Some(n),
             AnyId::Axis2Placement2d(i) => self.axis2_placement2d_ids[i.0] = Some(n),
@@ -1471,6 +1643,20 @@ impl<'a> Writer<'a> {
             AnyId::BrepWithVoids(i) => self.brep_with_void_ids[i.0] = Some(n),
             AnyId::CalendarDate(i) => self.calendar_date_ids[i.0] = Some(n),
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0] = Some(n),
+            AnyId::CcDesignApproval(i) => self.cc_design_approval_ids[i.0] = Some(n),
+            AnyId::CcDesignDateAndTimeAssignment(i) => {
+                self.cc_design_date_and_time_assignment_ids[i.0] = Some(n)
+            }
+            AnyId::CcDesignPersonAndOrganizationAssignment(i) => {
+                self.cc_design_person_and_organization_assignment_ids[i.0] = Some(n)
+            }
+            AnyId::CcDesignSecurityClassification(i) => {
+                self.cc_design_security_classification_ids[i.0] = Some(n)
+            }
+            AnyId::Certification(i) => self.certification_ids[i.0] = Some(n),
+            AnyId::CertificationType(i) => self.certification_type_ids[i.0] = Some(n),
+            AnyId::Change(i) => self.change_ids[i.0] = Some(n),
+            AnyId::ChangeRequest(i) => self.change_request_ids[i.0] = Some(n),
             AnyId::CharacterGlyphStyleOutline(i) => {
                 self.character_glyph_style_outline_ids[i.0] = Some(n)
             }
@@ -1489,6 +1675,9 @@ impl<'a> Writer<'a> {
             AnyId::ComplexTriangulatedFace(i) => self.complex_triangulated_face_ids[i.0] = Some(n),
             AnyId::CompositeShapeAspect(i) => self.composite_shape_aspect_ids[i.0] = Some(n),
             AnyId::ConcentricityTolerance(i) => self.concentricity_tolerance_ids[i.0] = Some(n),
+            AnyId::ConfigurationDesign(i) => self.configuration_design_ids[i.0] = Some(n),
+            AnyId::ConfigurationEffectivity(i) => self.configuration_effectivity_ids[i.0] = Some(n),
+            AnyId::ConfigurationItem(i) => self.configuration_item_ids[i.0] = Some(n),
             AnyId::Conic(i) => self.conic_ids[i.0] = Some(n),
             AnyId::ConicalSurface(i) => self.conical_surface_ids[i.0] = Some(n),
             AnyId::ConnectedFaceSet(i) => self.connected_face_set_ids[i.0] = Some(n),
@@ -1499,6 +1688,8 @@ impl<'a> Writer<'a> {
                 self.context_dependent_shape_representation_ids[i.0] = Some(n)
             }
             AnyId::ContextDependentUnit(i) => self.context_dependent_unit_ids[i.0] = Some(n),
+            AnyId::Contract(i) => self.contract_ids[i.0] = Some(n),
+            AnyId::ContractType(i) => self.contract_type_ids[i.0] = Some(n),
             AnyId::ConversionBasedUnit(i) => self.conversion_based_unit_ids[i.0] = Some(n),
             AnyId::CoordinatedUniversalTimeOffset(i) => {
                 self.coordinated_universal_time_offset_ids[i.0] = Some(n)
@@ -1516,6 +1707,8 @@ impl<'a> Writer<'a> {
             AnyId::CylindricityTolerance(i) => self.cylindricity_tolerance_ids[i.0] = Some(n),
             AnyId::Date(i) => self.date_ids[i.0] = Some(n),
             AnyId::DateAndTime(i) => self.date_and_time_ids[i.0] = Some(n),
+            AnyId::DateAndTimeAssignment(i) => self.date_and_time_assignment_ids[i.0] = Some(n),
+            AnyId::DateTimeRole(i) => self.date_time_role_ids[i.0] = Some(n),
             AnyId::Datum(i) => self.datum_ids[i.0] = Some(n),
             AnyId::DatumFeature(i) => self.datum_feature_ids[i.0] = Some(n),
             AnyId::DatumReference(i) => self.datum_reference_ids[i.0] = Some(n),
@@ -1555,6 +1748,7 @@ impl<'a> Writer<'a> {
             AnyId::Edge(i) => self.edge_ids[i.0] = Some(n),
             AnyId::EdgeCurve(i) => self.edge_curve_ids[i.0] = Some(n),
             AnyId::EdgeLoop(i) => self.edge_loop_ids[i.0] = Some(n),
+            AnyId::Effectivity(i) => self.effectivity_ids[i.0] = Some(n),
             AnyId::ElementarySurface(i) => self.elementary_surface_ids[i.0] = Some(n),
             AnyId::Ellipse(i) => self.ellipse_ids[i.0] = Some(n),
             AnyId::ExternalSource(i) => self.external_source_ids[i.0] = Some(n),
@@ -1695,6 +1889,9 @@ impl<'a> Writer<'a> {
             AnyId::PersonAndOrganizationAddress(i) => {
                 self.person_and_organization_addre_ids[i.0] = Some(n)
             }
+            AnyId::PersonAndOrganizationAssignment(i) => {
+                self.person_and_organization_assignment_ids[i.0] = Some(n)
+            }
             AnyId::PersonAndOrganizationRole(i) => {
                 self.person_and_organization_role_ids[i.0] = Some(n)
             }
@@ -1738,10 +1935,15 @@ impl<'a> Writer<'a> {
             AnyId::ProductCategoryRelationship(i) => {
                 self.product_category_relationship_ids[i.0] = Some(n)
             }
+            AnyId::ProductConcept(i) => self.product_concept_ids[i.0] = Some(n),
+            AnyId::ProductConceptContext(i) => self.product_concept_context_ids[i.0] = Some(n),
             AnyId::ProductContext(i) => self.product_context_ids[i.0] = Some(n),
             AnyId::ProductDefinition(i) => self.product_definition_ids[i.0] = Some(n),
             AnyId::ProductDefinitionContext(i) => {
                 self.product_definition_context_ids[i.0] = Some(n)
+            }
+            AnyId::ProductDefinitionEffectivity(i) => {
+                self.product_definition_effectivity_ids[i.0] = Some(n)
             }
             AnyId::ProductDefinitionFormation(i) => {
                 self.product_definition_formation_ids[i.0] = Some(n)
@@ -1790,6 +1992,13 @@ impl<'a> Writer<'a> {
             }
             AnyId::RoundnessTolerance(i) => self.roundness_tolerance_ids[i.0] = Some(n),
             AnyId::SeamCurve(i) => self.seam_curve_ids[i.0] = Some(n),
+            AnyId::SecurityClassification(i) => self.security_classification_ids[i.0] = Some(n),
+            AnyId::SecurityClassificationAssignment(i) => {
+                self.security_classification_assignment_ids[i.0] = Some(n)
+            }
+            AnyId::SecurityClassificationLevel(i) => {
+                self.security_classification_level_ids[i.0] = Some(n)
+            }
             AnyId::ShapeAspect(i) => self.shape_aspect_ids[i.0] = Some(n),
             AnyId::ShapeAspectRelationship(i) => self.shape_aspect_relationship_ids[i.0] = Some(n),
             AnyId::ShapeDefinitionRepresentation(i) => {
@@ -1807,6 +2016,8 @@ impl<'a> Writer<'a> {
             AnyId::SolidAngleUnit(i) => self.solid_angle_unit_ids[i.0] = Some(n),
             AnyId::SolidModel(i) => self.solid_model_ids[i.0] = Some(n),
             AnyId::SphericalSurface(i) => self.spherical_surface_ids[i.0] = Some(n),
+            AnyId::StartRequest(i) => self.start_request_ids[i.0] = Some(n),
+            AnyId::StartWork(i) => self.start_work_ids[i.0] = Some(n),
             AnyId::StraightnessTolerance(i) => self.straightness_tolerance_ids[i.0] = Some(n),
             AnyId::StyledItem(i) => self.styled_item_ids[i.0] = Some(n),
             AnyId::Surface(i) => self.surface_ids[i.0] = Some(n),
@@ -1883,12 +2094,43 @@ impl<'a> Writer<'a> {
             AnyId::UniformCurve(i) => self.uniform_curve_ids[i.0] = Some(n),
             AnyId::UniformSurface(i) => self.uniform_surface_ids[i.0] = Some(n),
             AnyId::Vector(i) => self.vector_ids[i.0] = Some(n),
+            AnyId::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0] = Some(n),
             AnyId::Vertex(i) => self.vertex_ids[i.0] = Some(n),
             AnyId::VertexLoop(i) => self.vertex_loop_ids[i.0] = Some(n),
             AnyId::VertexPoint(i) => self.vertex_point_ids[i.0] = Some(n),
             AnyId::VertexShell(i) => self.vertex_shell_ids[i.0] = Some(n),
             AnyId::WireShell(i) => self.wire_shell_ids[i.0] = Some(n),
             AnyId::ComplexUnit(i) => self.complex_ids[i.0] = Some(n),
+        }
+    }
+
+    fn id_of_ref_action_method(&self, r: &ActionMethodRef) -> u64 {
+        match r {
+            ActionMethodRef::ActionMethod(i) => {
+                self.action_method_ids[i.0].expect("dep id assigned")
+            }
+            ActionMethodRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_action_method(r: &ActionMethodRef, out: &mut Vec<AnyId>) {
+        match r {
+            ActionMethodRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+            ActionMethodRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_action(&self, r: &ActionRef) -> u64 {
+        match r {
+            ActionRef::Action(i) => self.action_ids[i.0].expect("dep id assigned"),
+            ActionRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_action(r: &ActionRef, out: &mut Vec<AnyId>) {
+        match r {
+            ActionRef::Action(i) => out.push(AnyId::Action(*i)),
+            ActionRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -1980,6 +2222,94 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_approval(&self, r: &ApprovalRef) -> u64 {
+        match r {
+            ApprovalRef::Approval(i) => self.approval_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_approval(r: &ApprovalRef, out: &mut Vec<AnyId>) {
+        match r {
+            ApprovalRef::Approval(i) => out.push(AnyId::Approval(*i)),
+        }
+    }
+
+    fn id_of_ref_approval_role(&self, r: &ApprovalRoleRef) -> u64 {
+        match r {
+            ApprovalRoleRef::ApprovalRole(i) => {
+                self.approval_role_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_approval_role(r: &ApprovalRoleRef, out: &mut Vec<AnyId>) {
+        match r {
+            ApprovalRoleRef::ApprovalRole(i) => out.push(AnyId::ApprovalRole(*i)),
+        }
+    }
+
+    fn id_of_ref_approval_status(&self, r: &ApprovalStatusRef) -> u64 {
+        match r {
+            ApprovalStatusRef::ApprovalStatus(i) => {
+                self.approval_statu_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_approval_status(r: &ApprovalStatusRef, out: &mut Vec<AnyId>) {
+        match r {
+            ApprovalStatusRef::ApprovalStatus(i) => out.push(AnyId::ApprovalStatus(*i)),
+        }
+    }
+
+    fn id_of_ref_approved_item(&self, r: &ApprovedItemRef) -> u64 {
+        match r {
+            ApprovedItemRef::Certification(i) => {
+                self.certification_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::Change(i) => self.change_ids[i.0].expect("dep id assigned"),
+            ApprovedItemRef::ChangeRequest(i) => {
+                self.change_request_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::ConfigurationEffectivity(i) => {
+                self.configuration_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::ConfigurationItem(i) => {
+                self.configuration_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
+            ApprovedItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+            ApprovedItemRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::StartRequest(i) => {
+                self.start_request_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::StartWork(i) => self.start_work_ids[i.0].expect("dep id assigned"),
+            ApprovedItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_approved_item(r: &ApprovedItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            ApprovedItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            ApprovedItemRef::Change(i) => out.push(AnyId::Change(*i)),
+            ApprovedItemRef::ChangeRequest(i) => out.push(AnyId::ChangeRequest(*i)),
+            ApprovedItemRef::ConfigurationEffectivity(i) => {
+                out.push(AnyId::ConfigurationEffectivity(*i))
+            }
+            ApprovedItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
+            ApprovedItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+            ApprovedItemRef::Product(i) => out.push(AnyId::Product(*i)),
+            ApprovedItemRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+            ApprovedItemRef::StartRequest(i) => out.push(AnyId::StartRequest(*i)),
+            ApprovedItemRef::StartWork(i) => out.push(AnyId::StartWork(*i)),
+            ApprovedItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_axis1_placement(&self, r: &Axis1PlacementRef) -> u64 {
         match r {
             Axis1PlacementRef::Axis1Placement(i) => {
@@ -2037,6 +2367,148 @@ impl<'a> Writer<'a> {
     fn deps_ref_cartesian_point(r: &CartesianPointRef, out: &mut Vec<AnyId>) {
         match r {
             CartesianPointRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+        }
+    }
+
+    fn id_of_ref_cc_classified_item(&self, r: &CcClassifiedItemRef) -> u64 {
+        match r {
+            CcClassifiedItemRef::AssemblyComponentUsage(i) => {
+                self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            CcClassifiedItemRef::NextAssemblyUsageOccurrence(i) => {
+                self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            CcClassifiedItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            CcClassifiedItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            CcClassifiedItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_cc_classified_item(r: &CcClassifiedItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            CcClassifiedItemRef::AssemblyComponentUsage(i) => {
+                out.push(AnyId::AssemblyComponentUsage(*i))
+            }
+            CcClassifiedItemRef::NextAssemblyUsageOccurrence(i) => {
+                out.push(AnyId::NextAssemblyUsageOccurrence(*i))
+            }
+            CcClassifiedItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            CcClassifiedItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            CcClassifiedItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_cc_person_organization_item(&self, r: &CcPersonOrganizationItemRef) -> u64 {
+        match r {
+            CcPersonOrganizationItemRef::Change(i) => {
+                self.change_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::ChangeRequest(i) => {
+                self.change_request_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::ConfigurationItem(i) => {
+                self.configuration_item_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::Contract(i) => {
+                self.contract_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::Product(i) => {
+                self.product_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            CcPersonOrganizationItemRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::StartRequest(i) => {
+                self.start_request_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::StartWork(i) => {
+                self.start_work_ids[i.0].expect("dep id assigned")
+            }
+            CcPersonOrganizationItemRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_cc_person_organization_item(r: &CcPersonOrganizationItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            CcPersonOrganizationItemRef::Change(i) => out.push(AnyId::Change(*i)),
+            CcPersonOrganizationItemRef::ChangeRequest(i) => out.push(AnyId::ChangeRequest(*i)),
+            CcPersonOrganizationItemRef::ConfigurationItem(i) => {
+                out.push(AnyId::ConfigurationItem(*i))
+            }
+            CcPersonOrganizationItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+            CcPersonOrganizationItemRef::Product(i) => out.push(AnyId::Product(*i)),
+            CcPersonOrganizationItemRef::ProductDefinition(i) => {
+                out.push(AnyId::ProductDefinition(*i))
+            }
+            CcPersonOrganizationItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            CcPersonOrganizationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            CcPersonOrganizationItemRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+            CcPersonOrganizationItemRef::StartRequest(i) => out.push(AnyId::StartRequest(*i)),
+            CcPersonOrganizationItemRef::StartWork(i) => out.push(AnyId::StartWork(*i)),
+            CcPersonOrganizationItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_certification_type(&self, r: &CertificationTypeRef) -> u64 {
+        match r {
+            CertificationTypeRef::CertificationType(i) => {
+                self.certification_type_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_certification_type(r: &CertificationTypeRef, out: &mut Vec<AnyId>) {
+        match r {
+            CertificationTypeRef::CertificationType(i) => out.push(AnyId::CertificationType(*i)),
+        }
+    }
+
+    fn id_of_ref_change_request_item(&self, r: &ChangeRequestItemRef) -> u64 {
+        match r {
+            ChangeRequestItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            ChangeRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            ChangeRequestItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_change_request_item(r: &ChangeRequestItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            ChangeRequestItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            ChangeRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            ChangeRequestItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -2401,6 +2873,90 @@ impl<'a> Writer<'a> {
             ColourRef::ColourRgb(i) => out.push(AnyId::ColourRgb(*i)),
             ColourRef::ColourSpecification(i) => out.push(AnyId::ColourSpecification(*i)),
             ColourRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_configuration_design_item(&self, r: &ConfigurationDesignItemRef) -> u64 {
+        match r {
+            ConfigurationDesignItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            ConfigurationDesignItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            ConfigurationDesignItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            ConfigurationDesignItemRef::ProductDefinitionOccurrence(i) => {
+                self.product_definition_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ConfigurationDesignItemRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_configuration_design_item(r: &ConfigurationDesignItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            ConfigurationDesignItemRef::ProductDefinition(i) => {
+                out.push(AnyId::ProductDefinition(*i))
+            }
+            ConfigurationDesignItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            ConfigurationDesignItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            ConfigurationDesignItemRef::ProductDefinitionOccurrence(i) => {
+                out.push(AnyId::ProductDefinitionOccurrence(*i))
+            }
+            ConfigurationDesignItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_configuration_design(&self, r: &ConfigurationDesignRef) -> u64 {
+        match r {
+            ConfigurationDesignRef::ConfigurationDesign(i) => {
+                self.configuration_design_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_configuration_design(r: &ConfigurationDesignRef, out: &mut Vec<AnyId>) {
+        match r {
+            ConfigurationDesignRef::ConfigurationDesign(i) => {
+                out.push(AnyId::ConfigurationDesign(*i))
+            }
+        }
+    }
+
+    fn id_of_ref_configuration_item(&self, r: &ConfigurationItemRef) -> u64 {
+        match r {
+            ConfigurationItemRef::ConfigurationItem(i) => {
+                self.configuration_item_ids[i.0].expect("dep id assigned")
+            }
+            ConfigurationItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_configuration_item(r: &ConfigurationItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            ConfigurationItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
+            ConfigurationItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_contract_type(&self, r: &ContractTypeRef) -> u64 {
+        match r {
+            ContractTypeRef::ContractType(i) => {
+                self.contract_type_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_contract_type(r: &ContractTypeRef, out: &mut Vec<AnyId>) {
+        match r {
+            ContractTypeRef::ContractType(i) => out.push(AnyId::ContractType(*i)),
         }
     }
 
@@ -2848,6 +3404,20 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_date_and_time(&self, r: &DateAndTimeRef) -> u64 {
+        match r {
+            DateAndTimeRef::DateAndTime(i) => self.date_and_time_ids[i.0].expect("dep id assigned"),
+            DateAndTimeRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_date_and_time(r: &DateAndTimeRef, out: &mut Vec<AnyId>) {
+        match r {
+            DateAndTimeRef::DateAndTime(i) => out.push(AnyId::DateAndTime(*i)),
+            DateAndTimeRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_date(&self, r: &DateRef) -> u64 {
         match r {
             DateRef::CalendarDate(i) => self.calendar_date_ids[i.0].expect("dep id assigned"),
@@ -2861,6 +3431,90 @@ impl<'a> Writer<'a> {
             DateRef::CalendarDate(i) => out.push(AnyId::CalendarDate(*i)),
             DateRef::Date(i) => out.push(AnyId::Date(*i)),
             DateRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_date_time_item(&self, r: &DateTimeItemRef) -> u64 {
+        match r {
+            DateTimeItemRef::ApprovalPersonOrganization(i) => {
+                self.approval_person_organization_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeItemRef::Certification(i) => {
+                self.certification_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeItemRef::Change(i) => self.change_ids[i.0].expect("dep id assigned"),
+            DateTimeItemRef::ChangeRequest(i) => {
+                self.change_request_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
+            DateTimeItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeItemRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeItemRef::StartRequest(i) => {
+                self.start_request_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeItemRef::StartWork(i) => self.start_work_ids[i.0].expect("dep id assigned"),
+            DateTimeItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_date_time_item(r: &DateTimeItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            DateTimeItemRef::ApprovalPersonOrganization(i) => {
+                out.push(AnyId::ApprovalPersonOrganization(*i))
+            }
+            DateTimeItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            DateTimeItemRef::Change(i) => out.push(AnyId::Change(*i)),
+            DateTimeItemRef::ChangeRequest(i) => out.push(AnyId::ChangeRequest(*i)),
+            DateTimeItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+            DateTimeItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            DateTimeItemRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+            DateTimeItemRef::StartRequest(i) => out.push(AnyId::StartRequest(*i)),
+            DateTimeItemRef::StartWork(i) => out.push(AnyId::StartWork(*i)),
+            DateTimeItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_date_time_role(&self, r: &DateTimeRoleRef) -> u64 {
+        match r {
+            DateTimeRoleRef::DateTimeRole(i) => {
+                self.date_time_role_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_date_time_role(r: &DateTimeRoleRef, out: &mut Vec<AnyId>) {
+        match r {
+            DateTimeRoleRef::DateTimeRole(i) => out.push(AnyId::DateTimeRole(*i)),
+        }
+    }
+
+    fn id_of_ref_date_time_select(&self, r: &DateTimeSelectRef) -> u64 {
+        match r {
+            DateTimeSelectRef::CalendarDate(i) => {
+                self.calendar_date_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeSelectRef::Date(i) => self.date_ids[i.0].expect("dep id assigned"),
+            DateTimeSelectRef::DateAndTime(i) => {
+                self.date_and_time_ids[i.0].expect("dep id assigned")
+            }
+            DateTimeSelectRef::LocalTime(i) => self.local_time_ids[i.0].expect("dep id assigned"),
+            DateTimeSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_date_time_select(r: &DateTimeSelectRef, out: &mut Vec<AnyId>) {
+        match r {
+            DateTimeSelectRef::CalendarDate(i) => out.push(AnyId::CalendarDate(*i)),
+            DateTimeSelectRef::Date(i) => out.push(AnyId::Date(*i)),
+            DateTimeSelectRef::DateAndTime(i) => out.push(AnyId::DateAndTime(*i)),
+            DateTimeSelectRef::LocalTime(i) => out.push(AnyId::LocalTime(*i)),
+            DateTimeSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -4497,6 +5151,65 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_person_and_organization(&self, r: &PersonAndOrganizationRef) -> u64 {
+        match r {
+            PersonAndOrganizationRef::PersonAndOrganization(i) => {
+                self.person_and_organization_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_person_and_organization(r: &PersonAndOrganizationRef, out: &mut Vec<AnyId>) {
+        match r {
+            PersonAndOrganizationRef::PersonAndOrganization(i) => {
+                out.push(AnyId::PersonAndOrganization(*i))
+            }
+        }
+    }
+
+    fn id_of_ref_person_and_organization_role(&self, r: &PersonAndOrganizationRoleRef) -> u64 {
+        match r {
+            PersonAndOrganizationRoleRef::PersonAndOrganizationRole(i) => {
+                self.person_and_organization_role_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_person_and_organization_role(
+        r: &PersonAndOrganizationRoleRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            PersonAndOrganizationRoleRef::PersonAndOrganizationRole(i) => {
+                out.push(AnyId::PersonAndOrganizationRole(*i))
+            }
+        }
+    }
+
+    fn id_of_ref_person_organization_select(&self, r: &PersonOrganizationSelectRef) -> u64 {
+        match r {
+            PersonOrganizationSelectRef::Organization(i) => {
+                self.organization_ids[i.0].expect("dep id assigned")
+            }
+            PersonOrganizationSelectRef::Person(i) => {
+                self.person_ids[i.0].expect("dep id assigned")
+            }
+            PersonOrganizationSelectRef::PersonAndOrganization(i) => {
+                self.person_and_organization_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_person_organization_select(r: &PersonOrganizationSelectRef, out: &mut Vec<AnyId>) {
+        match r {
+            PersonOrganizationSelectRef::Organization(i) => out.push(AnyId::Organization(*i)),
+            PersonOrganizationSelectRef::Person(i) => out.push(AnyId::Person(*i)),
+            PersonOrganizationSelectRef::PersonAndOrganization(i) => {
+                out.push(AnyId::PersonAndOrganization(*i))
+            }
+        }
+    }
+
     fn id_of_ref_person(&self, r: &PersonRef) -> u64 {
         match r {
             PersonRef::Person(i) => self.person_ids[i.0].expect("dep id assigned"),
@@ -4621,6 +5334,38 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::ProductRelatedProductCategory(*i))
             }
             ProductCategoryRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_product_concept_context(&self, r: &ProductConceptContextRef) -> u64 {
+        match r {
+            ProductConceptContextRef::ProductConceptContext(i) => {
+                self.product_concept_context_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_product_concept_context(r: &ProductConceptContextRef, out: &mut Vec<AnyId>) {
+        match r {
+            ProductConceptContextRef::ProductConceptContext(i) => {
+                out.push(AnyId::ProductConceptContext(*i))
+            }
+        }
+    }
+
+    fn id_of_ref_product_concept(&self, r: &ProductConceptRef) -> u64 {
+        match r {
+            ProductConceptRef::ProductConcept(i) => {
+                self.product_concept_ids[i.0].expect("dep id assigned")
+            }
+            ProductConceptRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_product_concept(r: &ProductConceptRef, out: &mut Vec<AnyId>) {
+        match r {
+            ProductConceptRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+            ProductConceptRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -5604,6 +6349,41 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_security_classification_level(&self, r: &SecurityClassificationLevelRef) -> u64 {
+        match r {
+            SecurityClassificationLevelRef::SecurityClassificationLevel(i) => {
+                self.security_classification_level_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_security_classification_level(
+        r: &SecurityClassificationLevelRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            SecurityClassificationLevelRef::SecurityClassificationLevel(i) => {
+                out.push(AnyId::SecurityClassificationLevel(*i))
+            }
+        }
+    }
+
+    fn id_of_ref_security_classification(&self, r: &SecurityClassificationRef) -> u64 {
+        match r {
+            SecurityClassificationRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_security_classification(r: &SecurityClassificationRef, out: &mut Vec<AnyId>) {
+        match r {
+            SecurityClassificationRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+        }
+    }
+
     fn id_of_ref_shape_aspect(&self, r: &ShapeAspectRef) -> u64 {
         match r {
             ShapeAspectRef::CommonDatum(i) => self.common_datum_ids[i.0].expect("dep id assigned"),
@@ -5776,6 +6556,30 @@ impl<'a> Writer<'a> {
             SizeSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
             SizeSelectRef::DescriptiveMeasure(_) => {}
             SizeSelectRef::PositiveLengthMeasure(_) => {}
+        }
+    }
+
+    fn id_of_ref_start_request_item(&self, r: &StartRequestItemRef) -> u64 {
+        match r {
+            StartRequestItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            StartRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            StartRequestItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_start_request_item(r: &StartRequestItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            StartRequestItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            StartRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            StartRequestItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -7358,6 +8162,22 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_versioned_action_request(&self, r: &VersionedActionRequestRef) -> u64 {
+        match r {
+            VersionedActionRequestRef::VersionedActionRequest(i) => {
+                self.versioned_action_request_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_versioned_action_request(r: &VersionedActionRequestRef, out: &mut Vec<AnyId>) {
+        match r {
+            VersionedActionRequestRef::VersionedActionRequest(i) => {
+                out.push(AnyId::VersionedActionRequest(*i))
+            }
+        }
+    }
+
     fn id_of_ref_vertex_loop(&self, r: &VertexLoopRef) -> u64 {
         match r {
             VertexLoopRef::VertexLoop(i) => self.vertex_loop_ids[i.0].expect("dep id assigned"),
@@ -7386,8 +8206,45 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_work_item(&self, r: &WorkItemRef) -> u64 {
+        match r {
+            WorkItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            WorkItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            WorkItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_work_item(r: &WorkItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            WorkItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            WorkItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            WorkItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn deps_of(&self, any: AnyId, out: &mut Vec<AnyId>) {
         match any {
+            AnyId::Action(id) => {
+                let it = self.model.actions.get(id.0);
+                Self::deps_ref_action_method(&it.chosen_method, out);
+            }
+            AnyId::ActionAssignment(id) => {
+                let it = self.model.action_assignments.get(id.0);
+                Self::deps_ref_action(&it.assigned_action, out);
+            }
+            AnyId::ActionMethod(_) => {}
+            AnyId::ActionRequestAssignment(id) => {
+                let it = self.model.action_request_assignments.get(id.0);
+                Self::deps_ref_versioned_action_request(&it.assigned_action_request, out);
+            }
             AnyId::Address(_) => {}
             AnyId::AdvancedBrepShapeRepresentation(id) => {
                 let it = self.model.advanced_brep_shape_representations.get(id.0);
@@ -7453,6 +8310,27 @@ impl<'a> Writer<'a> {
                 let it = self.model.application_protocol_definitions.get(id.0);
                 Self::deps_ref_application_context(&it.application, out);
             }
+            AnyId::Approval(id) => {
+                let it = self.model.approvals.get(id.0);
+                Self::deps_ref_approval_status(&it.status, out);
+            }
+            AnyId::ApprovalAssignment(id) => {
+                let it = self.model.approval_assignments.get(id.0);
+                Self::deps_ref_approval(&it.assigned_approval, out);
+            }
+            AnyId::ApprovalDateTime(id) => {
+                let it = self.model.approval_date_times.get(id.0);
+                Self::deps_ref_date_time_select(&it.date_time, out);
+                Self::deps_ref_approval(&it.dated_approval, out);
+            }
+            AnyId::ApprovalPersonOrganization(id) => {
+                let it = self.model.approval_person_organizations.get(id.0);
+                Self::deps_ref_person_organization_select(&it.person_organization, out);
+                Self::deps_ref_approval(&it.authorized_approval, out);
+                Self::deps_ref_approval_role(&it.role, out);
+            }
+            AnyId::ApprovalRole(_) => {}
+            AnyId::ApprovalStatus(_) => {}
             AnyId::AssemblyComponentUsage(id) => {
                 let it = self.model.assembly_component_usages.get(id.0);
                 Self::deps_ref_product_definition_or_reference(
@@ -7550,6 +8428,58 @@ impl<'a> Writer<'a> {
             }
             AnyId::CalendarDate(_) => {}
             AnyId::CartesianPoint(_) => {}
+            AnyId::CcDesignApproval(id) => {
+                let it = self.model.cc_design_approvals.get(id.0);
+                Self::deps_ref_approval(&it.assigned_approval, out);
+                for e in &it.items {
+                    Self::deps_ref_approved_item(e, out);
+                }
+            }
+            AnyId::CcDesignDateAndTimeAssignment(id) => {
+                let it = self.model.cc_design_date_and_time_assignments.get(id.0);
+                Self::deps_ref_date_and_time(&it.assigned_date_and_time, out);
+                Self::deps_ref_date_time_role(&it.role, out);
+                for e in &it.items {
+                    Self::deps_ref_date_time_item(e, out);
+                }
+            }
+            AnyId::CcDesignPersonAndOrganizationAssignment(id) => {
+                let it = self
+                    .model
+                    .cc_design_person_and_organization_assignments
+                    .get(id.0);
+                Self::deps_ref_person_and_organization(&it.assigned_person_and_organization, out);
+                Self::deps_ref_person_and_organization_role(&it.role, out);
+                for e in &it.items {
+                    Self::deps_ref_cc_person_organization_item(e, out);
+                }
+            }
+            AnyId::CcDesignSecurityClassification(id) => {
+                let it = self.model.cc_design_security_classifications.get(id.0);
+                Self::deps_ref_security_classification(&it.assigned_security_classification, out);
+                for e in &it.items {
+                    Self::deps_ref_cc_classified_item(e, out);
+                }
+            }
+            AnyId::Certification(id) => {
+                let it = self.model.certifications.get(id.0);
+                Self::deps_ref_certification_type(&it.kind, out);
+            }
+            AnyId::CertificationType(_) => {}
+            AnyId::Change(id) => {
+                let it = self.model.changes.get(id.0);
+                Self::deps_ref_action(&it.assigned_action, out);
+                for e in &it.items {
+                    Self::deps_ref_work_item(e, out);
+                }
+            }
+            AnyId::ChangeRequest(id) => {
+                let it = self.model.change_requests.get(id.0);
+                Self::deps_ref_versioned_action_request(&it.assigned_action_request, out);
+                for e in &it.items {
+                    Self::deps_ref_change_request_item(e, out);
+                }
+            }
             AnyId::CharacterGlyphStyleOutline(id) => {
                 let it = self.model.character_glyph_style_outlines.get(id.0);
                 Self::deps_ref_curve_style(&it.outline_style, out);
@@ -7617,6 +8547,20 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_datum_system_or_reference(e, out);
                 }
             }
+            AnyId::ConfigurationDesign(id) => {
+                let it = self.model.configuration_designs.get(id.0);
+                Self::deps_ref_configuration_item(&it.configuration, out);
+                Self::deps_ref_configuration_design_item(&it.design, out);
+            }
+            AnyId::ConfigurationEffectivity(id) => {
+                let it = self.model.configuration_effectivitys.get(id.0);
+                Self::deps_ref_product_definition_relationship(&it.usage, out);
+                Self::deps_ref_configuration_design(&it.configuration, out);
+            }
+            AnyId::ConfigurationItem(id) => {
+                let it = self.model.configuration_items.get(id.0);
+                Self::deps_ref_product_concept(&it.item_concept, out);
+            }
             AnyId::Conic(id) => {
                 let it = self.model.conics.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
@@ -7656,6 +8600,11 @@ impl<'a> Writer<'a> {
                 let it = self.model.context_dependent_units.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
+            AnyId::Contract(id) => {
+                let it = self.model.contracts.get(id.0);
+                Self::deps_ref_contract_type(&it.kind, out);
+            }
+            AnyId::ContractType(_) => {}
             AnyId::ConversionBasedUnit(id) => {
                 let it = self.model.conversion_based_units.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
@@ -7708,6 +8657,12 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_date(&it.date_component, out);
                 Self::deps_ref_local_time(&it.time_component, out);
             }
+            AnyId::DateAndTimeAssignment(id) => {
+                let it = self.model.date_and_time_assignments.get(id.0);
+                Self::deps_ref_date_and_time(&it.assigned_date_and_time, out);
+                Self::deps_ref_date_time_role(&it.role, out);
+            }
+            AnyId::DateTimeRole(_) => {}
             AnyId::Datum(id) => {
                 let it = self.model.datums.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
@@ -7834,6 +8789,7 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_oriented_edge(e, out);
                 }
             }
+            AnyId::Effectivity(_) => {}
             AnyId::ElementarySurface(id) => {
                 let it = self.model.elementary_surfaces.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
@@ -8244,6 +9200,11 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_person(e, out);
                 }
             }
+            AnyId::PersonAndOrganizationAssignment(id) => {
+                let it = self.model.person_and_organization_assignments.get(id.0);
+                Self::deps_ref_person_and_organization(&it.assigned_person_and_organization, out);
+                Self::deps_ref_person_and_organization_role(&it.role, out);
+            }
             AnyId::PersonAndOrganizationRole(_) => {}
             AnyId::PersonalAddress(id) => {
                 let it = self.model.personal_addresss.get(id.0);
@@ -8346,6 +9307,14 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_product_category(&it.category, out);
                 Self::deps_ref_product_category(&it.sub_category, out);
             }
+            AnyId::ProductConcept(id) => {
+                let it = self.model.product_concepts.get(id.0);
+                Self::deps_ref_product_concept_context(&it.market_context, out);
+            }
+            AnyId::ProductConceptContext(id) => {
+                let it = self.model.product_concept_contexts.get(id.0);
+                Self::deps_ref_application_context(&it.frame_of_reference, out);
+            }
             AnyId::ProductContext(id) => {
                 let it = self.model.product_contexts.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
@@ -8358,6 +9327,10 @@ impl<'a> Writer<'a> {
             AnyId::ProductDefinitionContext(id) => {
                 let it = self.model.product_definition_contexts.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
+            }
+            AnyId::ProductDefinitionEffectivity(id) => {
+                let it = self.model.product_definition_effectivitys.get(id.0);
+                Self::deps_ref_product_definition_relationship(&it.usage, out);
             }
             AnyId::ProductDefinitionFormation(id) => {
                 let it = self.model.product_definition_formations.get(id.0);
@@ -8502,6 +9475,15 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_pcurve_or_surface(e, out);
                 }
             }
+            AnyId::SecurityClassification(id) => {
+                let it = self.model.security_classifications.get(id.0);
+                Self::deps_ref_security_classification_level(&it.security_level, out);
+            }
+            AnyId::SecurityClassificationAssignment(id) => {
+                let it = self.model.security_classification_assignments.get(id.0);
+                Self::deps_ref_security_classification(&it.assigned_security_classification, out);
+            }
+            AnyId::SecurityClassificationLevel(_) => {}
             AnyId::ShapeAspect(id) => {
                 let it = self.model.shape_aspects.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
@@ -8550,6 +9532,20 @@ impl<'a> Writer<'a> {
             AnyId::SphericalSurface(id) => {
                 let it = self.model.spherical_surfaces.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
+            }
+            AnyId::StartRequest(id) => {
+                let it = self.model.start_requests.get(id.0);
+                Self::deps_ref_versioned_action_request(&it.assigned_action_request, out);
+                for e in &it.items {
+                    Self::deps_ref_start_request_item(e, out);
+                }
+            }
+            AnyId::StartWork(id) => {
+                let it = self.model.start_works.get(id.0);
+                Self::deps_ref_action(&it.assigned_action, out);
+                for e in &it.items {
+                    Self::deps_ref_work_item(e, out);
+                }
             }
             AnyId::StraightnessTolerance(id) => {
                 let it = self.model.straightness_tolerances.get(id.0);
@@ -8783,6 +9779,7 @@ impl<'a> Writer<'a> {
                 let it = self.model.vectors.get(id.0);
                 Self::deps_ref_direction(&it.orientation, out);
             }
+            AnyId::VersionedActionRequest(_) => {}
             AnyId::Vertex(_) => {}
             AnyId::VertexLoop(id) => {
                 let it = self.model.vertex_loops.get(id.0);
@@ -8806,10 +9803,24 @@ impl<'a> Writer<'a> {
                 let cu = self.model.complex_units.get(id.0);
                 for part in &cu.parts {
                     match part {
+                        UnitPart::Action { chosen_method, .. } => {
+                            Self::deps_ref_action_method(chosen_method, out);
+                        }
+                        UnitPart::ActionRequestAssignment {
+                            assigned_action_request,
+                            ..
+                        } => {
+                            Self::deps_ref_versioned_action_request(assigned_action_request, out);
+                        }
                         UnitPart::ApplicationContextElement {
                             frame_of_reference, ..
                         } => {
                             Self::deps_ref_application_context(frame_of_reference, out);
+                        }
+                        UnitPart::ApprovalAssignment {
+                            assigned_approval, ..
+                        } => {
+                            Self::deps_ref_approval(assigned_approval, out);
                         }
                         UnitPart::BSplineCurve {
                             control_points_list,
@@ -8834,11 +9845,42 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_oriented_closed_shell(e, out);
                             }
                         }
+                        UnitPart::CcDesignApproval { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_approved_item(e, out);
+                            }
+                        }
+                        UnitPart::CcDesignDateAndTimeAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_date_time_item(e, out);
+                            }
+                        }
+                        UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_cc_person_organization_item(e, out);
+                            }
+                        }
+                        UnitPart::CcDesignSecurityClassification { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_cc_classified_item(e, out);
+                            }
+                        }
+                        UnitPart::ChangeRequest { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_change_request_item(e, out);
+                            }
+                        }
                         UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => {
                             Self::deps_ref_curve_style(outline_style, out);
                         }
                         UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => {
                             Self::deps_ref_curve_style(stroke_style, out);
+                        }
+                        UnitPart::ConfigurationEffectivity { configuration, .. } => {
+                            Self::deps_ref_configuration_design(configuration, out);
+                        }
+                        UnitPart::ConfigurationItem { item_concept, .. } => {
+                            Self::deps_ref_product_concept(item_concept, out);
                         }
                         UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
                             if let Some(v) = cfs_faces {
@@ -8890,6 +9932,14 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_date(date_component, out);
                             Self::deps_ref_local_time(time_component, out);
+                        }
+                        UnitPart::DateAndTimeAssignment {
+                            assigned_date_and_time,
+                            role,
+                            ..
+                        } => {
+                            Self::deps_ref_date_and_time(assigned_date_and_time, out);
+                            Self::deps_ref_date_time_role(role, out);
                         }
                         UnitPart::DatumReference {
                             referenced_datum, ..
@@ -9117,6 +10167,17 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_surface(basis_surface, out);
                             Self::deps_ref_definitional_representation(reference_to_curve, out);
                         }
+                        UnitPart::PersonAndOrganizationAssignment {
+                            assigned_person_and_organization,
+                            role,
+                            ..
+                        } => {
+                            Self::deps_ref_person_and_organization(
+                                assigned_person_and_organization,
+                                out,
+                            );
+                            Self::deps_ref_person_and_organization_role(role, out);
+                        }
                         UnitPart::PersonalAddress { people, .. } => {
                             for e in people {
                                 Self::deps_ref_person(e, out);
@@ -9161,6 +10222,9 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_product_context(e, out);
                             }
                         }
+                        UnitPart::ProductConcept { market_context, .. } => {
+                            Self::deps_ref_product_concept_context(market_context, out);
+                        }
                         UnitPart::ProductDefinition {
                             formation,
                             frame_of_reference,
@@ -9168,6 +10232,9 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_product_definition_formation(formation, out);
                             Self::deps_ref_product_definition_context(frame_of_reference, out);
+                        }
+                        UnitPart::ProductDefinitionEffectivity { usage, .. } => {
+                            Self::deps_ref_product_definition_relationship(usage, out);
                         }
                         UnitPart::ProductDefinitionFormation { of_product, .. } => {
                             Self::deps_ref_product(of_product, out);
@@ -9255,6 +10322,15 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_transformation(transformation_operator, out);
                         }
+                        UnitPart::SecurityClassificationAssignment {
+                            assigned_security_classification,
+                            ..
+                        } => {
+                            Self::deps_ref_security_classification(
+                                assigned_security_classification,
+                                out,
+                            );
+                        }
                         UnitPart::ShapeAspect { of_shape, .. } => {
                             Self::deps_ref_product_definition_shape(of_shape, out);
                         }
@@ -9269,6 +10345,11 @@ impl<'a> Writer<'a> {
                         UnitPart::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
                             for e in sbsm_boundary {
                                 Self::deps_ref_shell(e, out);
+                            }
+                        }
+                        UnitPart::StartRequest { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_start_request_item(e, out);
                             }
                         }
                         UnitPart::StyledItem { styles, item, .. } => {
@@ -9398,6 +10479,49 @@ impl<'a> Writer<'a> {
 
     fn render_one(&self, any: AnyId) -> String {
         match any {
+            AnyId::Action(id) => {
+                let it = self.model.actions.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_action_method(&it.chosen_method)),
+                ];
+                format!("#{n} = ACTION({});\n", attrs.join(","))
+            }
+            AnyId::ActionAssignment(id) => {
+                let it = self.model.action_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> =
+                    vec![format!("#{}", self.id_of_ref_action(&it.assigned_action))];
+                format!("#{n} = ACTION_ASSIGNMENT({});\n", attrs.join(","))
+            }
+            AnyId::ActionMethod(id) => {
+                let it = self.model.action_methods.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    step_str(&it.consequence),
+                    step_str(&it.purpose),
+                ];
+                format!("#{n} = ACTION_METHOD({});\n", attrs.join(","))
+            }
+            AnyId::ActionRequestAssignment(id) => {
+                let it = self.model.action_request_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "#{}",
+                    self.id_of_ref_versioned_action_request(&it.assigned_action_request)
+                )];
+                format!("#{n} = ACTION_REQUEST_ASSIGNMENT({});\n", attrs.join(","))
+            }
             AnyId::Address(id) => {
                 let it = self.model.addresss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -9642,6 +10766,61 @@ impl<'a> Writer<'a> {
                     "#{n} = APPLICATION_PROTOCOL_DEFINITION({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::Approval(id) => {
+                let it = self.model.approvals.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_approval_status(&it.status)),
+                    step_str(&it.level),
+                ];
+                format!("#{n} = APPROVAL({});\n", attrs.join(","))
+            }
+            AnyId::ApprovalAssignment(id) => {
+                let it = self.model.approval_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "#{}",
+                    self.id_of_ref_approval(&it.assigned_approval)
+                )];
+                format!("#{n} = APPROVAL_ASSIGNMENT({});\n", attrs.join(","))
+            }
+            AnyId::ApprovalDateTime(id) => {
+                let it = self.model.approval_date_times.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_date_time_select(&it.date_time)),
+                    format!("#{}", self.id_of_ref_approval(&it.dated_approval)),
+                ];
+                format!("#{n} = APPROVAL_DATE_TIME({});\n", attrs.join(","))
+            }
+            AnyId::ApprovalPersonOrganization(id) => {
+                let it = self.model.approval_person_organizations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_person_organization_select(&it.person_organization)
+                    ),
+                    format!("#{}", self.id_of_ref_approval(&it.authorized_approval)),
+                    format!("#{}", self.id_of_ref_approval_role(&it.role)),
+                ];
+                format!(
+                    "#{n} = APPROVAL_PERSON_ORGANIZATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::ApprovalRole(id) => {
+                let it = self.model.approval_roles.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.role)];
+                format!("#{n} = APPROVAL_ROLE({});\n", attrs.join(","))
+            }
+            AnyId::ApprovalStatus(id) => {
+                let it = self.model.approval_statuss.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!("#{n} = APPROVAL_STATUS({});\n", attrs.join(","))
             }
             AnyId::AssemblyComponentUsage(id) => {
                 let it = self.model.assembly_component_usages.get(id.0);
@@ -9995,6 +11174,148 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = CARTESIAN_POINT({});\n", attrs.join(","))
             }
+            AnyId::CcDesignApproval(id) => {
+                let it = self.model.cc_design_approvals.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_approval(&it.assigned_approval)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_approved_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = CC_DESIGN_APPROVAL({});\n", attrs.join(","))
+            }
+            AnyId::CcDesignDateAndTimeAssignment(id) => {
+                let it = self.model.cc_design_date_and_time_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_date_and_time(&it.assigned_date_and_time)
+                    ),
+                    format!("#{}", self.id_of_ref_date_time_role(&it.role)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_date_time_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::CcDesignPersonAndOrganizationAssignment(id) => {
+                let it = self
+                    .model
+                    .cc_design_person_and_organization_assignments
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_person_and_organization(
+                            &it.assigned_person_and_organization
+                        )
+                    ),
+                    format!("#{}", self.id_of_ref_person_and_organization_role(&it.role)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_cc_person_organization_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::CcDesignSecurityClassification(id) => {
+                let it = self.model.cc_design_security_classifications.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_security_classification(
+                            &it.assigned_security_classification
+                        )
+                    ),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_cc_classified_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = CC_DESIGN_SECURITY_CLASSIFICATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::Certification(id) => {
+                let it = self.model.certifications.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.purpose),
+                    format!("#{}", self.id_of_ref_certification_type(&it.kind)),
+                ];
+                format!("#{n} = CERTIFICATION({});\n", attrs.join(","))
+            }
+            AnyId::CertificationType(id) => {
+                let it = self.model.certification_types.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.description)];
+                format!("#{n} = CERTIFICATION_TYPE({});\n", attrs.join(","))
+            }
+            AnyId::Change(id) => {
+                let it = self.model.changes.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_action(&it.assigned_action)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_work_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = CHANGE({});\n", attrs.join(","))
+            }
+            AnyId::ChangeRequest(id) => {
+                let it = self.model.change_requests.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_versioned_action_request(&it.assigned_action_request)
+                    ),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_change_request_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = CHANGE_REQUEST({});\n", attrs.join(","))
+            }
             AnyId::CharacterGlyphStyleOutline(id) => {
                 let it = self.model.character_glyph_style_outlines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -10245,6 +11566,49 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = CONCENTRICITY_TOLERANCE({});\n", attrs.join(","))
             }
+            AnyId::ConfigurationDesign(id) => {
+                let it = self.model.configuration_designs.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_configuration_item(&it.configuration)),
+                    format!("#{}", self.id_of_ref_configuration_design_item(&it.design)),
+                ];
+                format!("#{n} = CONFIGURATION_DESIGN({});\n", attrs.join(","))
+            }
+            AnyId::ConfigurationEffectivity(id) => {
+                let it = self.model.configuration_effectivitys.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.id),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition_relationship(&it.usage)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_configuration_design(&it.configuration)
+                    ),
+                ];
+                format!("#{n} = CONFIGURATION_EFFECTIVITY({});\n", attrs.join(","))
+            }
+            AnyId::ConfigurationItem(id) => {
+                let it = self.model.configuration_items.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.id),
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_product_concept(&it.item_concept)),
+                    match &it.purpose {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = CONFIGURATION_ITEM({});\n", attrs.join(","))
+            }
             AnyId::Conic(id) => {
                 let it = self.model.conics.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -10346,6 +11710,22 @@ impl<'a> Writer<'a> {
                     step_str(&it.name),
                 ];
                 format!("#{n} = CONTEXT_DEPENDENT_UNIT({});\n", attrs.join(","))
+            }
+            AnyId::Contract(id) => {
+                let it = self.model.contracts.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.purpose),
+                    format!("#{}", self.id_of_ref_contract_type(&it.kind)),
+                ];
+                format!("#{n} = CONTRACT({});\n", attrs.join(","))
+            }
+            AnyId::ContractType(id) => {
+                let it = self.model.contract_types.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.description)];
+                format!("#{n} = CONTRACT_TYPE({});\n", attrs.join(","))
             }
             AnyId::ConversionBasedUnit(id) => {
                 let it = self.model.conversion_based_units.get(id.0);
@@ -10530,6 +11910,24 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_local_time(&it.time_component)),
                 ];
                 format!("#{n} = DATE_AND_TIME({});\n", attrs.join(","))
+            }
+            AnyId::DateAndTimeAssignment(id) => {
+                let it = self.model.date_and_time_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_date_and_time(&it.assigned_date_and_time)
+                    ),
+                    format!("#{}", self.id_of_ref_date_time_role(&it.role)),
+                ];
+                format!("#{n} = DATE_AND_TIME_ASSIGNMENT({});\n", attrs.join(","))
+            }
+            AnyId::DateTimeRole(id) => {
+                let it = self.model.date_time_roles.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!("#{n} = DATE_TIME_ROLE({});\n", attrs.join(","))
             }
             AnyId::Datum(id) => {
                 let it = self.model.datums.get(id.0);
@@ -10937,6 +12335,12 @@ impl<'a> Writer<'a> {
                     ),
                 ];
                 format!("#{n} = EDGE_LOOP({});\n", attrs.join(","))
+            }
+            AnyId::Effectivity(id) => {
+                let it = self.model.effectivitys.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.id)];
+                format!("#{n} = EFFECTIVITY({});\n", attrs.join(","))
             }
             AnyId::ElementarySurface(id) => {
                 let it = self.model.elementary_surfaces.get(id.0);
@@ -12390,6 +13794,23 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::PersonAndOrganizationAssignment(id) => {
+                let it = self.model.person_and_organization_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_person_and_organization(
+                            &it.assigned_person_and_organization
+                        )
+                    ),
+                    format!("#{}", self.id_of_ref_person_and_organization_role(&it.role)),
+                ];
+                format!(
+                    "#{n} = PERSON_AND_ORGANIZATION_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::PersonAndOrganizationRole(id) => {
                 let it = self.model.person_and_organization_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -12782,6 +14203,36 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::ProductConcept(id) => {
+                let it = self.model.product_concepts.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.id),
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_concept_context(&it.market_context)
+                    ),
+                ];
+                format!("#{n} = PRODUCT_CONCEPT({});\n", attrs.join(","))
+            }
+            AnyId::ProductConceptContext(id) => {
+                let it = self.model.product_concept_contexts.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_application_context(&it.frame_of_reference)
+                    ),
+                    step_str(&it.market_segment_type),
+                ];
+                format!("#{n} = PRODUCT_CONCEPT_CONTEXT({});\n", attrs.join(","))
+            }
             AnyId::ProductContext(id) => {
                 let it = self.model.product_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -12827,6 +14278,21 @@ impl<'a> Writer<'a> {
                     step_str(&it.life_cycle_stage),
                 ];
                 format!("#{n} = PRODUCT_DEFINITION_CONTEXT({});\n", attrs.join(","))
+            }
+            AnyId::ProductDefinitionEffectivity(id) => {
+                let it = self.model.product_definition_effectivitys.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.id),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition_relationship(&it.usage)
+                    ),
+                ];
+                format!(
+                    "#{n} = PRODUCT_DEFINITION_EFFECTIVITY({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::ProductDefinitionFormation(id) => {
                 let it = self.model.product_definition_formations.get(id.0);
@@ -13344,6 +14810,40 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = SEAM_CURVE({});\n", attrs.join(","))
             }
+            AnyId::SecurityClassification(id) => {
+                let it = self.model.security_classifications.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.purpose),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_security_classification_level(&it.security_level)
+                    ),
+                ];
+                format!("#{n} = SECURITY_CLASSIFICATION({});\n", attrs.join(","))
+            }
+            AnyId::SecurityClassificationAssignment(id) => {
+                let it = self.model.security_classification_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "#{}",
+                    self.id_of_ref_security_classification(&it.assigned_security_classification)
+                )];
+                format!(
+                    "#{n} = SECURITY_CLASSIFICATION_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::SecurityClassificationLevel(id) => {
+                let it = self.model.security_classification_levels.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!(
+                    "#{n} = SECURITY_CLASSIFICATION_LEVEL({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::ShapeAspect(id) => {
                 let it = self.model.shape_aspects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -13509,6 +15009,41 @@ impl<'a> Writer<'a> {
                     real(it.radius),
                 ];
                 format!("#{n} = SPHERICAL_SURFACE({});\n", attrs.join(","))
+            }
+            AnyId::StartRequest(id) => {
+                let it = self.model.start_requests.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_versioned_action_request(&it.assigned_action_request)
+                    ),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_start_request_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = START_REQUEST({});\n", attrs.join(","))
+            }
+            AnyId::StartWork(id) => {
+                let it = self.model.start_works.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_action(&it.assigned_action)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_work_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = START_WORK({});\n", attrs.join(","))
             }
             AnyId::StraightnessTolerance(id) => {
                 let it = self.model.straightness_tolerances.get(id.0);
@@ -14184,6 +15719,23 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = VECTOR({});\n", attrs.join(","))
             }
+            AnyId::VersionedActionRequest(id) => {
+                let it = self.model.versioned_action_requests.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.id),
+                    match &it.version {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    step_str(&it.purpose),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = VERSIONED_ACTION_REQUEST({});\n", attrs.join(","))
+            }
             AnyId::Vertex(id) => {
                 let it = self.model.vertexs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -14239,6 +15791,9 @@ impl<'a> Writer<'a> {
                 let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len());
                 for part in &cu.parts {
                     part_txt.push(match part {
+                UnitPart::Action { name, description, chosen_method, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_action_method(chosen_method))]; format!("ACTION({})", a.join(",")) },
+                UnitPart::ActionMethod { name, description, consequence, purpose, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, step_str(consequence), step_str(purpose)]; format!("ACTION_METHOD({})", a.join(",")) },
+                UnitPart::ActionRequestAssignment { assigned_action_request, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_versioned_action_request(assigned_action_request))]; format!("ACTION_REQUEST_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::Address { internal_location, street_number, street, postal_box, town, region, postal_code, country, facsimile_number, telephone_number, electronic_mail_address, telex_number, .. } => { let a: Vec<String> = vec![match internal_location { Some(x) => step_str(x), None => "$".to_string() }, match street_number { Some(x) => step_str(x), None => "$".to_string() }, match street { Some(x) => step_str(x), None => "$".to_string() }, match postal_box { Some(x) => step_str(x), None => "$".to_string() }, match town { Some(x) => step_str(x), None => "$".to_string() }, match region { Some(x) => step_str(x), None => "$".to_string() }, match postal_code { Some(x) => step_str(x), None => "$".to_string() }, match country { Some(x) => step_str(x), None => "$".to_string() }, match facsimile_number { Some(x) => step_str(x), None => "$".to_string() }, match telephone_number { Some(x) => step_str(x), None => "$".to_string() }, match electronic_mail_address { Some(x) => step_str(x), None => "$".to_string() }, match telex_number { Some(x) => step_str(x), None => "$".to_string() }]; format!("ADDRESS({})", a.join(",")) },
                 UnitPart::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION()".to_string(),
                 UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
@@ -14247,6 +15802,7 @@ impl<'a> Writer<'a> {
                 UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE()".to_string(),
                 UnitPart::AnnotationText => "ANNOTATION_TEXT()".to_string(),
                 UnitPart::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
+                UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AssemblyComponentUsage { reference_designator, .. } => { let a: Vec<String> = vec![match reference_designator { Some(x) => step_str(x), None => "$".to_string() }]; format!("ASSEMBLY_COMPONENT_USAGE({})", a.join(",")) },
                 UnitPart::BSplineCurve { degree, control_points_list, curve_form, closed_curve, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", degree), format!("({})", control_points_list.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(",")), curve_form.token().to_string(), closed_curve.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_CURVE({})", a.join(",")) },
                 UnitPart::BSplineCurveWithKnots { knot_multiplicities, knots, knot_spec, .. } => { let a: Vec<String> = vec![format!("({})", knot_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), knot_spec.token().to_string()]; format!("B_SPLINE_CURVE_WITH_KNOTS({})", a.join(",")) },
@@ -14259,6 +15815,11 @@ impl<'a> Writer<'a> {
                 UnitPart::BoundedSurface => "BOUNDED_SURFACE()".to_string(),
                 UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE()".to_string(),
                 UnitPart::BrepWithVoids { voids, .. } => { let a: Vec<String> = vec![format!("({})", voids.iter().map(|e| format!("#{}", self.id_of_ref_oriented_closed_shell(e))).collect::<Vec<_>>().join(","))]; format!("BREP_WITH_VOIDS({})", a.join(",")) },
+                UnitPart::CcDesignApproval { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approved_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_APPROVAL({})", a.join(",")) },
+                UnitPart::CcDesignDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_time_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_person_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::CcDesignSecurityClassification { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_classified_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_SECURITY_CLASSIFICATION({})", a.join(",")) },
+                UnitPart::ChangeRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_change_request_item(e))).collect::<Vec<_>>().join(","))]; format!("CHANGE_REQUEST({})", a.join(",")) },
                 UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(outline_style))]; format!("CHARACTER_GLYPH_STYLE_OUTLINE({})", a.join(",")) },
                 UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(stroke_style))]; format!("CHARACTER_GLYPH_STYLE_STROKE({})", a.join(",")) },
                 UnitPart::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("CHARACTERIZED_OBJECT({})", a.join(",")) },
@@ -14268,6 +15829,8 @@ impl<'a> Writer<'a> {
                 UnitPart::ColourSpecification { name, .. } => { let a: Vec<String> = vec![step_str(name)]; format!("COLOUR_SPECIFICATION({})", a.join(",")) },
                 UnitPart::CommonDatum => "COMMON_DATUM()".to_string(),
                 UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT()".to_string(),
+                UnitPart::ConfigurationEffectivity { configuration, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_configuration_design(configuration))]; format!("CONFIGURATION_EFFECTIVITY({})", a.join(",")) },
+                UnitPart::ConfigurationItem { id, name, description, item_concept, purpose, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept(item_concept)), match purpose { Some(x) => step_str(x), None => "$".to_string() }]; format!("CONFIGURATION_ITEM({})", a.join(",")) },
                 UnitPart::ConnectedFaceSet { cfs_faces, .. } => { let a: Vec<String> = vec![match cfs_faces { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_face(e))).collect::<Vec<_>>().join(",")), None => "*".to_string() }]; format!("CONNECTED_FACE_SET({})", a.join(",")) },
                 UnitPart::ContextDependentOverRidingStyledItem { style_context, .. } => { let a: Vec<String> = vec![format!("({})", style_context.iter().map(|e| format!("#{}", self.id_of_ref_style_context_select(e))).collect::<Vec<_>>().join(","))]; format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
                 UnitPart::ContextDependentUnit { name, .. } => { let a: Vec<String> = vec![step_str(name)]; format!("CONTEXT_DEPENDENT_UNIT({})", a.join(",")) },
@@ -14280,6 +15843,7 @@ impl<'a> Writer<'a> {
                 UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE()".to_string(),
                 UnitPart::Date { year_component, .. } => { let a: Vec<String> = vec![format!("{}", year_component)]; format!("DATE({})", a.join(",")) },
                 UnitPart::DateAndTime { date_component, time_component, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_date(date_component)), format!("#{}", self.id_of_ref_local_time(time_component))]; format!("DATE_AND_TIME({})", a.join(",")) },
+                UnitPart::DateAndTimeAssignment { assigned_date_and_time, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_date_and_time(assigned_date_and_time)), format!("#{}", self.id_of_ref_date_time_role(role))]; format!("DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::Datum { identification, .. } => { let a: Vec<String> = vec![step_str(identification)]; format!("DATUM({})", a.join(",")) },
                 UnitPart::DatumFeature => "DATUM_FEATURE()".to_string(),
                 UnitPart::DatumReference { precedence, referenced_datum, .. } => { let a: Vec<String> = vec![format!("{}", precedence), format!("#{}", self.id_of_ref_datum(referenced_datum))]; format!("DATUM_REFERENCE({})", a.join(",")) },
@@ -14295,6 +15859,7 @@ impl<'a> Writer<'a> {
                 UnitPart::Edge { edge_start, edge_end, .. } => { let a: Vec<String> = vec![match edge_start { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }, match edge_end { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }]; format!("EDGE({})", a.join(",")) },
                 UnitPart::EdgeCurve { edge_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(edge_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("EDGE_CURVE({})", a.join(",")) },
                 UnitPart::EdgeLoop => "EDGE_LOOP()".to_string(),
+                UnitPart::Effectivity { id, .. } => { let a: Vec<String> = vec![step_str(id)]; format!("EFFECTIVITY({})", a.join(",")) },
                 UnitPart::ElementarySurface { position, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(position))]; format!("ELEMENTARY_SURFACE({})", a.join(",")) },
                 UnitPart::ExternalSource { source_id, .. } => { let a: Vec<String> = vec![string_select(source_id)]; format!("EXTERNAL_SOURCE({})", a.join(",")) },
                 UnitPart::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT()".to_string(),
@@ -14358,6 +15923,7 @@ impl<'a> Writer<'a> {
                 UnitPart::Path { edge_list, .. } => { let a: Vec<String> = vec![format!("({})", edge_list.iter().map(|e| format!("#{}", self.id_of_ref_oriented_edge(e))).collect::<Vec<_>>().join(","))]; format!("PATH({})", a.join(",")) },
                 UnitPart::Pcurve { basis_surface, reference_to_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(basis_surface)), format!("#{}", self.id_of_ref_definitional_representation(reference_to_curve))]; format!("PCURVE({})", a.join(",")) },
                 UnitPart::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS()".to_string(),
+                UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_person_and_organization(assigned_person_and_organization)), format!("#{}", self.id_of_ref_person_and_organization_role(role))]; format!("PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::PersonalAddress { people, description, .. } => { let a: Vec<String> = vec![format!("({})", people.iter().map(|e| format!("#{}", self.id_of_ref_person(e))).collect::<Vec<_>>().join(",")), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("PERSONAL_ADDRESS({})", a.join(",")) },
                 UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE()".to_string(),
                 UnitPart::Placement { location, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_cartesian_point(location))]; format!("PLACEMENT({})", a.join(",")) },
@@ -14380,9 +15946,11 @@ impl<'a> Writer<'a> {
                 UnitPart::PresentationStyleAssignment { styles, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| match e { PresentationStyleSelectRef::NullStyle(e) => format!("NULL_STYLE({})", e.token()), other => format!("#{}", self.id_of_ref_presentation_style_select(other)) }).collect::<Vec<_>>().join(","))]; format!("PRESENTATION_STYLE_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::Product { id, name, description, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("({})", frame_of_reference.iter().map(|e| format!("#{}", self.id_of_ref_product_context(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT({})", a.join(",")) },
                 UnitPart::ProductCategory { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("PRODUCT_CATEGORY({})", a.join(",")) },
+                UnitPart::ProductConcept { id, name, description, market_context, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept_context(market_context))]; format!("PRODUCT_CONCEPT({})", a.join(",")) },
                 UnitPart::ProductContext { discipline_type, .. } => { let a: Vec<String> = vec![step_str(discipline_type)]; format!("PRODUCT_CONTEXT({})", a.join(",")) },
                 UnitPart::ProductDefinition { id, description, formation, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(id), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_formation(formation)), format!("#{}", self.id_of_ref_product_definition_context(frame_of_reference))]; format!("PRODUCT_DEFINITION({})", a.join(",")) },
                 UnitPart::ProductDefinitionContext { life_cycle_stage, .. } => { let a: Vec<String> = vec![step_str(life_cycle_stage)]; format!("PRODUCT_DEFINITION_CONTEXT({})", a.join(",")) },
+                UnitPart::ProductDefinitionEffectivity { usage, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_product_definition_relationship(usage))]; format!("PRODUCT_DEFINITION_EFFECTIVITY({})", a.join(",")) },
                 UnitPart::ProductDefinitionFormation { id, description, of_product, .. } => { let a: Vec<String> = vec![step_str(id), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product(of_product))]; format!("PRODUCT_DEFINITION_FORMATION({})", a.join(",")) },
                 UnitPart::ProductDefinitionFormationWithSpecifiedSource { make_or_buy, .. } => { let a: Vec<String> = vec![make_or_buy.token().to_string()]; format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE({})", a.join(",")) },
                 UnitPart::ProductDefinitionOccurrence { id, name, description, definition, quantity, .. } => { let a: Vec<String> = vec![step_str(id), match name { Some(x) => step_str(x), None => "$".to_string() }, match description { Some(x) => step_str(x), None => "$".to_string() }, match definition { Some(r) => format!("#{}", self.id_of_ref_product_definition_or_reference(r)), None => "$".to_string() }, match quantity { Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)), None => "$".to_string() }]; format!("PRODUCT_DEFINITION_OCCURRENCE({})", a.join(",")) },
@@ -14406,6 +15974,7 @@ impl<'a> Writer<'a> {
                 UnitPart::RepresentationRelationshipWithTransformation { transformation_operator, .. } => { let a: Vec<String> = vec![match transformation_operator { TransformationRef::SetItemDefinedTransformation(vs) => format!("SET_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_transformation(other)) }]; format!("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})", a.join(",")) },
                 UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE()".to_string(),
                 UnitPart::SeamCurve => "SEAM_CURVE()".to_string(),
+                UnitPart::SecurityClassificationAssignment { assigned_security_classification, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_security_classification(assigned_security_classification))]; format!("SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::ShapeAspect { name, description, of_shape, product_definitional, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_shape(of_shape)), product_definitional.token().to_string()]; format!("SHAPE_ASPECT({})", a.join(",")) },
                 UnitPart::ShapeAspectRelationship { name, description, relating_shape_aspect, related_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_shape_aspect(relating_shape_aspect)), format!("#{}", self.id_of_ref_shape_aspect(related_shape_aspect))]; format!("SHAPE_ASPECT_RELATIONSHIP({})", a.join(",")) },
                 UnitPart::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION()".to_string(),
@@ -14416,6 +15985,7 @@ impl<'a> Writer<'a> {
                 UnitPart::SiUnit { prefix, name, .. } => { let a: Vec<String> = vec![match prefix { Some(x) => x.token().to_string(), None => "$".to_string() }, name.token().to_string()]; format!("SI_UNIT({})", a.join(",")) },
                 UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT()".to_string(),
                 UnitPart::SolidModel => "SOLID_MODEL()".to_string(),
+                UnitPart::StartRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_start_request_item(e))).collect::<Vec<_>>().join(","))]; format!("START_REQUEST({})", a.join(",")) },
                 UnitPart::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE()".to_string(),
                 UnitPart::StyledItem { styles, item, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_presentation_style_assignment(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_styled_item_target(item))]; format!("STYLED_ITEM({})", a.join(",")) },
                 UnitPart::Surface => "SURFACE()".to_string(),
@@ -14465,6 +16035,18 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.complex_units.items.len() {
             roots.push(AnyId::ComplexUnit(ComplexUnitId(i)));
         }
+        for i in 0..self.model.actions.items.len() {
+            roots.push(AnyId::Action(ActionId(i)));
+        }
+        for i in 0..self.model.action_assignments.items.len() {
+            roots.push(AnyId::ActionAssignment(ActionAssignmentId(i)));
+        }
+        for i in 0..self.model.action_methods.items.len() {
+            roots.push(AnyId::ActionMethod(ActionMethodId(i)));
+        }
+        for i in 0..self.model.action_request_assignments.items.len() {
+            roots.push(AnyId::ActionRequestAssignment(ActionRequestAssignmentId(i)));
+        }
         for i in 0..self.model.addresss.items.len() {
             roots.push(AnyId::Address(AddressId(i)));
         }
@@ -14510,6 +16092,26 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ApplicationProtocolDefinition(
                 ApplicationProtocolDefinitionId(i),
             ));
+        }
+        for i in 0..self.model.approvals.items.len() {
+            roots.push(AnyId::Approval(ApprovalId(i)));
+        }
+        for i in 0..self.model.approval_assignments.items.len() {
+            roots.push(AnyId::ApprovalAssignment(ApprovalAssignmentId(i)));
+        }
+        for i in 0..self.model.approval_date_times.items.len() {
+            roots.push(AnyId::ApprovalDateTime(ApprovalDateTimeId(i)));
+        }
+        for i in 0..self.model.approval_person_organizations.items.len() {
+            roots.push(AnyId::ApprovalPersonOrganization(
+                ApprovalPersonOrganizationId(i),
+            ));
+        }
+        for i in 0..self.model.approval_roles.items.len() {
+            roots.push(AnyId::ApprovalRole(ApprovalRoleId(i)));
+        }
+        for i in 0..self.model.approval_statuss.items.len() {
+            roots.push(AnyId::ApprovalStatus(ApprovalStatusId(i)));
         }
         for i in 0..self.model.assembly_component_usages.items.len() {
             roots.push(AnyId::AssemblyComponentUsage(AssemblyComponentUsageId(i)));
@@ -14562,6 +16164,41 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.cartesian_points.items.len() {
             roots.push(AnyId::CartesianPoint(CartesianPointId(i)));
         }
+        for i in 0..self.model.cc_design_approvals.items.len() {
+            roots.push(AnyId::CcDesignApproval(CcDesignApprovalId(i)));
+        }
+        for i in 0..self.model.cc_design_date_and_time_assignments.items.len() {
+            roots.push(AnyId::CcDesignDateAndTimeAssignment(
+                CcDesignDateAndTimeAssignmentId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .cc_design_person_and_organization_assignments
+            .items
+            .len()
+        {
+            roots.push(AnyId::CcDesignPersonAndOrganizationAssignment(
+                CcDesignPersonAndOrganizationAssignmentId(i),
+            ));
+        }
+        for i in 0..self.model.cc_design_security_classifications.items.len() {
+            roots.push(AnyId::CcDesignSecurityClassification(
+                CcDesignSecurityClassificationId(i),
+            ));
+        }
+        for i in 0..self.model.certifications.items.len() {
+            roots.push(AnyId::Certification(CertificationId(i)));
+        }
+        for i in 0..self.model.certification_types.items.len() {
+            roots.push(AnyId::CertificationType(CertificationTypeId(i)));
+        }
+        for i in 0..self.model.changes.items.len() {
+            roots.push(AnyId::Change(ChangeId(i)));
+        }
+        for i in 0..self.model.change_requests.items.len() {
+            roots.push(AnyId::ChangeRequest(ChangeRequestId(i)));
+        }
         for i in 0..self.model.character_glyph_style_outlines.items.len() {
             roots.push(AnyId::CharacterGlyphStyleOutline(
                 CharacterGlyphStyleOutlineId(i),
@@ -14608,6 +16245,17 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.concentricity_tolerances.items.len() {
             roots.push(AnyId::ConcentricityTolerance(ConcentricityToleranceId(i)));
         }
+        for i in 0..self.model.configuration_designs.items.len() {
+            roots.push(AnyId::ConfigurationDesign(ConfigurationDesignId(i)));
+        }
+        for i in 0..self.model.configuration_effectivitys.items.len() {
+            roots.push(AnyId::ConfigurationEffectivity(ConfigurationEffectivityId(
+                i,
+            )));
+        }
+        for i in 0..self.model.configuration_items.items.len() {
+            roots.push(AnyId::ConfigurationItem(ConfigurationItemId(i)));
+        }
         for i in 0..self.model.conics.items.len() {
             roots.push(AnyId::Conic(ConicId(i)));
         }
@@ -14639,6 +16287,12 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.context_dependent_units.items.len() {
             roots.push(AnyId::ContextDependentUnit(ContextDependentUnitId(i)));
+        }
+        for i in 0..self.model.contracts.items.len() {
+            roots.push(AnyId::Contract(ContractId(i)));
+        }
+        for i in 0..self.model.contract_types.items.len() {
+            roots.push(AnyId::ContractType(ContractTypeId(i)));
         }
         for i in 0..self.model.conversion_based_units.items.len() {
             roots.push(AnyId::ConversionBasedUnit(ConversionBasedUnitId(i)));
@@ -14682,6 +16336,12 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.date_and_times.items.len() {
             roots.push(AnyId::DateAndTime(DateAndTimeId(i)));
+        }
+        for i in 0..self.model.date_and_time_assignments.items.len() {
+            roots.push(AnyId::DateAndTimeAssignment(DateAndTimeAssignmentId(i)));
+        }
+        for i in 0..self.model.date_time_roles.items.len() {
+            roots.push(AnyId::DateTimeRole(DateTimeRoleId(i)));
         }
         for i in 0..self.model.datums.items.len() {
             roots.push(AnyId::Datum(DatumId(i)));
@@ -14776,6 +16436,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.edge_loops.items.len() {
             roots.push(AnyId::EdgeLoop(EdgeLoopId(i)));
+        }
+        for i in 0..self.model.effectivitys.items.len() {
+            roots.push(AnyId::Effectivity(EffectivityId(i)));
         }
         for i in 0..self.model.elementary_surfaces.items.len() {
             roots.push(AnyId::ElementarySurface(ElementarySurfaceId(i)));
@@ -15123,6 +16786,11 @@ impl<'a> Writer<'a> {
                 PersonAndOrganizationAddressId(i),
             ));
         }
+        for i in 0..self.model.person_and_organization_assignments.items.len() {
+            roots.push(AnyId::PersonAndOrganizationAssignment(
+                PersonAndOrganizationAssignmentId(i),
+            ));
+        }
         for i in 0..self.model.person_and_organization_roles.items.len() {
             roots.push(AnyId::PersonAndOrganizationRole(
                 PersonAndOrganizationRoleId(i),
@@ -15220,6 +16888,12 @@ impl<'a> Writer<'a> {
                 ProductCategoryRelationshipId(i),
             ));
         }
+        for i in 0..self.model.product_concepts.items.len() {
+            roots.push(AnyId::ProductConcept(ProductConceptId(i)));
+        }
+        for i in 0..self.model.product_concept_contexts.items.len() {
+            roots.push(AnyId::ProductConceptContext(ProductConceptContextId(i)));
+        }
         for i in 0..self.model.product_contexts.items.len() {
             roots.push(AnyId::ProductContext(ProductContextId(i)));
         }
@@ -15230,6 +16904,11 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ProductDefinitionContext(ProductDefinitionContextId(
                 i,
             )));
+        }
+        for i in 0..self.model.product_definition_effectivitys.items.len() {
+            roots.push(AnyId::ProductDefinitionEffectivity(
+                ProductDefinitionEffectivityId(i),
+            ));
         }
         for i in 0..self.model.product_definition_formations.items.len() {
             roots.push(AnyId::ProductDefinitionFormation(
@@ -15343,6 +17022,19 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.seam_curves.items.len() {
             roots.push(AnyId::SeamCurve(SeamCurveId(i)));
         }
+        for i in 0..self.model.security_classifications.items.len() {
+            roots.push(AnyId::SecurityClassification(SecurityClassificationId(i)));
+        }
+        for i in 0..self.model.security_classification_assignments.items.len() {
+            roots.push(AnyId::SecurityClassificationAssignment(
+                SecurityClassificationAssignmentId(i),
+            ));
+        }
+        for i in 0..self.model.security_classification_levels.items.len() {
+            roots.push(AnyId::SecurityClassificationLevel(
+                SecurityClassificationLevelId(i),
+            ));
+        }
         for i in 0..self.model.shape_aspects.items.len() {
             roots.push(AnyId::ShapeAspect(ShapeAspectId(i)));
         }
@@ -15381,6 +17073,12 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.spherical_surfaces.items.len() {
             roots.push(AnyId::SphericalSurface(SphericalSurfaceId(i)));
+        }
+        for i in 0..self.model.start_requests.items.len() {
+            roots.push(AnyId::StartRequest(StartRequestId(i)));
+        }
+        for i in 0..self.model.start_works.items.len() {
+            roots.push(AnyId::StartWork(StartWorkId(i)));
         }
         for i in 0..self.model.straightness_tolerances.items.len() {
             roots.push(AnyId::StraightnessTolerance(StraightnessToleranceId(i)));
@@ -15566,6 +17264,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.vectors.items.len() {
             roots.push(AnyId::Vector(VectorId(i)));
+        }
+        for i in 0..self.model.versioned_action_requests.items.len() {
+            roots.push(AnyId::VersionedActionRequest(VersionedActionRequestId(i)));
         }
         for i in 0..self.model.vertexs.items.len() {
             roots.push(AnyId::Vertex(VertexId(i)));

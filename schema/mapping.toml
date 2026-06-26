@@ -1245,3 +1245,20 @@ presentation_repr = [
     "presentation_layer_assignment",
     "context_dependent_over_riding_styled_item",
 ]
+# management metadata — top escape cluster. approval/person-org/date/security
+# roots; their cc_design_* items SELECTs are narrow (members close on already-
+# covered product/date + the change_management roots below). Abstract *_assignment
+# parents and 2nd-order deps (action/action_method/configuration_design/...) come
+# in via ref-reachability. group is already covered; applied_group_assignment
+# (groupable_item ~120-member mega-select) is deliberately deferred.
+management_metadata = [
+    "approval", "approval_status", "approval_role",
+    "approval_date_time", "approval_person_organization", "cc_design_approval",
+    "cc_design_person_and_organization_assignment",
+    "date_time_role", "cc_design_date_and_time_assignment",
+    "security_classification", "security_classification_level", "cc_design_security_classification",
+]
+change_management = [
+    "change", "change_request", "start_request", "start_work",
+    "contract", "certification", "configuration_item", "configuration_effectivity",
+]

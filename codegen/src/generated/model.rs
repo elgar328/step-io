@@ -859,6 +859,14 @@ impl TrimmingPreference {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionMethodId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionRequestAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AddressId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AdvancedBrepShapeRepresentationId(pub usize);
@@ -882,6 +890,18 @@ pub struct ApplicationContextId(pub usize);
 pub struct ApplicationContextElementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApplicationProtocolDefinitionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApprovalId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApprovalAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApprovalDateTimeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApprovalPersonOrganizationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApprovalRoleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApprovalStatusId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AssemblyComponentUsageId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -917,6 +937,22 @@ pub struct CalendarDateId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CartesianPointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CcDesignApprovalId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CcDesignDateAndTimeAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CcDesignPersonAndOrganizationAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CcDesignSecurityClassificationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CertificationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CertificationTypeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ChangeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ChangeRequestId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterGlyphStyleOutlineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterGlyphStyleStrokeId(pub usize);
@@ -945,6 +981,12 @@ pub struct CompositeShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConcentricityToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ConfigurationDesignId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ConfigurationEffectivityId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ConfigurationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConicId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConicalSurfaceId(pub usize);
@@ -956,6 +998,10 @@ pub struct ContextDependentOverRidingStyledItemId(pub usize);
 pub struct ContextDependentShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ContractId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ContractTypeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConversionBasedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -982,6 +1028,10 @@ pub struct CylindricityToleranceId(pub usize);
 pub struct DateId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateAndTimeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DateAndTimeAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DateTimeRoleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1032,6 +1082,8 @@ pub struct EdgeId(pub usize);
 pub struct EdgeCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EdgeLoopId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct EffectivityId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ElementarySurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1197,6 +1249,8 @@ pub struct PersonAndOrganizationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonAndOrganizationAddressId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PersonAndOrganizationAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonAndOrganizationRoleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonalAddressId(pub usize);
@@ -1251,11 +1305,17 @@ pub struct ProductCategoryId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductCategoryRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ProductConceptId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ProductConceptContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionContextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ProductDefinitionEffectivityId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionFormationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1307,6 +1367,12 @@ pub struct RoundnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SeamCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SecurityClassificationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SecurityClassificationAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SecurityClassificationLevelId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectRelationshipId(pub usize);
@@ -1328,6 +1394,10 @@ pub struct SolidAngleUnitId(pub usize);
 pub struct SolidModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SphericalSurfaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct StartRequestId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct StartWorkId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StraightnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1425,6 +1495,8 @@ pub struct UniformSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VectorId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct VersionedActionRequestId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VertexId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VertexLoopId(pub usize);
@@ -1439,6 +1511,10 @@ pub struct ComplexUnitId(pub usize);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AnyId {
+    Action(ActionId),
+    ActionAssignment(ActionAssignmentId),
+    ActionMethod(ActionMethodId),
+    ActionRequestAssignment(ActionRequestAssignmentId),
     Address(AddressId),
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
@@ -1451,6 +1527,12 @@ pub enum AnyId {
     ApplicationContext(ApplicationContextId),
     ApplicationContextElement(ApplicationContextElementId),
     ApplicationProtocolDefinition(ApplicationProtocolDefinitionId),
+    Approval(ApprovalId),
+    ApprovalAssignment(ApprovalAssignmentId),
+    ApprovalDateTime(ApprovalDateTimeId),
+    ApprovalPersonOrganization(ApprovalPersonOrganizationId),
+    ApprovalRole(ApprovalRoleId),
+    ApprovalStatus(ApprovalStatusId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
@@ -1468,6 +1550,14 @@ pub enum AnyId {
     BrepWithVoids(BrepWithVoidsId),
     CalendarDate(CalendarDateId),
     CartesianPoint(CartesianPointId),
+    CcDesignApproval(CcDesignApprovalId),
+    CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
+    CcDesignPersonAndOrganizationAssignment(CcDesignPersonAndOrganizationAssignmentId),
+    CcDesignSecurityClassification(CcDesignSecurityClassificationId),
+    Certification(CertificationId),
+    CertificationType(CertificationTypeId),
+    Change(ChangeId),
+    ChangeRequest(ChangeRequestId),
     CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
     CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
     CharacterizedObject(CharacterizedObjectId),
@@ -1482,12 +1572,17 @@ pub enum AnyId {
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     CompositeShapeAspect(CompositeShapeAspectId),
     ConcentricityTolerance(ConcentricityToleranceId),
+    ConfigurationDesign(ConfigurationDesignId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConfigurationItem(ConfigurationItemId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     ContextDependentUnit(ContextDependentUnitId),
+    Contract(ContractId),
+    ContractType(ContractTypeId),
     ConversionBasedUnit(ConversionBasedUnitId),
     CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
     CoordinatesList(CoordinatesListId),
@@ -1501,6 +1596,8 @@ pub enum AnyId {
     CylindricityTolerance(CylindricityToleranceId),
     Date(DateId),
     DateAndTime(DateAndTimeId),
+    DateAndTimeAssignment(DateAndTimeAssignmentId),
+    DateTimeRole(DateTimeRoleId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
     DatumReference(DatumReferenceId),
@@ -1526,6 +1623,7 @@ pub enum AnyId {
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
+    Effectivity(EffectivityId),
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
     ExternalSource(ExternalSourceId),
@@ -1610,6 +1708,7 @@ pub enum AnyId {
     Person(PersonId),
     PersonAndOrganization(PersonAndOrganizationId),
     PersonAndOrganizationAddress(PersonAndOrganizationAddressId),
+    PersonAndOrganizationAssignment(PersonAndOrganizationAssignmentId),
     PersonAndOrganizationRole(PersonAndOrganizationRoleId),
     PersonalAddress(PersonalAddressId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
@@ -1637,9 +1736,12 @@ pub enum AnyId {
     Product(ProductId),
     ProductCategory(ProductCategoryId),
     ProductCategoryRelationship(ProductCategoryRelationshipId),
+    ProductConcept(ProductConceptId),
+    ProductConceptContext(ProductConceptContextId),
     ProductContext(ProductContextId),
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionContext(ProductDefinitionContextId),
+    ProductDefinitionEffectivity(ProductDefinitionEffectivityId),
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
@@ -1665,6 +1767,9 @@ pub enum AnyId {
     RepresentationRelationshipWithTransformation(RepresentationRelationshipWithTransformationId),
     RoundnessTolerance(RoundnessToleranceId),
     SeamCurve(SeamCurveId),
+    SecurityClassification(SecurityClassificationId),
+    SecurityClassificationAssignment(SecurityClassificationAssignmentId),
+    SecurityClassificationLevel(SecurityClassificationLevelId),
     ShapeAspect(ShapeAspectId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
@@ -1676,6 +1781,8 @@ pub enum AnyId {
     SolidAngleUnit(SolidAngleUnitId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
+    StartRequest(StartRequestId),
+    StartWork(StartWorkId),
     StraightnessTolerance(StraightnessToleranceId),
     StyledItem(StyledItemId),
     Surface(SurfaceId),
@@ -1724,12 +1831,43 @@ pub enum AnyId {
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
     Vector(VectorId),
+    VersionedActionRequest(VersionedActionRequestId),
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
     ComplexUnit(ComplexUnitId),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ActionMethodRef {
+    ActionMethod(ActionMethodId),
+    Complex(ComplexUnitId),
+}
+impl ActionMethodRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ActionMethod(i) => Self::ActionMethod(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ActionMethodRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ActionRef {
+    Action(ActionId),
+    Complex(ComplexUnitId),
+}
+impl ActionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Action(i) => Self::Action(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ActionRef ref -> {other:?}"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1791,6 +1929,78 @@ impl ApplicationContextRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ApprovalRef {
+    Approval(ApprovalId),
+}
+impl ApprovalRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Approval(i) => Self::Approval(i),
+            other => panic!("ApprovalRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ApprovalRoleRef {
+    ApprovalRole(ApprovalRoleId),
+}
+impl ApprovalRoleRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ApprovalRole(i) => Self::ApprovalRole(i),
+            other => panic!("ApprovalRoleRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ApprovalStatusRef {
+    ApprovalStatus(ApprovalStatusId),
+}
+impl ApprovalStatusRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ApprovalStatus(i) => Self::ApprovalStatus(i),
+            other => panic!("ApprovalStatusRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ApprovedItemRef {
+    Certification(CertificationId),
+    Change(ChangeId),
+    ChangeRequest(ChangeRequestId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConfigurationItem(ConfigurationItemId),
+    Contract(ContractId),
+    Product(ProductId),
+    SecurityClassification(SecurityClassificationId),
+    StartRequest(StartRequestId),
+    StartWork(StartWorkId),
+    Complex(ComplexUnitId),
+}
+impl ApprovedItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Certification(i) => Self::Certification(i),
+            AnyId::Change(i) => Self::Change(i),
+            AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
+            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
+            AnyId::Contract(i) => Self::Contract(i),
+            AnyId::Product(i) => Self::Product(i),
+            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
+            AnyId::StartRequest(i) => Self::StartRequest(i),
+            AnyId::StartWork(i) => Self::StartWork(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ApprovedItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Axis1PlacementRef {
     Axis1Placement(Axis1PlacementId),
 }
@@ -1840,6 +2050,98 @@ impl CartesianPointRef {
         match a {
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             other => panic!("CartesianPointRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CcClassifiedItemRef {
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    Complex(ComplexUnitId),
+}
+impl CcClassifiedItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CcClassifiedItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CcPersonOrganizationItemRef {
+    Change(ChangeId),
+    ChangeRequest(ChangeRequestId),
+    ConfigurationItem(ConfigurationItemId),
+    Contract(ContractId),
+    Product(ProductId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    SecurityClassification(SecurityClassificationId),
+    StartRequest(StartRequestId),
+    StartWork(StartWorkId),
+    Complex(ComplexUnitId),
+}
+impl CcPersonOrganizationItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Change(i) => Self::Change(i),
+            AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
+            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
+            AnyId::Contract(i) => Self::Contract(i),
+            AnyId::Product(i) => Self::Product(i),
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
+            AnyId::StartRequest(i) => Self::StartRequest(i),
+            AnyId::StartWork(i) => Self::StartWork(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CcPersonOrganizationItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CertificationTypeRef {
+    CertificationType(CertificationTypeId),
+}
+impl CertificationTypeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CertificationType(i) => Self::CertificationType(i),
+            other => panic!("CertificationTypeRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ChangeRequestItemRef {
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    Complex(ComplexUnitId),
+}
+impl ChangeRequestItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ChangeRequestItemRef ref -> {other:?}"),
         }
     }
 }
@@ -2020,6 +2322,70 @@ impl ColourRef {
             AnyId::ColourSpecification(i) => Self::ColourSpecification(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ColourRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConfigurationDesignItemRef {
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
+    Complex(ComplexUnitId),
+}
+impl ConfigurationDesignItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ConfigurationDesignItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConfigurationDesignRef {
+    ConfigurationDesign(ConfigurationDesignId),
+}
+impl ConfigurationDesignRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
+            other => panic!("ConfigurationDesignRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConfigurationItemRef {
+    ConfigurationItem(ConfigurationItemId),
+    Complex(ComplexUnitId),
+}
+impl ConfigurationItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ConfigurationItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ContractTypeRef {
+    ContractType(ContractTypeId),
+}
+impl ContractTypeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ContractType(i) => Self::ContractType(i),
+            other => panic!("ContractTypeRef ref -> {other:?}"),
         }
     }
 }
@@ -2305,6 +2671,21 @@ impl CurveStyleRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DateAndTimeRef {
+    DateAndTime(DateAndTimeId),
+    Complex(ComplexUnitId),
+}
+impl DateAndTimeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DateAndTime(i) => Self::DateAndTime(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DateAndTimeRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DateRef {
     CalendarDate(CalendarDateId),
     Date(DateId),
@@ -2317,6 +2698,71 @@ impl DateRef {
             AnyId::Date(i) => Self::Date(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DateRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DateTimeItemRef {
+    ApprovalPersonOrganization(ApprovalPersonOrganizationId),
+    Certification(CertificationId),
+    Change(ChangeId),
+    ChangeRequest(ChangeRequestId),
+    Contract(ContractId),
+    ProductDefinition(ProductDefinitionId),
+    SecurityClassification(SecurityClassificationId),
+    StartRequest(StartRequestId),
+    StartWork(StartWorkId),
+    Complex(ComplexUnitId),
+}
+impl DateTimeItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ApprovalPersonOrganization(i) => Self::ApprovalPersonOrganization(i),
+            AnyId::Certification(i) => Self::Certification(i),
+            AnyId::Change(i) => Self::Change(i),
+            AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
+            AnyId::Contract(i) => Self::Contract(i),
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
+            AnyId::StartRequest(i) => Self::StartRequest(i),
+            AnyId::StartWork(i) => Self::StartWork(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DateTimeItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DateTimeRoleRef {
+    DateTimeRole(DateTimeRoleId),
+}
+impl DateTimeRoleRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DateTimeRole(i) => Self::DateTimeRole(i),
+            other => panic!("DateTimeRoleRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DateTimeSelectRef {
+    CalendarDate(CalendarDateId),
+    Date(DateId),
+    DateAndTime(DateAndTimeId),
+    LocalTime(LocalTimeId),
+    Complex(ComplexUnitId),
+}
+impl DateTimeSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CalendarDate(i) => Self::CalendarDate(i),
+            AnyId::Date(i) => Self::Date(i),
+            AnyId::DateAndTime(i) => Self::DateAndTime(i),
+            AnyId::LocalTime(i) => Self::LocalTime(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DateTimeSelectRef ref -> {other:?}"),
         }
     }
 }
@@ -3373,6 +3819,49 @@ impl PcurveOrSurfaceRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum PersonAndOrganizationRef {
+    PersonAndOrganization(PersonAndOrganizationId),
+}
+impl PersonAndOrganizationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
+            other => panic!("PersonAndOrganizationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PersonAndOrganizationRoleRef {
+    PersonAndOrganizationRole(PersonAndOrganizationRoleId),
+}
+impl PersonAndOrganizationRoleRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::PersonAndOrganizationRole(i) => Self::PersonAndOrganizationRole(i),
+            other => panic!("PersonAndOrganizationRoleRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PersonOrganizationSelectRef {
+    Organization(OrganizationId),
+    Person(PersonId),
+    PersonAndOrganization(PersonAndOrganizationId),
+}
+impl PersonOrganizationSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Organization(i) => Self::Organization(i),
+            AnyId::Person(i) => Self::Person(i),
+            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
+            other => panic!("PersonOrganizationSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum PersonRef {
     Person(PersonId),
 }
@@ -3462,6 +3951,34 @@ impl ProductCategoryRef {
             AnyId::ProductRelatedProductCategory(i) => Self::ProductRelatedProductCategory(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ProductCategoryRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProductConceptContextRef {
+    ProductConceptContext(ProductConceptContextId),
+}
+impl ProductConceptContextRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductConceptContext(i) => Self::ProductConceptContext(i),
+            other => panic!("ProductConceptContextRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProductConceptRef {
+    ProductConcept(ProductConceptId),
+    Complex(ComplexUnitId),
+}
+impl ProductConceptRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductConcept(i) => Self::ProductConcept(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ProductConceptRef ref -> {other:?}"),
         }
     }
 }
@@ -4027,6 +4544,32 @@ impl RepresentedDefinitionRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum SecurityClassificationLevelRef {
+    SecurityClassificationLevel(SecurityClassificationLevelId),
+}
+impl SecurityClassificationLevelRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::SecurityClassificationLevel(i) => Self::SecurityClassificationLevel(i),
+            other => panic!("SecurityClassificationLevelRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SecurityClassificationRef {
+    SecurityClassification(SecurityClassificationId),
+}
+impl SecurityClassificationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
+            other => panic!("SecurityClassificationRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ShapeAspectRef {
     CommonDatum(CommonDatumId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -4139,6 +4682,25 @@ impl SizeSelectRef {
             AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("SizeSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StartRequestItemRef {
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    Complex(ComplexUnitId),
+}
+impl StartRequestItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("StartRequestItemRef ref -> {other:?}"),
         }
     }
 }
@@ -5026,6 +5588,19 @@ impl VectorRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum VersionedActionRequestRef {
+    VersionedActionRequest(VersionedActionRequestId),
+}
+impl VersionedActionRequestRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
+            other => panic!("VersionedActionRequestRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum VertexLoopRef {
     VertexLoop(VertexLoopId),
 }
@@ -5053,6 +5628,50 @@ impl VertexRef {
             other => panic!("VertexRef ref -> {other:?}"),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WorkItemRef {
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    Complex(ComplexUnitId),
+}
+impl WorkItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("WorkItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Action {
+    pub name: String,
+    pub description: Option<String>,
+    pub chosen_method: ActionMethodRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionAssignment {
+    pub assigned_action: ActionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionMethod {
+    pub name: String,
+    pub description: Option<String>,
+    pub consequence: String,
+    pub purpose: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionRequestAssignment {
+    pub assigned_action_request: VersionedActionRequestRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5147,6 +5766,40 @@ pub struct ApplicationProtocolDefinition {
     pub application_interpreted_model_schema_name: String,
     pub application_protocol_year: i64,
     pub application: ApplicationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Approval {
+    pub status: ApprovalStatusRef,
+    pub level: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApprovalAssignment {
+    pub assigned_approval: ApprovalRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApprovalDateTime {
+    pub date_time: DateTimeSelectRef,
+    pub dated_approval: ApprovalRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApprovalPersonOrganization {
+    pub person_organization: PersonOrganizationSelectRef,
+    pub authorized_approval: ApprovalRef,
+    pub role: ApprovalRoleRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApprovalRole {
+    pub role: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApprovalStatus {
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5301,6 +5954,56 @@ pub struct CartesianPoint {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignApproval {
+    pub assigned_approval: ApprovalRef,
+    pub items: Vec<ApprovedItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignDateAndTimeAssignment {
+    pub assigned_date_and_time: DateAndTimeRef,
+    pub role: DateTimeRoleRef,
+    pub items: Vec<DateTimeItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignPersonAndOrganizationAssignment {
+    pub assigned_person_and_organization: PersonAndOrganizationRef,
+    pub role: PersonAndOrganizationRoleRef,
+    pub items: Vec<CcPersonOrganizationItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignSecurityClassification {
+    pub assigned_security_classification: SecurityClassificationRef,
+    pub items: Vec<CcClassifiedItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Certification {
+    pub name: String,
+    pub purpose: String,
+    pub kind: CertificationTypeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CertificationType {
+    pub description: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Change {
+    pub assigned_action: ActionRef,
+    pub items: Vec<WorkItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ChangeRequest {
+    pub assigned_action_request: VersionedActionRequestRef,
+    pub items: Vec<ChangeRequestItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CharacterGlyphStyleOutline {
     pub outline_style: CurveStyleRef,
 }
@@ -5402,6 +6105,28 @@ pub struct ConcentricityTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ConfigurationDesign {
+    pub configuration: ConfigurationItemRef,
+    pub design: ConfigurationDesignItemRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConfigurationEffectivity {
+    pub id: String,
+    pub usage: ProductDefinitionRelationshipRef,
+    pub configuration: ConfigurationDesignRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConfigurationItem {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub item_concept: ProductConceptRef,
+    pub purpose: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Conic {
     pub name: String,
     pub position: Axis2PlacementRef,
@@ -5440,6 +6165,18 @@ pub struct ContextDependentShapeRepresentation {
 pub struct ContextDependentUnit {
     pub dimensions: DimensionalExponentsRef,
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Contract {
+    pub name: String,
+    pub purpose: String,
+    pub kind: ContractTypeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContractType {
+    pub description: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5525,6 +6262,17 @@ pub struct Date {
 pub struct DateAndTime {
     pub date_component: DateRef,
     pub time_component: LocalTimeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DateAndTimeAssignment {
+    pub assigned_date_and_time: DateAndTimeRef,
+    pub role: DateTimeRoleRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DateTimeRole {
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5710,6 +6458,11 @@ pub struct EdgeCurve {
 pub struct EdgeLoop {
     pub name: String,
     pub edge_list: Vec<OrientedEdgeRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Effectivity {
+    pub id: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6311,6 +7064,12 @@ pub struct PersonAndOrganizationAddress {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PersonAndOrganizationAssignment {
+    pub assigned_person_and_organization: PersonAndOrganizationRef,
+    pub role: PersonAndOrganizationRoleRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PersonAndOrganizationRole {
     pub name: String,
 }
@@ -6488,6 +7247,21 @@ pub struct ProductCategoryRelationship {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ProductConcept {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub market_context: ProductConceptContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductConceptContext {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextRef,
+    pub market_segment_type: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ProductContext {
     pub name: String,
     pub frame_of_reference: ApplicationContextRef,
@@ -6507,6 +7281,12 @@ pub struct ProductDefinitionContext {
     pub name: String,
     pub frame_of_reference: ApplicationContextRef,
     pub life_cycle_stage: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionEffectivity {
+    pub id: String,
+    pub usage: ProductDefinitionRelationshipRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6710,6 +7490,23 @@ pub struct SeamCurve {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct SecurityClassification {
+    pub name: String,
+    pub purpose: String,
+    pub security_level: SecurityClassificationLevelRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SecurityClassificationAssignment {
+    pub assigned_security_classification: SecurityClassificationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SecurityClassificationLevel {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspect {
     pub name: String,
     pub description: Option<String>,
@@ -6780,6 +7577,18 @@ pub struct SphericalSurface {
     pub name: String,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StartRequest {
+    pub assigned_action_request: VersionedActionRequestRef,
+    pub items: Vec<StartRequestItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StartWork {
+    pub assigned_action: ActionRef,
+    pub items: Vec<WorkItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7102,6 +7911,14 @@ pub struct Vector {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct VersionedActionRequest {
+    pub id: String,
+    pub version: Option<String>,
+    pub purpose: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vertex {
     pub name: String,
 }
@@ -7132,6 +7949,20 @@ pub struct WireShell {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnitPart {
+    Action {
+        name: String,
+        description: Option<String>,
+        chosen_method: ActionMethodRef,
+    },
+    ActionMethod {
+        name: String,
+        description: Option<String>,
+        consequence: String,
+        purpose: String,
+    },
+    ActionRequestAssignment {
+        assigned_action_request: VersionedActionRequestRef,
+    },
     Address {
         internal_location: Option<String>,
         street_number: Option<String>,
@@ -7155,6 +7986,9 @@ pub enum UnitPart {
     ApplicationContextElement {
         name: String,
         frame_of_reference: ApplicationContextRef,
+    },
+    ApprovalAssignment {
+        assigned_approval: ApprovalRef,
     },
     AssemblyComponentUsage {
         reference_designator: Option<String>,
@@ -7196,6 +8030,21 @@ pub enum UnitPart {
     BrepWithVoids {
         voids: Vec<OrientedClosedShellRef>,
     },
+    CcDesignApproval {
+        items: Vec<ApprovedItemRef>,
+    },
+    CcDesignDateAndTimeAssignment {
+        items: Vec<DateTimeItemRef>,
+    },
+    CcDesignPersonAndOrganizationAssignment {
+        items: Vec<CcPersonOrganizationItemRef>,
+    },
+    CcDesignSecurityClassification {
+        items: Vec<CcClassifiedItemRef>,
+    },
+    ChangeRequest {
+        items: Vec<ChangeRequestItemRef>,
+    },
     CharacterGlyphStyleOutline {
         outline_style: CurveStyleRef,
     },
@@ -7218,6 +8067,16 @@ pub enum UnitPart {
     },
     CommonDatum,
     CompositeShapeAspect,
+    ConfigurationEffectivity {
+        configuration: ConfigurationDesignRef,
+    },
+    ConfigurationItem {
+        id: String,
+        name: String,
+        description: Option<String>,
+        item_concept: ProductConceptRef,
+        purpose: Option<String>,
+    },
     ConnectedFaceSet {
         cfs_faces: Option<Vec<FaceRef>>,
     },
@@ -7259,6 +8118,10 @@ pub enum UnitPart {
         date_component: DateRef,
         time_component: LocalTimeRef,
     },
+    DateAndTimeAssignment {
+        assigned_date_and_time: DateAndTimeRef,
+        role: DateTimeRoleRef,
+    },
     Datum {
         identification: String,
     },
@@ -7299,6 +8162,9 @@ pub enum UnitPart {
         same_sense: bool,
     },
     EdgeLoop,
+    Effectivity {
+        id: String,
+    },
     ElementarySurface {
         position: Axis2Placement3dRef,
     },
@@ -7471,6 +8337,10 @@ pub enum UnitPart {
         reference_to_curve: DefinitionalRepresentationRef,
     },
     PersonAndOrganizationAddress,
+    PersonAndOrganizationAssignment {
+        assigned_person_and_organization: PersonAndOrganizationRef,
+        role: PersonAndOrganizationRoleRef,
+    },
     PersonalAddress {
         people: Vec<PersonRef>,
         description: Option<String>,
@@ -7522,6 +8392,12 @@ pub enum UnitPart {
         name: String,
         description: Option<String>,
     },
+    ProductConcept {
+        id: String,
+        name: String,
+        description: Option<String>,
+        market_context: ProductConceptContextRef,
+    },
     ProductContext {
         discipline_type: String,
     },
@@ -7533,6 +8409,9 @@ pub enum UnitPart {
     },
     ProductDefinitionContext {
         life_cycle_stage: String,
+    },
+    ProductDefinitionEffectivity {
+        usage: ProductDefinitionRelationshipRef,
     },
     ProductDefinitionFormation {
         id: String,
@@ -7616,6 +8495,9 @@ pub enum UnitPart {
     },
     RoundnessTolerance,
     SeamCurve,
+    SecurityClassificationAssignment {
+        assigned_security_classification: SecurityClassificationRef,
+    },
     ShapeAspect {
         name: String,
         description: Option<String>,
@@ -7641,6 +8523,9 @@ pub enum UnitPart {
     },
     SolidAngleUnit,
     SolidModel,
+    StartRequest {
+        items: Vec<StartRequestItemRef>,
+    },
     StraightnessTolerance,
     StyledItem {
         styles: Vec<PresentationStyleAssignmentRef>,
@@ -7749,6 +8634,10 @@ pub struct ComplexUnit {
 
 #[derive(Debug, Default)]
 pub struct Model {
+    pub actions: Arena<Action>,
+    pub action_assignments: Arena<ActionAssignment>,
+    pub action_methods: Arena<ActionMethod>,
+    pub action_request_assignments: Arena<ActionRequestAssignment>,
     pub addresss: Arena<Address>,
     pub advanced_brep_shape_representations: Arena<AdvancedBrepShapeRepresentation>,
     pub advanced_faces: Arena<AdvancedFace>,
@@ -7761,6 +8650,12 @@ pub struct Model {
     pub application_contexts: Arena<ApplicationContext>,
     pub application_context_elements: Arena<ApplicationContextElement>,
     pub application_protocol_definitions: Arena<ApplicationProtocolDefinition>,
+    pub approvals: Arena<Approval>,
+    pub approval_assignments: Arena<ApprovalAssignment>,
+    pub approval_date_times: Arena<ApprovalDateTime>,
+    pub approval_person_organizations: Arena<ApprovalPersonOrganization>,
+    pub approval_roles: Arena<ApprovalRole>,
+    pub approval_statuss: Arena<ApprovalStatus>,
     pub assembly_component_usages: Arena<AssemblyComponentUsage>,
     pub axis1_placements: Arena<Axis1Placement>,
     pub axis2_placement2ds: Arena<Axis2Placement2d>,
@@ -7778,6 +8673,15 @@ pub struct Model {
     pub brep_with_voidss: Arena<BrepWithVoids>,
     pub calendar_dates: Arena<CalendarDate>,
     pub cartesian_points: Arena<CartesianPoint>,
+    pub cc_design_approvals: Arena<CcDesignApproval>,
+    pub cc_design_date_and_time_assignments: Arena<CcDesignDateAndTimeAssignment>,
+    pub cc_design_person_and_organization_assignments:
+        Arena<CcDesignPersonAndOrganizationAssignment>,
+    pub cc_design_security_classifications: Arena<CcDesignSecurityClassification>,
+    pub certifications: Arena<Certification>,
+    pub certification_types: Arena<CertificationType>,
+    pub changes: Arena<Change>,
+    pub change_requests: Arena<ChangeRequest>,
     pub character_glyph_style_outlines: Arena<CharacterGlyphStyleOutline>,
     pub character_glyph_style_strokes: Arena<CharacterGlyphStyleStroke>,
     pub characterized_objects: Arena<CharacterizedObject>,
@@ -7792,12 +8696,17 @@ pub struct Model {
     pub complex_triangulated_faces: Arena<ComplexTriangulatedFace>,
     pub composite_shape_aspects: Arena<CompositeShapeAspect>,
     pub concentricity_tolerances: Arena<ConcentricityTolerance>,
+    pub configuration_designs: Arena<ConfigurationDesign>,
+    pub configuration_effectivitys: Arena<ConfigurationEffectivity>,
+    pub configuration_items: Arena<ConfigurationItem>,
     pub conics: Arena<Conic>,
     pub conical_surfaces: Arena<ConicalSurface>,
     pub connected_face_sets: Arena<ConnectedFaceSet>,
     pub context_dependent_over_riding_styled_items: Arena<ContextDependentOverRidingStyledItem>,
     pub context_dependent_shape_representations: Arena<ContextDependentShapeRepresentation>,
     pub context_dependent_units: Arena<ContextDependentUnit>,
+    pub contracts: Arena<Contract>,
+    pub contract_types: Arena<ContractType>,
     pub conversion_based_units: Arena<ConversionBasedUnit>,
     pub coordinated_universal_time_offsets: Arena<CoordinatedUniversalTimeOffset>,
     pub coordinates_lists: Arena<CoordinatesList>,
@@ -7811,6 +8720,8 @@ pub struct Model {
     pub cylindricity_tolerances: Arena<CylindricityTolerance>,
     pub dates: Arena<Date>,
     pub date_and_times: Arena<DateAndTime>,
+    pub date_and_time_assignments: Arena<DateAndTimeAssignment>,
+    pub date_time_roles: Arena<DateTimeRole>,
     pub datums: Arena<Datum>,
     pub datum_features: Arena<DatumFeature>,
     pub datum_references: Arena<DatumReference>,
@@ -7836,6 +8747,7 @@ pub struct Model {
     pub edges: Arena<Edge>,
     pub edge_curves: Arena<EdgeCurve>,
     pub edge_loops: Arena<EdgeLoop>,
+    pub effectivitys: Arena<Effectivity>,
     pub elementary_surfaces: Arena<ElementarySurface>,
     pub ellipses: Arena<Ellipse>,
     pub external_sources: Arena<ExternalSource>,
@@ -7919,6 +8831,7 @@ pub struct Model {
     pub persons: Arena<Person>,
     pub person_and_organizations: Arena<PersonAndOrganization>,
     pub person_and_organization_addresss: Arena<PersonAndOrganizationAddress>,
+    pub person_and_organization_assignments: Arena<PersonAndOrganizationAssignment>,
     pub person_and_organization_roles: Arena<PersonAndOrganizationRole>,
     pub personal_addresss: Arena<PersonalAddress>,
     pub placed_datum_target_features: Arena<PlacedDatumTargetFeature>,
@@ -7946,9 +8859,12 @@ pub struct Model {
     pub products: Arena<Product>,
     pub product_categorys: Arena<ProductCategory>,
     pub product_category_relationships: Arena<ProductCategoryRelationship>,
+    pub product_concepts: Arena<ProductConcept>,
+    pub product_concept_contexts: Arena<ProductConceptContext>,
     pub product_contexts: Arena<ProductContext>,
     pub product_definitions: Arena<ProductDefinition>,
     pub product_definition_contexts: Arena<ProductDefinitionContext>,
+    pub product_definition_effectivitys: Arena<ProductDefinitionEffectivity>,
     pub product_definition_formations: Arena<ProductDefinitionFormation>,
     pub product_definition_formation_with_specified_sources:
         Arena<ProductDefinitionFormationWithSpecifiedSource>,
@@ -7977,6 +8893,9 @@ pub struct Model {
         Arena<RepresentationRelationshipWithTransformation>,
     pub roundness_tolerances: Arena<RoundnessTolerance>,
     pub seam_curves: Arena<SeamCurve>,
+    pub security_classifications: Arena<SecurityClassification>,
+    pub security_classification_assignments: Arena<SecurityClassificationAssignment>,
+    pub security_classification_levels: Arena<SecurityClassificationLevel>,
     pub shape_aspects: Arena<ShapeAspect>,
     pub shape_aspect_relationships: Arena<ShapeAspectRelationship>,
     pub shape_definition_representations: Arena<ShapeDefinitionRepresentation>,
@@ -7988,6 +8907,8 @@ pub struct Model {
     pub solid_angle_units: Arena<SolidAngleUnit>,
     pub solid_models: Arena<SolidModel>,
     pub spherical_surfaces: Arena<SphericalSurface>,
+    pub start_requests: Arena<StartRequest>,
+    pub start_works: Arena<StartWork>,
     pub straightness_tolerances: Arena<StraightnessTolerance>,
     pub styled_items: Arena<StyledItem>,
     pub surfaces: Arena<Surface>,
@@ -8036,6 +8957,7 @@ pub struct Model {
     pub uniform_curves: Arena<UniformCurve>,
     pub uniform_surfaces: Arena<UniformSurface>,
     pub vectors: Arena<Vector>,
+    pub versioned_action_requests: Arena<VersionedActionRequest>,
     pub vertexs: Arena<Vertex>,
     pub vertex_loops: Arena<VertexLoop>,
     pub vertex_points: Arena<VertexPoint>,
