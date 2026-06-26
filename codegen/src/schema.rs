@@ -118,7 +118,11 @@ pub fn agg_inner(ty: &str) -> Option<&str> {
         .map(str::trim)
 }
 
-/// Members of an inline `SELECT(a, b, …)` aliased type, or `None`.
+/// Members of an inline `SELECT(a, b, …)` aliased type, or `None`. Raw lexical
+/// parse — does NOT apply the `coverage.toml [narrow]` filter. Prefer
+/// [`crate::classify::Resolver::select_members`] in the generator so closure
+/// expansion and arm emission stay narrow-consistent; call this directly only
+/// where narrowing must not apply.
 pub fn select_members(aliased: &str) -> Option<Vec<&str>> {
     aliased
         .strip_prefix("SELECT(")

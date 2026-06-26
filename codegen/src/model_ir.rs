@@ -175,13 +175,13 @@ fn select_entity_members(res: &Resolver, alias: &str, out: &mut Vec<String>, dep
     if depth > 32 {
         return;
     }
-    let Some(td) = res.schema.types.get(alias) else {
+    if !res.schema.types.contains_key(alias) {
         if res.schema.entity.contains_key(alias) {
             out.push(alias.to_string());
         }
         return;
-    };
-    if let Some(members) = crate::schema::select_members(td.aliased.trim()) {
+    }
+    if let Some(members) = res.select_members(alias) {
         for m in members {
             if res.schema.entity.contains_key(m) {
                 out.push(m.to_string());
@@ -204,10 +204,7 @@ fn select_entity_members(res: &Resolver, alias: &str, out: &mut Vec<String>, dep
 /// one arm per distinct element E -> (variant ident, element ref-enum rust name).
 /// Empty for entities and non-aggregate selects.
 fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)> {
-    let Some(td) = res.schema.types.get(target) else {
-        return Vec::new();
-    };
-    let Some(members) = crate::schema::select_members(td.aliased.trim()) else {
+    let Some(members) = res.select_members(target) else {
         return Vec::new();
     };
     // One arm per aggregate MEMBER (named list/set types are wire-distinct via
@@ -228,10 +225,7 @@ fn aggregate_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)>
 /// Scalar arms of a ref-target: for a SELECT with named-scalar members, one arm
 /// per member -> (variant ident, scalar Kind, UPPER wire name). Empty otherwise.
 fn scalar_arms(res: &Resolver, target: &str) -> Vec<(String, Kind, String)> {
-    let Some(td) = res.schema.types.get(target) else {
-        return Vec::new();
-    };
-    let Some(members) = crate::schema::select_members(td.aliased.trim()) else {
+    let Some(members) = res.select_members(target) else {
         return Vec::new();
     };
     let mut out = Vec::new();
@@ -252,10 +246,7 @@ fn scalar_arms(res: &Resolver, target: &str) -> Vec<(String, Kind, String)> {
 /// alias is also returned so the caller can add it to `want_enums`. Empty for
 /// entities and selects without enum members.
 fn enum_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)> {
-    let Some(td) = res.schema.types.get(target) else {
-        return Vec::new();
-    };
-    let Some(members) = crate::schema::select_members(td.aliased.trim()) else {
+    let Some(members) = res.select_members(target) else {
         return Vec::new();
     };
     let mut seen = BTreeSet::new();
@@ -391,9 +382,7 @@ impl ModelIr {
         // (the Agg arm holds Vec<{E}Ref>). Fixpoint in case E is itself such.
         let mut queue: Vec<String> = want_refs.iter().cloned().collect();
         while let Some(t) = queue.pop() {
-            if let Some(td) = schema.types.get(&t)
-                && let Some(members) = crate::schema::select_members(td.aliased.trim())
-            {
+            if let Some(members) = res.select_members(&t) {
                 for m in members {
                     if let Some(e) = res.agg_element(m)
                         && res.ref_like(&e, 0)

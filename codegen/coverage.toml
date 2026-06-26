@@ -1,0 +1,393 @@
+# ---------------------------------------------------------------------------
+# codegen support boundary — hand-curated frontier (NOT corpus-automated).
+#
+# cover:   seed entities. Each list is the entry point for a transitive schema
+#          closure (seed + parents + every entity reachable via attr ty: Ref /
+#          SELECT members / Vec(Ref) inners). The closure is BOTH the entity set
+#          generated AND the round-trip subset filter. Synthetic complex names
+#          (multi-inheritance combos) are NOT entities — they enter the closure
+#          as their component part entities (NAMED_UNIT, SI_UNIT, …) listed
+#          directly so the generic part-bag covers them.
+# exclude: entities kept OUT of the closure entirely (global); their referrers
+#          escape via the round-trip filter. Used to defer entities whose attrs
+#          need a generator capability not yet built, or for closure SCOPE.
+# narrow:  restrict a SELECT to the listed members (others not pulled into the
+#          closure) — for mega-selects where pulling every member would explode
+#          the closure. Applied lockstep to closure expansion AND arm emission.
+#          Only remove members of the SAME kind as the survivors (else the
+#          SELECT's Kind classification flips).
+# ---------------------------------------------------------------------------
+
+# The special-select capabilities (aggregate / entity+enum / string) are all
+# built; the remaining exclusion is deferred for closure SCOPE, not a missing
+# capability.
+exclude = [
+    # item_identified_representation_usage: its `definition` SELECT drags the
+    # entire PLM applied-assignment subtree (a large domain with its own gaps) →
+    # keep deferred until the PLM domain is brought in as a deliberate step.
+    "item_identified_representation_usage",
+    # general_property is NOT excluded: it is a represented_definition member
+    # (standard via property_definition_representation.definition) and enters the
+    # closure that way. The non-standard property_definition.definition=#general_property
+    # input (general_property is not a characterized_definition member) is no longer
+    # a panic — the slot-aware drop pass classifies it as a Nonstandard drop.
+]
+
+[cover]
+units = [
+    "dimensional_exponents",
+    "measure_with_unit",
+    "length_measure_with_unit",
+    "uncertainty_measure_with_unit",
+    "derived_unit",
+    "derived_unit_element",
+    # complex part entities (multi-inheritance named_unit instances)
+    "named_unit",
+    "si_unit",
+    "conversion_based_unit",
+    "context_dependent_unit",
+    "length_unit",
+    "mass_unit",
+    "plane_angle_unit",
+    "solid_angle_unit",
+    "time_unit",
+    # units context: representation_context complex parts (complex-only) carrying
+    # the unit/uncertainty sets. references stay in the units closure (unit =
+    # SELECT(derived_unit, named_unit); uncertainty_measure_with_unit) -> low escape.
+    "global_unit_assigned_context",
+    "global_uncertainty_assigned_context",
+]
+geometry = [
+    "cartesian_point",
+    "direction",
+    "vector",
+    "line",
+    "circle",
+    "ellipse",
+    "b_spline_curve_with_knots",
+    # pcurve / surface_curve / seam_curve are OUT of the Phase 0 closure: they
+    # drag in the `representation` / pcurve subsystem (definitional_representation
+    # + representation_context complex), which is Phase 2 territory. The
+    # round-trip filter excludes any entity whose refs escape the closure, so
+    # fixtures using these (cylinder/seam curves) still round-trip their
+    # in-closure geometry — the escaping edge_curves are simply not compared.
+    "axis1_placement",
+    "axis2_placement_2d",
+    "axis2_placement_3d",
+    "plane",
+    "cylindrical_surface",
+    "conical_surface",
+    "spherical_surface",
+    "toroidal_surface",
+    "surface_of_linear_extrusion",
+    "surface_of_revolution",
+    "offset_surface",
+    "b_spline_surface_with_knots",
+    # NURBS complex-only leaves (not ref-reachable; seeded so they enter the
+    # closure and get part-bag variants). Membership as complex parts is
+    # auto (universal.toml is_complex_part); this is closure scoping only.
+    "rational_b_spline_curve",
+    "rational_b_spline_surface",
+    "uniform_curve",
+    "quasi_uniform_curve",
+    "bezier_curve",
+    "uniform_surface",
+    "quasi_uniform_surface",
+    "bezier_surface",
+    # representation/pcurve cluster: closes the edge_curve -> surface_curve ->
+    # pcurve -> definitional_representation escape chain. The pspace context is a
+    # complex (GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
+    # REPRESENTATION_CONTEXT) whose parts are auto-marked is_complex_part
+    # (implicit combinability of representation_context's bare subtypes).
+    "representation",
+    "definitional_representation",
+    "representation_context",
+    "geometric_representation_context",
+    "parametric_representation_context",
+    "pcurve",
+    "bounded_pcurve",
+    "surface_curve",
+    "seam_curve",
+    "intersection_curve",
+    "bounded_surface_curve",
+    # trimmed_curve: trim_1/trim_2 : SET OF trimming_select = SELECT(cartesian_point,
+    # parameter_value[real]) — exercises the entity+scalar select capability.
+    "trimmed_curve",
+]
+topology = [
+    "vertex_point",
+    "edge_curve",
+    "oriented_edge",
+    "edge_loop",
+    "poly_loop",
+    "vertex_loop",
+    "face_bound",
+    "face_outer_bound",
+    "advanced_face",
+    "closed_shell",
+    "open_shell",
+    "oriented_closed_shell",
+    "manifold_solid_brep",
+    "brep_with_voids",
+]
+# GD&T (geometric tolerance) + datum cluster — expressiveness de-risk spike.
+# Stage 1: minimal vertical. The product-identity backbone (shape_aspect ->
+# product_definition_shape -> ... -> product), the measure/unit subsystem, and
+# representation are pulled in automatically by ref-reachability, so only the
+# complex-only GD&T parts + the datum/shape_aspect entry points are seeded here.
+gdt = [
+    # geometric_tolerance part-bag: abstract base + all complex-part mixins
+    # (two are two-level) + all form-tolerance leaves. The combinatorial
+    # triples/quads ( (with_datum_reference, modified, position), etc.) are the
+    # expressiveness stress test for the generic part-bag model.
+    "geometric_tolerance",
+    "geometric_tolerance_with_datum_reference",
+    "modified_geometric_tolerance",
+    "geometric_tolerance_with_modifiers",
+    "geometric_tolerance_with_maximum_tolerance",
+    "geometric_tolerance_with_defined_unit",
+    "geometric_tolerance_with_defined_area_unit",
+    "unequally_disposed_geometric_tolerance",
+    # form-tolerance leaves (complex parts, own_attrs empty)
+    "position_tolerance",
+    "flatness_tolerance",
+    "cylindricity_tolerance",
+    "straightness_tolerance",
+    "roundness_tolerance",
+    "line_profile_tolerance",
+    "surface_profile_tolerance",
+    # datum-required leaves (single inheritance under with_datum_reference)
+    "angularity_tolerance",
+    "perpendicularity_tolerance",
+    "parallelism_tolerance",
+    "circular_runout_tolerance",
+    "total_runout_tolerance",
+    "coaxiality_tolerance",
+    "concentricity_tolerance",
+    "symmetry_tolerance",
+    # datum cluster (simple datum_reference path; general_datum_reference subtree
+    # is excluded above pending the aggregate-select capability)
+    "datum",
+    "datum_feature",
+    "datum_target",
+    "placed_datum_target_feature",
+    "datum_system",
+    "datum_reference",
+    "common_datum",
+    # shape_aspect / tolerance_zone / dimensional
+    "shape_aspect",
+    "shape_aspect_relationship",
+    "composite_shape_aspect",
+    "tolerance_zone",
+    "tolerance_zone_with_datum",
+    "tolerance_zone_definition",
+    "tolerance_zone_form",
+    "tolerance_value",
+    "dimensional_location",
+    "dimensional_location_with_path",
+    "dimensional_size",
+    "dimensional_size_with_path",
+    "dimensional_characteristic_representation",
+    # aggregate-arm exercise: representation_relationship_with_transformation
+    # .transformation_operator : transformation = SELECT(functionally_defined_
+    # transformation, item_defined_transformation, SET OF item_defined_transformation)
+    # — a single + aggregate-of-entity select (the aggregate-arm capability).
+    "representation_relationship_with_transformation",
+    "item_defined_transformation",
+    "functionally_defined_transformation",
+]
+
+# PLM (product lifecycle) — brought in as deliberate group-by-group seeds, not a
+# big-bang un-exclude of item_identified_representation_usage. Most members are
+# all-entity selects (already handled; just generated). New gaps surface per group
+# and are triaged: existing capability OK / entity+scalar (#1) / monster
+# (maths/heterogeneous) sub-excluded + catalogued.
+# Group (a): person / organization / project identification core (roles,
+# relationships, addresses). The applied-*-assignment roots are intentionally NOT
+# seeded here: their `items` attr is a ~90-member mega-select (person_and_
+# organization_item / organization_item / project_item) that drags the entire PLM
+# + product + representation + recursive-maths graph in one shot — the same
+# big-bang drag that keeps item_identified deferred. Assignment roots become a
+# deliberate later step (needs the maths cluster excluded + broad closure).
+plm_person_org = [
+    "person",
+    "organization",
+    "person_and_organization",
+    "address",
+    "personal_address",
+    "organizational_address",
+    "person_and_organization_address",
+    "organization_relationship",
+    "organization_role",
+    "organization_type",
+    "organization_type_role",
+    "organizational_project",
+    "organizational_project_relationship",
+    "organizational_project_role",
+    "person_and_organization_role",
+]
+# Group (b) applied-assignment: ATTEMPTED, then rolled back. Seeding the
+# applied-*-assignment roots pulled the whole PLM+product+representation graph
+# (the ~90-member `items` mega-select), growing closure 176->569 but adding only
+# ~1.1M validated while escaping ~30M (their refs leave the closure:
+# item_identified / maths / surrounding subtree). Net coverage 99.8%->90.4% — a
+# poor value/escape ratio vs the identification core (+307k validated / +88
+# escaped). Deferred in favor of incremental, low-escape PLM entities (date /
+# document identification, etc.) as a redesigned next step. (The maths exclude
+# that this big-bang required is also removed, since maths is only reachable
+# through the assignment items mega-select.)
+
+# presentation/style — the largest unmodeled cluster in real-world files (~25M instances:
+# styled_item 4.4M, presentation_style_assignment 4.2M, colour_rgb 4.1M, the
+# fill/surface_style family ~4.1M each). NOT a big-bang: styled_item.item targets
+# geometric/topological_representation_item (already in the geometry/topology
+# closure), and the style selects are self-contained — so this should LOWER
+# escaped (representation.items currently escapes when it points at unseeded
+# styled_item). Round 1 = pure style cluster only; mddgpr/draughting (which carry
+# the broad representation_item select) are a later, escape-measured round.
+presentation = [
+    "styled_item",
+    "presentation_style_assignment",
+    "colour_rgb",
+    "fill_area_style",
+    "fill_area_style_colour",
+    "surface_style_usage",
+    "surface_side_style",
+    "surface_style_fill_area",
+    "surface_style_rendering",
+    "surface_style_rendering_with_properties",
+    "surface_style_transparent",
+    "surface_style_parameter_line",
+    "curve_style",
+]
+# date/time — fully self-contained (scalar/enum + intra-cluster refs only, no
+# external references), so very low escape. date_and_time is dual-appearance
+# (mostly standalone, rarely a complex part). calendar_date is the only date
+# subtype that occurs (DateRef::CalendarDate).
+date_time = [
+    "date_and_time",
+    "calendar_date",
+    "local_time",
+    "coordinated_universal_time_offset",
+]
+# product/category — refs stay in the product backbone closure (products : SET OF
+# product; product_definition_formation_with_specified_source inherits
+# product_definition_formation) or are seeded here (product_category). source is
+# an ENUM. product_related_product_category / product_category /
+# product_definition_formation_with_specified_source are dual-appearance
+# (mostly standalone). product_category is a concrete supertype (ProductCategoryRef).
+product = [
+    "product_related_product_category",
+    "product_category",
+    "product_category_relationship",
+    "product_definition_formation_with_specified_source",
+]
+# shape representation — geometry/representation based, refs in the backbone
+# closure (shape_representation/representation/representation_relationship/shell;
+# items via the existing RepresentationItemRef). shape_definition_representation
+# .definition=represented_definition: property_definition/shape_aspect closure
+# members; property_definition_representation is the SDR parent (reachable).
+# general_property enters via the represented_definition member; its non-standard
+# use in property_definition.definition is handled by the slot-aware drop pass.
+shape = [
+    "shape_definition_representation",
+    "advanced_brep_shape_representation",
+    "shape_representation_relationship",
+    "shell_based_surface_model",
+    "manifold_surface_shape_representation",
+]
+# application_protocol_definition: self-contained — its only ref `application`
+# points at application_context (scalar-only leaf, no further refs). escape 0.
+application = ["application_protocol_definition"]
+# draughting_pre_defined_curve_font: parent chain pre_defined_curve_font ->
+# pre_defined_item (name:label, no refs). is_complex_part (part-bag); model_ir
+# handles the part-bag arm + simple read for any standalone appearance. escape 0.
+# (curve_style's font_select referrer is a separate presentation round.)
+# draughting_pre_defined_colour: sibling of the curve_font (pre_defined_item +
+# colour, no refs). cascade root via ColourRef (60k STYLED_ITEM chain). Also the
+# verification carrier for the IntSelect fix — it revives surface_style_parameter
+# _line so the U/V_DIRECTION_COUNT integer round-trip is actually exercised.
+draughting = ["draughting_pre_defined_curve_font", "draughting_pre_defined_colour"]
+# complex_triangulated_face: tessellated_* chain (scalar aggregates) on the
+# geometric_representation_item/representation_item closure; geometric_link =
+# face_or_surface SELECT(face_surface, surface), both already in the geometry/
+# topology backbone. Only the tessellated_* entities are newly generated. (merkle
+# entity_key is iterative now, so its deep ref chains no longer overflow.)
+tessellation = ["complex_triangulated_face"]
+# assembly tree (NAUO=part usage, CDSR=placement/transform). NAUO is a
+# product_definition_relationship subtype; relating/related = SELECT
+# product_definition_or_reference (3 members all closure). CDSR refs
+# shape_representation_relationship + product_definition_shape (both closure).
+assembly = [
+    "next_assembly_usage_occurrence",
+    "context_dependent_shape_representation",
+]
+# low-escape subtypes on the existing closure (all escape 0): over_riding_styled
+# _item=styled_item subtype, mechanical/design_context=product(_definition)_context
+# subtypes (frame_of_reference=application_context), polyline=bounded_curve subtype
+# (points=cartesian_point), descriptive/measure_representation_item=representation
+# _item subtypes (measure also has a complex-part variant — dual appearance).
+presentation_styling = ["over_riding_styled_item"]
+product_context = ["mechanical_context", "design_context"]
+curve = ["polyline"]
+repr_items = ["descriptive_representation_item", "measure_representation_item"]
+# presentation representation/layer roots — top escape (mddgpr+PLA). items/
+# assigned_items point at representation_item (already built as RepresentationItem
+# Ref), so no wide-SELECT drag; CDORSI's supertype over_riding_styled_item is
+# already seeded above.
+presentation_repr = [
+    "mechanical_design_geometric_presentation_representation",
+    "presentation_layer_assignment",
+    "context_dependent_over_riding_styled_item",
+]
+# management metadata — top escape cluster. approval/person-org/date/security
+# roots; their cc_design_* items SELECTs are narrow (members close on already-
+# covered product/date + the change_management roots below). Abstract *_assignment
+# parents and 2nd-order deps (action/action_method/configuration_design/...) come
+# in via ref-reachability. group is already covered; applied_group_assignment
+# (groupable_item ~120-member mega-select) is deliberately deferred.
+management_metadata = [
+    "approval", "approval_status", "approval_role",
+    "approval_date_time", "approval_person_organization", "cc_design_approval",
+    "cc_design_person_and_organization_assignment",
+    "date_time_role", "cc_design_date_and_time_assignment",
+    "security_classification", "security_classification_level", "cc_design_security_classification",
+]
+change_management = [
+    "change", "change_request", "start_request", "start_work",
+    "contract", "certification", "configuration_item", "configuration_effectivity",
+]
+# cascade roots (via-<TYPE> diagnostic) + low-risk leaves. draughting_pre_defined
+# _colour already seeded above (9bfe92e). All narrow: scalar / already-built refs
+# (MeasureValue/IntMeasureValue/RepresentationItemRef) / bounded selects.
+cascade_roots = ["mass_measure_with_unit", "composite_group_shape_aspect",
+  "characterized_item_within_representation", "real_representation_item", "document_file"]
+tessellation_leaves = ["tessellated_curve_set", "complex_triangulated_surface_set"]
+geometry_leaves = ["composite_curve_segment", "degenerate_toroidal_surface"]
+shape_rep_leaves = ["geometrically_bounded_wireframe_shape_representation",
+  "integer_representation_item", "draughting_model"]
+property_leaves = ["id_attribute", "general_property_association"]
+# low-risk residual: usage/value (geometric_item_specific_usage pulls only
+# constructive_geometry_representation; value_representation_item via Repr
+# ItemRef), curve/tessellated leaves (deps already seeded), annotation cluster
+# (draughting_callout head pulls its annotation_occurrence leaves + annotation_
+# fill_area=curve; invisibility leaf). value_format_type_qualifier (Bag A reach)
+# and apll_point (non-AP242) excluded; draughting_model_item_association mega.
+# value_representation_item re-seeded: measure_value is now enum{Int,Real}, so
+# its COUNT_MEASURE(2) integer tokens round-trip as 2 (not 2.) — integer bug #2
+# fixed. It is also the carrier that exercises the measure_value integer path.
+usage_value = ["geometric_item_specific_usage", "value_representation_item"]
+curve_tess = ["composite_curve", "tessellated_geometric_set", "repositioned_tessellated_item"]
+annotation = ["draughting_callout", "annotation_plane", "invisibility"]
+# small low-risk leaves: hyperbola(conic), view_volume+camera_model_d3(pair),
+# draughting_pre_defined_text_font(pre_defined_item sibling), leader_directed_
+# callout(draughting_callout), all_around_shape_aspect(shape_aspect chain),
+# plus_minus_tolerance(+limits_and_fits leaf), object_role(leaf). All deps covered
+# / auto. measure_qualification & role_association & applied_document_reference
+# excluded (maths_value / role_select / 170-member mega).
+geom_camera = ["hyperbola", "view_volume", "camera_model_d3"]
+draughting_leaf = ["draughting_pre_defined_text_font", "leader_directed_callout"]
+pmi_leaf = ["all_around_shape_aspect", "plus_minus_tolerance", "object_role"]
+
+[narrow]
+# (empty in commit A; populated in commit B)

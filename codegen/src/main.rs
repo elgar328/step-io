@@ -1,11 +1,11 @@
-//! `codegen` generator binary. Reads `schema/universal.toml` + `schema/mapping.toml`,
+//! `codegen` generator binary. Reads `schema/universal.toml` + `codegen/coverage.toml`,
 //! computes the units/geometry/topology schema closure, and emits a
 //! schema-faithful model + generic 2-pass read + topo write into
 //! `codegen/src/generated/`. Run: `cargo run -p codegen --bin codegen`.
 
 mod classify;
+mod coverage;
 mod emit;
-mod mapping;
 mod model_ir;
 mod schema;
 
@@ -23,19 +23,25 @@ fn main() {
             .expect("read universal.toml"),
     )
     .expect("parse universal.toml");
-    let mapping: mapping::Mapping = toml::from_str(
-        &std::fs::read_to_string(format!("{root}/schema/mapping.toml")).expect("read mapping.toml"),
+    // codegen support boundary (coverage.toml) lives in the codegen crate root
+    // (CARGO_MANIFEST_DIR, no `/..`), separate from the schema/ data files.
+    let coverage: coverage::Coverage = toml::from_str(
+        &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/coverage.toml"))
+            .expect("read coverage.toml"),
     )
-    .expect("parse mapping.toml");
+    .expect("parse coverage.toml");
 
-    let res = Resolver { schema: &schema };
+    let res = Resolver {
+        schema: &schema,
+        narrow: &coverage.narrow,
+    };
 
-    // Domain seeds -> single combined closure.
+    // Cover seeds -> single combined closure.
     let mut seeds: Vec<String> = Vec::new();
-    for list in mapping.codegen.domains.values() {
+    for list in coverage.cover.values() {
         seeds.extend(list.iter().cloned());
     }
-    let exclude: BTreeSet<String> = mapping.codegen.exclude.iter().cloned().collect();
+    let exclude: BTreeSet<String> = coverage.exclude.iter().cloned().collect();
     let closure = build_closure(&schema, &res, &seeds, &exclude);
 
     // Complex-part entities = closure entities flagged is_complex_part in

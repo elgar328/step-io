@@ -7,7 +7,9 @@
 //! `Ref(target)` carrying the EXPRESS target type name, so the generator can
 //! build a discriminated ref enum over the concrete leaf entities.
 
-use crate::schema::{EarlyToml, agg_inner, select_members, strip_optional};
+use std::collections::BTreeMap;
+
+use crate::schema::{EarlyToml, agg_inner, strip_optional};
 
 /// How an attribute's resolved `ty` maps to a generated Rust field.
 #[derive(Debug, Clone, PartialEq)]
@@ -44,9 +46,29 @@ pub const MAX_DEPTH: u32 = 64;
 
 pub struct Resolver<'a> {
     pub schema: &'a EarlyToml,
+    /// codegen support-boundary `narrow` map (`coverage.toml [narrow]`):
+    /// `SELECT alias -> kept members`. Empty map = no-op.
+    pub narrow: &'a BTreeMap<String, Vec<String>>,
 }
 
 impl<'a> Resolver<'a> {
+    /// Members of the SELECT aliased by `alias`, with the `narrow` filter
+    /// applied. This is the single choke-point every SELECT-member consumer
+    /// (closure expansion, arm emission, Kind classification) must go through so
+    /// the closure and the emitted arms stay lockstep. Returns `None` when
+    /// `alias` is not a `SELECT(...)` type.
+    pub fn select_members(&self, alias: &str) -> Option<Vec<&'a str>> {
+        let td = self.schema.types.get(alias)?;
+        let members = crate::schema::select_members(td.aliased.trim())?;
+        Some(match self.narrow.get(alias) {
+            Some(keep) => members
+                .into_iter()
+                .filter(|m| keep.iter().any(|k| k == m))
+                .collect(),
+            None => members,
+        })
+    }
+
     /// True when `ty` resolves to an entity reference (encodes as a bare `#N`).
     pub fn ref_like(&self, ty: &str, depth: u32) -> bool {
         assert!(depth < MAX_DEPTH, "ref_like: ty `{ty}` too deep (cycle?)");
@@ -58,7 +80,7 @@ impl<'a> Resolver<'a> {
             return false;
         };
         let a = td.aliased.trim();
-        if let Some(members) = select_members(a) {
+        if let Some(members) = self.select_members(t) {
             return members.iter().all(|m| self.ref_like(m, depth + 1));
         }
         if a.starts_with("ENUM(") {
@@ -164,7 +186,7 @@ impl<'a> Resolver<'a> {
             if a.starts_with("ENUM(") {
                 return Kind::Enum(t.to_string());
             }
-            if let Some(members) = select_members(a) {
+            if let Some(members) = self.select_members(t) {
                 // All-string select -> StringSelectValue (checked first, since the
                 // numeric measure check below also accepts Str).
                 if self.is_string_select(&members, depth + 1) {
@@ -214,7 +236,7 @@ impl<'a> Resolver<'a> {
         if a.starts_with("ENUM(") {
             return Some(t.to_string());
         }
-        if select_members(a).is_some() {
+        if self.select_members(t).is_some() {
             return None;
         }
         self.enum_alias(a, depth + 1)
