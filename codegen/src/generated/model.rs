@@ -1135,6 +1135,8 @@ pub struct ApplicationContextElementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApplicationProtocolDefinitionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AppliedApprovalAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedDateAndTimeAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedDocumentReferenceId(pub usize);
@@ -1142,6 +1144,8 @@ pub struct AppliedDocumentReferenceId(pub usize);
 pub struct AppliedExternalIdentificationAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedGroupAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AppliedPersonAndOrganizationAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedPresentedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -2066,10 +2070,12 @@ pub enum AnyId {
     ApplicationContext(ApplicationContextId),
     ApplicationContextElement(ApplicationContextElementId),
     ApplicationProtocolDefinition(ApplicationProtocolDefinitionId),
+    AppliedApprovalAssignment(AppliedApprovalAssignmentId),
     AppliedDateAndTimeAssignment(AppliedDateAndTimeAssignmentId),
     AppliedDocumentReference(AppliedDocumentReferenceId),
     AppliedExternalIdentificationAssignment(AppliedExternalIdentificationAssignmentId),
     AppliedGroupAssignment(AppliedGroupAssignmentId),
+    AppliedPersonAndOrganizationAssignment(AppliedPersonAndOrganizationAssignmentId),
     AppliedPresentedItem(AppliedPresentedItemId),
     Approval(ApprovalId),
     ApprovalAssignment(ApprovalAssignmentId),
@@ -2836,6 +2842,533 @@ impl ApplicationContextRef {
         match a {
             AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
             other => panic!("ApplicationContextRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ApprovalItemRef {
+    Action(ActionId),
+    ActionDirective(ActionDirectiveId),
+    ActionMethod(ActionMethodId),
+    ActionMethodRelationship(ActionMethodRelationshipId),
+    ActionProperty(ActionPropertyId),
+    ActionRequestSolution(ActionRequestSolutionId),
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AdvancedFace(AdvancedFaceId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbol(AnnotationSymbolId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+    AppliedApprovalAssignment(AppliedApprovalAssignmentId),
+    AppliedDateAndTimeAssignment(AppliedDateAndTimeAssignmentId),
+    AppliedDocumentReference(AppliedDocumentReferenceId),
+    AppliedExternalIdentificationAssignment(AppliedExternalIdentificationAssignmentId),
+    AppliedPersonAndOrganizationAssignment(AppliedPersonAndOrganizationAssignmentId),
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CalendarDate(CalendarDateId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    CartesianPoint(CartesianPointId),
+    CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
+    Certification(CertificationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
+    ConfigurationDesign(ConfigurationDesignId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConfigurationItem(ConfigurationItemId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ConstructiveGeometryRepresentationRelationship(
+        ConstructiveGeometryRepresentationRelationshipId,
+    ),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    Contract(ContractId),
+    CoordinatesList(CoordinatesListId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    Date(DateId),
+    DateAndTimeAssignment(DateAndTimeAssignmentId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
+    DefinedSymbol(DefinedSymbolId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DefinitionalRepresentationRelationship(DefinitionalRepresentationRelationshipId),
+    DefinitionalRepresentationRelationshipWithSameContext(
+        DefinitionalRepresentationRelationshipWithSameContextId,
+    ),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    DesignContext(DesignContextId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DirectedDimensionalLocation(DirectedDimensionalLocationId),
+    Direction(DirectionId),
+    Document(DocumentId),
+    DocumentFile(DocumentFileId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    DraughtingCallout(DraughtingCalloutId),
+    DraughtingModel(DraughtingModelId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    Effectivity(EffectivityId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeneralProperty(GeneralPropertyId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    Group(GroupId),
+    Hyperbola(HyperbolaId),
+    IntegerRepresentationItem(IntegerRepresentationItemId),
+    IntersectionCurve(IntersectionCurveId),
+    LeaderCurve(LeaderCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
+    Line(LineId),
+    Loop(LoopId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MappedItem(MappedItemId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
+    MechanicalDesignAndDraughtingRelationship(MechanicalDesignAndDraughtingRelationshipId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    Organization(OrganizationId),
+    OrganizationRelationship(OrganizationRelationshipId),
+    OrganizationalAddress(OrganizationalAddressId),
+    OrganizationalProject(OrganizationalProjectId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    Path(PathId),
+    Pcurve(PcurveId),
+    PersonAndOrganization(PersonAndOrganizationId),
+    PersonAndOrganizationAddress(PersonAndOrganizationAddressId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
+    PresentationArea(PresentationAreaId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationView(PresentationViewId),
+    Product(ProductId),
+    ProductConcept(ProductConceptId),
+    ProductConceptFeature(ProductConceptFeatureId),
+    ProductConceptFeatureCategory(ProductConceptFeatureCategoryId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionContext(ProductDefinitionContextId),
+    ProductDefinitionEffectivity(ProductDefinitionEffectivityId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductDefinitionSubstitute(ProductDefinitionSubstituteId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
+    PropertyDefinition(PropertyDefinitionId),
+    PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
+    QualifiedRepresentationItem(QualifiedRepresentationItemId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    RealRepresentationItem(RealRepresentationItemId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
+    Representation(RepresentationId),
+    RepresentationItem(RepresentationItemId),
+    RepresentationRelationship(RepresentationRelationshipId),
+    RepresentationRelationshipWithTransformation(RepresentationRelationshipWithTransformationId),
+    ResourceProperty(ResourcePropertyId),
+    SeamCurve(SeamCurveId),
+    SecurityClassification(SecurityClassificationId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
+    ShapeAspectDerivingRelationship(ShapeAspectDerivingRelationshipId),
+    ShapeAspectRelationship(ShapeAspectRelationshipId),
+    ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    StyledItem(StyledItemId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolRepresentation(SymbolRepresentationId),
+    SymbolTarget(SymbolTargetId),
+    TerminatorSymbol(TerminatorSymbolId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    TessellatedCurveSet(TessellatedCurveSetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedShell(TessellatedShellId),
+    TessellatedSolid(TessellatedSolidId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    ValueRepresentationItem(ValueRepresentationItemId),
+    Vector(VectorId),
+    VersionedActionRequest(VersionedActionRequestId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
+    Complex(ComplexUnitId),
+}
+impl ApprovalItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Action(i) => Self::Action(i),
+            AnyId::ActionDirective(i) => Self::ActionDirective(i),
+            AnyId::ActionMethod(i) => Self::ActionMethod(i),
+            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
+            AnyId::ActionProperty(i) => Self::ActionProperty(i),
+            AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
+            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            AnyId::AppliedApprovalAssignment(i) => Self::AppliedApprovalAssignment(i),
+            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
+            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::AppliedExternalIdentificationAssignment(i) => {
+                Self::AppliedExternalIdentificationAssignment(i)
+            }
+            AnyId::AppliedPersonAndOrganizationAssignment(i) => {
+                Self::AppliedPersonAndOrganizationAssignment(i)
+            }
+            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
+            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
+            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
+            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CalendarDate(i) => Self::CalendarDate(i),
+            AnyId::CameraImage(i) => Self::CameraImage(i),
+            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
+            AnyId::CameraModel(i) => Self::CameraModel(i),
+            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
+            AnyId::Certification(i) => Self::Certification(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
+            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
+            AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
+                Self::ConstructiveGeometryRepresentationRelationship(i)
+            }
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
+            AnyId::Contract(i) => Self::Contract(i),
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::Date(i) => Self::Date(i),
+            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DefinitionalRepresentationRelationship(i) => {
+                Self::DefinitionalRepresentationRelationship(i)
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                Self::DefinitionalRepresentationRelationshipWithSameContext(i)
+            }
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
+            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
+            AnyId::DesignContext(i) => Self::DesignContext(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
+            AnyId::Direction(i) => Self::Direction(i),
+            AnyId::Document(i) => Self::Document(i),
+            AnyId::DocumentFile(i) => Self::DocumentFile(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::Edge(i) => Self::Edge(i),
+            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
+            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
+            AnyId::Effectivity(i) => Self::Effectivity(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
+            AnyId::Face(i) => Self::Face(i),
+            AnyId::FaceBound(i) => Self::FaceBound(i),
+            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
+            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+            }
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::Group(i) => Self::Group(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
+            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::Loop(i) => Self::Loop(i),
+            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
+                Self::MechanicalDesignAndDraughtingRelationship(i)
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
+            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::Organization(i) => Self::Organization(i),
+            AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
+            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
+            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
+            AnyId::Path(i) => Self::Path(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
+            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
+            AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::Point(i) => Self::Point(i),
+            AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
+            AnyId::PresentationArea(i) => Self::PresentationArea(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::PresentationView(i) => Self::PresentationView(i),
+            AnyId::Product(i) => Self::Product(i),
+            AnyId::ProductConcept(i) => Self::ProductConcept(i),
+            AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
+            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
+            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ProductDefinitionSubstitute(i) => Self::ProductDefinitionSubstitute(i),
+            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
+            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
+            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
+            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
+            AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
+            AnyId::RepresentationRelationshipWithTransformation(i) => {
+                Self::RepresentationRelationshipWithTransformation(i)
+            }
+            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
+            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
+            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
+            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
+            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
+            AnyId::SolidModel(i) => Self::SolidModel(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
+            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
+            AnyId::Vector(i) => Self::Vector(i),
+            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
+            AnyId::Vertex(i) => Self::Vertex(i),
+            AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ApprovalItemRef ref -> {other:?}"),
         }
     }
 }
@@ -8332,6 +8865,197 @@ impl PcurveOrSurfaceRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum PersonAndOrganizationItemRef {
+    Action(ActionId),
+    ActionDirective(ActionDirectiveId),
+    ActionMethod(ActionMethodId),
+    ActionProperty(ActionPropertyId),
+    ActionRelationship(ActionRelationshipId),
+    ActionRequestSolution(ActionRequestSolutionId),
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AppliedDateAndTimeAssignment(AppliedDateAndTimeAssignmentId),
+    AppliedDocumentReference(AppliedDocumentReferenceId),
+    AppliedPersonAndOrganizationAssignment(AppliedPersonAndOrganizationAssignmentId),
+    Approval(ApprovalId),
+    ApprovalStatus(ApprovalStatusId),
+    AscribableState(AscribableStateId),
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
+    Certification(CertificationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    ConfigurationDesign(ConfigurationDesignId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConfigurationItem(ConfigurationItemId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    Contract(ContractId),
+    DateAndTimeAssignment(DateAndTimeAssignmentId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DesignContext(DesignContextId),
+    DocumentFile(DocumentFileId),
+    DocumentType(DocumentTypeId),
+    DraughtingModel(DraughtingModelId),
+    Effectivity(EffectivityId),
+    GeneralProperty(GeneralPropertyId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    Organization(OrganizationId),
+    OrganizationRelationship(OrganizationRelationshipId),
+    OrganizationalAddress(OrganizationalAddressId),
+    OrganizationalProject(OrganizationalProjectId),
+    PersonAndOrganization(PersonAndOrganizationId),
+    PersonAndOrganizationAddress(PersonAndOrganizationAddressId),
+    PresentationArea(PresentationAreaId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationView(PresentationViewId),
+    Product(ProductId),
+    ProductConcept(ProductConceptId),
+    ProductConceptFeature(ProductConceptFeatureId),
+    ProductConceptFeatureCategory(ProductConceptFeatureCategoryId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionContext(ProductDefinitionContextId),
+    ProductDefinitionEffectivity(ProductDefinitionEffectivityId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductDefinitionSubstitute(ProductDefinitionSubstituteId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
+    PropertyDefinition(PropertyDefinitionId),
+    PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
+    Representation(RepresentationId),
+    ResourceProperty(ResourcePropertyId),
+    SecurityClassification(SecurityClassificationId),
+    SecurityClassificationLevel(SecurityClassificationLevelId),
+    ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    StateObserved(StateObservedId),
+    StateType(StateTypeId),
+    SymbolRepresentation(SymbolRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    VersionedActionRequest(VersionedActionRequestId),
+    Complex(ComplexUnitId),
+}
+impl PersonAndOrganizationItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Action(i) => Self::Action(i),
+            AnyId::ActionDirective(i) => Self::ActionDirective(i),
+            AnyId::ActionMethod(i) => Self::ActionMethod(i),
+            AnyId::ActionProperty(i) => Self::ActionProperty(i),
+            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
+            AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
+            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::AppliedPersonAndOrganizationAssignment(i) => {
+                Self::AppliedPersonAndOrganizationAssignment(i)
+            }
+            AnyId::Approval(i) => Self::Approval(i),
+            AnyId::ApprovalStatus(i) => Self::ApprovalStatus(i),
+            AnyId::AscribableState(i) => Self::AscribableState(i),
+            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
+            AnyId::Certification(i) => Self::Certification(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
+            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
+            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
+            AnyId::Contract(i) => Self::Contract(i),
+            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DesignContext(i) => Self::DesignContext(i),
+            AnyId::DocumentFile(i) => Self::DocumentFile(i),
+            AnyId::DocumentType(i) => Self::DocumentType(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::Effectivity(i) => Self::Effectivity(i),
+            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+            }
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
+            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
+            AnyId::Organization(i) => Self::Organization(i),
+            AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
+            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
+            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
+            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
+            AnyId::PresentationArea(i) => Self::PresentationArea(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::PresentationView(i) => Self::PresentationView(i),
+            AnyId::Product(i) => Self::Product(i),
+            AnyId::ProductConcept(i) => Self::ProductConcept(i),
+            AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
+            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
+            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ProductDefinitionSubstitute(i) => Self::ProductDefinitionSubstitute(i),
+            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
+            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
+            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
+            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
+            AnyId::SecurityClassificationLevel(i) => Self::SecurityClassificationLevel(i),
+            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::StateObserved(i) => Self::StateObserved(i),
+            AnyId::StateType(i) => Self::StateType(i),
+            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("PersonAndOrganizationItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum PersonAndOrganizationRef {
     PersonAndOrganization(PersonAndOrganizationId),
 }
@@ -9475,6 +10199,7 @@ impl ResourceRequirementTypeRef {
 pub enum RoleSelectRef {
     ActionAssignment(ActionAssignmentId),
     ActionRequestAssignment(ActionRequestAssignmentId),
+    AppliedApprovalAssignment(AppliedApprovalAssignmentId),
     AppliedDocumentReference(AppliedDocumentReferenceId),
     AppliedGroupAssignment(AppliedGroupAssignmentId),
     ApprovalAssignment(ApprovalAssignmentId),
@@ -9495,6 +10220,7 @@ impl RoleSelectRef {
         match a {
             AnyId::ActionAssignment(i) => Self::ActionAssignment(i),
             AnyId::ActionRequestAssignment(i) => Self::ActionRequestAssignment(i),
+            AnyId::AppliedApprovalAssignment(i) => Self::AppliedApprovalAssignment(i),
             AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
             AnyId::AppliedGroupAssignment(i) => Self::AppliedGroupAssignment(i),
             AnyId::ApprovalAssignment(i) => Self::ApprovalAssignment(i),
@@ -11448,6 +12174,12 @@ pub struct ApplicationProtocolDefinition {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct AppliedApprovalAssignment {
+    pub assigned_approval: ApprovalRef,
+    pub items: Vec<ApprovalItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct AppliedDateAndTimeAssignment {
     pub assigned_date_and_time: DateAndTimeRef,
     pub role: DateTimeRoleRef,
@@ -11473,6 +12205,13 @@ pub struct AppliedExternalIdentificationAssignment {
 pub struct AppliedGroupAssignment {
     pub assigned_group: GroupRef,
     pub items: Vec<GroupableItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedPersonAndOrganizationAssignment {
+    pub assigned_person_and_organization: PersonAndOrganizationRef,
+    pub role: PersonAndOrganizationRoleRef,
+    pub items: Vec<PersonAndOrganizationItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14613,6 +15352,9 @@ pub enum UnitPart {
         name: String,
         frame_of_reference: ApplicationContextRef,
     },
+    AppliedApprovalAssignment {
+        items: Vec<ApprovalItemRef>,
+    },
     AppliedDateAndTimeAssignment {
         items: Vec<DateAndTimeItemRef>,
     },
@@ -14624,6 +15366,9 @@ pub enum UnitPart {
     },
     AppliedGroupAssignment {
         items: Vec<GroupableItemRef>,
+    },
+    AppliedPersonAndOrganizationAssignment {
+        items: Vec<PersonAndOrganizationItemRef>,
     },
     AppliedPresentedItem {
         items: Vec<PresentedItemSelectRef>,
@@ -15507,10 +16252,12 @@ pub struct Model {
     pub application_contexts: Arena<ApplicationContext>,
     pub application_context_elements: Arena<ApplicationContextElement>,
     pub application_protocol_definitions: Arena<ApplicationProtocolDefinition>,
+    pub applied_approval_assignments: Arena<AppliedApprovalAssignment>,
     pub applied_date_and_time_assignments: Arena<AppliedDateAndTimeAssignment>,
     pub applied_document_references: Arena<AppliedDocumentReference>,
     pub applied_external_identification_assignments: Arena<AppliedExternalIdentificationAssignment>,
     pub applied_group_assignments: Arena<AppliedGroupAssignment>,
+    pub applied_person_and_organization_assignments: Arena<AppliedPersonAndOrganizationAssignment>,
     pub applied_presented_items: Arena<AppliedPresentedItem>,
     pub approvals: Arena<Approval>,
     pub approval_assignments: Arena<ApprovalAssignment>,

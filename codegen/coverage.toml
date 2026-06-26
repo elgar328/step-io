@@ -498,6 +498,10 @@ small_select = [
     "applied_presented_item", "product_concept_feature", "product_concept_feature_category",
     "name_attribute", "action_request_solution", "product_definition_substitute",
 ]
+# applied person-org / approval assignments — items are mega item-selects
+# (person_and_organization_item 99 / approval_item 124, all-entity), narrowed
+# below to the already-covered members (mega so member-seeding is infeasible).
+plm_assignment2 = ["applied_person_and_organization_assignment", "applied_approval_assignment"]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
@@ -637,4 +641,45 @@ role_select = [
     "action_assignment", "action_request_assignment", "approval_assignment",
     "approval_date_time", "document_reference", "group_assignment",
     "security_classification_assignment",
+]
+# person_and_organization_item / approval_item: keep the already-covered members
+# (incl. the applied_* seeds + their sibling assignments); drop the uncovered
+# product_concept_*/interface_*/breakdown_* draggers. All entities -> Kind::Ref.
+person_and_organization_item = [
+    "action", "action_directive", "action_method",
+    "action_property", "action_relationship", "action_request_solution",
+    "applied_document_reference", "applied_person_and_organization_assignment", "approval",
+    "approval_status", "ascribable_state", "certification",
+    "configuration_design", "configuration_effectivity", "configuration_item",
+    "contract", "date_and_time_assignment", "document_file",
+    "document_type", "draughting_model", "effectivity",
+    "general_property", "mechanical_design_geometric_presentation_representation", "organization",
+    "organization_relationship", "organizational_address", "organizational_project",
+    "person_and_organization", "presentation_area", "product",
+    "product_concept", "product_concept_feature", "product_concept_feature_category",
+    "product_definition", "product_definition_context", "product_definition_formation",
+    "product_definition_relationship", "product_definition_substitute", "property_definition",
+    "property_definition_representation", "representation", "resource_property",
+    "security_classification", "security_classification_level", "shape_representation",
+    "state_observed", "state_type", "versioned_action_request",
+]
+approval_item = [
+    "action", "action_directive", "action_method",
+    "action_method_relationship", "action_property", "action_request_solution",
+    "applied_approval_assignment", "applied_document_reference", "applied_external_identification_assignment",
+    "applied_person_and_organization_assignment", "certification", "configuration_design",
+    "configuration_effectivity", "configuration_item", "contract",
+    "date", "date_and_time_assignment", "document",
+    "document_file", "draughting_model", "effectivity",
+    "general_property", "group", "measure_representation_item",
+    "mechanical_design_geometric_presentation_representation", "organization", "organization_relationship",
+    "organizational_address", "organizational_project", "person_and_organization",
+    "presentation_area", "product", "product_concept",
+    "product_concept_feature", "product_concept_feature_category", "product_definition",
+    "product_definition_context", "product_definition_formation", "product_definition_relationship",
+    "product_definition_substitute", "product_definition_usage", "property_definition",
+    "property_definition_representation", "representation", "representation_item",
+    "representation_relationship", "resource_property", "security_classification",
+    "shape_aspect_relationship", "shape_representation", "value_representation_item",
+    "versioned_action_request",
 ]

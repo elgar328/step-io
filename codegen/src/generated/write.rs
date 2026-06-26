@@ -106,10 +106,12 @@ pub struct Writer<'a> {
     application_context_ids: Vec<Option<u64>>,
     application_context_element_ids: Vec<Option<u64>>,
     application_protocol_definition_ids: Vec<Option<u64>>,
+    applied_approval_assignment_ids: Vec<Option<u64>>,
     applied_date_and_time_assignment_ids: Vec<Option<u64>>,
     applied_document_reference_ids: Vec<Option<u64>>,
     applied_external_identification_assignment_ids: Vec<Option<u64>>,
     applied_group_assignment_ids: Vec<Option<u64>>,
+    applied_person_and_organization_assignment_ids: Vec<Option<u64>>,
     applied_presented_item_ids: Vec<Option<u64>>,
     approval_ids: Vec<Option<u64>>,
     approval_assignment_ids: Vec<Option<u64>>,
@@ -679,6 +681,10 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            applied_approval_assignment_ids: vec![
+                None;
+                model.applied_approval_assignments.items.len()
+            ],
             applied_date_and_time_assignment_ids: vec![
                 None;
                 model
@@ -698,6 +704,13 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             applied_group_assignment_ids: vec![None; model.applied_group_assignments.items.len()],
+            applied_person_and_organization_assignment_ids: vec![
+                None;
+                model
+                    .applied_person_and_organization_assignments
+                    .items
+                    .len()
+            ],
             applied_presented_item_ids: vec![None; model.applied_presented_items.items.len()],
             approval_ids: vec![None; model.approvals.items.len()],
             approval_assignment_ids: vec![None; model.approval_assignments.items.len()],
@@ -1886,6 +1899,7 @@ impl<'a> Writer<'a> {
             AnyId::ApplicationProtocolDefinition(i) => {
                 self.application_protocol_definition_ids[i.0]
             }
+            AnyId::AppliedApprovalAssignment(i) => self.applied_approval_assignment_ids[i.0],
             AnyId::AppliedDateAndTimeAssignment(i) => {
                 self.applied_date_and_time_assignment_ids[i.0]
             }
@@ -1894,6 +1908,9 @@ impl<'a> Writer<'a> {
                 self.applied_external_identification_assignment_ids[i.0]
             }
             AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0],
+            AnyId::AppliedPersonAndOrganizationAssignment(i) => {
+                self.applied_person_and_organization_assignment_ids[i.0]
+            }
             AnyId::AppliedPresentedItem(i) => self.applied_presented_item_ids[i.0],
             AnyId::Approval(i) => self.approval_ids[i.0],
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0],
@@ -2559,6 +2576,9 @@ impl<'a> Writer<'a> {
             AnyId::ApplicationProtocolDefinition(i) => {
                 self.application_protocol_definition_ids[i.0] = Some(n)
             }
+            AnyId::AppliedApprovalAssignment(i) => {
+                self.applied_approval_assignment_ids[i.0] = Some(n)
+            }
             AnyId::AppliedDateAndTimeAssignment(i) => {
                 self.applied_date_and_time_assignment_ids[i.0] = Some(n)
             }
@@ -2569,6 +2589,9 @@ impl<'a> Writer<'a> {
                 self.applied_external_identification_assignment_ids[i.0] = Some(n)
             }
             AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0] = Some(n),
+            AnyId::AppliedPersonAndOrganizationAssignment(i) => {
+                self.applied_person_and_organization_assignment_ids[i.0] = Some(n)
+            }
             AnyId::AppliedPresentedItem(i) => self.applied_presented_item_ids[i.0] = Some(n),
             AnyId::Approval(i) => self.approval_ids[i.0] = Some(n),
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0] = Some(n),
@@ -3835,6 +3858,1032 @@ impl<'a> Writer<'a> {
     fn deps_ref_application_context(r: &ApplicationContextRef, out: &mut Vec<AnyId>) {
         match r {
             ApplicationContextRef::ApplicationContext(i) => out.push(AnyId::ApplicationContext(*i)),
+        }
+    }
+
+    fn id_of_ref_approval_item(&self, r: &ApprovalItemRef) -> u64 {
+        match r {
+            ApprovalItemRef::Action(i) => self.action_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ActionDirective(i) => {
+                self.action_directive_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ActionMethod(i) => {
+                self.action_method_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ActionMethodRelationship(i) => {
+                self.action_method_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ActionProperty(i) => {
+                self.action_property_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ActionRequestSolution(i) => {
+                self.action_request_solution_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AdvancedBrepShapeRepresentation(i) => {
+                self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AdvancedFace(i) => {
+                self.advanced_face_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationCurveOccurrence(i) => {
+                self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
+                self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationOccurrence(i) => {
+                self.annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationPlaceholderOccurrence(i) => {
+                self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::AnnotationPlane(i) => {
+                self.annotation_plane_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationSymbol(i) => {
+                self.annotation_symbol_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
+                self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationText(i) => {
+                self.annotation_text_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationTextCharacter(i) => {
+                self.annotation_text_character_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationTextOccurrence(i) => {
+                self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AppliedApprovalAssignment(i) => {
+                self.applied_approval_assignment_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AppliedDateAndTimeAssignment(i) => {
+                self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AppliedDocumentReference(i) => {
+                self.applied_document_reference_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AppliedExternalIdentificationAssignment(i) => {
+                self.applied_external_identification_assignment_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AppliedPersonAndOrganizationAssignment(i) => {
+                self.applied_person_and_organization_assignment_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AssemblyComponentUsage(i) => {
+                self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Axis1Placement(i) => {
+                self.axis1_placement_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Axis2Placement2d(i) => {
+                self.axis2_placement2d_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Axis2Placement3d(i) => {
+                self.axis2_placement3d_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BSplineCurve(i) => {
+                self.b_spline_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BSplineCurveWithKnots(i) => {
+                self.b_spline_curve_with_knot_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BSplineSurface(i) => {
+                self.b_spline_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BSplineSurfaceWithKnots(i) => {
+                self.b_spline_surface_with_knot_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BezierCurve(i) => self.bezier_curve_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::BezierSurface(i) => {
+                self.bezier_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BoundedCurve(i) => {
+                self.bounded_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BoundedPcurve(i) => {
+                self.bounded_pcurve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BoundedSurface(i) => {
+                self.bounded_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BoundedSurfaceCurve(i) => {
+                self.bounded_surface_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::BrepWithVoids(i) => {
+                self.brep_with_void_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CalendarDate(i) => {
+                self.calendar_date_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CameraImage(i) => self.camera_image_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::CameraImage3dWithScale(i) => {
+                self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CartesianPoint(i) => {
+                self.cartesian_point_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CcDesignDateAndTimeAssignment(i) => {
+                self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Certification(i) => {
+                self.certification_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ClosedShell(i) => self.closed_shell_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ComplexTriangulatedFace(i) => {
+                self.complex_triangulated_face_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                self.complex_triangulated_surface_set_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CompositeCurve(i) => {
+                self.composite_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::CompositeText(i) => {
+                self.composite_text_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ConfigurationDesign(i) => {
+                self.configuration_design_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ConfigurationEffectivity(i) => {
+                self.configuration_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ConfigurationItem(i) => {
+                self.configuration_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Conic(i) => self.conic_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ConicalSurface(i) => {
+                self.conical_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ConnectedFaceSet(i) => {
+                self.connected_face_set_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ConstructiveGeometryRepresentation(i) => {
+                self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ConstructiveGeometryRepresentationRelationship(i) => self
+                .constructive_geometry_representation_relationship_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::ContextDependentOverRidingStyledItem(i) => {
+                self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::CoordinatesList(i) => {
+                self.coordinates_list_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Curve(i) => self.curve_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::CylindricalSurface(i) => {
+                self.cylindrical_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Date(i) => self.date_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::DateAndTimeAssignment(i) => {
+                self.date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DefinedCharacterGlyph(i) => {
+                self.defined_character_glyph_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DefinedSymbol(i) => {
+                self.defined_symbol_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DefinitionalRepresentation(i) => {
+                self.definitional_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DefinitionalRepresentationRelationship(i) => {
+                self.definitional_representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => self
+                .definitional_representation_relationship_with_same_context_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::DegenerateToroidalSurface(i) => {
+                self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DescriptiveRepresentationItem(i) => {
+                self.descriptive_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DesignContext(i) => {
+                self.design_context_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DimensionalLocation(i) => {
+                self.dimensional_location_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DimensionalLocationWithPath(i) => {
+                self.dimensional_location_with_path_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Direction(i) => self.direction_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Document(i) => self.document_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::DocumentFile(i) => {
+                self.document_file_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DraughtingCallout(i) => {
+                self.draughting_callout_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::DraughtingModel(i) => {
+                self.draughting_model_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Edge(i) => self.edge_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::EdgeCurve(i) => self.edge_curve_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::EdgeLoop(i) => self.edge_loop_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Effectivity(i) => self.effectivity_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ElementarySurface(i) => {
+                self.elementary_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Ellipse(i) => self.ellipse_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
+                self.externally_defined_hatch_style_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ExternallyDefinedTileStyle(i) => {
+                self.externally_defined_tile_style_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Face(i) => self.face_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::FaceBound(i) => self.face_bound_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::FaceOuterBound(i) => {
+                self.face_outer_bound_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::FaceSurface(i) => self.face_surface_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::FillAreaStyleHatching(i) => {
+                self.fill_area_style_hatching_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::FillAreaStyleTileColouredRegion(i) => {
+                self.fill_area_style_tile_coloured_region_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                self.fill_area_style_tile_curve_with_style_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                self.fill_area_style_tile_symbol_with_style_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::FillAreaStyleTiles(i) => {
+                self.fill_area_style_tile_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::GeneralProperty(i) => {
+                self.general_property_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::GeometricCurveSet(i) => {
+                self.geometric_curve_set_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::GeometricRepresentationItem(i) => {
+                self.geometric_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::GeometricSet(i) => {
+                self.geometric_set_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
+                .geometrically_bounded_wireframe_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::IntegerRepresentationItem(i) => {
+                self.integer_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::IntersectionCurve(i) => {
+                self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::LeaderCurve(i) => self.leader_curve_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ManifoldSolidBrep(i) => {
+                self.manifold_solid_brep_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::MappedItem(i) => self.mapped_item_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::MeasureRepresentationItem(i) => {
+                self.measure_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::MechanicalDesignAndDraughtingRelationship(i) => self
+                .mechanical_design_and_draughting_relationship_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
+                .mechanical_design_geometric_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self
+                .mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::NextAssemblyUsageOccurrence(i) => {
+                self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OffsetSurface(i) => {
+                self.offset_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OneDirectionRepeatFactor(i) => {
+                self.one_direction_repeat_factor_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OpenShell(i) => self.open_shell_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Organization(i) => {
+                self.organization_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OrganizationRelationship(i) => {
+                self.organization_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OrganizationalAddress(i) => {
+                self.organizational_addre_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OrganizationalProject(i) => {
+                self.organizational_project_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OrientedClosedShell(i) => {
+                self.oriented_closed_shell_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OrientedEdge(i) => {
+                self.oriented_edge_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::OverRidingStyledItem(i) => {
+                self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Path(i) => self.path_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Pcurve(i) => self.pcurve_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::PersonAndOrganization(i) => {
+                self.person_and_organization_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::PersonAndOrganizationAddress(i) => {
+                self.person_and_organization_addre_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Placement(i) => self.placement_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::PlanarBox(i) => self.planar_box_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::PlanarExtent(i) => {
+                self.planar_extent_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Plane(i) => self.plane_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::PresentationRepresentation(i) => {
+                self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::ProductConcept(i) => {
+                self.product_concept_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductConceptFeature(i) => {
+                self.product_concept_feature_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionContext(i) => {
+                self.product_definition_context_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionEffectivity(i) => {
+                self.product_definition_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::ProductDefinitionRelationship(i) => {
+                self.product_definition_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionShape(i) => {
+                self.product_definition_shape_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionSubstitute(i) => {
+                self.product_definition_substitute_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionUsage(i) => {
+                self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::PropertyDefinition(i) => {
+                self.property_definition_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::PropertyDefinitionRepresentation(i) => {
+                self.property_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::QualifiedRepresentationItem(i) => {
+                self.qualified_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::QuasiUniformCurve(i) => {
+                self.quasi_uniform_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::QuasiUniformSurface(i) => {
+                self.quasi_uniform_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::RationalBSplineCurve(i) => {
+                self.rational_b_spline_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::RationalBSplineSurface(i) => {
+                self.rational_b_spline_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::RealRepresentationItem(i) => {
+                self.real_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::RepositionedTessellatedItem(i) => {
+                self.repositioned_tessellated_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Representation(i) => {
+                self.representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::RepresentationItem(i) => {
+                self.representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::RepresentationRelationship(i) => {
+                self.representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::RepresentationRelationshipWithTransformation(i) => self
+                .representation_relationship_with_transformation_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovalItemRef::ResourceProperty(i) => {
+                self.resource_property_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::SeamCurve(i) => self.seam_curve_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShapeAspectRelationship(i) => {
+                self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShapeDefinitionRepresentation(i) => {
+                self.shape_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShapeDimensionRepresentation(i) => {
+                self.shape_dimension_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShapeRepresentation(i) => {
+                self.shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShapeRepresentationRelationship(i) => {
+                self.shape_representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ShellBasedSurfaceModel(i) => {
+                self.shell_based_surface_model_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::SolidModel(i) => self.solid_model_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::SphericalSurface(i) => {
+                self.spherical_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::StyledItem(i) => self.styled_item_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Surface(i) => self.surface_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::SurfaceCurve(i) => {
+                self.surface_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::SurfaceOfLinearExtrusion(i) => {
+                self.surface_of_linear_extrusion_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::SurfaceOfRevolution(i) => {
+                self.surface_of_revolution_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::SweptSurface(i) => {
+                self.swept_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::SymbolTarget(i) => {
+                self.symbol_target_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedAnnotationOccurrence(i) => {
+                self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedCurveSet(i) => {
+                self.tessellated_curve_set_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedFace(i) => {
+                self.tessellated_face_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedGeometricSet(i) => {
+                self.tessellated_geometric_set_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedItem(i) => {
+                self.tessellated_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedStructuredItem(i) => {
+                self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TessellatedSurfaceSet(i) => {
+                self.tessellated_surface_set_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TextLiteral(i) => self.text_literal_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::TopologicalRepresentationItem(i) => {
+                self.topological_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ToroidalSurface(i) => {
+                self.toroidal_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TrimmedCurve(i) => {
+                self.trimmed_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::TwoDirectionRepeatFactor(i) => {
+                self.two_direction_repeat_factor_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::UniformCurve(i) => {
+                self.uniform_curve_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::UniformSurface(i) => {
+                self.uniform_surface_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::ValueRepresentationItem(i) => {
+                self.value_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::VersionedActionRequest(i) => {
+                self.versioned_action_request_ids[i.0].expect("dep id assigned")
+            }
+            ApprovalItemRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::VertexLoop(i) => self.vertex_loop_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::VertexPoint(i) => self.vertex_point_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::VertexShell(i) => self.vertex_shell_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::WireShell(i) => self.wire_shell_ids[i.0].expect("dep id assigned"),
+            ApprovalItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_approval_item(r: &ApprovalItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            ApprovalItemRef::Action(i) => out.push(AnyId::Action(*i)),
+            ApprovalItemRef::ActionDirective(i) => out.push(AnyId::ActionDirective(*i)),
+            ApprovalItemRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+            ApprovalItemRef::ActionMethodRelationship(i) => {
+                out.push(AnyId::ActionMethodRelationship(*i))
+            }
+            ApprovalItemRef::ActionProperty(i) => out.push(AnyId::ActionProperty(*i)),
+            ApprovalItemRef::ActionRequestSolution(i) => out.push(AnyId::ActionRequestSolution(*i)),
+            ApprovalItemRef::AdvancedBrepShapeRepresentation(i) => {
+                out.push(AnyId::AdvancedBrepShapeRepresentation(*i))
+            }
+            ApprovalItemRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+            ApprovalItemRef::AnnotationCurveOccurrence(i) => {
+                out.push(AnyId::AnnotationCurveOccurrence(*i))
+            }
+            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
+                out.push(AnyId::AnnotationFillAreaOccurrence(*i))
+            }
+            ApprovalItemRef::AnnotationOccurrence(i) => out.push(AnyId::AnnotationOccurrence(*i)),
+            ApprovalItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
+            ApprovalItemRef::AnnotationPlaceholderOccurrence(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            ApprovalItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
+            ApprovalItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+            ApprovalItemRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
+            ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
+                out.push(AnyId::AnnotationSymbolOccurrence(*i))
+            }
+            ApprovalItemRef::AnnotationText(i) => out.push(AnyId::AnnotationText(*i)),
+            ApprovalItemRef::AnnotationTextCharacter(i) => {
+                out.push(AnyId::AnnotationTextCharacter(*i))
+            }
+            ApprovalItemRef::AnnotationTextOccurrence(i) => {
+                out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            ApprovalItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            ApprovalItemRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            ApprovalItemRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            ApprovalItemRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
+            ApprovalItemRef::AppliedApprovalAssignment(i) => {
+                out.push(AnyId::AppliedApprovalAssignment(*i))
+            }
+            ApprovalItemRef::AppliedDateAndTimeAssignment(i) => {
+                out.push(AnyId::AppliedDateAndTimeAssignment(*i))
+            }
+            ApprovalItemRef::AppliedDocumentReference(i) => {
+                out.push(AnyId::AppliedDocumentReference(*i))
+            }
+            ApprovalItemRef::AppliedExternalIdentificationAssignment(i) => {
+                out.push(AnyId::AppliedExternalIdentificationAssignment(*i))
+            }
+            ApprovalItemRef::AppliedPersonAndOrganizationAssignment(i) => {
+                out.push(AnyId::AppliedPersonAndOrganizationAssignment(*i))
+            }
+            ApprovalItemRef::AssemblyComponentUsage(i) => {
+                out.push(AnyId::AssemblyComponentUsage(*i))
+            }
+            ApprovalItemRef::AuxiliaryLeaderLine(i) => out.push(AnyId::AuxiliaryLeaderLine(*i)),
+            ApprovalItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
+            ApprovalItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
+            ApprovalItemRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
+            ApprovalItemRef::BSplineCurve(i) => out.push(AnyId::BSplineCurve(*i)),
+            ApprovalItemRef::BSplineCurveWithKnots(i) => out.push(AnyId::BSplineCurveWithKnots(*i)),
+            ApprovalItemRef::BSplineSurface(i) => out.push(AnyId::BSplineSurface(*i)),
+            ApprovalItemRef::BSplineSurfaceWithKnots(i) => {
+                out.push(AnyId::BSplineSurfaceWithKnots(*i))
+            }
+            ApprovalItemRef::BezierCurve(i) => out.push(AnyId::BezierCurve(*i)),
+            ApprovalItemRef::BezierSurface(i) => out.push(AnyId::BezierSurface(*i)),
+            ApprovalItemRef::BoundedCurve(i) => out.push(AnyId::BoundedCurve(*i)),
+            ApprovalItemRef::BoundedPcurve(i) => out.push(AnyId::BoundedPcurve(*i)),
+            ApprovalItemRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
+            ApprovalItemRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
+            ApprovalItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            ApprovalItemRef::CalendarDate(i) => out.push(AnyId::CalendarDate(*i)),
+            ApprovalItemRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+            ApprovalItemRef::CameraImage3dWithScale(i) => {
+                out.push(AnyId::CameraImage3dWithScale(*i))
+            }
+            ApprovalItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            ApprovalItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            ApprovalItemRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
+            ApprovalItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+            ApprovalItemRef::CcDesignDateAndTimeAssignment(i) => {
+                out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
+            }
+            ApprovalItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            ApprovalItemRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
+            ApprovalItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
+            ApprovalItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
+            ApprovalItemRef::ComplexTriangulatedFace(i) => {
+                out.push(AnyId::ComplexTriangulatedFace(*i))
+            }
+            ApprovalItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                out.push(AnyId::ComplexTriangulatedSurfaceSet(*i))
+            }
+            ApprovalItemRef::CompositeCurve(i) => out.push(AnyId::CompositeCurve(*i)),
+            ApprovalItemRef::CompositeText(i) => out.push(AnyId::CompositeText(*i)),
+            ApprovalItemRef::ConfigurationDesign(i) => out.push(AnyId::ConfigurationDesign(*i)),
+            ApprovalItemRef::ConfigurationEffectivity(i) => {
+                out.push(AnyId::ConfigurationEffectivity(*i))
+            }
+            ApprovalItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
+            ApprovalItemRef::Conic(i) => out.push(AnyId::Conic(*i)),
+            ApprovalItemRef::ConicalSurface(i) => out.push(AnyId::ConicalSurface(*i)),
+            ApprovalItemRef::ConnectedFaceSet(i) => out.push(AnyId::ConnectedFaceSet(*i)),
+            ApprovalItemRef::ConstructiveGeometryRepresentation(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentation(*i))
+            }
+            ApprovalItemRef::ConstructiveGeometryRepresentationRelationship(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentationRelationship(*i))
+            }
+            ApprovalItemRef::ContextDependentOverRidingStyledItem(i) => {
+                out.push(AnyId::ContextDependentOverRidingStyledItem(*i))
+            }
+            ApprovalItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+            ApprovalItemRef::CoordinatesList(i) => out.push(AnyId::CoordinatesList(*i)),
+            ApprovalItemRef::Curve(i) => out.push(AnyId::Curve(*i)),
+            ApprovalItemRef::CylindricalSurface(i) => out.push(AnyId::CylindricalSurface(*i)),
+            ApprovalItemRef::Date(i) => out.push(AnyId::Date(*i)),
+            ApprovalItemRef::DateAndTimeAssignment(i) => out.push(AnyId::DateAndTimeAssignment(*i)),
+            ApprovalItemRef::DefinedCharacterGlyph(i) => out.push(AnyId::DefinedCharacterGlyph(*i)),
+            ApprovalItemRef::DefinedSymbol(i) => out.push(AnyId::DefinedSymbol(*i)),
+            ApprovalItemRef::DefinitionalRepresentation(i) => {
+                out.push(AnyId::DefinitionalRepresentation(*i))
+            }
+            ApprovalItemRef::DefinitionalRepresentationRelationship(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationship(*i))
+            }
+            ApprovalItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationshipWithSameContext(*i))
+            }
+            ApprovalItemRef::DegenerateToroidalSurface(i) => {
+                out.push(AnyId::DegenerateToroidalSurface(*i))
+            }
+            ApprovalItemRef::DescriptiveRepresentationItem(i) => {
+                out.push(AnyId::DescriptiveRepresentationItem(*i))
+            }
+            ApprovalItemRef::DesignContext(i) => out.push(AnyId::DesignContext(*i)),
+            ApprovalItemRef::DimensionalLocation(i) => out.push(AnyId::DimensionalLocation(*i)),
+            ApprovalItemRef::DimensionalLocationWithPath(i) => {
+                out.push(AnyId::DimensionalLocationWithPath(*i))
+            }
+            ApprovalItemRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
+            }
+            ApprovalItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
+            ApprovalItemRef::Document(i) => out.push(AnyId::Document(*i)),
+            ApprovalItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+            ApprovalItemRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
+            ApprovalItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
+            ApprovalItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+            ApprovalItemRef::Edge(i) => out.push(AnyId::Edge(*i)),
+            ApprovalItemRef::EdgeCurve(i) => out.push(AnyId::EdgeCurve(*i)),
+            ApprovalItemRef::EdgeLoop(i) => out.push(AnyId::EdgeLoop(*i)),
+            ApprovalItemRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
+            ApprovalItemRef::ElementarySurface(i) => out.push(AnyId::ElementarySurface(*i)),
+            ApprovalItemRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+            ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
+                out.push(AnyId::ExternallyDefinedHatchStyle(*i))
+            }
+            ApprovalItemRef::ExternallyDefinedTileStyle(i) => {
+                out.push(AnyId::ExternallyDefinedTileStyle(*i))
+            }
+            ApprovalItemRef::Face(i) => out.push(AnyId::Face(*i)),
+            ApprovalItemRef::FaceBound(i) => out.push(AnyId::FaceBound(*i)),
+            ApprovalItemRef::FaceOuterBound(i) => out.push(AnyId::FaceOuterBound(*i)),
+            ApprovalItemRef::FaceSurface(i) => out.push(AnyId::FaceSurface(*i)),
+            ApprovalItemRef::FillAreaStyleHatching(i) => out.push(AnyId::FillAreaStyleHatching(*i)),
+            ApprovalItemRef::FillAreaStyleTileColouredRegion(i) => {
+                out.push(AnyId::FillAreaStyleTileColouredRegion(*i))
+            }
+            ApprovalItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                out.push(AnyId::FillAreaStyleTileCurveWithStyle(*i))
+            }
+            ApprovalItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                out.push(AnyId::FillAreaStyleTileSymbolWithStyle(*i))
+            }
+            ApprovalItemRef::FillAreaStyleTiles(i) => out.push(AnyId::FillAreaStyleTiles(*i)),
+            ApprovalItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+            ApprovalItemRef::GeometricCurveSet(i) => out.push(AnyId::GeometricCurveSet(*i)),
+            ApprovalItemRef::GeometricRepresentationItem(i) => {
+                out.push(AnyId::GeometricRepresentationItem(*i))
+            }
+            ApprovalItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            ApprovalItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
+            ApprovalItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
+            }
+            ApprovalItemRef::Group(i) => out.push(AnyId::Group(*i)),
+            ApprovalItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
+            ApprovalItemRef::IntegerRepresentationItem(i) => {
+                out.push(AnyId::IntegerRepresentationItem(*i))
+            }
+            ApprovalItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            ApprovalItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+            ApprovalItemRef::LeaderDirectedCallout(i) => out.push(AnyId::LeaderDirectedCallout(*i)),
+            ApprovalItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
+            ApprovalItemRef::Line(i) => out.push(AnyId::Line(*i)),
+            ApprovalItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
+            ApprovalItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
+            ApprovalItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i))
+            }
+            ApprovalItemRef::MappedItem(i) => out.push(AnyId::MappedItem(*i)),
+            ApprovalItemRef::MeasureRepresentationItem(i) => {
+                out.push(AnyId::MeasureRepresentationItem(*i))
+            }
+            ApprovalItemRef::MechanicalDesignAndDraughtingRelationship(i) => {
+                out.push(AnyId::MechanicalDesignAndDraughtingRelationship(*i))
+            }
+            ApprovalItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
+                AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
+            ),
+            ApprovalItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            ApprovalItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
+            ApprovalItemRef::NextAssemblyUsageOccurrence(i) => {
+                out.push(AnyId::NextAssemblyUsageOccurrence(*i))
+            }
+            ApprovalItemRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
+            ApprovalItemRef::OneDirectionRepeatFactor(i) => {
+                out.push(AnyId::OneDirectionRepeatFactor(*i))
+            }
+            ApprovalItemRef::OpenShell(i) => out.push(AnyId::OpenShell(*i)),
+            ApprovalItemRef::Organization(i) => out.push(AnyId::Organization(*i)),
+            ApprovalItemRef::OrganizationRelationship(i) => {
+                out.push(AnyId::OrganizationRelationship(*i))
+            }
+            ApprovalItemRef::OrganizationalAddress(i) => out.push(AnyId::OrganizationalAddress(*i)),
+            ApprovalItemRef::OrganizationalProject(i) => out.push(AnyId::OrganizationalProject(*i)),
+            ApprovalItemRef::OrientedClosedShell(i) => out.push(AnyId::OrientedClosedShell(*i)),
+            ApprovalItemRef::OrientedEdge(i) => out.push(AnyId::OrientedEdge(*i)),
+            ApprovalItemRef::OverRidingStyledItem(i) => out.push(AnyId::OverRidingStyledItem(*i)),
+            ApprovalItemRef::Path(i) => out.push(AnyId::Path(*i)),
+            ApprovalItemRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
+            ApprovalItemRef::PersonAndOrganization(i) => out.push(AnyId::PersonAndOrganization(*i)),
+            ApprovalItemRef::PersonAndOrganizationAddress(i) => {
+                out.push(AnyId::PersonAndOrganizationAddress(*i))
+            }
+            ApprovalItemRef::Placement(i) => out.push(AnyId::Placement(*i)),
+            ApprovalItemRef::PlanarBox(i) => out.push(AnyId::PlanarBox(*i)),
+            ApprovalItemRef::PlanarExtent(i) => out.push(AnyId::PlanarExtent(*i)),
+            ApprovalItemRef::Plane(i) => out.push(AnyId::Plane(*i)),
+            ApprovalItemRef::Point(i) => out.push(AnyId::Point(*i)),
+            ApprovalItemRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
+            ApprovalItemRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+            ApprovalItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+            ApprovalItemRef::PresentationRepresentation(i) => {
+                out.push(AnyId::PresentationRepresentation(*i))
+            }
+            ApprovalItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+            ApprovalItemRef::Product(i) => out.push(AnyId::Product(*i)),
+            ApprovalItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+            ApprovalItemRef::ProductConceptFeature(i) => out.push(AnyId::ProductConceptFeature(*i)),
+            ApprovalItemRef::ProductConceptFeatureCategory(i) => {
+                out.push(AnyId::ProductConceptFeatureCategory(*i))
+            }
+            ApprovalItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            ApprovalItemRef::ProductDefinitionContext(i) => {
+                out.push(AnyId::ProductDefinitionContext(*i))
+            }
+            ApprovalItemRef::ProductDefinitionEffectivity(i) => {
+                out.push(AnyId::ProductDefinitionEffectivity(*i))
+            }
+            ApprovalItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            ApprovalItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            ApprovalItemRef::ProductDefinitionRelationship(i) => {
+                out.push(AnyId::ProductDefinitionRelationship(*i))
+            }
+            ApprovalItemRef::ProductDefinitionShape(i) => {
+                out.push(AnyId::ProductDefinitionShape(*i))
+            }
+            ApprovalItemRef::ProductDefinitionSubstitute(i) => {
+                out.push(AnyId::ProductDefinitionSubstitute(*i))
+            }
+            ApprovalItemRef::ProductDefinitionUsage(i) => {
+                out.push(AnyId::ProductDefinitionUsage(*i))
+            }
+            ApprovalItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
+            ApprovalItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
+            ApprovalItemRef::PropertyDefinitionRepresentation(i) => {
+                out.push(AnyId::PropertyDefinitionRepresentation(*i))
+            }
+            ApprovalItemRef::QualifiedRepresentationItem(i) => {
+                out.push(AnyId::QualifiedRepresentationItem(*i))
+            }
+            ApprovalItemRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
+            ApprovalItemRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
+            ApprovalItemRef::RationalBSplineCurve(i) => out.push(AnyId::RationalBSplineCurve(*i)),
+            ApprovalItemRef::RationalBSplineSurface(i) => {
+                out.push(AnyId::RationalBSplineSurface(*i))
+            }
+            ApprovalItemRef::RealRepresentationItem(i) => {
+                out.push(AnyId::RealRepresentationItem(*i))
+            }
+            ApprovalItemRef::RepositionedTessellatedItem(i) => {
+                out.push(AnyId::RepositionedTessellatedItem(*i))
+            }
+            ApprovalItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
+            ApprovalItemRef::RepresentationItem(i) => out.push(AnyId::RepresentationItem(*i)),
+            ApprovalItemRef::RepresentationRelationship(i) => {
+                out.push(AnyId::RepresentationRelationship(*i))
+            }
+            ApprovalItemRef::RepresentationRelationshipWithTransformation(i) => {
+                out.push(AnyId::RepresentationRelationshipWithTransformation(*i))
+            }
+            ApprovalItemRef::ResourceProperty(i) => out.push(AnyId::ResourceProperty(*i)),
+            ApprovalItemRef::SeamCurve(i) => out.push(AnyId::SeamCurve(*i)),
+            ApprovalItemRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+            ApprovalItemRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            ApprovalItemRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
+            }
+            ApprovalItemRef::ShapeAspectRelationship(i) => {
+                out.push(AnyId::ShapeAspectRelationship(*i))
+            }
+            ApprovalItemRef::ShapeDefinitionRepresentation(i) => {
+                out.push(AnyId::ShapeDefinitionRepresentation(*i))
+            }
+            ApprovalItemRef::ShapeDimensionRepresentation(i) => {
+                out.push(AnyId::ShapeDimensionRepresentation(*i))
+            }
+            ApprovalItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+            ApprovalItemRef::ShapeRepresentationRelationship(i) => {
+                out.push(AnyId::ShapeRepresentationRelationship(*i))
+            }
+            ApprovalItemRef::ShellBasedSurfaceModel(i) => {
+                out.push(AnyId::ShellBasedSurfaceModel(*i))
+            }
+            ApprovalItemRef::SolidModel(i) => out.push(AnyId::SolidModel(*i)),
+            ApprovalItemRef::SphericalSurface(i) => out.push(AnyId::SphericalSurface(*i)),
+            ApprovalItemRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+            ApprovalItemRef::Surface(i) => out.push(AnyId::Surface(*i)),
+            ApprovalItemRef::SurfaceCurve(i) => out.push(AnyId::SurfaceCurve(*i)),
+            ApprovalItemRef::SurfaceOfLinearExtrusion(i) => {
+                out.push(AnyId::SurfaceOfLinearExtrusion(*i))
+            }
+            ApprovalItemRef::SurfaceOfRevolution(i) => out.push(AnyId::SurfaceOfRevolution(*i)),
+            ApprovalItemRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
+            ApprovalItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+            ApprovalItemRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+            ApprovalItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
+            ApprovalItemRef::TessellatedAnnotationOccurrence(i) => {
+                out.push(AnyId::TessellatedAnnotationOccurrence(*i))
+            }
+            ApprovalItemRef::TessellatedCurveSet(i) => out.push(AnyId::TessellatedCurveSet(*i)),
+            ApprovalItemRef::TessellatedFace(i) => out.push(AnyId::TessellatedFace(*i)),
+            ApprovalItemRef::TessellatedGeometricSet(i) => {
+                out.push(AnyId::TessellatedGeometricSet(*i))
+            }
+            ApprovalItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            ApprovalItemRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
+            ApprovalItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
+            ApprovalItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
+            ApprovalItemRef::TessellatedStructuredItem(i) => {
+                out.push(AnyId::TessellatedStructuredItem(*i))
+            }
+            ApprovalItemRef::TessellatedSurfaceSet(i) => out.push(AnyId::TessellatedSurfaceSet(*i)),
+            ApprovalItemRef::TextLiteral(i) => out.push(AnyId::TextLiteral(*i)),
+            ApprovalItemRef::TopologicalRepresentationItem(i) => {
+                out.push(AnyId::TopologicalRepresentationItem(*i))
+            }
+            ApprovalItemRef::ToroidalSurface(i) => out.push(AnyId::ToroidalSurface(*i)),
+            ApprovalItemRef::TrimmedCurve(i) => out.push(AnyId::TrimmedCurve(*i)),
+            ApprovalItemRef::TwoDirectionRepeatFactor(i) => {
+                out.push(AnyId::TwoDirectionRepeatFactor(*i))
+            }
+            ApprovalItemRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
+            ApprovalItemRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+            ApprovalItemRef::ValueRepresentationItem(i) => {
+                out.push(AnyId::ValueRepresentationItem(*i))
+            }
+            ApprovalItemRef::Vector(i) => out.push(AnyId::Vector(*i)),
+            ApprovalItemRef::VersionedActionRequest(i) => {
+                out.push(AnyId::VersionedActionRequest(*i))
+            }
+            ApprovalItemRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
+            ApprovalItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
+            ApprovalItemRef::VertexPoint(i) => out.push(AnyId::VertexPoint(*i)),
+            ApprovalItemRef::VertexShell(i) => out.push(AnyId::VertexShell(*i)),
+            ApprovalItemRef::WireShell(i) => out.push(AnyId::WireShell(*i)),
+            ApprovalItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -13446,6 +14495,169 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_person_and_organization_item(&self, r: &PersonAndOrganizationItemRef) -> u64 {
+        match r {
+        PersonAndOrganizationItemRef::Action(i) => self.action_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ActionDirective(i) => self.action_directive_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ActionMethod(i) => self.action_method_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ActionProperty(i) => self.action_property_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ActionRelationship(i) => self.action_relationship_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ActionRequestSolution(i) => self.action_request_solution_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::AppliedDateAndTimeAssignment(i) => self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::AppliedDocumentReference(i) => self.applied_document_reference_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::AppliedPersonAndOrganizationAssignment(i) => self.applied_person_and_organization_assignment_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Approval(i) => self.approval_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ApprovalStatus(i) => self.approval_statu_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::AscribableState(i) => self.ascribable_state_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::CcDesignDateAndTimeAssignment(i) => self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Certification(i) => self.certification_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::CharacterizedRepresentation(i) => self.characterized_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ConfigurationDesign(i) => self.configuration_design_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ConfigurationEffectivity(i) => self.configuration_effectivity_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ConfigurationItem(i) => self.configuration_item_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::DateAndTimeAssignment(i) => self.date_and_time_assignment_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::DesignContext(i) => self.design_context_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::DocumentFile(i) => self.document_file_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::DocumentType(i) => self.document_type_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::DraughtingModel(i) => self.draughting_model_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Effectivity(i) => self.effectivity_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::GeneralProperty(i) => self.general_property_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self.mechanical_design_presentation_representation_with_draughting_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self.mechanical_design_shaded_presentation_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::NextAssemblyUsageOccurrence(i) => self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Organization(i) => self.organization_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::OrganizationRelationship(i) => self.organization_relationship_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::OrganizationalAddress(i) => self.organizational_addre_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::OrganizationalProject(i) => self.organizational_project_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::PersonAndOrganization(i) => self.person_and_organization_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::PersonAndOrganizationAddress(i) => self.person_and_organization_addre_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::PresentationArea(i) => self.presentation_area_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::PresentationRepresentation(i) => self.presentation_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::PresentationView(i) => self.presentation_view_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductConcept(i) => self.product_concept_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductConceptFeature(i) => self.product_concept_feature_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductConceptFeatureCategory(i) => self.product_concept_feature_category_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinition(i) => self.product_definition_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionContext(i) => self.product_definition_context_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionEffectivity(i) => self.product_definition_effectivity_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionFormation(i) => self.product_definition_formation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self.product_definition_formation_with_specified_source_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionRelationship(i) => self.product_definition_relationship_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionSubstitute(i) => self.product_definition_substitute_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ProductDefinitionWithAssociatedDocuments(i) => self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::PropertyDefinition(i) => self.property_definition_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::PropertyDefinitionRepresentation(i) => self.property_definition_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Representation(i) => self.representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ResourceProperty(i) => self.resource_property_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::SecurityClassification(i) => self.security_classification_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::SecurityClassificationLevel(i) => self.security_classification_level_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ShapeDefinitionRepresentation(i) => self.shape_definition_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::StateObserved(i) => self.state_observed_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::StateType(i) => self.state_type_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::SymbolRepresentation(i) => self.symbol_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0].expect("dep id assigned"),
+        PersonAndOrganizationItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+    }
+    }
+
+    fn deps_ref_person_and_organization_item(
+        r: &PersonAndOrganizationItemRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+        PersonAndOrganizationItemRef::Action(i) => out.push(AnyId::Action(*i)),
+        PersonAndOrganizationItemRef::ActionDirective(i) => out.push(AnyId::ActionDirective(*i)),
+        PersonAndOrganizationItemRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+        PersonAndOrganizationItemRef::ActionProperty(i) => out.push(AnyId::ActionProperty(*i)),
+        PersonAndOrganizationItemRef::ActionRelationship(i) => out.push(AnyId::ActionRelationship(*i)),
+        PersonAndOrganizationItemRef::ActionRequestSolution(i) => out.push(AnyId::ActionRequestSolution(*i)),
+        PersonAndOrganizationItemRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
+        PersonAndOrganizationItemRef::AppliedDateAndTimeAssignment(i) => out.push(AnyId::AppliedDateAndTimeAssignment(*i)),
+        PersonAndOrganizationItemRef::AppliedDocumentReference(i) => out.push(AnyId::AppliedDocumentReference(*i)),
+        PersonAndOrganizationItemRef::AppliedPersonAndOrganizationAssignment(i) => out.push(AnyId::AppliedPersonAndOrganizationAssignment(*i)),
+        PersonAndOrganizationItemRef::Approval(i) => out.push(AnyId::Approval(*i)),
+        PersonAndOrganizationItemRef::ApprovalStatus(i) => out.push(AnyId::ApprovalStatus(*i)),
+        PersonAndOrganizationItemRef::AscribableState(i) => out.push(AnyId::AscribableState(*i)),
+        PersonAndOrganizationItemRef::AssemblyComponentUsage(i) => out.push(AnyId::AssemblyComponentUsage(*i)),
+        PersonAndOrganizationItemRef::CcDesignDateAndTimeAssignment(i) => out.push(AnyId::CcDesignDateAndTimeAssignment(*i)),
+        PersonAndOrganizationItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+        PersonAndOrganizationItemRef::CharacterizedRepresentation(i) => out.push(AnyId::CharacterizedRepresentation(*i)),
+        PersonAndOrganizationItemRef::ConfigurationDesign(i) => out.push(AnyId::ConfigurationDesign(*i)),
+        PersonAndOrganizationItemRef::ConfigurationEffectivity(i) => out.push(AnyId::ConfigurationEffectivity(*i)),
+        PersonAndOrganizationItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
+        PersonAndOrganizationItemRef::ConstructiveGeometryRepresentation(i) => out.push(AnyId::ConstructiveGeometryRepresentation(*i)),
+        PersonAndOrganizationItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+        PersonAndOrganizationItemRef::DateAndTimeAssignment(i) => out.push(AnyId::DateAndTimeAssignment(*i)),
+        PersonAndOrganizationItemRef::DefinitionalRepresentation(i) => out.push(AnyId::DefinitionalRepresentation(*i)),
+        PersonAndOrganizationItemRef::DesignContext(i) => out.push(AnyId::DesignContext(*i)),
+        PersonAndOrganizationItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+        PersonAndOrganizationItemRef::DocumentType(i) => out.push(AnyId::DocumentType(*i)),
+        PersonAndOrganizationItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+        PersonAndOrganizationItemRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
+        PersonAndOrganizationItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+        PersonAndOrganizationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
+        PersonAndOrganizationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+        PersonAndOrganizationItemRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
+        PersonAndOrganizationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
+        PersonAndOrganizationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+        PersonAndOrganizationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i)),
+        PersonAndOrganizationItemRef::NextAssemblyUsageOccurrence(i) => out.push(AnyId::NextAssemblyUsageOccurrence(*i)),
+        PersonAndOrganizationItemRef::Organization(i) => out.push(AnyId::Organization(*i)),
+        PersonAndOrganizationItemRef::OrganizationRelationship(i) => out.push(AnyId::OrganizationRelationship(*i)),
+        PersonAndOrganizationItemRef::OrganizationalAddress(i) => out.push(AnyId::OrganizationalAddress(*i)),
+        PersonAndOrganizationItemRef::OrganizationalProject(i) => out.push(AnyId::OrganizationalProject(*i)),
+        PersonAndOrganizationItemRef::PersonAndOrganization(i) => out.push(AnyId::PersonAndOrganization(*i)),
+        PersonAndOrganizationItemRef::PersonAndOrganizationAddress(i) => out.push(AnyId::PersonAndOrganizationAddress(*i)),
+        PersonAndOrganizationItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+        PersonAndOrganizationItemRef::PresentationRepresentation(i) => out.push(AnyId::PresentationRepresentation(*i)),
+        PersonAndOrganizationItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+        PersonAndOrganizationItemRef::Product(i) => out.push(AnyId::Product(*i)),
+        PersonAndOrganizationItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+        PersonAndOrganizationItemRef::ProductConceptFeature(i) => out.push(AnyId::ProductConceptFeature(*i)),
+        PersonAndOrganizationItemRef::ProductConceptFeatureCategory(i) => out.push(AnyId::ProductConceptFeatureCategory(*i)),
+        PersonAndOrganizationItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionContext(i) => out.push(AnyId::ProductDefinitionContext(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionEffectivity(i) => out.push(AnyId::ProductDefinitionEffectivity(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionFormation(i) => out.push(AnyId::ProductDefinitionFormation(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionRelationship(i) => out.push(AnyId::ProductDefinitionRelationship(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionShape(i) => out.push(AnyId::ProductDefinitionShape(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionSubstitute(i) => out.push(AnyId::ProductDefinitionSubstitute(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionUsage(i) => out.push(AnyId::ProductDefinitionUsage(*i)),
+        PersonAndOrganizationItemRef::ProductDefinitionWithAssociatedDocuments(i) => out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i)),
+        PersonAndOrganizationItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
+        PersonAndOrganizationItemRef::PropertyDefinitionRepresentation(i) => out.push(AnyId::PropertyDefinitionRepresentation(*i)),
+        PersonAndOrganizationItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
+        PersonAndOrganizationItemRef::ResourceProperty(i) => out.push(AnyId::ResourceProperty(*i)),
+        PersonAndOrganizationItemRef::SecurityClassification(i) => out.push(AnyId::SecurityClassification(*i)),
+        PersonAndOrganizationItemRef::SecurityClassificationLevel(i) => out.push(AnyId::SecurityClassificationLevel(*i)),
+        PersonAndOrganizationItemRef::ShapeDefinitionRepresentation(i) => out.push(AnyId::ShapeDefinitionRepresentation(*i)),
+        PersonAndOrganizationItemRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
+        PersonAndOrganizationItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+        PersonAndOrganizationItemRef::StateObserved(i) => out.push(AnyId::StateObserved(*i)),
+        PersonAndOrganizationItemRef::StateType(i) => out.push(AnyId::StateType(*i)),
+        PersonAndOrganizationItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+        PersonAndOrganizationItemRef::TessellatedShapeRepresentation(i) => out.push(AnyId::TessellatedShapeRepresentation(*i)),
+        PersonAndOrganizationItemRef::VersionedActionRequest(i) => out.push(AnyId::VersionedActionRequest(*i)),
+        PersonAndOrganizationItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+    }
+    }
+
     fn id_of_ref_person_and_organization(&self, r: &PersonAndOrganizationRef) -> u64 {
         match r {
             PersonAndOrganizationRef::PersonAndOrganization(i) => {
@@ -15355,6 +16567,9 @@ impl<'a> Writer<'a> {
             RoleSelectRef::ActionRequestAssignment(i) => {
                 self.action_request_assignment_ids[i.0].expect("dep id assigned")
             }
+            RoleSelectRef::AppliedApprovalAssignment(i) => {
+                self.applied_approval_assignment_ids[i.0].expect("dep id assigned")
+            }
             RoleSelectRef::AppliedDocumentReference(i) => {
                 self.applied_document_reference_ids[i.0].expect("dep id assigned")
             }
@@ -15397,6 +16612,9 @@ impl<'a> Writer<'a> {
             RoleSelectRef::ActionAssignment(i) => out.push(AnyId::ActionAssignment(*i)),
             RoleSelectRef::ActionRequestAssignment(i) => {
                 out.push(AnyId::ActionRequestAssignment(*i))
+            }
+            RoleSelectRef::AppliedApprovalAssignment(i) => {
+                out.push(AnyId::AppliedApprovalAssignment(*i))
             }
             RoleSelectRef::AppliedDocumentReference(i) => {
                 out.push(AnyId::AppliedDocumentReference(*i))
@@ -18490,6 +19708,13 @@ impl<'a> Writer<'a> {
                 let it = self.model.application_protocol_definitions.get(id.0);
                 Self::deps_ref_application_context(&it.application, out);
             }
+            AnyId::AppliedApprovalAssignment(id) => {
+                let it = self.model.applied_approval_assignments.get(id.0);
+                Self::deps_ref_approval(&it.assigned_approval, out);
+                for e in &it.items {
+                    Self::deps_ref_approval_item(e, out);
+                }
+            }
             AnyId::AppliedDateAndTimeAssignment(id) => {
                 let it = self.model.applied_date_and_time_assignments.get(id.0);
                 Self::deps_ref_date_and_time(&it.assigned_date_and_time, out);
@@ -18521,6 +19746,17 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_group(&it.assigned_group, out);
                 for e in &it.items {
                     Self::deps_ref_groupable_item(e, out);
+                }
+            }
+            AnyId::AppliedPersonAndOrganizationAssignment(id) => {
+                let it = self
+                    .model
+                    .applied_person_and_organization_assignments
+                    .get(id.0);
+                Self::deps_ref_person_and_organization(&it.assigned_person_and_organization, out);
+                Self::deps_ref_person_and_organization_role(&it.role, out);
+                for e in &it.items {
+                    Self::deps_ref_person_and_organization_item(e, out);
                 }
             }
             AnyId::AppliedPresentedItem(id) => {
@@ -20663,6 +21899,11 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_application_context(frame_of_reference, out);
                         }
+                        UnitPart::AppliedApprovalAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_approval_item(e, out);
+                            }
+                        }
                         UnitPart::AppliedDateAndTimeAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_date_and_time_item(e, out);
@@ -20681,6 +21922,11 @@ impl<'a> Writer<'a> {
                         UnitPart::AppliedGroupAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_groupable_item(e, out);
+                            }
+                        }
+                        UnitPart::AppliedPersonAndOrganizationAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_person_and_organization_item(e, out);
                             }
                         }
                         UnitPart::AppliedPresentedItem { items, .. } => {
@@ -22220,6 +23466,22 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::AppliedApprovalAssignment(id) => {
+                let it = self.model.applied_approval_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_approval(&it.assigned_approval)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_approval_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = APPLIED_APPROVAL_ASSIGNMENT({});\n", attrs.join(","))
+            }
             AnyId::AppliedDateAndTimeAssignment(id) => {
                 let it = self.model.applied_date_and_time_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -22299,6 +23561,34 @@ impl<'a> Writer<'a> {
                     ),
                 ];
                 format!("#{n} = APPLIED_GROUP_ASSIGNMENT({});\n", attrs.join(","))
+            }
+            AnyId::AppliedPersonAndOrganizationAssignment(id) => {
+                let it = self
+                    .model
+                    .applied_person_and_organization_assignments
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_person_and_organization(
+                            &it.assigned_person_and_organization
+                        )
+                    ),
+                    format!("#{}", self.id_of_ref_person_and_organization_role(&it.role)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_person_and_organization_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::AppliedPresentedItem(id) => {
                 let it = self.model.applied_presented_items.get(id.0);
@@ -29380,10 +30670,12 @@ impl<'a> Writer<'a> {
                 UnitPart::AnnotationTextCharacter { alignment, .. } => { let a: Vec<String> = vec![step_str(alignment)]; format!("ANNOTATION_TEXT_CHARACTER({})", a.join(",")) },
                 UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE()".to_string(),
                 UnitPart::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
+                UnitPart::AppliedApprovalAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approval_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_and_time_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedDocumentReference { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_document_reference_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DOCUMENT_REFERENCE({})", a.join(",")) },
                 UnitPart::AppliedExternalIdentificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_external_identification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedGroupAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_groupable_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_GROUP_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::AppliedPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_person_and_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedPresentedItem { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_presented_item_select(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PRESENTED_ITEM({})", a.join(",")) },
                 UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AreaInSet { area, in_set, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_presentation_area(area)), format!("#{}", self.id_of_ref_presentation_set(in_set))]; format!("AREA_IN_SET({})", a.join(",")) },
@@ -29860,6 +31152,11 @@ impl<'a> Writer<'a> {
                 ApplicationProtocolDefinitionId(i),
             ));
         }
+        for i in 0..self.model.applied_approval_assignments.items.len() {
+            roots.push(AnyId::AppliedApprovalAssignment(
+                AppliedApprovalAssignmentId(i),
+            ));
+        }
         for i in 0..self.model.applied_date_and_time_assignments.items.len() {
             roots.push(AnyId::AppliedDateAndTimeAssignment(
                 AppliedDateAndTimeAssignmentId(i),
@@ -29882,6 +31179,16 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.applied_group_assignments.items.len() {
             roots.push(AnyId::AppliedGroupAssignment(AppliedGroupAssignmentId(i)));
+        }
+        for i in 0..self
+            .model
+            .applied_person_and_organization_assignments
+            .items
+            .len()
+        {
+            roots.push(AnyId::AppliedPersonAndOrganizationAssignment(
+                AppliedPersonAndOrganizationAssignmentId(i),
+            ));
         }
         for i in 0..self.model.applied_presented_items.items.len() {
             roots.push(AnyId::AppliedPresentedItem(AppliedPresentedItemId(i)));

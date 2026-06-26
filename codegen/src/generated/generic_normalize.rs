@@ -1093,6 +1093,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "APPLIED_APPROVAL_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "APPLIED_DATE_AND_TIME_ASSIGNMENT" => &[
             Slot {
                 k: Sk::Ref,
@@ -1160,6 +1174,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "APPLIED_GROUP_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
             Slot {
                 k: Sk::Ref,
                 req: true,
@@ -10074,6 +10108,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "APPLIED_APPROVAL_ASSIGNMENT" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "APPLIED_DATE_AND_TIME_ASSIGNMENT" => &[Slot {
             k: Sk::Vec,
             req: true,
@@ -10093,6 +10133,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "APPLIED_GROUP_ASSIGNMENT" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT" => &[Slot {
             k: Sk::Vec,
             req: true,
             der: false,
