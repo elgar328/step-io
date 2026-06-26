@@ -22,10 +22,9 @@
 # built; the remaining exclusion is deferred for closure SCOPE, not a missing
 # capability.
 exclude = [
-    # item_identified_representation_usage: its `definition` SELECT drags the
-    # entire PLM applied-assignment subtree (a large domain with its own gaps) →
-    # keep deferred until the PLM domain is brought in as a deliberate step.
-    "item_identified_representation_usage",
+    # (item_identified_representation_usage was the sole exclude — its `definition`
+    # SELECT drags the PLM applied-* subtree; now seeded + narrowed instead, since
+    # the narrow mechanism exists. See plm_item_identified below.)
     # general_property is NOT excluded: it is a represented_definition member
     # (standard via property_definition_representation.definition) and enters the
     # closure that way. The non-standard property_definition.definition=#general_property
@@ -502,6 +501,12 @@ small_select = [
 # (person_and_organization_item 99 / approval_item 124, all-entity), narrowed
 # below to the already-covered members (mega so member-seeding is infeasible).
 plm_assignment2 = ["applied_person_and_organization_assignment", "applied_approval_assignment"]
+# item_identified_representation_usage (formerly the sole exclude). definition is
+# the 34-member item_identified_representation_usage_definition SELECT — narrowed
+# below to the 15 covered members (drops the 18 uncovered applied_*/represented_
+# definition). identified_item (item_identified_representation_usage_select) needs
+# no narrow: it is list/representation_item/set, all resolving to representation_item.
+plm_item_identified = ["item_identified_representation_usage"]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
@@ -682,4 +687,15 @@ approval_item = [
     "representation_relationship", "resource_property", "security_classification",
     "shape_aspect_relationship", "shape_representation", "value_representation_item",
     "versioned_action_request",
+]
+# item_identified_representation_usage_definition: keep the 15 covered members
+# (incl. the 6 already-seeded applied_* + characterized_object/dimensional_size/
+# geometric_tolerance/property_definition/shape_aspect family); drop the 18
+# uncovered applied_* and nested represented_definition. All entities -> Kind::Ref.
+item_identified_representation_usage_definition = [
+    "applied_approval_assignment", "applied_date_and_time_assignment", "applied_document_reference",
+    "applied_external_identification_assignment", "applied_group_assignment", "applied_person_and_organization_assignment",
+    "characterized_object", "dimensional_size", "geometric_tolerance",
+    "product_definition_relationship", "property_definition", "general_property",
+    "property_definition_relationship", "shape_aspect", "shape_aspect_relationship",
 ]

@@ -318,6 +318,7 @@ pub struct Writer<'a> {
     intersection_curve_ids: Vec<Option<u64>>,
     invisibility_ids: Vec<Option<u64>>,
     item_defined_transformation_ids: Vec<Option<u64>>,
+    item_identified_representation_usage_ids: Vec<Option<u64>>,
     leader_curve_ids: Vec<Option<u64>>,
     leader_directed_callout_ids: Vec<Option<u64>>,
     leader_terminator_ids: Vec<Option<u64>>,
@@ -1255,6 +1256,13 @@ impl<'a> Writer<'a> {
             item_defined_transformation_ids: vec![
                 None;
                 model.item_defined_transformations.items.len()
+            ],
+            item_identified_representation_usage_ids: vec![
+                None;
+                model
+                    .item_identified_representation_usages
+                    .items
+                    .len()
             ],
             leader_curve_ids: vec![None; model.leader_curves.items.len()],
             leader_directed_callout_ids: vec![None; model.leader_directed_callouts.items.len()],
@@ -2199,6 +2207,9 @@ impl<'a> Writer<'a> {
             AnyId::IntersectionCurve(i) => self.intersection_curve_ids[i.0],
             AnyId::Invisibility(i) => self.invisibility_ids[i.0],
             AnyId::ItemDefinedTransformation(i) => self.item_defined_transformation_ids[i.0],
+            AnyId::ItemIdentifiedRepresentationUsage(i) => {
+                self.item_identified_representation_usage_ids[i.0]
+            }
             AnyId::LeaderCurve(i) => self.leader_curve_ids[i.0],
             AnyId::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0],
             AnyId::LeaderTerminator(i) => self.leader_terminator_ids[i.0],
@@ -2931,6 +2942,9 @@ impl<'a> Writer<'a> {
             AnyId::Invisibility(i) => self.invisibility_ids[i.0] = Some(n),
             AnyId::ItemDefinedTransformation(i) => {
                 self.item_defined_transformation_ids[i.0] = Some(n)
+            }
+            AnyId::ItemIdentifiedRepresentationUsage(i) => {
+                self.item_identified_representation_usage_ids[i.0] = Some(n)
             }
             AnyId::LeaderCurve(i) => self.leader_curve_ids[i.0] = Some(n),
             AnyId::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0] = Some(n),
@@ -5415,6 +5429,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::GeometricToleranceWithModifiers(i) => {
                 self.geometric_tolerance_with_modifier_ids[i.0].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::ItemIdentifiedRepresentationUsage(i) => {
+                self.item_identified_representation_usage_ids[i.0].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::LineProfileTolerance(i) => {
                 self.line_profile_tolerance_ids[i.0].expect("dep id assigned")
             }
@@ -5609,6 +5626,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::GeometricToleranceWithModifiers(i) => {
                 out.push(AnyId::GeometricToleranceWithModifiers(*i))
+            }
+            CharacterizedDefinitionRef::ItemIdentifiedRepresentationUsage(i) => {
+                out.push(AnyId::ItemIdentifiedRepresentationUsage(*i))
             }
             CharacterizedDefinitionRef::LineProfileTolerance(i) => {
                 out.push(AnyId::LineProfileTolerance(*i))
@@ -13325,6 +13345,476 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_item_identified_representation_usage_definition(
+        &self,
+        r: &ItemIdentifiedRepresentationUsageDefinitionRef,
+    ) -> u64 {
+        match r {
+        ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(i) => self.all_around_shape_aspect_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AngularityTolerance(i) => self.angularity_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedApprovalAssignment(i) => self.applied_approval_assignment_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedDateAndTimeAssignment(i) => self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedDocumentReference(i) => self.applied_document_reference_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedExternalIdentificationAssignment(i) => self.applied_external_identification_assignment_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => self.applied_person_and_organization_assignment_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => self.centre_of_symmetry_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => self.characterized_item_within_representation_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => self.characterized_object_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedRepresentation(i) => self.characterized_representation_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CircularRunoutTolerance(i) => self.circular_runout_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => self.coaxiality_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => self.common_datum_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => self.composite_group_shape_aspect_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => self.composite_shape_aspect_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => self.concentricity_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => self.continuous_shape_aspect_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => self.cylindricity_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => self.datum_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => self.datum_feature_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumReferenceCompartment(i) => self.datum_reference_compartment_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumReferenceElement(i) => self.datum_reference_element_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumSystem(i) => self.datum_system_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumTarget(i) => self.datum_target_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DerivedShapeAspect(i) => self.derived_shape_aspect_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalLocation(i) => self.dimensional_location_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalLocationWithPath(i) => self.dimensional_location_with_path_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSize(i) => self.dimensional_size_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithDatumFeature(i) => self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => self.dimensional_size_with_path_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => self.directed_dimensional_location_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => self.document_file_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => self.flatness_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => self.general_datum_reference_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeneralProperty(i) => self.general_property_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricTolerance(i) => self.geometric_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithDatumReference(i) => self.geometric_tolerance_with_datum_reference_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithDefinedAreaUnit(i) => self.geometric_tolerance_with_defined_area_unit_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithDefinedUnit(i) => self.geometric_tolerance_with_defined_unit_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithMaximumTolerance(i) => self.geometric_tolerance_with_maximum_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithModifiers(i) => self.geometric_tolerance_with_modifier_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::LineProfileTolerance(i) => self.line_profile_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ModelGeometricView(i) => self.model_geometric_view_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ModifiedGeometricTolerance(i) => self.modified_geometric_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::NextAssemblyUsageOccurrence(i) => self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ParallelismTolerance(i) => self.parallelism_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PerpendicularityTolerance(i) => self.perpendicularity_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PlacedDatumTargetFeature(i) => self.placed_datum_target_feature_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PositionTolerance(i) => self.position_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionRelationship(i) => self.product_definition_relationship_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => self.property_definition_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => self.property_definition_relationship_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => self.roundness_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => self.shape_aspect_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => self.shape_aspect_associativity_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectDerivingRelationship(i) => self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectRelationship(i) => self.shape_aspect_relationship_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::StraightnessTolerance(i) => self.straightness_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::SurfaceProfileTolerance(i) => self.surface_profile_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::SymmetryTolerance(i) => self.symmetry_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ToleranceZone(i) => self.tolerance_zone_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ToleranceZoneWithDatum(i) => self.tolerance_zone_with_datum_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::TotalRunoutTolerance(i) => self.total_runout_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::UnequallyDisposedGeometricTolerance(i) => self.unequally_disposed_geometric_tolerance_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+    }
+    }
+
+    fn deps_ref_item_identified_representation_usage_definition(
+        r: &ItemIdentifiedRepresentationUsageDefinitionRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+        ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(i) => out.push(AnyId::AllAroundShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AngularityTolerance(i) => out.push(AnyId::AngularityTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedApprovalAssignment(i) => out.push(AnyId::AppliedApprovalAssignment(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedDateAndTimeAssignment(i) => out.push(AnyId::AppliedDateAndTimeAssignment(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedDocumentReference(i) => out.push(AnyId::AppliedDocumentReference(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedExternalIdentificationAssignment(i) => out.push(AnyId::AppliedExternalIdentificationAssignment(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => out.push(AnyId::AppliedGroupAssignment(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => out.push(AnyId::AppliedPersonAndOrganizationAssignment(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => out.push(AnyId::AssemblyComponentUsage(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => out.push(AnyId::CentreOfSymmetry(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => out.push(AnyId::CharacterizedItemWithinRepresentation(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => out.push(AnyId::CharacterizedObject(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedRepresentation(i) => out.push(AnyId::CharacterizedRepresentation(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CircularRunoutTolerance(i) => out.push(AnyId::CircularRunoutTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => out.push(AnyId::CoaxialityTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => out.push(AnyId::CompositeGroupShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => out.push(AnyId::CompositeShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => out.push(AnyId::ConcentricityTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => out.push(AnyId::ContinuousShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => out.push(AnyId::CylindricityTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => out.push(AnyId::Datum(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => out.push(AnyId::DatumFeature(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumReferenceCompartment(i) => out.push(AnyId::DatumReferenceCompartment(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumReferenceElement(i) => out.push(AnyId::DatumReferenceElement(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DerivedShapeAspect(i) => out.push(AnyId::DerivedShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalLocation(i) => out.push(AnyId::DimensionalLocation(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalLocationWithPath(i) => out.push(AnyId::DimensionalLocationWithPath(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithDatumFeature(i) => out.push(AnyId::DimensionalSizeWithDatumFeature(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => out.push(AnyId::DimensionalSizeWithPath(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => out.push(AnyId::DirectedDimensionalLocation(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => out.push(AnyId::FlatnessTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => out.push(AnyId::GeneralDatumReference(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricTolerance(i) => out.push(AnyId::GeometricTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithDatumReference(i) => out.push(AnyId::GeometricToleranceWithDatumReference(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithDefinedAreaUnit(i) => out.push(AnyId::GeometricToleranceWithDefinedAreaUnit(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithDefinedUnit(i) => out.push(AnyId::GeometricToleranceWithDefinedUnit(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithMaximumTolerance(i) => out.push(AnyId::GeometricToleranceWithMaximumTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::GeometricToleranceWithModifiers(i) => out.push(AnyId::GeometricToleranceWithModifiers(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::LineProfileTolerance(i) => out.push(AnyId::LineProfileTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ModelGeometricView(i) => out.push(AnyId::ModelGeometricView(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ModifiedGeometricTolerance(i) => out.push(AnyId::ModifiedGeometricTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::NextAssemblyUsageOccurrence(i) => out.push(AnyId::NextAssemblyUsageOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ParallelismTolerance(i) => out.push(AnyId::ParallelismTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PerpendicularityTolerance(i) => out.push(AnyId::PerpendicularityTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PlacedDatumTargetFeature(i) => out.push(AnyId::PlacedDatumTargetFeature(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PositionTolerance(i) => out.push(AnyId::PositionTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionRelationship(i) => out.push(AnyId::ProductDefinitionRelationship(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionShape(i) => out.push(AnyId::ProductDefinitionShape(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => out.push(AnyId::ProductDefinitionUsage(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => out.push(AnyId::PropertyDefinitionRelationship(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => out.push(AnyId::RoundnessTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => out.push(AnyId::ShapeAspectAssociativity(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectDerivingRelationship(i) => out.push(AnyId::ShapeAspectDerivingRelationship(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectRelationship(i) => out.push(AnyId::ShapeAspectRelationship(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::StraightnessTolerance(i) => out.push(AnyId::StraightnessTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::SurfaceProfileTolerance(i) => out.push(AnyId::SurfaceProfileTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::SymmetryTolerance(i) => out.push(AnyId::SymmetryTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ToleranceZone(i) => out.push(AnyId::ToleranceZone(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ToleranceZoneWithDatum(i) => out.push(AnyId::ToleranceZoneWithDatum(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::TotalRunoutTolerance(i) => out.push(AnyId::TotalRunoutTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::UnequallyDisposedGeometricTolerance(i) => out.push(AnyId::UnequallyDisposedGeometricTolerance(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+    }
+    }
+
+    fn id_of_ref_item_identified_representation_usage_select(
+        &self,
+        r: &ItemIdentifiedRepresentationUsageSelectRef,
+    ) -> u64 {
+        match r {
+        ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => self.advanced_face_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => self.annotation_plane_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => self.annotation_text_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => self.annotation_text_character_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextOccurrence(i) => self.annotation_text_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationToAnnotationLeaderLine(i) => self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationToModelLeaderLine(i) => self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ApllPointWithSurface(i) => self.apll_point_with_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::AuxiliaryLeaderLine(i) => self.auxiliary_leader_line_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Axis1Placement(i) => self.axis1_placement_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement2d(i) => self.axis2_placement2d_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement3d(i) => self.axis2_placement3d_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineCurve(i) => self.b_spline_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineCurveWithKnots(i) => self.b_spline_curve_with_knot_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineSurface(i) => self.b_spline_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineSurfaceWithKnots(i) => self.b_spline_surface_with_knot_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BezierCurve(i) => self.bezier_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BezierSurface(i) => self.bezier_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedCurve(i) => self.bounded_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedPcurve(i) => self.bounded_pcurve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedSurface(i) => self.bounded_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::BrepWithVoids(i) => self.brep_with_void_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraImage(i) => self.camera_image_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => self.camera_model_d3_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => self.cartesian_point_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ClosedShell(i) => self.closed_shell_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedFace(i) => self.complex_triangulated_face_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedSurfaceSet(i) => self.complex_triangulated_surface_set_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CompositeCurve(i) => self.composite_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CompositeText(i) => self.composite_text_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Conic(i) => self.conic_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ConicalSurface(i) => self.conical_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ConnectedFaceSet(i) => self.connected_face_set_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ContextDependentOverRidingStyledItem(i) => self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CoordinatesList(i) => self.coordinates_list_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Curve(i) => self.curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CylindricalSurface(i) => self.cylindrical_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::DefinedCharacterGlyph(i) => self.defined_character_glyph_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::DefinedSymbol(i) => self.defined_symbol_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::DegenerateToroidalSurface(i) => self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::DescriptiveRepresentationItem(i) => self.descriptive_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Direction(i) => self.direction_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::DraughtingAnnotationOccurrence(i) => self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::DraughtingCallout(i) => self.draughting_callout_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Edge(i) => self.edge_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::EdgeCurve(i) => self.edge_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => self.edge_loop_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => self.elementary_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => self.ellipse_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => self.externally_defined_hatch_style_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => self.externally_defined_tile_style_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Face(i) => self.face_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FaceBound(i) => self.face_bound_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FaceOuterBound(i) => self.face_outer_bound_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FaceSurface(i) => self.face_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleHatching(i) => self.fill_area_style_hatching_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileColouredRegion(i) => self.fill_area_style_tile_coloured_region_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileCurveWithStyle(i) => self.fill_area_style_tile_curve_with_style_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileSymbolWithStyle(i) => self.fill_area_style_tile_symbol_with_style_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTiles(i) => self.fill_area_style_tile_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::GeometricCurveSet(i) => self.geometric_curve_set_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::GeometricRepresentationItem(i) => self.geometric_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::GeometricSet(i) => self.geometric_set_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::IntegerRepresentationItem(i) => self.integer_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::IntersectionCurve(i) => self.intersection_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::LeaderCurve(i) => self.leader_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::LeaderTerminator(i) => self.leader_terminator_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ManifoldSolidBrep(i) => self.manifold_solid_brep_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::MappedItem(i) => self.mapped_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::MeasureRepresentationItem(i) => self.measure_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::OffsetSurface(i) => self.offset_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::OneDirectionRepeatFactor(i) => self.one_direction_repeat_factor_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::OpenShell(i) => self.open_shell_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => self.oriented_closed_shell_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => self.oriented_edge_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => self.over_riding_styled_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Path(i) => self.path_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => self.pcurve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => self.placement_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::PlanarBox(i) => self.planar_box_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::PlanarExtent(i) => self.planar_extent_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Plane(i) => self.plane_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::QualifiedRepresentationItem(i) => self.qualified_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineCurve(i) => self.rational_b_spline_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineSurface(i) => self.rational_b_spline_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::RealRepresentationItem(i) => self.real_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::RepositionedTessellatedItem(i) => self.repositioned_tessellated_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::RepresentationItem(i) => self.representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SeamCurve(i) => self.seam_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ShellBasedSurfaceModel(i) => self.shell_based_surface_model_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SolidModel(i) => self.solid_model_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SphericalSurface(i) => self.spherical_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::StyledItem(i) => self.styled_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Surface(i) => self.surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SurfaceCurve(i) => self.surface_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfLinearExtrusion(i) => self.surface_of_linear_extrusion_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfRevolution(i) => self.surface_of_revolution_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SweptSurface(i) => self.swept_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::SymbolTarget(i) => self.symbol_target_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TerminatorSymbol(i) => self.terminator_symbol_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedAnnotationOccurrence(i) => self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedCurveSet(i) => self.tessellated_curve_set_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedFace(i) => self.tessellated_face_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedGeometricSet(i) => self.tessellated_geometric_set_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedItem(i) => self.tessellated_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedShell(i) => self.tessellated_shell_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedSolid(i) => self.tessellated_solid_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedStructuredItem(i) => self.tessellated_structured_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedSurfaceSet(i) => self.tessellated_surface_set_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TextLiteral(i) => self.text_literal_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TopologicalRepresentationItem(i) => self.topological_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ToroidalSurface(i) => self.toroidal_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TrimmedCurve(i) => self.trimmed_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::TwoDirectionRepeatFactor(i) => self.two_direction_repeat_factor_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::UniformCurve(i) => self.uniform_curve_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::UniformSurface(i) => self.uniform_surface_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ValueRepresentationItem(i) => self.value_representation_item_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::VertexLoop(i) => self.vertex_loop_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => self.vertex_point_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => self.vertex_shell_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => self.wire_shell_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(_) => panic!("aggregate via single id_of"),
+        ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(_) => panic!("aggregate via single id_of"),
+    }
+    }
+
+    fn deps_ref_item_identified_representation_usage_select(
+        r: &ItemIdentifiedRepresentationUsageSelectRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+        ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => out.push(AnyId::AnnotationCurveOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationFillAreaOccurrence(i) => out.push(AnyId::AnnotationFillAreaOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => out.push(AnyId::AnnotationOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => out.push(AnyId::AnnotationPlaceholderLeaderLine(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => out.push(AnyId::AnnotationPlaceholderOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => out.push(AnyId::AnnotationSymbolOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => out.push(AnyId::AnnotationText(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => out.push(AnyId::AnnotationTextCharacter(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextOccurrence(i) => out.push(AnyId::AnnotationTextOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationToAnnotationLeaderLine(i) => out.push(AnyId::AnnotationToAnnotationLeaderLine(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AnnotationToModelLeaderLine(i) => out.push(AnyId::AnnotationToModelLeaderLine(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::AuxiliaryLeaderLine(i) => out.push(AnyId::AuxiliaryLeaderLine(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineCurve(i) => out.push(AnyId::BSplineCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineCurveWithKnots(i) => out.push(AnyId::BSplineCurveWithKnots(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineSurface(i) => out.push(AnyId::BSplineSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BSplineSurfaceWithKnots(i) => out.push(AnyId::BSplineSurfaceWithKnots(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BezierCurve(i) => out.push(AnyId::BezierCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BezierSurface(i) => out.push(AnyId::BezierSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedCurve(i) => out.push(AnyId::BoundedCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedPcurve(i) => out.push(AnyId::BoundedPcurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => out.push(AnyId::CameraImage3dWithScale(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => out.push(AnyId::CameraModelD3WithHlhsr(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => out.push(AnyId::Circle(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedFace(i) => out.push(AnyId::ComplexTriangulatedFace(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedSurfaceSet(i) => out.push(AnyId::ComplexTriangulatedSurfaceSet(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CompositeCurve(i) => out.push(AnyId::CompositeCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CompositeText(i) => out.push(AnyId::CompositeText(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Conic(i) => out.push(AnyId::Conic(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ConicalSurface(i) => out.push(AnyId::ConicalSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ConnectedFaceSet(i) => out.push(AnyId::ConnectedFaceSet(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ContextDependentOverRidingStyledItem(i) => out.push(AnyId::ContextDependentOverRidingStyledItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CoordinatesList(i) => out.push(AnyId::CoordinatesList(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Curve(i) => out.push(AnyId::Curve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CylindricalSurface(i) => out.push(AnyId::CylindricalSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::DefinedCharacterGlyph(i) => out.push(AnyId::DefinedCharacterGlyph(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::DefinedSymbol(i) => out.push(AnyId::DefinedSymbol(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::DegenerateToroidalSurface(i) => out.push(AnyId::DegenerateToroidalSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::DescriptiveRepresentationItem(i) => out.push(AnyId::DescriptiveRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Direction(i) => out.push(AnyId::Direction(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::DraughtingAnnotationOccurrence(i) => out.push(AnyId::DraughtingAnnotationOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Edge(i) => out.push(AnyId::Edge(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::EdgeCurve(i) => out.push(AnyId::EdgeCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => out.push(AnyId::EdgeLoop(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => out.push(AnyId::ElementarySurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => out.push(AnyId::ExternallyDefinedHatchStyle(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => out.push(AnyId::ExternallyDefinedTileStyle(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Face(i) => out.push(AnyId::Face(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FaceBound(i) => out.push(AnyId::FaceBound(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FaceOuterBound(i) => out.push(AnyId::FaceOuterBound(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FaceSurface(i) => out.push(AnyId::FaceSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleHatching(i) => out.push(AnyId::FillAreaStyleHatching(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileColouredRegion(i) => out.push(AnyId::FillAreaStyleTileColouredRegion(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileCurveWithStyle(i) => out.push(AnyId::FillAreaStyleTileCurveWithStyle(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileSymbolWithStyle(i) => out.push(AnyId::FillAreaStyleTileSymbolWithStyle(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTiles(i) => out.push(AnyId::FillAreaStyleTiles(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::GeometricCurveSet(i) => out.push(AnyId::GeometricCurveSet(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::GeometricRepresentationItem(i) => out.push(AnyId::GeometricRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::IntegerRepresentationItem(i) => out.push(AnyId::IntegerRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::LeaderDirectedCallout(i) => out.push(AnyId::LeaderDirectedCallout(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Line(i) => out.push(AnyId::Line(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Loop(i) => out.push(AnyId::Loop(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::MappedItem(i) => out.push(AnyId::MappedItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::MeasureRepresentationItem(i) => out.push(AnyId::MeasureRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::OneDirectionRepeatFactor(i) => out.push(AnyId::OneDirectionRepeatFactor(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::OpenShell(i) => out.push(AnyId::OpenShell(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => out.push(AnyId::OrientedClosedShell(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => out.push(AnyId::OrientedEdge(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => out.push(AnyId::OverRidingStyledItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Path(i) => out.push(AnyId::Path(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => out.push(AnyId::Placement(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::PlanarBox(i) => out.push(AnyId::PlanarBox(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::PlanarExtent(i) => out.push(AnyId::PlanarExtent(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Plane(i) => out.push(AnyId::Plane(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Point(i) => out.push(AnyId::Point(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::QualifiedRepresentationItem(i) => out.push(AnyId::QualifiedRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineCurve(i) => out.push(AnyId::RationalBSplineCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineSurface(i) => out.push(AnyId::RationalBSplineSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::RealRepresentationItem(i) => out.push(AnyId::RealRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::RepositionedTessellatedItem(i) => out.push(AnyId::RepositionedTessellatedItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::RepresentationItem(i) => out.push(AnyId::RepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SeamCurve(i) => out.push(AnyId::SeamCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ShellBasedSurfaceModel(i) => out.push(AnyId::ShellBasedSurfaceModel(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SolidModel(i) => out.push(AnyId::SolidModel(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SphericalSurface(i) => out.push(AnyId::SphericalSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Surface(i) => out.push(AnyId::Surface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SurfaceCurve(i) => out.push(AnyId::SurfaceCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfLinearExtrusion(i) => out.push(AnyId::SurfaceOfLinearExtrusion(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfRevolution(i) => out.push(AnyId::SurfaceOfRevolution(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedAnnotationOccurrence(i) => out.push(AnyId::TessellatedAnnotationOccurrence(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedCurveSet(i) => out.push(AnyId::TessellatedCurveSet(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedFace(i) => out.push(AnyId::TessellatedFace(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedGeometricSet(i) => out.push(AnyId::TessellatedGeometricSet(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedStructuredItem(i) => out.push(AnyId::TessellatedStructuredItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TessellatedSurfaceSet(i) => out.push(AnyId::TessellatedSurfaceSet(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TextLiteral(i) => out.push(AnyId::TextLiteral(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TopologicalRepresentationItem(i) => out.push(AnyId::TopologicalRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ToroidalSurface(i) => out.push(AnyId::ToroidalSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TrimmedCurve(i) => out.push(AnyId::TrimmedCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::TwoDirectionRepeatFactor(i) => out.push(AnyId::TwoDirectionRepeatFactor(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ValueRepresentationItem(i) => out.push(AnyId::ValueRepresentationItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Vector(i) => out.push(AnyId::Vector(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => out.push(AnyId::VertexPoint(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => out.push(AnyId::VertexShell(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => out.push(AnyId::WireShell(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(vs) => { for e in vs { Self::deps_ref_representation_item(e, out); } },
+        ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(vs) => { for e in vs { Self::deps_ref_representation_item(e, out); } },
+    }
+    }
+
     fn id_of_ref_layered_item(&self, r: &LayeredItemRef) -> u64 {
         match r {
             LayeredItemRef::AdvancedFace(i) => {
@@ -20773,6 +21263,15 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_item(&it.transform_item_1, out);
                 Self::deps_ref_representation_item(&it.transform_item_2, out);
             }
+            AnyId::ItemIdentifiedRepresentationUsage(id) => {
+                let it = self.model.item_identified_representation_usages.get(id.0);
+                Self::deps_ref_item_identified_representation_usage_definition(&it.definition, out);
+                Self::deps_ref_representation(&it.used_representation, out);
+                Self::deps_ref_item_identified_representation_usage_select(
+                    &it.identified_item,
+                    out,
+                );
+            }
             AnyId::LeaderCurve(id) => {
                 let it = self.model.leader_curves.get(id.0);
                 for e in &it.styles {
@@ -22328,6 +22827,21 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_representation_item(transform_item_1, out);
                             Self::deps_ref_representation_item(transform_item_2, out);
+                        }
+                        UnitPart::ItemIdentifiedRepresentationUsage {
+                            definition,
+                            used_representation,
+                            identified_item,
+                            ..
+                        } => {
+                            Self::deps_ref_item_identified_representation_usage_definition(
+                                definition, out,
+                            );
+                            Self::deps_ref_representation(used_representation, out);
+                            Self::deps_ref_item_identified_representation_usage_select(
+                                identified_item,
+                                out,
+                            );
                         }
                         UnitPart::ManifoldSolidBrep { outer, .. } => {
                             Self::deps_ref_closed_shell(outer, out);
@@ -26955,6 +27469,55 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = ITEM_DEFINED_TRANSFORMATION({});\n", attrs.join(","))
             }
+            AnyId::ItemIdentifiedRepresentationUsage(id) => {
+                let it = self.model.item_identified_representation_usages.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_item_identified_representation_usage_definition(
+                            &it.definition
+                        )
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation(&it.used_representation)
+                    ),
+                    match &it.identified_item {
+                        ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(vs) => {
+                            format!(
+                                "LIST_REPRESENTATION_ITEM(({}))",
+                                vs.iter()
+                                    .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            )
+                        }
+                        ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(vs) => {
+                            format!(
+                                "SET_REPRESENTATION_ITEM(({}))",
+                                vs.iter()
+                                    .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            )
+                        }
+                        other => format!(
+                            "#{}",
+                            self.id_of_ref_item_identified_representation_usage_select(other)
+                        ),
+                    },
+                ];
+                format!(
+                    "#{n} = ITEM_IDENTIFIED_REPRESENTATION_USAGE({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::LeaderCurve(id) => {
                 let it = self.model.leader_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -30821,6 +31384,7 @@ impl<'a> Writer<'a> {
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
                 UnitPart::Invisibility { invisible_items, .. } => { let a: Vec<String> = vec![format!("({})", invisible_items.iter().map(|e| format!("#{}", self.id_of_ref_invisible_item(e))).collect::<Vec<_>>().join(","))]; format!("INVISIBILITY({})", a.join(",")) },
                 UnitPart::ItemDefinedTransformation { name, description, transform_item_1, transform_item_2, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_item(transform_item_1)), format!("#{}", self.id_of_ref_representation_item(transform_item_2))]; format!("ITEM_DEFINED_TRANSFORMATION({})", a.join(",")) },
+                UnitPart::ItemIdentifiedRepresentationUsage { name, description, definition, used_representation, identified_item, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_item_identified_representation_usage_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation)), match identified_item { ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(vs) => format!("LIST_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(vs) => format!("SET_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_item_identified_representation_usage_select(other)) }]; format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE({})", a.join(",")) },
                 UnitPart::LeaderCurve => "LEADER_CURVE()".to_string(),
                 UnitPart::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT()".to_string(),
                 UnitPart::LeaderTerminator => "LEADER_TERMINATOR()".to_string(),
@@ -32031,6 +32595,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.item_defined_transformations.items.len() {
             roots.push(AnyId::ItemDefinedTransformation(
                 ItemDefinedTransformationId(i),
+            ));
+        }
+        for i in 0..self.model.item_identified_representation_usages.items.len() {
+            roots.push(AnyId::ItemIdentifiedRepresentationUsage(
+                ItemIdentifiedRepresentationUsageId(i),
             ));
         }
         for i in 0..self.model.leader_curves.items.len() {

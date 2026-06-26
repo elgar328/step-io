@@ -5370,6 +5370,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "LEADER_CURVE" => &[
             Slot {
                 k: Sk::Str,
@@ -11305,6 +11337,38 @@ fn part_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Str,
                 req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
                 der: false,
                 swire: None,
             },
