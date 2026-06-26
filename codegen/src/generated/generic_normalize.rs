@@ -1265,6 +1265,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "APPROVAL" => &[
             Slot {
                 k: Sk::Ref,
@@ -2030,6 +2044,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "CAMERA_MODEL_D3_MULTI_CLIPPING" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
                 req: true,
                 der: false,
                 swire: None,
@@ -10456,6 +10496,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "APPROVAL_ASSIGNMENT" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -10665,6 +10711,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "CAMERA_MODEL_D3_MULTI_CLIPPING" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "CAMERA_MODEL_D3_WITH_HLHSR" => &[Slot {
             k: Sk::Bool,
             req: true,

@@ -521,6 +521,11 @@ scraps = [
     "make_from_usage_option", "ratio_measure_with_unit", "compound_representation_item",
     "description_attribute", "date_role",
 ]
+# scrap narrows: applied_security_classification_assignment (items=security_
+# classification_item 80-member mega, narrowed to covered) and camera_model_d3_
+# multi_clipping (shape_clipping select narrowed to plane — the ...union member
+# is a recursive triad, dropped).
+scraps_narrow = ["applied_security_classification_assignment", "camera_model_d3_multi_clipping"]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
@@ -712,4 +717,23 @@ item_identified_representation_usage_definition = [
     "characterized_object", "dimensional_size", "geometric_tolerance",
     "product_definition_relationship", "property_definition", "general_property",
     "property_definition_relationship", "shape_aspect", "shape_aspect_relationship",
+]
+# security_classification_item: keep the 33 covered members; drop the 47 uncovered
+# (interface_*/breakdown_*/etc.). camera_model_d3_multi_clipping_intersection_select:
+# keep plane; drop camera_model_d3_multi_clipping_union (recursive triad). Entities.
+security_classification_item = [
+    "action", "action_directive", "action_method",
+    "action_method_relationship", "action_property", "applied_document_reference",
+    "applied_external_identification_assignment", "assembly_component_usage", "configuration_design",
+    "configuration_effectivity", "document", "document_file",
+    "draughting_model", "general_property", "group",
+    "make_from_usage_option", "mechanical_design_geometric_presentation_representation", "organizational_project",
+    "presentation_area", "product", "product_concept",
+    "product_concept_feature", "product_concept_feature_category", "product_definition",
+    "product_definition_formation", "product_definition_relationship", "product_definition_usage",
+    "property_definition", "property_definition_representation", "representation",
+    "resource_property", "shape_representation", "versioned_action_request",
+]
+camera_model_d3_multi_clipping_intersection_select = [
+    "plane",
 ]

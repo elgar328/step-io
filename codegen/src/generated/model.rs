@@ -1177,6 +1177,8 @@ pub struct AppliedPersonAndOrganizationAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedPresentedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AppliedSecurityClassificationAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalAssignmentId(pub usize);
@@ -1244,6 +1246,8 @@ pub struct CameraImage3dWithScaleId(pub usize);
 pub struct CameraModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraModelD3Id(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CameraModelD3MultiClippingId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraModelD3WithHlhsrId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -2129,6 +2133,7 @@ pub enum AnyId {
     AppliedGroupAssignment(AppliedGroupAssignmentId),
     AppliedPersonAndOrganizationAssignment(AppliedPersonAndOrganizationAssignmentId),
     AppliedPresentedItem(AppliedPresentedItemId),
+    AppliedSecurityClassificationAssignment(AppliedSecurityClassificationAssignmentId),
     Approval(ApprovalId),
     ApprovalAssignment(ApprovalAssignmentId),
     ApprovalDateTime(ApprovalDateTimeId),
@@ -2163,6 +2168,7 @@ pub enum AnyId {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CameraUsage(CameraUsageId),
     CartesianPoint(CartesianPointId),
@@ -2962,6 +2968,7 @@ pub enum ApprovalItemRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
@@ -3224,6 +3231,7 @@ impl ApprovalItemRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
@@ -3584,6 +3592,19 @@ impl Axis2PlacementRef {
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
             other => panic!("Axis2PlacementRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CameraModelD3MultiClippingIntersectionSelectRef {
+    Plane(PlaneId),
+}
+impl CameraModelD3MultiClippingIntersectionSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Plane(i) => Self::Plane(i),
+            other => panic!("CameraModelD3MultiClippingIntersectionSelectRef ref -> {other:?}"),
         }
     }
 }
@@ -4034,6 +4055,7 @@ pub enum CompoundItemDefinitionRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
@@ -4190,6 +4212,7 @@ impl CompoundItemDefinitionRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
@@ -5550,6 +5573,7 @@ pub enum DocumentReferenceItemRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
@@ -5843,6 +5867,7 @@ impl DocumentReferenceItemRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
@@ -6433,6 +6458,7 @@ pub enum ExternalIdentificationItemRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
@@ -6683,6 +6709,7 @@ impl ExternalIdentificationItemRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
@@ -7222,6 +7249,7 @@ pub enum GeometricModelItemRef {
     BrepWithVoids(BrepWithVoidsId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
@@ -7337,6 +7365,7 @@ impl GeometricModelItemRef {
             AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
@@ -7748,6 +7777,7 @@ pub enum GroupableItemRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
@@ -8059,6 +8089,7 @@ impl GroupableItemRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
@@ -8979,6 +9010,7 @@ pub enum ItemIdentifiedRepresentationUsageSelectRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
@@ -9135,6 +9167,7 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
@@ -9292,6 +9325,7 @@ pub enum LayeredItemRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
@@ -9449,6 +9483,7 @@ impl LayeredItemRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
@@ -10827,6 +10862,7 @@ pub enum RepresentationItemRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
@@ -10981,6 +11017,7 @@ impl RepresentationItemRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
@@ -11376,6 +11413,7 @@ pub enum RoleSelectRef {
     AppliedApprovalAssignment(AppliedApprovalAssignmentId),
     AppliedDocumentReference(AppliedDocumentReferenceId),
     AppliedGroupAssignment(AppliedGroupAssignmentId),
+    AppliedSecurityClassificationAssignment(AppliedSecurityClassificationAssignmentId),
     ApprovalAssignment(ApprovalAssignmentId),
     ApprovalDateTime(ApprovalDateTimeId),
     CcDesignApproval(CcDesignApprovalId),
@@ -11397,6 +11435,9 @@ impl RoleSelectRef {
             AnyId::AppliedApprovalAssignment(i) => Self::AppliedApprovalAssignment(i),
             AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
             AnyId::AppliedGroupAssignment(i) => Self::AppliedGroupAssignment(i),
+            AnyId::AppliedSecurityClassificationAssignment(i) => {
+                Self::AppliedSecurityClassificationAssignment(i)
+            }
             AnyId::ApprovalAssignment(i) => Self::ApprovalAssignment(i),
             AnyId::ApprovalDateTime(i) => Self::ApprovalDateTime(i),
             AnyId::CcDesignApproval(i) => Self::CcDesignApproval(i),
@@ -11410,6 +11451,157 @@ impl RoleSelectRef {
             AnyId::StartWork(i) => Self::StartWork(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RoleSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SecurityClassificationItemRef {
+    Action(ActionId),
+    ActionDirective(ActionDirectiveId),
+    ActionMethod(ActionMethodId),
+    ActionMethodRelationship(ActionMethodRelationshipId),
+    ActionProperty(ActionPropertyId),
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AppliedDocumentReference(AppliedDocumentReferenceId),
+    AppliedExternalIdentificationAssignment(AppliedExternalIdentificationAssignmentId),
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    ConfigurationDesign(ConfigurationDesignId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    Document(DocumentId),
+    DocumentFile(DocumentFileId),
+    DraughtingModel(DraughtingModelId),
+    GeneralProperty(GeneralPropertyId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    Group(GroupId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    OrganizationalProject(OrganizationalProjectId),
+    PresentationArea(PresentationAreaId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationView(PresentationViewId),
+    Product(ProductId),
+    ProductConcept(ProductConceptId),
+    ProductConceptFeature(ProductConceptFeatureId),
+    ProductConceptFeatureCategory(ProductConceptFeatureCategoryId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
+    PropertyDefinition(PropertyDefinitionId),
+    PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
+    Representation(RepresentationId),
+    ResourceProperty(ResourcePropertyId),
+    ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
+    SymbolRepresentation(SymbolRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    VersionedActionRequest(VersionedActionRequestId),
+    Complex(ComplexUnitId),
+}
+impl SecurityClassificationItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Action(i) => Self::Action(i),
+            AnyId::ActionDirective(i) => Self::ActionDirective(i),
+            AnyId::ActionMethod(i) => Self::ActionMethod(i),
+            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
+            AnyId::ActionProperty(i) => Self::ActionProperty(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::AppliedExternalIdentificationAssignment(i) => {
+                Self::AppliedExternalIdentificationAssignment(i)
+            }
+            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
+            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
+            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::Document(i) => Self::Document(i),
+            AnyId::DocumentFile(i) => Self::DocumentFile(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+            }
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::Group(i) => Self::Group(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
+            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
+            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            AnyId::PresentationArea(i) => Self::PresentationArea(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::PresentationView(i) => Self::PresentationView(i),
+            AnyId::Product(i) => Self::Product(i),
+            AnyId::ProductConcept(i) => Self::ProductConcept(i),
+            AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
+            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
+            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
+            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
+            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
+            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("SecurityClassificationItemRef ref -> {other:?}"),
         }
     }
 }
@@ -11708,6 +11900,7 @@ pub enum StyleContextSelectRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     CharacterizedRepresentation(CharacterizedRepresentationId),
@@ -11908,6 +12101,7 @@ impl StyleContextSelectRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
@@ -12169,6 +12363,7 @@ pub enum StyledItemTargetRef {
     CameraImage3dWithScale(CameraImage3dWithScaleId),
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
     CharacterizedRepresentation(CharacterizedRepresentationId),
@@ -12333,6 +12528,7 @@ impl StyledItemTargetRef {
             AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
             AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
@@ -13432,6 +13628,12 @@ pub struct AppliedPresentedItem {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct AppliedSecurityClassificationAssignment {
+    pub assigned_security_classification: SecurityClassificationRef,
+    pub items: Vec<SecurityClassificationItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Approval {
     pub status: ApprovalStatusRef,
     pub level: String,
@@ -13685,6 +13887,14 @@ pub struct CameraModelD3 {
     pub name: String,
     pub view_reference_system: Axis2Placement3dRef,
     pub perspective_of_volume: ViewVolumeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraModelD3MultiClipping {
+    pub name: String,
+    pub view_reference_system: Axis2Placement3dRef,
+    pub perspective_of_volume: ViewVolumeRef,
+    pub shape_clipping: Vec<CameraModelD3MultiClippingIntersectionSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16667,6 +16877,9 @@ pub enum UnitPart {
     AppliedPresentedItem {
         items: Vec<PresentedItemSelectRef>,
     },
+    AppliedSecurityClassificationAssignment {
+        items: Vec<SecurityClassificationItemRef>,
+    },
     ApprovalAssignment {
         assigned_approval: ApprovalRef,
     },
@@ -16726,6 +16939,9 @@ pub enum UnitPart {
     CameraModelD3 {
         view_reference_system: Axis2Placement3dRef,
         perspective_of_volume: ViewVolumeRef,
+    },
+    CameraModelD3MultiClipping {
+        shape_clipping: Vec<CameraModelD3MultiClippingIntersectionSelectRef>,
     },
     CameraModelD3WithHlhsr {
         hidden_line_surface_removal: bool,
@@ -17571,6 +17787,7 @@ pub struct Model {
     pub applied_group_assignments: Arena<AppliedGroupAssignment>,
     pub applied_person_and_organization_assignments: Arena<AppliedPersonAndOrganizationAssignment>,
     pub applied_presented_items: Arena<AppliedPresentedItem>,
+    pub applied_security_classification_assignments: Arena<AppliedSecurityClassificationAssignment>,
     pub approvals: Arena<Approval>,
     pub approval_assignments: Arena<ApprovalAssignment>,
     pub approval_date_times: Arena<ApprovalDateTime>,
@@ -17605,6 +17822,7 @@ pub struct Model {
     pub camera_image3d_with_scales: Arena<CameraImage3dWithScale>,
     pub camera_models: Arena<CameraModel>,
     pub camera_model_d3s: Arena<CameraModelD3>,
+    pub camera_model_d3_multi_clippings: Arena<CameraModelD3MultiClipping>,
     pub camera_model_d3_with_hlhsrs: Arena<CameraModelD3WithHlhsr>,
     pub camera_usages: Arena<CameraUsage>,
     pub cartesian_points: Arena<CartesianPoint>,

@@ -115,6 +115,7 @@ pub struct Writer<'a> {
     applied_group_assignment_ids: Vec<Option<u64>>,
     applied_person_and_organization_assignment_ids: Vec<Option<u64>>,
     applied_presented_item_ids: Vec<Option<u64>>,
+    applied_security_classification_assignment_ids: Vec<Option<u64>>,
     approval_ids: Vec<Option<u64>>,
     approval_assignment_ids: Vec<Option<u64>>,
     approval_date_time_ids: Vec<Option<u64>>,
@@ -149,6 +150,7 @@ pub struct Writer<'a> {
     camera_image3d_with_scale_ids: Vec<Option<u64>>,
     camera_model_ids: Vec<Option<u64>>,
     camera_model_d3_ids: Vec<Option<u64>>,
+    camera_model_d3_multi_clipping_ids: Vec<Option<u64>>,
     camera_model_d3_with_hlhsr_ids: Vec<Option<u64>>,
     camera_usage_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
@@ -727,6 +729,13 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             applied_presented_item_ids: vec![None; model.applied_presented_items.items.len()],
+            applied_security_classification_assignment_ids: vec![
+                None;
+                model
+                    .applied_security_classification_assignments
+                    .items
+                    .len()
+            ],
             approval_ids: vec![None; model.approvals.items.len()],
             approval_assignment_ids: vec![None; model.approval_assignments.items.len()],
             approval_date_time_ids: vec![None; model.approval_date_times.items.len()],
@@ -782,6 +791,13 @@ impl<'a> Writer<'a> {
             camera_image3d_with_scale_ids: vec![None; model.camera_image3d_with_scales.items.len()],
             camera_model_ids: vec![None; model.camera_models.items.len()],
             camera_model_d3_ids: vec![None; model.camera_model_d3s.items.len()],
+            camera_model_d3_multi_clipping_ids: vec![
+                None;
+                model
+                    .camera_model_d3_multi_clippings
+                    .items
+                    .len()
+            ],
             camera_model_d3_with_hlhsr_ids: vec![
                 None;
                 model.camera_model_d3_with_hlhsrs.items.len()
@@ -1967,6 +1983,9 @@ impl<'a> Writer<'a> {
                 self.applied_person_and_organization_assignment_ids[i.0]
             }
             AnyId::AppliedPresentedItem(i) => self.applied_presented_item_ids[i.0],
+            AnyId::AppliedSecurityClassificationAssignment(i) => {
+                self.applied_security_classification_assignment_ids[i.0]
+            }
             AnyId::Approval(i) => self.approval_ids[i.0],
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0],
             AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0],
@@ -2005,6 +2024,7 @@ impl<'a> Writer<'a> {
             AnyId::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0],
             AnyId::CameraModel(i) => self.camera_model_ids[i.0],
             AnyId::CameraModelD3(i) => self.camera_model_d3_ids[i.0],
+            AnyId::CameraModelD3MultiClipping(i) => self.camera_model_d3_multi_clipping_ids[i.0],
             AnyId::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0],
             AnyId::CameraUsage(i) => self.camera_usage_ids[i.0],
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0],
@@ -2667,6 +2687,9 @@ impl<'a> Writer<'a> {
                 self.applied_person_and_organization_assignment_ids[i.0] = Some(n)
             }
             AnyId::AppliedPresentedItem(i) => self.applied_presented_item_ids[i.0] = Some(n),
+            AnyId::AppliedSecurityClassificationAssignment(i) => {
+                self.applied_security_classification_assignment_ids[i.0] = Some(n)
+            }
             AnyId::Approval(i) => self.approval_ids[i.0] = Some(n),
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0] = Some(n),
             AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0] = Some(n),
@@ -2709,6 +2732,9 @@ impl<'a> Writer<'a> {
             AnyId::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0] = Some(n),
             AnyId::CameraModel(i) => self.camera_model_ids[i.0] = Some(n),
             AnyId::CameraModelD3(i) => self.camera_model_d3_ids[i.0] = Some(n),
+            AnyId::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0] = Some(n)
+            }
             AnyId::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0] = Some(n),
             AnyId::CameraUsage(i) => self.camera_usage_ids[i.0] = Some(n),
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0] = Some(n),
@@ -4103,6 +4129,9 @@ impl<'a> Writer<'a> {
             ApprovalItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            ApprovalItemRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             ApprovalItemRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -4672,6 +4701,9 @@ impl<'a> Writer<'a> {
             }
             ApprovalItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             ApprovalItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            ApprovalItemRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             ApprovalItemRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -5177,6 +5209,26 @@ impl<'a> Writer<'a> {
         match r {
             Axis2PlacementRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
             Axis2PlacementRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
+        }
+    }
+
+    fn id_of_ref_camera_model_d3_multi_clipping_intersection_select(
+        &self,
+        r: &CameraModelD3MultiClippingIntersectionSelectRef,
+    ) -> u64 {
+        match r {
+            CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => {
+                self.plane_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_camera_model_d3_multi_clipping_intersection_select(
+        r: &CameraModelD3MultiClippingIntersectionSelectRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => out.push(AnyId::Plane(*i)),
         }
     }
 
@@ -6060,6 +6112,9 @@ impl<'a> Writer<'a> {
             CompoundItemDefinitionRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            CompoundItemDefinitionRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             CompoundItemDefinitionRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -6451,6 +6506,9 @@ impl<'a> Writer<'a> {
             }
             CompoundItemDefinitionRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             CompoundItemDefinitionRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            CompoundItemDefinitionRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             CompoundItemDefinitionRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -8588,6 +8646,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -9319,6 +9380,9 @@ impl<'a> Writer<'a> {
             }
             DocumentReferenceItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             DocumentReferenceItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            DocumentReferenceItemRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             DocumentReferenceItemRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -10398,6 +10462,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CameraModelD3(i) => self.camera_model_d3_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CameraModelD3MultiClipping(i) => self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CartesianPoint(i) => self.cartesian_point_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CcDesignDateAndTimeAssignment(i) => self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned"),
@@ -10638,6 +10703,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::CameraImage3dWithScale(i) => out.push(AnyId::CameraImage3dWithScale(*i)),
         ExternalIdentificationItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
         ExternalIdentificationItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+        ExternalIdentificationItemRef::CameraModelD3MultiClipping(i) => out.push(AnyId::CameraModelD3MultiClipping(*i)),
         ExternalIdentificationItemRef::CameraModelD3WithHlhsr(i) => out.push(AnyId::CameraModelD3WithHlhsr(*i)),
         ExternalIdentificationItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
         ExternalIdentificationItemRef::CcDesignDateAndTimeAssignment(i) => out.push(AnyId::CcDesignDateAndTimeAssignment(*i)),
@@ -11416,6 +11482,9 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            GeometricModelItemRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             GeometricModelItemRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -11688,6 +11757,9 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
             GeometricModelItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             GeometricModelItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            GeometricModelItemRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             GeometricModelItemRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -12511,6 +12583,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -13233,6 +13308,9 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             GroupableItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            GroupableItemRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             GroupableItemRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -14698,6 +14776,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => self.camera_model_d3_ids[i.0].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3MultiClipping(i) => self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => self.cartesian_point_ids[i.0].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
@@ -14856,6 +14935,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => out.push(AnyId::CameraImage3dWithScale(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3MultiClipping(i) => out.push(AnyId::CameraModelD3MultiClipping(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => out.push(AnyId::CameraModelD3WithHlhsr(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => out.push(AnyId::Circle(*i)),
@@ -15074,6 +15154,9 @@ impl<'a> Writer<'a> {
             LayeredItemRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
@@ -15409,6 +15492,9 @@ impl<'a> Writer<'a> {
             }
             LayeredItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             LayeredItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            LayeredItemRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             LayeredItemRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -17345,6 +17431,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -17718,6 +17807,9 @@ impl<'a> Writer<'a> {
             }
             RepresentationItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             RepresentationItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            RepresentationItemRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             RepresentationItemRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -18326,6 +18418,9 @@ impl<'a> Writer<'a> {
             RoleSelectRef::AppliedGroupAssignment(i) => {
                 self.applied_group_assignment_ids[i.0].expect("dep id assigned")
             }
+            RoleSelectRef::AppliedSecurityClassificationAssignment(i) => {
+                self.applied_security_classification_assignment_ids[i.0].expect("dep id assigned")
+            }
             RoleSelectRef::ApprovalAssignment(i) => {
                 self.approval_assignment_ids[i.0].expect("dep id assigned")
             }
@@ -18370,6 +18465,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::AppliedDocumentReference(*i))
             }
             RoleSelectRef::AppliedGroupAssignment(i) => out.push(AnyId::AppliedGroupAssignment(*i)),
+            RoleSelectRef::AppliedSecurityClassificationAssignment(i) => {
+                out.push(AnyId::AppliedSecurityClassificationAssignment(*i))
+            }
             RoleSelectRef::ApprovalAssignment(i) => out.push(AnyId::ApprovalAssignment(*i)),
             RoleSelectRef::ApprovalDateTime(i) => out.push(AnyId::ApprovalDateTime(*i)),
             RoleSelectRef::CcDesignApproval(i) => out.push(AnyId::CcDesignApproval(*i)),
@@ -18387,6 +18485,127 @@ impl<'a> Writer<'a> {
             RoleSelectRef::StartWork(i) => out.push(AnyId::StartWork(*i)),
             RoleSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
+    }
+
+    fn id_of_ref_security_classification_item(&self, r: &SecurityClassificationItemRef) -> u64 {
+        match r {
+        SecurityClassificationItemRef::Action(i) => self.action_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ActionDirective(i) => self.action_directive_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ActionMethod(i) => self.action_method_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ActionMethodRelationship(i) => self.action_method_relationship_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ActionProperty(i) => self.action_property_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::AppliedDocumentReference(i) => self.applied_document_reference_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::AppliedExternalIdentificationAssignment(i) => self.applied_external_identification_assignment_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::CharacterizedRepresentation(i) => self.characterized_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ConfigurationDesign(i) => self.configuration_design_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ConfigurationEffectivity(i) => self.configuration_effectivity_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::Document(i) => self.document_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::DocumentFile(i) => self.document_file_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::DraughtingModel(i) => self.draughting_model_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::GeneralProperty(i) => self.general_property_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::MakeFromUsageOption(i) => self.make_from_usage_option_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self.mechanical_design_presentation_representation_with_draughting_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self.mechanical_design_shaded_presentation_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::NextAssemblyUsageOccurrence(i) => self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::OrganizationalProject(i) => self.organizational_project_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::PresentationArea(i) => self.presentation_area_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::PresentationRepresentation(i) => self.presentation_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::PresentationView(i) => self.presentation_view_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductConcept(i) => self.product_concept_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductConceptFeature(i) => self.product_concept_feature_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductConceptFeatureCategory(i) => self.product_concept_feature_category_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductDefinition(i) => self.product_definition_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductDefinitionFormation(i) => self.product_definition_formation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self.product_definition_formation_with_specified_source_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductDefinitionRelationship(i) => self.product_definition_relationship_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ProductDefinitionWithAssociatedDocuments(i) => self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::PropertyDefinition(i) => self.property_definition_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::PropertyDefinitionRepresentation(i) => self.property_definition_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::Representation(i) => self.representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ResourceProperty(i) => self.resource_property_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ShapeDefinitionRepresentation(i) => self.shape_definition_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::ShapeRepresentationWithParameters(i) => self.shape_representation_with_parameter_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::SymbolRepresentation(i) => self.symbol_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0].expect("dep id assigned"),
+        SecurityClassificationItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+    }
+    }
+
+    fn deps_ref_security_classification_item(
+        r: &SecurityClassificationItemRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+        SecurityClassificationItemRef::Action(i) => out.push(AnyId::Action(*i)),
+        SecurityClassificationItemRef::ActionDirective(i) => out.push(AnyId::ActionDirective(*i)),
+        SecurityClassificationItemRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+        SecurityClassificationItemRef::ActionMethodRelationship(i) => out.push(AnyId::ActionMethodRelationship(*i)),
+        SecurityClassificationItemRef::ActionProperty(i) => out.push(AnyId::ActionProperty(*i)),
+        SecurityClassificationItemRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
+        SecurityClassificationItemRef::AppliedDocumentReference(i) => out.push(AnyId::AppliedDocumentReference(*i)),
+        SecurityClassificationItemRef::AppliedExternalIdentificationAssignment(i) => out.push(AnyId::AppliedExternalIdentificationAssignment(*i)),
+        SecurityClassificationItemRef::AssemblyComponentUsage(i) => out.push(AnyId::AssemblyComponentUsage(*i)),
+        SecurityClassificationItemRef::CharacterizedRepresentation(i) => out.push(AnyId::CharacterizedRepresentation(*i)),
+        SecurityClassificationItemRef::ConfigurationDesign(i) => out.push(AnyId::ConfigurationDesign(*i)),
+        SecurityClassificationItemRef::ConfigurationEffectivity(i) => out.push(AnyId::ConfigurationEffectivity(*i)),
+        SecurityClassificationItemRef::ConstructiveGeometryRepresentation(i) => out.push(AnyId::ConstructiveGeometryRepresentation(*i)),
+        SecurityClassificationItemRef::DefinitionalRepresentation(i) => out.push(AnyId::DefinitionalRepresentation(*i)),
+        SecurityClassificationItemRef::Document(i) => out.push(AnyId::Document(*i)),
+        SecurityClassificationItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+        SecurityClassificationItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+        SecurityClassificationItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+        SecurityClassificationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
+        SecurityClassificationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+        SecurityClassificationItemRef::Group(i) => out.push(AnyId::Group(*i)),
+        SecurityClassificationItemRef::MakeFromUsageOption(i) => out.push(AnyId::MakeFromUsageOption(*i)),
+        SecurityClassificationItemRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
+        SecurityClassificationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
+        SecurityClassificationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+        SecurityClassificationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i)),
+        SecurityClassificationItemRef::NextAssemblyUsageOccurrence(i) => out.push(AnyId::NextAssemblyUsageOccurrence(*i)),
+        SecurityClassificationItemRef::OrganizationalProject(i) => out.push(AnyId::OrganizationalProject(*i)),
+        SecurityClassificationItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+        SecurityClassificationItemRef::PresentationRepresentation(i) => out.push(AnyId::PresentationRepresentation(*i)),
+        SecurityClassificationItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+        SecurityClassificationItemRef::Product(i) => out.push(AnyId::Product(*i)),
+        SecurityClassificationItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+        SecurityClassificationItemRef::ProductConceptFeature(i) => out.push(AnyId::ProductConceptFeature(*i)),
+        SecurityClassificationItemRef::ProductConceptFeatureCategory(i) => out.push(AnyId::ProductConceptFeatureCategory(*i)),
+        SecurityClassificationItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+        SecurityClassificationItemRef::ProductDefinitionFormation(i) => out.push(AnyId::ProductDefinitionFormation(*i)),
+        SecurityClassificationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i)),
+        SecurityClassificationItemRef::ProductDefinitionRelationship(i) => out.push(AnyId::ProductDefinitionRelationship(*i)),
+        SecurityClassificationItemRef::ProductDefinitionShape(i) => out.push(AnyId::ProductDefinitionShape(*i)),
+        SecurityClassificationItemRef::ProductDefinitionUsage(i) => out.push(AnyId::ProductDefinitionUsage(*i)),
+        SecurityClassificationItemRef::ProductDefinitionWithAssociatedDocuments(i) => out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i)),
+        SecurityClassificationItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
+        SecurityClassificationItemRef::PropertyDefinitionRepresentation(i) => out.push(AnyId::PropertyDefinitionRepresentation(*i)),
+        SecurityClassificationItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
+        SecurityClassificationItemRef::ResourceProperty(i) => out.push(AnyId::ResourceProperty(*i)),
+        SecurityClassificationItemRef::ShapeDefinitionRepresentation(i) => out.push(AnyId::ShapeDefinitionRepresentation(*i)),
+        SecurityClassificationItemRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
+        SecurityClassificationItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+        SecurityClassificationItemRef::ShapeRepresentationWithParameters(i) => out.push(AnyId::ShapeRepresentationWithParameters(*i)),
+        SecurityClassificationItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+        SecurityClassificationItemRef::TessellatedShapeRepresentation(i) => out.push(AnyId::TessellatedShapeRepresentation(*i)),
+        SecurityClassificationItemRef::VersionedActionRequest(i) => out.push(AnyId::VersionedActionRequest(*i)),
+        SecurityClassificationItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+    }
     }
 
     fn id_of_ref_security_classification_level(&self, r: &SecurityClassificationLevelRef) -> u64 {
@@ -18872,6 +19091,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -19340,6 +19562,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             StyleContextSelectRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            StyleContextSelectRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             StyleContextSelectRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -19801,6 +20026,9 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
             }
+            StyledItemTargetRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0].expect("dep id assigned")
+            }
             StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
                 self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
@@ -20153,6 +20381,9 @@ impl<'a> Writer<'a> {
             }
             StyledItemTargetRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             StyledItemTargetRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            StyledItemTargetRef::CameraModelD3MultiClipping(i) => {
+                out.push(AnyId::CameraModelD3MultiClipping(*i))
+            }
             StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
                 out.push(AnyId::CameraModelD3WithHlhsr(*i))
             }
@@ -21566,6 +21797,16 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_presented_item_select(e, out);
                 }
             }
+            AnyId::AppliedSecurityClassificationAssignment(id) => {
+                let it = self
+                    .model
+                    .applied_security_classification_assignments
+                    .get(id.0);
+                Self::deps_ref_security_classification(&it.assigned_security_classification, out);
+                for e in &it.items {
+                    Self::deps_ref_security_classification_item(e, out);
+                }
+            }
             AnyId::Approval(id) => {
                 let it = self.model.approvals.get(id.0);
                 Self::deps_ref_approval_status(&it.status, out);
@@ -21732,6 +21973,14 @@ impl<'a> Writer<'a> {
                 let it = self.model.camera_model_d3s.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
                 Self::deps_ref_view_volume(&it.perspective_of_volume, out);
+            }
+            AnyId::CameraModelD3MultiClipping(id) => {
+                let it = self.model.camera_model_d3_multi_clippings.get(id.0);
+                Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
+                Self::deps_ref_view_volume(&it.perspective_of_volume, out);
+                for e in &it.shape_clipping {
+                    Self::deps_ref_camera_model_d3_multi_clipping_intersection_select(e, out);
+                }
             }
             AnyId::CameraModelD3WithHlhsr(id) => {
                 let it = self.model.camera_model_d3_with_hlhsrs.get(id.0);
@@ -23796,6 +24045,11 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_presented_item_select(e, out);
                             }
                         }
+                        UnitPart::AppliedSecurityClassificationAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_security_classification_item(e, out);
+                            }
+                        }
                         UnitPart::ApprovalAssignment {
                             assigned_approval, ..
                         } => {
@@ -23843,6 +24097,13 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_axis2_placement3d(view_reference_system, out);
                             Self::deps_ref_view_volume(perspective_of_volume, out);
+                        }
+                        UnitPart::CameraModelD3MultiClipping { shape_clipping, .. } => {
+                            for e in shape_clipping {
+                                Self::deps_ref_camera_model_d3_multi_clipping_intersection_select(
+                                    e, out,
+                                );
+                            }
                         }
                         UnitPart::CcDesignApproval { items, .. } => {
                             for e in items {
@@ -25514,6 +25775,33 @@ impl<'a> Writer<'a> {
                 )];
                 format!("#{n} = APPLIED_PRESENTED_ITEM({});\n", attrs.join(","))
             }
+            AnyId::AppliedSecurityClassificationAssignment(id) => {
+                let it = self
+                    .model
+                    .applied_security_classification_assignments
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_security_classification(
+                            &it.assigned_security_classification
+                        )
+                    ),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_security_classification_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::Approval(id) => {
                 let it = self.model.approvals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -26076,6 +26364,35 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_view_volume(&it.perspective_of_volume)),
                 ];
                 format!("#{n} = CAMERA_MODEL_D3({});\n", attrs.join(","))
+            }
+            AnyId::CameraModelD3MultiClipping(id) => {
+                let it = self.model.camera_model_d3_multi_clippings.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_axis2_placement3d(&it.view_reference_system)
+                    ),
+                    format!("#{}", self.id_of_ref_view_volume(&it.perspective_of_volume)),
+                    format!(
+                        "({})",
+                        it.shape_clipping
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_camera_model_d3_multi_clipping_intersection_select(
+                                    e
+                                )
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = CAMERA_MODEL_D3_MULTI_CLIPPING({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::CameraModelD3WithHlhsr(id) => {
                 let it = self.model.camera_model_d3_with_hlhsrs.get(id.0);
@@ -32829,6 +33146,7 @@ impl<'a> Writer<'a> {
                 UnitPart::AppliedGroupAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_groupable_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_GROUP_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_person_and_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedPresentedItem { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_presented_item_select(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PRESENTED_ITEM({})", a.join(",")) },
+                UnitPart::AppliedSecurityClassificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_security_classification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AreaInSet { area, in_set, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_presentation_area(area)), format!("#{}", self.id_of_ref_presentation_set(in_set))]; format!("AREA_IN_SET({})", a.join(",")) },
                 UnitPart::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
@@ -32848,6 +33166,7 @@ impl<'a> Writer<'a> {
                 UnitPart::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE()".to_string(),
                 UnitPart::CameraModel => "CAMERA_MODEL()".to_string(),
                 UnitPart::CameraModelD3 { view_reference_system, perspective_of_volume, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(view_reference_system)), format!("#{}", self.id_of_ref_view_volume(perspective_of_volume))]; format!("CAMERA_MODEL_D3({})", a.join(",")) },
+                UnitPart::CameraModelD3MultiClipping { shape_clipping, .. } => { let a: Vec<String> = vec![format!("({})", shape_clipping.iter().map(|e| format!("#{}", self.id_of_ref_camera_model_d3_multi_clipping_intersection_select(e))).collect::<Vec<_>>().join(","))]; format!("CAMERA_MODEL_D3_MULTI_CLIPPING({})", a.join(",")) },
                 UnitPart::CameraModelD3WithHlhsr { hidden_line_surface_removal, .. } => { let a: Vec<String> = vec![(if *hidden_line_surface_removal { ".T." } else { ".F." }).to_string()]; format!("CAMERA_MODEL_D3_WITH_HLHSR({})", a.join(",")) },
                 UnitPart::CameraUsage => "CAMERA_USAGE()".to_string(),
                 UnitPart::CcDesignApproval { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approved_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_APPROVAL({})", a.join(",")) },
@@ -33357,6 +33676,16 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.applied_presented_items.items.len() {
             roots.push(AnyId::AppliedPresentedItem(AppliedPresentedItemId(i)));
         }
+        for i in 0..self
+            .model
+            .applied_security_classification_assignments
+            .items
+            .len()
+        {
+            roots.push(AnyId::AppliedSecurityClassificationAssignment(
+                AppliedSecurityClassificationAssignmentId(i),
+            ));
+        }
         for i in 0..self.model.approvals.items.len() {
             roots.push(AnyId::Approval(ApprovalId(i)));
         }
@@ -33466,6 +33795,11 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.camera_model_d3s.items.len() {
             roots.push(AnyId::CameraModelD3(CameraModelD3Id(i)));
+        }
+        for i in 0..self.model.camera_model_d3_multi_clippings.items.len() {
+            roots.push(AnyId::CameraModelD3MultiClipping(
+                CameraModelD3MultiClippingId(i),
+            ));
         }
         for i in 0..self.model.camera_model_d3_with_hlhsrs.items.len() {
             roots.push(AnyId::CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId(i)));

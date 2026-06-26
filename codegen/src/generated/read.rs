@@ -154,6 +154,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "APPLIED_GROUP_ASSIGNMENT",
     "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT",
     "APPLIED_PRESENTED_ITEM",
+    "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT",
     "APPROVAL",
     "APPROVAL_ASSIGNMENT",
     "APPROVAL_DATE_TIME",
@@ -188,6 +189,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CAMERA_IMAGE_3D_WITH_SCALE",
     "CAMERA_MODEL",
     "CAMERA_MODEL_D3",
+    "CAMERA_MODEL_D3_MULTI_CLIPPING",
     "CAMERA_MODEL_D3_WITH_HLHSR",
     "CAMERA_USAGE",
     "CARTESIAN_POINT",
@@ -635,6 +637,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "APPLIED_GROUP_ASSIGNMENT",
     "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT",
     "APPLIED_PRESENTED_ITEM",
+    "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT",
     "APPROVAL_ASSIGNMENT",
     "AREA_IN_SET",
     "ASCRIBABLE_STATE_RELATIONSHIP",
@@ -654,6 +657,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "CAMERA_IMAGE_3D_WITH_SCALE",
     "CAMERA_MODEL",
     "CAMERA_MODEL_D3",
+    "CAMERA_MODEL_D3_MULTI_CLIPPING",
     "CAMERA_MODEL_D3_WITH_HLHSR",
     "CAMERA_USAGE",
     "CC_DESIGN_APPROVAL",
@@ -1155,6 +1159,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -1555,6 +1560,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -1734,6 +1740,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -1996,6 +2003,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -2163,6 +2171,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -2388,6 +2397,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -2678,6 +2688,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -3027,6 +3038,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -3319,6 +3331,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -3569,6 +3582,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -3936,6 +3950,76 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_security_classification",
+                allowed: &["SECURITY_CLASSIFICATION"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ACTION",
+                    "ACTION_DIRECTIVE",
+                    "ACTION_METHOD",
+                    "ACTION_METHOD_RELATIONSHIP",
+                    "ACTION_PROPERTY",
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "APPLIED_DOCUMENT_REFERENCE",
+                    "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONFIGURATION_DESIGN",
+                    "CONFIGURATION_EFFECTIVITY",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DOCUMENT",
+                    "DOCUMENT_FILE",
+                    "DRAUGHTING_MODEL",
+                    "GENERAL_PROPERTY",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "GROUP",
+                    "MAKE_FROM_USAGE_OPTION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "ORGANIZATIONAL_PROJECT",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "PRODUCT",
+                    "PRODUCT_CONCEPT",
+                    "PRODUCT_CONCEPT_FEATURE",
+                    "PRODUCT_CONCEPT_FEATURE_CATEGORY",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_SHAPE",
+                    "PRODUCT_DEFINITION_USAGE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                    "PROPERTY_DEFINITION",
+                    "PROPERTY_DEFINITION_REPRESENTATION",
+                    "REPRESENTATION",
+                    "RESOURCE_PROPERTY",
+                    "SHAPE_DEFINITION_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHAPE_REPRESENTATION_WITH_PARAMETERS",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "VERSIONED_ACTION_REQUEST",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
         "APPROVAL" => &[RefSlot {
             idx: 0,
             name: "status",
@@ -4333,6 +4417,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -4497,6 +4582,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -4629,6 +4715,29 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "CAMERA_MODEL_D3_MULTI_CLIPPING" => &[
+            RefSlot {
+                idx: 1,
+                name: "view_reference_system",
+                allowed: &["AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "perspective_of_volume",
+                allowed: &["VIEW_VOLUME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "shape_clipping",
+                allowed: &["PLANE"],
+                complex_ok: false,
+                is_vec: true,
+            },
+        ],
         "CAMERA_MODEL_D3_WITH_HLHSR" => &[
             RefSlot {
                 idx: 1,
@@ -4686,6 +4795,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -5059,6 +5169,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -5244,6 +5355,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -5648,6 +5760,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CIRCLE",
@@ -5928,6 +6041,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -6152,6 +6266,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -6336,6 +6451,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -6835,6 +6951,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -7067,6 +7184,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -7876,6 +7994,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -8071,6 +8190,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -9114,6 +9234,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BREP_WITH_VOIDS",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -9670,6 +9791,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -9840,6 +9962,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -10285,6 +10408,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -10440,6 +10564,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -10707,6 +10832,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -11095,6 +11221,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -11272,6 +11399,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -11577,6 +11705,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -11747,6 +11876,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -11917,6 +12047,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -12087,6 +12218,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -12509,6 +12641,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -13073,6 +13206,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -13242,6 +13376,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CIRCLE",
@@ -13401,6 +13536,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -13626,6 +13762,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -13814,6 +13951,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -14676,6 +14814,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -14846,6 +14985,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -15155,6 +15295,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "APPLIED_APPROVAL_ASSIGNMENT",
                     "APPLIED_DOCUMENT_REFERENCE",
                     "APPLIED_GROUP_ASSIGNMENT",
+                    "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT",
                     "APPROVAL_ASSIGNMENT",
                     "APPROVAL_DATE_TIME",
                     "CC_DESIGN_APPROVAL",
@@ -15583,6 +15724,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -15753,6 +15895,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -15983,6 +16126,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -16276,6 +16420,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -16780,6 +16925,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -17048,6 +17194,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -17275,6 +17422,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -18182,6 +18330,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -18506,6 +18655,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -18782,6 +18932,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -19023,6 +19174,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -19373,6 +19525,67 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "ACTION",
+                "ACTION_DIRECTIVE",
+                "ACTION_METHOD",
+                "ACTION_METHOD_RELATIONSHIP",
+                "ACTION_PROPERTY",
+                "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                "APPLIED_DOCUMENT_REFERENCE",
+                "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
+                "ASSEMBLY_COMPONENT_USAGE",
+                "CHARACTERIZED_REPRESENTATION",
+                "CONFIGURATION_DESIGN",
+                "CONFIGURATION_EFFECTIVITY",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "DEFINITIONAL_REPRESENTATION",
+                "DOCUMENT",
+                "DOCUMENT_FILE",
+                "DRAUGHTING_MODEL",
+                "GENERAL_PROPERTY",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "GROUP",
+                "MAKE_FROM_USAGE_OPTION",
+                "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "ORGANIZATIONAL_PROJECT",
+                "PRESENTATION_AREA",
+                "PRESENTATION_REPRESENTATION",
+                "PRESENTATION_VIEW",
+                "PRODUCT",
+                "PRODUCT_CONCEPT",
+                "PRODUCT_CONCEPT_FEATURE",
+                "PRODUCT_CONCEPT_FEATURE_CATEGORY",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "PRODUCT_DEFINITION_RELATIONSHIP",
+                "PRODUCT_DEFINITION_SHAPE",
+                "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                "PROPERTY_DEFINITION",
+                "PROPERTY_DEFINITION_REPRESENTATION",
+                "REPRESENTATION",
+                "RESOURCE_PROPERTY",
+                "SHAPE_DEFINITION_REPRESENTATION",
+                "SHAPE_DIMENSION_REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "SHAPE_REPRESENTATION_WITH_PARAMETERS",
+                "SYMBOL_REPRESENTATION",
+                "TESSELLATED_SHAPE_REPRESENTATION",
+                "VERSIONED_ACTION_REQUEST",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "APPROVAL_ASSIGNMENT" => &[RefSlot {
             idx: 0,
             name: "assigned_approval",
@@ -19442,6 +19655,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "CAMERA_MODEL_D3_MULTI_CLIPPING" => &[RefSlot {
+            idx: 0,
+            name: "shape_clipping",
+            allowed: &["PLANE"],
+            complex_ok: false,
+            is_vec: true,
+        }],
         "CC_DESIGN_APPROVAL" => &[RefSlot {
             idx: 0,
             name: "items",
@@ -19579,6 +19799,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -19813,6 +20034,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CIRCLE",
@@ -19990,6 +20212,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CHARACTERIZED_REPRESENTATION",
@@ -20939,6 +21162,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -21094,6 +21318,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -21361,6 +21586,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -21532,6 +21758,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -21912,6 +22139,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CHARACTERIZED_REPRESENTATION",
@@ -22456,6 +22684,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -22626,6 +22855,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
@@ -22989,6 +23219,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
                     "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
@@ -23565,6 +23796,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_applied_presented_items: Vec<(AppliedPresentedItemId, u64)> = Vec::new();
+    let mut pending_applied_security_classification_assignments: Vec<(
+        AppliedSecurityClassificationAssignmentId,
+        u64,
+    )> = Vec::new();
     let mut pending_approvals: Vec<(ApprovalId, u64)> = Vec::new();
     let mut pending_approval_assignments: Vec<(ApprovalAssignmentId, u64)> = Vec::new();
     let mut pending_approval_date_times: Vec<(ApprovalDateTimeId, u64)> = Vec::new();
@@ -23594,6 +23829,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_camera_images: Vec<(CameraImageId, u64)> = Vec::new();
     let mut pending_camera_image3d_with_scales: Vec<(CameraImage3dWithScaleId, u64)> = Vec::new();
     let mut pending_camera_model_d3s: Vec<(CameraModelD3Id, u64)> = Vec::new();
+    let mut pending_camera_model_d3_multi_clippings: Vec<(CameraModelD3MultiClippingId, u64)> =
+        Vec::new();
     let mut pending_camera_model_d3_with_hlhsrs: Vec<(CameraModelD3WithHlhsrId, u64)> = Vec::new();
     let mut pending_camera_usages: Vec<(CameraUsageId, u64)> = Vec::new();
     let mut pending_cc_design_approvals: Vec<(CcDesignApprovalId, u64)> = Vec::new();
@@ -24919,6 +25156,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => {
+                let v = AppliedSecurityClassificationAssignment {
+                    assigned_security_classification:
+                        SecurityClassificationRef::SecurityClassification(SecurityClassificationId(
+                            usize::MAX,
+                        )),
+                    items: Vec::new(),
+                };
+                let aid = AppliedSecurityClassificationAssignmentId(
+                    model.applied_security_classification_assignments.push(v),
+                );
+                idmap.insert(id, AnyId::AppliedSecurityClassificationAssignment(aid));
+                pending_applied_security_classification_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "APPROVAL" => {
                 let v = Approval {
                     status: ApprovalStatusRef::ApprovalStatus(ApprovalStatusId(usize::MAX)),
@@ -25447,6 +25700,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = CameraModelD3Id(model.camera_model_d3s.push(v));
                 idmap.insert(id, AnyId::CameraModelD3(aid));
                 pending_camera_model_d3s.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CAMERA_MODEL_D3_MULTI_CLIPPING" => {
+                let v = CameraModelD3MultiClipping {
+                    name: as_str(&attributes[0]),
+                    view_reference_system: Axis2Placement3dRef::Axis2Placement3d(
+                        Axis2Placement3dId(usize::MAX),
+                    ),
+                    perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)),
+                    shape_clipping: Vec::new(),
+                };
+                let aid =
+                    CameraModelD3MultiClippingId(model.camera_model_d3_multi_clippings.push(v));
+                idmap.insert(id, AnyId::CameraModelD3MultiClipping(aid));
+                pending_camera_model_d3_multi_clippings.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -31995,6 +32264,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_applied_presented_items(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_applied_security_classification_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_applied_security_classification_assignments(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
     for (aid, raw) in pending_approvals {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_approvals(&mut model, aid, attributes, &idmap);
@@ -32123,6 +32399,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_camera_model_d3s {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_camera_model_d3s(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_camera_model_d3_multi_clippings {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_camera_model_d3_multi_clippings(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_camera_model_d3_with_hlhsrs {
@@ -34534,6 +34815,28 @@ fn resolve_applied_presented_items(
     it.items = items_v;
 }
 
+fn resolve_applied_security_classification_assignments(
+    model: &mut Model,
+    aid: AppliedSecurityClassificationAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_security_classification_v =
+        SecurityClassificationRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                SecurityClassificationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.applied_security_classification_assignments.items[aid.0];
+    it.assigned_security_classification = assigned_security_classification_v;
+    it.items = items_v;
+}
+
 fn resolve_approvals(
     model: &mut Model,
     aid: ApprovalId,
@@ -34969,6 +35272,33 @@ fn resolve_camera_model_d3s(
     let it = &mut model.camera_model_d3s.items[aid.0];
     it.view_reference_system = view_reference_system_v;
     it.perspective_of_volume = perspective_of_volume_v;
+}
+
+fn resolve_camera_model_d3_multi_clippings(
+    model: &mut Model,
+    aid: CameraModelD3MultiClippingId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let view_reference_system_v =
+        Axis2Placement3dRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let perspective_of_volume_v =
+        ViewVolumeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let shape_clipping_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                CameraModelD3MultiClippingIntersectionSelectRef::from_any(
+                    *idmap.get(&as_ref_id(e)).expect("ref"),
+                )
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.camera_model_d3_multi_clippings.items[aid.0];
+    it.view_reference_system = view_reference_system_v;
+    it.perspective_of_volume = perspective_of_volume_v;
+    it.shape_clipping = shape_clipping_v;
 }
 
 fn resolve_camera_model_d3_with_hlhsrs(
@@ -40317,6 +40647,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "APPLIED_GROUP_ASSIGNMENT" => UnitPart::AppliedGroupAssignment { items: Vec::new(), },
         "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::AppliedPersonAndOrganizationAssignment { items: Vec::new(), },
         "APPLIED_PRESENTED_ITEM" => UnitPart::AppliedPresentedItem { items: Vec::new(), },
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::AppliedSecurityClassificationAssignment { items: Vec::new(), },
         "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)), },
         "AREA_IN_SET" => UnitPart::AreaInSet { area: PresentationAreaRef::PresentationArea(PresentationAreaId(usize::MAX)), in_set: PresentationSetRef::PresentationSet(PresentationSetId(usize::MAX)), },
         "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), },
@@ -40336,6 +40667,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "CAMERA_IMAGE_3D_WITH_SCALE" => UnitPart::CameraImage3dWithScale,
         "CAMERA_MODEL" => UnitPart::CameraModel,
         "CAMERA_MODEL_D3" => UnitPart::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)), },
+        "CAMERA_MODEL_D3_MULTI_CLIPPING" => UnitPart::CameraModelD3MultiClipping { shape_clipping: Vec::new(), },
         "CAMERA_MODEL_D3_WITH_HLHSR" => UnitPart::CameraModelD3WithHlhsr { hidden_line_surface_removal: matches!(&p.attributes[0], Attribute::Enum(s) if s == "T"), },
         "CAMERA_USAGE" => UnitPart::CameraUsage,
         "CC_DESIGN_APPROVAL" => UnitPart::CcDesignApproval { items: Vec::new(), },
@@ -40824,6 +41156,19 @@ fn resolve_complex(
                     other => panic!("vec ref: {other:?}"),
                 };
             }
+            UnitPart::AppliedSecurityClassificationAssignment { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            SecurityClassificationItemRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
             UnitPart::ApprovalAssignment {
                 assigned_approval, ..
             } => {
@@ -40909,6 +41254,19 @@ fn resolve_complex(
                 );
                 *perspective_of_volume =
                     ViewVolumeRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
+            }
+            UnitPart::CameraModelD3MultiClipping { shape_clipping, .. } => {
+                *shape_clipping = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            CameraModelD3MultiClippingIntersectionSelectRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::CcDesignApproval { items, .. } => {
                 *items = match &p.attributes[0] {
