@@ -517,12 +517,14 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ADDRESS",
     "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
+    "ANNOTATION_CURVE_OCCURRENCE",
     "ANNOTATION_OCCURRENCE",
     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
     "ANNOTATION_SYMBOL",
     "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
     "ANNOTATION_TEXT_CHARACTER",
+    "ANNOTATION_TEXT_OCCURRENCE",
     "APPLICATION_CONTEXT_ELEMENT",
     "APPROVAL_ASSIGNMENT",
     "ASCRIBABLE_STATE_RELATIONSHIP",
@@ -549,6 +551,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "CHARACTER_GLYPH_STYLE_STROKE",
     "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
     "CHARACTERIZED_OBJECT",
+    "CIRCULAR_RUNOUT_TOLERANCE",
     "CLOSED_SHELL",
     "COLOUR",
     "COLOUR_RGB",
@@ -556,6 +559,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "COMMON_DATUM",
     "COMPOSITE_CURVE",
     "COMPOSITE_CURVE_SEGMENT",
+    "COMPOSITE_GROUP_SHAPE_ASPECT",
     "COMPOSITE_SHAPE_ASPECT",
     "COMPOSITE_TEXT",
     "CONFIGURATION_EFFECTIVITY",
@@ -589,6 +593,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DOCUMENT",
     "DOCUMENT_FILE",
     "DRAUGHTING_CALLOUT",
+    "DRAUGHTING_MODEL",
     "DRAUGHTING_PRE_DEFINED_COLOUR",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
     "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
@@ -668,9 +673,11 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
     "OVER_RIDING_STYLED_ITEM",
+    "PARALLELISM_TOLERANCE",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "PATH",
     "PCURVE",
+    "PERPENDICULARITY_TOLERANCE",
     "PERSON_AND_ORGANIZATION_ADDRESS",
     "PERSON_AND_ORGANIZATION_ASSIGNMENT",
     "PERSONAL_ADDRESS",
@@ -719,6 +726,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "RATIONAL_B_SPLINE_SURFACE",
     "REAL_LITERAL",
     "REAL_REPRESENTATION_ITEM",
+    "REPOSITIONED_TESSELLATED_ITEM",
     "REPRESENTATION",
     "REPRESENTATION_CONTEXT",
     "REPRESENTATION_ITEM",
@@ -762,6 +770,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SURFACE_STYLE_USAGE",
     "SYMBOL_STYLE",
     "SYMBOL_TARGET",
+    "TESSELLATED_GEOMETRIC_SET",
     "TESSELLATED_ITEM",
     "TESSELLATED_STRUCTURED_ITEM",
     "TEXT_LITERAL",
@@ -4605,7 +4614,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 1,
             name: "styled_curve",
             allowed: &["ANNOTATION_CURVE_OCCURRENCE"],
-            complex_ok: false,
+            complex_ok: true,
             is_vec: false,
         }],
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => &[RefSlot {
@@ -11333,7 +11342,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 0,
             name: "styled_curve",
             allowed: &["ANNOTATION_CURVE_OCCURRENCE"],
-            complex_ok: false,
+            complex_ok: true,
             is_vec: false,
         }],
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => &[RefSlot {
@@ -12461,6 +12470,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "REPOSITIONED_TESSELLATED_ITEM" => &[RefSlot {
+            idx: 0,
+            name: "location",
+            allowed: &["AXIS2_PLACEMENT_3D"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "REPRESENTATION" => &[
             RefSlot {
                 idx: 1,
@@ -13222,6 +13238,24 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
             complex_ok: false,
             is_vec: false,
+        }],
+        "TESSELLATED_GEOMETRIC_SET" => &[RefSlot {
+            idx: 0,
+            name: "children",
+            allowed: &[
+                "COMPLEX_TRIANGULATED_FACE",
+                "COMPLEX_TRIANGULATED_SURFACE_SET",
+                "COORDINATES_LIST",
+                "REPOSITIONED_TESSELLATED_ITEM",
+                "TESSELLATED_CURVE_SET",
+                "TESSELLATED_FACE",
+                "TESSELLATED_GEOMETRIC_SET",
+                "TESSELLATED_ITEM",
+                "TESSELLATED_STRUCTURED_ITEM",
+                "TESSELLATED_SURFACE_SET",
+            ],
+            complex_ok: true,
+            is_vec: true,
         }],
         "TEXT_LITERAL" => &[
             RefSlot {
@@ -26506,12 +26540,14 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "ADDRESS" => UnitPart::Address { internal_location: match &p.attributes[0] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[0])) }, street_number: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, street: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, postal_box: match &p.attributes[3] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[3])) }, town: match &p.attributes[4] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[4])) }, region: match &p.attributes[5] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[5])) }, postal_code: match &p.attributes[6] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[6])) }, country: match &p.attributes[7] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[7])) }, facsimile_number: match &p.attributes[8] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[8])) }, telephone_number: match &p.attributes[9] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[9])) }, electronic_mail_address: match &p.attributes[10] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[10])) }, telex_number: match &p.attributes[11] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[11])) }, },
         "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
         "ADVANCED_FACE" => UnitPart::AdvancedFace,
+        "ANNOTATION_CURVE_OCCURRENCE" => UnitPart::AnnotationCurveOccurrence,
         "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence { role: match &p.attributes[0] { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).expect("annotation_placeholder_occurrence_role"), other => panic!("enum annotation_placeholder_occurrence_role: {other:?}") }, line_spacing: as_real(&p.attributes[1]), },
         "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
         "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
         "ANNOTATION_TEXT" => UnitPart::AnnotationText,
         "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter { alignment: as_str(&p.attributes[0]), },
+        "ANNOTATION_TEXT_OCCURRENCE" => UnitPart::AnnotationTextOccurrence,
         "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: as_str(&p.attributes[0]), frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(usize::MAX)), },
         "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)), },
         "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), },
@@ -26538,6 +26574,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), },
         "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => UnitPart::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
         "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "CIRCULAR_RUNOUT_TOLERANCE" => UnitPart::CircularRunoutTolerance,
         "CLOSED_SHELL" => UnitPart::ClosedShell,
         "COLOUR" => UnitPart::Colour,
         "COLOUR_RGB" => UnitPart::ColourRgb { red: as_real(&p.attributes[0]), green: as_real(&p.attributes[1]), blue: as_real(&p.attributes[2]), },
@@ -26545,6 +26582,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "COMMON_DATUM" => UnitPart::CommonDatum,
         "COMPOSITE_CURVE" => UnitPart::CompositeCurve { segments: Vec::new(), self_intersect: as_logical(&p.attributes[1]), },
         "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment { transition: match &p.attributes[0] { Attribute::Enum(s) => TransitionCode::parse(s).expect("transition_code"), other => panic!("enum transition_code: {other:?}") }, same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), parent_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)), },
+        "COMPOSITE_GROUP_SHAPE_ASPECT" => UnitPart::CompositeGroupShapeAspect,
         "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
         "COMPOSITE_TEXT" => UnitPart::CompositeText { collected_text: Vec::new(), },
         "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(usize::MAX)), },
@@ -26578,6 +26616,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "DOCUMENT" => UnitPart::Document { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)), },
         "DOCUMENT_FILE" => UnitPart::DocumentFile,
         "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout { contents: Vec::new(), },
+        "DRAUGHTING_MODEL" => UnitPart::DraughtingModel,
         "DRAUGHTING_PRE_DEFINED_COLOUR" => UnitPart::DraughtingPreDefinedColour,
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
         "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => UnitPart::DraughtingPreDefinedTextFont,
@@ -26657,9 +26696,11 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)), orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
         "ORIENTED_EDGE" => UnitPart::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(usize::MAX)), orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
         "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
+        "PARALLELISM_TOLERANCE" => UnitPart::ParallelismTolerance,
         "PARAMETRIC_REPRESENTATION_CONTEXT" => UnitPart::ParametricRepresentationContext,
         "PATH" => UnitPart::Path { edge_list: Vec::new(), },
         "PCURVE" => UnitPart::Pcurve { basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)), reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(DefinitionalRepresentationId(usize::MAX)), },
+        "PERPENDICULARITY_TOLERANCE" => UnitPart::PerpendicularityTolerance,
         "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
         "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(usize::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(usize::MAX)), },
         "PERSONAL_ADDRESS" => UnitPart::PersonalAddress { people: Vec::new(), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
@@ -26708,6 +26749,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "RATIONAL_B_SPLINE_SURFACE" => UnitPart::RationalBSplineSurface { weights_data: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect::<Vec<_>>(), o => panic!("nested vec: {o:?}") }).collect(), other => panic!("vec: {other:?}") }, },
         "REAL_LITERAL" => UnitPart::RealLiteral,
         "REAL_REPRESENTATION_ITEM" => UnitPart::RealRepresentationItem,
+        "REPOSITIONED_TESSELLATED_ITEM" => UnitPart::RepositionedTessellatedItem { location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), },
         "REPRESENTATION" => UnitPart::Representation { name: as_str(&p.attributes[0]), items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(usize::MAX)), },
         "REPRESENTATION_CONTEXT" => UnitPart::RepresentationContext { context_identifier: as_str(&p.attributes[0]), context_type: as_str(&p.attributes[1]), },
         "REPRESENTATION_ITEM" => UnitPart::RepresentationItem { name: as_str(&p.attributes[0]), },
@@ -26751,6 +26793,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage { side: match &p.attributes[0] { Attribute::Enum(s) => SurfaceSide::parse(s).expect("surface_side"), other => panic!("enum surface_side: {other:?}") }, style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(usize::MAX)), },
         "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: as_str(&p.attributes[0]), style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)), },
         "SYMBOL_TARGET" => UnitPart::SymbolTarget { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), x_scale: as_real(&p.attributes[1]), y_scale: as_real(&p.attributes[2]), },
+        "TESSELLATED_GEOMETRIC_SET" => UnitPart::TessellatedGeometricSet { children: Vec::new(), },
         "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
         "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
         "TEXT_LITERAL" => UnitPart::TextLiteral { literal: as_str(&p.attributes[0]), placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), alignment: as_str(&p.attributes[2]), path: match &p.attributes[3] { Attribute::Enum(s) => TextPath::parse(s).expect("text_path"), other => panic!("enum text_path: {other:?}") }, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(usize::MAX)), },
@@ -27815,6 +27858,11 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
             }
+            UnitPart::RepositionedTessellatedItem { location, .. } => {
+                *location = Axis2Placement3dRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
             UnitPart::Representation {
                 items,
                 context_of_items,
@@ -28053,6 +28101,17 @@ fn resolve_complex(
                 *placement = Axis2PlacementRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
+            }
+            UnitPart::TessellatedGeometricSet { children, .. } => {
+                *children = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            TessellatedItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::TextLiteral {
                 placement, font, ..

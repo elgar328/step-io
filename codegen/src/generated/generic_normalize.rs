@@ -8402,6 +8402,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
         ],
         "ADVANCED_BREP_SHAPE_REPRESENTATION" => &[],
         "ADVANCED_FACE" => &[],
+        "ANNOTATION_CURVE_OCCURRENCE" => &[],
         "ANNOTATION_OCCURRENCE" => &[],
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => &[
             Slot {
@@ -8426,6 +8427,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "ANNOTATION_TEXT_OCCURRENCE" => &[],
         "APPLICATION_CONTEXT_ELEMENT" => &[
             Slot {
                 k: Sk::Str,
@@ -8703,6 +8705,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "CIRCULAR_RUNOUT_TOLERANCE" => &[],
         "CLOSED_SHELL" => &[],
         "COLOUR" => &[],
         "COLOUR_RGB" => &[
@@ -8766,6 +8769,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "COMPOSITE_GROUP_SHAPE_ASPECT" => &[],
         "COMPOSITE_SHAPE_ASPECT" => &[],
         "COMPOSITE_TEXT" => &[Slot {
             k: Sk::Vec,
@@ -9081,6 +9085,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "DRAUGHTING_MODEL" => &[],
         "DRAUGHTING_PRE_DEFINED_COLOUR" => &[],
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => &[],
         "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => &[],
@@ -9597,6 +9602,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "PARALLELISM_TOLERANCE" => &[],
         "PARAMETRIC_REPRESENTATION_CONTEXT" => &[],
         "PATH" => &[Slot {
             k: Sk::Vec,
@@ -9618,6 +9624,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PERPENDICULARITY_TOLERANCE" => &[],
         "PERSON_AND_ORGANIZATION_ADDRESS" => &[],
         "PERSON_AND_ORGANIZATION_ASSIGNMENT" => &[
             Slot {
@@ -10022,6 +10029,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
         }],
         "REAL_LITERAL" => &[],
         "REAL_REPRESENTATION_ITEM" => &[],
+        "REPOSITIONED_TESSELLATED_ITEM" => &[Slot {
+            k: Sk::Ref,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "REPRESENTATION" => &[
             Slot {
                 k: Sk::Str,
@@ -10413,6 +10426,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "TESSELLATED_GEOMETRIC_SET" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "TESSELLATED_ITEM" => &[],
         "TESSELLATED_STRUCTURED_ITEM" => &[],
         "TEXT_LITERAL" => &[

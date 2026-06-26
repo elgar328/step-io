@@ -2248,11 +2248,13 @@ impl ActionResourceTypeRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationCurveOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    Complex(ComplexUnitId),
 }
 impl AnnotationCurveOccurrenceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationCurveOccurrenceRef ref -> {other:?}"),
         }
     }
@@ -10256,6 +10258,7 @@ pub enum UnitPart {
     },
     AdvancedBrepShapeRepresentation,
     AdvancedFace,
+    AnnotationCurveOccurrence,
     AnnotationOccurrence,
     AnnotationPlaceholderOccurrence {
         role: AnnotationPlaceholderOccurrenceRole,
@@ -10267,6 +10270,7 @@ pub enum UnitPart {
     AnnotationTextCharacter {
         alignment: String,
     },
+    AnnotationTextOccurrence,
     ApplicationContextElement {
         name: String,
         frame_of_reference: ApplicationContextRef,
@@ -10354,6 +10358,7 @@ pub enum UnitPart {
         name: String,
         description: Option<String>,
     },
+    CircularRunoutTolerance,
     ClosedShell,
     Colour,
     ColourRgb {
@@ -10374,6 +10379,7 @@ pub enum UnitPart {
         same_sense: bool,
         parent_curve: CurveRef,
     },
+    CompositeGroupShapeAspect,
     CompositeShapeAspect,
     CompositeText {
         collected_text: Vec<TextOrCharacterRef>,
@@ -10480,6 +10486,7 @@ pub enum UnitPart {
     DraughtingCallout {
         contents: Vec<DraughtingCalloutElementRef>,
     },
+    DraughtingModel,
     DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont,
     DraughtingPreDefinedTextFont,
@@ -10675,6 +10682,7 @@ pub enum UnitPart {
     OverRidingStyledItem {
         over_ridden_style: StyledItemRef,
     },
+    ParallelismTolerance,
     ParametricRepresentationContext,
     Path {
         edge_list: Vec<OrientedEdgeRef>,
@@ -10683,6 +10691,7 @@ pub enum UnitPart {
         basis_surface: SurfaceRef,
         reference_to_curve: DefinitionalRepresentationRef,
     },
+    PerpendicularityTolerance,
     PersonAndOrganizationAddress,
     PersonAndOrganizationAssignment {
         assigned_person_and_organization: PersonAndOrganizationRef,
@@ -10816,6 +10825,9 @@ pub enum UnitPart {
     },
     RealLiteral,
     RealRepresentationItem,
+    RepositionedTessellatedItem {
+        location: Axis2Placement3dRef,
+    },
     Representation {
         name: String,
         items: Vec<RepresentationItemRef>,
@@ -10945,6 +10957,9 @@ pub enum UnitPart {
         placement: Axis2PlacementRef,
         x_scale: f64,
         y_scale: f64,
+    },
+    TessellatedGeometricSet {
+        children: Vec<TessellatedItemRef>,
     },
     TessellatedItem,
     TessellatedStructuredItem,

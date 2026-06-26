@@ -2637,6 +2637,9 @@ impl<'a> Writer<'a> {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
             }
+            AnnotationCurveOccurrenceRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
         }
     }
 
@@ -2648,6 +2651,7 @@ impl<'a> Writer<'a> {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 out.push(AnyId::AnnotationCurveOccurrence(*i))
             }
+            AnnotationCurveOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -13862,6 +13866,9 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_represented_definition(definition, out);
                             Self::deps_ref_representation(used_representation, out);
                         }
+                        UnitPart::RepositionedTessellatedItem { location, .. } => {
+                            Self::deps_ref_axis2_placement3d(location, out);
+                        }
                         UnitPart::Representation {
                             items,
                             context_of_items,
@@ -13996,6 +14003,11 @@ impl<'a> Writer<'a> {
                         }
                         UnitPart::SymbolTarget { placement, .. } => {
                             Self::deps_ref_axis2_placement(placement, out);
+                        }
+                        UnitPart::TessellatedGeometricSet { children, .. } => {
+                            for e in children {
+                                Self::deps_ref_tessellated_item(e, out);
+                            }
                         }
                         UnitPart::TextLiteral {
                             placement, font, ..
@@ -20446,12 +20458,14 @@ impl<'a> Writer<'a> {
                 UnitPart::Address { internal_location, street_number, street, postal_box, town, region, postal_code, country, facsimile_number, telephone_number, electronic_mail_address, telex_number, .. } => { let a: Vec<String> = vec![match internal_location { Some(x) => step_str(x), None => "$".to_string() }, match street_number { Some(x) => step_str(x), None => "$".to_string() }, match street { Some(x) => step_str(x), None => "$".to_string() }, match postal_box { Some(x) => step_str(x), None => "$".to_string() }, match town { Some(x) => step_str(x), None => "$".to_string() }, match region { Some(x) => step_str(x), None => "$".to_string() }, match postal_code { Some(x) => step_str(x), None => "$".to_string() }, match country { Some(x) => step_str(x), None => "$".to_string() }, match facsimile_number { Some(x) => step_str(x), None => "$".to_string() }, match telephone_number { Some(x) => step_str(x), None => "$".to_string() }, match electronic_mail_address { Some(x) => step_str(x), None => "$".to_string() }, match telex_number { Some(x) => step_str(x), None => "$".to_string() }]; format!("ADDRESS({})", a.join(",")) },
                 UnitPart::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION()".to_string(),
                 UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
+                UnitPart::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE()".to_string(),
                 UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
                 UnitPart::AnnotationPlaceholderOccurrence { role, line_spacing, .. } => { let a: Vec<String> = vec![role.token().to_string(), real(*line_spacing)]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE({})", a.join(",")) },
                 UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL()".to_string(),
                 UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE()".to_string(),
                 UnitPart::AnnotationText => "ANNOTATION_TEXT()".to_string(),
                 UnitPart::AnnotationTextCharacter { alignment, .. } => { let a: Vec<String> = vec![step_str(alignment)]; format!("ANNOTATION_TEXT_CHARACTER({})", a.join(",")) },
+                UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE()".to_string(),
                 UnitPart::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
                 UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
@@ -20478,6 +20492,7 @@ impl<'a> Writer<'a> {
                 UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(stroke_style))]; format!("CHARACTER_GLYPH_STYLE_STROKE({})", a.join(",")) },
                 UnitPart::CharacterizedItemWithinRepresentation { item, rep, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(item)), format!("#{}", self.id_of_ref_representation(rep))]; format!("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION({})", a.join(",")) },
                 UnitPart::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("CHARACTERIZED_OBJECT({})", a.join(",")) },
+                UnitPart::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE()".to_string(),
                 UnitPart::ClosedShell => "CLOSED_SHELL()".to_string(),
                 UnitPart::Colour => "COLOUR()".to_string(),
                 UnitPart::ColourRgb { red, green, blue, .. } => { let a: Vec<String> = vec![real(*red), real(*green), real(*blue)]; format!("COLOUR_RGB({})", a.join(",")) },
@@ -20485,6 +20500,7 @@ impl<'a> Writer<'a> {
                 UnitPart::CommonDatum => "COMMON_DATUM()".to_string(),
                 UnitPart::CompositeCurve { segments, self_intersect, .. } => { let a: Vec<String> = vec![format!("({})", segments.iter().map(|e| format!("#{}", self.id_of_ref_composite_curve_segment(e))).collect::<Vec<_>>().join(",")), self_intersect.token().to_string()]; format!("COMPOSITE_CURVE({})", a.join(",")) },
                 UnitPart::CompositeCurveSegment { transition, same_sense, parent_curve, .. } => { let a: Vec<String> = vec![transition.token().to_string(), (if *same_sense { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_curve(parent_curve))]; format!("COMPOSITE_CURVE_SEGMENT({})", a.join(",")) },
+                UnitPart::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT()".to_string(),
                 UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT()".to_string(),
                 UnitPart::CompositeText { collected_text, .. } => { let a: Vec<String> = vec![format!("({})", collected_text.iter().map(|e| format!("#{}", self.id_of_ref_text_or_character(e))).collect::<Vec<_>>().join(","))]; format!("COMPOSITE_TEXT({})", a.join(",")) },
                 UnitPart::ConfigurationEffectivity { configuration, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_configuration_design(configuration))]; format!("CONFIGURATION_EFFECTIVITY({})", a.join(",")) },
@@ -20518,6 +20534,7 @@ impl<'a> Writer<'a> {
                 UnitPart::Document { id, name, description, kind, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_document_type(kind))]; format!("DOCUMENT({})", a.join(",")) },
                 UnitPart::DocumentFile => "DOCUMENT_FILE()".to_string(),
                 UnitPart::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
+                UnitPart::DraughtingModel => "DRAUGHTING_MODEL()".to_string(),
                 UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR()".to_string(),
                 UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT()".to_string(),
                 UnitPart::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT()".to_string(),
@@ -20597,9 +20614,11 @@ impl<'a> Writer<'a> {
                 UnitPart::OrientedClosedShell { closed_shell_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_closed_shell(closed_shell_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_CLOSED_SHELL({})", a.join(",")) },
                 UnitPart::OrientedEdge { edge_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_edge(edge_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_EDGE({})", a.join(",")) },
                 UnitPart::OverRidingStyledItem { over_ridden_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_styled_item(over_ridden_style))]; format!("OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
+                UnitPart::ParallelismTolerance => "PARALLELISM_TOLERANCE()".to_string(),
                 UnitPart::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT()".to_string(),
                 UnitPart::Path { edge_list, .. } => { let a: Vec<String> = vec![format!("({})", edge_list.iter().map(|e| format!("#{}", self.id_of_ref_oriented_edge(e))).collect::<Vec<_>>().join(","))]; format!("PATH({})", a.join(",")) },
                 UnitPart::Pcurve { basis_surface, reference_to_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(basis_surface)), format!("#{}", self.id_of_ref_definitional_representation(reference_to_curve))]; format!("PCURVE({})", a.join(",")) },
+                UnitPart::PerpendicularityTolerance => "PERPENDICULARITY_TOLERANCE()".to_string(),
                 UnitPart::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS()".to_string(),
                 UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_person_and_organization(assigned_person_and_organization)), format!("#{}", self.id_of_ref_person_and_organization_role(role))]; format!("PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::PersonalAddress { people, description, .. } => { let a: Vec<String> = vec![format!("({})", people.iter().map(|e| format!("#{}", self.id_of_ref_person(e))).collect::<Vec<_>>().join(",")), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("PERSONAL_ADDRESS({})", a.join(",")) },
@@ -20648,6 +20667,7 @@ impl<'a> Writer<'a> {
                 UnitPart::RationalBSplineSurface { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| real(*e)).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_SURFACE({})", a.join(",")) },
                 UnitPart::RealLiteral => "REAL_LITERAL()".to_string(),
                 UnitPart::RealRepresentationItem => "REAL_REPRESENTATION_ITEM()".to_string(),
+                UnitPart::RepositionedTessellatedItem { location, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(location))]; format!("REPOSITIONED_TESSELLATED_ITEM({})", a.join(",")) },
                 UnitPart::Representation { name, items, context_of_items, .. } => { let a: Vec<String> = vec![step_str(name), format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_representation_context(context_of_items))]; format!("REPRESENTATION({})", a.join(",")) },
                 UnitPart::RepresentationContext { context_identifier, context_type, .. } => { let a: Vec<String> = vec![step_str(context_identifier), step_str(context_type)]; format!("REPRESENTATION_CONTEXT({})", a.join(",")) },
                 UnitPart::RepresentationItem { name, .. } => { let a: Vec<String> = vec![step_str(name)]; format!("REPRESENTATION_ITEM({})", a.join(",")) },
@@ -20691,6 +20711,7 @@ impl<'a> Writer<'a> {
                 UnitPart::SurfaceStyleUsage { side, style, .. } => { let a: Vec<String> = vec![side.token().to_string(), format!("#{}", self.id_of_ref_surface_side_style_select(style))]; format!("SURFACE_STYLE_USAGE({})", a.join(",")) },
                 UnitPart::SymbolStyle { name, style_of_symbol, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_symbol_style_select(style_of_symbol))]; format!("SYMBOL_STYLE({})", a.join(",")) },
                 UnitPart::SymbolTarget { placement, x_scale, y_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement)), real(*x_scale), real(*y_scale)]; format!("SYMBOL_TARGET({})", a.join(",")) },
+                UnitPart::TessellatedGeometricSet { children, .. } => { let a: Vec<String> = vec![format!("({})", children.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_item(e))).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_GEOMETRIC_SET({})", a.join(",")) },
                 UnitPart::TessellatedItem => "TESSELLATED_ITEM()".to_string(),
                 UnitPart::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM()".to_string(),
                 UnitPart::TextLiteral { literal, placement, alignment, path, font, .. } => { let a: Vec<String> = vec![step_str(literal), format!("#{}", self.id_of_ref_axis2_placement(placement)), step_str(alignment), path.token().to_string(), format!("#{}", self.id_of_ref_font_select(font))]; format!("TEXT_LITERAL({})", a.join(",")) },

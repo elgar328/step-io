@@ -934,6 +934,7 @@ own_attrs = []
 [entity.annotation_curve_occurrence]
 parents = ["annotation_occurrence"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [[entity.annotation_curve_occurrence.redeclared_attrs]]
@@ -1091,6 +1092,7 @@ ty = "axis2_placement"
 [entity.annotation_text_occurrence]
 parents = ["annotation_occurrence"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [[entity.annotation_text_occurrence.redeclared_attrs]]
@@ -2847,6 +2849,7 @@ own_attrs = []
 [entity.camera_image_3d_with_scale]
 parents = ["camera_image"]
 is_abstract = false
+is_complex_part = true
 derives = ["scale"]
 own_attrs = []
 
@@ -3483,6 +3486,7 @@ own_attrs = []
 [entity.circular_runout_tolerance]
 parents = ["geometric_tolerance_with_datum_reference"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.class]
@@ -3987,6 +3991,7 @@ ty = "integer"
 [entity.composite_group_shape_aspect]
 parents = ["composite_shape_aspect"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.composite_hole]
@@ -6935,6 +6940,7 @@ own_attrs = []
 [entity.draughting_annotation_occurrence]
 parents = ["annotation_occurrence"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.draughting_callout]
@@ -6975,6 +6981,7 @@ own_attrs = []
 [entity.draughting_model]
 parents = ["representation"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.draughting_model_item_association]
@@ -10890,6 +10897,7 @@ ty = "SET OF language_item"
 [entity.leader_curve]
 parents = ["annotation_curve_occurrence"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.leader_directed_callout]
@@ -13320,6 +13328,7 @@ ty = "parallel_offset_type"
 [entity.parallelism_tolerance]
 parents = ["geometric_tolerance_with_datum_reference"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.parametric_representation_context]
@@ -13541,6 +13550,7 @@ own_attrs = []
 [entity.perpendicularity_tolerance]
 parents = ["geometric_tolerance_with_datum_reference"]
 is_abstract = false
+is_complex_part = true
 own_attrs = []
 
 [entity.person]
@@ -16313,6 +16323,7 @@ own_attrs = []
 [entity.repositioned_tessellated_item]
 parents = ["tessellated_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.repositioned_tessellated_item.own_attrs]]
 name = "location"
@@ -19898,6 +19909,7 @@ ty = "OPTIONAL face_or_surface"
 [entity.tessellated_geometric_set]
 parents = ["tessellated_item"]
 is_abstract = false
+is_complex_part = true
 
 [[entity.tessellated_geometric_set.own_attrs]]
 name = "children"
