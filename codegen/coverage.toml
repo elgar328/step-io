@@ -401,6 +401,20 @@ draughting_assoc = [
     "draughting_model_item_association",
     "draughting_model_item_association_with_placeholder",
 ]
+# tessellation cascade-root + low-risk leaves. tessellated_shape_representation
+# (parent shape_representation, own_attrs=[]) completes the complex part-bag
+# (DRAUGHTING_MODEL+REPRESENTATION+SHAPE_REPRESENTATION+TESSELLATED_SHAPE_REPRESENTATION)
+# so that cascade resolves with zero new drag. tessellated_solid (items : SET OF
+# tessellated_structured_item covered, voids : manifold_solid_brep covered).
+tessellation_shape = ["tessellated_shape_representation", "tessellated_solid"]
+# associativity leaves: shape_aspect_associativity (parent shape_aspect_relationship,
+# own_attrs=[]), annotation_occurrence_associativity (pulls annotation_occurrence_
+# relationship; its refs are annotation_occurrence, covered). Both own_attrs empty.
+associativity_leaves = ["shape_aspect_associativity", "annotation_occurrence_associativity"]
+# text_style_with_box_characteristics: box_characteristics : SET OF box_characteristic
+# _select, whose members (box_height/width=positive_ratio_measure, box_rotate/slant
+# _angle=plane_angle_measure) are all named scalars -> MeasureSelect, no entity drag.
+text_style_box = ["text_style_with_box_characteristics"]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop

@@ -691,6 +691,58 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => &[
             Slot {
                 k: Sk::Str,
@@ -6932,6 +6984,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "SHAPE_ASPECT_ASSOCIATIVITY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "SHAPE_ASPECT_RELATIONSHIP" => &[
             Slot {
                 k: Sk::Str,
@@ -7634,6 +7712,46 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "TESSELLATED_SHAPE_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "TESSELLATED_SOLID" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "TESSELLATED_STRUCTURED_ITEM" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -7744,6 +7862,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "TEXTURE_STYLE_SPECIFICATION" => &[],
         "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => &[],
         "TIME_UNIT" => &[Slot {
@@ -8580,6 +8718,33 @@ fn part_slots(n: &str) -> &'static [Slot] {
         "ADVANCED_FACE" => &[],
         "ANNOTATION_CURVE_OCCURRENCE" => &[],
         "ANNOTATION_OCCURRENCE" => &[],
+        "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => &[],
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => &[
             Slot {
                 k: Sk::Enum,
@@ -10625,6 +10790,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "TESSELLATED_ITEM" => &[],
+        "TESSELLATED_SHAPE_REPRESENTATION" => &[],
         "TESSELLATED_STRUCTURED_ITEM" => &[],
         "TEXT_LITERAL" => &[
             Slot {
@@ -10672,6 +10838,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "TEXTURE_STYLE_SPECIFICATION" => &[],
         "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => &[],
         "TIME_UNIT" => &[],

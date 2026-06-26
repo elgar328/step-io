@@ -126,6 +126,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ANNOTATION_CURVE_OCCURRENCE",
     "ANNOTATION_FILL_AREA_OCCURRENCE",
     "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+    "ANNOTATION_OCCURRENCE_RELATIONSHIP",
     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
     "ANNOTATION_PLANE",
     "ANNOTATION_SYMBOL",
@@ -433,6 +435,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SECURITY_CLASSIFICATION_ASSIGNMENT",
     "SECURITY_CLASSIFICATION_LEVEL",
     "SHAPE_ASPECT",
+    "SHAPE_ASPECT_ASSOCIATIVITY",
     "SHAPE_ASPECT_RELATIONSHIP",
     "SHAPE_DEFINITION_REPRESENTATION",
     "SHAPE_DIMENSION_REPRESENTATION",
@@ -480,12 +483,15 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "TESSELLATED_FACE",
     "TESSELLATED_GEOMETRIC_SET",
     "TESSELLATED_ITEM",
+    "TESSELLATED_SHAPE_REPRESENTATION",
+    "TESSELLATED_SOLID",
     "TESSELLATED_STRUCTURED_ITEM",
     "TESSELLATED_SURFACE_SET",
     "TEXT_FONT",
     "TEXT_LITERAL",
     "TEXT_STYLE",
     "TEXT_STYLE_FOR_DEFINED_FONT",
+    "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
     "TEXTURE_STYLE_SPECIFICATION",
     "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
     "TIME_UNIT",
@@ -529,6 +535,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ADVANCED_FACE",
     "ANNOTATION_CURVE_OCCURRENCE",
     "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+    "ANNOTATION_OCCURRENCE_RELATIONSHIP",
     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
     "ANNOTATION_SYMBOL",
     "ANNOTATION_SYMBOL_OCCURRENCE",
@@ -788,9 +796,11 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SYMBOL_TARGET",
     "TESSELLATED_GEOMETRIC_SET",
     "TESSELLATED_ITEM",
+    "TESSELLATED_SHAPE_REPRESENTATION",
     "TESSELLATED_STRUCTURED_ITEM",
     "TEXT_LITERAL",
     "TEXT_STYLE",
+    "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
     "TEXTURE_STYLE_SPECIFICATION",
     "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
     "TIME_UNIT",
@@ -1078,6 +1088,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -1366,6 +1377,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -1519,6 +1532,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -1534,6 +1549,74 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "VERTEX_POINT",
                     "VERTEX_SHELL",
                     "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_annotation_occurrence",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_annotation_occurrence",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_annotation_occurrence",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_annotation_occurrence",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -1665,6 +1748,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -1848,6 +1933,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -2561,6 +2647,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -2599,6 +2686,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3058,6 +3146,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -3218,6 +3307,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -3395,6 +3486,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -3872,6 +3965,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -4310,6 +4404,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -4391,6 +4486,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION",
                     "ROUNDNESS_TOLERANCE",
                     "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_ASSOCIATIVITY",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "STRAIGHTNESS_TOLERANCE",
                     "SURFACE_PROFILE_TOLERANCE",
@@ -4481,6 +4577,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION",
                     "ROUNDNESS_TOLERANCE",
                     "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_ASSOCIATIVITY",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "STRAIGHTNESS_TOLERANCE",
                     "SURFACE_PROFILE_TOLERANCE",
@@ -5068,6 +5165,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_ASSOCIATIVITY",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -5085,6 +5183,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5181,6 +5280,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -5635,6 +5735,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -5781,6 +5882,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "REPRESENTATION",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
+                "SHAPE_ASPECT_ASSOCIATIVITY",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "SHAPE_DIMENSION_REPRESENTATION",
                 "SHAPE_REPRESENTATION",
@@ -5788,6 +5890,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "SURFACE_PROFILE_TOLERANCE",
                 "SYMBOL_REPRESENTATION",
                 "SYMMETRY_TOLERANCE",
+                "TESSELLATED_SHAPE_REPRESENTATION",
                 "TOLERANCE_ZONE",
                 "TOLERANCE_ZONE_WITH_DATUM",
                 "TOPOLOGICAL_REPRESENTATION_ITEM",
@@ -5895,6 +5998,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "STYLED_ITEM",
                 "SYMBOL_REPRESENTATION",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
+                "TESSELLATED_SHAPE_REPRESENTATION",
             ],
             complex_ok: true,
             is_vec: true,
@@ -6018,6 +6122,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -6156,6 +6261,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -6403,6 +6509,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -6563,6 +6670,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -6771,6 +6879,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -7126,6 +7235,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -7634,6 +7745,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -7789,6 +7901,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_FACE",
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
+                "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
                 "TEXT_LITERAL",
@@ -7928,6 +8041,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -7973,6 +8087,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "SURFACE_STYLE_USAGE",
                 "SYMBOL_STYLE",
                 "TEXT_STYLE",
+                "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
                 "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
             ],
             complex_ok: true,
@@ -8097,6 +8212,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -8358,6 +8474,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_USAGE",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
+                "SHAPE_ASPECT_ASSOCIATIVITY",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "STRAIGHTNESS_TOLERANCE",
                 "SURFACE_PROFILE_TOLERANCE",
@@ -8455,6 +8572,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_USAGE",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
+                "SHAPE_ASPECT_ASSOCIATIVITY",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "STRAIGHTNESS_TOLERANCE",
                 "SURFACE_PROFILE_TOLERANCE",
@@ -8508,6 +8626,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION",
                     "PROPERTY_DEFINITION_RELATIONSHIP",
                     "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_ASSOCIATIVITY",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -8533,6 +8652,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8690,6 +8810,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -8843,6 +8964,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -8881,6 +9003,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8913,6 +9036,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8936,6 +9060,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8961,6 +9086,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8984,6 +9110,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9130,6 +9257,56 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "SHAPE_ASPECT_ASSOCIATIVITY" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_shape_aspect",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_shape_aspect",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "SHAPE_ASPECT_RELATIONSHIP" => &[
             RefSlot {
                 idx: 2,
@@ -9205,6 +9382,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION",
                     "PROPERTY_DEFINITION_RELATIONSHIP",
                     "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_ASSOCIATIVITY",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -9230,6 +9408,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9354,6 +9533,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -9507,6 +9687,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -9561,6 +9742,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9584,6 +9766,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9825,6 +10008,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -10300,6 +10485,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -10519,6 +10705,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -10596,12 +10784,187 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_FACE",
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
+                "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
             ],
             complex_ok: true,
             is_vec: true,
         }],
+        "TESSELLATED_SHAPE_REPRESENTATION" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "TESSELLATED_SOLID" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "geometric_link",
+                allowed: &["BREP_WITH_VOIDS", "MANIFOLD_SOLID_BREP"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "TESSELLATED_SURFACE_SET" => &[RefSlot {
             idx: 1,
             name: "coordinates",
@@ -10650,6 +11013,17 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "COLOUR_SPECIFICATION",
                 "DRAUGHTING_PRE_DEFINED_COLOUR",
                 "PRE_DEFINED_COLOUR",
+            ],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => &[RefSlot {
+            idx: 1,
+            name: "character_appearance",
+            allowed: &[
+                "CHARACTER_GLYPH_STYLE_OUTLINE",
+                "CHARACTER_GLYPH_STYLE_STROKE",
+                "TEXT_STYLE_FOR_DEFINED_FONT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -11163,6 +11537,40 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_annotation_occurrence",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_annotation_occurrence",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "APPLICATION_CONTEXT_ELEMENT" => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
@@ -11432,6 +11840,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -11470,6 +11879,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -11685,6 +12095,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_FACE",
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
+                "TESSELLATED_SHAPE_REPRESENTATION",
+                "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
                 "TEXT_LITERAL",
@@ -12351,6 +12763,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "STYLED_ITEM",
                 "SYMBOL_REPRESENTATION",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
+                "TESSELLATED_SHAPE_REPRESENTATION",
             ],
             complex_ok: true,
             is_vec: true,
@@ -12474,6 +12887,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -12612,6 +13026,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -12766,6 +13181,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -12993,6 +13409,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "SURFACE_STYLE_USAGE",
                 "SYMBOL_STYLE",
                 "TEXT_STYLE",
+                "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
                 "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
             ],
             complex_ok: true,
@@ -13188,6 +13605,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_USAGE",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
+                "SHAPE_ASPECT_ASSOCIATIVITY",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "STRAIGHTNESS_TOLERANCE",
                 "SURFACE_PROFILE_TOLERANCE",
@@ -13225,6 +13643,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION",
                     "PROPERTY_DEFINITION_RELATIONSHIP",
                     "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_ASSOCIATIVITY",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -13250,6 +13669,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -13393,6 +13813,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -13546,6 +13967,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -13584,6 +14006,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -13616,6 +14039,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -13639,6 +14063,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_DIMENSION_REPRESENTATION",
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -13867,6 +14292,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
                     "TEXT_LITERAL",
@@ -14062,6 +14489,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_FACE",
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
+                "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
             ],
@@ -14263,6 +14691,14 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_annotation_fill_area_occurrences: Vec<(AnnotationFillAreaOccurrenceId, u64)> =
         Vec::new();
     let mut pending_annotation_occurrences: Vec<(AnnotationOccurrenceId, u64)> = Vec::new();
+    let mut pending_annotation_occurrence_associativitys: Vec<(
+        AnnotationOccurrenceAssociativityId,
+        u64,
+    )> = Vec::new();
+    let mut pending_annotation_occurrence_relationships: Vec<(
+        AnnotationOccurrenceRelationshipId,
+        u64,
+    )> = Vec::new();
     let mut pending_annotation_placeholder_occurrences: Vec<(
         AnnotationPlaceholderOccurrenceId,
         u64,
@@ -14643,6 +15079,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_shape_aspects: Vec<(ShapeAspectId, u64)> = Vec::new();
+    let mut pending_shape_aspect_associativitys: Vec<(ShapeAspectAssociativityId, u64)> =
+        Vec::new();
     let mut pending_shape_aspect_relationships: Vec<(ShapeAspectRelationshipId, u64)> = Vec::new();
     let mut pending_shape_definition_representations: Vec<(ShapeDefinitionRepresentationId, u64)> =
         Vec::new();
@@ -14696,11 +15134,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_tessellated_curve_sets: Vec<(TessellatedCurveSetId, u64)> = Vec::new();
     let mut pending_tessellated_faces: Vec<(TessellatedFaceId, u64)> = Vec::new();
     let mut pending_tessellated_geometric_sets: Vec<(TessellatedGeometricSetId, u64)> = Vec::new();
+    let mut pending_tessellated_shape_representations: Vec<(
+        TessellatedShapeRepresentationId,
+        u64,
+    )> = Vec::new();
+    let mut pending_tessellated_solids: Vec<(TessellatedSolidId, u64)> = Vec::new();
     let mut pending_tessellated_surface_sets: Vec<(TessellatedSurfaceSetId, u64)> = Vec::new();
     let mut pending_text_literals: Vec<(TextLiteralId, u64)> = Vec::new();
     let mut pending_text_styles: Vec<(TextStyleId, u64)> = Vec::new();
     let mut pending_text_style_for_defined_fonts: Vec<(TextStyleForDefinedFontId, u64)> =
         Vec::new();
+    let mut pending_text_style_with_box_characteristicss: Vec<(
+        TextStyleWithBoxCharacteristicsId,
+        u64,
+    )> = Vec::new();
     let mut pending_time_units: Vec<(TimeUnitId, u64)> = Vec::new();
     let mut pending_tolerance_values: Vec<(ToleranceValueId, u64)> = Vec::new();
     let mut pending_tolerance_zones: Vec<(ToleranceZoneId, u64)> = Vec::new();
@@ -15066,6 +15513,48 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = AnnotationOccurrenceId(model.annotation_occurrences.push(v));
                 idmap.insert(id, AnyId::AnnotationOccurrence(aid));
                 pending_annotation_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => {
+                let v = AnnotationOccurrenceAssociativity {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                    relating_annotation_occurrence:
+                        AnnotationOccurrenceRef::AnnotationCurveOccurrence(
+                            AnnotationCurveOccurrenceId(usize::MAX),
+                        ),
+                    related_annotation_occurrence:
+                        AnnotationOccurrenceRef::AnnotationCurveOccurrence(
+                            AnnotationCurveOccurrenceId(usize::MAX),
+                        ),
+                };
+                let aid = AnnotationOccurrenceAssociativityId(
+                    model.annotation_occurrence_associativitys.push(v),
+                );
+                idmap.insert(id, AnyId::AnnotationOccurrenceAssociativity(aid));
+                pending_annotation_occurrence_associativitys.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_OCCURRENCE_RELATIONSHIP" => {
+                let v = AnnotationOccurrenceRelationship {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                    relating_annotation_occurrence:
+                        AnnotationOccurrenceRef::AnnotationCurveOccurrence(
+                            AnnotationCurveOccurrenceId(usize::MAX),
+                        ),
+                    related_annotation_occurrence:
+                        AnnotationOccurrenceRef::AnnotationCurveOccurrence(
+                            AnnotationCurveOccurrenceId(usize::MAX),
+                        ),
+                };
+                let aid = AnnotationOccurrenceRelationshipId(
+                    model.annotation_occurrence_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::AnnotationOccurrenceRelationship(aid));
+                pending_annotation_occurrence_relationships.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -19799,6 +20288,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "SHAPE_ASPECT_ASSOCIATIVITY" => {
+                let v = ShapeAspectAssociativity {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                    related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                };
+                let aid = ShapeAspectAssociativityId(model.shape_aspect_associativitys.push(v));
+                idmap.insert(id, AnyId::ShapeAspectAssociativity(aid));
+                pending_shape_aspect_associativitys.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "SHAPE_ASPECT_RELATIONSHIP" => {
                 let v = ShapeAspectRelationship {
                     name: as_str(&attributes[0]),
@@ -20440,6 +20949,34 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TESSELLATED_SHAPE_REPRESENTATION" => {
+                let v = TessellatedShapeRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = TessellatedShapeRepresentationId(
+                    model.tessellated_shape_representations.push(v),
+                );
+                idmap.insert(id, AnyId::TessellatedShapeRepresentation(aid));
+                pending_tessellated_shape_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TESSELLATED_SOLID" => {
+                let v = TessellatedSolid {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    geometric_link: None,
+                };
+                let aid = TessellatedSolidId(model.tessellated_solids.push(v));
+                idmap.insert(id, AnyId::TessellatedSolid(aid));
+                pending_tessellated_solids.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "TESSELLATED_STRUCTURED_ITEM" => {
                 let v = TessellatedStructuredItem {
                     name: as_str(&attributes[0]),
@@ -20524,6 +21061,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = TextStyleForDefinedFontId(model.text_style_for_defined_fonts.push(v));
                 idmap.insert(id, AnyId::TextStyleForDefinedFont(aid));
                 pending_text_style_for_defined_fonts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => {
+                let v = TextStyleWithBoxCharacteristics {
+                    name: as_str(&attributes[0]),
+                    character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
+                        CharacterGlyphStyleOutlineId(usize::MAX),
+                    ),
+                    characteristics: match &attributes[2] {
+                        Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = TextStyleWithBoxCharacteristicsId(
+                    model.text_style_with_box_characteristicss.push(v),
+                );
+                idmap.insert(id, AnyId::TextStyleWithBoxCharacteristics(aid));
+                pending_text_style_with_box_characteristicss.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -21025,6 +21581,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_annotation_occurrences {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_annotation_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_occurrence_associativitys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_occurrence_associativitys(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_occurrence_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_occurrence_relationships(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_annotation_placeholder_occurrences {
@@ -22210,6 +22776,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_shape_aspects(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_shape_aspect_associativitys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_aspect_associativitys(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_shape_aspect_relationships {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_shape_aspect_relationships(&mut model, aid, attributes, &idmap);
@@ -22400,6 +22971,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_tessellated_geometric_sets(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_tessellated_shape_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tessellated_shape_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_tessellated_solids {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tessellated_solids(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_tessellated_surface_sets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_tessellated_surface_sets(&mut model, aid, attributes, &idmap);
@@ -22418,6 +22999,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_text_style_for_defined_fonts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_text_style_for_defined_fonts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_text_style_with_box_characteristicss {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_text_style_with_box_characteristicss(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_time_units {
@@ -22812,6 +23398,36 @@ fn resolve_annotation_occurrences(
     let it = &mut model.annotation_occurrences.items[aid.0];
     it.styles = styles_v;
     it.item = item_v;
+}
+
+fn resolve_annotation_occurrence_associativitys(
+    model: &mut Model,
+    aid: AnnotationOccurrenceAssociativityId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_annotation_occurrence_v =
+        AnnotationOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_annotation_occurrence_v =
+        AnnotationOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.annotation_occurrence_associativitys.items[aid.0];
+    it.relating_annotation_occurrence = relating_annotation_occurrence_v;
+    it.related_annotation_occurrence = related_annotation_occurrence_v;
+}
+
+fn resolve_annotation_occurrence_relationships(
+    model: &mut Model,
+    aid: AnnotationOccurrenceRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_annotation_occurrence_v =
+        AnnotationOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_annotation_occurrence_v =
+        AnnotationOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.annotation_occurrence_relationships.items[aid.0];
+    it.relating_annotation_occurrence = relating_annotation_occurrence_v;
+    it.related_annotation_occurrence = related_annotation_occurrence_v;
 }
 
 fn resolve_annotation_placeholder_occurrences(
@@ -26694,6 +27310,21 @@ fn resolve_shape_aspects(
     it.of_shape = of_shape_v;
 }
 
+fn resolve_shape_aspect_associativitys(
+    model: &mut Model,
+    aid: ShapeAspectAssociativityId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.shape_aspect_associativitys.items[aid.0];
+    it.relating_shape_aspect = relating_shape_aspect_v;
+    it.related_shape_aspect = related_shape_aspect_v;
+}
+
 fn resolve_shape_aspect_relationships(
     model: &mut Model,
     aid: ShapeAspectRelationshipId,
@@ -27280,6 +27911,52 @@ fn resolve_tessellated_geometric_sets(
     it.children = children_v;
 }
 
+fn resolve_tessellated_shape_representations(
+    model: &mut Model,
+    aid: TessellatedShapeRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.tessellated_shape_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
+}
+
+fn resolve_tessellated_solids(
+    model: &mut Model,
+    aid: TessellatedSolidId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                TessellatedStructuredItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let geometric_link_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(ManifoldSolidBrepRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let it = &mut model.tessellated_solids.items[aid.0];
+    it.items = items_v;
+    it.geometric_link = geometric_link_v;
+}
+
 fn resolve_tessellated_surface_sets(
     model: &mut Model,
     aid: TessellatedSurfaceSetId,
@@ -27326,6 +28003,18 @@ fn resolve_text_style_for_defined_fonts(
     let text_colour_v = ColourRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.text_style_for_defined_fonts.items[aid.0];
     it.text_colour = text_colour_v;
+}
+
+fn resolve_text_style_with_box_characteristicss(
+    model: &mut Model,
+    aid: TextStyleWithBoxCharacteristicsId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let character_appearance_v =
+        CharacterStyleSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.text_style_with_box_characteristicss.items[aid.0];
+    it.character_appearance = character_appearance_v;
 }
 
 fn resolve_time_units(
@@ -27673,6 +28362,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "ADVANCED_FACE" => UnitPart::AdvancedFace,
         "ANNOTATION_CURVE_OCCURRENCE" => UnitPart::AnnotationCurveOccurrence,
         "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
+        "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => UnitPart::AnnotationOccurrenceAssociativity,
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => UnitPart::AnnotationOccurrenceRelationship { name: as_str(&p.attributes[0]), description: as_str(&p.attributes[1]), relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence { role: match &p.attributes[0] { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).expect("annotation_placeholder_occurrence_role"), other => panic!("enum annotation_placeholder_occurrence_role: {other:?}") }, line_spacing: as_real(&p.attributes[1]), },
         "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
         "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
@@ -27932,9 +28623,11 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "SYMBOL_TARGET" => UnitPart::SymbolTarget { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), x_scale: as_real(&p.attributes[1]), y_scale: as_real(&p.attributes[2]), },
         "TESSELLATED_GEOMETRIC_SET" => UnitPart::TessellatedGeometricSet { children: Vec::new(), },
         "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
+        "TESSELLATED_SHAPE_REPRESENTATION" => UnitPart::TessellatedShapeRepresentation,
         "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
         "TEXT_LITERAL" => UnitPart::TextLiteral { literal: as_str(&p.attributes[0]), placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), alignment: as_str(&p.attributes[2]), path: match &p.attributes[3] { Attribute::Enum(s) => TextPath::parse(s).expect("text_path"), other => panic!("enum text_path: {other:?}") }, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(usize::MAX)), },
         "TEXT_STYLE" => UnitPart::TextStyle { name: as_str(&p.attributes[0]), character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(usize::MAX)), },
+        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => UnitPart::TextStyleWithBoxCharacteristics { characteristics: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(), other => panic!("vec: {other:?}") }, },
         "TEXTURE_STYLE_SPECIFICATION" => UnitPart::TextureStyleSpecification,
         "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => UnitPart::TextureStyleTessellationSpecification,
         "TIME_UNIT" => UnitPart::TimeUnit,
@@ -28031,6 +28724,18 @@ fn resolve_complex(
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::AnnotationOccurrenceRelationship {
+                relating_annotation_occurrence,
+                related_annotation_occurrence,
+                ..
+            } => {
+                *relating_annotation_occurrence = AnnotationOccurrenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+                *related_annotation_occurrence = AnnotationOccurrenceRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
             }
             UnitPart::ApplicationContextElement {
                 frame_of_reference, ..

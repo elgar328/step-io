@@ -1019,6 +1019,10 @@ pub struct AnnotationFillAreaOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationOccurrenceAssociativityId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationOccurrenceRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaceholderOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaneId(pub usize);
@@ -1633,6 +1637,8 @@ pub struct SecurityClassificationLevelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ShapeAspectAssociativityId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeDefinitionRepresentationId(pub usize);
@@ -1727,6 +1733,10 @@ pub struct TessellatedGeometricSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TessellatedShapeRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TessellatedSolidId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedStructuredItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedSurfaceSetId(pub usize);
@@ -1738,6 +1748,8 @@ pub struct TextLiteralId(pub usize);
 pub struct TextStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextStyleForDefinedFontId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TextStyleWithBoxCharacteristicsId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextureStyleSpecificationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1821,6 +1833,8 @@ pub enum AnyId {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationOccurrenceAssociativity(AnnotationOccurrenceAssociativityId),
+    AnnotationOccurrenceRelationship(AnnotationOccurrenceRelationshipId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
@@ -2132,6 +2146,7 @@ pub enum AnyId {
     SecurityClassificationAssignment(SecurityClassificationAssignmentId),
     SecurityClassificationLevel(SecurityClassificationLevelId),
     ShapeAspect(ShapeAspectId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
@@ -2179,12 +2194,15 @@ pub enum AnyId {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextFont(TextFontId),
     TextLiteral(TextLiteralId),
     TextStyle(TextStyleId),
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
+    TextStyleWithBoxCharacteristics(TextStyleWithBoxCharacteristicsId),
     TextureStyleSpecification(TextureStyleSpecificationId),
     TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
     TimeUnit(TimeUnitId),
@@ -2286,6 +2304,35 @@ impl AnnotationCurveOccurrenceRef {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationCurveOccurrenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationOccurrenceRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexUnitId),
+}
+impl AnnotationOccurrenceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("AnnotationOccurrenceRef ref -> {other:?}"),
         }
     }
 }
@@ -2758,6 +2805,7 @@ pub enum CharacterizedDefinitionRef {
     ProductDefinitionUsage(ProductDefinitionUsageId),
     RoundnessTolerance(RoundnessToleranceId),
     ShapeAspect(ShapeAspectId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     StraightnessTolerance(StraightnessToleranceId),
     SurfaceProfileTolerance(SurfaceProfileToleranceId),
@@ -2835,6 +2883,7 @@ impl CharacterizedDefinitionRef {
             AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
             AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
             AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
             AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
             AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
@@ -3798,6 +3847,7 @@ pub enum DraughtingModelItemDefinitionRef {
     PropertyDefinition(PropertyDefinitionId),
     RoundnessTolerance(RoundnessToleranceId),
     ShapeAspect(ShapeAspectId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     StraightnessTolerance(StraightnessToleranceId),
     SurfaceProfileTolerance(SurfaceProfileToleranceId),
@@ -3861,6 +3911,7 @@ impl DraughtingModelItemDefinitionRef {
             AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
             AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
             AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
             AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
             AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
@@ -4123,6 +4174,7 @@ pub enum GeometricItemSpecificUsageSelectRef {
     GeneralDatumReference(GeneralDatumReferenceId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     ShapeAspect(ShapeAspectId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
@@ -4147,6 +4199,7 @@ impl GeometricItemSpecificUsageSelectRef {
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
             AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
             AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
             AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
@@ -4246,6 +4299,7 @@ pub enum GeometricModelItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextLiteral(TextLiteralId),
@@ -4349,6 +4403,7 @@ impl GeometricModelItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TextLiteral(i) => Self::TextLiteral(i),
@@ -4613,6 +4668,7 @@ pub enum IdAttributeSelectRef {
     Representation(RepresentationId),
     RoundnessTolerance(RoundnessToleranceId),
     ShapeAspect(ShapeAspectId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
@@ -4620,6 +4676,7 @@ pub enum IdAttributeSelectRef {
     SurfaceProfileTolerance(SurfaceProfileToleranceId),
     SymbolRepresentation(SymbolRepresentationId),
     SymmetryTolerance(SymmetryToleranceId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
@@ -4727,6 +4784,7 @@ impl IdAttributeSelectRef {
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
             AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
@@ -4734,6 +4792,7 @@ impl IdAttributeSelectRef {
             AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
             AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
             AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
@@ -4786,6 +4845,7 @@ pub enum InvisibleItemRef {
     StyledItem(StyledItemId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
 }
 impl InvisibleItemRef {
@@ -4829,6 +4889,7 @@ impl InvisibleItemRef {
             AnyId::StyledItem(i) => Self::StyledItem(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("InvisibleItemRef ref -> {other:?}"),
         }
@@ -4969,6 +5030,7 @@ pub enum LayeredItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextLiteral(TextLiteralId),
@@ -5109,6 +5171,7 @@ impl LayeredItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TextLiteral(i) => Self::TextLiteral(i),
@@ -5193,6 +5256,23 @@ impl LoopRef {
             AnyId::VertexLoop(i) => Self::VertexLoop(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("LoopRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ManifoldSolidBrepRef {
+    BrepWithVoids(BrepWithVoidsId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    Complex(ComplexUnitId),
+}
+impl ManifoldSolidBrepRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ManifoldSolidBrepRef ref -> {other:?}"),
         }
     }
 }
@@ -5526,6 +5606,7 @@ pub enum PresentationStyleSelectRef {
     SurfaceStyleUsage(SurfaceStyleUsageId),
     SymbolStyle(SymbolStyleId),
     TextStyle(TextStyleId),
+    TextStyleWithBoxCharacteristics(TextStyleWithBoxCharacteristicsId),
     TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
     NullStyle(NullStyle),
     Complex(ComplexUnitId),
@@ -5540,6 +5621,7 @@ impl PresentationStyleSelectRef {
             AnyId::SurfaceStyleUsage(i) => Self::SurfaceStyleUsage(i),
             AnyId::SymbolStyle(i) => Self::SymbolStyle(i),
             AnyId::TextStyle(i) => Self::TextStyle(i),
+            AnyId::TextStyleWithBoxCharacteristics(i) => Self::TextStyleWithBoxCharacteristics(i),
             AnyId::TextureStyleTessellationSpecification(i) => {
                 Self::TextureStyleTessellationSpecification(i)
             }
@@ -5905,6 +5987,7 @@ pub enum RepresentationItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextLiteral(TextLiteralId),
@@ -6042,6 +6125,7 @@ impl RepresentationItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TextLiteral(i) => Self::TextLiteral(i),
@@ -6100,6 +6184,7 @@ pub enum RepresentationOrRepresentationReferenceRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
     SymbolRepresentation(SymbolRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
 }
 impl RepresentationOrRepresentationReferenceRef {
@@ -6128,6 +6213,7 @@ impl RepresentationOrRepresentationReferenceRef {
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RepresentationOrRepresentationReferenceRef ref -> {other:?}"),
         }
@@ -6154,6 +6240,7 @@ pub enum RepresentationRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
     SymbolRepresentation(SymbolRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
 }
 impl RepresentationRef {
@@ -6181,6 +6268,7 @@ impl RepresentationRef {
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RepresentationRef ref -> {other:?}"),
         }
@@ -6209,6 +6297,7 @@ pub enum RepresentedDefinitionRef {
     PropertyDefinition(PropertyDefinitionId),
     PropertyDefinitionRelationship(PropertyDefinitionRelationshipId),
     ShapeAspect(ShapeAspectId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
@@ -6237,6 +6326,7 @@ impl RepresentedDefinitionRef {
             AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
             AnyId::PropertyDefinitionRelationship(i) => Self::PropertyDefinitionRelationship(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
             AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
             AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
             AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
@@ -6355,6 +6445,7 @@ pub enum ShapeModelRef {
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
 }
 impl ShapeModelRef {
@@ -6372,6 +6463,7 @@ impl ShapeModelRef {
             }
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ShapeModelRef ref -> {other:?}"),
         }
@@ -6633,6 +6725,8 @@ pub enum StyleContextSelectRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextLiteral(TextLiteralId),
@@ -6803,6 +6897,8 @@ impl StyleContextSelectRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TextLiteral(i) => Self::TextLiteral(i),
@@ -6982,6 +7078,8 @@ pub enum StyledItemTargetRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextLiteral(TextLiteralId),
@@ -7124,6 +7222,8 @@ impl StyledItemTargetRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TextLiteral(i) => Self::TextLiteral(i),
@@ -7314,6 +7414,7 @@ pub enum TessellatedItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     Complex(ComplexUnitId),
@@ -7329,10 +7430,30 @@ impl TessellatedItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("TessellatedItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TessellatedStructuredItemRef {
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    Complex(ComplexUnitId),
+}
+impl TessellatedStructuredItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("TessellatedStructuredItemRef ref -> {other:?}"),
         }
     }
 }
@@ -7848,6 +7969,22 @@ pub struct AnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationOccurrenceAssociativity {
+    pub name: String,
+    pub description: String,
+    pub relating_annotation_occurrence: AnnotationOccurrenceRef,
+    pub related_annotation_occurrence: AnnotationOccurrenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationOccurrenceRelationship {
+    pub name: String,
+    pub description: String,
+    pub relating_annotation_occurrence: AnnotationOccurrenceRef,
+    pub related_annotation_occurrence: AnnotationOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10025,6 +10162,14 @@ pub struct ShapeAspect {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ShapeAspectAssociativity {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspectRelationship {
     pub name: String,
     pub description: Option<String>,
@@ -10316,6 +10461,20 @@ pub struct TessellatedItem {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedShapeRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedSolid {
+    pub name: String,
+    pub items: Vec<TessellatedStructuredItemRef>,
+    pub geometric_link: Option<ManifoldSolidBrepRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedStructuredItem {
     pub name: String,
 }
@@ -10354,6 +10513,13 @@ pub struct TextStyle {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextStyleForDefinedFont {
     pub text_colour: ColourRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextStyleWithBoxCharacteristics {
+    pub name: String,
+    pub character_appearance: CharacterStyleSelectRef,
+    pub characteristics: Vec<MeasureValue>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10620,6 +10786,13 @@ pub enum UnitPart {
     AdvancedFace,
     AnnotationCurveOccurrence,
     AnnotationOccurrence,
+    AnnotationOccurrenceAssociativity,
+    AnnotationOccurrenceRelationship {
+        name: String,
+        description: String,
+        relating_annotation_occurrence: AnnotationOccurrenceRef,
+        related_annotation_occurrence: AnnotationOccurrenceRef,
+    },
     AnnotationPlaceholderOccurrence {
         role: AnnotationPlaceholderOccurrenceRole,
         line_spacing: f64,
@@ -11332,6 +11505,7 @@ pub enum UnitPart {
         children: Vec<TessellatedItemRef>,
     },
     TessellatedItem,
+    TessellatedShapeRepresentation,
     TessellatedStructuredItem,
     TextLiteral {
         literal: String,
@@ -11343,6 +11517,9 @@ pub enum UnitPart {
     TextStyle {
         name: String,
         character_appearance: CharacterStyleSelectRef,
+    },
+    TextStyleWithBoxCharacteristics {
+        characteristics: Vec<MeasureValue>,
     },
     TextureStyleSpecification,
     TextureStyleTessellationSpecification,
@@ -11422,6 +11599,8 @@ pub struct Model {
     pub annotation_curve_occurrences: Arena<AnnotationCurveOccurrence>,
     pub annotation_fill_area_occurrences: Arena<AnnotationFillAreaOccurrence>,
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
+    pub annotation_occurrence_associativitys: Arena<AnnotationOccurrenceAssociativity>,
+    pub annotation_occurrence_relationships: Arena<AnnotationOccurrenceRelationship>,
     pub annotation_placeholder_occurrences: Arena<AnnotationPlaceholderOccurrence>,
     pub annotation_planes: Arena<AnnotationPlane>,
     pub annotation_symbols: Arena<AnnotationSymbol>,
@@ -11736,6 +11915,7 @@ pub struct Model {
     pub security_classification_assignments: Arena<SecurityClassificationAssignment>,
     pub security_classification_levels: Arena<SecurityClassificationLevel>,
     pub shape_aspects: Arena<ShapeAspect>,
+    pub shape_aspect_associativitys: Arena<ShapeAspectAssociativity>,
     pub shape_aspect_relationships: Arena<ShapeAspectRelationship>,
     pub shape_definition_representations: Arena<ShapeDefinitionRepresentation>,
     pub shape_dimension_representations: Arena<ShapeDimensionRepresentation>,
@@ -11783,12 +11963,15 @@ pub struct Model {
     pub tessellated_faces: Arena<TessellatedFace>,
     pub tessellated_geometric_sets: Arena<TessellatedGeometricSet>,
     pub tessellated_items: Arena<TessellatedItem>,
+    pub tessellated_shape_representations: Arena<TessellatedShapeRepresentation>,
+    pub tessellated_solids: Arena<TessellatedSolid>,
     pub tessellated_structured_items: Arena<TessellatedStructuredItem>,
     pub tessellated_surface_sets: Arena<TessellatedSurfaceSet>,
     pub text_fonts: Arena<TextFont>,
     pub text_literals: Arena<TextLiteral>,
     pub text_styles: Arena<TextStyle>,
     pub text_style_for_defined_fonts: Arena<TextStyleForDefinedFont>,
+    pub text_style_with_box_characteristicss: Arena<TextStyleWithBoxCharacteristics>,
     pub texture_style_specifications: Arena<TextureStyleSpecification>,
     pub texture_style_tessellation_specifications: Arena<TextureStyleTessellationSpecification>,
     pub time_units: Arena<TimeUnit>,

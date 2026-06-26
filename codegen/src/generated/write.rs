@@ -87,6 +87,8 @@ pub struct Writer<'a> {
     annotation_curve_occurrence_ids: Vec<Option<u64>>,
     annotation_fill_area_occurrence_ids: Vec<Option<u64>>,
     annotation_occurrence_ids: Vec<Option<u64>>,
+    annotation_occurrence_associativity_ids: Vec<Option<u64>>,
+    annotation_occurrence_relationship_ids: Vec<Option<u64>>,
     annotation_placeholder_occurrence_ids: Vec<Option<u64>>,
     annotation_plane_ids: Vec<Option<u64>>,
     annotation_symbol_ids: Vec<Option<u64>>,
@@ -394,6 +396,7 @@ pub struct Writer<'a> {
     security_classification_assignment_ids: Vec<Option<u64>>,
     security_classification_level_ids: Vec<Option<u64>>,
     shape_aspect_ids: Vec<Option<u64>>,
+    shape_aspect_associativity_ids: Vec<Option<u64>>,
     shape_aspect_relationship_ids: Vec<Option<u64>>,
     shape_definition_representation_ids: Vec<Option<u64>>,
     shape_dimension_representation_ids: Vec<Option<u64>>,
@@ -441,12 +444,15 @@ pub struct Writer<'a> {
     tessellated_face_ids: Vec<Option<u64>>,
     tessellated_geometric_set_ids: Vec<Option<u64>>,
     tessellated_item_ids: Vec<Option<u64>>,
+    tessellated_shape_representation_ids: Vec<Option<u64>>,
+    tessellated_solid_ids: Vec<Option<u64>>,
     tessellated_structured_item_ids: Vec<Option<u64>>,
     tessellated_surface_set_ids: Vec<Option<u64>>,
     text_font_ids: Vec<Option<u64>>,
     text_literal_ids: Vec<Option<u64>>,
     text_style_ids: Vec<Option<u64>>,
     text_style_for_defined_font_ids: Vec<Option<u64>>,
+    text_style_with_box_characteristic_ids: Vec<Option<u64>>,
     texture_style_specification_ids: Vec<Option<u64>>,
     texture_style_tessellation_specification_ids: Vec<Option<u64>>,
     time_unit_ids: Vec<Option<u64>>,
@@ -529,6 +535,20 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             annotation_occurrence_ids: vec![None; model.annotation_occurrences.items.len()],
+            annotation_occurrence_associativity_ids: vec![
+                None;
+                model
+                    .annotation_occurrence_associativitys
+                    .items
+                    .len()
+            ],
+            annotation_occurrence_relationship_ids: vec![
+                None;
+                model
+                    .annotation_occurrence_relationships
+                    .items
+                    .len()
+            ],
             annotation_placeholder_occurrence_ids: vec![
                 None;
                 model
@@ -1280,6 +1300,10 @@ impl<'a> Writer<'a> {
                 model.security_classification_levels.items.len()
             ],
             shape_aspect_ids: vec![None; model.shape_aspects.items.len()],
+            shape_aspect_associativity_ids: vec![
+                None;
+                model.shape_aspect_associativitys.items.len()
+            ],
             shape_aspect_relationship_ids: vec![None; model.shape_aspect_relationships.items.len()],
             shape_definition_representation_ids: vec![
                 None;
@@ -1381,6 +1405,14 @@ impl<'a> Writer<'a> {
             tessellated_face_ids: vec![None; model.tessellated_faces.items.len()],
             tessellated_geometric_set_ids: vec![None; model.tessellated_geometric_sets.items.len()],
             tessellated_item_ids: vec![None; model.tessellated_items.items.len()],
+            tessellated_shape_representation_ids: vec![
+                None;
+                model
+                    .tessellated_shape_representations
+                    .items
+                    .len()
+            ],
+            tessellated_solid_ids: vec![None; model.tessellated_solids.items.len()],
             tessellated_structured_item_ids: vec![
                 None;
                 model.tessellated_structured_items.items.len()
@@ -1392,6 +1424,13 @@ impl<'a> Writer<'a> {
             text_style_for_defined_font_ids: vec![
                 None;
                 model.text_style_for_defined_fonts.items.len()
+            ],
+            text_style_with_box_characteristic_ids: vec![
+                None;
+                model
+                    .text_style_with_box_characteristicss
+                    .items
+                    .len()
             ],
             texture_style_specification_ids: vec![
                 None;
@@ -1486,6 +1525,12 @@ impl<'a> Writer<'a> {
             AnyId::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0],
             AnyId::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0],
             AnyId::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0],
+            AnyId::AnnotationOccurrenceAssociativity(i) => {
+                self.annotation_occurrence_associativity_ids[i.0]
+            }
+            AnyId::AnnotationOccurrenceRelationship(i) => {
+                self.annotation_occurrence_relationship_ids[i.0]
+            }
             AnyId::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0]
             }
@@ -1885,6 +1930,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::SecurityClassificationLevel(i) => self.security_classification_level_ids[i.0],
             AnyId::ShapeAspect(i) => self.shape_aspect_ids[i.0],
+            AnyId::ShapeAspectAssociativity(i) => self.shape_aspect_associativity_ids[i.0],
             AnyId::ShapeAspectRelationship(i) => self.shape_aspect_relationship_ids[i.0],
             AnyId::ShapeDefinitionRepresentation(i) => {
                 self.shape_definition_representation_ids[i.0]
@@ -1944,12 +1990,19 @@ impl<'a> Writer<'a> {
             AnyId::TessellatedFace(i) => self.tessellated_face_ids[i.0],
             AnyId::TessellatedGeometricSet(i) => self.tessellated_geometric_set_ids[i.0],
             AnyId::TessellatedItem(i) => self.tessellated_item_ids[i.0],
+            AnyId::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0]
+            }
+            AnyId::TessellatedSolid(i) => self.tessellated_solid_ids[i.0],
             AnyId::TessellatedStructuredItem(i) => self.tessellated_structured_item_ids[i.0],
             AnyId::TessellatedSurfaceSet(i) => self.tessellated_surface_set_ids[i.0],
             AnyId::TextFont(i) => self.text_font_ids[i.0],
             AnyId::TextLiteral(i) => self.text_literal_ids[i.0],
             AnyId::TextStyle(i) => self.text_style_ids[i.0],
             AnyId::TextStyleForDefinedFont(i) => self.text_style_for_defined_font_ids[i.0],
+            AnyId::TextStyleWithBoxCharacteristics(i) => {
+                self.text_style_with_box_characteristic_ids[i.0]
+            }
             AnyId::TextureStyleSpecification(i) => self.texture_style_specification_ids[i.0],
             AnyId::TextureStyleTessellationSpecification(i) => {
                 self.texture_style_tessellation_specification_ids[i.0]
@@ -2023,6 +2076,12 @@ impl<'a> Writer<'a> {
                 self.annotation_fill_area_occurrence_ids[i.0] = Some(n)
             }
             AnyId::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0] = Some(n),
+            AnyId::AnnotationOccurrenceAssociativity(i) => {
+                self.annotation_occurrence_associativity_ids[i.0] = Some(n)
+            }
+            AnyId::AnnotationOccurrenceRelationship(i) => {
+                self.annotation_occurrence_relationship_ids[i.0] = Some(n)
+            }
             AnyId::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0] = Some(n)
             }
@@ -2518,6 +2577,9 @@ impl<'a> Writer<'a> {
                 self.security_classification_level_ids[i.0] = Some(n)
             }
             AnyId::ShapeAspect(i) => self.shape_aspect_ids[i.0] = Some(n),
+            AnyId::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0] = Some(n)
+            }
             AnyId::ShapeAspectRelationship(i) => self.shape_aspect_relationship_ids[i.0] = Some(n),
             AnyId::ShapeDefinitionRepresentation(i) => {
                 self.shape_definition_representation_ids[i.0] = Some(n)
@@ -2585,6 +2647,10 @@ impl<'a> Writer<'a> {
             AnyId::TessellatedFace(i) => self.tessellated_face_ids[i.0] = Some(n),
             AnyId::TessellatedGeometricSet(i) => self.tessellated_geometric_set_ids[i.0] = Some(n),
             AnyId::TessellatedItem(i) => self.tessellated_item_ids[i.0] = Some(n),
+            AnyId::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0] = Some(n)
+            }
+            AnyId::TessellatedSolid(i) => self.tessellated_solid_ids[i.0] = Some(n),
             AnyId::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0] = Some(n)
             }
@@ -2594,6 +2660,9 @@ impl<'a> Writer<'a> {
             AnyId::TextStyle(i) => self.text_style_ids[i.0] = Some(n),
             AnyId::TextStyleForDefinedFont(i) => {
                 self.text_style_for_defined_font_ids[i.0] = Some(n)
+            }
+            AnyId::TextStyleWithBoxCharacteristics(i) => {
+                self.text_style_with_box_characteristic_ids[i.0] = Some(n)
             }
             AnyId::TextureStyleSpecification(i) => {
                 self.texture_style_specification_ids[i.0] = Some(n)
@@ -2722,6 +2791,64 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::AnnotationCurveOccurrence(*i))
             }
             AnnotationCurveOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_annotation_occurrence(&self, r: &AnnotationOccurrenceRef) -> u64 {
+        match r {
+            AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
+                self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
+                self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::AnnotationOccurrence(i) => {
+                self.annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
+                self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::AnnotationPlane(i) => {
+                self.annotation_plane_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::AnnotationSymbolOccurrence(i) => {
+                self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::AnnotationTextOccurrence(i) => {
+                self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::TessellatedAnnotationOccurrence(i) => {
+                self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_annotation_occurrence(r: &AnnotationOccurrenceRef, out: &mut Vec<AnyId>) {
+        match r {
+            AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
+                out.push(AnyId::AnnotationCurveOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
+                out.push(AnyId::AnnotationFillAreaOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::AnnotationOccurrence(i) => {
+                out.push(AnyId::AnnotationOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+            AnnotationOccurrenceRef::AnnotationSymbolOccurrence(i) => {
+                out.push(AnyId::AnnotationSymbolOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::AnnotationTextOccurrence(i) => {
+                out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::TessellatedAnnotationOccurrence(i) => {
+                out.push(AnyId::TessellatedAnnotationOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -3522,6 +3649,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::ShapeAspect(i) => {
                 self.shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
             }
@@ -3688,6 +3818,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::RoundnessTolerance(*i))
             }
             CharacterizedDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            CharacterizedDefinitionRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
             CharacterizedDefinitionRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
             }
@@ -5235,6 +5368,9 @@ impl<'a> Writer<'a> {
             DraughtingModelItemDefinitionRef::ShapeAspect(i) => {
                 self.shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            DraughtingModelItemDefinitionRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
             DraughtingModelItemDefinitionRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
             }
@@ -5384,6 +5520,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::RoundnessTolerance(*i))
             }
             DraughtingModelItemDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            DraughtingModelItemDefinitionRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
             DraughtingModelItemDefinitionRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
             }
@@ -5797,6 +5936,9 @@ impl<'a> Writer<'a> {
             GeometricItemSpecificUsageSelectRef::ShapeAspect(i) => {
                 self.shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            GeometricItemSpecificUsageSelectRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
             GeometricItemSpecificUsageSelectRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
             }
@@ -5855,6 +5997,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::PlacedDatumTargetFeature(*i))
             }
             GeometricItemSpecificUsageSelectRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            GeometricItemSpecificUsageSelectRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
             GeometricItemSpecificUsageSelectRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
             }
@@ -6110,6 +6255,9 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            GeometricModelItemRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
             GeometricModelItemRef::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
             }
@@ -6286,6 +6434,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             GeometricModelItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            GeometricModelItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             GeometricModelItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
             }
@@ -6844,6 +6993,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::ShapeAspect(i) => {
                 self.shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            IdAttributeSelectRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
             IdAttributeSelectRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
             }
@@ -6864,6 +7016,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::SymmetryTolerance(i) => {
                 self.symmetry_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
             }
             IdAttributeSelectRef::ToleranceZone(i) => {
                 self.tolerance_zone_ids[i.0].expect("dep id assigned")
@@ -7054,6 +7209,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::Representation(i) => out.push(AnyId::Representation(*i)),
             IdAttributeSelectRef::RoundnessTolerance(i) => out.push(AnyId::RoundnessTolerance(*i)),
             IdAttributeSelectRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            IdAttributeSelectRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
             IdAttributeSelectRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
             }
@@ -7073,6 +7231,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::SymbolRepresentation(*i))
             }
             IdAttributeSelectRef::SymmetryTolerance(i) => out.push(AnyId::SymmetryTolerance(*i)),
+            IdAttributeSelectRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
             IdAttributeSelectRef::ToleranceZone(i) => out.push(AnyId::ToleranceZone(*i)),
             IdAttributeSelectRef::ToleranceZoneWithDatum(i) => {
                 out.push(AnyId::ToleranceZoneWithDatum(*i))
@@ -7179,6 +7340,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
+            InvisibleItemRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
             InvisibleItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
     }
@@ -7246,6 +7410,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
             InvisibleItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
+            }
+            InvisibleItemRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
             }
             InvisibleItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
@@ -7565,6 +7732,9 @@ impl<'a> Writer<'a> {
             LayeredItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
             }
@@ -7782,6 +7952,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             LayeredItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            LayeredItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             LayeredItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
             }
@@ -7891,6 +8062,26 @@ impl<'a> Writer<'a> {
             LoopRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
             LoopRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
             LoopRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_manifold_solid_brep(&self, r: &ManifoldSolidBrepRef) -> u64 {
+        match r {
+            ManifoldSolidBrepRef::BrepWithVoids(i) => {
+                self.brep_with_void_ids[i.0].expect("dep id assigned")
+            }
+            ManifoldSolidBrepRef::ManifoldSolidBrep(i) => {
+                self.manifold_solid_brep_ids[i.0].expect("dep id assigned")
+            }
+            ManifoldSolidBrepRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_manifold_solid_brep(r: &ManifoldSolidBrepRef, out: &mut Vec<AnyId>) {
+        match r {
+            ManifoldSolidBrepRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            ManifoldSolidBrepRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
+            ManifoldSolidBrepRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -8345,6 +8536,9 @@ impl<'a> Writer<'a> {
             PresentationStyleSelectRef::TextStyle(i) => {
                 self.text_style_ids[i.0].expect("dep id assigned")
             }
+            PresentationStyleSelectRef::TextStyleWithBoxCharacteristics(i) => {
+                self.text_style_with_box_characteristic_ids[i.0].expect("dep id assigned")
+            }
             PresentationStyleSelectRef::TextureStyleTessellationSpecification(i) => {
                 self.texture_style_tessellation_specification_ids[i.0].expect("dep id assigned")
             }
@@ -8368,6 +8562,9 @@ impl<'a> Writer<'a> {
             }
             PresentationStyleSelectRef::SymbolStyle(i) => out.push(AnyId::SymbolStyle(*i)),
             PresentationStyleSelectRef::TextStyle(i) => out.push(AnyId::TextStyle(*i)),
+            PresentationStyleSelectRef::TextStyleWithBoxCharacteristics(i) => {
+                out.push(AnyId::TextStyleWithBoxCharacteristics(*i))
+            }
             PresentationStyleSelectRef::TextureStyleTessellationSpecification(i) => {
                 out.push(AnyId::TextureStyleTessellationSpecification(*i))
             }
@@ -9046,6 +9243,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
             }
@@ -9292,6 +9492,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             RepresentationItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            RepresentationItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             RepresentationItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
             }
@@ -9358,6 +9559,7 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => self.symbol_representation_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
     }
     }
@@ -9382,6 +9584,7 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+        RepresentationOrRepresentationReferenceRef::TessellatedShapeRepresentation(i) => out.push(AnyId::TessellatedShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
     }
     }
@@ -9430,6 +9633,9 @@ impl<'a> Writer<'a> {
             RepresentationRef::SymbolRepresentation(i) => {
                 self.symbol_representation_ids[i.0].expect("dep id assigned")
             }
+            RepresentationRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
             RepresentationRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
     }
@@ -9466,6 +9672,9 @@ impl<'a> Writer<'a> {
             }
             RepresentationRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
             RepresentationRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+            RepresentationRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
             RepresentationRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -9530,6 +9739,9 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::ShapeAspect(i) => {
                 self.shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            RepresentedDefinitionRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
             RepresentedDefinitionRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
             }
@@ -9591,6 +9803,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::PropertyDefinitionRelationship(*i))
             }
             RepresentedDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            RepresentedDefinitionRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
             RepresentedDefinitionRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
             }
@@ -9770,6 +9985,9 @@ impl<'a> Writer<'a> {
             ShapeModelRef::ShapeRepresentation(i) => {
                 self.shape_representation_ids[i.0].expect("dep id assigned")
             }
+            ShapeModelRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
             ShapeModelRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
     }
@@ -9792,6 +10010,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::ShapeDimensionRepresentation(*i))
             }
             ShapeModelRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+            ShapeModelRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
             ShapeModelRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -10319,6 +10540,12 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
             }
@@ -10617,6 +10844,10 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             StyleContextSelectRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            StyleContextSelectRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
+            StyleContextSelectRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             StyleContextSelectRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
             }
@@ -11011,6 +11242,12 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
             StyledItemTargetRef::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
             }
@@ -11237,6 +11474,10 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             StyledItemTargetRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
+            StyledItemTargetRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             StyledItemTargetRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
             }
@@ -11532,6 +11773,9 @@ impl<'a> Writer<'a> {
             TessellatedItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            TessellatedItemRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
             TessellatedItemRef::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
             }
@@ -11560,6 +11804,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             TessellatedItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            TessellatedItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             TessellatedItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
             }
@@ -11567,6 +11812,41 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedSurfaceSet(*i))
             }
             TessellatedItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_tessellated_structured_item(&self, r: &TessellatedStructuredItemRef) -> u64 {
+        match r {
+            TessellatedStructuredItemRef::ComplexTriangulatedFace(i) => {
+                self.complex_triangulated_face_ids[i.0].expect("dep id assigned")
+            }
+            TessellatedStructuredItemRef::TessellatedFace(i) => {
+                self.tessellated_face_ids[i.0].expect("dep id assigned")
+            }
+            TessellatedStructuredItemRef::TessellatedStructuredItem(i) => {
+                self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
+            }
+            TessellatedStructuredItemRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_tessellated_structured_item(
+        r: &TessellatedStructuredItemRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            TessellatedStructuredItemRef::ComplexTriangulatedFace(i) => {
+                out.push(AnyId::ComplexTriangulatedFace(*i))
+            }
+            TessellatedStructuredItemRef::TessellatedFace(i) => {
+                out.push(AnyId::TessellatedFace(*i))
+            }
+            TessellatedStructuredItemRef::TessellatedStructuredItem(i) => {
+                out.push(AnyId::TessellatedStructuredItem(*i))
+            }
+            TessellatedStructuredItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -12199,6 +12479,16 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_styled_item_target(&it.item, out);
+            }
+            AnyId::AnnotationOccurrenceAssociativity(id) => {
+                let it = self.model.annotation_occurrence_associativitys.get(id.0);
+                Self::deps_ref_annotation_occurrence(&it.relating_annotation_occurrence, out);
+                Self::deps_ref_annotation_occurrence(&it.related_annotation_occurrence, out);
+            }
+            AnyId::AnnotationOccurrenceRelationship(id) => {
+                let it = self.model.annotation_occurrence_relationships.get(id.0);
+                Self::deps_ref_annotation_occurrence(&it.relating_annotation_occurrence, out);
+                Self::deps_ref_annotation_occurrence(&it.related_annotation_occurrence, out);
             }
             AnyId::AnnotationPlaceholderOccurrence(id) => {
                 let it = self.model.annotation_placeholder_occurrences.get(id.0);
@@ -13645,6 +13935,11 @@ impl<'a> Writer<'a> {
                 let it = self.model.shape_aspects.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
+            AnyId::ShapeAspectAssociativity(id) => {
+                let it = self.model.shape_aspect_associativitys.get(id.0);
+                Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
+                Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
+            }
             AnyId::ShapeAspectRelationship(id) => {
                 let it = self.model.shape_aspect_relationships.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
@@ -13859,6 +14154,22 @@ impl<'a> Writer<'a> {
                 }
             }
             AnyId::TessellatedItem(_) => {}
+            AnyId::TessellatedShapeRepresentation(id) => {
+                let it = self.model.tessellated_shape_representations.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
+            AnyId::TessellatedSolid(id) => {
+                let it = self.model.tessellated_solids.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_tessellated_structured_item(e, out);
+                }
+                if let Some(r) = &it.geometric_link {
+                    Self::deps_ref_manifold_solid_brep(r, out);
+                }
+            }
             AnyId::TessellatedStructuredItem(_) => {}
             AnyId::TessellatedSurfaceSet(id) => {
                 let it = self.model.tessellated_surface_sets.get(id.0);
@@ -13877,6 +14188,10 @@ impl<'a> Writer<'a> {
             AnyId::TextStyleForDefinedFont(id) => {
                 let it = self.model.text_style_for_defined_fonts.get(id.0);
                 Self::deps_ref_colour(&it.text_colour, out);
+            }
+            AnyId::TextStyleWithBoxCharacteristics(id) => {
+                let it = self.model.text_style_with_box_characteristicss.get(id.0);
+                Self::deps_ref_character_style_select(&it.character_appearance, out);
             }
             AnyId::TextureStyleSpecification(_) => {}
             AnyId::TextureStyleTessellationSpecification(_) => {}
@@ -14045,6 +14360,20 @@ impl<'a> Writer<'a> {
                             for e in operations {
                                 Self::deps_ref_characterized_action_definition(e, out);
                             }
+                        }
+                        UnitPart::AnnotationOccurrenceRelationship {
+                            relating_annotation_occurrence,
+                            related_annotation_occurrence,
+                            ..
+                        } => {
+                            Self::deps_ref_annotation_occurrence(
+                                relating_annotation_occurrence,
+                                out,
+                            );
+                            Self::deps_ref_annotation_occurrence(
+                                related_annotation_occurrence,
+                                out,
+                            );
                         }
                         UnitPart::ApplicationContextElement {
                             frame_of_reference, ..
@@ -15177,6 +15506,46 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
                 ];
                 format!("#{n} = ANNOTATION_OCCURRENCE({});\n", attrs.join(","))
+            }
+            AnyId::AnnotationOccurrenceAssociativity(id) => {
+                let it = self.model.annotation_occurrence_associativitys.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.description),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_occurrence(&it.relating_annotation_occurrence)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_occurrence(&it.related_annotation_occurrence)
+                    ),
+                ];
+                format!(
+                    "#{n} = ANNOTATION_OCCURRENCE_ASSOCIATIVITY({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::AnnotationOccurrenceRelationship(id) => {
+                let it = self.model.annotation_occurrence_relationships.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.description),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_occurrence(&it.relating_annotation_occurrence)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_occurrence(&it.related_annotation_occurrence)
+                    ),
+                ];
+                format!(
+                    "#{n} = ANNOTATION_OCCURRENCE_RELATIONSHIP({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::AnnotationPlaceholderOccurrence(id) => {
                 let it = self.model.annotation_placeholder_occurrences.get(id.0);
@@ -20205,6 +20574,23 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = SHAPE_ASPECT({});\n", attrs.join(","))
             }
+            AnyId::ShapeAspectAssociativity(id) => {
+                let it = self.model.shape_aspect_associativitys.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_shape_aspect(&it.relating_shape_aspect)
+                    ),
+                    format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
+                ];
+                format!("#{n} = SHAPE_ASPECT_ASSOCIATIVITY({});\n", attrs.join(","))
+            }
             AnyId::ShapeAspectRelationship(id) => {
                 let it = self.model.shape_aspect_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -20859,6 +21245,49 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = TESSELLATED_ITEM({});\n", attrs.join(","))
             }
+            AnyId::TessellatedShapeRepresentation(id) => {
+                let it = self.model.tessellated_shape_representations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                ];
+                format!(
+                    "#{n} = TESSELLATED_SHAPE_REPRESENTATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::TessellatedSolid(id) => {
+                let it = self.model.tessellated_solids.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_tessellated_structured_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    match &it.geometric_link {
+                        Some(r) => format!("#{}", self.id_of_ref_manifold_solid_brep(r)),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = TESSELLATED_SOLID({});\n", attrs.join(","))
+            }
             AnyId::TessellatedStructuredItem(id) => {
                 let it = self.model.tessellated_structured_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -20927,6 +21356,29 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_colour(&it.text_colour))];
                 format!("#{n} = TEXT_STYLE_FOR_DEFINED_FONT({});\n", attrs.join(","))
+            }
+            AnyId::TextStyleWithBoxCharacteristics(id) => {
+                let it = self.model.text_style_with_box_characteristicss.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_character_style_select(&it.character_appearance)
+                    ),
+                    format!(
+                        "({})",
+                        it.characteristics
+                            .iter()
+                            .map(|e| measure(e))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = TEXT_STYLE_WITH_BOX_CHARACTERISTICS({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::TextureStyleSpecification(_) => {
                 let n = self.get_id(any).expect("id assigned");
@@ -21358,6 +21810,8 @@ impl<'a> Writer<'a> {
                 UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
                 UnitPart::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE()".to_string(),
                 UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
+                UnitPart::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY()".to_string(),
+                UnitPart::AnnotationOccurrenceRelationship { name, description, relating_annotation_occurrence, related_annotation_occurrence, .. } => { let a: Vec<String> = vec![step_str(name), step_str(description), format!("#{}", self.id_of_ref_annotation_occurrence(relating_annotation_occurrence)), format!("#{}", self.id_of_ref_annotation_occurrence(related_annotation_occurrence))]; format!("ANNOTATION_OCCURRENCE_RELATIONSHIP({})", a.join(",")) },
                 UnitPart::AnnotationPlaceholderOccurrence { role, line_spacing, .. } => { let a: Vec<String> = vec![role.token().to_string(), real(*line_spacing)]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE({})", a.join(",")) },
                 UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL()".to_string(),
                 UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE()".to_string(),
@@ -21617,9 +22071,11 @@ impl<'a> Writer<'a> {
                 UnitPart::SymbolTarget { placement, x_scale, y_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement)), real(*x_scale), real(*y_scale)]; format!("SYMBOL_TARGET({})", a.join(",")) },
                 UnitPart::TessellatedGeometricSet { children, .. } => { let a: Vec<String> = vec![format!("({})", children.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_item(e))).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_GEOMETRIC_SET({})", a.join(",")) },
                 UnitPart::TessellatedItem => "TESSELLATED_ITEM()".to_string(),
+                UnitPart::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION()".to_string(),
                 UnitPart::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM()".to_string(),
                 UnitPart::TextLiteral { literal, placement, alignment, path, font, .. } => { let a: Vec<String> = vec![step_str(literal), format!("#{}", self.id_of_ref_axis2_placement(placement)), step_str(alignment), path.token().to_string(), format!("#{}", self.id_of_ref_font_select(font))]; format!("TEXT_LITERAL({})", a.join(",")) },
                 UnitPart::TextStyle { name, character_appearance, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_character_style_select(character_appearance))]; format!("TEXT_STYLE({})", a.join(",")) },
+                UnitPart::TextStyleWithBoxCharacteristics { characteristics, .. } => { let a: Vec<String> = vec![format!("({})", characteristics.iter().map(|e| measure(e)).collect::<Vec<_>>().join(","))]; format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS({})", a.join(",")) },
                 UnitPart::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION()".to_string(),
                 UnitPart::TextureStyleTessellationSpecification => "TEXTURE_STYLE_TESSELLATION_SPECIFICATION()".to_string(),
                 UnitPart::TimeUnit => "TIME_UNIT()".to_string(),
@@ -21721,6 +22177,16 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.annotation_occurrences.items.len() {
             roots.push(AnyId::AnnotationOccurrence(AnnotationOccurrenceId(i)));
+        }
+        for i in 0..self.model.annotation_occurrence_associativitys.items.len() {
+            roots.push(AnyId::AnnotationOccurrenceAssociativity(
+                AnnotationOccurrenceAssociativityId(i),
+            ));
+        }
+        for i in 0..self.model.annotation_occurrence_relationships.items.len() {
+            roots.push(AnyId::AnnotationOccurrenceRelationship(
+                AnnotationOccurrenceRelationshipId(i),
+            ));
         }
         for i in 0..self.model.annotation_placeholder_occurrences.items.len() {
             roots.push(AnyId::AnnotationPlaceholderOccurrence(
@@ -22925,6 +23391,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.shape_aspects.items.len() {
             roots.push(AnyId::ShapeAspect(ShapeAspectId(i)));
         }
+        for i in 0..self.model.shape_aspect_associativitys.items.len() {
+            roots.push(AnyId::ShapeAspectAssociativity(ShapeAspectAssociativityId(
+                i,
+            )));
+        }
         for i in 0..self.model.shape_aspect_relationships.items.len() {
             roots.push(AnyId::ShapeAspectRelationship(ShapeAspectRelationshipId(i)));
         }
@@ -23091,6 +23562,14 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.tessellated_items.items.len() {
             roots.push(AnyId::TessellatedItem(TessellatedItemId(i)));
         }
+        for i in 0..self.model.tessellated_shape_representations.items.len() {
+            roots.push(AnyId::TessellatedShapeRepresentation(
+                TessellatedShapeRepresentationId(i),
+            ));
+        }
+        for i in 0..self.model.tessellated_solids.items.len() {
+            roots.push(AnyId::TessellatedSolid(TessellatedSolidId(i)));
+        }
         for i in 0..self.model.tessellated_structured_items.items.len() {
             roots.push(AnyId::TessellatedStructuredItem(
                 TessellatedStructuredItemId(i),
@@ -23110,6 +23589,11 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.text_style_for_defined_fonts.items.len() {
             roots.push(AnyId::TextStyleForDefinedFont(TextStyleForDefinedFontId(i)));
+        }
+        for i in 0..self.model.text_style_with_box_characteristicss.items.len() {
+            roots.push(AnyId::TextStyleWithBoxCharacteristics(
+                TextStyleWithBoxCharacteristicsId(i),
+            ));
         }
         for i in 0..self.model.texture_style_specifications.items.len() {
             roots.push(AnyId::TextureStyleSpecification(
