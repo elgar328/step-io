@@ -208,6 +208,8 @@ pub struct Writer<'a> {
     document_type_ids: Vec<Option<u64>>,
     draughting_callout_ids: Vec<Option<u64>>,
     draughting_model_ids: Vec<Option<u64>>,
+    draughting_model_item_association_ids: Vec<Option<u64>>,
+    draughting_model_item_association_with_placeholder_ids: Vec<Option<u64>>,
     draughting_pre_defined_colour_ids: Vec<Option<u64>>,
     draughting_pre_defined_curve_font_ids: Vec<Option<u64>>,
     draughting_pre_defined_text_font_ids: Vec<Option<u64>>,
@@ -341,10 +343,13 @@ pub struct Writer<'a> {
     pre_defined_symbol_ids: Vec<Option<u64>>,
     pre_defined_text_font_ids: Vec<Option<u64>>,
     pre_defined_tile_ids: Vec<Option<u64>>,
+    precision_qualifier_ids: Vec<Option<u64>>,
+    presentation_area_ids: Vec<Option<u64>>,
     presentation_layer_assignment_ids: Vec<Option<u64>>,
     presentation_representation_ids: Vec<Option<u64>>,
     presentation_set_ids: Vec<Option<u64>>,
     presentation_style_assignment_ids: Vec<Option<u64>>,
+    presentation_view_ids: Vec<Option<u64>>,
     product_ids: Vec<Option<u64>>,
     product_category_ids: Vec<Option<u64>>,
     product_category_relationship_ids: Vec<Option<u64>>,
@@ -365,6 +370,7 @@ pub struct Writer<'a> {
     property_definition_ids: Vec<Option<u64>>,
     property_definition_relationship_ids: Vec<Option<u64>>,
     property_definition_representation_ids: Vec<Option<u64>>,
+    qualified_representation_item_ids: Vec<Option<u64>>,
     quasi_uniform_curve_ids: Vec<Option<u64>>,
     quasi_uniform_surface_ids: Vec<Option<u64>>,
     rational_b_spline_curve_ids: Vec<Option<u64>>,
@@ -426,6 +432,7 @@ pub struct Writer<'a> {
     surface_style_usage_ids: Vec<Option<u64>>,
     swept_surface_ids: Vec<Option<u64>>,
     symbol_colour_ids: Vec<Option<u64>>,
+    symbol_representation_ids: Vec<Option<u64>>,
     symbol_style_ids: Vec<Option<u64>>,
     symbol_target_ids: Vec<Option<u64>>,
     symmetry_tolerance_ids: Vec<Option<u64>>,
@@ -453,10 +460,13 @@ pub struct Writer<'a> {
     total_runout_tolerance_ids: Vec<Option<u64>>,
     trimmed_curve_ids: Vec<Option<u64>>,
     two_direction_repeat_factor_ids: Vec<Option<u64>>,
+    type_qualifier_ids: Vec<Option<u64>>,
     uncertainty_measure_with_unit_ids: Vec<Option<u64>>,
+    uncertainty_qualifier_ids: Vec<Option<u64>>,
     unequally_disposed_geometric_tolerance_ids: Vec<Option<u64>>,
     uniform_curve_ids: Vec<Option<u64>>,
     uniform_surface_ids: Vec<Option<u64>>,
+    value_format_type_qualifier_ids: Vec<Option<u64>>,
     value_representation_item_ids: Vec<Option<u64>>,
     vector_ids: Vec<Option<u64>>,
     versioned_action_request_ids: Vec<Option<u64>>,
@@ -772,6 +782,20 @@ impl<'a> Writer<'a> {
             document_type_ids: vec![None; model.document_types.items.len()],
             draughting_callout_ids: vec![None; model.draughting_callouts.items.len()],
             draughting_model_ids: vec![None; model.draughting_models.items.len()],
+            draughting_model_item_association_ids: vec![
+                None;
+                model
+                    .draughting_model_item_associations
+                    .items
+                    .len()
+            ],
+            draughting_model_item_association_with_placeholder_ids: vec![
+                None;
+                model
+                    .draughting_model_item_association_with_placeholders
+                    .items
+                    .len()
+            ],
             draughting_pre_defined_colour_ids: vec![
                 None;
                 model.draughting_pre_defined_colours.items.len()
@@ -1112,6 +1136,8 @@ impl<'a> Writer<'a> {
             pre_defined_symbol_ids: vec![None; model.pre_defined_symbols.items.len()],
             pre_defined_text_font_ids: vec![None; model.pre_defined_text_fonts.items.len()],
             pre_defined_tile_ids: vec![None; model.pre_defined_tiles.items.len()],
+            precision_qualifier_ids: vec![None; model.precision_qualifiers.items.len()],
+            presentation_area_ids: vec![None; model.presentation_areas.items.len()],
             presentation_layer_assignment_ids: vec![
                 None;
                 model.presentation_layer_assignments.items.len()
@@ -1125,6 +1151,7 @@ impl<'a> Writer<'a> {
                 None;
                 model.presentation_style_assignments.items.len()
             ],
+            presentation_view_ids: vec![None; model.presentation_views.items.len()],
             product_ids: vec![None; model.products.items.len()],
             product_category_ids: vec![None; model.product_categorys.items.len()],
             product_category_relationship_ids: vec![
@@ -1198,6 +1225,10 @@ impl<'a> Writer<'a> {
                     .property_definition_representations
                     .items
                     .len()
+            ],
+            qualified_representation_item_ids: vec![
+                None;
+                model.qualified_representation_items.items.len()
             ],
             quasi_uniform_curve_ids: vec![None; model.quasi_uniform_curves.items.len()],
             quasi_uniform_surface_ids: vec![None; model.quasi_uniform_surfaces.items.len()],
@@ -1335,6 +1366,7 @@ impl<'a> Writer<'a> {
             surface_style_usage_ids: vec![None; model.surface_style_usages.items.len()],
             swept_surface_ids: vec![None; model.swept_surfaces.items.len()],
             symbol_colour_ids: vec![None; model.symbol_colours.items.len()],
+            symbol_representation_ids: vec![None; model.symbol_representations.items.len()],
             symbol_style_ids: vec![None; model.symbol_styles.items.len()],
             symbol_target_ids: vec![None; model.symbol_targets.items.len()],
             symmetry_tolerance_ids: vec![None; model.symmetry_tolerances.items.len()],
@@ -1392,10 +1424,12 @@ impl<'a> Writer<'a> {
                 None;
                 model.two_direction_repeat_factors.items.len()
             ],
+            type_qualifier_ids: vec![None; model.type_qualifiers.items.len()],
             uncertainty_measure_with_unit_ids: vec![
                 None;
                 model.uncertainty_measure_with_units.items.len()
             ],
+            uncertainty_qualifier_ids: vec![None; model.uncertainty_qualifiers.items.len()],
             unequally_disposed_geometric_tolerance_ids: vec![
                 None;
                 model
@@ -1405,6 +1439,10 @@ impl<'a> Writer<'a> {
             ],
             uniform_curve_ids: vec![None; model.uniform_curves.items.len()],
             uniform_surface_ids: vec![None; model.uniform_surfaces.items.len()],
+            value_format_type_qualifier_ids: vec![
+                None;
+                model.value_format_type_qualifiers.items.len()
+            ],
             value_representation_item_ids: vec![None; model.value_representation_items.items.len()],
             vector_ids: vec![None; model.vectors.items.len()],
             versioned_action_request_ids: vec![None; model.versioned_action_requests.items.len()],
@@ -1597,6 +1635,12 @@ impl<'a> Writer<'a> {
             AnyId::DocumentType(i) => self.document_type_ids[i.0],
             AnyId::DraughtingCallout(i) => self.draughting_callout_ids[i.0],
             AnyId::DraughtingModel(i) => self.draughting_model_ids[i.0],
+            AnyId::DraughtingModelItemAssociation(i) => {
+                self.draughting_model_item_association_ids[i.0]
+            }
+            AnyId::DraughtingModelItemAssociationWithPlaceholder(i) => {
+                self.draughting_model_item_association_with_placeholder_ids[i.0]
+            }
             AnyId::DraughtingPreDefinedColour(i) => self.draughting_pre_defined_colour_ids[i.0],
             AnyId::DraughtingPreDefinedCurveFont(i) => {
                 self.draughting_pre_defined_curve_font_ids[i.0]
@@ -1772,10 +1816,13 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedSymbol(i) => self.pre_defined_symbol_ids[i.0],
             AnyId::PreDefinedTextFont(i) => self.pre_defined_text_font_ids[i.0],
             AnyId::PreDefinedTile(i) => self.pre_defined_tile_ids[i.0],
+            AnyId::PrecisionQualifier(i) => self.precision_qualifier_ids[i.0],
+            AnyId::PresentationArea(i) => self.presentation_area_ids[i.0],
             AnyId::PresentationLayerAssignment(i) => self.presentation_layer_assignment_ids[i.0],
             AnyId::PresentationRepresentation(i) => self.presentation_representation_ids[i.0],
             AnyId::PresentationSet(i) => self.presentation_set_ids[i.0],
             AnyId::PresentationStyleAssignment(i) => self.presentation_style_assignment_ids[i.0],
+            AnyId::PresentationView(i) => self.presentation_view_ids[i.0],
             AnyId::Product(i) => self.product_ids[i.0],
             AnyId::ProductCategory(i) => self.product_category_ids[i.0],
             AnyId::ProductCategoryRelationship(i) => self.product_category_relationship_ids[i.0],
@@ -1808,6 +1855,7 @@ impl<'a> Writer<'a> {
             AnyId::PropertyDefinitionRepresentation(i) => {
                 self.property_definition_representation_ids[i.0]
             }
+            AnyId::QualifiedRepresentationItem(i) => self.qualified_representation_item_ids[i.0],
             AnyId::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0],
             AnyId::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0],
             AnyId::RationalBSplineCurve(i) => self.rational_b_spline_curve_ids[i.0],
@@ -1885,6 +1933,7 @@ impl<'a> Writer<'a> {
             AnyId::SurfaceStyleUsage(i) => self.surface_style_usage_ids[i.0],
             AnyId::SweptSurface(i) => self.swept_surface_ids[i.0],
             AnyId::SymbolColour(i) => self.symbol_colour_ids[i.0],
+            AnyId::SymbolRepresentation(i) => self.symbol_representation_ids[i.0],
             AnyId::SymbolStyle(i) => self.symbol_style_ids[i.0],
             AnyId::SymbolTarget(i) => self.symbol_target_ids[i.0],
             AnyId::SymmetryTolerance(i) => self.symmetry_tolerance_ids[i.0],
@@ -1918,12 +1967,15 @@ impl<'a> Writer<'a> {
             AnyId::TotalRunoutTolerance(i) => self.total_runout_tolerance_ids[i.0],
             AnyId::TrimmedCurve(i) => self.trimmed_curve_ids[i.0],
             AnyId::TwoDirectionRepeatFactor(i) => self.two_direction_repeat_factor_ids[i.0],
+            AnyId::TypeQualifier(i) => self.type_qualifier_ids[i.0],
             AnyId::UncertaintyMeasureWithUnit(i) => self.uncertainty_measure_with_unit_ids[i.0],
+            AnyId::UncertaintyQualifier(i) => self.uncertainty_qualifier_ids[i.0],
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
                 self.unequally_disposed_geometric_tolerance_ids[i.0]
             }
             AnyId::UniformCurve(i) => self.uniform_curve_ids[i.0],
             AnyId::UniformSurface(i) => self.uniform_surface_ids[i.0],
+            AnyId::ValueFormatTypeQualifier(i) => self.value_format_type_qualifier_ids[i.0],
             AnyId::ValueRepresentationItem(i) => self.value_representation_item_ids[i.0],
             AnyId::Vector(i) => self.vector_ids[i.0],
             AnyId::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0],
@@ -2146,6 +2198,12 @@ impl<'a> Writer<'a> {
             AnyId::DocumentType(i) => self.document_type_ids[i.0] = Some(n),
             AnyId::DraughtingCallout(i) => self.draughting_callout_ids[i.0] = Some(n),
             AnyId::DraughtingModel(i) => self.draughting_model_ids[i.0] = Some(n),
+            AnyId::DraughtingModelItemAssociation(i) => {
+                self.draughting_model_item_association_ids[i.0] = Some(n)
+            }
+            AnyId::DraughtingModelItemAssociationWithPlaceholder(i) => {
+                self.draughting_model_item_association_with_placeholder_ids[i.0] = Some(n)
+            }
             AnyId::DraughtingPreDefinedColour(i) => {
                 self.draughting_pre_defined_colour_ids[i.0] = Some(n)
             }
@@ -2367,6 +2425,8 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedSymbol(i) => self.pre_defined_symbol_ids[i.0] = Some(n),
             AnyId::PreDefinedTextFont(i) => self.pre_defined_text_font_ids[i.0] = Some(n),
             AnyId::PreDefinedTile(i) => self.pre_defined_tile_ids[i.0] = Some(n),
+            AnyId::PrecisionQualifier(i) => self.precision_qualifier_ids[i.0] = Some(n),
+            AnyId::PresentationArea(i) => self.presentation_area_ids[i.0] = Some(n),
             AnyId::PresentationLayerAssignment(i) => {
                 self.presentation_layer_assignment_ids[i.0] = Some(n)
             }
@@ -2377,6 +2437,7 @@ impl<'a> Writer<'a> {
             AnyId::PresentationStyleAssignment(i) => {
                 self.presentation_style_assignment_ids[i.0] = Some(n)
             }
+            AnyId::PresentationView(i) => self.presentation_view_ids[i.0] = Some(n),
             AnyId::Product(i) => self.product_ids[i.0] = Some(n),
             AnyId::ProductCategory(i) => self.product_category_ids[i.0] = Some(n),
             AnyId::ProductCategoryRelationship(i) => {
@@ -2418,6 +2479,9 @@ impl<'a> Writer<'a> {
             }
             AnyId::PropertyDefinitionRepresentation(i) => {
                 self.property_definition_representation_ids[i.0] = Some(n)
+            }
+            AnyId::QualifiedRepresentationItem(i) => {
+                self.qualified_representation_item_ids[i.0] = Some(n)
             }
             AnyId::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0] = Some(n),
             AnyId::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0] = Some(n),
@@ -2510,6 +2574,7 @@ impl<'a> Writer<'a> {
             AnyId::SurfaceStyleUsage(i) => self.surface_style_usage_ids[i.0] = Some(n),
             AnyId::SweptSurface(i) => self.swept_surface_ids[i.0] = Some(n),
             AnyId::SymbolColour(i) => self.symbol_colour_ids[i.0] = Some(n),
+            AnyId::SymbolRepresentation(i) => self.symbol_representation_ids[i.0] = Some(n),
             AnyId::SymbolStyle(i) => self.symbol_style_ids[i.0] = Some(n),
             AnyId::SymbolTarget(i) => self.symbol_target_ids[i.0] = Some(n),
             AnyId::SymmetryTolerance(i) => self.symmetry_tolerance_ids[i.0] = Some(n),
@@ -2551,14 +2616,19 @@ impl<'a> Writer<'a> {
             AnyId::TwoDirectionRepeatFactor(i) => {
                 self.two_direction_repeat_factor_ids[i.0] = Some(n)
             }
+            AnyId::TypeQualifier(i) => self.type_qualifier_ids[i.0] = Some(n),
             AnyId::UncertaintyMeasureWithUnit(i) => {
                 self.uncertainty_measure_with_unit_ids[i.0] = Some(n)
             }
+            AnyId::UncertaintyQualifier(i) => self.uncertainty_qualifier_ids[i.0] = Some(n),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
                 self.unequally_disposed_geometric_tolerance_ids[i.0] = Some(n)
             }
             AnyId::UniformCurve(i) => self.uniform_curve_ids[i.0] = Some(n),
             AnyId::UniformSurface(i) => self.uniform_surface_ids[i.0] = Some(n),
+            AnyId::ValueFormatTypeQualifier(i) => {
+                self.value_format_type_qualifier_ids[i.0] = Some(n)
+            }
             AnyId::ValueRepresentationItem(i) => self.value_representation_item_ids[i.0] = Some(n),
             AnyId::Vector(i) => self.vector_ids[i.0] = Some(n),
             AnyId::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0] = Some(n),
@@ -2655,6 +2725,32 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_annotation_placeholder_occurrence(
+        &self,
+        r: &AnnotationPlaceholderOccurrenceRef,
+    ) -> u64 {
+        match r {
+            AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
+                self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationPlaceholderOccurrenceRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_annotation_placeholder_occurrence(
+        r: &AnnotationPlaceholderOccurrenceRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            AnnotationPlaceholderOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_annotation_plane_element(&self, r: &AnnotationPlaneElementRef) -> u64 {
         match r {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
@@ -2740,6 +2836,50 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
             AnnotationPlaneElementRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_annotation_representation_select(
+        &self,
+        r: &AnnotationRepresentationSelectRef,
+    ) -> u64 {
+        match r {
+            AnnotationRepresentationSelectRef::DraughtingModel(i) => {
+                self.draughting_model_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationRepresentationSelectRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationRepresentationSelectRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationRepresentationSelectRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationRepresentationSelectRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_annotation_representation_select(
+        r: &AnnotationRepresentationSelectRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            AnnotationRepresentationSelectRef::DraughtingModel(i) => {
+                out.push(AnyId::DraughtingModel(*i))
+            }
+            AnnotationRepresentationSelectRef::PresentationArea(i) => {
+                out.push(AnyId::PresentationArea(*i))
+            }
+            AnnotationRepresentationSelectRef::PresentationView(i) => {
+                out.push(AnyId::PresentationView(*i))
+            }
+            AnnotationRepresentationSelectRef::SymbolRepresentation(i) => {
+                out.push(AnyId::SymbolRepresentation(*i))
+            }
+            AnnotationRepresentationSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -3304,6 +3444,12 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::DocumentFile(i) => {
                 self.document_file_ids[i.0].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::DraughtingModelItemAssociation(i) => {
+                self.draughting_model_item_association_ids[i.0].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::DraughtingModelItemAssociationWithPlaceholder(i) => self
+                .draughting_model_item_association_with_placeholder_ids[i.0]
+                .expect("dep id assigned"),
             CharacterizedDefinitionRef::FlatnessTolerance(i) => {
                 self.flatness_tolerance_ids[i.0].expect("dep id assigned")
             }
@@ -3466,6 +3612,12 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
             }
             CharacterizedDefinitionRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+            CharacterizedDefinitionRef::DraughtingModelItemAssociation(i) => {
+                out.push(AnyId::DraughtingModelItemAssociation(*i))
+            }
+            CharacterizedDefinitionRef::DraughtingModelItemAssociationWithPlaceholder(i) => {
+                out.push(AnyId::DraughtingModelItemAssociationWithPlaceholder(*i))
+            }
             CharacterizedDefinitionRef::FlatnessTolerance(i) => {
                 out.push(AnyId::FlatnessTolerance(*i))
             }
@@ -4872,6 +5024,394 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_draughting_model_item_association_select(
+        &self,
+        r: &DraughtingModelItemAssociationSelectRef,
+    ) -> u64 {
+        match r {
+            DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => {
+                self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => {
+                self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => {
+                self.annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => {
+                self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationPlane(i) => {
+                self.annotation_plane_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationSymbolOccurrence(i) => {
+                self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => {
+                self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => {
+                self.draughting_callout_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => {
+                self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemAssociationSelectRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_draughting_model_item_association_select(
+        r: &DraughtingModelItemAssociationSelectRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => {
+                out.push(AnyId::AnnotationCurveOccurrence(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => {
+                out.push(AnyId::AnnotationFillAreaOccurrence(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => {
+                out.push(AnyId::AnnotationOccurrence(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationPlane(i) => {
+                out.push(AnyId::AnnotationPlane(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationSymbolOccurrence(i) => {
+                out.push(AnyId::AnnotationSymbolOccurrence(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => {
+                out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => {
+                out.push(AnyId::DraughtingCallout(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => {
+                out.push(AnyId::TessellatedAnnotationOccurrence(*i))
+            }
+            DraughtingModelItemAssociationSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_draughting_model_item_definition(
+        &self,
+        r: &DraughtingModelItemDefinitionRef,
+    ) -> u64 {
+        match r {
+            DraughtingModelItemDefinitionRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::AngularityTolerance(i) => {
+                self.angularity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::AssemblyComponentUsage(i) => {
+                self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::CircularRunoutTolerance(i) => {
+                self.circular_runout_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::CoaxialityTolerance(i) => {
+                self.coaxiality_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::CommonDatum(i) => {
+                self.common_datum_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::CompositeGroupShapeAspect(i) => {
+                self.composite_group_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::CompositeShapeAspect(i) => {
+                self.composite_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ConcentricityTolerance(i) => {
+                self.concentricity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::CylindricityTolerance(i) => {
+                self.cylindricity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::Datum(i) => {
+                self.datum_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DatumFeature(i) => {
+                self.datum_feature_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DatumReferenceCompartment(i) => {
+                self.datum_reference_compartment_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DatumReferenceElement(i) => {
+                self.datum_reference_element_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DatumSystem(i) => {
+                self.datum_system_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DatumTarget(i) => {
+                self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DimensionalLocation(i) => {
+                self.dimensional_location_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DimensionalLocationWithPath(i) => {
+                self.dimensional_location_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DimensionalSize(i) => {
+                self.dimensional_size_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DimensionalSizeWithPath(i) => {
+                self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::FlatnessTolerance(i) => {
+                self.flatness_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::GeneralDatumReference(i) => {
+                self.general_datum_reference_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::GeometricTolerance(i) => {
+                self.geometric_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithDatumReference(i) => {
+                self.geometric_tolerance_with_datum_reference_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithDefinedAreaUnit(i) => {
+                self.geometric_tolerance_with_defined_area_unit_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithDefinedUnit(i) => {
+                self.geometric_tolerance_with_defined_unit_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithMaximumTolerance(i) => {
+                self.geometric_tolerance_with_maximum_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithModifiers(i) => {
+                self.geometric_tolerance_with_modifier_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::LineProfileTolerance(i) => {
+                self.line_profile_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ModifiedGeometricTolerance(i) => {
+                self.modified_geometric_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::NextAssemblyUsageOccurrence(i) => {
+                self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ParallelismTolerance(i) => {
+                self.parallelism_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::PerpendicularityTolerance(i) => {
+                self.perpendicularity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::PlacedDatumTargetFeature(i) => {
+                self.placed_datum_target_feature_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::PositionTolerance(i) => {
+                self.position_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ProductDefinitionRelationship(i) => {
+                self.product_definition_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ProductDefinitionShape(i) => {
+                self.product_definition_shape_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ProductDefinitionUsage(i) => {
+                self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::PropertyDefinition(i) => {
+                self.property_definition_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::RoundnessTolerance(i) => {
+                self.roundness_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ShapeAspect(i) => {
+                self.shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ShapeAspectRelationship(i) => {
+                self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::StraightnessTolerance(i) => {
+                self.straightness_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::SurfaceProfileTolerance(i) => {
+                self.surface_profile_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::SymmetryTolerance(i) => {
+                self.symmetry_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ToleranceZone(i) => {
+                self.tolerance_zone_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ToleranceZoneWithDatum(i) => {
+                self.tolerance_zone_with_datum_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::TotalRunoutTolerance(i) => {
+                self.total_runout_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::UnequallyDisposedGeometricTolerance(i) => {
+                self.unequally_disposed_geometric_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_draughting_model_item_definition(
+        r: &DraughtingModelItemDefinitionRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            DraughtingModelItemDefinitionRef::AllAroundShapeAspect(i) => {
+                out.push(AnyId::AllAroundShapeAspect(*i))
+            }
+            DraughtingModelItemDefinitionRef::AngularityTolerance(i) => {
+                out.push(AnyId::AngularityTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::AssemblyComponentUsage(i) => {
+                out.push(AnyId::AssemblyComponentUsage(*i))
+            }
+            DraughtingModelItemDefinitionRef::CircularRunoutTolerance(i) => {
+                out.push(AnyId::CircularRunoutTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::CoaxialityTolerance(i) => {
+                out.push(AnyId::CoaxialityTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
+            DraughtingModelItemDefinitionRef::CompositeGroupShapeAspect(i) => {
+                out.push(AnyId::CompositeGroupShapeAspect(*i))
+            }
+            DraughtingModelItemDefinitionRef::CompositeShapeAspect(i) => {
+                out.push(AnyId::CompositeShapeAspect(*i))
+            }
+            DraughtingModelItemDefinitionRef::ConcentricityTolerance(i) => {
+                out.push(AnyId::ConcentricityTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
+            }
+            DraughtingModelItemDefinitionRef::CylindricityTolerance(i) => {
+                out.push(AnyId::CylindricityTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::Datum(i) => out.push(AnyId::Datum(*i)),
+            DraughtingModelItemDefinitionRef::DatumFeature(i) => out.push(AnyId::DatumFeature(*i)),
+            DraughtingModelItemDefinitionRef::DatumReferenceCompartment(i) => {
+                out.push(AnyId::DatumReferenceCompartment(*i))
+            }
+            DraughtingModelItemDefinitionRef::DatumReferenceElement(i) => {
+                out.push(AnyId::DatumReferenceElement(*i))
+            }
+            DraughtingModelItemDefinitionRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
+            DraughtingModelItemDefinitionRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            DraughtingModelItemDefinitionRef::DimensionalLocation(i) => {
+                out.push(AnyId::DimensionalLocation(*i))
+            }
+            DraughtingModelItemDefinitionRef::DimensionalLocationWithPath(i) => {
+                out.push(AnyId::DimensionalLocationWithPath(*i))
+            }
+            DraughtingModelItemDefinitionRef::DimensionalSize(i) => {
+                out.push(AnyId::DimensionalSize(*i))
+            }
+            DraughtingModelItemDefinitionRef::DimensionalSizeWithPath(i) => {
+                out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            DraughtingModelItemDefinitionRef::FlatnessTolerance(i) => {
+                out.push(AnyId::FlatnessTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::GeneralDatumReference(i) => {
+                out.push(AnyId::GeneralDatumReference(*i))
+            }
+            DraughtingModelItemDefinitionRef::GeometricTolerance(i) => {
+                out.push(AnyId::GeometricTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithDatumReference(i) => {
+                out.push(AnyId::GeometricToleranceWithDatumReference(*i))
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithDefinedAreaUnit(i) => {
+                out.push(AnyId::GeometricToleranceWithDefinedAreaUnit(*i))
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithDefinedUnit(i) => {
+                out.push(AnyId::GeometricToleranceWithDefinedUnit(*i))
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithMaximumTolerance(i) => {
+                out.push(AnyId::GeometricToleranceWithMaximumTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::GeometricToleranceWithModifiers(i) => {
+                out.push(AnyId::GeometricToleranceWithModifiers(*i))
+            }
+            DraughtingModelItemDefinitionRef::LineProfileTolerance(i) => {
+                out.push(AnyId::LineProfileTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::ModifiedGeometricTolerance(i) => {
+                out.push(AnyId::ModifiedGeometricTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::NextAssemblyUsageOccurrence(i) => {
+                out.push(AnyId::NextAssemblyUsageOccurrence(*i))
+            }
+            DraughtingModelItemDefinitionRef::ParallelismTolerance(i) => {
+                out.push(AnyId::ParallelismTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::PerpendicularityTolerance(i) => {
+                out.push(AnyId::PerpendicularityTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::PlacedDatumTargetFeature(i) => {
+                out.push(AnyId::PlacedDatumTargetFeature(*i))
+            }
+            DraughtingModelItemDefinitionRef::PositionTolerance(i) => {
+                out.push(AnyId::PositionTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::ProductDefinitionRelationship(i) => {
+                out.push(AnyId::ProductDefinitionRelationship(*i))
+            }
+            DraughtingModelItemDefinitionRef::ProductDefinitionShape(i) => {
+                out.push(AnyId::ProductDefinitionShape(*i))
+            }
+            DraughtingModelItemDefinitionRef::ProductDefinitionUsage(i) => {
+                out.push(AnyId::ProductDefinitionUsage(*i))
+            }
+            DraughtingModelItemDefinitionRef::PropertyDefinition(i) => {
+                out.push(AnyId::PropertyDefinition(*i))
+            }
+            DraughtingModelItemDefinitionRef::RoundnessTolerance(i) => {
+                out.push(AnyId::RoundnessTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            DraughtingModelItemDefinitionRef::ShapeAspectRelationship(i) => {
+                out.push(AnyId::ShapeAspectRelationship(*i))
+            }
+            DraughtingModelItemDefinitionRef::StraightnessTolerance(i) => {
+                out.push(AnyId::StraightnessTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::SurfaceProfileTolerance(i) => {
+                out.push(AnyId::SurfaceProfileTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::SymmetryTolerance(i) => {
+                out.push(AnyId::SymmetryTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::ToleranceZone(i) => {
+                out.push(AnyId::ToleranceZone(*i))
+            }
+            DraughtingModelItemDefinitionRef::ToleranceZoneWithDatum(i) => {
+                out.push(AnyId::ToleranceZoneWithDatum(*i))
+            }
+            DraughtingModelItemDefinitionRef::TotalRunoutTolerance(i) => {
+                out.push(AnyId::TotalRunoutTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::UnequallyDisposedGeometricTolerance(i) => {
+                out.push(AnyId::UnequallyDisposedGeometricTolerance(*i))
+            }
+            DraughtingModelItemDefinitionRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_edge(&self, r: &EdgeRef) -> u64 {
         match r {
             EdgeRef::Edge(i) => self.edge_ids[i.0].expect("dep id assigned"),
@@ -6274,8 +6814,14 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::PositionTolerance(i) => {
                 self.position_tolerance_ids[i.0].expect("dep id assigned")
             }
+            IdAttributeSelectRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
             IdAttributeSelectRef::PresentationRepresentation(i) => {
                 self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
             }
             IdAttributeSelectRef::ProductCategory(i) => {
                 self.product_category_ids[i.0].expect("dep id assigned")
@@ -6312,6 +6858,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::SurfaceProfileTolerance(i) => {
                 self.surface_profile_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
             }
             IdAttributeSelectRef::SymmetryTolerance(i) => {
                 self.symmetry_tolerance_ids[i.0].expect("dep id assigned")
@@ -6489,9 +7038,11 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
             IdAttributeSelectRef::PositionTolerance(i) => out.push(AnyId::PositionTolerance(*i)),
+            IdAttributeSelectRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             IdAttributeSelectRef::PresentationRepresentation(i) => {
                 out.push(AnyId::PresentationRepresentation(*i))
             }
+            IdAttributeSelectRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
             IdAttributeSelectRef::ProductCategory(i) => out.push(AnyId::ProductCategory(*i)),
             IdAttributeSelectRef::ProductDefinitionShape(i) => {
                 out.push(AnyId::ProductDefinitionShape(*i))
@@ -6517,6 +7068,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::SurfaceProfileTolerance(i) => {
                 out.push(AnyId::SurfaceProfileTolerance(*i))
+            }
+            IdAttributeSelectRef::SymbolRepresentation(i) => {
+                out.push(AnyId::SymbolRepresentation(*i))
             }
             IdAttributeSelectRef::SymmetryTolerance(i) => out.push(AnyId::SymmetryTolerance(*i)),
             IdAttributeSelectRef::ToleranceZone(i) => out.push(AnyId::ToleranceZone(*i)),
@@ -6597,11 +7151,17 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
+            InvisibleItemRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
             InvisibleItemRef::PresentationLayerAssignment(i) => {
                 self.presentation_layer_assignment_ids[i.0].expect("dep id assigned")
             }
             InvisibleItemRef::PresentationRepresentation(i) => {
                 self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            InvisibleItemRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
             }
             InvisibleItemRef::Representation(i) => {
                 self.representation_ids[i.0].expect("dep id assigned")
@@ -6613,6 +7173,9 @@ impl<'a> Writer<'a> {
                 self.shape_representation_ids[i.0].expect("dep id assigned")
             }
             InvisibleItemRef::StyledItem(i) => self.styled_item_ids[i.0].expect("dep id assigned"),
+            InvisibleItemRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
+            }
             InvisibleItemRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -6666,18 +7229,21 @@ impl<'a> Writer<'a> {
                 AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
             ),
             InvisibleItemRef::OverRidingStyledItem(i) => out.push(AnyId::OverRidingStyledItem(*i)),
+            InvisibleItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             InvisibleItemRef::PresentationLayerAssignment(i) => {
                 out.push(AnyId::PresentationLayerAssignment(*i))
             }
             InvisibleItemRef::PresentationRepresentation(i) => {
                 out.push(AnyId::PresentationRepresentation(*i))
             }
+            InvisibleItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
             InvisibleItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
             InvisibleItemRef::ShapeDimensionRepresentation(i) => {
                 out.push(AnyId::ShapeDimensionRepresentation(*i))
             }
             InvisibleItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
             InvisibleItemRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+            InvisibleItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
             InvisibleItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -6926,8 +7492,17 @@ impl<'a> Writer<'a> {
             LayeredItemRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+            LayeredItemRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::PresentationRepresentation(i) => {
                 self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::QualifiedRepresentationItem(i) => {
+                self.qualified_representation_item_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::QuasiUniformCurve(i) => {
                 self.quasi_uniform_curve_ids[i.0].expect("dep id assigned")
@@ -7162,8 +7737,13 @@ impl<'a> Writer<'a> {
             LayeredItemRef::Point(i) => out.push(AnyId::Point(*i)),
             LayeredItemRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
             LayeredItemRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+            LayeredItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             LayeredItemRef::PresentationRepresentation(i) => {
                 out.push(AnyId::PresentationRepresentation(*i))
+            }
+            LayeredItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+            LayeredItemRef::QualifiedRepresentationItem(i) => {
+                out.push(AnyId::QualifiedRepresentationItem(*i))
             }
             LayeredItemRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
             LayeredItemRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
@@ -8396,6 +8976,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
             RepresentationItemRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
             RepresentationItemRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+            RepresentationItemRef::QualifiedRepresentationItem(i) => {
+                self.qualified_representation_item_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::QuasiUniformCurve(i) => {
                 self.quasi_uniform_curve_ids[i.0].expect("dep id assigned")
             }
@@ -8661,6 +9244,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Point(i) => out.push(AnyId::Point(*i)),
             RepresentationItemRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
             RepresentationItemRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+            RepresentationItemRef::QualifiedRepresentationItem(i) => {
+                out.push(AnyId::QualifiedRepresentationItem(*i))
+            }
             RepresentationItemRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
             RepresentationItemRef::QuasiUniformSurface(i) => {
                 out.push(AnyId::QuasiUniformSurface(*i))
@@ -8764,11 +9350,14 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::PresentationArea(i) => self.presentation_area_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::PresentationRepresentation(i) => self.presentation_representation_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::PresentationView(i) => self.presentation_view_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::Representation(i) => self.representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::RepresentationReference(i) => self.representation_reference_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => self.symbol_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
     }
     }
@@ -8785,11 +9374,14 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
+        RepresentationOrRepresentationReferenceRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
         RepresentationOrRepresentationReferenceRef::PresentationRepresentation(i) => out.push(AnyId::PresentationRepresentation(*i)),
+        RepresentationOrRepresentationReferenceRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
         RepresentationOrRepresentationReferenceRef::Representation(i) => out.push(AnyId::Representation(*i)),
         RepresentationOrRepresentationReferenceRef::RepresentationReference(i) => out.push(AnyId::RepresentationReference(*i)),
         RepresentationOrRepresentationReferenceRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+        RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
     }
     }
@@ -8817,8 +9409,14 @@ impl<'a> Writer<'a> {
             RepresentationRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
+            RepresentationRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
             RepresentationRef::PresentationRepresentation(i) => {
                 self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
             }
             RepresentationRef::Representation(i) => {
                 self.representation_ids[i.0].expect("dep id assigned")
@@ -8828,6 +9426,9 @@ impl<'a> Writer<'a> {
             }
             RepresentationRef::ShapeRepresentation(i) => {
                 self.shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
             }
             RepresentationRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
@@ -8854,14 +9455,17 @@ impl<'a> Writer<'a> {
             RepresentationRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
                 AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
             ),
+            RepresentationRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             RepresentationRef::PresentationRepresentation(i) => {
                 out.push(AnyId::PresentationRepresentation(*i))
             }
+            RepresentationRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
             RepresentationRef::Representation(i) => out.push(AnyId::Representation(*i)),
             RepresentationRef::ShapeDimensionRepresentation(i) => {
                 out.push(AnyId::ShapeDimensionRepresentation(*i))
             }
             RepresentationRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+            RepresentationRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
             RepresentationRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -9609,6 +10213,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
             StyleContextSelectRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
             StyleContextSelectRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+            StyleContextSelectRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::PresentationLayerAssignment(i) => {
                 self.presentation_layer_assignment_ids[i.0].expect("dep id assigned")
             }
@@ -9617,6 +10224,12 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::PresentationSet(i) => {
                 self.presentation_set_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::QualifiedRepresentationItem(i) => {
+                self.qualified_representation_item_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::QuasiUniformCurve(i) => {
                 self.quasi_uniform_curve_ids[i.0].expect("dep id assigned")
@@ -9684,6 +10297,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::SweptSurface(i) => {
                 self.swept_surface_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::SymbolTarget(i) => {
                 self.symbol_target_ids[i.0].expect("dep id assigned")
@@ -9925,6 +10541,7 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::Point(i) => out.push(AnyId::Point(*i)),
             StyleContextSelectRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
             StyleContextSelectRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+            StyleContextSelectRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             StyleContextSelectRef::PresentationLayerAssignment(i) => {
                 out.push(AnyId::PresentationLayerAssignment(*i))
             }
@@ -9932,6 +10549,10 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::PresentationRepresentation(*i))
             }
             StyleContextSelectRef::PresentationSet(i) => out.push(AnyId::PresentationSet(*i)),
+            StyleContextSelectRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+            StyleContextSelectRef::QualifiedRepresentationItem(i) => {
+                out.push(AnyId::QualifiedRepresentationItem(*i))
+            }
             StyleContextSelectRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
             StyleContextSelectRef::QuasiUniformSurface(i) => {
                 out.push(AnyId::QuasiUniformSurface(*i))
@@ -9981,6 +10602,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::SurfaceOfRevolution(*i))
             }
             StyleContextSelectRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
+            StyleContextSelectRef::SymbolRepresentation(i) => {
+                out.push(AnyId::SymbolRepresentation(*i))
+            }
             StyleContextSelectRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
             StyleContextSelectRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
@@ -10310,8 +10934,14 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
             StyledItemTargetRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
             StyledItemTargetRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+            StyledItemTargetRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
             StyledItemTargetRef::PresentationRepresentation(i) => {
                 self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::QuasiUniformCurve(i) => {
                 self.quasi_uniform_curve_ids[i.0].expect("dep id assigned")
@@ -10362,6 +10992,9 @@ impl<'a> Writer<'a> {
             }
             StyledItemTargetRef::SweptSurface(i) => {
                 self.swept_surface_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::SymbolTarget(i) => {
                 self.symbol_target_ids[i.0].expect("dep id assigned")
@@ -10557,9 +11190,11 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::Point(i) => out.push(AnyId::Point(*i)),
             StyledItemTargetRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
             StyledItemTargetRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+            StyledItemTargetRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             StyledItemTargetRef::PresentationRepresentation(i) => {
                 out.push(AnyId::PresentationRepresentation(*i))
             }
+            StyledItemTargetRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
             StyledItemTargetRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
             StyledItemTargetRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
             StyledItemTargetRef::RationalBSplineCurve(i) => {
@@ -10592,6 +11227,9 @@ impl<'a> Writer<'a> {
             }
             StyledItemTargetRef::SurfaceOfRevolution(i) => out.push(AnyId::SurfaceOfRevolution(*i)),
             StyledItemTargetRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
+            StyledItemTargetRef::SymbolRepresentation(i) => {
+                out.push(AnyId::SymbolRepresentation(*i))
+            }
             StyledItemTargetRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
             StyledItemTargetRef::TessellatedCurveSet(i) => out.push(AnyId::TessellatedCurveSet(*i)),
             StyledItemTargetRef::TessellatedFace(i) => out.push(AnyId::TessellatedFace(*i)),
@@ -11329,6 +11967,34 @@ impl<'a> Writer<'a> {
             UnitRef::SolidAngleUnit(i) => out.push(AnyId::SolidAngleUnit(*i)),
             UnitRef::TimeUnit(i) => out.push(AnyId::TimeUnit(*i)),
             UnitRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_value_qualifier(&self, r: &ValueQualifierRef) -> u64 {
+        match r {
+            ValueQualifierRef::PrecisionQualifier(i) => {
+                self.precision_qualifier_ids[i.0].expect("dep id assigned")
+            }
+            ValueQualifierRef::TypeQualifier(i) => {
+                self.type_qualifier_ids[i.0].expect("dep id assigned")
+            }
+            ValueQualifierRef::UncertaintyQualifier(i) => {
+                self.uncertainty_qualifier_ids[i.0].expect("dep id assigned")
+            }
+            ValueQualifierRef::ValueFormatTypeQualifier(i) => {
+                self.value_format_type_qualifier_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_value_qualifier(r: &ValueQualifierRef, out: &mut Vec<AnyId>) {
+        match r {
+            ValueQualifierRef::PrecisionQualifier(i) => out.push(AnyId::PrecisionQualifier(*i)),
+            ValueQualifierRef::TypeQualifier(i) => out.push(AnyId::TypeQualifier(*i)),
+            ValueQualifierRef::UncertaintyQualifier(i) => out.push(AnyId::UncertaintyQualifier(*i)),
+            ValueQualifierRef::ValueFormatTypeQualifier(i) => {
+                out.push(AnyId::ValueFormatTypeQualifier(*i))
+            }
         }
     }
 
@@ -12138,6 +12804,22 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
+            AnyId::DraughtingModelItemAssociation(id) => {
+                let it = self.model.draughting_model_item_associations.get(id.0);
+                Self::deps_ref_draughting_model_item_definition(&it.definition, out);
+                Self::deps_ref_annotation_representation_select(&it.used_representation, out);
+                Self::deps_ref_draughting_model_item_association_select(&it.identified_item, out);
+            }
+            AnyId::DraughtingModelItemAssociationWithPlaceholder(id) => {
+                let it = self
+                    .model
+                    .draughting_model_item_association_with_placeholders
+                    .get(id.0);
+                Self::deps_ref_draughting_model_item_definition(&it.definition, out);
+                Self::deps_ref_annotation_representation_select(&it.used_representation, out);
+                Self::deps_ref_draughting_model_item_association_select(&it.identified_item, out);
+                Self::deps_ref_annotation_placeholder_occurrence(&it.annotation_placeholder, out);
+            }
             AnyId::DraughtingPreDefinedColour(_) => {}
             AnyId::DraughtingPreDefinedCurveFont(_) => {}
             AnyId::DraughtingPreDefinedTextFont(_) => {}
@@ -12718,6 +13400,14 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedSymbol(_) => {}
             AnyId::PreDefinedTextFont(_) => {}
             AnyId::PreDefinedTile(_) => {}
+            AnyId::PrecisionQualifier(_) => {}
+            AnyId::PresentationArea(id) => {
+                let it = self.model.presentation_areas.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
             AnyId::PresentationLayerAssignment(id) => {
                 let it = self.model.presentation_layer_assignments.get(id.0);
                 for e in &it.assigned_items {
@@ -12737,6 +13427,13 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_select(e, out);
                 }
+            }
+            AnyId::PresentationView(id) => {
+                let it = self.model.presentation_views.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             AnyId::Product(id) => {
                 let it = self.model.products.get(id.0);
@@ -12842,6 +13539,12 @@ impl<'a> Writer<'a> {
                 let it = self.model.property_definition_representations.get(id.0);
                 Self::deps_ref_represented_definition(&it.definition, out);
                 Self::deps_ref_representation(&it.used_representation, out);
+            }
+            AnyId::QualifiedRepresentationItem(id) => {
+                let it = self.model.qualified_representation_items.get(id.0);
+                for e in &it.qualifiers {
+                    Self::deps_ref_value_qualifier(e, out);
+                }
             }
             AnyId::QuasiUniformCurve(id) => {
                 let it = self.model.quasi_uniform_curves.get(id.0);
@@ -13106,6 +13809,13 @@ impl<'a> Writer<'a> {
                 let it = self.model.symbol_colours.get(id.0);
                 Self::deps_ref_colour(&it.colour_of_symbol, out);
             }
+            AnyId::SymbolRepresentation(id) => {
+                let it = self.model.symbol_representations.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
             AnyId::SymbolStyle(id) => {
                 let it = self.model.symbol_styles.get(id.0);
                 Self::deps_ref_symbol_style_select(&it.style_of_symbol, out);
@@ -13234,10 +13944,12 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_vector(&it.repeat_factor, out);
                 Self::deps_ref_vector(&it.second_repeat_factor, out);
             }
+            AnyId::TypeQualifier(_) => {}
             AnyId::UncertaintyMeasureWithUnit(id) => {
                 let it = self.model.uncertainty_measure_with_units.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
+            AnyId::UncertaintyQualifier(_) => {}
             AnyId::UnequallyDisposedGeometricTolerance(id) => {
                 let it = self.model.unequally_disposed_geometric_tolerances.get(id.0);
                 if let Some(r) = &it.magnitude {
@@ -13260,6 +13972,7 @@ impl<'a> Writer<'a> {
                     }
                 }
             }
+            AnyId::ValueFormatTypeQualifier(_) => {}
             AnyId::ValueRepresentationItem(_) => {}
             AnyId::Vector(id) => {
                 let it = self.model.vectors.get(id.0);
@@ -13534,6 +14247,15 @@ impl<'a> Writer<'a> {
                             for e in contents {
                                 Self::deps_ref_draughting_callout_element(e, out);
                             }
+                        }
+                        UnitPart::DraughtingModelItemAssociationWithPlaceholder {
+                            annotation_placeholder,
+                            ..
+                        } => {
+                            Self::deps_ref_annotation_placeholder_occurrence(
+                                annotation_placeholder,
+                                out,
+                            );
                         }
                         UnitPart::Edge {
                             edge_start,
@@ -13865,6 +14587,11 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_represented_definition(definition, out);
                             Self::deps_ref_representation(used_representation, out);
+                        }
+                        UnitPart::QualifiedRepresentationItem { qualifiers, .. } => {
+                            for e in qualifiers {
+                                Self::deps_ref_value_qualifier(e, out);
+                            }
                         }
                         UnitPart::RepositionedTessellatedItem { location, .. } => {
                             Self::deps_ref_axis2_placement3d(location, out);
@@ -16464,6 +17191,73 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = DRAUGHTING_MODEL({});\n", attrs.join(","))
             }
+            AnyId::DraughtingModelItemAssociation(id) => {
+                let it = self.model.draughting_model_item_associations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_draughting_model_item_definition(&it.definition)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_representation_select(&it.used_representation)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_draughting_model_item_association_select(
+                            &it.identified_item
+                        )
+                    ),
+                ];
+                format!(
+                    "#{n} = DRAUGHTING_MODEL_ITEM_ASSOCIATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::DraughtingModelItemAssociationWithPlaceholder(id) => {
+                let it = self
+                    .model
+                    .draughting_model_item_association_with_placeholders
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_draughting_model_item_definition(&it.definition)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_representation_select(&it.used_representation)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_draughting_model_item_association_select(
+                            &it.identified_item
+                        )
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_placeholder_occurrence(
+                            &it.annotation_placeholder
+                        )
+                    ),
+                ];
+                format!(
+                    "#{n} = DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::DraughtingPreDefinedColour(id) => {
                 let it = self.model.draughting_pre_defined_colours.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -18532,6 +19326,32 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = PRE_DEFINED_TILE({});\n", attrs.join(","))
             }
+            AnyId::PrecisionQualifier(id) => {
+                let it = self.model.precision_qualifiers.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!("{}", it.precision_value)];
+                format!("#{n} = PRECISION_QUALIFIER({});\n", attrs.join(","))
+            }
+            AnyId::PresentationArea(id) => {
+                let it = self.model.presentation_areas.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                ];
+                format!("#{n} = PRESENTATION_AREA({});\n", attrs.join(","))
+            }
             AnyId::PresentationLayerAssignment(id) => {
                 let it = self.model.presentation_layer_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -18597,6 +19417,26 @@ impl<'a> Writer<'a> {
                     "#{n} = PRESENTATION_STYLE_ASSIGNMENT({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::PresentationView(id) => {
+                let it = self.model.presentation_views.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                ];
+                format!("#{n} = PRESENTATION_VIEW({});\n", attrs.join(","))
             }
             AnyId::Product(id) => {
                 let it = self.model.products.get(id.0);
@@ -18971,6 +19811,25 @@ impl<'a> Writer<'a> {
                 ];
                 format!(
                     "#{n} = PROPERTY_DEFINITION_REPRESENTATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::QualifiedRepresentationItem(id) => {
+                let it = self.model.qualified_representation_items.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.qualifiers
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_value_qualifier(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = QUALIFIED_REPRESENTATION_ITEM({});\n",
                     attrs.join(",")
                 )
             }
@@ -19839,6 +20698,26 @@ impl<'a> Writer<'a> {
                     vec![format!("#{}", self.id_of_ref_colour(&it.colour_of_symbol))];
                 format!("#{n} = SYMBOL_COLOUR({});\n", attrs.join(","))
             }
+            AnyId::SymbolRepresentation(id) => {
+                let it = self.model.symbol_representations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                ];
+                format!("#{n} = SYMBOL_REPRESENTATION({});\n", attrs.join(","))
+            }
             AnyId::SymbolStyle(id) => {
                 let it = self.model.symbol_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -20242,6 +21121,12 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = TWO_DIRECTION_REPEAT_FACTOR({});\n", attrs.join(","))
             }
+            AnyId::TypeQualifier(id) => {
+                let it = self.model.type_qualifiers.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!("#{n} = TYPE_QUALIFIER({});\n", attrs.join(","))
+            }
             AnyId::UncertaintyMeasureWithUnit(id) => {
                 let it = self.model.uncertainty_measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -20258,6 +21143,13 @@ impl<'a> Writer<'a> {
                     "#{n} = UNCERTAINTY_MEASURE_WITH_UNIT({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::UncertaintyQualifier(id) => {
+                let it = self.model.uncertainty_qualifiers.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> =
+                    vec![step_str(&it.measure_name), step_str(&it.description)];
+                format!("#{n} = UNCERTAINTY_QUALIFIER({});\n", attrs.join(","))
             }
             AnyId::UnequallyDisposedGeometricTolerance(id) => {
                 let it = self.model.unequally_disposed_geometric_tolerances.get(id.0);
@@ -20333,6 +21225,12 @@ impl<'a> Writer<'a> {
                     it.self_intersect.token().to_string(),
                 ];
                 format!("#{n} = UNIFORM_SURFACE({});\n", attrs.join(","))
+            }
+            AnyId::ValueFormatTypeQualifier(id) => {
+                let it = self.model.value_format_type_qualifiers.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.format_type)];
+                format!("#{n} = VALUE_FORMAT_TYPE_QUALIFIER({});\n", attrs.join(","))
             }
             AnyId::ValueRepresentationItem(id) => {
                 let it = self.model.value_representation_items.get(id.0);
@@ -20535,6 +21433,8 @@ impl<'a> Writer<'a> {
                 UnitPart::DocumentFile => "DOCUMENT_FILE()".to_string(),
                 UnitPart::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
                 UnitPart::DraughtingModel => "DRAUGHTING_MODEL()".to_string(),
+                UnitPart::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION()".to_string(),
+                UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_placeholder_occurrence(annotation_placeholder))]; format!("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER({})", a.join(",")) },
                 UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR()".to_string(),
                 UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT()".to_string(),
                 UnitPart::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT()".to_string(),
@@ -20641,9 +21541,11 @@ impl<'a> Writer<'a> {
                 UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL()".to_string(),
                 UnitPart::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT()".to_string(),
                 UnitPart::PreDefinedTile => "PRE_DEFINED_TILE()".to_string(),
+                UnitPart::PresentationArea => "PRESENTATION_AREA()".to_string(),
                 UnitPart::PresentationRepresentation => "PRESENTATION_REPRESENTATION()".to_string(),
                 UnitPart::PresentationSet => "PRESENTATION_SET()".to_string(),
                 UnitPart::PresentationStyleAssignment { styles, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| match e { PresentationStyleSelectRef::NullStyle(e) => format!("NULL_STYLE({})", e.token()), other => format!("#{}", self.id_of_ref_presentation_style_select(other)) }).collect::<Vec<_>>().join(","))]; format!("PRESENTATION_STYLE_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::PresentationView => "PRESENTATION_VIEW()".to_string(),
                 UnitPart::Product { id, name, description, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("({})", frame_of_reference.iter().map(|e| format!("#{}", self.id_of_ref_product_context(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT({})", a.join(",")) },
                 UnitPart::ProductCategory { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("PRODUCT_CATEGORY({})", a.join(",")) },
                 UnitPart::ProductConcept { id, name, description, market_context, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept_context(market_context))]; format!("PRODUCT_CONCEPT({})", a.join(",")) },
@@ -20661,6 +21563,7 @@ impl<'a> Writer<'a> {
                 UnitPart::ProductRelatedProductCategory { products, .. } => { let a: Vec<String> = vec![format!("({})", products.iter().map(|e| format!("#{}", self.id_of_ref_product(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_RELATED_PRODUCT_CATEGORY({})", a.join(",")) },
                 UnitPart::PropertyDefinition { name, description, definition, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_characterized_definition(definition))]; format!("PROPERTY_DEFINITION({})", a.join(",")) },
                 UnitPart::PropertyDefinitionRepresentation { definition, used_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_represented_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation))]; format!("PROPERTY_DEFINITION_REPRESENTATION({})", a.join(",")) },
+                UnitPart::QualifiedRepresentationItem { qualifiers, .. } => { let a: Vec<String> = vec![format!("({})", qualifiers.iter().map(|e| format!("#{}", self.id_of_ref_value_qualifier(e))).collect::<Vec<_>>().join(","))]; format!("QUALIFIED_REPRESENTATION_ITEM({})", a.join(",")) },
                 UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE()".to_string(),
                 UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE()".to_string(),
                 UnitPart::RationalBSplineCurve { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_CURVE({})", a.join(",")) },
@@ -20709,6 +21612,7 @@ impl<'a> Writer<'a> {
                 UnitPart::SurfaceStyleSegmentationCurve { style_of_segmentation_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_segmentation_curve))]; format!("SURFACE_STYLE_SEGMENTATION_CURVE({})", a.join(",")) },
                 UnitPart::SurfaceStyleSilhouette { style_of_silhouette, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_silhouette))]; format!("SURFACE_STYLE_SILHOUETTE({})", a.join(",")) },
                 UnitPart::SurfaceStyleUsage { side, style, .. } => { let a: Vec<String> = vec![side.token().to_string(), format!("#{}", self.id_of_ref_surface_side_style_select(style))]; format!("SURFACE_STYLE_USAGE({})", a.join(",")) },
+                UnitPart::SymbolRepresentation => "SYMBOL_REPRESENTATION()".to_string(),
                 UnitPart::SymbolStyle { name, style_of_symbol, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_symbol_style_select(style_of_symbol))]; format!("SYMBOL_STYLE({})", a.join(",")) },
                 UnitPart::SymbolTarget { placement, x_scale, y_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement)), real(*x_scale), real(*y_scale)]; format!("SYMBOL_TARGET({})", a.join(",")) },
                 UnitPart::TessellatedGeometricSet { children, .. } => { let a: Vec<String> = vec![format!("({})", children.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_item(e))).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_GEOMETRIC_SET({})", a.join(",")) },
@@ -21262,6 +22166,21 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.draughting_models.items.len() {
             roots.push(AnyId::DraughtingModel(DraughtingModelId(i)));
         }
+        for i in 0..self.model.draughting_model_item_associations.items.len() {
+            roots.push(AnyId::DraughtingModelItemAssociation(
+                DraughtingModelItemAssociationId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .draughting_model_item_association_with_placeholders
+            .items
+            .len()
+        {
+            roots.push(AnyId::DraughtingModelItemAssociationWithPlaceholder(
+                DraughtingModelItemAssociationWithPlaceholderId(i),
+            ));
+        }
         for i in 0..self.model.draughting_pre_defined_colours.items.len() {
             roots.push(AnyId::DraughtingPreDefinedColour(
                 DraughtingPreDefinedColourId(i),
@@ -21796,6 +22715,12 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.pre_defined_tiles.items.len() {
             roots.push(AnyId::PreDefinedTile(PreDefinedTileId(i)));
         }
+        for i in 0..self.model.precision_qualifiers.items.len() {
+            roots.push(AnyId::PrecisionQualifier(PrecisionQualifierId(i)));
+        }
+        for i in 0..self.model.presentation_areas.items.len() {
+            roots.push(AnyId::PresentationArea(PresentationAreaId(i)));
+        }
         for i in 0..self.model.presentation_layer_assignments.items.len() {
             roots.push(AnyId::PresentationLayerAssignment(
                 PresentationLayerAssignmentId(i),
@@ -21813,6 +22738,9 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::PresentationStyleAssignment(
                 PresentationStyleAssignmentId(i),
             ));
+        }
+        for i in 0..self.model.presentation_views.items.len() {
+            roots.push(AnyId::PresentationView(PresentationViewId(i)));
         }
         for i in 0..self.model.products.items.len() {
             roots.push(AnyId::Product(ProductId(i)));
@@ -21904,6 +22832,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.property_definition_representations.items.len() {
             roots.push(AnyId::PropertyDefinitionRepresentation(
                 PropertyDefinitionRepresentationId(i),
+            ));
+        }
+        for i in 0..self.model.qualified_representation_items.items.len() {
+            roots.push(AnyId::QualifiedRepresentationItem(
+                QualifiedRepresentationItemId(i),
             ));
         }
         for i in 0..self.model.quasi_uniform_curves.items.len() {
@@ -22129,6 +23062,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.symbol_colours.items.len() {
             roots.push(AnyId::SymbolColour(SymbolColourId(i)));
         }
+        for i in 0..self.model.symbol_representations.items.len() {
+            roots.push(AnyId::SymbolRepresentation(SymbolRepresentationId(i)));
+        }
         for i in 0..self.model.symbol_styles.items.len() {
             roots.push(AnyId::SymbolStyle(SymbolStyleId(i)));
         }
@@ -22227,10 +23163,16 @@ impl<'a> Writer<'a> {
                 i,
             )));
         }
+        for i in 0..self.model.type_qualifiers.items.len() {
+            roots.push(AnyId::TypeQualifier(TypeQualifierId(i)));
+        }
         for i in 0..self.model.uncertainty_measure_with_units.items.len() {
             roots.push(AnyId::UncertaintyMeasureWithUnit(
                 UncertaintyMeasureWithUnitId(i),
             ));
+        }
+        for i in 0..self.model.uncertainty_qualifiers.items.len() {
+            roots.push(AnyId::UncertaintyQualifier(UncertaintyQualifierId(i)));
         }
         for i in 0..self
             .model
@@ -22247,6 +23189,11 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.uniform_surfaces.items.len() {
             roots.push(AnyId::UniformSurface(UniformSurfaceId(i)));
+        }
+        for i in 0..self.model.value_format_type_qualifiers.items.len() {
+            roots.push(AnyId::ValueFormatTypeQualifier(ValueFormatTypeQualifierId(
+                i,
+            )));
         }
         for i in 0..self.model.value_representation_items.items.len() {
             roots.push(AnyId::ValueRepresentationItem(ValueRepresentationItemId(i)));

@@ -388,6 +388,64 @@ annotation = ["draughting_callout", "annotation_plane", "invisibility"]
 geom_camera = ["hyperbola", "view_volume", "camera_model_d3"]
 draughting_leaf = ["draughting_pre_defined_text_font", "leader_directed_callout"]
 pmi_leaf = ["all_around_shape_aspect", "plus_minus_tolerance", "object_role"]
+# Bag A: qualified_representation_item (complex part). Its qualifiers : SET OF
+# value_qualifier pulls the value_qualifier SELECT — narrowed below to the four
+# simple qualifier entities (maths_value_precision_qualifier dropped, else the
+# maths cluster recurses in). Exercises the aggregate-of-select arm path.
+bag_a = ["qualified_representation_item"]
+# draughting_model_item_association (+ _with_placeholder): complex parts whose
+# `definition` is the 54-member draughting_model_item_definition SELECT —
+# narrowed below to the 30 PMI/tolerance members (already covered), dropping the
+# 24 applied_* PLM-assignment members that would drag the PLM mega-subtree in.
+draughting_assoc = [
+    "draughting_model_item_association",
+    "draughting_model_item_association_with_placeholder",
+]
 
 [narrow]
-# (empty in commit A; populated in commit B)
+# value_qualifier: keep the four simple qualifier entities; drop
+# maths_value_precision_qualifier (its maths_value cluster recurses/explodes).
+# All members are entities, so the survivors are the same Kind (entity ref) —
+# the SELECT stays a ref enum, no Kind flip.
+value_qualifier = [
+    "precision_qualifier",
+    "type_qualifier",
+    "uncertainty_qualifier",
+    "value_format_type_qualifier",
+]
+# draughting_model_item_definition: keep the 30 PMI/tolerance/shape members (all
+# already in the closure via the gdt/shape seeds); drop the 24 applied_* PLM
+# assignment members (the item_identified-style mega-subtree). All members are
+# entities, so survivors are same Kind — no classify Kind flip.
+draughting_model_item_definition = [
+    "angularity_tolerance",
+    "circular_runout_tolerance",
+    "coaxiality_tolerance",
+    "concentricity_tolerance",
+    "cylindricity_tolerance",
+    "dimensional_location",
+    "dimensional_size",
+    "flatness_tolerance",
+    "geometric_tolerance",
+    "geometric_tolerance_with_datum_reference",
+    "geometric_tolerance_with_defined_area_unit",
+    "geometric_tolerance_with_defined_unit",
+    "geometric_tolerance_with_maximum_tolerance",
+    "geometric_tolerance_with_modifiers",
+    "line_profile_tolerance",
+    "modified_geometric_tolerance",
+    "parallelism_tolerance",
+    "perpendicularity_tolerance",
+    "position_tolerance",
+    "product_definition_relationship",
+    "product_definition_shape",
+    "property_definition",
+    "roundness_tolerance",
+    "shape_aspect",
+    "shape_aspect_relationship",
+    "straightness_tolerance",
+    "surface_profile_tolerance",
+    "symmetry_tolerance",
+    "total_runout_tolerance",
+    "unequally_disposed_geometric_tolerance",
+]

@@ -3274,6 +3274,76 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "DRAUGHTING_PRE_DEFINED_COLOUR" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -5791,6 +5861,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "PRECISION_QUALIFIER" => &[Slot {
+            k: Sk::Int,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "PRESENTATION_AREA" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "PRESENTATION_LAYER_ASSIGNMENT" => &[
             Slot {
                 k: Sk::Str,
@@ -5838,6 +5934,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "PRESENTATION_VIEW" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "PRODUCT" => &[
             Slot {
                 k: Sk::Str,
@@ -6299,6 +6415,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "QUALIFIED_REPRESENTATION_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
                 req: true,
                 der: false,
                 swire: None,
@@ -7320,6 +7450,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "SYMBOL_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "SYMBOL_STYLE" => &[
             Slot {
                 k: Sk::Str,
@@ -7840,6 +7990,12 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "TYPE_QUALIFIER" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "UNCERTAINTY_MEASURE_WITH_UNIT" => &[
             Slot {
                 k: Sk::Meas,
@@ -7862,6 +8018,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Str,
                 req: false,
+                der: false,
+                swire: None,
+            },
+        ],
+        "UNCERTAINTY_QUALIFIER" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
                 der: false,
                 swire: None,
             },
@@ -7986,6 +8156,12 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "VALUE_FORMAT_TYPE_QUALIFIER" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "VALUE_REPRESENTATION_ITEM" => &[
             Slot {
                 k: Sk::Str,
@@ -9086,6 +9262,13 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "DRAUGHTING_MODEL" => &[],
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION" => &[],
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => &[Slot {
+            k: Sk::Ref,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "DRAUGHTING_PRE_DEFINED_COLOUR" => &[],
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => &[],
         "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => &[],
@@ -9731,6 +9914,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
         "PRE_DEFINED_SYMBOL" => &[],
         "PRE_DEFINED_TEXT_FONT" => &[],
         "PRE_DEFINED_TILE" => &[],
+        "PRESENTATION_AREA" => &[],
         "PRESENTATION_REPRESENTATION" => &[],
         "PRESENTATION_SET" => &[],
         "PRESENTATION_STYLE_ASSIGNMENT" => &[Slot {
@@ -9739,6 +9923,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "PRESENTATION_VIEW" => &[],
         "PRODUCT" => &[
             Slot {
                 k: Sk::Str,
@@ -10013,6 +10198,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "QUALIFIED_REPRESENTATION_ITEM" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "QUASI_UNIFORM_CURVE" => &[],
         "QUASI_UNIFORM_SURFACE" => &[],
         "RATIONAL_B_SPLINE_CURVE" => &[Slot {
@@ -10392,6 +10583,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "SYMBOL_REPRESENTATION" => &[],
         "SYMBOL_STYLE" => &[
             Slot {
                 k: Sk::Str,
