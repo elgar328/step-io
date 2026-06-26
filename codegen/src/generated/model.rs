@@ -131,6 +131,27 @@ impl AnnotationPlaceholderOccurrenceRole {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ApproximationMethod {
+    ChordalDeviation,
+    ChordalLength,
+}
+impl ApproximationMethod {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "CHORDAL_DEVIATION" => Self::ChordalDeviation,
+            "CHORDAL_LENGTH" => Self::ChordalLength,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::ChordalDeviation => ".CHORDAL_DEVIATION.",
+            Self::ChordalLength => ".CHORDAL_LENGTH.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AreaUnitType {
     Spherical,
     Cylindrical,
@@ -593,6 +614,27 @@ impl PreferredSurfaceCurveRepresentation {
             Self::Curve3d => ".CURVE_3D.",
             Self::PcurveS1 => ".PCURVE_S1.",
             Self::PcurveS2 => ".PCURVE_S2.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProductOrPresentationSpace {
+    ProductShapeSpace,
+    PresentationAreaSpace,
+}
+impl ProductOrPresentationSpace {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "PRODUCT_SHAPE_SPACE" => Self::ProductShapeSpace,
+            "PRESENTATION_AREA_SPACE" => Self::PresentationAreaSpace,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::ProductShapeSpace => ".PRODUCT_SHAPE_SPACE.",
+            Self::PresentationAreaSpace => ".PRESENTATION_AREA_SPACE.",
         }
     }
 }
@@ -1111,6 +1153,12 @@ pub struct ApprovalRoleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalStatusId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApproximationToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApproximationToleranceDeviationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApproximationToleranceParameterId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AscribableStateId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AscribableStateRelationshipId(pub usize);
@@ -1625,6 +1673,8 @@ pub struct PreDefinedMarkerId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedPointMarkerSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PreDefinedPresentationStyleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedSurfaceSideStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedSymbolId(pub usize);
@@ -1969,6 +2019,9 @@ pub enum AnyId {
     ApprovalPersonOrganization(ApprovalPersonOrganizationId),
     ApprovalRole(ApprovalRoleId),
     ApprovalStatus(ApprovalStatusId),
+    ApproximationTolerance(ApproximationToleranceId),
+    ApproximationToleranceDeviation(ApproximationToleranceDeviationId),
+    ApproximationToleranceParameter(ApproximationToleranceParameterId),
     AscribableState(AscribableStateId),
     AscribableStateRelationship(AscribableStateRelationshipId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
@@ -2238,6 +2291,7 @@ pub enum AnyId {
     PreDefinedItem(PreDefinedItemId),
     PreDefinedMarker(PreDefinedMarkerId),
     PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
+    PreDefinedPresentationStyle(PreDefinedPresentationStyleId),
     PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
     PreDefinedSymbol(PreDefinedSymbolId),
     PreDefinedTerminatorSymbol(PreDefinedTerminatorSymbolId),
@@ -2748,6 +2802,10 @@ pub enum ApprovedItemRef {
     ConfigurationItem(ConfigurationItemId),
     Contract(ContractId),
     Product(ProductId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
@@ -2763,6 +2821,14 @@ impl ApprovedItemRef {
             AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
             AnyId::Contract(i) => Self::Contract(i),
             AnyId::Product(i) => Self::Product(i),
+            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
             AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
             AnyId::StartRequest(i) => Self::StartRequest(i),
             AnyId::StartWork(i) => Self::StartWork(i),
@@ -5606,6 +5672,7 @@ pub enum FaceOrSurfaceRef {
     CylindricalSurface(CylindricalSurfaceId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     ElementarySurface(ElementarySurfaceId),
+    Face(FaceId),
     FaceSurface(FaceSurfaceId),
     OffsetSurface(OffsetSurfaceId),
     Plane(PlaneId),
@@ -5632,6 +5699,7 @@ impl FaceOrSurfaceRef {
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Face(i) => Self::Face(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::Plane(i) => Self::Plane(i),
@@ -8035,10 +8103,12 @@ impl PresentationStyleAssignmentRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationStyleSelectRef {
+    ApproximationTolerance(ApproximationToleranceId),
     CurveStyle(CurveStyleId),
     ExternallyDefinedStyle(ExternallyDefinedStyleId),
     FillAreaStyle(FillAreaStyleId),
     PointStyle(PointStyleId),
+    PreDefinedPresentationStyle(PreDefinedPresentationStyleId),
     SurfaceStyleUsage(SurfaceStyleUsageId),
     SymbolStyle(SymbolStyleId),
     TextStyle(TextStyleId),
@@ -8050,10 +8120,12 @@ pub enum PresentationStyleSelectRef {
 impl PresentationStyleSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::ApproximationTolerance(i) => Self::ApproximationTolerance(i),
             AnyId::CurveStyle(i) => Self::CurveStyle(i),
             AnyId::ExternallyDefinedStyle(i) => Self::ExternallyDefinedStyle(i),
             AnyId::FillAreaStyle(i) => Self::FillAreaStyle(i),
             AnyId::PointStyle(i) => Self::PointStyle(i),
+            AnyId::PreDefinedPresentationStyle(i) => Self::PreDefinedPresentationStyle(i),
             AnyId::SurfaceStyleUsage(i) => Self::SurfaceStyleUsage(i),
             AnyId::SymbolStyle(i) => Self::SymbolStyle(i),
             AnyId::TextStyle(i) => Self::TextStyle(i),
@@ -10148,6 +10220,21 @@ impl ToleranceMethodDefinitionRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ToleranceSelectRef {
+    ApproximationToleranceDeviation(ApproximationToleranceDeviationId),
+    ApproximationToleranceParameter(ApproximationToleranceParameterId),
+}
+impl ToleranceSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ApproximationToleranceDeviation(i) => Self::ApproximationToleranceDeviation(i),
+            AnyId::ApproximationToleranceParameter(i) => Self::ApproximationToleranceParameter(i),
+            other => panic!("ToleranceSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
 }
@@ -10265,6 +10352,7 @@ pub enum TransformationRef {
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
     SetItemDefinedTransformation(Vec<ItemDefinedTransformationRef>),
+    ListItemDefinedTransformation(Vec<ItemDefinedTransformationRef>),
     Complex(ComplexUnitId),
 }
 impl TransformationRef {
@@ -10817,6 +10905,23 @@ pub struct ApprovalRole {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApprovalStatus {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApproximationTolerance {
+    pub tolerance: ToleranceSelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApproximationToleranceDeviation {
+    pub tessellation_type: ApproximationMethod,
+    pub tolerances: Vec<MeasureValue>,
+    pub definition_space: ProductOrPresentationSpace,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApproximationToleranceParameter {
+    pub tolerances: Vec<MeasureValue>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -12649,6 +12754,11 @@ pub struct PreDefinedPointMarkerSymbol {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedPresentationStyle {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSurfaceSideStyle {
     pub name: String,
 }
@@ -14223,6 +14333,7 @@ pub enum UnitPart {
     },
     PreDefinedMarker,
     PreDefinedPointMarkerSymbol,
+    PreDefinedPresentationStyle,
     PreDefinedSurfaceSideStyle,
     PreDefinedSymbol,
     PreDefinedTerminatorSymbol,
@@ -14589,6 +14700,9 @@ pub struct Model {
     pub approval_person_organizations: Arena<ApprovalPersonOrganization>,
     pub approval_roles: Arena<ApprovalRole>,
     pub approval_statuss: Arena<ApprovalStatus>,
+    pub approximation_tolerances: Arena<ApproximationTolerance>,
+    pub approximation_tolerance_deviations: Arena<ApproximationToleranceDeviation>,
+    pub approximation_tolerance_parameters: Arena<ApproximationToleranceParameter>,
     pub ascribable_states: Arena<AscribableState>,
     pub ascribable_state_relationships: Arena<AscribableStateRelationship>,
     pub assembly_component_usages: Arena<AssemblyComponentUsage>,
@@ -14855,6 +14969,7 @@ pub struct Model {
     pub pre_defined_items: Arena<PreDefinedItem>,
     pub pre_defined_markers: Arena<PreDefinedMarker>,
     pub pre_defined_point_marker_symbols: Arena<PreDefinedPointMarkerSymbol>,
+    pub pre_defined_presentation_styles: Arena<PreDefinedPresentationStyle>,
     pub pre_defined_surface_side_styles: Arena<PreDefinedSurfaceSideStyle>,
     pub pre_defined_symbols: Arena<PreDefinedSymbol>,
     pub pre_defined_terminator_symbols: Arena<PreDefinedTerminatorSymbol>,

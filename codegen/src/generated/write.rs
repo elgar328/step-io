@@ -115,6 +115,9 @@ pub struct Writer<'a> {
     approval_person_organization_ids: Vec<Option<u64>>,
     approval_role_ids: Vec<Option<u64>>,
     approval_statu_ids: Vec<Option<u64>>,
+    approximation_tolerance_ids: Vec<Option<u64>>,
+    approximation_tolerance_deviation_ids: Vec<Option<u64>>,
+    approximation_tolerance_parameter_ids: Vec<Option<u64>>,
     ascribable_state_ids: Vec<Option<u64>>,
     ascribable_state_relationship_ids: Vec<Option<u64>>,
     assembly_component_usage_ids: Vec<Option<u64>>,
@@ -372,6 +375,7 @@ pub struct Writer<'a> {
     pre_defined_item_ids: Vec<Option<u64>>,
     pre_defined_marker_ids: Vec<Option<u64>>,
     pre_defined_point_marker_symbol_ids: Vec<Option<u64>>,
+    pre_defined_presentation_style_ids: Vec<Option<u64>>,
     pre_defined_surface_side_style_ids: Vec<Option<u64>>,
     pre_defined_symbol_ids: Vec<Option<u64>>,
     pre_defined_terminator_symbol_ids: Vec<Option<u64>>,
@@ -674,6 +678,21 @@ impl<'a> Writer<'a> {
             ],
             approval_role_ids: vec![None; model.approval_roles.items.len()],
             approval_statu_ids: vec![None; model.approval_statuss.items.len()],
+            approximation_tolerance_ids: vec![None; model.approximation_tolerances.items.len()],
+            approximation_tolerance_deviation_ids: vec![
+                None;
+                model
+                    .approximation_tolerance_deviations
+                    .items
+                    .len()
+            ],
+            approximation_tolerance_parameter_ids: vec![
+                None;
+                model
+                    .approximation_tolerance_parameters
+                    .items
+                    .len()
+            ],
             ascribable_state_ids: vec![None; model.ascribable_states.items.len()],
             ascribable_state_relationship_ids: vec![
                 None;
@@ -1315,6 +1334,13 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            pre_defined_presentation_style_ids: vec![
+                None;
+                model
+                    .pre_defined_presentation_styles
+                    .items
+                    .len()
+            ],
             pre_defined_surface_side_style_ids: vec![
                 None;
                 model
@@ -1754,6 +1780,13 @@ impl<'a> Writer<'a> {
             AnyId::ApprovalPersonOrganization(i) => self.approval_person_organization_ids[i.0],
             AnyId::ApprovalRole(i) => self.approval_role_ids[i.0],
             AnyId::ApprovalStatus(i) => self.approval_statu_ids[i.0],
+            AnyId::ApproximationTolerance(i) => self.approximation_tolerance_ids[i.0],
+            AnyId::ApproximationToleranceDeviation(i) => {
+                self.approximation_tolerance_deviation_ids[i.0]
+            }
+            AnyId::ApproximationToleranceParameter(i) => {
+                self.approximation_tolerance_parameter_ids[i.0]
+            }
             AnyId::AscribableState(i) => self.ascribable_state_ids[i.0],
             AnyId::AscribableStateRelationship(i) => self.ascribable_state_relationship_ids[i.0],
             AnyId::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0],
@@ -2099,6 +2132,7 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedItem(i) => self.pre_defined_item_ids[i.0],
             AnyId::PreDefinedMarker(i) => self.pre_defined_marker_ids[i.0],
             AnyId::PreDefinedPointMarkerSymbol(i) => self.pre_defined_point_marker_symbol_ids[i.0],
+            AnyId::PreDefinedPresentationStyle(i) => self.pre_defined_presentation_style_ids[i.0],
             AnyId::PreDefinedSurfaceSideStyle(i) => self.pre_defined_surface_side_style_ids[i.0],
             AnyId::PreDefinedSymbol(i) => self.pre_defined_symbol_ids[i.0],
             AnyId::PreDefinedTerminatorSymbol(i) => self.pre_defined_terminator_symbol_ids[i.0],
@@ -2383,6 +2417,13 @@ impl<'a> Writer<'a> {
             }
             AnyId::ApprovalRole(i) => self.approval_role_ids[i.0] = Some(n),
             AnyId::ApprovalStatus(i) => self.approval_statu_ids[i.0] = Some(n),
+            AnyId::ApproximationTolerance(i) => self.approximation_tolerance_ids[i.0] = Some(n),
+            AnyId::ApproximationToleranceDeviation(i) => {
+                self.approximation_tolerance_deviation_ids[i.0] = Some(n)
+            }
+            AnyId::ApproximationToleranceParameter(i) => {
+                self.approximation_tolerance_parameter_ids[i.0] = Some(n)
+            }
             AnyId::AscribableState(i) => self.ascribable_state_ids[i.0] = Some(n),
             AnyId::AscribableStateRelationship(i) => {
                 self.ascribable_state_relationship_ids[i.0] = Some(n)
@@ -2794,6 +2835,9 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedMarker(i) => self.pre_defined_marker_ids[i.0] = Some(n),
             AnyId::PreDefinedPointMarkerSymbol(i) => {
                 self.pre_defined_point_marker_symbol_ids[i.0] = Some(n)
+            }
+            AnyId::PreDefinedPresentationStyle(i) => {
+                self.pre_defined_presentation_style_ids[i.0] = Some(n)
             }
             AnyId::PreDefinedSurfaceSideStyle(i) => {
                 self.pre_defined_surface_side_style_ids[i.0] = Some(n)
@@ -3638,6 +3682,18 @@ impl<'a> Writer<'a> {
             }
             ApprovedItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
             ApprovedItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+            ApprovedItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            ApprovedItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            ApprovedItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
             ApprovedItemRef::SecurityClassification(i) => {
                 self.security_classification_ids[i.0].expect("dep id assigned")
             }
@@ -3660,6 +3716,16 @@ impl<'a> Writer<'a> {
             ApprovedItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
             ApprovedItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
             ApprovedItemRef::Product(i) => out.push(AnyId::Product(*i)),
+            ApprovedItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            ApprovedItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            ApprovedItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            ApprovedItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
             ApprovedItemRef::SecurityClassification(i) => {
                 out.push(AnyId::SecurityClassification(*i))
             }
@@ -8363,6 +8429,7 @@ impl<'a> Writer<'a> {
             FaceOrSurfaceRef::ElementarySurface(i) => {
                 self.elementary_surface_ids[i.0].expect("dep id assigned")
             }
+            FaceOrSurfaceRef::Face(i) => self.face_ids[i.0].expect("dep id assigned"),
             FaceOrSurfaceRef::FaceSurface(i) => {
                 self.face_surface_ids[i.0].expect("dep id assigned")
             }
@@ -8414,6 +8481,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DegenerateToroidalSurface(*i))
             }
             FaceOrSurfaceRef::ElementarySurface(i) => out.push(AnyId::ElementarySurface(*i)),
+            FaceOrSurfaceRef::Face(i) => out.push(AnyId::Face(*i)),
             FaceOrSurfaceRef::FaceSurface(i) => out.push(AnyId::FaceSurface(*i)),
             FaceOrSurfaceRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
             FaceOrSurfaceRef::Plane(i) => out.push(AnyId::Plane(*i)),
@@ -12791,6 +12859,9 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_presentation_style_select(&self, r: &PresentationStyleSelectRef) -> u64 {
         match r {
+            PresentationStyleSelectRef::ApproximationTolerance(i) => {
+                self.approximation_tolerance_ids[i.0].expect("dep id assigned")
+            }
             PresentationStyleSelectRef::CurveStyle(i) => {
                 self.curve_style_ids[i.0].expect("dep id assigned")
             }
@@ -12802,6 +12873,9 @@ impl<'a> Writer<'a> {
             }
             PresentationStyleSelectRef::PointStyle(i) => {
                 self.point_style_ids[i.0].expect("dep id assigned")
+            }
+            PresentationStyleSelectRef::PreDefinedPresentationStyle(i) => {
+                self.pre_defined_presentation_style_ids[i.0].expect("dep id assigned")
             }
             PresentationStyleSelectRef::SurfaceStyleUsage(i) => {
                 self.surface_style_usage_ids[i.0].expect("dep id assigned")
@@ -12827,12 +12901,18 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_presentation_style_select(r: &PresentationStyleSelectRef, out: &mut Vec<AnyId>) {
         match r {
+            PresentationStyleSelectRef::ApproximationTolerance(i) => {
+                out.push(AnyId::ApproximationTolerance(*i))
+            }
             PresentationStyleSelectRef::CurveStyle(i) => out.push(AnyId::CurveStyle(*i)),
             PresentationStyleSelectRef::ExternallyDefinedStyle(i) => {
                 out.push(AnyId::ExternallyDefinedStyle(*i))
             }
             PresentationStyleSelectRef::FillAreaStyle(i) => out.push(AnyId::FillAreaStyle(*i)),
             PresentationStyleSelectRef::PointStyle(i) => out.push(AnyId::PointStyle(*i)),
+            PresentationStyleSelectRef::PreDefinedPresentationStyle(i) => {
+                out.push(AnyId::PreDefinedPresentationStyle(*i))
+            }
             PresentationStyleSelectRef::SurfaceStyleUsage(i) => {
                 out.push(AnyId::SurfaceStyleUsage(*i))
             }
@@ -16557,6 +16637,28 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_tolerance_select(&self, r: &ToleranceSelectRef) -> u64 {
+        match r {
+            ToleranceSelectRef::ApproximationToleranceDeviation(i) => {
+                self.approximation_tolerance_deviation_ids[i.0].expect("dep id assigned")
+            }
+            ToleranceSelectRef::ApproximationToleranceParameter(i) => {
+                self.approximation_tolerance_parameter_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_tolerance_select(r: &ToleranceSelectRef, out: &mut Vec<AnyId>) {
+        match r {
+            ToleranceSelectRef::ApproximationToleranceDeviation(i) => {
+                out.push(AnyId::ApproximationToleranceDeviation(*i))
+            }
+            ToleranceSelectRef::ApproximationToleranceParameter(i) => {
+                out.push(AnyId::ApproximationToleranceParameter(*i))
+            }
+        }
+    }
+
     fn id_of_ref_tolerance_zone_form(&self, r: &ToleranceZoneFormRef) -> u64 {
         match r {
             ToleranceZoneFormRef::ToleranceZoneForm(i) => {
@@ -16789,6 +16891,9 @@ impl<'a> Writer<'a> {
             TransformationRef::SetItemDefinedTransformation(_) => {
                 panic!("aggregate via single id_of")
             }
+            TransformationRef::ListItemDefinedTransformation(_) => {
+                panic!("aggregate via single id_of")
+            }
         }
     }
 
@@ -16802,6 +16907,11 @@ impl<'a> Writer<'a> {
             }
             TransformationRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
             TransformationRef::SetItemDefinedTransformation(vs) => {
+                for e in vs {
+                    Self::deps_ref_item_defined_transformation(e, out);
+                }
+            }
+            TransformationRef::ListItemDefinedTransformation(vs) => {
                 for e in vs {
                     Self::deps_ref_item_defined_transformation(e, out);
                 }
@@ -17293,6 +17403,12 @@ impl<'a> Writer<'a> {
             }
             AnyId::ApprovalRole(_) => {}
             AnyId::ApprovalStatus(_) => {}
+            AnyId::ApproximationTolerance(id) => {
+                let it = self.model.approximation_tolerances.get(id.0);
+                Self::deps_ref_tolerance_select(&it.tolerance, out);
+            }
+            AnyId::ApproximationToleranceDeviation(_) => {}
+            AnyId::ApproximationToleranceParameter(_) => {}
             AnyId::AscribableState(id) => {
                 let it = self.model.ascribable_states.get(id.0);
                 Self::deps_ref_state_type(&it.pertaining_state_type, out);
@@ -18538,6 +18654,7 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedItem(_) => {}
             AnyId::PreDefinedMarker(_) => {}
             AnyId::PreDefinedPointMarkerSymbol(_) => {}
+            AnyId::PreDefinedPresentationStyle(_) => {}
             AnyId::PreDefinedSurfaceSideStyle(_) => {}
             AnyId::PreDefinedSymbol(_) => {}
             AnyId::PreDefinedTerminatorSymbol(_) => {}
@@ -20931,6 +21048,51 @@ impl<'a> Writer<'a> {
                 let n = self.get_id(any).expect("id assigned");
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = APPROVAL_STATUS({});\n", attrs.join(","))
+            }
+            AnyId::ApproximationTolerance(id) => {
+                let it = self.model.approximation_tolerances.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "#{}",
+                    self.id_of_ref_tolerance_select(&it.tolerance)
+                )];
+                format!("#{n} = APPROXIMATION_TOLERANCE({});\n", attrs.join(","))
+            }
+            AnyId::ApproximationToleranceDeviation(id) => {
+                let it = self.model.approximation_tolerance_deviations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    it.tessellation_type.token().to_string(),
+                    format!(
+                        "({})",
+                        it.tolerances
+                            .iter()
+                            .map(|e| measure(e))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    it.definition_space.token().to_string(),
+                ];
+                format!(
+                    "#{n} = APPROXIMATION_TOLERANCE_DEVIATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::ApproximationToleranceParameter(id) => {
+                let it = self.model.approximation_tolerance_parameters.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "({})",
+                    it.tolerances
+                        .iter()
+                        .map(|e| measure(e))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )];
+                format!(
+                    "#{n} = APPROXIMATION_TOLERANCE_PARAMETER({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::AscribableState(id) => {
                 let it = self.model.ascribable_states.get(id.0);
@@ -25213,6 +25375,15 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::PreDefinedPresentationStyle(id) => {
+                let it = self.model.pre_defined_presentation_styles.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!(
+                    "#{n} = PRE_DEFINED_PRESENTATION_STYLE({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::PreDefinedSurfaceSideStyle(id) => {
                 let it = self.model.pre_defined_surface_side_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -26041,6 +26212,16 @@ impl<'a> Writer<'a> {
                     match &it.transformation_operator {
                         TransformationRef::SetItemDefinedTransformation(vs) => format!(
                             "SET_ITEM_DEFINED_TRANSFORMATION(({}))",
+                            vs.iter()
+                                .map(|e| format!(
+                                    "#{}",
+                                    self.id_of_ref_item_defined_transformation(e)
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                        TransformationRef::ListItemDefinedTransformation(vs) => format!(
+                            "LIST_ITEM_DEFINED_TRANSFORMATION(({}))",
                             vs.iter()
                                 .map(|e| format!(
                                     "#{}",
@@ -27655,6 +27836,7 @@ impl<'a> Writer<'a> {
                 UnitPart::PreDefinedItem { name, .. } => { let a: Vec<String> = vec![step_str(name)]; format!("PRE_DEFINED_ITEM({})", a.join(",")) },
                 UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER()".to_string(),
                 UnitPart::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL()".to_string(),
+                UnitPart::PreDefinedPresentationStyle => "PRE_DEFINED_PRESENTATION_STYLE()".to_string(),
                 UnitPart::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE()".to_string(),
                 UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL()".to_string(),
                 UnitPart::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL()".to_string(),
@@ -27697,7 +27879,7 @@ impl<'a> Writer<'a> {
                 UnitPart::RepresentationMap { mapping_origin, mapped_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(mapping_origin)), format!("#{}", self.id_of_ref_representation(mapped_representation))]; format!("REPRESENTATION_MAP({})", a.join(",")) },
                 UnitPart::RepresentationReference { id, context_of_items, .. } => { let a: Vec<String> = vec![step_str(id), format!("#{}", self.id_of_ref_representation_context_reference(context_of_items))]; format!("REPRESENTATION_REFERENCE({})", a.join(",")) },
                 UnitPart::RepresentationRelationship { name, description, rep_1, rep_2, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_2))]; format!("REPRESENTATION_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::RepresentationRelationshipWithTransformation { transformation_operator, .. } => { let a: Vec<String> = vec![match transformation_operator { TransformationRef::SetItemDefinedTransformation(vs) => format!("SET_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_transformation(other)) }]; format!("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})", a.join(",")) },
+                UnitPart::RepresentationRelationshipWithTransformation { transformation_operator, .. } => { let a: Vec<String> = vec![match transformation_operator { TransformationRef::SetItemDefinedTransformation(vs) => format!("SET_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), TransformationRef::ListItemDefinedTransformation(vs) => format!("LIST_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_transformation(other)) }]; format!("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})", a.join(",")) },
                 UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE()".to_string(),
                 UnitPart::SeamCurve => "SEAM_CURVE()".to_string(),
                 UnitPart::SecurityClassificationAssignment { assigned_security_classification, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_security_classification(assigned_security_classification))]; format!("SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
@@ -27968,6 +28150,19 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.approval_statuss.items.len() {
             roots.push(AnyId::ApprovalStatus(ApprovalStatusId(i)));
+        }
+        for i in 0..self.model.approximation_tolerances.items.len() {
+            roots.push(AnyId::ApproximationTolerance(ApproximationToleranceId(i)));
+        }
+        for i in 0..self.model.approximation_tolerance_deviations.items.len() {
+            roots.push(AnyId::ApproximationToleranceDeviation(
+                ApproximationToleranceDeviationId(i),
+            ));
+        }
+        for i in 0..self.model.approximation_tolerance_parameters.items.len() {
+            roots.push(AnyId::ApproximationToleranceParameter(
+                ApproximationToleranceParameterId(i),
+            ));
         }
         for i in 0..self.model.ascribable_states.items.len() {
             roots.push(AnyId::AscribableState(AscribableStateId(i)));
@@ -29007,6 +29202,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.pre_defined_point_marker_symbols.items.len() {
             roots.push(AnyId::PreDefinedPointMarkerSymbol(
                 PreDefinedPointMarkerSymbolId(i),
+            ));
+        }
+        for i in 0..self.model.pre_defined_presentation_styles.items.len() {
+            roots.push(AnyId::PreDefinedPresentationStyle(
+                PreDefinedPresentationStyleId(i),
             ));
         }
         for i in 0..self.model.pre_defined_surface_side_styles.items.len() {

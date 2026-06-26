@@ -154,6 +154,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "APPROVAL_PERSON_ORGANIZATION",
     "APPROVAL_ROLE",
     "APPROVAL_STATUS",
+    "APPROXIMATION_TOLERANCE",
+    "APPROXIMATION_TOLERANCE_DEVIATION",
+    "APPROXIMATION_TOLERANCE_PARAMETER",
     "ASCRIBABLE_STATE",
     "ASCRIBABLE_STATE_RELATIONSHIP",
     "ASSEMBLY_COMPONENT_USAGE",
@@ -411,6 +414,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
     "PRE_DEFINED_POINT_MARKER_SYMBOL",
+    "PRE_DEFINED_PRESENTATION_STYLE",
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
     "PRE_DEFINED_TERMINATOR_SYMBOL",
@@ -772,6 +776,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
     "PRE_DEFINED_POINT_MARKER_SYMBOL",
+    "PRE_DEFINED_PRESENTATION_STYLE",
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
     "PRE_DEFINED_TERMINATOR_SYMBOL",
@@ -3338,6 +3343,16 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "APPROXIMATION_TOLERANCE" => &[RefSlot {
+            idx: 0,
+            name: "tolerance",
+            allowed: &[
+                "APPROXIMATION_TOLERANCE_DEVIATION",
+                "APPROXIMATION_TOLERANCE_PARAMETER",
+            ],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "ASCRIBABLE_STATE" => &[
             RefSlot {
                 idx: 2,
@@ -3636,6 +3651,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONFIGURATION_ITEM",
                     "CONTRACT",
                     "PRODUCT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                     "SECURITY_CLASSIFICATION",
                     "START_REQUEST",
                     "START_WORK",
@@ -4282,6 +4301,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CYLINDRICAL_SURFACE",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "ELEMENTARY_SURFACE",
+                    "FACE",
                     "FACE_SURFACE",
                     "OFFSET_SURFACE",
                     "PLANE",
@@ -10829,10 +10849,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 0,
             name: "styles",
             allowed: &[
+                "APPROXIMATION_TOLERANCE",
                 "CURVE_STYLE",
                 "EXTERNALLY_DEFINED_STYLE",
                 "FILL_AREA_STYLE",
                 "POINT_STYLE",
+                "PRE_DEFINED_PRESENTATION_STYLE",
                 "SURFACE_STYLE_USAGE",
                 "SYMBOL_STYLE",
                 "TEXT_STYLE",
@@ -13741,6 +13763,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CYLINDRICAL_SURFACE",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "ELEMENTARY_SURFACE",
+                    "FACE",
                     "FACE_SURFACE",
                     "OFFSET_SURFACE",
                     "PLANE",
@@ -15548,6 +15571,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONFIGURATION_ITEM",
                 "CONTRACT",
                 "PRODUCT",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "SECURITY_CLASSIFICATION",
                 "START_REQUEST",
                 "START_WORK",
@@ -17460,10 +17487,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 0,
             name: "styles",
             allowed: &[
+                "APPROXIMATION_TOLERANCE",
                 "CURVE_STYLE",
                 "EXTERNALLY_DEFINED_STYLE",
                 "FILL_AREA_STYLE",
                 "POINT_STYLE",
+                "PRE_DEFINED_PRESENTATION_STYLE",
                 "SURFACE_STYLE_USAGE",
                 "SYMBOL_STYLE",
                 "TEXT_STYLE",
@@ -18885,6 +18914,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_approval_date_times: Vec<(ApprovalDateTimeId, u64)> = Vec::new();
     let mut pending_approval_person_organizations: Vec<(ApprovalPersonOrganizationId, u64)> =
         Vec::new();
+    let mut pending_approximation_tolerances: Vec<(ApproximationToleranceId, u64)> = Vec::new();
     let mut pending_ascribable_states: Vec<(AscribableStateId, u64)> = Vec::new();
     let mut pending_ascribable_state_relationships: Vec<(AscribableStateRelationshipId, u64)> =
         Vec::new();
@@ -20143,6 +20173,57 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = ApprovalStatusId(model.approval_statuss.push(v));
                 idmap.insert(id, AnyId::ApprovalStatus(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROXIMATION_TOLERANCE" => {
+                let v = ApproximationTolerance {
+                    tolerance: ToleranceSelectRef::ApproximationToleranceDeviation(
+                        ApproximationToleranceDeviationId(usize::MAX),
+                    ),
+                };
+                let aid = ApproximationToleranceId(model.approximation_tolerances.push(v));
+                idmap.insert(id, AnyId::ApproximationTolerance(aid));
+                pending_approximation_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROXIMATION_TOLERANCE_DEVIATION" => {
+                let v = ApproximationToleranceDeviation {
+                    tessellation_type: match &attributes[0] {
+                        Attribute::Enum(s) => {
+                            ApproximationMethod::parse(s).expect("approximation_method")
+                        }
+                        other => panic!("enum approximation_method: {other:?}"),
+                    },
+                    tolerances: match &attributes[1] {
+                        Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    definition_space: match &attributes[2] {
+                        Attribute::Enum(s) => ProductOrPresentationSpace::parse(s)
+                            .expect("product_or_presentation_space"),
+                        other => panic!("enum product_or_presentation_space: {other:?}"),
+                    },
+                };
+                let aid = ApproximationToleranceDeviationId(
+                    model.approximation_tolerance_deviations.push(v),
+                );
+                idmap.insert(id, AnyId::ApproximationToleranceDeviation(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPROXIMATION_TOLERANCE_PARAMETER" => {
+                let v = ApproximationToleranceParameter {
+                    tolerances: match &attributes[0] {
+                        Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                };
+                let aid = ApproximationToleranceParameterId(
+                    model.approximation_tolerance_parameters.push(v),
+                );
+                idmap.insert(id, AnyId::ApproximationToleranceParameter(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -24158,6 +24239,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRE_DEFINED_PRESENTATION_STYLE" => {
+                let v = PreDefinedPresentationStyle {
+                    name: as_str(&attributes[0]),
+                };
+                let aid =
+                    PreDefinedPresentationStyleId(model.pre_defined_presentation_styles.push(v));
+                idmap.insert(id, AnyId::PreDefinedPresentationStyle(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRE_DEFINED_SURFACE_SIDE_STYLE" => {
                 let v = PreDefinedSurfaceSideStyle {
                     name: as_str(&attributes[0]),
@@ -26507,6 +26598,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_approval_person_organizations(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_approximation_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_approximation_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_ascribable_states {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_ascribable_states(&mut model, aid, attributes, &idmap);
@@ -28808,6 +28904,17 @@ fn resolve_approval_person_organizations(
     it.person_organization = person_organization_v;
     it.authorized_approval = authorized_approval_v;
     it.role = role_v;
+}
+
+fn resolve_approximation_tolerances(
+    model: &mut Model,
+    aid: ApproximationToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let tolerance_v = ToleranceSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.approximation_tolerances.items[aid.0];
+    it.tolerance = tolerance_v;
 }
 
 fn resolve_ascribable_states(
@@ -32719,6 +32826,21 @@ fn resolve_representation_relationship_with_transformations(
                 other => panic!("agg list SET_ITEM_DEFINED_TRANSFORMATION: {other:?}"),
             })
         }
+        Attribute::Typed { type_name, value }
+            if type_name == "LIST_ITEM_DEFINED_TRANSFORMATION" =>
+        {
+            TransformationRef::ListItemDefinedTransformation(match value.as_ref() {
+                Attribute::List(l) => l
+                    .iter()
+                    .map(|e| {
+                        ItemDefinedTransformationRef::from_any(
+                            *idmap.get(&as_ref_id(e)).expect("ref"),
+                        )
+                    })
+                    .collect(),
+                other => panic!("agg list LIST_ITEM_DEFINED_TRANSFORMATION: {other:?}"),
+            })
+        }
         _ => TransformationRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref")),
     };
     let it = &mut model.representation_relationship_with_transformations.items[aid.0];
@@ -34132,6 +34254,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem { name: as_str(&p.attributes[0]), },
         "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
         "PRE_DEFINED_POINT_MARKER_SYMBOL" => UnitPart::PreDefinedPointMarkerSymbol,
+        "PRE_DEFINED_PRESENTATION_STYLE" => UnitPart::PreDefinedPresentationStyle,
         "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
         "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
         "PRE_DEFINED_TERMINATOR_SYMBOL" => UnitPart::PreDefinedTerminatorSymbol,
@@ -35483,6 +35606,21 @@ fn resolve_complex(
                                 })
                                 .collect(),
                             other => panic!("agg list SET_ITEM_DEFINED_TRANSFORMATION: {other:?}"),
+                        })
+                    }
+                    Attribute::Typed { type_name, value }
+                        if type_name == "LIST_ITEM_DEFINED_TRANSFORMATION" =>
+                    {
+                        TransformationRef::ListItemDefinedTransformation(match value.as_ref() {
+                            Attribute::List(l) => l
+                                .iter()
+                                .map(|e| {
+                                    ItemDefinedTransformationRef::from_any(
+                                        *idmap.get(&as_ref_id(e)).expect("ref"),
+                                    )
+                                })
+                                .collect(),
+                            other => panic!("agg list LIST_ITEM_DEFINED_TRANSFORMATION: {other:?}"),
                         })
                     }
                     _ => TransformationRef::from_any(

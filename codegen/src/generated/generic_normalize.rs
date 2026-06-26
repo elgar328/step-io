@@ -1225,6 +1225,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "APPROXIMATION_TOLERANCE" => &[Slot {
+            k: Sk::Ref,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "APPROXIMATION_TOLERANCE_DEVIATION" => &[
+            Slot {
+                k: Sk::Enum,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Enum,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "APPROXIMATION_TOLERANCE_PARAMETER" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "ASCRIBABLE_STATE" => &[
             Slot {
                 k: Sk::Str,
@@ -6535,6 +6567,12 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "PRE_DEFINED_PRESENTATION_STYLE" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "PRE_DEFINED_SURFACE_SIDE_STYLE" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -10925,6 +10963,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
         }],
         "PRE_DEFINED_MARKER" => &[],
         "PRE_DEFINED_POINT_MARKER_SYMBOL" => &[],
+        "PRE_DEFINED_PRESENTATION_STYLE" => &[],
         "PRE_DEFINED_SURFACE_SIDE_STYLE" => &[],
         "PRE_DEFINED_SYMBOL" => &[],
         "PRE_DEFINED_TERMINATOR_SYMBOL" => &[],
