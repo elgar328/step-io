@@ -107,11 +107,16 @@ fn drop_pass(
     let mut drops: BTreeMap<DropReason, usize> = BTreeMap::new();
     // Candidate set: closure-typed entities. Non-closure types are unimplemented.
     let mut keep: BTreeSet<u64> = BTreeSet::new();
+    // Root drop reason per id, so cascade can attribute itself to the ultimate
+    // unimplemented/dangling type instead of a flat "ref-dropped" label.
+    let mut root_of: BTreeMap<u64, String> = BTreeMap::new();
     for (&id, e) in graph {
         if in_subset(e) {
             keep.insert(id);
         } else {
-            bump(&mut drops, DropKind::Unimplemented, ent_name(e));
+            let n = ent_name(e);
+            root_of.insert(id, n.clone());
+            bump(&mut drops, DropKind::Unimplemented, n);
         }
     }
     // Iteratively drop candidates — fixpoint, so a drop propagates to dependents.
@@ -120,13 +125,19 @@ fn drop_pass(
         let snapshot: Vec<u64> = keep.iter().copied().collect();
         for id in snapshot {
             let ent = &graph[&id];
-            // cascade (flat): a ref to a non-kept target drops this entity. The
-            // root reason lives on the target's own record; cascade just links.
+            // cascade: a ref to a non-kept target drops this entity. Attribute it
+            // to the target's root reason (propagated), so 2nd/3rd-order cascades
+            // roll up to the ultimate unimplemented/dangling type.
             let mut cascaded = false;
             for r in entity_refs(ent) {
                 if !keep.contains(&r) {
                     keep.remove(&id);
-                    bump(&mut drops, DropKind::Cascade, "ref-dropped");
+                    let root = root_of
+                        .get(&r)
+                        .cloned()
+                        .unwrap_or_else(|| "dangling".to_string());
+                    bump(&mut drops, DropKind::Cascade, format!("via-{root}"));
+                    root_of.insert(id, root);
                     removed = true;
                     cascaded = true;
                     break;
@@ -139,6 +150,7 @@ fn drop_pass(
             // slot whose SELECT does not admit its type (schema violation).
             if let Some(reason) = nonstd_ref(ent, graph) {
                 keep.remove(&id);
+                root_of.insert(id, reason.clone());
                 bump(&mut drops, DropKind::Nonstandard, reason);
                 removed = true;
             }
