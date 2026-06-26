@@ -121,6 +121,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ADDRESS",
     "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
+    "ALL_AROUND_SHAPE_ASPECT",
     "ANGULARITY_TOLERANCE",
     "ANNOTATION_CURVE_OCCURRENCE",
     "ANNOTATION_FILL_AREA_OCCURRENCE",
@@ -159,6 +160,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
     "CALENDAR_DATE",
+    "CAMERA_MODEL",
+    "CAMERA_MODEL_D3",
     "CARTESIAN_POINT",
     "CC_DESIGN_APPROVAL",
     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -198,6 +201,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
     "CONTEXT_DEPENDENT_UNIT",
+    "CONTINUOUS_SHAPE_ASPECT",
     "CONTRACT",
     "CONTRACT_TYPE",
     "CONVERSION_BASED_UNIT",
@@ -245,6 +249,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DRAUGHTING_MODEL",
     "DRAUGHTING_PRE_DEFINED_COLOUR",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
+    "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
     "EDGE",
     "EDGE_CURVE",
     "EDGE_LOOP",
@@ -297,14 +302,17 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
     "GROUP",
+    "HYPERBOLA",
     "ID_ATTRIBUTE",
     "INT_LITERAL",
     "INTEGER_REPRESENTATION_ITEM",
     "INTERSECTION_CURVE",
     "INVISIBILITY",
     "ITEM_DEFINED_TRANSFORMATION",
+    "LEADER_DIRECTED_CALLOUT",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
+    "LIMITS_AND_FITS",
     "LINE",
     "LINE_PROFILE_TOLERANCE",
     "LITERAL_NUMBER",
@@ -323,6 +331,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "NAMED_UNIT",
     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
     "NUMERIC_EXPRESSION",
+    "OBJECT_ROLE",
     "OFFSET_SURFACE",
     "ONE_DIRECTION_REPEAT_FACTOR",
     "OPEN_SHELL",
@@ -356,6 +365,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PLANE",
     "PLANE_ANGLE_MEASURE_WITH_UNIT",
     "PLANE_ANGLE_UNIT",
+    "PLUS_MINUS_TOLERANCE",
     "POINT",
     "POINT_STYLE",
     "POLY_LOOP",
@@ -493,6 +503,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "VERTEX_LOOP",
     "VERTEX_POINT",
     "VERTEX_SHELL",
+    "VIEW_VOLUME",
     "WIRE_SHELL",
 ];
 pub const COMPLEX_PART_NAMES: &[&str] = &[
@@ -527,6 +538,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "BOUNDED_SURFACE",
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
+    "CAMERA_MODEL",
+    "CAMERA_MODEL_D3",
     "CC_DESIGN_APPROVAL",
     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
     "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
@@ -578,6 +591,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DRAUGHTING_CALLOUT",
     "DRAUGHTING_PRE_DEFINED_COLOUR",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
+    "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
     "EDGE",
     "EDGE_CURVE",
     "EDGE_LOOP",
@@ -631,6 +645,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "INTERSECTION_CURVE",
     "INVISIBILITY",
     "ITEM_DEFINED_TRANSFORMATION",
+    "LEADER_DIRECTED_CALLOUT",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
     "LINE_PROFILE_TOLERANCE",
@@ -767,6 +782,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "VECTOR",
     "VERTEX",
     "VERTEX_POINT",
+    "VIEW_VOLUME",
 ];
 pub fn is_complex_unit(parts: &[RawEntityPart]) -> bool {
     !parts.is_empty()
@@ -948,6 +964,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -987,8 +1005,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -1102,6 +1122,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "ALL_AROUND_SHAPE_ASPECT" => &[RefSlot {
+            idx: 2,
+            name: "of_shape",
+            allowed: &["PRODUCT_DEFINITION_SHAPE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "ANGULARITY_TOLERANCE" => &[
             RefSlot {
                 idx: 2,
@@ -1114,9 +1141,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -1169,6 +1198,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CURVE",
                     "ELLIPSE",
                     "GEOMETRIC_CURVE_SET",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -1217,6 +1247,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -1258,7 +1290,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -1363,6 +1397,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -1404,7 +1440,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -1502,6 +1540,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -1543,7 +1583,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -1636,6 +1678,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_TEXT_OCCURRENCE",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "DRAUGHTING_CALLOUT",
+                    "LEADER_DIRECTED_CALLOUT",
                     "OVER_RIDING_STYLED_ITEM",
                     "STYLED_ITEM",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
@@ -1681,6 +1724,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -1720,8 +1765,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -2107,6 +2154,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -2165,6 +2213,22 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &["ORIENTED_CLOSED_SHELL"],
                 complex_ok: true,
                 is_vec: true,
+            },
+        ],
+        "CAMERA_MODEL_D3" => &[
+            RefSlot {
+                idx: 1,
+                name: "view_reference_system",
+                allowed: &["AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "perspective_of_volume",
+                allowed: &["VIEW_VOLUME"],
+                complex_ok: true,
+                is_vec: false,
             },
         ],
         "CC_DESIGN_APPROVAL" => &[
@@ -2372,6 +2436,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -2411,8 +2477,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -2515,9 +2583,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -2565,9 +2635,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -2670,6 +2742,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
+                "HYPERBOLA",
                 "INTERSECTION_CURVE",
                 "LINE",
                 "PCURVE",
@@ -2723,9 +2796,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -2854,6 +2929,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -2893,8 +2970,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -3005,6 +3084,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -3046,7 +3127,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -3159,6 +3242,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -3204,8 +3289,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "GROUP",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -3302,6 +3389,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "dimensions",
             allowed: &["DIMENSIONAL_EXPONENTS"],
             complex_ok: false,
+            is_vec: false,
+        }],
+        "CONTINUOUS_SHAPE_ASPECT" => &[RefSlot {
+            idx: 2,
+            name: "of_shape",
+            allowed: &["PRODUCT_DEFINITION_SHAPE"],
+            complex_ok: true,
             is_vec: false,
         }],
         "CONTRACT" => &[RefSlot {
@@ -3421,9 +3515,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -3639,6 +3735,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -3678,8 +3776,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -3821,9 +3921,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 2,
                 name: "relating_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -3843,9 +3945,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "related_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -3867,9 +3971,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 2,
                 name: "relating_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -3889,9 +3995,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "related_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -3911,9 +4019,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 4,
                 name: "path",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -3934,9 +4044,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 0,
             name: "applies_to",
             allowed: &[
+                "ALL_AROUND_SHAPE_ASPECT",
                 "COMMON_DATUM",
                 "COMPOSITE_GROUP_SHAPE_ASPECT",
                 "COMPOSITE_SHAPE_ASPECT",
+                "CONTINUOUS_SHAPE_ASPECT",
                 "DATUM",
                 "DATUM_FEATURE",
                 "DATUM_REFERENCE_COMPARTMENT",
@@ -3957,9 +4069,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 0,
                 name: "applies_to",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -3979,9 +4093,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 2,
                 name: "path",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -4056,6 +4172,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -4095,8 +4213,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -4220,6 +4340,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -4451,6 +4572,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -4527,9 +4649,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -4657,6 +4781,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "ELEMENTARY_SURFACE",
                 "ELLIPSE",
+                "HYPERBOLA",
                 "INTERSECTION_CURVE",
                 "LINE",
                 "OFFSET_SURFACE",
@@ -4690,9 +4815,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 2,
                 name: "definition",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -4746,6 +4873,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -4779,7 +4908,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "MANIFOLD_SOLID_BREP",
                     "OFFSET_SURFACE",
@@ -4856,6 +4987,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "ELEMENTARY_SURFACE",
                 "ELLIPSE",
+                "HYPERBOLA",
                 "INTERSECTION_CURVE",
                 "LINE",
                 "OFFSET_SURFACE",
@@ -4896,9 +5028,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -4932,9 +5066,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -4975,9 +5111,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -5025,9 +5163,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -5068,9 +5208,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -5111,9 +5253,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -5165,6 +5309,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -5204,8 +5350,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -5308,6 +5456,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "HYPERBOLA" => &[RefSlot {
+            idx: 1,
+            name: "position",
+            allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "ID_ATTRIBUTE" => &[RefSlot {
             idx: 1,
             name: "identified_item",
@@ -5316,6 +5471,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ADDRESS",
                 "ADVANCED_BREP_SHAPE_REPRESENTATION",
                 "ADVANCED_FACE",
+                "ALL_AROUND_SHAPE_ASPECT",
                 "ANGULARITY_TOLERANCE",
                 "APPLICATION_CONTEXT",
                 "ASCRIBABLE_STATE_RELATIONSHIP",
@@ -5328,6 +5484,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONCENTRICITY_TOLERANCE",
                 "CONNECTED_FACE_SET",
                 "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "CONTINUOUS_SHAPE_ASPECT",
                 "CYLINDRICITY_TOLERANCE",
                 "DATUM",
                 "DATUM_FEATURE",
@@ -5420,6 +5577,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -5482,6 +5640,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "LEADER_DIRECTED_CALLOUT",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                 "OVER_RIDING_STYLED_ITEM",
@@ -5526,6 +5685,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -5565,8 +5726,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -5659,6 +5822,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -5698,8 +5863,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -5764,6 +5931,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "LEADER_DIRECTED_CALLOUT" => &[RefSlot {
+            idx: 1,
+            name: "contents",
+            allowed: &[
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT_OCCURRENCE",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "LENGTH_MEASURE_WITH_UNIT" => &[RefSlot {
             idx: 1,
             name: "unit_component",
@@ -5817,9 +5998,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -5885,6 +6068,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -5924,8 +6109,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6040,6 +6227,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -6079,8 +6268,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6243,6 +6434,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -6282,8 +6475,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6373,9 +6568,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -6587,6 +6784,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -6628,7 +6827,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6724,9 +6925,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -6810,9 +7013,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -6949,6 +7154,27 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "PLUS_MINUS_TOLERANCE" => &[
+            RefSlot {
+                idx: 0,
+                name: "range",
+                allowed: &["LIMITS_AND_FITS", "TOLERANCE_VALUE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "toleranced_dimension",
+                allowed: &[
+                    "DIMENSIONAL_LOCATION",
+                    "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_PATH",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "POINT_STYLE" => &[
             RefSlot {
                 idx: 1,
@@ -7011,9 +7237,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -7064,6 +7292,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE",
                 "BOUNDED_SURFACE_CURVE",
                 "BREP_WITH_VOIDS",
+                "CAMERA_MODEL",
+                "CAMERA_MODEL_D3",
                 "CARTESIAN_POINT",
                 "CIRCLE",
                 "CLOSED_SHELL",
@@ -7103,8 +7333,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_CURVE_SET",
                 "GEOMETRIC_REPRESENTATION_ITEM",
                 "GEOMETRIC_SET",
+                "HYPERBOLA",
                 "INTEGER_REPRESENTATION_ITEM",
                 "INTERSECTION_CURVE",
+                "LEADER_DIRECTED_CALLOUT",
                 "LINE",
                 "LOOP",
                 "MANIFOLD_SOLID_BREP",
@@ -7199,6 +7431,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -7238,8 +7472,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -7510,6 +7746,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 2,
             name: "definition",
             allowed: &[
+                "ALL_AROUND_SHAPE_ASPECT",
                 "ANGULARITY_TOLERANCE",
                 "ASSEMBLY_COMPONENT_USAGE",
                 "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
@@ -7520,6 +7757,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "COMPOSITE_GROUP_SHAPE_ASPECT",
                 "COMPOSITE_SHAPE_ASPECT",
                 "CONCENTRICITY_TOLERANCE",
+                "CONTINUOUS_SHAPE_ASPECT",
                 "CYLINDRICITY_TOLERANCE",
                 "DATUM",
                 "DATUM_FEATURE",
@@ -7603,6 +7841,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 2,
             name: "definition",
             allowed: &[
+                "ALL_AROUND_SHAPE_ASPECT",
                 "ANGULARITY_TOLERANCE",
                 "ASSEMBLY_COMPONENT_USAGE",
                 "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
@@ -7613,6 +7852,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "COMPOSITE_GROUP_SHAPE_ASPECT",
                 "COMPOSITE_SHAPE_ASPECT",
                 "CONCENTRICITY_TOLERANCE",
+                "CONTINUOUS_SHAPE_ASPECT",
                 "CYLINDRICITY_TOLERANCE",
                 "DATUM",
                 "DATUM_FEATURE",
@@ -7682,9 +7922,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 0,
                 name: "definition",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -7778,6 +8020,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -7817,8 +8061,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -7926,6 +8172,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -7965,8 +8213,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -8174,9 +8424,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -8214,6 +8466,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -8284,9 +8537,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 2,
                 name: "relating_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -8306,9 +8561,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "related_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -8330,9 +8587,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 0,
                 name: "definition",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -8405,6 +8664,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -8444,8 +8705,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -8553,6 +8816,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -8592,8 +8857,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -8797,9 +9064,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -8854,6 +9123,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -8895,7 +9166,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -8976,6 +9249,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -9036,6 +9310,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -9074,6 +9349,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -9108,9 +9384,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -9263,6 +9541,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
+                "HYPERBOLA",
                 "INTERSECTION_CURVE",
                 "LINE",
                 "PCURVE",
@@ -9316,9 +9595,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -9380,6 +9661,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -9421,7 +9704,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -9568,6 +9853,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 5,
                 name: "font",
                 allowed: &[
+                    "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
                     "EXTERNALLY_DEFINED_TEXT_FONT",
                     "PRE_DEFINED_TEXT_FONT",
                     "TEXT_FONT",
@@ -9703,9 +9989,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 1,
                 name: "boundaries",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -9802,9 +10090,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -9849,6 +10139,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -9924,9 +10215,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -9990,6 +10283,22 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "VIEW_VOLUME" => &[
+            RefSlot {
+                idx: 1,
+                name: "projection_point",
+                allowed: &["CARTESIAN_POINT"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 8,
+                name: "view_window",
+                allowed: &["PLANAR_BOX"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "WIRE_SHELL" => &[RefSlot {
             idx: 1,
             name: "wire_shell_extent",
@@ -10130,6 +10439,22 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "CAMERA_MODEL_D3" => &[
+            RefSlot {
+                idx: 0,
+                name: "view_reference_system",
+                allowed: &["AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "perspective_of_volume",
+                allowed: &["VIEW_VOLUME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "CC_DESIGN_APPROVAL" => &[RefSlot {
             idx: 0,
             name: "items",
@@ -10250,6 +10575,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -10289,8 +10616,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -10396,6 +10725,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
+                "HYPERBOLA",
                 "INTERSECTION_CURVE",
                 "LINE",
                 "PCURVE",
@@ -10474,6 +10804,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE",
                 "BOUNDED_SURFACE_CURVE",
                 "BREP_WITH_VOIDS",
+                "CAMERA_MODEL",
+                "CAMERA_MODEL_D3",
                 "CARTESIAN_POINT",
                 "CIRCLE",
                 "CLOSED_SHELL",
@@ -10519,8 +10851,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_SET",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "GROUP",
+                "HYPERBOLA",
                 "INTEGER_REPRESENTATION_ITEM",
                 "INTERSECTION_CURVE",
+                "LEADER_DIRECTED_CALLOUT",
                 "LINE",
                 "LOOP",
                 "MANIFOLD_SOLID_BREP",
@@ -10762,9 +11096,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 0,
             name: "applies_to",
             allowed: &[
+                "ALL_AROUND_SHAPE_ASPECT",
                 "COMMON_DATUM",
                 "COMPOSITE_GROUP_SHAPE_ASPECT",
                 "COMPOSITE_SHAPE_ASPECT",
+                "CONTINUOUS_SHAPE_ASPECT",
                 "DATUM",
                 "DATUM_FEATURE",
                 "DATUM_REFERENCE_COMPARTMENT",
@@ -10832,6 +11168,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
+                "HYPERBOLA",
                 "INTERSECTION_CURVE",
                 "LINE",
                 "PCURVE",
@@ -10963,6 +11300,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -11078,6 +11416,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "ELEMENTARY_SURFACE",
                 "ELLIPSE",
+                "HYPERBOLA",
                 "INTERSECTION_CURVE",
                 "LINE",
                 "OFFSET_SURFACE",
@@ -11118,9 +11457,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "toleranced_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -11213,6 +11554,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "LEADER_DIRECTED_CALLOUT",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                 "OVER_RIDING_STYLED_ITEM",
@@ -11257,6 +11599,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -11296,8 +11640,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -11390,6 +11736,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -11429,8 +11777,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -11539,6 +11889,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -11578,8 +11930,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -11995,6 +12349,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 2,
             name: "definition",
             allowed: &[
+                "ALL_AROUND_SHAPE_ASPECT",
                 "ANGULARITY_TOLERANCE",
                 "ASSEMBLY_COMPONENT_USAGE",
                 "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
@@ -12005,6 +12360,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "COMPOSITE_GROUP_SHAPE_ASPECT",
                 "COMPOSITE_SHAPE_ASPECT",
                 "CONCENTRICITY_TOLERANCE",
+                "CONTINUOUS_SHAPE_ASPECT",
                 "CYLINDRICITY_TOLERANCE",
                 "DATUM",
                 "DATUM_FEATURE",
@@ -12058,9 +12414,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 0,
                 name: "definition",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -12133,6 +12491,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -12172,8 +12532,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -12281,6 +12643,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -12320,8 +12684,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -12483,9 +12849,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 2,
                 name: "relating_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -12505,9 +12873,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 3,
                 name: "related_shape_aspect",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -12580,6 +12950,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -12621,7 +12993,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -12702,6 +13076,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
+                    "HYPERBOLA",
                     "INTERSECTION_CURVE",
                     "LINE",
                     "PCURVE",
@@ -12860,6 +13235,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 4,
                 name: "font",
                 allowed: &[
+                    "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
                     "EXTERNALLY_DEFINED_TEXT_FONT",
                     "PRE_DEFINED_TEXT_FONT",
                     "TEXT_FONT",
@@ -12938,9 +13314,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 1,
                 name: "boundaries",
                 allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
                     "DATUM",
                     "DATUM_FEATURE",
                     "DATUM_REFERENCE_COMPARTMENT",
@@ -12992,6 +13370,22 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "VIEW_VOLUME" => &[
+            RefSlot {
+                idx: 1,
+                name: "projection_point",
+                allowed: &["CARTESIAN_POINT"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 8,
+                name: "view_window",
+                allowed: &["PLANAR_BOX"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         _ => &[],
     }
 }
@@ -13017,6 +13411,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_advanced_faces: Vec<(AdvancedFaceId, u64)> = Vec::new();
+    let mut pending_all_around_shape_aspects: Vec<(AllAroundShapeAspectId, u64)> = Vec::new();
     let mut pending_angularity_tolerances: Vec<(AngularityToleranceId, u64)> = Vec::new();
     let mut pending_annotation_curve_occurrences: Vec<(AnnotationCurveOccurrenceId, u64)> =
         Vec::new();
@@ -13061,6 +13456,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_bounded_pcurves: Vec<(BoundedPcurveId, u64)> = Vec::new();
     let mut pending_bounded_surface_curves: Vec<(BoundedSurfaceCurveId, u64)> = Vec::new();
     let mut pending_brep_with_voidss: Vec<(BrepWithVoidsId, u64)> = Vec::new();
+    let mut pending_camera_model_d3s: Vec<(CameraModelD3Id, u64)> = Vec::new();
     let mut pending_cc_design_approvals: Vec<(CcDesignApprovalId, u64)> = Vec::new();
     let mut pending_cc_design_date_and_time_assignments: Vec<(
         CcDesignDateAndTimeAssignmentId,
@@ -13119,6 +13515,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_context_dependent_units: Vec<(ContextDependentUnitId, u64)> = Vec::new();
+    let mut pending_continuous_shape_aspects: Vec<(ContinuousShapeAspectId, u64)> = Vec::new();
     let mut pending_contracts: Vec<(ContractId, u64)> = Vec::new();
     let mut pending_conversion_based_units: Vec<(ConversionBasedUnitId, u64)> = Vec::new();
     let mut pending_curve_styles: Vec<(CurveStyleId, u64)> = Vec::new();
@@ -13248,11 +13645,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_global_unit_assigned_contexts: Vec<(GlobalUnitAssignedContextId, u64)> =
         Vec::new();
+    let mut pending_hyperbolas: Vec<(HyperbolaId, u64)> = Vec::new();
     let mut pending_id_attributes: Vec<(IdAttributeId, u64)> = Vec::new();
     let mut pending_intersection_curves: Vec<(IntersectionCurveId, u64)> = Vec::new();
     let mut pending_invisibilitys: Vec<(InvisibilityId, u64)> = Vec::new();
     let mut pending_item_defined_transformations: Vec<(ItemDefinedTransformationId, u64)> =
         Vec::new();
+    let mut pending_leader_directed_callouts: Vec<(LeaderDirectedCalloutId, u64)> = Vec::new();
     let mut pending_length_measure_with_units: Vec<(LengthMeasureWithUnitId, u64)> = Vec::new();
     let mut pending_length_units: Vec<(LengthUnitId, u64)> = Vec::new();
     let mut pending_lines: Vec<(LineId, u64)> = Vec::new();
@@ -13314,6 +13713,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_plane_angle_measure_with_units: Vec<(PlaneAngleMeasureWithUnitId, u64)> =
         Vec::new();
     let mut pending_plane_angle_units: Vec<(PlaneAngleUnitId, u64)> = Vec::new();
+    let mut pending_plus_minus_tolerances: Vec<(PlusMinusToleranceId, u64)> = Vec::new();
     let mut pending_point_styles: Vec<(PointStyleId, u64)> = Vec::new();
     let mut pending_poly_loops: Vec<(PolyLoopId, u64)> = Vec::new();
     let mut pending_polylines: Vec<(PolylineId, u64)> = Vec::new();
@@ -13465,6 +13865,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_vertex_loops: Vec<(VertexLoopId, u64)> = Vec::new();
     let mut pending_vertex_points: Vec<(VertexPointId, u64)> = Vec::new();
     let mut pending_vertex_shells: Vec<(VertexShellId, u64)> = Vec::new();
+    let mut pending_view_volumes: Vec<(ViewVolumeId, u64)> = Vec::new();
     let mut pending_wire_shells: Vec<(WireShellId, u64)> = Vec::new();
     let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();
     for (&id, ent) in map {
@@ -13731,6 +14132,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "ALL_AROUND_SHAPE_ASPECT" => {
+                let v = AllAroundShapeAspect {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                };
+                let aid = AllAroundShapeAspectId(model.all_around_shape_aspects.push(v));
+                idmap.insert(id, AnyId::AllAroundShapeAspect(aid));
+                pending_all_around_shape_aspects.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "ANGULARITY_TOLERANCE" => {
                 let v = AngularityTolerance {
                     name: as_str(&attributes[0]),
@@ -13739,8 +14158,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -14337,6 +14756,29 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CAMERA_MODEL" => {
+                let v = CameraModel {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = CameraModelId(model.camera_models.push(v));
+                idmap.insert(id, AnyId::CameraModel(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CAMERA_MODEL_D3" => {
+                let v = CameraModelD3 {
+                    name: as_str(&attributes[0]),
+                    view_reference_system: Axis2Placement3dRef::Axis2Placement3d(
+                        Axis2Placement3dId(usize::MAX),
+                    ),
+                    perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)),
+                };
+                let aid = CameraModelD3Id(model.camera_model_d3s.push(v));
+                idmap.insert(id, AnyId::CameraModelD3(aid));
+                pending_camera_model_d3s.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CARTESIAN_POINT" => {
                 let v = CartesianPoint {
                     name: as_str(&attributes[0]),
@@ -14529,8 +14971,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -14559,8 +15001,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -14806,8 +15248,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -14967,6 +15409,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ContextDependentUnitId(model.context_dependent_units.push(v));
                 idmap.insert(id, AnyId::ContextDependentUnit(aid));
                 pending_context_dependent_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONTINUOUS_SHAPE_ASPECT" => {
+                let v = ContinuousShapeAspect {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                };
+                let aid = ContinuousShapeAspectId(model.continuous_shape_aspects.push(v));
+                idmap.insert(id, AnyId::ContinuousShapeAspect(aid));
+                pending_continuous_shape_aspects.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -15143,8 +15603,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = CylindricityToleranceId(model.cylindricity_tolerances.push(v));
@@ -15479,8 +15939,12 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
-                    related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                    related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
                 };
                 let aid = DimensionalLocationId(model.dimensional_locations.push(v));
                 idmap.insert(id, AnyId::DimensionalLocation(aid));
@@ -15495,9 +15959,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
-                    related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
-                    path: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                    related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                    path: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
                 };
                 let aid =
                     DimensionalLocationWithPathId(model.dimensional_location_with_paths.push(v));
@@ -15508,7 +15976,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 name, attributes, ..
             } if name == "DIMENSIONAL_SIZE" => {
                 let v = DimensionalSize {
-                    applies_to: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
+                        usize::MAX,
+                    )),
                     name: as_str(&attributes[1]),
                 };
                 let aid = DimensionalSizeId(model.dimensional_sizes.push(v));
@@ -15519,9 +15989,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 name, attributes, ..
             } if name == "DIMENSIONAL_SIZE_WITH_PATH" => {
                 let v = DimensionalSizeWithPath {
-                    applies_to: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
+                        usize::MAX,
+                    )),
                     name: as_str(&attributes[1]),
-                    path: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    path: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
                 };
                 let aid = DimensionalSizeWithPathId(model.dimensional_size_with_paths.push(v));
                 idmap.insert(id, AnyId::DimensionalSizeWithPath(aid));
@@ -15631,6 +16103,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     model.draughting_pre_defined_curve_fonts.push(v),
                 );
                 idmap.insert(id, AnyId::DraughtingPreDefinedCurveFont(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => {
+                let v = DraughtingPreDefinedTextFont {
+                    name: as_str(&attributes[0]),
+                };
+                let aid =
+                    DraughtingPreDefinedTextFontId(model.draughting_pre_defined_text_fonts.push(v));
+                idmap.insert(id, AnyId::DraughtingPreDefinedTextFont(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -15984,8 +16466,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = FlatnessToleranceId(model.flatness_tolerances.push(v));
@@ -16114,9 +16596,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    definition: GeometricItemSpecificUsageSelectRef::CommonDatum(CommonDatumId(
-                        usize::MAX,
-                    )),
+                    definition: GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
                     used_representation: ShapeModelRef::AdvancedBrepShapeRepresentation(
                         AdvancedBrepShapeRepresentationId(usize::MAX),
                     ),
@@ -16173,8 +16655,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = GeometricToleranceId(model.geometric_tolerances.push(v));
@@ -16191,8 +16673,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -16212,8 +16694,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
                         LengthMeasureWithUnitId(usize::MAX),
@@ -16240,8 +16722,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
                         LengthMeasureWithUnitId(usize::MAX),
@@ -16263,8 +16745,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     modifiers: match &attributes[4] {
                         Attribute::List(l) => l
@@ -16297,8 +16779,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     modifiers: match &attributes[4] {
                         Attribute::List(l) => l
@@ -16380,6 +16862,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "HYPERBOLA" => {
+                let v = Hyperbola {
+                    name: as_str(&attributes[0]),
+                    position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+                    semi_axis: as_real(&attributes[2]),
+                    semi_imag_axis: as_real(&attributes[3]),
+                };
+                let aid = HyperbolaId(model.hyperbolas.push(v));
+                idmap.insert(id, AnyId::Hyperbola(aid));
+                pending_hyperbolas.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "ID_ATTRIBUTE" => {
                 let v = IdAttribute {
                     attribute_value: as_str(&attributes[0]),
@@ -16457,6 +16952,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "LEADER_DIRECTED_CALLOUT" => {
+                let v = LeaderDirectedCallout {
+                    name: as_str(&attributes[0]),
+                    contents: Vec::new(),
+                };
+                let aid = LeaderDirectedCalloutId(model.leader_directed_callouts.push(v));
+                idmap.insert(id, AnyId::LeaderDirectedCallout(aid));
+                pending_leader_directed_callouts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "LENGTH_MEASURE_WITH_UNIT" => {
                 let v = LengthMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
@@ -16482,6 +16988,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "LIMITS_AND_FITS" => {
+                let v = LimitsAndFits {
+                    form_variance: as_str(&attributes[0]),
+                    zone_variance: as_str(&attributes[1]),
+                    grade: as_str(&attributes[2]),
+                    source: as_str(&attributes[3]),
+                };
+                let aid = LimitsAndFitsId(model.limits_and_fitss.push(v));
+                idmap.insert(id, AnyId::LimitsAndFits(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "LINE" => {
                 let v = Line {
                     name: as_str(&attributes[0]),
@@ -16502,8 +17020,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = LineProfileToleranceId(model.line_profile_tolerances.push(v));
@@ -16687,8 +17205,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     modifier: match &attributes[4] {
                         Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"),
@@ -16741,6 +17259,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let v = NumericExpression {};
                 let aid = NumericExpressionId(model.numeric_expressions.push(v));
                 idmap.insert(id, AnyId::NumericExpression(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "OBJECT_ROLE" => {
+                let v = ObjectRole {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = ObjectRoleId(model.object_roles.push(v));
+                idmap.insert(id, AnyId::ObjectRole(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -17013,8 +17544,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -17069,8 +17600,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -17370,6 +17901,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PLUS_MINUS_TOLERANCE" => {
+                let v = PlusMinusTolerance {
+                    range: ToleranceMethodDefinitionRef::LimitsAndFits(LimitsAndFitsId(usize::MAX)),
+                    toleranced_dimension: DimensionalCharacteristicRef::DimensionalLocation(
+                        DimensionalLocationId(usize::MAX),
+                    ),
+                };
+                let aid = PlusMinusToleranceId(model.plus_minus_tolerances.push(v));
+                idmap.insert(id, AnyId::PlusMinusTolerance(aid));
+                pending_plus_minus_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "POINT" => {
                 let v = Point {
                     name: as_str(&attributes[0]),
@@ -17422,8 +17966,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = PositionToleranceId(model.position_tolerances.push(v));
@@ -17815,8 +18359,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    definition: CharacterizedDefinitionRef::AngularityTolerance(
-                        AngularityToleranceId(usize::MAX),
+                    definition: CharacterizedDefinitionRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = ProductDefinitionShapeId(model.product_definition_shapes.push(v));
@@ -17872,8 +18416,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    definition: CharacterizedDefinitionRef::AngularityTolerance(
-                        AngularityToleranceId(usize::MAX),
+                    definition: CharacterizedDefinitionRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = PropertyDefinitionId(model.property_definitions.push(v));
@@ -17903,7 +18447,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 name, attributes, ..
             } if name == "PROPERTY_DEFINITION_REPRESENTATION" => {
                 let v = PropertyDefinitionRepresentation {
-                    definition: RepresentedDefinitionRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    definition: RepresentedDefinitionRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
                     used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
                         AdvancedBrepShapeRepresentationId(usize::MAX),
                     ),
@@ -18201,8 +18747,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = RoundnessToleranceId(model.roundness_tolerances.push(v));
@@ -18292,8 +18838,12 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Unset => None,
                         _ => Some(as_str(&attributes[1])),
                     },
-                    relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
-                    related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                    related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
                 };
                 let aid = ShapeAspectRelationshipId(model.shape_aspect_relationships.push(v));
                 idmap.insert(id, AnyId::ShapeAspectRelationship(aid));
@@ -18303,7 +18853,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 name, attributes, ..
             } if name == "SHAPE_DEFINITION_REPRESENTATION" => {
                 let v = ShapeDefinitionRepresentation {
-                    definition: RepresentedDefinitionRef::CommonDatum(CommonDatumId(usize::MAX)),
+                    definition: RepresentedDefinitionRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
                     used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
                         AdvancedBrepShapeRepresentationId(usize::MAX),
                     ),
@@ -18504,8 +19056,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = StraightnessToleranceId(model.straightness_tolerances.push(v));
@@ -18586,8 +19138,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                 };
                 let aid = SurfaceProfileToleranceId(model.surface_profile_tolerances.push(v));
@@ -18811,8 +19363,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -18960,9 +19512,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         Attribute::Enum(s) => TextPath::parse(s).expect("text_path"),
                         other => panic!("enum text_path: {other:?}"),
                     },
-                    font: FontSelectRef::ExternallyDefinedTextFont(ExternallyDefinedTextFontId(
-                        usize::MAX,
-                    )),
+                    font: FontSelectRef::DraughtingPreDefinedTextFont(
+                        DraughtingPreDefinedTextFontId(usize::MAX),
+                    ),
                 };
                 let aid = TextLiteralId(model.text_literals.push(v));
                 idmap.insert(id, AnyId::TextLiteral(aid));
@@ -19128,8 +19680,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     datum_system: Vec::new(),
                 };
@@ -19198,8 +19750,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         _ => Some(as_str(&attributes[1])),
                     },
                     magnitude: None,
-                    toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(
-                        CommonDatumId(usize::MAX),
+                    toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
                     ),
                     displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
                         LengthMeasureWithUnitId(usize::MAX),
@@ -19337,6 +19889,31 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "VIEW_VOLUME" => {
+                let v = ViewVolume {
+                    projection_type: match &attributes[0] {
+                        Attribute::Enum(s) => {
+                            CentralOrParallel::parse(s).expect("central_or_parallel")
+                        }
+                        other => panic!("enum central_or_parallel: {other:?}"),
+                    },
+                    projection_point: CartesianPointRef::CartesianPoint(CartesianPointId(
+                        usize::MAX,
+                    )),
+                    view_plane_distance: as_real(&attributes[2]),
+                    front_plane_distance: as_real(&attributes[3]),
+                    front_plane_clipping: matches!(&attributes[4], Attribute::Enum(s) if s == "T"),
+                    back_plane_distance: as_real(&attributes[5]),
+                    back_plane_clipping: matches!(&attributes[6], Attribute::Enum(s) if s == "T"),
+                    view_volume_sides_clipping: matches!(&attributes[7], Attribute::Enum(s) if s == "T"),
+                    view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)),
+                };
+                let aid = ViewVolumeId(model.view_volumes.push(v));
+                idmap.insert(id, AnyId::ViewVolume(aid));
+                pending_view_volumes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "WIRE_SHELL" => {
                 let v = WireShell {
                     name: as_str(&attributes[0]),
@@ -19413,6 +19990,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_advanced_faces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_advanced_faces(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_all_around_shape_aspects {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_all_around_shape_aspects(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_angularity_tolerances {
@@ -19573,6 +20155,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_brep_with_voidss {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_brep_with_voidss(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_camera_model_d3s {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_camera_model_d3s(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_cc_design_approvals {
@@ -19740,6 +20327,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_context_dependent_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_context_dependent_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_continuous_shape_aspects {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_continuous_shape_aspects(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_contracts {
@@ -20123,6 +20715,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_global_unit_assigned_contexts(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_hyperbolas {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_hyperbolas(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_id_attributes {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_id_attributes(&mut model, aid, attributes, &idmap);
@@ -20141,6 +20738,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_item_defined_transformations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_item_defined_transformations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_leader_directed_callouts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_leader_directed_callouts(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_length_measure_with_units {
@@ -20348,6 +20950,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_plane_angle_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_plane_angle_units(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_plus_minus_tolerances {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_plus_minus_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_point_styles {
@@ -20856,6 +21463,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_vertex_shells(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_view_volumes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_view_volumes(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_wire_shells {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_wire_shells(&mut model, aid, attributes, &idmap);
@@ -21054,6 +21666,18 @@ fn resolve_advanced_faces(
     let it = &mut model.advanced_faces.items[aid.0];
     it.bounds = bounds_v;
     it.face_geometry = face_geometry_v;
+}
+
+fn resolve_all_around_shape_aspects(
+    model: &mut Model,
+    aid: AllAroundShapeAspectId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.all_around_shape_aspects.items[aid.0];
+    it.of_shape = of_shape_v;
 }
 
 fn resolve_angularity_tolerances(
@@ -21648,6 +22272,21 @@ fn resolve_brep_with_voidss(
     it.voids = voids_v;
 }
 
+fn resolve_camera_model_d3s(
+    model: &mut Model,
+    aid: CameraModelD3Id,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let view_reference_system_v =
+        Axis2Placement3dRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let perspective_of_volume_v =
+        ViewVolumeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.camera_model_d3s.items[aid.0];
+    it.view_reference_system = view_reference_system_v;
+    it.perspective_of_volume = perspective_of_volume_v;
+}
+
 fn resolve_cc_design_approvals(
     model: &mut Model,
     aid: CcDesignApprovalId,
@@ -22201,6 +22840,18 @@ fn resolve_context_dependent_units(
         DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.context_dependent_units.items[aid.0];
     it.dimensions = dimensions_v;
+}
+
+fn resolve_continuous_shape_aspects(
+    model: &mut Model,
+    aid: ContinuousShapeAspectId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.continuous_shape_aspects.items[aid.0];
+    it.of_shape = of_shape_v;
 }
 
 fn resolve_contracts(
@@ -23472,6 +24123,17 @@ fn resolve_global_unit_assigned_contexts(
     it.units = units_v;
 }
 
+fn resolve_hyperbolas(
+    model: &mut Model,
+    aid: HyperbolaId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let position_v = Axis2PlacementRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.hyperbolas.items[aid.0];
+    it.position = position_v;
+}
+
 fn resolve_id_attributes(
     model: &mut Model,
     aid: IdAttributeId,
@@ -23533,6 +24195,23 @@ fn resolve_item_defined_transformations(
     let it = &mut model.item_defined_transformations.items[aid.0];
     it.transform_item_1 = transform_item_1_v;
     it.transform_item_2 = transform_item_2_v;
+}
+
+fn resolve_leader_directed_callouts(
+    model: &mut Model,
+    aid: LeaderDirectedCalloutId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let contents_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DraughtingCalloutElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.leader_directed_callouts.items[aid.0];
+    it.contents = contents_v;
 }
 
 fn resolve_length_measure_with_units(
@@ -24150,6 +24829,21 @@ fn resolve_plane_angle_units(
         DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.plane_angle_units.items[aid.0];
     it.dimensions = dimensions_v;
+}
+
+fn resolve_plus_minus_tolerances(
+    model: &mut Model,
+    aid: PlusMinusToleranceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let range_v =
+        ToleranceMethodDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let toleranced_dimension_v =
+        DimensionalCharacteristicRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.plus_minus_tolerances.items[aid.0];
+    it.range = range_v;
+    it.toleranced_dimension = toleranced_dimension_v;
 }
 
 fn resolve_point_styles(
@@ -25769,6 +26463,20 @@ fn resolve_vertex_shells(
     it.vertex_shell_extent = vertex_shell_extent_v;
 }
 
+fn resolve_view_volumes(
+    model: &mut Model,
+    aid: ViewVolumeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let projection_point_v =
+        CartesianPointRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let view_window_v = PlanarBoxRef::from_any(*idmap.get(&as_ref_id(&attrs[8])).expect("ref"));
+    let it = &mut model.view_volumes.items[aid.0];
+    it.projection_point = projection_point_v;
+    it.view_window = view_window_v;
+}
+
 fn resolve_wire_shells(
     model: &mut Model,
     aid: WireShellId,
@@ -25787,1145 +26495,285 @@ fn resolve_wire_shells(
 }
 
 fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
-    parts
-        .iter()
-        .map(|p| match p.name.as_str() {
-            "ACTION" => UnitPart::Action {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
-            },
-            "ACTION_METHOD" => UnitPart::ActionMethod {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                consequence: as_str(&p.attributes[2]),
-                purpose: as_str(&p.attributes[3]),
-            },
-            "ACTION_METHOD_RELATIONSHIP" => UnitPart::ActionMethodRelationship {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                relating_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
-                related_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
-            },
-            "ACTION_RELATIONSHIP" => UnitPart::ActionRelationship {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                relating_action: ActionRef::Action(ActionId(usize::MAX)),
-                related_action: ActionRef::Action(ActionId(usize::MAX)),
-            },
-            "ACTION_REQUEST_ASSIGNMENT" => UnitPart::ActionRequestAssignment {
-                assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
-                    VersionedActionRequestId(usize::MAX),
-                ),
-            },
-            "ACTION_RESOURCE" => UnitPart::ActionResource {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                usage: Vec::new(),
-                kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(usize::MAX)),
-            },
-            "ACTION_RESOURCE_REQUIREMENT" => UnitPart::ActionResourceRequirement {
-                name: as_str(&p.attributes[0]),
-                description: as_str(&p.attributes[1]),
-                kind: ResourceRequirementTypeRef::ResourceRequirementType(
-                    ResourceRequirementTypeId(usize::MAX),
-                ),
-                operations: Vec::new(),
-            },
-            "ADDRESS" => UnitPart::Address {
-                internal_location: match &p.attributes[0] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[0])),
-                },
-                street_number: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                street: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-                postal_box: match &p.attributes[3] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[3])),
-                },
-                town: match &p.attributes[4] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[4])),
-                },
-                region: match &p.attributes[5] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[5])),
-                },
-                postal_code: match &p.attributes[6] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[6])),
-                },
-                country: match &p.attributes[7] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[7])),
-                },
-                facsimile_number: match &p.attributes[8] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[8])),
-                },
-                telephone_number: match &p.attributes[9] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[9])),
-                },
-                electronic_mail_address: match &p.attributes[10] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[10])),
-                },
-                telex_number: match &p.attributes[11] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[11])),
-                },
-            },
-            "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
-            "ADVANCED_FACE" => UnitPart::AdvancedFace,
-            "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
-            "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence {
-                role: match &p.attributes[0] {
-                    Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s)
-                        .expect("annotation_placeholder_occurrence_role"),
-                    other => panic!("enum annotation_placeholder_occurrence_role: {other:?}"),
-                },
-                line_spacing: as_real(&p.attributes[1]),
-            },
-            "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
-            "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
-            "ANNOTATION_TEXT" => UnitPart::AnnotationText,
-            "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter {
-                alignment: as_str(&p.attributes[0]),
-            },
-            "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement {
-                name: as_str(&p.attributes[0]),
-                frame_of_reference: ApplicationContextRef::ApplicationContext(
-                    ApplicationContextId(usize::MAX),
-                ),
-            },
-            "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment {
-                assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
-            },
-            "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(
-                    usize::MAX,
-                )),
-                related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(
-                    usize::MAX,
-                )),
-            },
-            "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage {
-                reference_designator: match &p.attributes[0] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[0])),
-                },
-            },
-            "B_SPLINE_CURVE" => UnitPart::BSplineCurve {
-                degree: as_int(&p.attributes[0]),
-                control_points_list: Vec::new(),
-                curve_form: match &p.attributes[2] {
-                    Attribute::Enum(s) => BSplineCurveForm::parse(s).expect("b_spline_curve_form"),
-                    other => panic!("enum b_spline_curve_form: {other:?}"),
-                },
-                closed_curve: as_logical(&p.attributes[3]),
-                self_intersect: as_logical(&p.attributes[4]),
-            },
-            "B_SPLINE_CURVE_WITH_KNOTS" => UnitPart::BSplineCurveWithKnots {
-                knot_multiplicities: match &p.attributes[0] {
-                    Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-                knots: match &p.attributes[1] {
-                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-                knot_spec: match &p.attributes[2] {
-                    Attribute::Enum(s) => KnotType::parse(s).expect("knot_type"),
-                    other => panic!("enum knot_type: {other:?}"),
-                },
-            },
-            "B_SPLINE_SURFACE" => UnitPart::BSplineSurface {
-                u_degree: as_int(&p.attributes[0]),
-                v_degree: as_int(&p.attributes[1]),
-                control_points_list: Vec::new(),
-                surface_form: match &p.attributes[3] {
-                    Attribute::Enum(s) => {
-                        BSplineSurfaceForm::parse(s).expect("b_spline_surface_form")
-                    }
-                    other => panic!("enum b_spline_surface_form: {other:?}"),
-                },
-                u_closed: as_logical(&p.attributes[4]),
-                v_closed: as_logical(&p.attributes[5]),
-                self_intersect: as_logical(&p.attributes[6]),
-            },
-            "B_SPLINE_SURFACE_WITH_KNOTS" => UnitPart::BSplineSurfaceWithKnots {
-                u_multiplicities: match &p.attributes[0] {
-                    Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-                v_multiplicities: match &p.attributes[1] {
-                    Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-                u_knots: match &p.attributes[2] {
-                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-                v_knots: match &p.attributes[3] {
-                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-                knot_spec: match &p.attributes[4] {
-                    Attribute::Enum(s) => KnotType::parse(s).expect("knot_type"),
-                    other => panic!("enum knot_type: {other:?}"),
-                },
-            },
-            "BEZIER_CURVE" => UnitPart::BezierCurve,
-            "BEZIER_SURFACE" => UnitPart::BezierSurface,
-            "BOUNDED_CURVE" => UnitPart::BoundedCurve,
-            "BOUNDED_PCURVE" => UnitPart::BoundedPcurve,
-            "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
-            "BOUNDED_SURFACE_CURVE" => UnitPart::BoundedSurfaceCurve,
-            "BREP_WITH_VOIDS" => UnitPart::BrepWithVoids { voids: Vec::new() },
-            "CC_DESIGN_APPROVAL" => UnitPart::CcDesignApproval { items: Vec::new() },
-            "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => {
-                UnitPart::CcDesignDateAndTimeAssignment { items: Vec::new() }
-            }
-            "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => {
-                UnitPart::CcDesignPersonAndOrganizationAssignment { items: Vec::new() }
-            }
-            "CC_DESIGN_SECURITY_CLASSIFICATION" => {
-                UnitPart::CcDesignSecurityClassification { items: Vec::new() }
-            }
-            "CHANGE_REQUEST" => UnitPart::ChangeRequest { items: Vec::new() },
-            "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline {
-                outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
-            },
-            "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke {
-                stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
-            },
-            "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => {
-                UnitPart::CharacterizedItemWithinRepresentation {
-                    item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-                    rep: RepresentationRef::AdvancedBrepShapeRepresentation(
-                        AdvancedBrepShapeRepresentationId(usize::MAX),
-                    ),
-                }
-            }
-            "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "CLOSED_SHELL" => UnitPart::ClosedShell,
-            "COLOUR" => UnitPart::Colour,
-            "COLOUR_RGB" => UnitPart::ColourRgb {
-                red: as_real(&p.attributes[0]),
-                green: as_real(&p.attributes[1]),
-                blue: as_real(&p.attributes[2]),
-            },
-            "COLOUR_SPECIFICATION" => UnitPart::ColourSpecification {
-                name: as_str(&p.attributes[0]),
-            },
-            "COMMON_DATUM" => UnitPart::CommonDatum,
-            "COMPOSITE_CURVE" => UnitPart::CompositeCurve {
-                segments: Vec::new(),
-                self_intersect: as_logical(&p.attributes[1]),
-            },
-            "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment {
-                transition: match &p.attributes[0] {
-                    Attribute::Enum(s) => TransitionCode::parse(s).expect("transition_code"),
-                    other => panic!("enum transition_code: {other:?}"),
-                },
-                same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
-                parent_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
-            },
-            "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
-            "COMPOSITE_TEXT" => UnitPart::CompositeText {
-                collected_text: Vec::new(),
-            },
-            "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity {
-                configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(
-                    usize::MAX,
-                )),
-            },
-            "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem {
-                id: as_str(&p.attributes[0]),
-                name: as_str(&p.attributes[1]),
-                description: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-                item_concept: ProductConceptRef::ProductConcept(ProductConceptId(usize::MAX)),
-                purpose: match &p.attributes[4] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[4])),
-                },
-            },
-            "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None },
-            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => {
-                UnitPart::ContextDependentOverRidingStyledItem {
-                    style_context: Vec::new(),
-                }
-            }
-            "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit {
-                name: as_str(&p.attributes[0]),
-            },
-            "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit {
-                name: as_str(&p.attributes[0]),
-                conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(
-                    LengthMeasureWithUnitId(usize::MAX),
-                ),
-            },
-            "CURVE" => UnitPart::Curve,
-            "CURVE_STYLE" => UnitPart::CurveStyle {
-                name: as_str(&p.attributes[0]),
-                curve_font: None,
-                curve_width: None,
-                curve_colour: None,
-            },
-            "CURVE_STYLE_FONT" => UnitPart::CurveStyleFont {
-                name: as_str(&p.attributes[0]),
-                pattern_list: Vec::new(),
-            },
-            "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling {
-                name: as_str(&p.attributes[0]),
-                curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(usize::MAX)),
-                curve_font_scaling: as_real(&p.attributes[2]),
-            },
-            "CURVE_STYLE_FONT_PATTERN" => UnitPart::CurveStyleFontPattern {
-                visible_segment_length: as_real(&p.attributes[0]),
-                invisible_segment_length: as_real(&p.attributes[1]),
-            },
-            "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
-            "DATE" => UnitPart::Date {
-                year_component: as_int(&p.attributes[0]),
-            },
-            "DATE_AND_TIME" => UnitPart::DateAndTime {
-                date_component: DateRef::CalendarDate(CalendarDateId(usize::MAX)),
-                time_component: LocalTimeRef::LocalTime(LocalTimeId(usize::MAX)),
-            },
-            "DATE_AND_TIME_ASSIGNMENT" => UnitPart::DateAndTimeAssignment {
-                assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
-                role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
-            },
-            "DATUM" => UnitPart::Datum {
-                identification: as_str(&p.attributes[0]),
-            },
-            "DATUM_FEATURE" => UnitPart::DatumFeature,
-            "DATUM_REFERENCE" => UnitPart::DatumReference {
-                precedence: as_int(&p.attributes[0]),
-                referenced_datum: DatumRef::CommonDatum(CommonDatumId(usize::MAX)),
-            },
-            "DATUM_SYSTEM" => UnitPart::DatumSystem {
-                constituents: Vec::new(),
-            },
-            "DATUM_TARGET" => UnitPart::DatumTarget {
-                target_id: as_str(&p.attributes[0]),
-            },
-            "DEFINED_CHARACTER_GLYPH" => UnitPart::DefinedCharacterGlyph {
-                definition: DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(
-                    ExternallyDefinedCharacterGlyphId(usize::MAX),
-                ),
-                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
-            },
-            "DEFINED_SYMBOL" => UnitPart::DefinedSymbol {
-                definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(
-                    ExternallyDefinedSymbolId(usize::MAX),
-                ),
-                target: SymbolTargetRef::SymbolTarget(SymbolTargetId(usize::MAX)),
-            },
-            "DEFINITIONAL_REPRESENTATION" => UnitPart::DefinitionalRepresentation,
-            "DEGENERATE_TOROIDAL_SURFACE" => UnitPart::DegenerateToroidalSurface {
-                select_outer: matches!(&p.attributes[0], Attribute::Enum(s) if s == "T"),
-            },
-            "DERIVED_UNIT" => UnitPart::DerivedUnit {
-                elements: Vec::new(),
-            },
-            "DESIGN_CONTEXT" => UnitPart::DesignContext,
-            "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize {
-                applies_to: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
-                name: as_str(&p.attributes[1]),
-            },
-            "DIRECTION" => UnitPart::Direction {
-                direction_ratios: match &p.attributes[0] {
-                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-            },
-            "DOCUMENT" => UnitPart::Document {
-                id: as_str(&p.attributes[0]),
-                name: as_str(&p.attributes[1]),
-                description: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-                kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)),
-            },
-            "DOCUMENT_FILE" => UnitPart::DocumentFile,
-            "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout {
-                contents: Vec::new(),
-            },
-            "DRAUGHTING_PRE_DEFINED_COLOUR" => UnitPart::DraughtingPreDefinedColour,
-            "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
-            "EDGE" => UnitPart::Edge {
-                edge_start: None,
-                edge_end: None,
-            },
-            "EDGE_CURVE" => UnitPart::EdgeCurve {
-                edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
-                same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
-            },
-            "EDGE_LOOP" => UnitPart::EdgeLoop,
-            "EFFECTIVITY" => UnitPart::Effectivity {
-                id: as_str(&p.attributes[0]),
-            },
-            "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface {
-                position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
-            },
-            "EXPRESSION" => UnitPart::Expression,
-            "EXTERNAL_SOURCE" => UnitPart::ExternalSource {
-                source_id: read_string_select(&p.attributes[0]),
-            },
-            "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => UnitPart::ExternallyDefinedCharacterGlyph,
-            "EXTERNALLY_DEFINED_CURVE_FONT" => UnitPart::ExternallyDefinedCurveFont,
-            "EXTERNALLY_DEFINED_HATCH_STYLE" => UnitPart::ExternallyDefinedHatchStyle,
-            "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem {
-                item_id: read_string_select(&p.attributes[0]),
-                source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
-            },
-            "EXTERNALLY_DEFINED_STYLE" => UnitPart::ExternallyDefinedStyle,
-            "EXTERNALLY_DEFINED_SYMBOL" => UnitPart::ExternallyDefinedSymbol,
-            "EXTERNALLY_DEFINED_TEXT_FONT" => UnitPart::ExternallyDefinedTextFont,
-            "EXTERNALLY_DEFINED_TILE" => UnitPart::ExternallyDefinedTile,
-            "EXTERNALLY_DEFINED_TILE_STYLE" => UnitPart::ExternallyDefinedTileStyle,
-            "FACE" => UnitPart::Face { bounds: Vec::new() },
-            "FACE_BOUND" => UnitPart::FaceBound {
-                bound: LoopRef::EdgeLoop(EdgeLoopId(usize::MAX)),
-                orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
-            },
-            "FACE_OUTER_BOUND" => UnitPart::FaceOuterBound,
-            "FACE_SURFACE" => UnitPart::FaceSurface {
-                face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
-                same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
-            },
-            "FILL_AREA_STYLE" => UnitPart::FillAreaStyle {
-                name: as_str(&p.attributes[0]),
-                fill_styles: Vec::new(),
-            },
-            "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching {
-                hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
-                start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(
-                    OneDirectionRepeatFactorId(usize::MAX),
-                ),
-                point_of_reference_hatch_line: CartesianPointRef::CartesianPoint(CartesianPointId(
-                    usize::MAX,
-                )),
-                pattern_start: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
-                hatch_line_angle: as_real(&p.attributes[4]),
-            },
-            "FILL_AREA_STYLE_TILE_COLOURED_REGION" => UnitPart::FillAreaStyleTileColouredRegion {
-                closed_curve: CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
-                    AnnotationCurveOccurrenceId(usize::MAX),
-                ),
-                region_colour: ColourRef::Colour(ColourId(usize::MAX)),
-            },
-            "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => UnitPart::FillAreaStyleTileCurveWithStyle {
-                styled_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
-                    AnnotationCurveOccurrenceId(usize::MAX),
-                ),
-            },
-            "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => {
-                UnitPart::FillAreaStyleTileSymbolWithStyle {
-                    symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(
-                        AnnotationSymbolOccurrenceId(usize::MAX),
-                    ),
-                }
-            }
-            "FILL_AREA_STYLE_TILES" => UnitPart::FillAreaStyleTiles {
-                tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(
-                    TwoDirectionRepeatFactorId(usize::MAX),
-                ),
-                tiles: Vec::new(),
-                tiling_scale: as_real(&p.attributes[2]),
-            },
-            "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
-            "FOUNDED_ITEM" => UnitPart::FoundedItem,
-            "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference {
-                base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
-                modifiers: None,
-            },
-            "GENERAL_PROPERTY" => UnitPart::GeneralProperty {
-                id: as_str(&p.attributes[0]),
-                name: as_str(&p.attributes[1]),
-                description: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-            },
-            "GENERIC_EXPRESSION" => UnitPart::GenericExpression,
-            "GENERIC_LITERAL" => UnitPart::GenericLiteral,
-            "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference {
-                source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
-            },
-            "GEOMETRIC_ITEM_SPECIFIC_USAGE" => UnitPart::GeometricItemSpecificUsage,
-            "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext {
-                coordinate_space_dimension: as_int(&p.attributes[0]),
-            },
-            "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
-            "GEOMETRIC_SET" => UnitPart::GeometricSet {
-                elements: Vec::new(),
-            },
-            "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                magnitude: None,
-                toleranced_shape_aspect: GeometricToleranceTargetRef::CommonDatum(CommonDatumId(
-                    usize::MAX,
-                )),
-            },
-            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => {
-                UnitPart::GeometricToleranceWithDatumReference {
-                    datum_system: Vec::new(),
-                }
-            }
-            "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => {
-                UnitPart::GeometricToleranceWithDefinedAreaUnit {
-                    area_type: match &p.attributes[0] {
-                        Attribute::Enum(s) => AreaUnitType::parse(s).expect("area_unit_type"),
-                        other => panic!("enum area_unit_type: {other:?}"),
-                    },
-                    second_unit_size: None,
-                }
-            }
-            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => {
-                UnitPart::GeometricToleranceWithDefinedUnit {
-                    unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
-                        LengthMeasureWithUnitId(usize::MAX),
-                    ),
-                }
-            }
-            "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => {
-                UnitPart::GeometricToleranceWithMaximumTolerance {
-                    maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
-                        LengthMeasureWithUnitId(usize::MAX),
-                    ),
-                }
-            }
-            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => UnitPart::GeometricToleranceWithModifiers {
-                modifiers: match &p.attributes[0] {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| match e {
-                            Attribute::Enum(s) => GeometricToleranceModifier::parse(s)
-                                .expect("geometric_tolerance_modifier"),
-                            o => panic!("{o:?}"),
-                        })
-                        .collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-            },
-            "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => {
-                UnitPart::GeometricallyBoundedWireframeShapeRepresentation
-            }
-            "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext {
-                uncertainty: Vec::new(),
-            },
-            "GLOBAL_UNIT_ASSIGNED_CONTEXT" => {
-                UnitPart::GlobalUnitAssignedContext { units: Vec::new() }
-            }
-            "GROUP" => UnitPart::Group {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "INT_LITERAL" => UnitPart::IntLiteral,
-            "INTEGER_REPRESENTATION_ITEM" => UnitPart::IntegerRepresentationItem,
-            "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
-            "INVISIBILITY" => UnitPart::Invisibility {
-                invisible_items: Vec::new(),
-            },
-            "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-                transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-            },
-            "LENGTH_MEASURE_WITH_UNIT" => UnitPart::LengthMeasureWithUnit,
-            "LENGTH_UNIT" => UnitPart::LengthUnit,
-            "LINE_PROFILE_TOLERANCE" => UnitPart::LineProfileTolerance,
-            "LITERAL_NUMBER" => UnitPart::LiteralNumber {
-                the_value: as_real(&p.attributes[0]),
-            },
-            "LOOP" => UnitPart::Loop,
-            "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep {
-                outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
-            },
-            "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => UnitPart::ManifoldSurfaceShapeRepresentation,
-            "MAPPED_ITEM" => UnitPart::MappedItem {
-                mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
-                    usize::MAX,
-                )),
-                mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-            },
-            "MASS_UNIT" => UnitPart::MassUnit,
-            "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
-            "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit {
-                value_component: read_measure_value(&p.attributes[0]),
-                unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)),
-            },
-            "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
-            "MODIFIED_GEOMETRIC_TOLERANCE" => UnitPart::ModifiedGeometricTolerance {
-                modifier: match &p.attributes[0] {
-                    Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"),
-                    other => panic!("enum limit_condition: {other:?}"),
-                },
-            },
-            "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None },
-            "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => UnitPart::NextAssemblyUsageOccurrence,
-            "NUMERIC_EXPRESSION" => UnitPart::NumericExpression,
-            "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor {
-                repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
-            },
-            "OPEN_SHELL" => UnitPart::OpenShell,
-            "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress {
-                organizations: Vec::new(),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell {
-                closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
-                orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
-            },
-            "ORIENTED_EDGE" => UnitPart::OrientedEdge {
-                edge_element: EdgeRef::Edge(EdgeId(usize::MAX)),
-                orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"),
-            },
-            "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem {
-                over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(
-                    AnnotationCurveOccurrenceId(usize::MAX),
-                ),
-            },
-            "PARAMETRIC_REPRESENTATION_CONTEXT" => UnitPart::ParametricRepresentationContext,
-            "PATH" => UnitPart::Path {
-                edge_list: Vec::new(),
-            },
-            "PCURVE" => UnitPart::Pcurve {
-                basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
-                reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(
-                    DefinitionalRepresentationId(usize::MAX),
-                ),
-            },
-            "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
-            "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment {
-                assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
-                    PersonAndOrganizationId(usize::MAX),
-                ),
-                role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(
-                    PersonAndOrganizationRoleId(usize::MAX),
-                ),
-            },
-            "PERSONAL_ADDRESS" => UnitPart::PersonalAddress {
-                people: Vec::new(),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
-            "PLACEMENT" => UnitPart::Placement {
-                location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
-            },
-            "PLANAR_BOX" => UnitPart::PlanarBox {
-                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
-            },
-            "PLANAR_EXTENT" => UnitPart::PlanarExtent {
-                size_in_x: as_real(&p.attributes[0]),
-                size_in_y: as_real(&p.attributes[1]),
-            },
-            "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
-            "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
-            "POINT" => UnitPart::Point,
-            "POINT_STYLE" => UnitPart::PointStyle {
-                name: as_str(&p.attributes[0]),
-                marker: None,
-                marker_size: None,
-                marker_colour: None,
-            },
-            "POLY_LOOP" => UnitPart::PolyLoop {
-                polygon: Vec::new(),
-            },
-            "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
-            "PRE_DEFINED_CHARACTER_GLYPH" => UnitPart::PreDefinedCharacterGlyph,
-            "PRE_DEFINED_COLOUR" => UnitPart::PreDefinedColour,
-            "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
-            "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem {
-                name: as_str(&p.attributes[0]),
-            },
-            "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
-            "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
-            "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
-            "PRE_DEFINED_TEXT_FONT" => UnitPart::PreDefinedTextFont,
-            "PRE_DEFINED_TILE" => UnitPart::PreDefinedTile,
-            "PRESENTATION_REPRESENTATION" => UnitPart::PresentationRepresentation,
-            "PRESENTATION_SET" => UnitPart::PresentationSet,
-            "PRESENTATION_STYLE_ASSIGNMENT" => {
-                UnitPart::PresentationStyleAssignment { styles: Vec::new() }
-            }
-            "PRODUCT" => UnitPart::Product {
-                id: as_str(&p.attributes[0]),
-                name: as_str(&p.attributes[1]),
-                description: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-                frame_of_reference: Vec::new(),
-            },
-            "PRODUCT_CATEGORY" => UnitPart::ProductCategory {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "PRODUCT_CONCEPT" => UnitPart::ProductConcept {
-                id: as_str(&p.attributes[0]),
-                name: as_str(&p.attributes[1]),
-                description: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-                market_context: ProductConceptContextRef::ProductConceptContext(
-                    ProductConceptContextId(usize::MAX),
-                ),
-            },
-            "PRODUCT_CONTEXT" => UnitPart::ProductContext {
-                discipline_type: as_str(&p.attributes[0]),
-            },
-            "PRODUCT_DEFINITION" => UnitPart::ProductDefinition {
-                id: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
-                    ProductDefinitionFormationId(usize::MAX),
-                ),
-                frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(
-                    usize::MAX,
-                )),
-            },
-            "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext {
-                life_cycle_stage: as_str(&p.attributes[0]),
-            },
-            "PRODUCT_DEFINITION_EFFECTIVITY" => UnitPart::ProductDefinitionEffectivity {
-                usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
-                    AssemblyComponentUsageId(usize::MAX),
-                ),
-            },
-            "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation {
-                id: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                of_product: ProductRef::Product(ProductId(usize::MAX)),
-            },
-            "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => {
-                UnitPart::ProductDefinitionFormationWithSpecifiedSource {
-                    make_or_buy: match &p.attributes[0] {
-                        Attribute::Enum(s) => Source::parse(s).expect("source"),
-                        other => panic!("enum source: {other:?}"),
-                    },
-                }
-            }
-            "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence {
-                id: as_str(&p.attributes[0]),
-                name: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                description: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-                definition: None,
-                quantity: None,
-            },
-            "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship {
-                id: as_str(&p.attributes[0]),
-                name: as_str(&p.attributes[1]),
-                description: match &p.attributes[2] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[2])),
-                },
-                relating_product_definition:
-                    ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                        GenericProductDefinitionReferenceId(usize::MAX),
-                    ),
-                related_product_definition:
-                    ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                        GenericProductDefinitionReferenceId(usize::MAX),
-                    ),
-            },
-            "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => {
-                UnitPart::ProductDefinitionRelationshipRelationship {
-                    id: as_str(&p.attributes[0]),
-                    name: as_str(&p.attributes[1]),
-                    description: match &p.attributes[2] {
-                        Attribute::Unset => None,
-                        _ => Some(as_str(&p.attributes[2])),
-                    },
-                    relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
-                        AssemblyComponentUsageId(usize::MAX),
-                    ),
-                    related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
-                        AssemblyComponentUsageId(usize::MAX),
-                    ),
-                }
-            }
-            "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
-            "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
-            "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory {
-                products: Vec::new(),
-            },
-            "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                definition: CharacterizedDefinitionRef::AngularityTolerance(AngularityToleranceId(
-                    usize::MAX,
-                )),
-            },
-            "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation {
-                definition: RepresentedDefinitionRef::CommonDatum(CommonDatumId(usize::MAX)),
-                used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
-                    AdvancedBrepShapeRepresentationId(usize::MAX),
-                ),
-            },
-            "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
-            "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
-            "RATIONAL_B_SPLINE_CURVE" => UnitPart::RationalBSplineCurve {
-                weights_data: match &p.attributes[0] {
-                    Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-            },
-            "RATIONAL_B_SPLINE_SURFACE" => UnitPart::RationalBSplineSurface {
-                weights_data: match &p.attributes[0] {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| match e {
-                            Attribute::List(l) => l.iter().map(|e| as_real(e)).collect::<Vec<_>>(),
-                            o => panic!("nested vec: {o:?}"),
-                        })
-                        .collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-            },
-            "REAL_LITERAL" => UnitPart::RealLiteral,
-            "REAL_REPRESENTATION_ITEM" => UnitPart::RealRepresentationItem,
-            "REPRESENTATION" => UnitPart::Representation {
-                name: as_str(&p.attributes[0]),
-                items: Vec::new(),
-                context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-                    GeometricRepresentationContextId(usize::MAX),
-                ),
-            },
-            "REPRESENTATION_CONTEXT" => UnitPart::RepresentationContext {
-                context_identifier: as_str(&p.attributes[0]),
-                context_type: as_str(&p.attributes[1]),
-            },
-            "REPRESENTATION_ITEM" => UnitPart::RepresentationItem {
-                name: as_str(&p.attributes[0]),
-            },
-            "REPRESENTATION_MAP" => UnitPart::RepresentationMap {
-                mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-                mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
-                    AdvancedBrepShapeRepresentationId(usize::MAX),
-                ),
-            },
-            "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference {
-                id: as_str(&p.attributes[0]),
-                context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(
-                    RepresentationContextReferenceId(usize::MAX),
-                ),
-            },
-            "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-                    AdvancedBrepShapeRepresentationId(usize::MAX),
-                ),
-                rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-                    AdvancedBrepShapeRepresentationId(usize::MAX),
-                ),
-            },
-            "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => {
-                UnitPart::RepresentationRelationshipWithTransformation {
-                    transformation_operator: TransformationRef::FunctionallyDefinedTransformation(
-                        FunctionallyDefinedTransformationId(usize::MAX),
-                    ),
-                }
-            }
-            "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
-            "SEAM_CURVE" => UnitPart::SeamCurve,
-            "SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::SecurityClassificationAssignment {
-                assigned_security_classification: SecurityClassificationRef::SecurityClassification(
-                    SecurityClassificationId(usize::MAX),
-                ),
-            },
-            "SHAPE_ASPECT" => UnitPart::ShapeAspect {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
-                    ProductDefinitionShapeId(usize::MAX),
-                ),
-                product_definitional: as_logical(&p.attributes[3]),
-            },
-            "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-                relating_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
-                related_shape_aspect: ShapeAspectRef::CommonDatum(CommonDatumId(usize::MAX)),
-            },
-            "SHAPE_DEFINITION_REPRESENTATION" => UnitPart::ShapeDefinitionRepresentation,
-            "SHAPE_DIMENSION_REPRESENTATION" => UnitPart::ShapeDimensionRepresentation,
-            "SHAPE_REPRESENTATION" => UnitPart::ShapeRepresentation,
-            "SHAPE_REPRESENTATION_RELATIONSHIP" => UnitPart::ShapeRepresentationRelationship,
-            "SHELL_BASED_SURFACE_MODEL" => UnitPart::ShellBasedSurfaceModel {
-                sbsm_boundary: Vec::new(),
-            },
-            "SI_UNIT" => UnitPart::SiUnit {
-                prefix: match &p.attributes[0] {
-                    Attribute::Unset => None,
-                    _ => Some(match &p.attributes[0] {
-                        Attribute::Enum(s) => SiPrefix::parse(s).expect("si_prefix"),
-                        other => panic!("enum si_prefix: {other:?}"),
-                    }),
-                },
-                name: match &p.attributes[1] {
-                    Attribute::Enum(s) => SiUnitName::parse(s).expect("si_unit_name"),
-                    other => panic!("enum si_unit_name: {other:?}"),
-                },
-            },
-            "SIMPLE_GENERIC_EXPRESSION" => UnitPart::SimpleGenericExpression,
-            "SIMPLE_NUMERIC_EXPRESSION" => UnitPart::SimpleNumericExpression,
-            "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
-            "SOLID_MODEL" => UnitPart::SolidModel,
-            "START_REQUEST" => UnitPart::StartRequest { items: Vec::new() },
-            "STATE_OBSERVED" => UnitPart::StateObserved {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "STATE_TYPE" => UnitPart::StateType {
-                name: as_str(&p.attributes[0]),
-                description: match &p.attributes[1] {
-                    Attribute::Unset => None,
-                    _ => Some(as_str(&p.attributes[1])),
-                },
-            },
-            "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
-            "STYLED_ITEM" => UnitPart::StyledItem {
-                styles: Vec::new(),
-                item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-                    AdvancedBrepShapeRepresentationId(usize::MAX),
-                ),
-            },
-            "SURFACE" => UnitPart::Surface,
-            "SURFACE_CURVE" => UnitPart::SurfaceCurve {
-                curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
-                associated_geometry: Vec::new(),
-                master_representation: match &p.attributes[2] {
-                    Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s)
-                        .expect("preferred_surface_curve_representation"),
-                    other => panic!("enum preferred_surface_curve_representation: {other:?}"),
-                },
-            },
-            "SURFACE_PROFILE_TOLERANCE" => UnitPart::SurfaceProfileTolerance,
-            "SURFACE_SIDE_STYLE" => UnitPart::SurfaceSideStyle {
-                name: as_str(&p.attributes[0]),
-                styles: Vec::new(),
-            },
-            "SURFACE_STYLE_BOUNDARY" => UnitPart::SurfaceStyleBoundary {
-                style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
-            },
-            "SURFACE_STYLE_CONTROL_GRID" => UnitPart::SurfaceStyleControlGrid {
-                style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
-            },
-            "SURFACE_STYLE_FILL_AREA" => UnitPart::SurfaceStyleFillArea {
-                fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(usize::MAX)),
-            },
-            "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine {
-                style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
-                direction_counts: match &p.attributes[1] {
-                    Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e)).collect(),
-                    other => panic!("vec: {other:?}"),
-                },
-            },
-            "SURFACE_STYLE_REFLECTANCE_AMBIENT" => UnitPart::SurfaceStyleReflectanceAmbient {
-                ambient_reflectance: as_real(&p.attributes[0]),
-            },
-            "SURFACE_STYLE_RENDERING" => UnitPart::SurfaceStyleRendering {
-                rendering_method: match &p.attributes[0] {
-                    Attribute::Enum(s) => {
-                        ShadingSurfaceMethod::parse(s).expect("shading_surface_method")
-                    }
-                    other => panic!("enum shading_surface_method: {other:?}"),
-                },
-                surface_colour: ColourRef::Colour(ColourId(usize::MAX)),
-            },
-            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => {
-                UnitPart::SurfaceStyleRenderingWithProperties {
-                    properties: Vec::new(),
-                }
-            }
-            "SURFACE_STYLE_SEGMENTATION_CURVE" => UnitPart::SurfaceStyleSegmentationCurve {
-                style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
-            },
-            "SURFACE_STYLE_SILHOUETTE" => UnitPart::SurfaceStyleSilhouette {
-                style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
-            },
-            "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage {
-                side: match &p.attributes[0] {
-                    Attribute::Enum(s) => SurfaceSide::parse(s).expect("surface_side"),
-                    other => panic!("enum surface_side: {other:?}"),
-                },
-                style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(
-                    PreDefinedSurfaceSideStyleId(usize::MAX),
-                ),
-            },
-            "SYMBOL_STYLE" => UnitPart::SymbolStyle {
-                name: as_str(&p.attributes[0]),
-                style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)),
-            },
-            "SYMBOL_TARGET" => UnitPart::SymbolTarget {
-                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
-                x_scale: as_real(&p.attributes[1]),
-                y_scale: as_real(&p.attributes[2]),
-            },
-            "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
-            "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
-            "TEXT_LITERAL" => UnitPart::TextLiteral {
-                literal: as_str(&p.attributes[0]),
-                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
-                alignment: as_str(&p.attributes[2]),
-                path: match &p.attributes[3] {
-                    Attribute::Enum(s) => TextPath::parse(s).expect("text_path"),
-                    other => panic!("enum text_path: {other:?}"),
-                },
-                font: FontSelectRef::ExternallyDefinedTextFont(ExternallyDefinedTextFontId(
-                    usize::MAX,
-                )),
-            },
-            "TEXT_STYLE" => UnitPart::TextStyle {
-                name: as_str(&p.attributes[0]),
-                character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
-                    CharacterGlyphStyleOutlineId(usize::MAX),
-                ),
-            },
-            "TEXTURE_STYLE_SPECIFICATION" => UnitPart::TextureStyleSpecification,
-            "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => {
-                UnitPart::TextureStyleTessellationSpecification
-            }
-            "TIME_UNIT" => UnitPart::TimeUnit,
-            "TOLERANCE_ZONE" => UnitPart::ToleranceZone {
-                defining_tolerance: Vec::new(),
-                form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)),
-            },
-            "TOLERANCE_ZONE_DEFINITION" => UnitPart::ToleranceZoneDefinition {
-                zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)),
-                boundaries: Vec::new(),
-            },
-            "TOLERANCE_ZONE_WITH_DATUM" => UnitPart::ToleranceZoneWithDatum {
-                datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(usize::MAX)),
-            },
-            "TOPOLOGICAL_REPRESENTATION_ITEM" => UnitPart::TopologicalRepresentationItem,
-            "TOROIDAL_SURFACE" => UnitPart::ToroidalSurface {
-                major_radius: as_real(&p.attributes[0]),
-                minor_radius: as_real(&p.attributes[1]),
-            },
-            "TWO_DIRECTION_REPEAT_FACTOR" => UnitPart::TwoDirectionRepeatFactor {
-                second_repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
-            },
-            "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => {
-                UnitPart::UnequallyDisposedGeometricTolerance {
-                    displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
-                        LengthMeasureWithUnitId(usize::MAX),
-                    ),
-                }
-            }
-            "UNIFORM_CURVE" => UnitPart::UniformCurve,
-            "UNIFORM_SURFACE" => UnitPart::UniformSurface,
-            "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem {
-                value_component: read_measure_value(&p.attributes[0]),
-            },
-            "VECTOR" => UnitPart::Vector {
-                orientation: DirectionRef::Direction(DirectionId(usize::MAX)),
-                magnitude: as_real(&p.attributes[1]),
-            },
-            "VERTEX" => UnitPart::Vertex,
-            "VERTEX_POINT" => UnitPart::VertexPoint {
-                vertex_geometry: PointRef::CartesianPoint(CartesianPointId(usize::MAX)),
-            },
-            other => panic!("unknown complex part: {other}"),
-        })
-        .collect()
+    parts.iter().map(|p| match p.name.as_str() {
+        "ACTION" => UnitPart::Action { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)), },
+        "ACTION_METHOD" => UnitPart::ActionMethod { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, consequence: as_str(&p.attributes[2]), purpose: as_str(&p.attributes[3]), },
+        "ACTION_METHOD_RELATIONSHIP" => UnitPart::ActionMethodRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)), related_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)), },
+        "ACTION_RELATIONSHIP" => UnitPart::ActionRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_action: ActionRef::Action(ActionId(usize::MAX)), related_action: ActionRef::Action(ActionId(usize::MAX)), },
+        "ACTION_REQUEST_ASSIGNMENT" => UnitPart::ActionRequestAssignment { assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(VersionedActionRequestId(usize::MAX)), },
+        "ACTION_RESOURCE" => UnitPart::ActionResource { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, usage: Vec::new(), kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(usize::MAX)), },
+        "ACTION_RESOURCE_REQUIREMENT" => UnitPart::ActionResourceRequirement { name: as_str(&p.attributes[0]), description: as_str(&p.attributes[1]), kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(usize::MAX)), operations: Vec::new(), },
+        "ADDRESS" => UnitPart::Address { internal_location: match &p.attributes[0] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[0])) }, street_number: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, street: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, postal_box: match &p.attributes[3] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[3])) }, town: match &p.attributes[4] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[4])) }, region: match &p.attributes[5] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[5])) }, postal_code: match &p.attributes[6] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[6])) }, country: match &p.attributes[7] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[7])) }, facsimile_number: match &p.attributes[8] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[8])) }, telephone_number: match &p.attributes[9] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[9])) }, electronic_mail_address: match &p.attributes[10] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[10])) }, telex_number: match &p.attributes[11] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[11])) }, },
+        "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
+        "ADVANCED_FACE" => UnitPart::AdvancedFace,
+        "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence { role: match &p.attributes[0] { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).expect("annotation_placeholder_occurrence_role"), other => panic!("enum annotation_placeholder_occurrence_role: {other:?}") }, line_spacing: as_real(&p.attributes[1]), },
+        "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
+        "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
+        "ANNOTATION_TEXT" => UnitPart::AnnotationText,
+        "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter { alignment: as_str(&p.attributes[0]), },
+        "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: as_str(&p.attributes[0]), frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(usize::MAX)), },
+        "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)), },
+        "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), },
+        "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage { reference_designator: match &p.attributes[0] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[0])) }, },
+        "B_SPLINE_CURVE" => UnitPart::BSplineCurve { degree: as_int(&p.attributes[0]), control_points_list: Vec::new(), curve_form: match &p.attributes[2] { Attribute::Enum(s) => BSplineCurveForm::parse(s).expect("b_spline_curve_form"), other => panic!("enum b_spline_curve_form: {other:?}") }, closed_curve: as_logical(&p.attributes[3]), self_intersect: as_logical(&p.attributes[4]), },
+        "B_SPLINE_CURVE_WITH_KNOTS" => UnitPart::BSplineCurveWithKnots { knot_multiplicities: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(), other => panic!("vec: {other:?}") }, knots: match &p.attributes[1] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, knot_spec: match &p.attributes[2] { Attribute::Enum(s) => KnotType::parse(s).expect("knot_type"), other => panic!("enum knot_type: {other:?}") }, },
+        "B_SPLINE_SURFACE" => UnitPart::BSplineSurface { u_degree: as_int(&p.attributes[0]), v_degree: as_int(&p.attributes[1]), control_points_list: Vec::new(), surface_form: match &p.attributes[3] { Attribute::Enum(s) => BSplineSurfaceForm::parse(s).expect("b_spline_surface_form"), other => panic!("enum b_spline_surface_form: {other:?}") }, u_closed: as_logical(&p.attributes[4]), v_closed: as_logical(&p.attributes[5]), self_intersect: as_logical(&p.attributes[6]), },
+        "B_SPLINE_SURFACE_WITH_KNOTS" => UnitPart::BSplineSurfaceWithKnots { u_multiplicities: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(), other => panic!("vec: {other:?}") }, v_multiplicities: match &p.attributes[1] { Attribute::List(l) => l.iter().map(|e| as_int(e)).collect(), other => panic!("vec: {other:?}") }, u_knots: match &p.attributes[2] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, v_knots: match &p.attributes[3] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, knot_spec: match &p.attributes[4] { Attribute::Enum(s) => KnotType::parse(s).expect("knot_type"), other => panic!("enum knot_type: {other:?}") }, },
+        "BEZIER_CURVE" => UnitPart::BezierCurve,
+        "BEZIER_SURFACE" => UnitPart::BezierSurface,
+        "BOUNDED_CURVE" => UnitPart::BoundedCurve,
+        "BOUNDED_PCURVE" => UnitPart::BoundedPcurve,
+        "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
+        "BOUNDED_SURFACE_CURVE" => UnitPart::BoundedSurfaceCurve,
+        "BREP_WITH_VOIDS" => UnitPart::BrepWithVoids { voids: Vec::new(), },
+        "CAMERA_MODEL" => UnitPart::CameraModel,
+        "CAMERA_MODEL_D3" => UnitPart::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)), },
+        "CC_DESIGN_APPROVAL" => UnitPart::CcDesignApproval { items: Vec::new(), },
+        "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => UnitPart::CcDesignDateAndTimeAssignment { items: Vec::new(), },
+        "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::CcDesignPersonAndOrganizationAssignment { items: Vec::new(), },
+        "CC_DESIGN_SECURITY_CLASSIFICATION" => UnitPart::CcDesignSecurityClassification { items: Vec::new(), },
+        "CHANGE_REQUEST" => UnitPart::ChangeRequest { items: Vec::new(), },
+        "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), },
+        "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), },
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => UnitPart::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "CLOSED_SHELL" => UnitPart::ClosedShell,
+        "COLOUR" => UnitPart::Colour,
+        "COLOUR_RGB" => UnitPart::ColourRgb { red: as_real(&p.attributes[0]), green: as_real(&p.attributes[1]), blue: as_real(&p.attributes[2]), },
+        "COLOUR_SPECIFICATION" => UnitPart::ColourSpecification { name: as_str(&p.attributes[0]), },
+        "COMMON_DATUM" => UnitPart::CommonDatum,
+        "COMPOSITE_CURVE" => UnitPart::CompositeCurve { segments: Vec::new(), self_intersect: as_logical(&p.attributes[1]), },
+        "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment { transition: match &p.attributes[0] { Attribute::Enum(s) => TransitionCode::parse(s).expect("transition_code"), other => panic!("enum transition_code: {other:?}") }, same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), parent_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)), },
+        "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
+        "COMPOSITE_TEXT" => UnitPart::CompositeText { collected_text: Vec::new(), },
+        "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(usize::MAX)), },
+        "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(usize::MAX)), purpose: match &p.attributes[4] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[4])) }, },
+        "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None, },
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => UnitPart::ContextDependentOverRidingStyledItem { style_context: Vec::new(), },
+        "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit { name: as_str(&p.attributes[0]), },
+        "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit { name: as_str(&p.attributes[0]), conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
+        "CURVE" => UnitPart::Curve,
+        "CURVE_STYLE" => UnitPart::CurveStyle { name: as_str(&p.attributes[0]), curve_font: None, curve_width: None, curve_colour: None, },
+        "CURVE_STYLE_FONT" => UnitPart::CurveStyleFont { name: as_str(&p.attributes[0]), pattern_list: Vec::new(), },
+        "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling { name: as_str(&p.attributes[0]), curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(usize::MAX)), curve_font_scaling: as_real(&p.attributes[2]), },
+        "CURVE_STYLE_FONT_PATTERN" => UnitPart::CurveStyleFontPattern { visible_segment_length: as_real(&p.attributes[0]), invisible_segment_length: as_real(&p.attributes[1]), },
+        "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
+        "DATE" => UnitPart::Date { year_component: as_int(&p.attributes[0]), },
+        "DATE_AND_TIME" => UnitPart::DateAndTime { date_component: DateRef::CalendarDate(CalendarDateId(usize::MAX)), time_component: LocalTimeRef::LocalTime(LocalTimeId(usize::MAX)), },
+        "DATE_AND_TIME_ASSIGNMENT" => UnitPart::DateAndTimeAssignment { assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)), role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)), },
+        "DATUM" => UnitPart::Datum { identification: as_str(&p.attributes[0]), },
+        "DATUM_FEATURE" => UnitPart::DatumFeature,
+        "DATUM_REFERENCE" => UnitPart::DatumReference { precedence: as_int(&p.attributes[0]), referenced_datum: DatumRef::CommonDatum(CommonDatumId(usize::MAX)), },
+        "DATUM_SYSTEM" => UnitPart::DatumSystem { constituents: Vec::new(), },
+        "DATUM_TARGET" => UnitPart::DatumTarget { target_id: as_str(&p.attributes[0]), },
+        "DEFINED_CHARACTER_GLYPH" => UnitPart::DefinedCharacterGlyph { definition: DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId(usize::MAX)), placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), },
+        "DEFINED_SYMBOL" => UnitPart::DefinedSymbol { definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(ExternallyDefinedSymbolId(usize::MAX)), target: SymbolTargetRef::SymbolTarget(SymbolTargetId(usize::MAX)), },
+        "DEFINITIONAL_REPRESENTATION" => UnitPart::DefinitionalRepresentation,
+        "DEGENERATE_TOROIDAL_SURFACE" => UnitPart::DegenerateToroidalSurface { select_outer: matches!(&p.attributes[0], Attribute::Enum(s) if s == "T"), },
+        "DERIVED_UNIT" => UnitPart::DerivedUnit { elements: Vec::new(), },
+        "DESIGN_CONTEXT" => UnitPart::DesignContext,
+        "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), name: as_str(&p.attributes[1]), },
+        "DIRECTION" => UnitPart::Direction { direction_ratios: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, },
+        "DOCUMENT" => UnitPart::Document { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)), },
+        "DOCUMENT_FILE" => UnitPart::DocumentFile,
+        "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout { contents: Vec::new(), },
+        "DRAUGHTING_PRE_DEFINED_COLOUR" => UnitPart::DraughtingPreDefinedColour,
+        "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
+        "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => UnitPart::DraughtingPreDefinedTextFont,
+        "EDGE" => UnitPart::Edge { edge_start: None, edge_end: None, },
+        "EDGE_CURVE" => UnitPart::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)), same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
+        "EDGE_LOOP" => UnitPart::EdgeLoop,
+        "EFFECTIVITY" => UnitPart::Effectivity { id: as_str(&p.attributes[0]), },
+        "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface { position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), },
+        "EXPRESSION" => UnitPart::Expression,
+        "EXTERNAL_SOURCE" => UnitPart::ExternalSource { source_id: read_string_select(&p.attributes[0]), },
+        "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => UnitPart::ExternallyDefinedCharacterGlyph,
+        "EXTERNALLY_DEFINED_CURVE_FONT" => UnitPart::ExternallyDefinedCurveFont,
+        "EXTERNALLY_DEFINED_HATCH_STYLE" => UnitPart::ExternallyDefinedHatchStyle,
+        "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem { item_id: read_string_select(&p.attributes[0]), source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)), },
+        "EXTERNALLY_DEFINED_STYLE" => UnitPart::ExternallyDefinedStyle,
+        "EXTERNALLY_DEFINED_SYMBOL" => UnitPart::ExternallyDefinedSymbol,
+        "EXTERNALLY_DEFINED_TEXT_FONT" => UnitPart::ExternallyDefinedTextFont,
+        "EXTERNALLY_DEFINED_TILE" => UnitPart::ExternallyDefinedTile,
+        "EXTERNALLY_DEFINED_TILE_STYLE" => UnitPart::ExternallyDefinedTileStyle,
+        "FACE" => UnitPart::Face { bounds: Vec::new(), },
+        "FACE_BOUND" => UnitPart::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(usize::MAX)), orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
+        "FACE_OUTER_BOUND" => UnitPart::FaceOuterBound,
+        "FACE_SURFACE" => UnitPart::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)), same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
+        "FILL_AREA_STYLE" => UnitPart::FillAreaStyle { name: as_str(&p.attributes[0]), fill_styles: Vec::new(), },
+        "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(usize::MAX)), point_of_reference_hatch_line: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), pattern_start: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), hatch_line_angle: as_real(&p.attributes[4]), },
+        "FILL_AREA_STYLE_TILE_COLOURED_REGION" => UnitPart::FillAreaStyleTileColouredRegion { closed_curve: CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), region_colour: ColourRef::Colour(ColourId(usize::MAX)), },
+        "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => UnitPart::FillAreaStyleTileCurveWithStyle { styled_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
+        "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => UnitPart::FillAreaStyleTileSymbolWithStyle { symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId(usize::MAX)), },
+        "FILL_AREA_STYLE_TILES" => UnitPart::FillAreaStyleTiles { tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(usize::MAX)), tiles: Vec::new(), tiling_scale: as_real(&p.attributes[2]), },
+        "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
+        "FOUNDED_ITEM" => UnitPart::FoundedItem,
+        "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference { base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)), modifiers: None, },
+        "GENERAL_PROPERTY" => UnitPart::GeneralProperty { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, },
+        "GENERIC_EXPRESSION" => UnitPart::GenericExpression,
+        "GENERIC_LITERAL" => UnitPart::GenericLiteral,
+        "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference { source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)), },
+        "GEOMETRIC_ITEM_SPECIFIC_USAGE" => UnitPart::GeometricItemSpecificUsage,
+        "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext { coordinate_space_dimension: as_int(&p.attributes[0]), },
+        "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
+        "GEOMETRIC_SET" => UnitPart::GeometricSet { elements: Vec::new(), },
+        "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => UnitPart::GeometricToleranceWithDatumReference { datum_system: Vec::new(), },
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => UnitPart::GeometricToleranceWithDefinedAreaUnit { area_type: match &p.attributes[0] { Attribute::Enum(s) => AreaUnitType::parse(s).expect("area_unit_type"), other => panic!("enum area_unit_type: {other:?}") }, second_unit_size: None, },
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => UnitPart::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => UnitPart::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => UnitPart::GeometricToleranceWithModifiers { modifiers: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).expect("geometric_tolerance_modifier"), o => panic!("{o:?}") }).collect(), other => panic!("vec: {other:?}") }, },
+        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedWireframeShapeRepresentation,
+        "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext { uncertainty: Vec::new(), },
+        "GLOBAL_UNIT_ASSIGNED_CONTEXT" => UnitPart::GlobalUnitAssignedContext { units: Vec::new(), },
+        "GROUP" => UnitPart::Group { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "INT_LITERAL" => UnitPart::IntLiteral,
+        "INTEGER_REPRESENTATION_ITEM" => UnitPart::IntegerRepresentationItem,
+        "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
+        "INVISIBILITY" => UnitPart::Invisibility { invisible_items: Vec::new(), },
+        "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
+        "LEADER_DIRECTED_CALLOUT" => UnitPart::LeaderDirectedCallout,
+        "LENGTH_MEASURE_WITH_UNIT" => UnitPart::LengthMeasureWithUnit,
+        "LENGTH_UNIT" => UnitPart::LengthUnit,
+        "LINE_PROFILE_TOLERANCE" => UnitPart::LineProfileTolerance,
+        "LITERAL_NUMBER" => UnitPart::LiteralNumber { the_value: as_real(&p.attributes[0]), },
+        "LOOP" => UnitPart::Loop,
+        "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep { outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)), },
+        "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => UnitPart::ManifoldSurfaceShapeRepresentation,
+        "MAPPED_ITEM" => UnitPart::MappedItem { mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(usize::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
+        "MASS_UNIT" => UnitPart::MassUnit,
+        "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
+        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: read_measure_value(&p.attributes[0]), unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)), },
+        "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
+        "MODIFIED_GEOMETRIC_TOLERANCE" => UnitPart::ModifiedGeometricTolerance { modifier: match &p.attributes[0] { Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"), other => panic!("enum limit_condition: {other:?}") }, },
+        "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None, },
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => UnitPart::NextAssemblyUsageOccurrence,
+        "NUMERIC_EXPRESSION" => UnitPart::NumericExpression,
+        "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor { repeat_factor: VectorRef::Vector(VectorId(usize::MAX)), },
+        "OPEN_SHELL" => UnitPart::OpenShell,
+        "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress { organizations: Vec::new(), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)), orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
+        "ORIENTED_EDGE" => UnitPart::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(usize::MAX)), orientation: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
+        "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
+        "PARAMETRIC_REPRESENTATION_CONTEXT" => UnitPart::ParametricRepresentationContext,
+        "PATH" => UnitPart::Path { edge_list: Vec::new(), },
+        "PCURVE" => UnitPart::Pcurve { basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)), reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(DefinitionalRepresentationId(usize::MAX)), },
+        "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
+        "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(usize::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(usize::MAX)), },
+        "PERSONAL_ADDRESS" => UnitPart::PersonalAddress { people: Vec::new(), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
+        "PLACEMENT" => UnitPart::Placement { location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), },
+        "PLANAR_BOX" => UnitPart::PlanarBox { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), },
+        "PLANAR_EXTENT" => UnitPart::PlanarExtent { size_in_x: as_real(&p.attributes[0]), size_in_y: as_real(&p.attributes[1]), },
+        "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
+        "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
+        "POINT" => UnitPart::Point,
+        "POINT_STYLE" => UnitPart::PointStyle { name: as_str(&p.attributes[0]), marker: None, marker_size: None, marker_colour: None, },
+        "POLY_LOOP" => UnitPart::PolyLoop { polygon: Vec::new(), },
+        "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
+        "PRE_DEFINED_CHARACTER_GLYPH" => UnitPart::PreDefinedCharacterGlyph,
+        "PRE_DEFINED_COLOUR" => UnitPart::PreDefinedColour,
+        "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
+        "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem { name: as_str(&p.attributes[0]), },
+        "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
+        "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
+        "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
+        "PRE_DEFINED_TEXT_FONT" => UnitPart::PreDefinedTextFont,
+        "PRE_DEFINED_TILE" => UnitPart::PreDefinedTile,
+        "PRESENTATION_REPRESENTATION" => UnitPart::PresentationRepresentation,
+        "PRESENTATION_SET" => UnitPart::PresentationSet,
+        "PRESENTATION_STYLE_ASSIGNMENT" => UnitPart::PresentationStyleAssignment { styles: Vec::new(), },
+        "PRODUCT" => UnitPart::Product { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, frame_of_reference: Vec::new(), },
+        "PRODUCT_CATEGORY" => UnitPart::ProductCategory { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "PRODUCT_CONCEPT" => UnitPart::ProductConcept { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(usize::MAX)), },
+        "PRODUCT_CONTEXT" => UnitPart::ProductContext { discipline_type: as_str(&p.attributes[0]), },
+        "PRODUCT_DEFINITION" => UnitPart::ProductDefinition { id: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(usize::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(usize::MAX)), },
+        "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext { life_cycle_stage: as_str(&p.attributes[0]), },
+        "PRODUCT_DEFINITION_EFFECTIVITY" => UnitPart::ProductDefinitionEffectivity { usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), },
+        "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation { id: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, of_product: ProductRef::Product(ProductId(usize::MAX)), },
+        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => UnitPart::ProductDefinitionFormationWithSpecifiedSource { make_or_buy: match &p.attributes[0] { Attribute::Enum(s) => Source::parse(s).expect("source"), other => panic!("enum source: {other:?}") }, },
+        "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence { id: as_str(&p.attributes[0]), name: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, definition: None, quantity: None, },
+        "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, relating_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(usize::MAX)), related_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(usize::MAX)), },
+        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => UnitPart::ProductDefinitionRelationshipRelationship { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), },
+        "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
+        "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
+        "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory { products: Vec::new(), },
+        "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
+        "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
+        "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
+        "RATIONAL_B_SPLINE_CURVE" => UnitPart::RationalBSplineCurve { weights_data: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, },
+        "RATIONAL_B_SPLINE_SURFACE" => UnitPart::RationalBSplineSurface { weights_data: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect::<Vec<_>>(), o => panic!("nested vec: {o:?}") }).collect(), other => panic!("vec: {other:?}") }, },
+        "REAL_LITERAL" => UnitPart::RealLiteral,
+        "REAL_REPRESENTATION_ITEM" => UnitPart::RealRepresentationItem,
+        "REPRESENTATION" => UnitPart::Representation { name: as_str(&p.attributes[0]), items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(usize::MAX)), },
+        "REPRESENTATION_CONTEXT" => UnitPart::RepresentationContext { context_identifier: as_str(&p.attributes[0]), context_type: as_str(&p.attributes[1]), },
+        "REPRESENTATION_ITEM" => UnitPart::RepresentationItem { name: as_str(&p.attributes[0]), },
+        "REPRESENTATION_MAP" => UnitPart::RepresentationMap { mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference { id: as_str(&p.attributes[0]), context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(RepresentationContextReferenceId(usize::MAX)), },
+        "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => UnitPart::RepresentationRelationshipWithTransformation { transformation_operator: TransformationRef::FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId(usize::MAX)), },
+        "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
+        "SEAM_CURVE" => UnitPart::SeamCurve,
+        "SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::SecurityClassificationAssignment { assigned_security_classification: SecurityClassificationRef::SecurityClassification(SecurityClassificationId(usize::MAX)), },
+        "SHAPE_ASPECT" => UnitPart::ShapeAspect { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(usize::MAX)), product_definitional: as_logical(&p.attributes[3]), },
+        "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
+        "SHAPE_DEFINITION_REPRESENTATION" => UnitPart::ShapeDefinitionRepresentation,
+        "SHAPE_DIMENSION_REPRESENTATION" => UnitPart::ShapeDimensionRepresentation,
+        "SHAPE_REPRESENTATION" => UnitPart::ShapeRepresentation,
+        "SHAPE_REPRESENTATION_RELATIONSHIP" => UnitPart::ShapeRepresentationRelationship,
+        "SHELL_BASED_SURFACE_MODEL" => UnitPart::ShellBasedSurfaceModel { sbsm_boundary: Vec::new(), },
+        "SI_UNIT" => UnitPart::SiUnit { prefix: match &p.attributes[0] { Attribute::Unset => None, _ => Some(match &p.attributes[0] { Attribute::Enum(s) => SiPrefix::parse(s).expect("si_prefix"), other => panic!("enum si_prefix: {other:?}") }) }, name: match &p.attributes[1] { Attribute::Enum(s) => SiUnitName::parse(s).expect("si_unit_name"), other => panic!("enum si_unit_name: {other:?}") }, },
+        "SIMPLE_GENERIC_EXPRESSION" => UnitPart::SimpleGenericExpression,
+        "SIMPLE_NUMERIC_EXPRESSION" => UnitPart::SimpleNumericExpression,
+        "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
+        "SOLID_MODEL" => UnitPart::SolidModel,
+        "START_REQUEST" => UnitPart::StartRequest { items: Vec::new(), },
+        "STATE_OBSERVED" => UnitPart::StateObserved { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "STATE_TYPE" => UnitPart::StateType { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
+        "STYLED_ITEM" => UnitPart::StyledItem { styles: Vec::new(), item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "SURFACE" => UnitPart::Surface,
+        "SURFACE_CURVE" => UnitPart::SurfaceCurve { curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)), associated_geometry: Vec::new(), master_representation: match &p.attributes[2] { Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s).expect("preferred_surface_curve_representation"), other => panic!("enum preferred_surface_curve_representation: {other:?}") }, },
+        "SURFACE_PROFILE_TOLERANCE" => UnitPart::SurfaceProfileTolerance,
+        "SURFACE_SIDE_STYLE" => UnitPart::SurfaceSideStyle { name: as_str(&p.attributes[0]), styles: Vec::new(), },
+        "SURFACE_STYLE_BOUNDARY" => UnitPart::SurfaceStyleBoundary { style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
+        "SURFACE_STYLE_CONTROL_GRID" => UnitPart::SurfaceStyleControlGrid { style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
+        "SURFACE_STYLE_FILL_AREA" => UnitPart::SurfaceStyleFillArea { fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(usize::MAX)), },
+        "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), direction_counts: match &p.attributes[1] { Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e)).collect(), other => panic!("vec: {other:?}") }, },
+        "SURFACE_STYLE_REFLECTANCE_AMBIENT" => UnitPart::SurfaceStyleReflectanceAmbient { ambient_reflectance: as_real(&p.attributes[0]), },
+        "SURFACE_STYLE_RENDERING" => UnitPart::SurfaceStyleRendering { rendering_method: match &p.attributes[0] { Attribute::Enum(s) => ShadingSurfaceMethod::parse(s).expect("shading_surface_method"), other => panic!("enum shading_surface_method: {other:?}") }, surface_colour: ColourRef::Colour(ColourId(usize::MAX)), },
+        "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => UnitPart::SurfaceStyleRenderingWithProperties { properties: Vec::new(), },
+        "SURFACE_STYLE_SEGMENTATION_CURVE" => UnitPart::SurfaceStyleSegmentationCurve { style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
+        "SURFACE_STYLE_SILHOUETTE" => UnitPart::SurfaceStyleSilhouette { style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
+        "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage { side: match &p.attributes[0] { Attribute::Enum(s) => SurfaceSide::parse(s).expect("surface_side"), other => panic!("enum surface_side: {other:?}") }, style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(usize::MAX)), },
+        "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: as_str(&p.attributes[0]), style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)), },
+        "SYMBOL_TARGET" => UnitPart::SymbolTarget { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), x_scale: as_real(&p.attributes[1]), y_scale: as_real(&p.attributes[2]), },
+        "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
+        "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
+        "TEXT_LITERAL" => UnitPart::TextLiteral { literal: as_str(&p.attributes[0]), placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), alignment: as_str(&p.attributes[2]), path: match &p.attributes[3] { Attribute::Enum(s) => TextPath::parse(s).expect("text_path"), other => panic!("enum text_path: {other:?}") }, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(usize::MAX)), },
+        "TEXT_STYLE" => UnitPart::TextStyle { name: as_str(&p.attributes[0]), character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(usize::MAX)), },
+        "TEXTURE_STYLE_SPECIFICATION" => UnitPart::TextureStyleSpecification,
+        "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => UnitPart::TextureStyleTessellationSpecification,
+        "TIME_UNIT" => UnitPart::TimeUnit,
+        "TOLERANCE_ZONE" => UnitPart::ToleranceZone { defining_tolerance: Vec::new(), form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)), },
+        "TOLERANCE_ZONE_DEFINITION" => UnitPart::ToleranceZoneDefinition { zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)), boundaries: Vec::new(), },
+        "TOLERANCE_ZONE_WITH_DATUM" => UnitPart::ToleranceZoneWithDatum { datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(usize::MAX)), },
+        "TOPOLOGICAL_REPRESENTATION_ITEM" => UnitPart::TopologicalRepresentationItem,
+        "TOROIDAL_SURFACE" => UnitPart::ToroidalSurface { major_radius: as_real(&p.attributes[0]), minor_radius: as_real(&p.attributes[1]), },
+        "TWO_DIRECTION_REPEAT_FACTOR" => UnitPart::TwoDirectionRepeatFactor { second_repeat_factor: VectorRef::Vector(VectorId(usize::MAX)), },
+        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => UnitPart::UnequallyDisposedGeometricTolerance { displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
+        "UNIFORM_CURVE" => UnitPart::UniformCurve,
+        "UNIFORM_SURFACE" => UnitPart::UniformSurface,
+        "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem { value_component: read_measure_value(&p.attributes[0]), },
+        "VECTOR" => UnitPart::Vector { orientation: DirectionRef::Direction(DirectionId(usize::MAX)), magnitude: as_real(&p.attributes[1]), },
+        "VERTEX" => UnitPart::Vertex,
+        "VERTEX_POINT" => UnitPart::VertexPoint { vertex_geometry: PointRef::CartesianPoint(CartesianPointId(usize::MAX)), },
+        "VIEW_VOLUME" => UnitPart::ViewVolume { projection_type: match &p.attributes[0] { Attribute::Enum(s) => CentralOrParallel::parse(s).expect("central_or_parallel"), other => panic!("enum central_or_parallel: {other:?}") }, projection_point: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), view_plane_distance: as_real(&p.attributes[2]), front_plane_distance: as_real(&p.attributes[3]), front_plane_clipping: matches!(&p.attributes[4], Attribute::Enum(s) if s == "T"), back_plane_distance: as_real(&p.attributes[5]), back_plane_clipping: matches!(&p.attributes[6], Attribute::Enum(s) if s == "T"), view_volume_sides_clipping: matches!(&p.attributes[7], Attribute::Enum(s) if s == "T"), view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)), },
+        other => panic!("unknown complex part: {other}"),
+    }).collect()
 }
 
 fn resolve_complex(
@@ -27077,6 +26925,17 @@ fn resolve_complex(
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::CameraModelD3 {
+                view_reference_system,
+                perspective_of_volume,
+                ..
+            } => {
+                *view_reference_system = Axis2Placement3dRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *perspective_of_volume =
+                    ViewVolumeRef::from_any(*idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"));
             }
             UnitPart::CcDesignApproval { items, .. } => {
                 *items = match &p.attributes[0] {
@@ -28274,6 +28133,17 @@ fn resolve_complex(
             } => {
                 *vertex_geometry =
                     PointRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::ViewVolume {
+                projection_point,
+                view_window,
+                ..
+            } => {
+                *projection_point = CartesianPointRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+                *view_window =
+                    PlanarBoxRef::from_any(*idmap.get(&as_ref_id(&p.attributes[8])).expect("ref"));
             }
             _ => {}
         }

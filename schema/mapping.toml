@@ -1288,3 +1288,12 @@ property_leaves = ["id_attribute", "general_property_association"]
 usage_value = ["geometric_item_specific_usage", "value_representation_item"]
 curve_tess = ["composite_curve", "tessellated_geometric_set", "repositioned_tessellated_item"]
 annotation = ["draughting_callout", "annotation_plane", "invisibility"]
+# small low-risk leaves: hyperbola(conic), view_volume+camera_model_d3(pair),
+# draughting_pre_defined_text_font(pre_defined_item sibling), leader_directed_
+# callout(draughting_callout), all_around_shape_aspect(shape_aspect chain),
+# plus_minus_tolerance(+limits_and_fits leaf), object_role(leaf). All deps covered
+# / auto. measure_qualification & role_association & applied_document_reference
+# excluded (maths_value / role_select / 170-member mega).
+geom_camera = ["hyperbola", "view_volume", "camera_model_d3"]
+draughting_leaf = ["draughting_pre_defined_text_font", "leader_directed_callout"]
+pmi_leaf = ["all_around_shape_aspect", "plus_minus_tolerance", "object_role"]

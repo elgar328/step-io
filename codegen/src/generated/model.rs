@@ -242,6 +242,27 @@ impl BSplineSurfaceForm {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CentralOrParallel {
+    Central,
+    Parallel,
+}
+impl CentralOrParallel {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "CENTRAL" => Self::Central,
+            "PARALLEL" => Self::Parallel,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Central => ".CENTRAL.",
+            Self::Parallel => ".PARALLEL.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DatumReferenceModifierType {
     Projected,
     Distance,
@@ -988,6 +1009,8 @@ pub struct AdvancedBrepShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AdvancedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AllAroundShapeAspectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AngularityToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationCurveOccurrenceId(pub usize);
@@ -1063,6 +1086,10 @@ pub struct BoundedSurfaceCurveId(pub usize);
 pub struct BrepWithVoidsId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CalendarDateId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CameraModelId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CameraModelD3Id(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CartesianPointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1141,6 +1168,8 @@ pub struct ContextDependentOverRidingStyledItemId(pub usize);
 pub struct ContextDependentShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ContinuousShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContractId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1235,6 +1264,8 @@ pub struct DraughtingModelId(pub usize);
 pub struct DraughtingPreDefinedColourId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedCurveFontId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DraughtingPreDefinedTextFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EdgeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1340,6 +1371,8 @@ pub struct GlobalUnitAssignedContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GroupId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HyperbolaId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IdAttributeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntLiteralId(pub usize);
@@ -1352,9 +1385,13 @@ pub struct InvisibilityId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemDefinedTransformationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LeaderDirectedCalloutId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LengthMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LengthUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LimitsAndFitsId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1391,6 +1428,8 @@ pub struct NamedUnitId(pub usize);
 pub struct NextAssemblyUsageOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NumericExpressionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ObjectRoleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OffsetSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1457,6 +1496,8 @@ pub struct PlaneId(pub usize);
 pub struct PlaneAngleMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneAngleUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PlusMinusToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1732,6 +1773,8 @@ pub struct VertexPointId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VertexShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ViewVolumeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WireShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ComplexUnitId(pub usize);
@@ -1753,6 +1796,7 @@ pub enum AnyId {
     Address(AddressId),
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
+    AllAroundShapeAspect(AllAroundShapeAspectId),
     AngularityTolerance(AngularityToleranceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
@@ -1791,6 +1835,8 @@ pub enum AnyId {
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
     CalendarDate(CalendarDateId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
     CcDesignApproval(CcDesignApprovalId),
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
@@ -1830,6 +1876,7 @@ pub enum AnyId {
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     ContextDependentUnit(ContextDependentUnitId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
     Contract(ContractId),
     ContractType(ContractTypeId),
     ConversionBasedUnit(ConversionBasedUnitId),
@@ -1877,6 +1924,7 @@ pub enum AnyId {
     DraughtingModel(DraughtingModelId),
     DraughtingPreDefinedColour(DraughtingPreDefinedColourId),
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
+    DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
@@ -1931,14 +1979,17 @@ pub enum AnyId {
     GlobalUncertaintyAssignedContext(GlobalUncertaintyAssignedContextId),
     GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
     Group(GroupId),
+    Hyperbola(HyperbolaId),
     IdAttribute(IdAttributeId),
     IntLiteral(IntLiteralId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
     Invisibility(InvisibilityId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     LengthUnit(LengthUnitId),
+    LimitsAndFits(LimitsAndFitsId),
     Line(LineId),
     LineProfileTolerance(LineProfileToleranceId),
     LiteralNumber(LiteralNumberId),
@@ -1959,6 +2010,7 @@ pub enum AnyId {
     NamedUnit(NamedUnitId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     NumericExpression(NumericExpressionId),
+    ObjectRole(ObjectRoleId),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
@@ -1992,6 +2044,7 @@ pub enum AnyId {
     Plane(PlaneId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     PlaneAngleUnit(PlaneAngleUnitId),
+    PlusMinusTolerance(PlusMinusToleranceId),
     Point(PointId),
     PointStyle(PointStyleId),
     PolyLoop(PolyLoopId),
@@ -2129,6 +2182,7 @@ pub enum AnyId {
     VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
+    ViewVolume(ViewVolumeId),
     WireShell(WireShellId),
     ComplexUnit(ComplexUnitId),
 }
@@ -2215,6 +2269,7 @@ pub enum AnnotationPlaneElementRef {
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     DraughtingCallout(DraughtingCalloutId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     OverRidingStyledItem(OverRidingStyledItemId),
     StyledItem(StyledItemId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
@@ -2234,6 +2289,7 @@ impl AnnotationPlaneElementRef {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
             AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
             AnyId::StyledItem(i) => Self::StyledItem(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
@@ -2584,6 +2640,7 @@ impl CharacterizedActionDefinitionRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedDefinitionRef {
+    AllAroundShapeAspect(AllAroundShapeAspectId),
     AngularityTolerance(AngularityToleranceId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
     CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentationId),
@@ -2594,6 +2651,7 @@ pub enum CharacterizedDefinitionRef {
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     ConcentricityTolerance(ConcentricityToleranceId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
     CylindricityTolerance(CylindricityToleranceId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
@@ -2643,6 +2701,7 @@ pub enum CharacterizedDefinitionRef {
 impl CharacterizedDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
             AnyId::CharacterizedItemWithinRepresentation(i) => {
@@ -2655,6 +2714,7 @@ impl CharacterizedDefinitionRef {
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
+            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
             AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
@@ -2918,6 +2978,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     Conic(ConicId),
     Curve(CurveId),
     Ellipse(EllipseId),
+    Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Pcurve(PcurveId),
@@ -2945,6 +3006,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
@@ -2975,6 +3037,7 @@ pub enum CurveOrCurveSetRef {
     Curve(CurveId),
     Ellipse(EllipseId),
     GeometricCurveSet(GeometricCurveSetId),
+    Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Pcurve(PcurveId),
@@ -3002,6 +3065,7 @@ impl CurveOrCurveSetRef {
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
@@ -3048,6 +3112,7 @@ pub enum CurveRef {
     Conic(ConicId),
     Curve(CurveId),
     Ellipse(EllipseId),
+    Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Pcurve(PcurveId),
@@ -3074,6 +3139,7 @@ impl CurveRef {
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
@@ -3775,6 +3841,7 @@ impl FillStyleSelectRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FontSelectRef {
+    DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId),
     ExternallyDefinedTextFont(ExternallyDefinedTextFontId),
     PreDefinedTextFont(PreDefinedTextFontId),
     TextFont(TextFontId),
@@ -3783,6 +3850,7 @@ pub enum FontSelectRef {
 impl FontSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::DraughtingPreDefinedTextFont(i) => Self::DraughtingPreDefinedTextFont(i),
             AnyId::ExternallyDefinedTextFont(i) => Self::ExternallyDefinedTextFont(i),
             AnyId::PreDefinedTextFont(i) => Self::PreDefinedTextFont(i),
             AnyId::TextFont(i) => Self::TextFont(i),
@@ -3809,9 +3877,11 @@ impl GeneralPropertyRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricItemSpecificUsageSelectRef {
+    AllAroundShapeAspect(AllAroundShapeAspectId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
     DatumReferenceCompartment(DatumReferenceCompartmentId),
@@ -3831,9 +3901,11 @@ pub enum GeometricItemSpecificUsageSelectRef {
 impl GeometricItemSpecificUsageSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
             AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
@@ -3873,6 +3945,8 @@ pub enum GeometricModelItemRef {
     BoundedSurface(BoundedSurfaceId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
@@ -3906,7 +3980,9 @@ pub enum GeometricModelItemRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
+    Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     Line(LineId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     OffsetSurface(OffsetSurfaceId),
@@ -3972,6 +4048,8 @@ impl GeometricModelItemRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CameraModel(i) => Self::CameraModel(i),
+            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
@@ -4005,7 +4083,9 @@ impl GeometricModelItemRef {
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
             AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
@@ -4081,6 +4161,7 @@ pub enum GeometricSetSelectRef {
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
+    Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     OffsetSurface(OffsetSurfaceId),
@@ -4134,6 +4215,7 @@ impl GeometricSetSelectRef {
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
@@ -4166,9 +4248,11 @@ impl GeometricSetSelectRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceTargetRef {
+    AllAroundShapeAspect(AllAroundShapeAspectId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
     DatumReferenceCompartment(DatumReferenceCompartmentId),
@@ -4190,9 +4274,11 @@ pub enum GeometricToleranceTargetRef {
 impl GeometricToleranceTargetRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
             AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
@@ -4221,6 +4307,7 @@ pub enum IdAttributeSelectRef {
     Address(AddressId),
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
+    AllAroundShapeAspect(AllAroundShapeAspectId),
     AngularityTolerance(AngularityToleranceId),
     ApplicationContext(ApplicationContextId),
     AscribableStateRelationship(AscribableStateRelationshipId),
@@ -4233,6 +4320,7 @@ pub enum IdAttributeSelectRef {
     ConcentricityTolerance(ConcentricityToleranceId),
     ConnectedFaceSet(ConnectedFaceSetId),
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
     CylindricityTolerance(CylindricityToleranceId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
@@ -4318,6 +4406,7 @@ impl IdAttributeSelectRef {
             AnyId::Address(i) => Self::Address(i),
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
             AnyId::AscribableStateRelationship(i) => Self::AscribableStateRelationship(i),
@@ -4332,6 +4421,7 @@ impl IdAttributeSelectRef {
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 Self::ConstructiveGeometryRepresentation(i)
             }
+            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
             AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
@@ -4444,6 +4534,7 @@ pub enum InvisibleItemRef {
     GeometricallyBoundedWireframeShapeRepresentation(
         GeometricallyBoundedWireframeShapeRepresentationId,
     ),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
@@ -4481,6 +4572,7 @@ impl InvisibleItemRef {
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 Self::GeometricallyBoundedWireframeShapeRepresentation(i)
             }
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
@@ -4543,6 +4635,8 @@ pub enum LayeredItemRef {
     BoundedSurface(BoundedSurfaceId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
@@ -4582,8 +4676,10 @@ pub enum LayeredItemRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
+    Hyperbola(HyperbolaId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
@@ -4674,6 +4770,8 @@ impl LayeredItemRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CameraModel(i) => Self::CameraModel(i),
+            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
@@ -4715,8 +4813,10 @@ impl LayeredItemRef {
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
             AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
@@ -5106,6 +5206,21 @@ impl PersonRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum PlanarBoxRef {
+    PlanarBox(PlanarBoxId),
+    Complex(ComplexUnitId),
+}
+impl PlanarBoxRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("PlanarBoxRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum PlaneOrPlanarBoxRef {
     PlanarBox(PlanarBoxId),
     Plane(PlaneId),
@@ -5453,6 +5568,8 @@ pub enum RepresentationItemRef {
     BoundedSurface(BoundedSurfaceId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
@@ -5492,8 +5609,10 @@ pub enum RepresentationItemRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
+    Hyperbola(HyperbolaId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
@@ -5583,6 +5702,8 @@ impl RepresentationItemRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CameraModel(i) => Self::CameraModel(i),
+            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
@@ -5624,8 +5745,10 @@ impl RepresentationItemRef {
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
             AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
@@ -5804,9 +5927,11 @@ impl RepresentationRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentedDefinitionRef {
+    AllAroundShapeAspect(AllAroundShapeAspectId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
     DatumReferenceCompartment(DatumReferenceCompartmentId),
@@ -5830,9 +5955,11 @@ pub enum RepresentedDefinitionRef {
 impl RepresentedDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
             AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
@@ -5898,9 +6025,11 @@ impl SecurityClassificationRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeAspectRef {
+    AllAroundShapeAspect(AllAroundShapeAspectId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
     DatumReferenceCompartment(DatumReferenceCompartmentId),
@@ -5917,9 +6046,11 @@ pub enum ShapeAspectRef {
 impl ShapeAspectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
             AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
@@ -6127,6 +6258,8 @@ pub enum StyleContextSelectRef {
     BoundedSurface(BoundedSurfaceId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
@@ -6174,8 +6307,10 @@ pub enum StyleContextSelectRef {
         GeometricallyBoundedWireframeShapeRepresentationId,
     ),
     Group(GroupId),
+    Hyperbola(HyperbolaId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
@@ -6279,6 +6414,8 @@ impl StyleContextSelectRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CameraModel(i) => Self::CameraModel(i),
+            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
@@ -6332,8 +6469,10 @@ impl StyleContextSelectRef {
                 Self::GeometricallyBoundedWireframeShapeRepresentation(i)
             }
             AnyId::Group(i) => Self::Group(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
@@ -6476,6 +6615,8 @@ pub enum StyledItemTargetRef {
     BoundedSurface(BoundedSurfaceId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     BrepWithVoids(BrepWithVoidsId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
@@ -6519,7 +6660,9 @@ pub enum StyledItemTargetRef {
     GeometricallyBoundedWireframeShapeRepresentation(
         GeometricallyBoundedWireframeShapeRepresentationId,
     ),
+    Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
@@ -6607,6 +6750,8 @@ impl StyledItemTargetRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CameraModel(i) => Self::CameraModel(i),
+            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
@@ -6652,7 +6797,9 @@ impl StyledItemTargetRef {
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 Self::GeometricallyBoundedWireframeShapeRepresentation(i)
             }
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
@@ -6938,6 +7085,21 @@ impl TextOrCharacterRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ToleranceMethodDefinitionRef {
+    LimitsAndFits(LimitsAndFitsId),
+    ToleranceValue(ToleranceValueId),
+}
+impl ToleranceMethodDefinitionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::LimitsAndFits(i) => Self::LimitsAndFits(i),
+            AnyId::ToleranceValue(i) => Self::ToleranceValue(i),
+            other => panic!("ToleranceMethodDefinitionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
 }
@@ -7204,6 +7366,21 @@ impl VertexRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ViewVolumeRef {
+    ViewVolume(ViewVolumeId),
+    Complex(ComplexUnitId),
+}
+impl ViewVolumeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ViewVolume(i) => Self::ViewVolume(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ViewVolumeRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum WorkItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
@@ -7337,6 +7514,14 @@ pub struct AdvancedFace {
     pub bounds: Vec<FaceBoundRef>,
     pub face_geometry: SurfaceRef,
     pub same_sense: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AllAroundShapeAspect {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7638,6 +7823,18 @@ pub struct CalendarDate {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CameraModel {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraModelD3 {
+    pub name: String,
+    pub view_reference_system: Axis2Placement3dRef,
+    pub perspective_of_volume: ViewVolumeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CartesianPoint {
     pub name: String,
     pub coordinates: Vec<f64>,
@@ -7909,6 +8106,14 @@ pub struct ContextDependentShapeRepresentation {
 pub struct ContextDependentUnit {
     pub dimensions: DimensionalExponentsRef,
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContinuousShapeAspect {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8236,6 +8441,11 @@ pub struct DraughtingPreDefinedColour {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedCurveFont {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingPreDefinedTextFont {
     pub name: String,
 }
 
@@ -8591,6 +8801,14 @@ pub struct Group {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Hyperbola {
+    pub name: String,
+    pub position: Axis2PlacementRef,
+    pub semi_axis: f64,
+    pub semi_imag_axis: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct IdAttribute {
     pub attribute_value: String,
     pub identified_item: IdAttributeSelectRef,
@@ -8629,6 +8847,12 @@ pub struct ItemDefinedTransformation {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct LeaderDirectedCallout {
+    pub name: String,
+    pub contents: Vec<DraughtingCalloutElementRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct LengthMeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
@@ -8637,6 +8861,14 @@ pub struct LengthMeasureWithUnit {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LengthUnit {
     pub dimensions: DimensionalExponentsRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LimitsAndFits {
+    pub form_variance: String,
+    pub zone_variance: String,
+    pub grade: String,
+    pub source: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8756,6 +8988,12 @@ pub struct NextAssemblyUsageOccurrence {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NumericExpression {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ObjectRole {
+    pub name: String,
+    pub description: Option<String>,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetSurface {
@@ -9019,6 +9257,12 @@ pub struct PlaneAngleMeasureWithUnit {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlaneAngleUnit {
     pub dimensions: DimensionalExponentsRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlusMinusTolerance {
+    pub range: ToleranceMethodDefinitionRef,
+    pub toleranced_dimension: DimensionalCharacteristicRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -9938,6 +10182,19 @@ pub struct VertexShell {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ViewVolume {
+    pub projection_type: CentralOrParallel,
+    pub projection_point: CartesianPointRef,
+    pub view_plane_distance: f64,
+    pub front_plane_distance: f64,
+    pub front_plane_clipping: bool,
+    pub back_plane_distance: f64,
+    pub back_plane_clipping: bool,
+    pub view_volume_sides_clipping: bool,
+    pub view_window: PlanarBoxRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct WireShell {
     pub name: String,
     pub wire_shell_extent: Vec<LoopRef>,
@@ -10062,6 +10319,11 @@ pub enum UnitPart {
     BoundedSurfaceCurve,
     BrepWithVoids {
         voids: Vec<OrientedClosedShellRef>,
+    },
+    CameraModel,
+    CameraModelD3 {
+        view_reference_system: Axis2Placement3dRef,
+        perspective_of_volume: ViewVolumeRef,
     },
     CcDesignApproval {
         items: Vec<ApprovedItemRef>,
@@ -10220,6 +10482,7 @@ pub enum UnitPart {
     },
     DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont,
+    DraughtingPreDefinedTextFont,
     Edge {
         edge_start: Option<VertexRef>,
         edge_end: Option<VertexRef>,
@@ -10362,6 +10625,7 @@ pub enum UnitPart {
         transform_item_1: RepresentationItemRef,
         transform_item_2: RepresentationItemRef,
     },
+    LeaderDirectedCallout,
     LengthMeasureWithUnit,
     LengthUnit,
     LineProfileTolerance,
@@ -10733,6 +10997,17 @@ pub enum UnitPart {
     VertexPoint {
         vertex_geometry: PointRef,
     },
+    ViewVolume {
+        projection_type: CentralOrParallel,
+        projection_point: CartesianPointRef,
+        view_plane_distance: f64,
+        front_plane_distance: f64,
+        front_plane_clipping: bool,
+        back_plane_distance: f64,
+        back_plane_clipping: bool,
+        view_volume_sides_clipping: bool,
+        view_window: PlanarBoxRef,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10757,6 +11032,7 @@ pub struct Model {
     pub addresss: Arena<Address>,
     pub advanced_brep_shape_representations: Arena<AdvancedBrepShapeRepresentation>,
     pub advanced_faces: Arena<AdvancedFace>,
+    pub all_around_shape_aspects: Arena<AllAroundShapeAspect>,
     pub angularity_tolerances: Arena<AngularityTolerance>,
     pub annotation_curve_occurrences: Arena<AnnotationCurveOccurrence>,
     pub annotation_fill_area_occurrences: Arena<AnnotationFillAreaOccurrence>,
@@ -10795,6 +11071,8 @@ pub struct Model {
     pub bounded_surface_curves: Arena<BoundedSurfaceCurve>,
     pub brep_with_voidss: Arena<BrepWithVoids>,
     pub calendar_dates: Arena<CalendarDate>,
+    pub camera_models: Arena<CameraModel>,
+    pub camera_model_d3s: Arena<CameraModelD3>,
     pub cartesian_points: Arena<CartesianPoint>,
     pub cc_design_approvals: Arena<CcDesignApproval>,
     pub cc_design_date_and_time_assignments: Arena<CcDesignDateAndTimeAssignment>,
@@ -10835,6 +11113,7 @@ pub struct Model {
     pub context_dependent_over_riding_styled_items: Arena<ContextDependentOverRidingStyledItem>,
     pub context_dependent_shape_representations: Arena<ContextDependentShapeRepresentation>,
     pub context_dependent_units: Arena<ContextDependentUnit>,
+    pub continuous_shape_aspects: Arena<ContinuousShapeAspect>,
     pub contracts: Arena<Contract>,
     pub contract_types: Arena<ContractType>,
     pub conversion_based_units: Arena<ConversionBasedUnit>,
@@ -10882,6 +11161,7 @@ pub struct Model {
     pub draughting_models: Arena<DraughtingModel>,
     pub draughting_pre_defined_colours: Arena<DraughtingPreDefinedColour>,
     pub draughting_pre_defined_curve_fonts: Arena<DraughtingPreDefinedCurveFont>,
+    pub draughting_pre_defined_text_fonts: Arena<DraughtingPreDefinedTextFont>,
     pub edges: Arena<Edge>,
     pub edge_curves: Arena<EdgeCurve>,
     pub edge_loops: Arena<EdgeLoop>,
@@ -10935,14 +11215,17 @@ pub struct Model {
     pub global_uncertainty_assigned_contexts: Arena<GlobalUncertaintyAssignedContext>,
     pub global_unit_assigned_contexts: Arena<GlobalUnitAssignedContext>,
     pub groups: Arena<Group>,
+    pub hyperbolas: Arena<Hyperbola>,
     pub id_attributes: Arena<IdAttribute>,
     pub int_literals: Arena<IntLiteral>,
     pub integer_representation_items: Arena<IntegerRepresentationItem>,
     pub intersection_curves: Arena<IntersectionCurve>,
     pub invisibilitys: Arena<Invisibility>,
     pub item_defined_transformations: Arena<ItemDefinedTransformation>,
+    pub leader_directed_callouts: Arena<LeaderDirectedCallout>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
     pub length_units: Arena<LengthUnit>,
+    pub limits_and_fitss: Arena<LimitsAndFits>,
     pub lines: Arena<Line>,
     pub line_profile_tolerances: Arena<LineProfileTolerance>,
     pub literal_numbers: Arena<LiteralNumber>,
@@ -10962,6 +11245,7 @@ pub struct Model {
     pub named_units: Arena<NamedUnit>,
     pub next_assembly_usage_occurrences: Arena<NextAssemblyUsageOccurrence>,
     pub numeric_expressions: Arena<NumericExpression>,
+    pub object_roles: Arena<ObjectRole>,
     pub offset_surfaces: Arena<OffsetSurface>,
     pub one_direction_repeat_factors: Arena<OneDirectionRepeatFactor>,
     pub open_shells: Arena<OpenShell>,
@@ -10995,6 +11279,7 @@ pub struct Model {
     pub planes: Arena<Plane>,
     pub plane_angle_measure_with_units: Arena<PlaneAngleMeasureWithUnit>,
     pub plane_angle_units: Arena<PlaneAngleUnit>,
+    pub plus_minus_tolerances: Arena<PlusMinusTolerance>,
     pub points: Arena<Point>,
     pub point_styles: Arena<PointStyle>,
     pub poly_loops: Arena<PolyLoop>,
@@ -11135,6 +11420,7 @@ pub struct Model {
     pub vertex_loops: Arena<VertexLoop>,
     pub vertex_points: Arena<VertexPoint>,
     pub vertex_shells: Arena<VertexShell>,
+    pub view_volumes: Arena<ViewVolume>,
     pub wire_shells: Arena<WireShell>,
     pub complex_units: Arena<ComplexUnit>,
 }

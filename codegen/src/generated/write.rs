@@ -82,6 +82,7 @@ pub struct Writer<'a> {
     addre_ids: Vec<Option<u64>>,
     advanced_brep_shape_representation_ids: Vec<Option<u64>>,
     advanced_face_ids: Vec<Option<u64>>,
+    all_around_shape_aspect_ids: Vec<Option<u64>>,
     angularity_tolerance_ids: Vec<Option<u64>>,
     annotation_curve_occurrence_ids: Vec<Option<u64>>,
     annotation_fill_area_occurrence_ids: Vec<Option<u64>>,
@@ -120,6 +121,8 @@ pub struct Writer<'a> {
     bounded_surface_curve_ids: Vec<Option<u64>>,
     brep_with_void_ids: Vec<Option<u64>>,
     calendar_date_ids: Vec<Option<u64>>,
+    camera_model_ids: Vec<Option<u64>>,
+    camera_model_d3_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
     cc_design_approval_ids: Vec<Option<u64>>,
     cc_design_date_and_time_assignment_ids: Vec<Option<u64>>,
@@ -159,6 +162,7 @@ pub struct Writer<'a> {
     context_dependent_over_riding_styled_item_ids: Vec<Option<u64>>,
     context_dependent_shape_representation_ids: Vec<Option<u64>>,
     context_dependent_unit_ids: Vec<Option<u64>>,
+    continuous_shape_aspect_ids: Vec<Option<u64>>,
     contract_ids: Vec<Option<u64>>,
     contract_type_ids: Vec<Option<u64>>,
     conversion_based_unit_ids: Vec<Option<u64>>,
@@ -206,6 +210,7 @@ pub struct Writer<'a> {
     draughting_model_ids: Vec<Option<u64>>,
     draughting_pre_defined_colour_ids: Vec<Option<u64>>,
     draughting_pre_defined_curve_font_ids: Vec<Option<u64>>,
+    draughting_pre_defined_text_font_ids: Vec<Option<u64>>,
     edge_ids: Vec<Option<u64>>,
     edge_curve_ids: Vec<Option<u64>>,
     edge_loop_ids: Vec<Option<u64>>,
@@ -258,14 +263,17 @@ pub struct Writer<'a> {
     global_uncertainty_assigned_context_ids: Vec<Option<u64>>,
     global_unit_assigned_context_ids: Vec<Option<u64>>,
     group_ids: Vec<Option<u64>>,
+    hyperbola_ids: Vec<Option<u64>>,
     id_attribute_ids: Vec<Option<u64>>,
     int_literal_ids: Vec<Option<u64>>,
     integer_representation_item_ids: Vec<Option<u64>>,
     intersection_curve_ids: Vec<Option<u64>>,
     invisibility_ids: Vec<Option<u64>>,
     item_defined_transformation_ids: Vec<Option<u64>>,
+    leader_directed_callout_ids: Vec<Option<u64>>,
     length_measure_with_unit_ids: Vec<Option<u64>>,
     length_unit_ids: Vec<Option<u64>>,
+    limits_and_fit_ids: Vec<Option<u64>>,
     line_ids: Vec<Option<u64>>,
     line_profile_tolerance_ids: Vec<Option<u64>>,
     literal_number_ids: Vec<Option<u64>>,
@@ -284,6 +292,7 @@ pub struct Writer<'a> {
     named_unit_ids: Vec<Option<u64>>,
     next_assembly_usage_occurrence_ids: Vec<Option<u64>>,
     numeric_expression_ids: Vec<Option<u64>>,
+    object_role_ids: Vec<Option<u64>>,
     offset_surface_ids: Vec<Option<u64>>,
     one_direction_repeat_factor_ids: Vec<Option<u64>>,
     open_shell_ids: Vec<Option<u64>>,
@@ -317,6 +326,7 @@ pub struct Writer<'a> {
     plane_ids: Vec<Option<u64>>,
     plane_angle_measure_with_unit_ids: Vec<Option<u64>>,
     plane_angle_unit_ids: Vec<Option<u64>>,
+    plus_minus_tolerance_ids: Vec<Option<u64>>,
     point_ids: Vec<Option<u64>>,
     point_style_ids: Vec<Option<u64>>,
     poly_loop_ids: Vec<Option<u64>>,
@@ -454,6 +464,7 @@ pub struct Writer<'a> {
     vertex_loop_ids: Vec<Option<u64>>,
     vertex_point_ids: Vec<Option<u64>>,
     vertex_shell_ids: Vec<Option<u64>>,
+    view_volume_ids: Vec<Option<u64>>,
     wire_shell_ids: Vec<Option<u64>>,
     complex_ids: Vec<Option<u64>>,
 }
@@ -494,6 +505,7 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             advanced_face_ids: vec![None; model.advanced_faces.items.len()],
+            all_around_shape_aspect_ids: vec![None; model.all_around_shape_aspects.items.len()],
             angularity_tolerance_ids: vec![None; model.angularity_tolerances.items.len()],
             annotation_curve_occurrence_ids: vec![
                 None;
@@ -571,6 +583,8 @@ impl<'a> Writer<'a> {
             bounded_surface_curve_ids: vec![None; model.bounded_surface_curves.items.len()],
             brep_with_void_ids: vec![None; model.brep_with_voidss.items.len()],
             calendar_date_ids: vec![None; model.calendar_dates.items.len()],
+            camera_model_ids: vec![None; model.camera_models.items.len()],
+            camera_model_d3_ids: vec![None; model.camera_model_d3s.items.len()],
             cartesian_point_ids: vec![None; model.cartesian_points.items.len()],
             cc_design_approval_ids: vec![None; model.cc_design_approvals.items.len()],
             cc_design_date_and_time_assignment_ids: vec![
@@ -667,6 +681,7 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             context_dependent_unit_ids: vec![None; model.context_dependent_units.items.len()],
+            continuous_shape_aspect_ids: vec![None; model.continuous_shape_aspects.items.len()],
             contract_ids: vec![None; model.contracts.items.len()],
             contract_type_ids: vec![None; model.contract_types.items.len()],
             conversion_based_unit_ids: vec![None; model.conversion_based_units.items.len()],
@@ -765,6 +780,13 @@ impl<'a> Writer<'a> {
                 None;
                 model
                     .draughting_pre_defined_curve_fonts
+                    .items
+                    .len()
+            ],
+            draughting_pre_defined_text_font_ids: vec![
+                None;
+                model
+                    .draughting_pre_defined_text_fonts
                     .items
                     .len()
             ],
@@ -931,6 +953,7 @@ impl<'a> Writer<'a> {
                 model.global_unit_assigned_contexts.items.len()
             ],
             group_ids: vec![None; model.groups.items.len()],
+            hyperbola_ids: vec![None; model.hyperbolas.items.len()],
             id_attribute_ids: vec![None; model.id_attributes.items.len()],
             int_literal_ids: vec![None; model.int_literals.items.len()],
             integer_representation_item_ids: vec![
@@ -943,8 +966,10 @@ impl<'a> Writer<'a> {
                 None;
                 model.item_defined_transformations.items.len()
             ],
+            leader_directed_callout_ids: vec![None; model.leader_directed_callouts.items.len()],
             length_measure_with_unit_ids: vec![None; model.length_measure_with_units.items.len()],
             length_unit_ids: vec![None; model.length_units.items.len()],
+            limits_and_fit_ids: vec![None; model.limits_and_fitss.items.len()],
             line_ids: vec![None; model.lines.items.len()],
             line_profile_tolerance_ids: vec![None; model.line_profile_tolerances.items.len()],
             literal_number_ids: vec![None; model.literal_numbers.items.len()],
@@ -987,6 +1012,7 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             numeric_expression_ids: vec![None; model.numeric_expressions.items.len()],
+            object_role_ids: vec![None; model.object_roles.items.len()],
             offset_surface_ids: vec![None; model.offset_surfaces.items.len()],
             one_direction_repeat_factor_ids: vec![
                 None;
@@ -1062,6 +1088,7 @@ impl<'a> Writer<'a> {
                 model.plane_angle_measure_with_units.items.len()
             ],
             plane_angle_unit_ids: vec![None; model.plane_angle_units.items.len()],
+            plus_minus_tolerance_ids: vec![None; model.plus_minus_tolerances.items.len()],
             point_ids: vec![None; model.points.items.len()],
             point_style_ids: vec![None; model.point_styles.items.len()],
             poly_loop_ids: vec![None; model.poly_loops.items.len()],
@@ -1385,6 +1412,7 @@ impl<'a> Writer<'a> {
             vertex_loop_ids: vec![None; model.vertex_loops.items.len()],
             vertex_point_ids: vec![None; model.vertex_points.items.len()],
             vertex_shell_ids: vec![None; model.vertex_shells.items.len()],
+            view_volume_ids: vec![None; model.view_volumes.items.len()],
             wire_shell_ids: vec![None; model.wire_shells.items.len()],
             complex_ids: vec![None; model.complex_units.items.len()],
         }
@@ -1415,6 +1443,7 @@ impl<'a> Writer<'a> {
                 self.advanced_brep_shape_representation_ids[i.0]
             }
             AnyId::AdvancedFace(i) => self.advanced_face_ids[i.0],
+            AnyId::AllAroundShapeAspect(i) => self.all_around_shape_aspect_ids[i.0],
             AnyId::AngularityTolerance(i) => self.angularity_tolerance_ids[i.0],
             AnyId::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0],
             AnyId::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0],
@@ -1457,6 +1486,8 @@ impl<'a> Writer<'a> {
             AnyId::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0],
             AnyId::BrepWithVoids(i) => self.brep_with_void_ids[i.0],
             AnyId::CalendarDate(i) => self.calendar_date_ids[i.0],
+            AnyId::CameraModel(i) => self.camera_model_ids[i.0],
+            AnyId::CameraModelD3(i) => self.camera_model_d3_ids[i.0],
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0],
             AnyId::CcDesignApproval(i) => self.cc_design_approval_ids[i.0],
             AnyId::CcDesignDateAndTimeAssignment(i) => {
@@ -1512,6 +1543,7 @@ impl<'a> Writer<'a> {
                 self.context_dependent_shape_representation_ids[i.0]
             }
             AnyId::ContextDependentUnit(i) => self.context_dependent_unit_ids[i.0],
+            AnyId::ContinuousShapeAspect(i) => self.continuous_shape_aspect_ids[i.0],
             AnyId::Contract(i) => self.contract_ids[i.0],
             AnyId::ContractType(i) => self.contract_type_ids[i.0],
             AnyId::ConversionBasedUnit(i) => self.conversion_based_unit_ids[i.0],
@@ -1568,6 +1600,9 @@ impl<'a> Writer<'a> {
             AnyId::DraughtingPreDefinedColour(i) => self.draughting_pre_defined_colour_ids[i.0],
             AnyId::DraughtingPreDefinedCurveFont(i) => {
                 self.draughting_pre_defined_curve_font_ids[i.0]
+            }
+            AnyId::DraughtingPreDefinedTextFont(i) => {
+                self.draughting_pre_defined_text_font_ids[i.0]
             }
             AnyId::Edge(i) => self.edge_ids[i.0],
             AnyId::EdgeCurve(i) => self.edge_curve_ids[i.0],
@@ -1649,14 +1684,17 @@ impl<'a> Writer<'a> {
             }
             AnyId::GlobalUnitAssignedContext(i) => self.global_unit_assigned_context_ids[i.0],
             AnyId::Group(i) => self.group_ids[i.0],
+            AnyId::Hyperbola(i) => self.hyperbola_ids[i.0],
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0],
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0],
             AnyId::IntegerRepresentationItem(i) => self.integer_representation_item_ids[i.0],
             AnyId::IntersectionCurve(i) => self.intersection_curve_ids[i.0],
             AnyId::Invisibility(i) => self.invisibility_ids[i.0],
             AnyId::ItemDefinedTransformation(i) => self.item_defined_transformation_ids[i.0],
+            AnyId::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0],
             AnyId::LengthMeasureWithUnit(i) => self.length_measure_with_unit_ids[i.0],
             AnyId::LengthUnit(i) => self.length_unit_ids[i.0],
+            AnyId::LimitsAndFits(i) => self.limits_and_fit_ids[i.0],
             AnyId::Line(i) => self.line_ids[i.0],
             AnyId::LineProfileTolerance(i) => self.line_profile_tolerance_ids[i.0],
             AnyId::LiteralNumber(i) => self.literal_number_ids[i.0],
@@ -1679,6 +1717,7 @@ impl<'a> Writer<'a> {
             AnyId::NamedUnit(i) => self.named_unit_ids[i.0],
             AnyId::NextAssemblyUsageOccurrence(i) => self.next_assembly_usage_occurrence_ids[i.0],
             AnyId::NumericExpression(i) => self.numeric_expression_ids[i.0],
+            AnyId::ObjectRole(i) => self.object_role_ids[i.0],
             AnyId::OffsetSurface(i) => self.offset_surface_ids[i.0],
             AnyId::OneDirectionRepeatFactor(i) => self.one_direction_repeat_factor_ids[i.0],
             AnyId::OpenShell(i) => self.open_shell_ids[i.0],
@@ -1718,6 +1757,7 @@ impl<'a> Writer<'a> {
             AnyId::Plane(i) => self.plane_ids[i.0],
             AnyId::PlaneAngleMeasureWithUnit(i) => self.plane_angle_measure_with_unit_ids[i.0],
             AnyId::PlaneAngleUnit(i) => self.plane_angle_unit_ids[i.0],
+            AnyId::PlusMinusTolerance(i) => self.plus_minus_tolerance_ids[i.0],
             AnyId::Point(i) => self.point_ids[i.0],
             AnyId::PointStyle(i) => self.point_style_ids[i.0],
             AnyId::PolyLoop(i) => self.poly_loop_ids[i.0],
@@ -1891,6 +1931,7 @@ impl<'a> Writer<'a> {
             AnyId::VertexLoop(i) => self.vertex_loop_ids[i.0],
             AnyId::VertexPoint(i) => self.vertex_point_ids[i.0],
             AnyId::VertexShell(i) => self.vertex_shell_ids[i.0],
+            AnyId::ViewVolume(i) => self.view_volume_ids[i.0],
             AnyId::WireShell(i) => self.wire_shell_ids[i.0],
             AnyId::ComplexUnit(i) => self.complex_ids[i.0],
         }
@@ -1921,6 +1962,7 @@ impl<'a> Writer<'a> {
                 self.advanced_brep_shape_representation_ids[i.0] = Some(n)
             }
             AnyId::AdvancedFace(i) => self.advanced_face_ids[i.0] = Some(n),
+            AnyId::AllAroundShapeAspect(i) => self.all_around_shape_aspect_ids[i.0] = Some(n),
             AnyId::AngularityTolerance(i) => self.angularity_tolerance_ids[i.0] = Some(n),
             AnyId::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0] = Some(n)
@@ -1977,6 +2019,8 @@ impl<'a> Writer<'a> {
             AnyId::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0] = Some(n),
             AnyId::BrepWithVoids(i) => self.brep_with_void_ids[i.0] = Some(n),
             AnyId::CalendarDate(i) => self.calendar_date_ids[i.0] = Some(n),
+            AnyId::CameraModel(i) => self.camera_model_ids[i.0] = Some(n),
+            AnyId::CameraModelD3(i) => self.camera_model_d3_ids[i.0] = Some(n),
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0] = Some(n),
             AnyId::CcDesignApproval(i) => self.cc_design_approval_ids[i.0] = Some(n),
             AnyId::CcDesignDateAndTimeAssignment(i) => {
@@ -2038,6 +2082,7 @@ impl<'a> Writer<'a> {
                 self.context_dependent_shape_representation_ids[i.0] = Some(n)
             }
             AnyId::ContextDependentUnit(i) => self.context_dependent_unit_ids[i.0] = Some(n),
+            AnyId::ContinuousShapeAspect(i) => self.continuous_shape_aspect_ids[i.0] = Some(n),
             AnyId::Contract(i) => self.contract_ids[i.0] = Some(n),
             AnyId::ContractType(i) => self.contract_type_ids[i.0] = Some(n),
             AnyId::ConversionBasedUnit(i) => self.conversion_based_unit_ids[i.0] = Some(n),
@@ -2106,6 +2151,9 @@ impl<'a> Writer<'a> {
             }
             AnyId::DraughtingPreDefinedCurveFont(i) => {
                 self.draughting_pre_defined_curve_font_ids[i.0] = Some(n)
+            }
+            AnyId::DraughtingPreDefinedTextFont(i) => {
+                self.draughting_pre_defined_text_font_ids[i.0] = Some(n)
             }
             AnyId::Edge(i) => self.edge_ids[i.0] = Some(n),
             AnyId::EdgeCurve(i) => self.edge_curve_ids[i.0] = Some(n),
@@ -2203,6 +2251,7 @@ impl<'a> Writer<'a> {
                 self.global_unit_assigned_context_ids[i.0] = Some(n)
             }
             AnyId::Group(i) => self.group_ids[i.0] = Some(n),
+            AnyId::Hyperbola(i) => self.hyperbola_ids[i.0] = Some(n),
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0] = Some(n),
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0] = Some(n),
             AnyId::IntegerRepresentationItem(i) => {
@@ -2213,8 +2262,10 @@ impl<'a> Writer<'a> {
             AnyId::ItemDefinedTransformation(i) => {
                 self.item_defined_transformation_ids[i.0] = Some(n)
             }
+            AnyId::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0] = Some(n),
             AnyId::LengthMeasureWithUnit(i) => self.length_measure_with_unit_ids[i.0] = Some(n),
             AnyId::LengthUnit(i) => self.length_unit_ids[i.0] = Some(n),
+            AnyId::LimitsAndFits(i) => self.limits_and_fit_ids[i.0] = Some(n),
             AnyId::Line(i) => self.line_ids[i.0] = Some(n),
             AnyId::LineProfileTolerance(i) => self.line_profile_tolerance_ids[i.0] = Some(n),
             AnyId::LiteralNumber(i) => self.literal_number_ids[i.0] = Some(n),
@@ -2243,6 +2294,7 @@ impl<'a> Writer<'a> {
                 self.next_assembly_usage_occurrence_ids[i.0] = Some(n)
             }
             AnyId::NumericExpression(i) => self.numeric_expression_ids[i.0] = Some(n),
+            AnyId::ObjectRole(i) => self.object_role_ids[i.0] = Some(n),
             AnyId::OffsetSurface(i) => self.offset_surface_ids[i.0] = Some(n),
             AnyId::OneDirectionRepeatFactor(i) => {
                 self.one_direction_repeat_factor_ids[i.0] = Some(n)
@@ -2296,6 +2348,7 @@ impl<'a> Writer<'a> {
                 self.plane_angle_measure_with_unit_ids[i.0] = Some(n)
             }
             AnyId::PlaneAngleUnit(i) => self.plane_angle_unit_ids[i.0] = Some(n),
+            AnyId::PlusMinusTolerance(i) => self.plus_minus_tolerance_ids[i.0] = Some(n),
             AnyId::Point(i) => self.point_ids[i.0] = Some(n),
             AnyId::PointStyle(i) => self.point_style_ids[i.0] = Some(n),
             AnyId::PolyLoop(i) => self.poly_loop_ids[i.0] = Some(n),
@@ -2513,6 +2566,7 @@ impl<'a> Writer<'a> {
             AnyId::VertexLoop(i) => self.vertex_loop_ids[i.0] = Some(n),
             AnyId::VertexPoint(i) => self.vertex_point_ids[i.0] = Some(n),
             AnyId::VertexShell(i) => self.vertex_shell_ids[i.0] = Some(n),
+            AnyId::ViewVolume(i) => self.view_volume_ids[i.0] = Some(n),
             AnyId::WireShell(i) => self.wire_shell_ids[i.0] = Some(n),
             AnyId::ComplexUnit(i) => self.complex_ids[i.0] = Some(n),
         }
@@ -2626,6 +2680,9 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0].expect("dep id assigned")
             }
+            AnnotationPlaneElementRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
             AnnotationPlaneElementRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
@@ -2667,6 +2724,9 @@ impl<'a> Writer<'a> {
             }
             AnnotationPlaneElementRef::DraughtingCallout(i) => {
                 out.push(AnyId::DraughtingCallout(*i))
+            }
+            AnnotationPlaneElementRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
             }
             AnnotationPlaneElementRef::OverRidingStyledItem(i) => {
                 out.push(AnyId::OverRidingStyledItem(*i))
@@ -3170,6 +3230,9 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_characterized_definition(&self, r: &CharacterizedDefinitionRef) -> u64 {
         match r {
+            CharacterizedDefinitionRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::AngularityTolerance(i) => {
                 self.angularity_tolerance_ids[i.0].expect("dep id assigned")
             }
@@ -3199,6 +3262,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
                 self.concentricity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
                 self.cylindricity_tolerance_ids[i.0].expect("dep id assigned")
@@ -3338,6 +3404,9 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_characterized_definition(r: &CharacterizedDefinitionRef, out: &mut Vec<AnyId>) {
         match r {
+            CharacterizedDefinitionRef::AllAroundShapeAspect(i) => {
+                out.push(AnyId::AllAroundShapeAspect(*i))
+            }
             CharacterizedDefinitionRef::AngularityTolerance(i) => {
                 out.push(AnyId::AngularityTolerance(*i))
             }
@@ -3365,6 +3434,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
                 out.push(AnyId::ConcentricityTolerance(*i))
+            }
+            CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
                 out.push(AnyId::CylindricityTolerance(*i))
@@ -3801,6 +3873,9 @@ impl<'a> Writer<'a> {
             CurveOrAnnotationCurveOccurrenceRef::Ellipse(i) => {
                 self.ellipse_ids[i.0].expect("dep id assigned")
             }
+            CurveOrAnnotationCurveOccurrenceRef::Hyperbola(i) => {
+                self.hyperbola_ids[i.0].expect("dep id assigned")
+            }
             CurveOrAnnotationCurveOccurrenceRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
@@ -3868,6 +3943,7 @@ impl<'a> Writer<'a> {
             CurveOrAnnotationCurveOccurrenceRef::Conic(i) => out.push(AnyId::Conic(*i)),
             CurveOrAnnotationCurveOccurrenceRef::Curve(i) => out.push(AnyId::Curve(*i)),
             CurveOrAnnotationCurveOccurrenceRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+            CurveOrAnnotationCurveOccurrenceRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             CurveOrAnnotationCurveOccurrenceRef::IntersectionCurve(i) => {
                 out.push(AnyId::IntersectionCurve(*i))
             }
@@ -3924,6 +4000,7 @@ impl<'a> Writer<'a> {
             CurveOrCurveSetRef::GeometricCurveSet(i) => {
                 self.geometric_curve_set_ids[i.0].expect("dep id assigned")
             }
+            CurveOrCurveSetRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
             CurveOrCurveSetRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
@@ -3966,6 +4043,7 @@ impl<'a> Writer<'a> {
             CurveOrCurveSetRef::Curve(i) => out.push(AnyId::Curve(*i)),
             CurveOrCurveSetRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
             CurveOrCurveSetRef::GeometricCurveSet(i) => out.push(AnyId::GeometricCurveSet(*i)),
+            CurveOrCurveSetRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             CurveOrCurveSetRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
             CurveOrCurveSetRef::Line(i) => out.push(AnyId::Line(*i)),
             CurveOrCurveSetRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
@@ -4017,6 +4095,7 @@ impl<'a> Writer<'a> {
             CurveRef::Conic(i) => self.conic_ids[i.0].expect("dep id assigned"),
             CurveRef::Curve(i) => self.curve_ids[i.0].expect("dep id assigned"),
             CurveRef::Ellipse(i) => self.ellipse_ids[i.0].expect("dep id assigned"),
+            CurveRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
             CurveRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
@@ -4050,6 +4129,7 @@ impl<'a> Writer<'a> {
             CurveRef::Conic(i) => out.push(AnyId::Conic(*i)),
             CurveRef::Curve(i) => out.push(AnyId::Curve(*i)),
             CurveRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+            CurveRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             CurveRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
             CurveRef::Line(i) => out.push(AnyId::Line(*i)),
             CurveRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
@@ -5076,6 +5156,9 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_font_select(&self, r: &FontSelectRef) -> u64 {
         match r {
+            FontSelectRef::DraughtingPreDefinedTextFont(i) => {
+                self.draughting_pre_defined_text_font_ids[i.0].expect("dep id assigned")
+            }
             FontSelectRef::ExternallyDefinedTextFont(i) => {
                 self.externally_defined_text_font_ids[i.0].expect("dep id assigned")
             }
@@ -5089,6 +5172,9 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_font_select(r: &FontSelectRef, out: &mut Vec<AnyId>) {
         match r {
+            FontSelectRef::DraughtingPreDefinedTextFont(i) => {
+                out.push(AnyId::DraughtingPreDefinedTextFont(*i))
+            }
             FontSelectRef::ExternallyDefinedTextFont(i) => {
                 out.push(AnyId::ExternallyDefinedTextFont(*i))
             }
@@ -5119,6 +5205,9 @@ impl<'a> Writer<'a> {
         r: &GeometricItemSpecificUsageSelectRef,
     ) -> u64 {
         match r {
+            GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             GeometricItemSpecificUsageSelectRef::CommonDatum(i) => {
                 self.common_datum_ids[i.0].expect("dep id assigned")
             }
@@ -5127,6 +5216,9 @@ impl<'a> Writer<'a> {
             }
             GeometricItemSpecificUsageSelectRef::CompositeShapeAspect(i) => {
                 self.composite_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            GeometricItemSpecificUsageSelectRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             GeometricItemSpecificUsageSelectRef::Datum(i) => {
                 self.datum_ids[i.0].expect("dep id assigned")
@@ -5181,12 +5273,18 @@ impl<'a> Writer<'a> {
         out: &mut Vec<AnyId>,
     ) {
         match r {
+            GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
+                out.push(AnyId::AllAroundShapeAspect(*i))
+            }
             GeometricItemSpecificUsageSelectRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             GeometricItemSpecificUsageSelectRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
             }
             GeometricItemSpecificUsageSelectRef::CompositeShapeAspect(i) => {
                 out.push(AnyId::CompositeShapeAspect(*i))
+            }
+            GeometricItemSpecificUsageSelectRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
             }
             GeometricItemSpecificUsageSelectRef::Datum(i) => out.push(AnyId::Datum(*i)),
             GeometricItemSpecificUsageSelectRef::DatumFeature(i) => {
@@ -5279,6 +5377,12 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            GeometricModelItemRef::CameraModel(i) => {
+                self.camera_model_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
             GeometricModelItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
             }
@@ -5368,8 +5472,14 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::GeometricSet(i) => {
                 self.geometric_set_ids[i.0].expect("dep id assigned")
             }
+            GeometricModelItemRef::Hyperbola(i) => {
+                self.hyperbola_ids[i.0].expect("dep id assigned")
+            }
             GeometricModelItemRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
             }
             GeometricModelItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             GeometricModelItemRef::ManifoldSolidBrep(i) => {
@@ -5515,6 +5625,8 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::BoundedSurfaceCurve(*i))
             }
             GeometricModelItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            GeometricModelItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            GeometricModelItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
             GeometricModelItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             GeometricModelItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
             GeometricModelItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -5570,7 +5682,11 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricRepresentationItem(*i))
             }
             GeometricModelItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            GeometricModelItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             GeometricModelItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            GeometricModelItemRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
             GeometricModelItemRef::Line(i) => out.push(AnyId::Line(*i)),
             GeometricModelItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
             GeometricModelItemRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
@@ -5712,6 +5828,9 @@ impl<'a> Writer<'a> {
                 self.elementary_surface_ids[i.0].expect("dep id assigned")
             }
             GeometricSetSelectRef::Ellipse(i) => self.ellipse_ids[i.0].expect("dep id assigned"),
+            GeometricSetSelectRef::Hyperbola(i) => {
+                self.hyperbola_ids[i.0].expect("dep id assigned")
+            }
             GeometricSetSelectRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
@@ -5810,6 +5929,7 @@ impl<'a> Writer<'a> {
             }
             GeometricSetSelectRef::ElementarySurface(i) => out.push(AnyId::ElementarySurface(*i)),
             GeometricSetSelectRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+            GeometricSetSelectRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             GeometricSetSelectRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
             GeometricSetSelectRef::Line(i) => out.push(AnyId::Line(*i)),
             GeometricSetSelectRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
@@ -5850,6 +5970,9 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_geometric_tolerance_target(&self, r: &GeometricToleranceTargetRef) -> u64 {
         match r {
+            GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             GeometricToleranceTargetRef::CommonDatum(i) => {
                 self.common_datum_ids[i.0].expect("dep id assigned")
             }
@@ -5858,6 +5981,9 @@ impl<'a> Writer<'a> {
             }
             GeometricToleranceTargetRef::CompositeShapeAspect(i) => {
                 self.composite_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceTargetRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             GeometricToleranceTargetRef::Datum(i) => self.datum_ids[i.0].expect("dep id assigned"),
             GeometricToleranceTargetRef::DatumFeature(i) => {
@@ -5913,12 +6039,18 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_geometric_tolerance_target(r: &GeometricToleranceTargetRef, out: &mut Vec<AnyId>) {
         match r {
+            GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
+                out.push(AnyId::AllAroundShapeAspect(*i))
+            }
             GeometricToleranceTargetRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             GeometricToleranceTargetRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
             }
             GeometricToleranceTargetRef::CompositeShapeAspect(i) => {
                 out.push(AnyId::CompositeShapeAspect(*i))
+            }
+            GeometricToleranceTargetRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
             }
             GeometricToleranceTargetRef::Datum(i) => out.push(AnyId::Datum(*i)),
             GeometricToleranceTargetRef::DatumFeature(i) => out.push(AnyId::DatumFeature(*i)),
@@ -5968,6 +6100,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::AdvancedFace(i) => {
                 self.advanced_face_ids[i.0].expect("dep id assigned")
             }
+            IdAttributeSelectRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             IdAttributeSelectRef::AngularityTolerance(i) => {
                 self.angularity_tolerance_ids[i.0].expect("dep id assigned")
             }
@@ -6003,6 +6138,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             IdAttributeSelectRef::CylindricityTolerance(i) => {
                 self.cylindricity_tolerance_ids[i.0].expect("dep id assigned")
@@ -6214,6 +6352,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::AdvancedBrepShapeRepresentation(*i))
             }
             IdAttributeSelectRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+            IdAttributeSelectRef::AllAroundShapeAspect(i) => {
+                out.push(AnyId::AllAroundShapeAspect(*i))
+            }
             IdAttributeSelectRef::AngularityTolerance(i) => {
                 out.push(AnyId::AngularityTolerance(*i))
             }
@@ -6241,6 +6382,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::ConnectedFaceSet(i) => out.push(AnyId::ConnectedFaceSet(*i)),
             IdAttributeSelectRef::ConstructiveGeometryRepresentation(i) => {
                 out.push(AnyId::ConstructiveGeometryRepresentation(*i))
+            }
+            IdAttributeSelectRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
             }
             IdAttributeSelectRef::CylindricityTolerance(i) => {
                 out.push(AnyId::CylindricityTolerance(*i))
@@ -6437,6 +6581,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
+            InvisibleItemRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
             InvisibleItemRef::ManifoldSurfaceShapeRepresentation(i) => {
                 self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned")
             }
@@ -6504,6 +6651,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
             InvisibleItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
+            }
+            InvisibleItemRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
             }
             InvisibleItemRef::ManifoldSurfaceShapeRepresentation(i) => {
                 out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i))
@@ -6629,6 +6779,10 @@ impl<'a> Writer<'a> {
             LayeredItemRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
+            LayeredItemRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
             }
@@ -6722,11 +6876,15 @@ impl<'a> Writer<'a> {
             LayeredItemRef::GeometricSet(i) => {
                 self.geometric_set_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::IntegerRepresentationItem(i) => {
                 self.integer_representation_item_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
@@ -6907,6 +7065,8 @@ impl<'a> Writer<'a> {
             LayeredItemRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
             LayeredItemRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
             LayeredItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            LayeredItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            LayeredItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
             LayeredItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             LayeredItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
             LayeredItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -6968,10 +7128,12 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricRepresentationItem(*i))
             }
             LayeredItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            LayeredItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             LayeredItemRef::IntegerRepresentationItem(i) => {
                 out.push(AnyId::IntegerRepresentationItem(*i))
             }
             LayeredItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            LayeredItemRef::LeaderDirectedCallout(i) => out.push(AnyId::LeaderDirectedCallout(*i)),
             LayeredItemRef::Line(i) => out.push(AnyId::Line(*i)),
             LayeredItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
             LayeredItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
@@ -7504,6 +7666,20 @@ impl<'a> Writer<'a> {
     fn deps_ref_person(r: &PersonRef, out: &mut Vec<AnyId>) {
         match r {
             PersonRef::Person(i) => out.push(AnyId::Person(*i)),
+        }
+    }
+
+    fn id_of_ref_planar_box(&self, r: &PlanarBoxRef) -> u64 {
+        match r {
+            PlanarBoxRef::PlanarBox(i) => self.planar_box_ids[i.0].expect("dep id assigned"),
+            PlanarBoxRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_planar_box(r: &PlanarBoxRef, out: &mut Vec<AnyId>) {
+        match r {
+            PlanarBoxRef::PlanarBox(i) => out.push(AnyId::PlanarBox(*i)),
+            PlanarBoxRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -8051,6 +8227,12 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::CameraModel(i) => {
+                self.camera_model_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
             }
@@ -8154,11 +8336,17 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::GeometricSet(i) => {
                 self.geometric_set_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::Hyperbola(i) => {
+                self.hyperbola_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::IntegerRepresentationItem(i) => {
                 self.integer_representation_item_ids[i.0].expect("dep id assigned")
             }
             RepresentationItemRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
             }
             RepresentationItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             RepresentationItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
@@ -8366,6 +8554,8 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::BoundedSurfaceCurve(*i))
             }
             RepresentationItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            RepresentationItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            RepresentationItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
             RepresentationItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             RepresentationItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
             RepresentationItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -8431,10 +8621,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricRepresentationItem(*i))
             }
             RepresentationItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            RepresentationItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             RepresentationItemRef::IntegerRepresentationItem(i) => {
                 out.push(AnyId::IntegerRepresentationItem(*i))
             }
             RepresentationItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            RepresentationItemRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
             RepresentationItemRef::Line(i) => out.push(AnyId::Line(*i)),
             RepresentationItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
             RepresentationItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
@@ -8670,6 +8864,9 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_represented_definition(&self, r: &RepresentedDefinitionRef) -> u64 {
         match r {
+            RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             RepresentedDefinitionRef::CommonDatum(i) => {
                 self.common_datum_ids[i.0].expect("dep id assigned")
             }
@@ -8678,6 +8875,9 @@ impl<'a> Writer<'a> {
             }
             RepresentedDefinitionRef::CompositeShapeAspect(i) => {
                 self.composite_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            RepresentedDefinitionRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             RepresentedDefinitionRef::Datum(i) => self.datum_ids[i.0].expect("dep id assigned"),
             RepresentedDefinitionRef::DatumFeature(i) => {
@@ -8737,12 +8937,18 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_represented_definition(r: &RepresentedDefinitionRef, out: &mut Vec<AnyId>) {
         match r {
+            RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
+                out.push(AnyId::AllAroundShapeAspect(*i))
+            }
             RepresentedDefinitionRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             RepresentedDefinitionRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
             }
             RepresentedDefinitionRef::CompositeShapeAspect(i) => {
                 out.push(AnyId::CompositeShapeAspect(*i))
+            }
+            RepresentedDefinitionRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
             }
             RepresentedDefinitionRef::Datum(i) => out.push(AnyId::Datum(*i)),
             RepresentedDefinitionRef::DatumFeature(i) => out.push(AnyId::DatumFeature(*i)),
@@ -8841,12 +9047,18 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_shape_aspect(&self, r: &ShapeAspectRef) -> u64 {
         match r {
+            ShapeAspectRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             ShapeAspectRef::CommonDatum(i) => self.common_datum_ids[i.0].expect("dep id assigned"),
             ShapeAspectRef::CompositeGroupShapeAspect(i) => {
                 self.composite_group_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             ShapeAspectRef::CompositeShapeAspect(i) => {
                 self.composite_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            ShapeAspectRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             ShapeAspectRef::Datum(i) => self.datum_ids[i.0].expect("dep id assigned"),
             ShapeAspectRef::DatumFeature(i) => {
@@ -8879,11 +9091,13 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_shape_aspect(r: &ShapeAspectRef, out: &mut Vec<AnyId>) {
         match r {
+            ShapeAspectRef::AllAroundShapeAspect(i) => out.push(AnyId::AllAroundShapeAspect(*i)),
             ShapeAspectRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             ShapeAspectRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
             }
             ShapeAspectRef::CompositeShapeAspect(i) => out.push(AnyId::CompositeShapeAspect(*i)),
+            ShapeAspectRef::ContinuousShapeAspect(i) => out.push(AnyId::ContinuousShapeAspect(*i)),
             ShapeAspectRef::Datum(i) => out.push(AnyId::Datum(*i)),
             ShapeAspectRef::DatumFeature(i) => out.push(AnyId::DatumFeature(*i)),
             ShapeAspectRef::DatumReferenceCompartment(i) => {
@@ -9204,6 +9418,12 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::CameraModel(i) => {
+                self.camera_model_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
             }
@@ -9323,11 +9543,17 @@ impl<'a> Writer<'a> {
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
             StyleContextSelectRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
+            StyleContextSelectRef::Hyperbola(i) => {
+                self.hyperbola_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::IntegerRepresentationItem(i) => {
                 self.integer_representation_item_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             StyleContextSelectRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
@@ -9571,6 +9797,8 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::BoundedSurfaceCurve(*i))
             }
             StyleContextSelectRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            StyleContextSelectRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            StyleContextSelectRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
             StyleContextSelectRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             StyleContextSelectRef::Circle(i) => out.push(AnyId::Circle(*i)),
             StyleContextSelectRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -9650,10 +9878,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
             StyleContextSelectRef::Group(i) => out.push(AnyId::Group(*i)),
+            StyleContextSelectRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             StyleContextSelectRef::IntegerRepresentationItem(i) => {
                 out.push(AnyId::IntegerRepresentationItem(*i))
             }
             StyleContextSelectRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            StyleContextSelectRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
             StyleContextSelectRef::Line(i) => out.push(AnyId::Line(*i)),
             StyleContextSelectRef::Loop(i) => out.push(AnyId::Loop(*i)),
             StyleContextSelectRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
@@ -9920,6 +10152,12 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            StyledItemTargetRef::CameraModel(i) => {
+                self.camera_model_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
             StyledItemTargetRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
             }
@@ -10023,8 +10261,12 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
+            StyledItemTargetRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
             StyledItemTargetRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             StyledItemTargetRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
@@ -10208,6 +10450,8 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
             StyledItemTargetRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
             StyledItemTargetRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            StyledItemTargetRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            StyledItemTargetRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
             StyledItemTargetRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             StyledItemTargetRef::Circle(i) => out.push(AnyId::Circle(*i)),
             StyledItemTargetRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -10277,7 +10521,11 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
+            StyledItemTargetRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
             StyledItemTargetRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            StyledItemTargetRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
             StyledItemTargetRef::Line(i) => out.push(AnyId::Line(*i)),
             StyledItemTargetRef::Loop(i) => out.push(AnyId::Loop(*i)),
             StyledItemTargetRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
@@ -10716,6 +10964,27 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_tolerance_method_definition(&self, r: &ToleranceMethodDefinitionRef) -> u64 {
+        match r {
+            ToleranceMethodDefinitionRef::LimitsAndFits(i) => {
+                self.limits_and_fit_ids[i.0].expect("dep id assigned")
+            }
+            ToleranceMethodDefinitionRef::ToleranceValue(i) => {
+                self.tolerance_value_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_tolerance_method_definition(
+        r: &ToleranceMethodDefinitionRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            ToleranceMethodDefinitionRef::LimitsAndFits(i) => out.push(AnyId::LimitsAndFits(*i)),
+            ToleranceMethodDefinitionRef::ToleranceValue(i) => out.push(AnyId::ToleranceValue(*i)),
+        }
+    }
+
     fn id_of_ref_tolerance_zone_form(&self, r: &ToleranceZoneFormRef) -> u64 {
         match r {
             ToleranceZoneFormRef::ToleranceZoneForm(i) => {
@@ -11117,6 +11386,20 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_view_volume(&self, r: &ViewVolumeRef) -> u64 {
+        match r {
+            ViewVolumeRef::ViewVolume(i) => self.view_volume_ids[i.0].expect("dep id assigned"),
+            ViewVolumeRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_view_volume(r: &ViewVolumeRef, out: &mut Vec<AnyId>) {
+        match r {
+            ViewVolumeRef::ViewVolume(i) => out.push(AnyId::ViewVolume(*i)),
+            ViewVolumeRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_work_item(&self, r: &WorkItemRef) -> u64 {
         match r {
             WorkItemRef::ProductDefinitionFormation(i) => {
@@ -11210,6 +11493,10 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_face_bound(e, out);
                 }
                 Self::deps_ref_surface(&it.face_geometry, out);
+            }
+            AnyId::AllAroundShapeAspect(id) => {
+                let it = self.model.all_around_shape_aspects.get(id.0);
+                Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             AnyId::AngularityTolerance(id) => {
                 let it = self.model.angularity_tolerances.get(id.0);
@@ -11427,6 +11714,12 @@ impl<'a> Writer<'a> {
                 }
             }
             AnyId::CalendarDate(_) => {}
+            AnyId::CameraModel(_) => {}
+            AnyId::CameraModelD3(id) => {
+                let it = self.model.camera_model_d3s.get(id.0);
+                Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
+                Self::deps_ref_view_volume(&it.perspective_of_volume, out);
+            }
             AnyId::CartesianPoint(_) => {}
             AnyId::CcDesignApproval(id) => {
                 let it = self.model.cc_design_approvals.get(id.0);
@@ -11639,6 +11932,10 @@ impl<'a> Writer<'a> {
                 let it = self.model.context_dependent_units.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
+            AnyId::ContinuousShapeAspect(id) => {
+                let it = self.model.continuous_shape_aspects.get(id.0);
+                Self::deps_ref_product_definition_shape(&it.of_shape, out);
+            }
             AnyId::Contract(id) => {
                 let it = self.model.contracts.get(id.0);
                 Self::deps_ref_contract_type(&it.kind, out);
@@ -11839,6 +12136,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::DraughtingPreDefinedColour(_) => {}
             AnyId::DraughtingPreDefinedCurveFont(_) => {}
+            AnyId::DraughtingPreDefinedTextFont(_) => {}
             AnyId::Edge(id) => {
                 let it = self.model.edges.get(id.0);
                 if let Some(r) = &it.edge_start {
@@ -12099,6 +12397,10 @@ impl<'a> Writer<'a> {
                 }
             }
             AnyId::Group(_) => {}
+            AnyId::Hyperbola(id) => {
+                let it = self.model.hyperbolas.get(id.0);
+                Self::deps_ref_axis2_placement(&it.position, out);
+            }
             AnyId::IdAttribute(id) => {
                 let it = self.model.id_attributes.get(id.0);
                 Self::deps_ref_id_attribute_select(&it.identified_item, out);
@@ -12123,6 +12425,12 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_item(&it.transform_item_1, out);
                 Self::deps_ref_representation_item(&it.transform_item_2, out);
             }
+            AnyId::LeaderDirectedCallout(id) => {
+                let it = self.model.leader_directed_callouts.get(id.0);
+                for e in &it.contents {
+                    Self::deps_ref_draughting_callout_element(e, out);
+                }
+            }
             AnyId::LengthMeasureWithUnit(id) => {
                 let it = self.model.length_measure_with_units.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
@@ -12131,6 +12439,7 @@ impl<'a> Writer<'a> {
                 let it = self.model.length_units.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
+            AnyId::LimitsAndFits(_) => {}
             AnyId::Line(id) => {
                 let it = self.model.lines.get(id.0);
                 Self::deps_ref_cartesian_point(&it.pnt, out);
@@ -12217,6 +12526,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_product_definition_or_reference(&it.related_product_definition, out);
             }
             AnyId::NumericExpression(_) => {}
+            AnyId::ObjectRole(_) => {}
             AnyId::OffsetSurface(id) => {
                 let it = self.model.offset_surfaces.get(id.0);
                 Self::deps_ref_surface(&it.basis_surface, out);
@@ -12357,6 +12667,11 @@ impl<'a> Writer<'a> {
             AnyId::PlaneAngleUnit(id) => {
                 let it = self.model.plane_angle_units.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
+            }
+            AnyId::PlusMinusTolerance(id) => {
+                let it = self.model.plus_minus_tolerances.get(id.0);
+                Self::deps_ref_tolerance_method_definition(&it.range, out);
+                Self::deps_ref_dimensional_characteristic(&it.toleranced_dimension, out);
             }
             AnyId::Point(_) => {}
             AnyId::PointStyle(id) => {
@@ -12960,6 +13275,11 @@ impl<'a> Writer<'a> {
                 let it = self.model.vertex_shells.get(id.0);
                 Self::deps_ref_vertex_loop(&it.vertex_shell_extent, out);
             }
+            AnyId::ViewVolume(id) => {
+                let it = self.model.view_volumes.get(id.0);
+                Self::deps_ref_cartesian_point(&it.projection_point, out);
+                Self::deps_ref_planar_box(&it.view_window, out);
+            }
             AnyId::WireShell(id) => {
                 let it = self.model.wire_shells.get(id.0);
                 for e in &it.wire_shell_extent {
@@ -13049,6 +13369,14 @@ impl<'a> Writer<'a> {
                             for e in voids {
                                 Self::deps_ref_oriented_closed_shell(e, out);
                             }
+                        }
+                        UnitPart::CameraModelD3 {
+                            view_reference_system,
+                            perspective_of_volume,
+                            ..
+                        } => {
+                            Self::deps_ref_axis2_placement3d(view_reference_system, out);
+                            Self::deps_ref_view_volume(perspective_of_volume, out);
                         }
                         UnitPart::CcDesignApproval { items, .. } => {
                             for e in items {
@@ -13721,6 +14049,14 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_point(vertex_geometry, out);
                         }
+                        UnitPart::ViewVolume {
+                            projection_point,
+                            view_window,
+                            ..
+                        } => {
+                            Self::deps_ref_cartesian_point(projection_point, out);
+                            Self::deps_ref_planar_box(view_window, out);
+                        }
                         _ => {}
                     }
                 }
@@ -13996,6 +14332,20 @@ impl<'a> Writer<'a> {
                     (if it.same_sense { ".T." } else { ".F." }).to_string(),
                 ];
                 format!("#{n} = ADVANCED_FACE({});\n", attrs.join(","))
+            }
+            AnyId::AllAroundShapeAspect(id) => {
+                let it = self.model.all_around_shape_aspects.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
+                    it.product_definitional.token().to_string(),
+                ];
+                format!("#{n} = ALL_AROUND_SHAPE_ASPECT({});\n", attrs.join(","))
             }
             AnyId::AngularityTolerance(id) => {
                 let it = self.model.angularity_tolerances.get(id.0);
@@ -14689,6 +15039,25 @@ impl<'a> Writer<'a> {
                     format!("{}", it.month_component),
                 ];
                 format!("#{n} = CALENDAR_DATE({});\n", attrs.join(","))
+            }
+            AnyId::CameraModel(id) => {
+                let it = self.model.camera_models.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!("#{n} = CAMERA_MODEL({});\n", attrs.join(","))
+            }
+            AnyId::CameraModelD3(id) => {
+                let it = self.model.camera_model_d3s.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_axis2_placement3d(&it.view_reference_system)
+                    ),
+                    format!("#{}", self.id_of_ref_view_volume(&it.perspective_of_volume)),
+                ];
+                format!("#{n} = CAMERA_MODEL_D3({});\n", attrs.join(","))
             }
             AnyId::CartesianPoint(id) => {
                 let it = self.model.cartesian_points.get(id.0);
@@ -15400,6 +15769,20 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = CONTEXT_DEPENDENT_UNIT({});\n", attrs.join(","))
             }
+            AnyId::ContinuousShapeAspect(id) => {
+                let it = self.model.continuous_shape_aspects.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
+                    it.product_definitional.token().to_string(),
+                ];
+                format!("#{n} = CONTINUOUS_SHAPE_ASPECT({});\n", attrs.join(","))
+            }
             AnyId::Contract(id) => {
                 let it = self.model.contracts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -16084,6 +16467,15 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!(
                     "#{n} = DRAUGHTING_PRE_DEFINED_CURVE_FONT({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::DraughtingPreDefinedTextFont(id) => {
+                let it = self.model.draughting_pre_defined_text_fonts.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!(
+                    "#{n} = DRAUGHTING_PRE_DEFINED_TEXT_FONT({});\n",
                     attrs.join(",")
                 )
             }
@@ -16919,6 +17311,17 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = GROUP({});\n", attrs.join(","))
             }
+            AnyId::Hyperbola(id) => {
+                let it = self.model.hyperbolas.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
+                    real(it.semi_axis),
+                    real(it.semi_imag_axis),
+                ];
+                format!("#{n} = HYPERBOLA({});\n", attrs.join(","))
+            }
             AnyId::IdAttribute(id) => {
                 let it = self.model.id_attributes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -16994,6 +17397,22 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = ITEM_DEFINED_TRANSFORMATION({});\n", attrs.join(","))
             }
+            AnyId::LeaderDirectedCallout(id) => {
+                let it = self.model.leader_directed_callouts.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.contents
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = LEADER_DIRECTED_CALLOUT({});\n", attrs.join(","))
+            }
             AnyId::LengthMeasureWithUnit(id) => {
                 let it = self.model.length_measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -17011,6 +17430,17 @@ impl<'a> Writer<'a> {
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
                 format!("#{n} = LENGTH_UNIT({});\n", attrs.join(","))
+            }
+            AnyId::LimitsAndFits(id) => {
+                let it = self.model.limits_and_fitss.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.form_variance),
+                    step_str(&it.zone_variance),
+                    step_str(&it.grade),
+                    step_str(&it.source),
+                ];
+                format!("#{n} = LIMITS_AND_FITS({});\n", attrs.join(","))
             }
             AnyId::Line(id) => {
                 let it = self.model.lines.get(id.0);
@@ -17264,6 +17694,18 @@ impl<'a> Writer<'a> {
                 let n = self.get_id(any).expect("id assigned");
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = NUMERIC_EXPRESSION({});\n", attrs.join(","))
+            }
+            AnyId::ObjectRole(id) => {
+                let it = self.model.object_roles.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = OBJECT_ROLE({});\n", attrs.join(","))
             }
             AnyId::OffsetSurface(id) => {
                 let it = self.model.offset_surfaces.get(id.0);
@@ -17919,6 +18361,18 @@ impl<'a> Writer<'a> {
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
                 format!("#{n} = PLANE_ANGLE_UNIT({});\n", attrs.join(","))
+            }
+            AnyId::PlusMinusTolerance(id) => {
+                let it = self.model.plus_minus_tolerances.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_tolerance_method_definition(&it.range)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_dimensional_characteristic(&it.toleranced_dimension)
+                    ),
+                ];
+                format!("#{n} = PLUS_MINUS_TOLERANCE({});\n", attrs.join(","))
             }
             AnyId::Point(id) => {
                 let it = self.model.points.get(id.0);
@@ -19934,6 +20388,32 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = VERTEX_SHELL({});\n", attrs.join(","))
             }
+            AnyId::ViewVolume(id) => {
+                let it = self.model.view_volumes.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    it.projection_type.token().to_string(),
+                    format!("#{}", self.id_of_ref_cartesian_point(&it.projection_point)),
+                    real(it.view_plane_distance),
+                    real(it.front_plane_distance),
+                    (if it.front_plane_clipping {
+                        ".T."
+                    } else {
+                        ".F."
+                    })
+                    .to_string(),
+                    real(it.back_plane_distance),
+                    (if it.back_plane_clipping { ".T." } else { ".F." }).to_string(),
+                    (if it.view_volume_sides_clipping {
+                        ".T."
+                    } else {
+                        ".F."
+                    })
+                    .to_string(),
+                    format!("#{}", self.id_of_ref_planar_box(&it.view_window)),
+                ];
+                format!("#{n} = VIEW_VOLUME({});\n", attrs.join(","))
+            }
             AnyId::WireShell(id) => {
                 let it = self.model.wire_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -19987,6 +20467,8 @@ impl<'a> Writer<'a> {
                 UnitPart::BoundedSurface => "BOUNDED_SURFACE()".to_string(),
                 UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE()".to_string(),
                 UnitPart::BrepWithVoids { voids, .. } => { let a: Vec<String> = vec![format!("({})", voids.iter().map(|e| format!("#{}", self.id_of_ref_oriented_closed_shell(e))).collect::<Vec<_>>().join(","))]; format!("BREP_WITH_VOIDS({})", a.join(",")) },
+                UnitPart::CameraModel => "CAMERA_MODEL()".to_string(),
+                UnitPart::CameraModelD3 { view_reference_system, perspective_of_volume, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(view_reference_system)), format!("#{}", self.id_of_ref_view_volume(perspective_of_volume))]; format!("CAMERA_MODEL_D3({})", a.join(",")) },
                 UnitPart::CcDesignApproval { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approved_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_APPROVAL({})", a.join(",")) },
                 UnitPart::CcDesignDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_time_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_person_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
@@ -20038,6 +20520,7 @@ impl<'a> Writer<'a> {
                 UnitPart::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
                 UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR()".to_string(),
                 UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT()".to_string(),
+                UnitPart::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT()".to_string(),
                 UnitPart::Edge { edge_start, edge_end, .. } => { let a: Vec<String> = vec![match edge_start { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }, match edge_end { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }]; format!("EDGE({})", a.join(",")) },
                 UnitPart::EdgeCurve { edge_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(edge_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("EDGE_CURVE({})", a.join(",")) },
                 UnitPart::EdgeLoop => "EDGE_LOOP()".to_string(),
@@ -20091,6 +20574,7 @@ impl<'a> Writer<'a> {
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
                 UnitPart::Invisibility { invisible_items, .. } => { let a: Vec<String> = vec![format!("({})", invisible_items.iter().map(|e| format!("#{}", self.id_of_ref_invisible_item(e))).collect::<Vec<_>>().join(","))]; format!("INVISIBILITY({})", a.join(",")) },
                 UnitPart::ItemDefinedTransformation { name, description, transform_item_1, transform_item_2, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_item(transform_item_1)), format!("#{}", self.id_of_ref_representation_item(transform_item_2))]; format!("ITEM_DEFINED_TRANSFORMATION({})", a.join(",")) },
+                UnitPart::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT()".to_string(),
                 UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
                 UnitPart::LengthUnit => "LENGTH_UNIT()".to_string(),
                 UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE()".to_string(),
@@ -20227,6 +20711,7 @@ impl<'a> Writer<'a> {
                 UnitPart::Vector { orientation, magnitude, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_direction(orientation)), real(*magnitude)]; format!("VECTOR({})", a.join(",")) },
                 UnitPart::Vertex => "VERTEX()".to_string(),
                 UnitPart::VertexPoint { vertex_geometry, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(vertex_geometry))]; format!("VERTEX_POINT({})", a.join(",")) },
+                UnitPart::ViewVolume { projection_type, projection_point, view_plane_distance, front_plane_distance, front_plane_clipping, back_plane_distance, back_plane_clipping, view_volume_sides_clipping, view_window, .. } => { let a: Vec<String> = vec![projection_type.token().to_string(), format!("#{}", self.id_of_ref_cartesian_point(projection_point)), real(*view_plane_distance), real(*front_plane_distance), (if *front_plane_clipping { ".T." } else { ".F." }).to_string(), real(*back_plane_distance), (if *back_plane_clipping { ".T." } else { ".F." }).to_string(), (if *view_volume_sides_clipping { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_planar_box(view_window))]; format!("VIEW_VOLUME({})", a.join(",")) },
             });
                 }
                 format!("#{n} = ( {} );\n", part_txt.join(" "))
@@ -20292,6 +20777,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.advanced_faces.items.len() {
             roots.push(AnyId::AdvancedFace(AdvancedFaceId(i)));
+        }
+        for i in 0..self.model.all_around_shape_aspects.items.len() {
+            roots.push(AnyId::AllAroundShapeAspect(AllAroundShapeAspectId(i)));
         }
         for i in 0..self.model.angularity_tolerances.items.len() {
             roots.push(AnyId::AngularityTolerance(AngularityToleranceId(i)));
@@ -20424,6 +20912,12 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.calendar_dates.items.len() {
             roots.push(AnyId::CalendarDate(CalendarDateId(i)));
+        }
+        for i in 0..self.model.camera_models.items.len() {
+            roots.push(AnyId::CameraModel(CameraModelId(i)));
+        }
+        for i in 0..self.model.camera_model_d3s.items.len() {
+            roots.push(AnyId::CameraModelD3(CameraModelD3Id(i)));
         }
         for i in 0..self.model.cartesian_points.items.len() {
             roots.push(AnyId::CartesianPoint(CartesianPointId(i)));
@@ -20585,6 +21079,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.context_dependent_units.items.len() {
             roots.push(AnyId::ContextDependentUnit(ContextDependentUnitId(i)));
+        }
+        for i in 0..self.model.continuous_shape_aspects.items.len() {
+            roots.push(AnyId::ContinuousShapeAspect(ContinuousShapeAspectId(i)));
         }
         for i in 0..self.model.contracts.items.len() {
             roots.push(AnyId::Contract(ContractId(i)));
@@ -20752,6 +21249,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.draughting_pre_defined_curve_fonts.items.len() {
             roots.push(AnyId::DraughtingPreDefinedCurveFont(
                 DraughtingPreDefinedCurveFontId(i),
+            ));
+        }
+        for i in 0..self.model.draughting_pre_defined_text_fonts.items.len() {
+            roots.push(AnyId::DraughtingPreDefinedTextFont(
+                DraughtingPreDefinedTextFontId(i),
             ));
         }
         for i in 0..self.model.edges.items.len() {
@@ -20989,6 +21491,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.groups.items.len() {
             roots.push(AnyId::Group(GroupId(i)));
         }
+        for i in 0..self.model.hyperbolas.items.len() {
+            roots.push(AnyId::Hyperbola(HyperbolaId(i)));
+        }
         for i in 0..self.model.id_attributes.items.len() {
             roots.push(AnyId::IdAttribute(IdAttributeId(i)));
         }
@@ -21011,11 +21516,17 @@ impl<'a> Writer<'a> {
                 ItemDefinedTransformationId(i),
             ));
         }
+        for i in 0..self.model.leader_directed_callouts.items.len() {
+            roots.push(AnyId::LeaderDirectedCallout(LeaderDirectedCalloutId(i)));
+        }
         for i in 0..self.model.length_measure_with_units.items.len() {
             roots.push(AnyId::LengthMeasureWithUnit(LengthMeasureWithUnitId(i)));
         }
         for i in 0..self.model.length_units.items.len() {
             roots.push(AnyId::LengthUnit(LengthUnitId(i)));
+        }
+        for i in 0..self.model.limits_and_fitss.items.len() {
+            roots.push(AnyId::LimitsAndFits(LimitsAndFitsId(i)));
         }
         for i in 0..self.model.lines.items.len() {
             roots.push(AnyId::Line(LineId(i)));
@@ -21090,6 +21601,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.numeric_expressions.items.len() {
             roots.push(AnyId::NumericExpression(NumericExpressionId(i)));
+        }
+        for i in 0..self.model.object_roles.items.len() {
+            roots.push(AnyId::ObjectRole(ObjectRoleId(i)));
         }
         for i in 0..self.model.offset_surfaces.items.len() {
             roots.push(AnyId::OffsetSurface(OffsetSurfaceId(i)));
@@ -21211,6 +21725,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.plane_angle_units.items.len() {
             roots.push(AnyId::PlaneAngleUnit(PlaneAngleUnitId(i)));
+        }
+        for i in 0..self.model.plus_minus_tolerances.items.len() {
+            roots.push(AnyId::PlusMinusTolerance(PlusMinusToleranceId(i)));
         }
         for i in 0..self.model.points.items.len() {
             roots.push(AnyId::Point(PointId(i)));
@@ -21730,6 +22247,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.vertex_shells.items.len() {
             roots.push(AnyId::VertexShell(VertexShellId(i)));
+        }
+        for i in 0..self.model.view_volumes.items.len() {
+            roots.push(AnyId::ViewVolume(ViewVolumeId(i)));
         }
         for i in 0..self.model.wire_shells.items.len() {
             roots.push(AnyId::WireShell(WireShellId(i)));
