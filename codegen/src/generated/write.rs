@@ -106,6 +106,8 @@ pub struct Writer<'a> {
     application_context_element_ids: Vec<Option<u64>>,
     application_protocol_definition_ids: Vec<Option<u64>>,
     applied_date_and_time_assignment_ids: Vec<Option<u64>>,
+    applied_document_reference_ids: Vec<Option<u64>>,
+    applied_external_identification_assignment_ids: Vec<Option<u64>>,
     applied_group_assignment_ids: Vec<Option<u64>>,
     approval_ids: Vec<Option<u64>>,
     approval_assignment_ids: Vec<Option<u64>>,
@@ -222,6 +224,7 @@ pub struct Writer<'a> {
     direction_ids: Vec<Option<u64>>,
     document_ids: Vec<Option<u64>>,
     document_file_ids: Vec<Option<u64>>,
+    document_reference_ids: Vec<Option<u64>>,
     document_type_ids: Vec<Option<u64>>,
     draughting_annotation_occurrence_ids: Vec<Option<u64>>,
     draughting_callout_ids: Vec<Option<u64>>,
@@ -239,6 +242,7 @@ pub struct Writer<'a> {
     elementary_surface_ids: Vec<Option<u64>>,
     ellipse_ids: Vec<Option<u64>>,
     expression_ids: Vec<Option<u64>>,
+    external_identification_assignment_ids: Vec<Option<u64>>,
     external_source_ids: Vec<Option<u64>>,
     externally_defined_character_glyph_ids: Vec<Option<u64>>,
     externally_defined_curve_font_ids: Vec<Option<u64>>,
@@ -287,6 +291,7 @@ pub struct Writer<'a> {
     group_assignment_ids: Vec<Option<u64>>,
     hyperbola_ids: Vec<Option<u64>>,
     id_attribute_ids: Vec<Option<u64>>,
+    identification_assignment_ids: Vec<Option<u64>>,
     identification_role_ids: Vec<Option<u64>>,
     int_literal_ids: Vec<Option<u64>>,
     integer_representation_item_ids: Vec<Option<u64>>,
@@ -418,6 +423,7 @@ pub struct Writer<'a> {
     representation_relationship_with_transformation_ids: Vec<Option<u64>>,
     resource_property_ids: Vec<Option<u64>>,
     resource_requirement_type_ids: Vec<Option<u64>>,
+    role_association_ids: Vec<Option<u64>>,
     roundness_tolerance_ids: Vec<Option<u64>>,
     seam_curve_ids: Vec<Option<u64>>,
     security_classification_ids: Vec<Option<u64>>,
@@ -644,6 +650,17 @@ impl<'a> Writer<'a> {
                 None;
                 model
                     .applied_date_and_time_assignments
+                    .items
+                    .len()
+            ],
+            applied_document_reference_ids: vec![
+                None;
+                model.applied_document_references.items.len()
+            ],
+            applied_external_identification_assignment_ids: vec![
+                None;
+                model
+                    .applied_external_identification_assignments
                     .items
                     .len()
             ],
@@ -895,6 +912,7 @@ impl<'a> Writer<'a> {
             direction_ids: vec![None; model.directions.items.len()],
             document_ids: vec![None; model.documents.items.len()],
             document_file_ids: vec![None; model.document_files.items.len()],
+            document_reference_ids: vec![None; model.document_references.items.len()],
             document_type_ids: vec![None; model.document_types.items.len()],
             draughting_annotation_occurrence_ids: vec![
                 None;
@@ -951,6 +969,13 @@ impl<'a> Writer<'a> {
             elementary_surface_ids: vec![None; model.elementary_surfaces.items.len()],
             ellipse_ids: vec![None; model.ellipses.items.len()],
             expression_ids: vec![None; model.expressions.items.len()],
+            external_identification_assignment_ids: vec![
+                None;
+                model
+                    .external_identification_assignments
+                    .items
+                    .len()
+            ],
             external_source_ids: vec![None; model.external_sources.items.len()],
             externally_defined_character_glyph_ids: vec![
                 None;
@@ -1110,6 +1135,7 @@ impl<'a> Writer<'a> {
             group_assignment_ids: vec![None; model.group_assignments.items.len()],
             hyperbola_ids: vec![None; model.hyperbolas.items.len()],
             id_attribute_ids: vec![None; model.id_attributes.items.len()],
+            identification_assignment_ids: vec![None; model.identification_assignments.items.len()],
             identification_role_ids: vec![None; model.identification_roles.items.len()],
             int_literal_ids: vec![None; model.int_literals.items.len()],
             integer_representation_item_ids: vec![
@@ -1439,6 +1465,7 @@ impl<'a> Writer<'a> {
             ],
             resource_property_ids: vec![None; model.resource_propertys.items.len()],
             resource_requirement_type_ids: vec![None; model.resource_requirement_types.items.len()],
+            role_association_ids: vec![None; model.role_associations.items.len()],
             roundness_tolerance_ids: vec![None; model.roundness_tolerances.items.len()],
             seam_curve_ids: vec![None; model.seam_curves.items.len()],
             security_classification_ids: vec![None; model.security_classifications.items.len()],
@@ -1716,6 +1743,10 @@ impl<'a> Writer<'a> {
             AnyId::AppliedDateAndTimeAssignment(i) => {
                 self.applied_date_and_time_assignment_ids[i.0]
             }
+            AnyId::AppliedDocumentReference(i) => self.applied_document_reference_ids[i.0],
+            AnyId::AppliedExternalIdentificationAssignment(i) => {
+                self.applied_external_identification_assignment_ids[i.0]
+            }
             AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0],
             AnyId::Approval(i) => self.approval_ids[i.0],
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0],
@@ -1862,6 +1893,7 @@ impl<'a> Writer<'a> {
             AnyId::Direction(i) => self.direction_ids[i.0],
             AnyId::Document(i) => self.document_ids[i.0],
             AnyId::DocumentFile(i) => self.document_file_ids[i.0],
+            AnyId::DocumentReference(i) => self.document_reference_ids[i.0],
             AnyId::DocumentType(i) => self.document_type_ids[i.0],
             AnyId::DraughtingAnnotationOccurrence(i) => {
                 self.draughting_annotation_occurrence_ids[i.0]
@@ -1891,6 +1923,9 @@ impl<'a> Writer<'a> {
             AnyId::ElementarySurface(i) => self.elementary_surface_ids[i.0],
             AnyId::Ellipse(i) => self.ellipse_ids[i.0],
             AnyId::Expression(i) => self.expression_ids[i.0],
+            AnyId::ExternalIdentificationAssignment(i) => {
+                self.external_identification_assignment_ids[i.0]
+            }
             AnyId::ExternalSource(i) => self.external_source_ids[i.0],
             AnyId::ExternallyDefinedCharacterGlyph(i) => {
                 self.externally_defined_character_glyph_ids[i.0]
@@ -1967,6 +2002,7 @@ impl<'a> Writer<'a> {
             AnyId::GroupAssignment(i) => self.group_assignment_ids[i.0],
             AnyId::Hyperbola(i) => self.hyperbola_ids[i.0],
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0],
+            AnyId::IdentificationAssignment(i) => self.identification_assignment_ids[i.0],
             AnyId::IdentificationRole(i) => self.identification_role_ids[i.0],
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0],
             AnyId::IntegerRepresentationItem(i) => self.integer_representation_item_ids[i.0],
@@ -2132,6 +2168,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::ResourceProperty(i) => self.resource_property_ids[i.0],
             AnyId::ResourceRequirementType(i) => self.resource_requirement_type_ids[i.0],
+            AnyId::RoleAssociation(i) => self.role_association_ids[i.0],
             AnyId::RoundnessTolerance(i) => self.roundness_tolerance_ids[i.0],
             AnyId::SeamCurve(i) => self.seam_curve_ids[i.0],
             AnyId::SecurityClassification(i) => self.security_classification_ids[i.0],
@@ -2331,6 +2368,12 @@ impl<'a> Writer<'a> {
             AnyId::AppliedDateAndTimeAssignment(i) => {
                 self.applied_date_and_time_assignment_ids[i.0] = Some(n)
             }
+            AnyId::AppliedDocumentReference(i) => {
+                self.applied_document_reference_ids[i.0] = Some(n)
+            }
+            AnyId::AppliedExternalIdentificationAssignment(i) => {
+                self.applied_external_identification_assignment_ids[i.0] = Some(n)
+            }
             AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0] = Some(n),
             AnyId::Approval(i) => self.approval_ids[i.0] = Some(n),
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0] = Some(n),
@@ -2499,6 +2542,7 @@ impl<'a> Writer<'a> {
             AnyId::Direction(i) => self.direction_ids[i.0] = Some(n),
             AnyId::Document(i) => self.document_ids[i.0] = Some(n),
             AnyId::DocumentFile(i) => self.document_file_ids[i.0] = Some(n),
+            AnyId::DocumentReference(i) => self.document_reference_ids[i.0] = Some(n),
             AnyId::DocumentType(i) => self.document_type_ids[i.0] = Some(n),
             AnyId::DraughtingAnnotationOccurrence(i) => {
                 self.draughting_annotation_occurrence_ids[i.0] = Some(n)
@@ -2530,6 +2574,9 @@ impl<'a> Writer<'a> {
             AnyId::ElementarySurface(i) => self.elementary_surface_ids[i.0] = Some(n),
             AnyId::Ellipse(i) => self.ellipse_ids[i.0] = Some(n),
             AnyId::Expression(i) => self.expression_ids[i.0] = Some(n),
+            AnyId::ExternalIdentificationAssignment(i) => {
+                self.external_identification_assignment_ids[i.0] = Some(n)
+            }
             AnyId::ExternalSource(i) => self.external_source_ids[i.0] = Some(n),
             AnyId::ExternallyDefinedCharacterGlyph(i) => {
                 self.externally_defined_character_glyph_ids[i.0] = Some(n)
@@ -2622,6 +2669,7 @@ impl<'a> Writer<'a> {
             AnyId::GroupAssignment(i) => self.group_assignment_ids[i.0] = Some(n),
             AnyId::Hyperbola(i) => self.hyperbola_ids[i.0] = Some(n),
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0] = Some(n),
+            AnyId::IdentificationAssignment(i) => self.identification_assignment_ids[i.0] = Some(n),
             AnyId::IdentificationRole(i) => self.identification_role_ids[i.0] = Some(n),
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0] = Some(n),
             AnyId::IntegerRepresentationItem(i) => {
@@ -2842,6 +2890,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::ResourceProperty(i) => self.resource_property_ids[i.0] = Some(n),
             AnyId::ResourceRequirementType(i) => self.resource_requirement_type_ids[i.0] = Some(n),
+            AnyId::RoleAssociation(i) => self.role_association_ids[i.0] = Some(n),
             AnyId::RoundnessTolerance(i) => self.roundness_tolerance_ids[i.0] = Some(n),
             AnyId::SeamCurve(i) => self.seam_curve_ids[i.0] = Some(n),
             AnyId::SecurityClassification(i) => self.security_classification_ids[i.0] = Some(n),
@@ -6010,6 +6059,1290 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_document_reference_item(&self, r: &DocumentReferenceItemRef) -> u64 {
+        match r {
+            DocumentReferenceItemRef::ActionDirective(i) => {
+                self.action_directive_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ActionMethod(i) => {
+                self.action_method_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ActionMethodRelationship(i) => {
+                self.action_method_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ActionProperty(i) => {
+                self.action_property_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ActionRelationship(i) => {
+                self.action_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AdvancedBrepShapeRepresentation(i) => {
+                self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AdvancedFace(i) => {
+                self.advanced_face_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => {
+                self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => {
+                self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationOccurrence(i) => {
+                self.annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationPlaceholderOccurrence(i) => {
+                self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::AnnotationPlane(i) => {
+                self.annotation_plane_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationSymbol(i) => {
+                self.annotation_symbol_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => {
+                self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationText(i) => {
+                self.annotation_text_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationTextCharacter(i) => {
+                self.annotation_text_character_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationTextOccurrence(i) => {
+                self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ApllPoint(i) => {
+                self.apll_point_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AppliedDateAndTimeAssignment(i) => {
+                self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AppliedDocumentReference(i) => {
+                self.applied_document_reference_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AppliedExternalIdentificationAssignment(i) => {
+                self.applied_external_identification_assignment_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Approval(i) => {
+                self.approval_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ApprovalPersonOrganization(i) => {
+                self.approval_person_organization_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AssemblyComponentUsage(i) => {
+                self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Axis1Placement(i) => {
+                self.axis1_placement_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Axis2Placement2d(i) => {
+                self.axis2_placement2d_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Axis2Placement3d(i) => {
+                self.axis2_placement3d_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BSplineCurve(i) => {
+                self.b_spline_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BSplineCurveWithKnots(i) => {
+                self.b_spline_curve_with_knot_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BSplineSurface(i) => {
+                self.b_spline_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => {
+                self.b_spline_surface_with_knot_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BezierCurve(i) => {
+                self.bezier_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BezierSurface(i) => {
+                self.bezier_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BoundedCurve(i) => {
+                self.bounded_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BoundedPcurve(i) => {
+                self.bounded_pcurve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BoundedSurface(i) => {
+                self.bounded_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BoundedSurfaceCurve(i) => {
+                self.bounded_surface_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::BrepWithVoids(i) => {
+                self.brep_with_void_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CameraModel(i) => {
+                self.camera_model_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CartesianPoint(i) => {
+                self.cartesian_point_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CcDesignDateAndTimeAssignment(i) => {
+                self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Certification(i) => {
+                self.certification_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CharacterizedItemWithinRepresentation(i) => {
+                self.characterized_item_within_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CharacterizedObject(i) => {
+                self.characterized_object_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::ClosedShell(i) => {
+                self.closed_shell_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CommonDatum(i) => {
+                self.common_datum_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ComplexTriangulatedFace(i) => {
+                self.complex_triangulated_face_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                self.complex_triangulated_surface_set_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CompositeCurve(i) => {
+                self.composite_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => {
+                self.composite_group_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CompositeShapeAspect(i) => {
+                self.composite_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CompositeText(i) => {
+                self.composite_text_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ConfigurationDesign(i) => {
+                self.configuration_design_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ConfigurationEffectivity(i) => {
+                self.configuration_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ConfigurationItem(i) => {
+                self.configuration_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Conic(i) => self.conic_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::ConicalSurface(i) => {
+                self.conical_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ConnectedFaceSet(i) => {
+                self.connected_face_set_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ConstructiveGeometryRepresentation(i) => {
+                self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ConstructiveGeometryRepresentationRelationship(i) => self
+                .constructive_geometry_representation_relationship_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::ContextDependentOverRidingStyledItem(i) => {
+                self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Contract(i) => {
+                self.contract_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CoordinatesList(i) => {
+                self.coordinates_list_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Curve(i) => self.curve_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::CylindricalSurface(i) => {
+                self.cylindrical_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DateAndTimeAssignment(i) => {
+                self.date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Datum(i) => self.datum_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::DatumFeature(i) => {
+                self.datum_feature_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DatumReferenceCompartment(i) => {
+                self.datum_reference_compartment_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DatumReferenceElement(i) => {
+                self.datum_reference_element_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DatumSystem(i) => {
+                self.datum_system_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DatumTarget(i) => {
+                self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DefinedCharacterGlyph(i) => {
+                self.defined_character_glyph_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DefinedSymbol(i) => {
+                self.defined_symbol_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DefinitionalRepresentation(i) => {
+                self.definitional_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DefinitionalRepresentationRelationship(i) => {
+                self.definitional_representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                self.definitional_representation_relationship_with_same_context_ids[i.0]
+                    .expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DegenerateToroidalSurface(i) => {
+                self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DescriptiveRepresentationItem(i) => {
+                self.descriptive_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DesignContext(i) => {
+                self.design_context_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DimensionalLocation(i) => {
+                self.dimensional_location_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DimensionalLocationWithPath(i) => {
+                self.dimensional_location_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DimensionalSize(i) => {
+                self.dimensional_size_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DimensionalSizeWithPath(i) => {
+                self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Direction(i) => {
+                self.direction_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DocumentFile(i) => {
+                self.document_file_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DraughtingCallout(i) => {
+                self.draughting_callout_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DraughtingModel(i) => {
+                self.draughting_model_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Edge(i) => self.edge_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::EdgeCurve(i) => {
+                self.edge_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::EdgeLoop(i) => {
+                self.edge_loop_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Effectivity(i) => {
+                self.effectivity_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ElementarySurface(i) => {
+                self.elementary_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Ellipse(i) => self.ellipse_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => {
+                self.externally_defined_character_glyph_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedCurveFont(i) => {
+                self.externally_defined_curve_font_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedHatchStyle(i) => {
+                self.externally_defined_hatch_style_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedItem(i) => {
+                self.externally_defined_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedStyle(i) => {
+                self.externally_defined_style_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedSymbol(i) => {
+                self.externally_defined_symbol_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedTextFont(i) => {
+                self.externally_defined_text_font_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedTile(i) => {
+                self.externally_defined_tile_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternallyDefinedTileStyle(i) => {
+                self.externally_defined_tile_style_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Face(i) => self.face_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::FaceBound(i) => {
+                self.face_bound_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FaceOuterBound(i) => {
+                self.face_outer_bound_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FaceSurface(i) => {
+                self.face_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FillAreaStyleHatching(i) => {
+                self.fill_area_style_hatching_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FillAreaStyleTileColouredRegion(i) => {
+                self.fill_area_style_tile_coloured_region_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                self.fill_area_style_tile_curve_with_style_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                self.fill_area_style_tile_symbol_with_style_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FillAreaStyleTiles(i) => {
+                self.fill_area_style_tile_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::GeneralDatumReference(i) => {
+                self.general_datum_reference_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::GeneralProperty(i) => {
+                self.general_property_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::GeometricCurveSet(i) => {
+                self.geometric_curve_set_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::GeometricRepresentationItem(i) => {
+                self.geometric_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::GeometricSet(i) => {
+                self.geometric_set_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
+                .geometrically_bounded_wireframe_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::Hyperbola(i) => {
+                self.hyperbola_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::IntegerRepresentationItem(i) => {
+                self.integer_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::IntersectionCurve(i) => {
+                self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::ManifoldSolidBrep(i) => {
+                self.manifold_solid_brep_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::MappedItem(i) => {
+                self.mapped_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::MeasureRepresentationItem(i) => {
+                self.measure_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::MechanicalDesignAndDraughtingRelationship(i) => self
+                .mechanical_design_and_draughting_relationship_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                self.mechanical_design_geometric_presentation_representation_ids[i.0]
+                    .expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::MechanicalDesignPresentationRepresentationWithDraughting(
+                i,
+            ) => self.mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::ModelGeometricView(i) => {
+                self.model_geometric_view_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::NextAssemblyUsageOccurrence(i) => {
+                self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OffsetSurface(i) => {
+                self.offset_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OneDirectionRepeatFactor(i) => {
+                self.one_direction_repeat_factor_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OpenShell(i) => {
+                self.open_shell_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Organization(i) => {
+                self.organization_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OrganizationRelationship(i) => {
+                self.organization_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OrganizationalAddress(i) => {
+                self.organizational_addre_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OrganizationalProject(i) => {
+                self.organizational_project_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OrganizationalProjectRelationship(i) => {
+                self.organizational_project_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OrientedClosedShell(i) => {
+                self.oriented_closed_shell_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OrientedEdge(i) => {
+                self.oriented_edge_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::OverRidingStyledItem(i) => {
+                self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Path(i) => self.path_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::Pcurve(i) => self.pcurve_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::Person(i) => self.person_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::PersonAndOrganization(i) => {
+                self.person_and_organization_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PersonAndOrganizationAddress(i) => {
+                self.person_and_organization_addre_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PlacedDatumTargetFeature(i) => {
+                self.placed_datum_target_feature_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Placement(i) => {
+                self.placement_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PlanarBox(i) => {
+                self.planar_box_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PlanarExtent(i) => {
+                self.planar_extent_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Plane(i) => self.plane_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::PolyLoop(i) => {
+                self.poly_loop_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Polyline(i) => {
+                self.polyline_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PresentationRepresentation(i) => {
+                self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::ProductCategory(i) => {
+                self.product_category_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductConcept(i) => {
+                self.product_concept_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinitionContext(i) => {
+                self.product_definition_context_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinitionEffectivity(i) => {
+                self.product_definition_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::ProductDefinitionRelationship(i) => {
+                self.product_definition_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinitionShape(i) => {
+                self.product_definition_shape_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinitionUsage(i) => {
+                self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ProductRelatedProductCategory(i) => {
+                self.product_related_product_category_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PropertyDefinition(i) => {
+                self.property_definition_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::PropertyDefinitionRepresentation(i) => {
+                self.property_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::QualifiedRepresentationItem(i) => {
+                self.qualified_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::QuasiUniformCurve(i) => {
+                self.quasi_uniform_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::QuasiUniformSurface(i) => {
+                self.quasi_uniform_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::RationalBSplineCurve(i) => {
+                self.rational_b_spline_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::RationalBSplineSurface(i) => {
+                self.rational_b_spline_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::RealRepresentationItem(i) => {
+                self.real_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::RepositionedTessellatedItem(i) => {
+                self.repositioned_tessellated_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Representation(i) => {
+                self.representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::RepresentationItem(i) => {
+                self.representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::RepresentationRelationship(i) => {
+                self.representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::RepresentationRelationshipWithTransformation(i) => self
+                .representation_relationship_with_transformation_ids[i.0]
+                .expect("dep id assigned"),
+            DocumentReferenceItemRef::ResourceRequirementType(i) => {
+                self.resource_requirement_type_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SeamCurve(i) => {
+                self.seam_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeAspect(i) => {
+                self.shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeAspectRelationship(i) => {
+                self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeDefinitionRepresentation(i) => {
+                self.shape_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeDimensionRepresentation(i) => {
+                self.shape_dimension_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeRepresentation(i) => {
+                self.shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeRepresentationRelationship(i) => {
+                self.shape_representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShellBasedSurfaceModel(i) => {
+                self.shell_based_surface_model_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SolidModel(i) => {
+                self.solid_model_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SphericalSurface(i) => {
+                self.spherical_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::StateObserved(i) => {
+                self.state_observed_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::StateType(i) => {
+                self.state_type_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::StyledItem(i) => {
+                self.styled_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Surface(i) => self.surface_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::SurfaceCurve(i) => {
+                self.surface_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SurfaceOfLinearExtrusion(i) => {
+                self.surface_of_linear_extrusion_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SurfaceOfRevolution(i) => {
+                self.surface_of_revolution_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SweptSurface(i) => {
+                self.swept_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::SymbolTarget(i) => {
+                self.symbol_target_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedAnnotationOccurrence(i) => {
+                self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedCurveSet(i) => {
+                self.tessellated_curve_set_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedFace(i) => {
+                self.tessellated_face_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedGeometricSet(i) => {
+                self.tessellated_geometric_set_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedItem(i) => {
+                self.tessellated_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedStructuredItem(i) => {
+                self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TessellatedSurfaceSet(i) => {
+                self.tessellated_surface_set_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TextLiteral(i) => {
+                self.text_literal_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ToleranceZone(i) => {
+                self.tolerance_zone_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ToleranceZoneWithDatum(i) => {
+                self.tolerance_zone_with_datum_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TopologicalRepresentationItem(i) => {
+                self.topological_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ToroidalSurface(i) => {
+                self.toroidal_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TrimmedCurve(i) => {
+                self.trimmed_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::TwoDirectionRepeatFactor(i) => {
+                self.two_direction_repeat_factor_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::UniformCurve(i) => {
+                self.uniform_curve_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::UniformSurface(i) => {
+                self.uniform_surface_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ValueRepresentationItem(i) => {
+                self.value_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::VersionedActionRequest(i) => {
+                self.versioned_action_request_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
+            DocumentReferenceItemRef::VertexLoop(i) => {
+                self.vertex_loop_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::VertexPoint(i) => {
+                self.vertex_point_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::VertexShell(i) => {
+                self.vertex_shell_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::WireShell(i) => {
+                self.wire_shell_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_document_reference_item(r: &DocumentReferenceItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            DocumentReferenceItemRef::ActionDirective(i) => out.push(AnyId::ActionDirective(*i)),
+            DocumentReferenceItemRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+            DocumentReferenceItemRef::ActionMethodRelationship(i) => {
+                out.push(AnyId::ActionMethodRelationship(*i))
+            }
+            DocumentReferenceItemRef::ActionProperty(i) => out.push(AnyId::ActionProperty(*i)),
+            DocumentReferenceItemRef::ActionRelationship(i) => {
+                out.push(AnyId::ActionRelationship(*i))
+            }
+            DocumentReferenceItemRef::AdvancedBrepShapeRepresentation(i) => {
+                out.push(AnyId::AdvancedBrepShapeRepresentation(*i))
+            }
+            DocumentReferenceItemRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+            DocumentReferenceItemRef::AllAroundShapeAspect(i) => {
+                out.push(AnyId::AllAroundShapeAspect(*i))
+            }
+            DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => {
+                out.push(AnyId::AnnotationCurveOccurrence(*i))
+            }
+            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => {
+                out.push(AnyId::AnnotationFillAreaOccurrence(*i))
+            }
+            DocumentReferenceItemRef::AnnotationOccurrence(i) => {
+                out.push(AnyId::AnnotationOccurrence(*i))
+            }
+            DocumentReferenceItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
+            DocumentReferenceItemRef::AnnotationPlaceholderOccurrence(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            DocumentReferenceItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
+            DocumentReferenceItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+            DocumentReferenceItemRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
+            DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => {
+                out.push(AnyId::AnnotationSymbolOccurrence(*i))
+            }
+            DocumentReferenceItemRef::AnnotationText(i) => out.push(AnyId::AnnotationText(*i)),
+            DocumentReferenceItemRef::AnnotationTextCharacter(i) => {
+                out.push(AnyId::AnnotationTextCharacter(*i))
+            }
+            DocumentReferenceItemRef::AnnotationTextOccurrence(i) => {
+                out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            DocumentReferenceItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            DocumentReferenceItemRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            DocumentReferenceItemRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            DocumentReferenceItemRef::ApllPointWithSurface(i) => {
+                out.push(AnyId::ApllPointWithSurface(*i))
+            }
+            DocumentReferenceItemRef::AppliedDateAndTimeAssignment(i) => {
+                out.push(AnyId::AppliedDateAndTimeAssignment(*i))
+            }
+            DocumentReferenceItemRef::AppliedDocumentReference(i) => {
+                out.push(AnyId::AppliedDocumentReference(*i))
+            }
+            DocumentReferenceItemRef::AppliedExternalIdentificationAssignment(i) => {
+                out.push(AnyId::AppliedExternalIdentificationAssignment(*i))
+            }
+            DocumentReferenceItemRef::Approval(i) => out.push(AnyId::Approval(*i)),
+            DocumentReferenceItemRef::ApprovalPersonOrganization(i) => {
+                out.push(AnyId::ApprovalPersonOrganization(*i))
+            }
+            DocumentReferenceItemRef::AssemblyComponentUsage(i) => {
+                out.push(AnyId::AssemblyComponentUsage(*i))
+            }
+            DocumentReferenceItemRef::AuxiliaryLeaderLine(i) => {
+                out.push(AnyId::AuxiliaryLeaderLine(*i))
+            }
+            DocumentReferenceItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
+            DocumentReferenceItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
+            DocumentReferenceItemRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
+            DocumentReferenceItemRef::BSplineCurve(i) => out.push(AnyId::BSplineCurve(*i)),
+            DocumentReferenceItemRef::BSplineCurveWithKnots(i) => {
+                out.push(AnyId::BSplineCurveWithKnots(*i))
+            }
+            DocumentReferenceItemRef::BSplineSurface(i) => out.push(AnyId::BSplineSurface(*i)),
+            DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => {
+                out.push(AnyId::BSplineSurfaceWithKnots(*i))
+            }
+            DocumentReferenceItemRef::BezierCurve(i) => out.push(AnyId::BezierCurve(*i)),
+            DocumentReferenceItemRef::BezierSurface(i) => out.push(AnyId::BezierSurface(*i)),
+            DocumentReferenceItemRef::BoundedCurve(i) => out.push(AnyId::BoundedCurve(*i)),
+            DocumentReferenceItemRef::BoundedPcurve(i) => out.push(AnyId::BoundedPcurve(*i)),
+            DocumentReferenceItemRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
+            DocumentReferenceItemRef::BoundedSurfaceCurve(i) => {
+                out.push(AnyId::BoundedSurfaceCurve(*i))
+            }
+            DocumentReferenceItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            DocumentReferenceItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            DocumentReferenceItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            DocumentReferenceItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+            DocumentReferenceItemRef::CcDesignDateAndTimeAssignment(i) => {
+                out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
+            }
+            DocumentReferenceItemRef::CentreOfSymmetry(i) => out.push(AnyId::CentreOfSymmetry(*i)),
+            DocumentReferenceItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            DocumentReferenceItemRef::CharacterizedItemWithinRepresentation(i) => {
+                out.push(AnyId::CharacterizedItemWithinRepresentation(*i))
+            }
+            DocumentReferenceItemRef::CharacterizedObject(i) => {
+                out.push(AnyId::CharacterizedObject(*i))
+            }
+            DocumentReferenceItemRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
+            DocumentReferenceItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
+            DocumentReferenceItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
+            DocumentReferenceItemRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
+            DocumentReferenceItemRef::ComplexTriangulatedFace(i) => {
+                out.push(AnyId::ComplexTriangulatedFace(*i))
+            }
+            DocumentReferenceItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                out.push(AnyId::ComplexTriangulatedSurfaceSet(*i))
+            }
+            DocumentReferenceItemRef::CompositeCurve(i) => out.push(AnyId::CompositeCurve(*i)),
+            DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => {
+                out.push(AnyId::CompositeGroupShapeAspect(*i))
+            }
+            DocumentReferenceItemRef::CompositeShapeAspect(i) => {
+                out.push(AnyId::CompositeShapeAspect(*i))
+            }
+            DocumentReferenceItemRef::CompositeText(i) => out.push(AnyId::CompositeText(*i)),
+            DocumentReferenceItemRef::ConfigurationDesign(i) => {
+                out.push(AnyId::ConfigurationDesign(*i))
+            }
+            DocumentReferenceItemRef::ConfigurationEffectivity(i) => {
+                out.push(AnyId::ConfigurationEffectivity(*i))
+            }
+            DocumentReferenceItemRef::ConfigurationItem(i) => {
+                out.push(AnyId::ConfigurationItem(*i))
+            }
+            DocumentReferenceItemRef::Conic(i) => out.push(AnyId::Conic(*i)),
+            DocumentReferenceItemRef::ConicalSurface(i) => out.push(AnyId::ConicalSurface(*i)),
+            DocumentReferenceItemRef::ConnectedFaceSet(i) => out.push(AnyId::ConnectedFaceSet(*i)),
+            DocumentReferenceItemRef::ConstructiveGeometryRepresentation(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentation(*i))
+            }
+            DocumentReferenceItemRef::ConstructiveGeometryRepresentationRelationship(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentationRelationship(*i))
+            }
+            DocumentReferenceItemRef::ContextDependentOverRidingStyledItem(i) => {
+                out.push(AnyId::ContextDependentOverRidingStyledItem(*i))
+            }
+            DocumentReferenceItemRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
+            }
+            DocumentReferenceItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+            DocumentReferenceItemRef::CoordinatesList(i) => out.push(AnyId::CoordinatesList(*i)),
+            DocumentReferenceItemRef::Curve(i) => out.push(AnyId::Curve(*i)),
+            DocumentReferenceItemRef::CylindricalSurface(i) => {
+                out.push(AnyId::CylindricalSurface(*i))
+            }
+            DocumentReferenceItemRef::DateAndTimeAssignment(i) => {
+                out.push(AnyId::DateAndTimeAssignment(*i))
+            }
+            DocumentReferenceItemRef::Datum(i) => out.push(AnyId::Datum(*i)),
+            DocumentReferenceItemRef::DatumFeature(i) => out.push(AnyId::DatumFeature(*i)),
+            DocumentReferenceItemRef::DatumReferenceCompartment(i) => {
+                out.push(AnyId::DatumReferenceCompartment(*i))
+            }
+            DocumentReferenceItemRef::DatumReferenceElement(i) => {
+                out.push(AnyId::DatumReferenceElement(*i))
+            }
+            DocumentReferenceItemRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
+            DocumentReferenceItemRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            DocumentReferenceItemRef::DefinedCharacterGlyph(i) => {
+                out.push(AnyId::DefinedCharacterGlyph(*i))
+            }
+            DocumentReferenceItemRef::DefinedSymbol(i) => out.push(AnyId::DefinedSymbol(*i)),
+            DocumentReferenceItemRef::DefinitionalRepresentation(i) => {
+                out.push(AnyId::DefinitionalRepresentation(*i))
+            }
+            DocumentReferenceItemRef::DefinitionalRepresentationRelationship(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationship(*i))
+            }
+            DocumentReferenceItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationshipWithSameContext(*i))
+            }
+            DocumentReferenceItemRef::DegenerateToroidalSurface(i) => {
+                out.push(AnyId::DegenerateToroidalSurface(*i))
+            }
+            DocumentReferenceItemRef::DerivedShapeAspect(i) => {
+                out.push(AnyId::DerivedShapeAspect(*i))
+            }
+            DocumentReferenceItemRef::DescriptiveRepresentationItem(i) => {
+                out.push(AnyId::DescriptiveRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::DesignContext(i) => out.push(AnyId::DesignContext(*i)),
+            DocumentReferenceItemRef::DimensionalLocation(i) => {
+                out.push(AnyId::DimensionalLocation(*i))
+            }
+            DocumentReferenceItemRef::DimensionalLocationWithPath(i) => {
+                out.push(AnyId::DimensionalLocationWithPath(*i))
+            }
+            DocumentReferenceItemRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+            DocumentReferenceItemRef::DimensionalSizeWithPath(i) => {
+                out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            DocumentReferenceItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
+            DocumentReferenceItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+            DocumentReferenceItemRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
+            DocumentReferenceItemRef::DraughtingCallout(i) => {
+                out.push(AnyId::DraughtingCallout(*i))
+            }
+            DocumentReferenceItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+            DocumentReferenceItemRef::Edge(i) => out.push(AnyId::Edge(*i)),
+            DocumentReferenceItemRef::EdgeCurve(i) => out.push(AnyId::EdgeCurve(*i)),
+            DocumentReferenceItemRef::EdgeLoop(i) => out.push(AnyId::EdgeLoop(*i)),
+            DocumentReferenceItemRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
+            DocumentReferenceItemRef::ElementarySurface(i) => {
+                out.push(AnyId::ElementarySurface(*i))
+            }
+            DocumentReferenceItemRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+            DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => {
+                out.push(AnyId::ExternallyDefinedCharacterGlyph(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedCurveFont(i) => {
+                out.push(AnyId::ExternallyDefinedCurveFont(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedHatchStyle(i) => {
+                out.push(AnyId::ExternallyDefinedHatchStyle(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedItem(i) => {
+                out.push(AnyId::ExternallyDefinedItem(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedStyle(i) => {
+                out.push(AnyId::ExternallyDefinedStyle(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedSymbol(i) => {
+                out.push(AnyId::ExternallyDefinedSymbol(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedTextFont(i) => {
+                out.push(AnyId::ExternallyDefinedTextFont(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedTile(i) => {
+                out.push(AnyId::ExternallyDefinedTile(*i))
+            }
+            DocumentReferenceItemRef::ExternallyDefinedTileStyle(i) => {
+                out.push(AnyId::ExternallyDefinedTileStyle(*i))
+            }
+            DocumentReferenceItemRef::Face(i) => out.push(AnyId::Face(*i)),
+            DocumentReferenceItemRef::FaceBound(i) => out.push(AnyId::FaceBound(*i)),
+            DocumentReferenceItemRef::FaceOuterBound(i) => out.push(AnyId::FaceOuterBound(*i)),
+            DocumentReferenceItemRef::FaceSurface(i) => out.push(AnyId::FaceSurface(*i)),
+            DocumentReferenceItemRef::FillAreaStyleHatching(i) => {
+                out.push(AnyId::FillAreaStyleHatching(*i))
+            }
+            DocumentReferenceItemRef::FillAreaStyleTileColouredRegion(i) => {
+                out.push(AnyId::FillAreaStyleTileColouredRegion(*i))
+            }
+            DocumentReferenceItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                out.push(AnyId::FillAreaStyleTileCurveWithStyle(*i))
+            }
+            DocumentReferenceItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                out.push(AnyId::FillAreaStyleTileSymbolWithStyle(*i))
+            }
+            DocumentReferenceItemRef::FillAreaStyleTiles(i) => {
+                out.push(AnyId::FillAreaStyleTiles(*i))
+            }
+            DocumentReferenceItemRef::GeneralDatumReference(i) => {
+                out.push(AnyId::GeneralDatumReference(*i))
+            }
+            DocumentReferenceItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+            DocumentReferenceItemRef::GeometricCurveSet(i) => {
+                out.push(AnyId::GeometricCurveSet(*i))
+            }
+            DocumentReferenceItemRef::GeometricRepresentationItem(i) => {
+                out.push(AnyId::GeometricRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            DocumentReferenceItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
+            }
+            DocumentReferenceItemRef::Group(i) => out.push(AnyId::Group(*i)),
+            DocumentReferenceItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
+            DocumentReferenceItemRef::IntegerRepresentationItem(i) => {
+                out.push(AnyId::IntegerRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::IntersectionCurve(i) => {
+                out.push(AnyId::IntersectionCurve(*i))
+            }
+            DocumentReferenceItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+            DocumentReferenceItemRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
+            DocumentReferenceItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
+            DocumentReferenceItemRef::Line(i) => out.push(AnyId::Line(*i)),
+            DocumentReferenceItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
+            DocumentReferenceItemRef::ManifoldSolidBrep(i) => {
+                out.push(AnyId::ManifoldSolidBrep(*i))
+            }
+            DocumentReferenceItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i))
+            }
+            DocumentReferenceItemRef::MappedItem(i) => out.push(AnyId::MappedItem(*i)),
+            DocumentReferenceItemRef::MeasureRepresentationItem(i) => {
+                out.push(AnyId::MeasureRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::MechanicalDesignAndDraughtingRelationship(i) => {
+                out.push(AnyId::MechanicalDesignAndDraughtingRelationship(*i))
+            }
+            DocumentReferenceItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out
+                .push(AnyId::MechanicalDesignGeometricPresentationRepresentation(
+                    *i,
+                )),
+            DocumentReferenceItemRef::MechanicalDesignPresentationRepresentationWithDraughting(
+                i,
+            ) => out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+            DocumentReferenceItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
+            DocumentReferenceItemRef::ModelGeometricView(i) => {
+                out.push(AnyId::ModelGeometricView(*i))
+            }
+            DocumentReferenceItemRef::NextAssemblyUsageOccurrence(i) => {
+                out.push(AnyId::NextAssemblyUsageOccurrence(*i))
+            }
+            DocumentReferenceItemRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
+            DocumentReferenceItemRef::OneDirectionRepeatFactor(i) => {
+                out.push(AnyId::OneDirectionRepeatFactor(*i))
+            }
+            DocumentReferenceItemRef::OpenShell(i) => out.push(AnyId::OpenShell(*i)),
+            DocumentReferenceItemRef::Organization(i) => out.push(AnyId::Organization(*i)),
+            DocumentReferenceItemRef::OrganizationRelationship(i) => {
+                out.push(AnyId::OrganizationRelationship(*i))
+            }
+            DocumentReferenceItemRef::OrganizationalAddress(i) => {
+                out.push(AnyId::OrganizationalAddress(*i))
+            }
+            DocumentReferenceItemRef::OrganizationalProject(i) => {
+                out.push(AnyId::OrganizationalProject(*i))
+            }
+            DocumentReferenceItemRef::OrganizationalProjectRelationship(i) => {
+                out.push(AnyId::OrganizationalProjectRelationship(*i))
+            }
+            DocumentReferenceItemRef::OrientedClosedShell(i) => {
+                out.push(AnyId::OrientedClosedShell(*i))
+            }
+            DocumentReferenceItemRef::OrientedEdge(i) => out.push(AnyId::OrientedEdge(*i)),
+            DocumentReferenceItemRef::OverRidingStyledItem(i) => {
+                out.push(AnyId::OverRidingStyledItem(*i))
+            }
+            DocumentReferenceItemRef::Path(i) => out.push(AnyId::Path(*i)),
+            DocumentReferenceItemRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
+            DocumentReferenceItemRef::Person(i) => out.push(AnyId::Person(*i)),
+            DocumentReferenceItemRef::PersonAndOrganization(i) => {
+                out.push(AnyId::PersonAndOrganization(*i))
+            }
+            DocumentReferenceItemRef::PersonAndOrganizationAddress(i) => {
+                out.push(AnyId::PersonAndOrganizationAddress(*i))
+            }
+            DocumentReferenceItemRef::PlacedDatumTargetFeature(i) => {
+                out.push(AnyId::PlacedDatumTargetFeature(*i))
+            }
+            DocumentReferenceItemRef::Placement(i) => out.push(AnyId::Placement(*i)),
+            DocumentReferenceItemRef::PlanarBox(i) => out.push(AnyId::PlanarBox(*i)),
+            DocumentReferenceItemRef::PlanarExtent(i) => out.push(AnyId::PlanarExtent(*i)),
+            DocumentReferenceItemRef::Plane(i) => out.push(AnyId::Plane(*i)),
+            DocumentReferenceItemRef::Point(i) => out.push(AnyId::Point(*i)),
+            DocumentReferenceItemRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
+            DocumentReferenceItemRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+            DocumentReferenceItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+            DocumentReferenceItemRef::PresentationRepresentation(i) => {
+                out.push(AnyId::PresentationRepresentation(*i))
+            }
+            DocumentReferenceItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+            DocumentReferenceItemRef::Product(i) => out.push(AnyId::Product(*i)),
+            DocumentReferenceItemRef::ProductCategory(i) => out.push(AnyId::ProductCategory(*i)),
+            DocumentReferenceItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+            DocumentReferenceItemRef::ProductDefinition(i) => {
+                out.push(AnyId::ProductDefinition(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionContext(i) => {
+                out.push(AnyId::ProductDefinitionContext(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionEffectivity(i) => {
+                out.push(AnyId::ProductDefinitionEffectivity(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionRelationship(i) => {
+                out.push(AnyId::ProductDefinitionRelationship(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionShape(i) => {
+                out.push(AnyId::ProductDefinitionShape(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionUsage(i) => {
+                out.push(AnyId::ProductDefinitionUsage(*i))
+            }
+            DocumentReferenceItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
+            DocumentReferenceItemRef::ProductRelatedProductCategory(i) => {
+                out.push(AnyId::ProductRelatedProductCategory(*i))
+            }
+            DocumentReferenceItemRef::PropertyDefinition(i) => {
+                out.push(AnyId::PropertyDefinition(*i))
+            }
+            DocumentReferenceItemRef::PropertyDefinitionRepresentation(i) => {
+                out.push(AnyId::PropertyDefinitionRepresentation(*i))
+            }
+            DocumentReferenceItemRef::QualifiedRepresentationItem(i) => {
+                out.push(AnyId::QualifiedRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::QuasiUniformCurve(i) => {
+                out.push(AnyId::QuasiUniformCurve(*i))
+            }
+            DocumentReferenceItemRef::QuasiUniformSurface(i) => {
+                out.push(AnyId::QuasiUniformSurface(*i))
+            }
+            DocumentReferenceItemRef::RationalBSplineCurve(i) => {
+                out.push(AnyId::RationalBSplineCurve(*i))
+            }
+            DocumentReferenceItemRef::RationalBSplineSurface(i) => {
+                out.push(AnyId::RationalBSplineSurface(*i))
+            }
+            DocumentReferenceItemRef::RealRepresentationItem(i) => {
+                out.push(AnyId::RealRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::RepositionedTessellatedItem(i) => {
+                out.push(AnyId::RepositionedTessellatedItem(*i))
+            }
+            DocumentReferenceItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
+            DocumentReferenceItemRef::RepresentationItem(i) => {
+                out.push(AnyId::RepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::RepresentationRelationship(i) => {
+                out.push(AnyId::RepresentationRelationship(*i))
+            }
+            DocumentReferenceItemRef::RepresentationRelationshipWithTransformation(i) => {
+                out.push(AnyId::RepresentationRelationshipWithTransformation(*i))
+            }
+            DocumentReferenceItemRef::ResourceRequirementType(i) => {
+                out.push(AnyId::ResourceRequirementType(*i))
+            }
+            DocumentReferenceItemRef::SeamCurve(i) => out.push(AnyId::SeamCurve(*i)),
+            DocumentReferenceItemRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+            DocumentReferenceItemRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            DocumentReferenceItemRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            DocumentReferenceItemRef::ShapeAspectRelationship(i) => {
+                out.push(AnyId::ShapeAspectRelationship(*i))
+            }
+            DocumentReferenceItemRef::ShapeDefinitionRepresentation(i) => {
+                out.push(AnyId::ShapeDefinitionRepresentation(*i))
+            }
+            DocumentReferenceItemRef::ShapeDimensionRepresentation(i) => {
+                out.push(AnyId::ShapeDimensionRepresentation(*i))
+            }
+            DocumentReferenceItemRef::ShapeRepresentation(i) => {
+                out.push(AnyId::ShapeRepresentation(*i))
+            }
+            DocumentReferenceItemRef::ShapeRepresentationRelationship(i) => {
+                out.push(AnyId::ShapeRepresentationRelationship(*i))
+            }
+            DocumentReferenceItemRef::ShellBasedSurfaceModel(i) => {
+                out.push(AnyId::ShellBasedSurfaceModel(*i))
+            }
+            DocumentReferenceItemRef::SolidModel(i) => out.push(AnyId::SolidModel(*i)),
+            DocumentReferenceItemRef::SphericalSurface(i) => out.push(AnyId::SphericalSurface(*i)),
+            DocumentReferenceItemRef::StateObserved(i) => out.push(AnyId::StateObserved(*i)),
+            DocumentReferenceItemRef::StateType(i) => out.push(AnyId::StateType(*i)),
+            DocumentReferenceItemRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+            DocumentReferenceItemRef::Surface(i) => out.push(AnyId::Surface(*i)),
+            DocumentReferenceItemRef::SurfaceCurve(i) => out.push(AnyId::SurfaceCurve(*i)),
+            DocumentReferenceItemRef::SurfaceOfLinearExtrusion(i) => {
+                out.push(AnyId::SurfaceOfLinearExtrusion(*i))
+            }
+            DocumentReferenceItemRef::SurfaceOfRevolution(i) => {
+                out.push(AnyId::SurfaceOfRevolution(*i))
+            }
+            DocumentReferenceItemRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
+            DocumentReferenceItemRef::SymbolRepresentation(i) => {
+                out.push(AnyId::SymbolRepresentation(*i))
+            }
+            DocumentReferenceItemRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+            DocumentReferenceItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
+            DocumentReferenceItemRef::TessellatedAnnotationOccurrence(i) => {
+                out.push(AnyId::TessellatedAnnotationOccurrence(*i))
+            }
+            DocumentReferenceItemRef::TessellatedCurveSet(i) => {
+                out.push(AnyId::TessellatedCurveSet(*i))
+            }
+            DocumentReferenceItemRef::TessellatedFace(i) => out.push(AnyId::TessellatedFace(*i)),
+            DocumentReferenceItemRef::TessellatedGeometricSet(i) => {
+                out.push(AnyId::TessellatedGeometricSet(*i))
+            }
+            DocumentReferenceItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            DocumentReferenceItemRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
+            DocumentReferenceItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
+            DocumentReferenceItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
+            DocumentReferenceItemRef::TessellatedStructuredItem(i) => {
+                out.push(AnyId::TessellatedStructuredItem(*i))
+            }
+            DocumentReferenceItemRef::TessellatedSurfaceSet(i) => {
+                out.push(AnyId::TessellatedSurfaceSet(*i))
+            }
+            DocumentReferenceItemRef::TextLiteral(i) => out.push(AnyId::TextLiteral(*i)),
+            DocumentReferenceItemRef::ToleranceZone(i) => out.push(AnyId::ToleranceZone(*i)),
+            DocumentReferenceItemRef::ToleranceZoneWithDatum(i) => {
+                out.push(AnyId::ToleranceZoneWithDatum(*i))
+            }
+            DocumentReferenceItemRef::TopologicalRepresentationItem(i) => {
+                out.push(AnyId::TopologicalRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::ToroidalSurface(i) => out.push(AnyId::ToroidalSurface(*i)),
+            DocumentReferenceItemRef::TrimmedCurve(i) => out.push(AnyId::TrimmedCurve(*i)),
+            DocumentReferenceItemRef::TwoDirectionRepeatFactor(i) => {
+                out.push(AnyId::TwoDirectionRepeatFactor(*i))
+            }
+            DocumentReferenceItemRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
+            DocumentReferenceItemRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+            DocumentReferenceItemRef::ValueRepresentationItem(i) => {
+                out.push(AnyId::ValueRepresentationItem(*i))
+            }
+            DocumentReferenceItemRef::Vector(i) => out.push(AnyId::Vector(*i)),
+            DocumentReferenceItemRef::VersionedActionRequest(i) => {
+                out.push(AnyId::VersionedActionRequest(*i))
+            }
+            DocumentReferenceItemRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
+            DocumentReferenceItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
+            DocumentReferenceItemRef::VertexPoint(i) => out.push(AnyId::VertexPoint(*i)),
+            DocumentReferenceItemRef::VertexShell(i) => out.push(AnyId::VertexShell(*i)),
+            DocumentReferenceItemRef::WireShell(i) => out.push(AnyId::WireShell(*i)),
+            DocumentReferenceItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_document_type(&self, r: &DocumentTypeRef) -> u64 {
         match r {
             DocumentTypeRef::DocumentType(i) => {
@@ -6508,6 +7841,463 @@ impl<'a> Writer<'a> {
             EdgeRef::OrientedEdge(i) => out.push(AnyId::OrientedEdge(*i)),
             EdgeRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
+    }
+
+    fn id_of_ref_external_identification_item(&self, r: &ExternalIdentificationItemRef) -> u64 {
+        match r {
+        ExternalIdentificationItemRef::ActionDirective(i) => self.action_directive_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ActionMethod(i) => self.action_method_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ActionMethodRelationship(i) => self.action_method_relationship_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ActionRelationship(i) => self.action_relationship_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Address(i) => self.addre_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AdvancedFace(i) => self.advanced_face_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationPlane(i) => self.annotation_plane_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationText(i) => self.annotation_text_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationTextCharacter(i) => self.annotation_text_character_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationTextOccurrence(i) => self.annotation_text_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationToAnnotationLeaderLine(i) => self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AnnotationToModelLeaderLine(i) => self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ApllPointWithSurface(i) => self.apll_point_with_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AppliedDateAndTimeAssignment(i) => self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AppliedExternalIdentificationAssignment(i) => self.applied_external_identification_assignment_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Approval(i) => self.approval_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ApprovalPersonOrganization(i) => self.approval_person_organization_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ApprovalStatus(i) => self.approval_statu_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AuxiliaryLeaderLine(i) => self.auxiliary_leader_line_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Axis1Placement(i) => self.axis1_placement_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Axis2Placement2d(i) => self.axis2_placement2d_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Axis2Placement3d(i) => self.axis2_placement3d_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BSplineCurve(i) => self.b_spline_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BSplineCurveWithKnots(i) => self.b_spline_curve_with_knot_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BSplineSurface(i) => self.b_spline_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BSplineSurfaceWithKnots(i) => self.b_spline_surface_with_knot_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BezierCurve(i) => self.bezier_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BezierSurface(i) => self.bezier_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BoundedCurve(i) => self.bounded_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BoundedPcurve(i) => self.bounded_pcurve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BoundedSurface(i) => self.bounded_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::BrepWithVoids(i) => self.brep_with_void_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CameraModelD3(i) => self.camera_model_d3_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CartesianPoint(i) => self.cartesian_point_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CcDesignDateAndTimeAssignment(i) => self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Certification(i) => self.certification_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CharacterizedRepresentation(i) => self.characterized_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ClosedShell(i) => self.closed_shell_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ComplexTriangulatedFace(i) => self.complex_triangulated_face_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ComplexTriangulatedSurfaceSet(i) => self.complex_triangulated_surface_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CompositeCurve(i) => self.composite_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CompositeText(i) => self.composite_text_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ConfigurationEffectivity(i) => self.configuration_effectivity_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Conic(i) => self.conic_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ConicalSurface(i) => self.conical_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ConnectedFaceSet(i) => self.connected_face_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ContextDependentOverRidingStyledItem(i) => self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ContextDependentUnit(i) => self.context_dependent_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ConversionBasedUnit(i) => self.conversion_based_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CoordinatesList(i) => self.coordinates_list_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Curve(i) => self.curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CylindricalSurface(i) => self.cylindrical_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DateAndTimeAssignment(i) => self.date_and_time_assignment_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DefinedCharacterGlyph(i) => self.defined_character_glyph_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DefinedSymbol(i) => self.defined_symbol_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DegenerateToroidalSurface(i) => self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DerivedUnit(i) => self.derived_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DescriptiveRepresentationItem(i) => self.descriptive_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DesignContext(i) => self.design_context_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Direction(i) => self.direction_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DocumentFile(i) => self.document_file_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DraughtingAnnotationOccurrence(i) => self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DraughtingCallout(i) => self.draughting_callout_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::DraughtingModel(i) => self.draughting_model_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Edge(i) => self.edge_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::EdgeCurve(i) => self.edge_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::EdgeLoop(i) => self.edge_loop_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Effectivity(i) => self.effectivity_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ElementarySurface(i) => self.elementary_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Ellipse(i) => self.ellipse_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ExternalSource(i) => self.external_source_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => self.externally_defined_hatch_style_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => self.externally_defined_tile_style_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Face(i) => self.face_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FaceBound(i) => self.face_bound_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FaceOuterBound(i) => self.face_outer_bound_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FaceSurface(i) => self.face_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FillAreaStyleHatching(i) => self.fill_area_style_hatching_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FillAreaStyleTileColouredRegion(i) => self.fill_area_style_tile_coloured_region_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FillAreaStyleTileCurveWithStyle(i) => self.fill_area_style_tile_curve_with_style_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FillAreaStyleTileSymbolWithStyle(i) => self.fill_area_style_tile_symbol_with_style_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::FillAreaStyleTiles(i) => self.fill_area_style_tile_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::GeneralProperty(i) => self.general_property_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::GenericProductDefinitionReference(i) => self.generic_product_definition_reference_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::GeometricCurveSet(i) => self.geometric_curve_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::GeometricRepresentationItem(i) => self.geometric_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::GeometricSet(i) => self.geometric_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::IntegerRepresentationItem(i) => self.integer_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::IntersectionCurve(i) => self.intersection_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::LeaderCurve(i) => self.leader_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::LeaderTerminator(i) => self.leader_terminator_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::LengthUnit(i) => self.length_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ManifoldSolidBrep(i) => self.manifold_solid_brep_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::MappedItem(i) => self.mapped_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::MassUnit(i) => self.mass_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::MeasureRepresentationItem(i) => self.measure_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self.mechanical_design_presentation_representation_with_draughting_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self.mechanical_design_shaded_presentation_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::NamedUnit(i) => self.named_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::NextAssemblyUsageOccurrence(i) => self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OffsetSurface(i) => self.offset_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OneDirectionRepeatFactor(i) => self.one_direction_repeat_factor_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OpenShell(i) => self.open_shell_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Organization(i) => self.organization_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OrganizationalAddress(i) => self.organizational_addre_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OrganizationalProject(i) => self.organizational_project_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OrientedClosedShell(i) => self.oriented_closed_shell_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OrientedEdge(i) => self.oriented_edge_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::OverRidingStyledItem(i) => self.over_riding_styled_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Path(i) => self.path_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Pcurve(i) => self.pcurve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Person(i) => self.person_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PersonAndOrganization(i) => self.person_and_organization_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PersonAndOrganizationAddress(i) => self.person_and_organization_addre_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PersonalAddress(i) => self.personal_addre_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Placement(i) => self.placement_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PlanarBox(i) => self.planar_box_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PlanarExtent(i) => self.planar_extent_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Plane(i) => self.plane_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PlaneAngleUnit(i) => self.plane_angle_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PrecisionQualifier(i) => self.precision_qualifier_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PresentationArea(i) => self.presentation_area_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PresentationRepresentation(i) => self.presentation_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PresentationView(i) => self.presentation_view_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductConcept(i) => self.product_concept_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductConceptContext(i) => self.product_concept_context_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinition(i) => self.product_definition_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinitionContext(i) => self.product_definition_context_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinitionEffectivity(i) => self.product_definition_effectivity_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinitionFormation(i) => self.product_definition_formation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self.product_definition_formation_with_specified_source_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinitionOccurrence(i) => self.product_definition_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductDefinitionWithAssociatedDocuments(i) => self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::PropertyDefinition(i) => self.property_definition_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::QualifiedRepresentationItem(i) => self.qualified_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::RationalBSplineCurve(i) => self.rational_b_spline_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::RationalBSplineSurface(i) => self.rational_b_spline_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::RealRepresentationItem(i) => self.real_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::RepositionedTessellatedItem(i) => self.repositioned_tessellated_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Representation(i) => self.representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::RepresentationItem(i) => self.representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SeamCurve(i) => self.seam_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SecurityClassification(i) => self.security_classification_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ShellBasedSurfaceModel(i) => self.shell_based_surface_model_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SiUnit(i) => self.si_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SolidAngleUnit(i) => self.solid_angle_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SolidModel(i) => self.solid_model_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SphericalSurface(i) => self.spherical_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::StateObserved(i) => self.state_observed_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::StateType(i) => self.state_type_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::StyledItem(i) => self.styled_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Surface(i) => self.surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SurfaceCurve(i) => self.surface_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SurfaceOfLinearExtrusion(i) => self.surface_of_linear_extrusion_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SurfaceOfRevolution(i) => self.surface_of_revolution_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SweptSurface(i) => self.swept_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SymbolRepresentation(i) => self.symbol_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::SymbolTarget(i) => self.symbol_target_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TerminatorSymbol(i) => self.terminator_symbol_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedAnnotationOccurrence(i) => self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedCurveSet(i) => self.tessellated_curve_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedFace(i) => self.tessellated_face_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedGeometricSet(i) => self.tessellated_geometric_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedItem(i) => self.tessellated_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedShell(i) => self.tessellated_shell_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedSolid(i) => self.tessellated_solid_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedStructuredItem(i) => self.tessellated_structured_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TessellatedSurfaceSet(i) => self.tessellated_surface_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TextLiteral(i) => self.text_literal_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TimeUnit(i) => self.time_unit_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TopologicalRepresentationItem(i) => self.topological_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ToroidalSurface(i) => self.toroidal_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TrimmedCurve(i) => self.trimmed_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TwoDirectionRepeatFactor(i) => self.two_direction_repeat_factor_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::TypeQualifier(i) => self.type_qualifier_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::UncertaintyQualifier(i) => self.uncertainty_qualifier_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::UniformCurve(i) => self.uniform_curve_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::UniformSurface(i) => self.uniform_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ValueRepresentationItem(i) => self.value_representation_item_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::VertexLoop(i) => self.vertex_loop_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::VertexPoint(i) => self.vertex_point_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::VertexShell(i) => self.vertex_shell_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::WireShell(i) => self.wire_shell_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+    }
+    }
+
+    fn deps_ref_external_identification_item(
+        r: &ExternalIdentificationItemRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+        ExternalIdentificationItemRef::ActionDirective(i) => out.push(AnyId::ActionDirective(*i)),
+        ExternalIdentificationItemRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+        ExternalIdentificationItemRef::ActionMethodRelationship(i) => out.push(AnyId::ActionMethodRelationship(*i)),
+        ExternalIdentificationItemRef::ActionRelationship(i) => out.push(AnyId::ActionRelationship(*i)),
+        ExternalIdentificationItemRef::Address(i) => out.push(AnyId::Address(*i)),
+        ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
+        ExternalIdentificationItemRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+        ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => out.push(AnyId::AnnotationCurveOccurrence(*i)),
+        ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => out.push(AnyId::AnnotationFillAreaOccurrence(*i)),
+        ExternalIdentificationItemRef::AnnotationOccurrence(i) => out.push(AnyId::AnnotationOccurrence(*i)),
+        ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => out.push(AnyId::AnnotationPlaceholderLeaderLine(*i)),
+        ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => out.push(AnyId::AnnotationPlaceholderOccurrence(*i)),
+        ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+        ExternalIdentificationItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+        ExternalIdentificationItemRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
+        ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => out.push(AnyId::AnnotationSymbolOccurrence(*i)),
+        ExternalIdentificationItemRef::AnnotationText(i) => out.push(AnyId::AnnotationText(*i)),
+        ExternalIdentificationItemRef::AnnotationTextCharacter(i) => out.push(AnyId::AnnotationTextCharacter(*i)),
+        ExternalIdentificationItemRef::AnnotationTextOccurrence(i) => out.push(AnyId::AnnotationTextOccurrence(*i)),
+        ExternalIdentificationItemRef::AnnotationToAnnotationLeaderLine(i) => out.push(AnyId::AnnotationToAnnotationLeaderLine(*i)),
+        ExternalIdentificationItemRef::AnnotationToModelLeaderLine(i) => out.push(AnyId::AnnotationToModelLeaderLine(*i)),
+        ExternalIdentificationItemRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+        ExternalIdentificationItemRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
+        ExternalIdentificationItemRef::AppliedDateAndTimeAssignment(i) => out.push(AnyId::AppliedDateAndTimeAssignment(*i)),
+        ExternalIdentificationItemRef::AppliedExternalIdentificationAssignment(i) => out.push(AnyId::AppliedExternalIdentificationAssignment(*i)),
+        ExternalIdentificationItemRef::Approval(i) => out.push(AnyId::Approval(*i)),
+        ExternalIdentificationItemRef::ApprovalPersonOrganization(i) => out.push(AnyId::ApprovalPersonOrganization(*i)),
+        ExternalIdentificationItemRef::ApprovalStatus(i) => out.push(AnyId::ApprovalStatus(*i)),
+        ExternalIdentificationItemRef::AssemblyComponentUsage(i) => out.push(AnyId::AssemblyComponentUsage(*i)),
+        ExternalIdentificationItemRef::AuxiliaryLeaderLine(i) => out.push(AnyId::AuxiliaryLeaderLine(*i)),
+        ExternalIdentificationItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
+        ExternalIdentificationItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
+        ExternalIdentificationItemRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
+        ExternalIdentificationItemRef::BSplineCurve(i) => out.push(AnyId::BSplineCurve(*i)),
+        ExternalIdentificationItemRef::BSplineCurveWithKnots(i) => out.push(AnyId::BSplineCurveWithKnots(*i)),
+        ExternalIdentificationItemRef::BSplineSurface(i) => out.push(AnyId::BSplineSurface(*i)),
+        ExternalIdentificationItemRef::BSplineSurfaceWithKnots(i) => out.push(AnyId::BSplineSurfaceWithKnots(*i)),
+        ExternalIdentificationItemRef::BezierCurve(i) => out.push(AnyId::BezierCurve(*i)),
+        ExternalIdentificationItemRef::BezierSurface(i) => out.push(AnyId::BezierSurface(*i)),
+        ExternalIdentificationItemRef::BoundedCurve(i) => out.push(AnyId::BoundedCurve(*i)),
+        ExternalIdentificationItemRef::BoundedPcurve(i) => out.push(AnyId::BoundedPcurve(*i)),
+        ExternalIdentificationItemRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
+        ExternalIdentificationItemRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
+        ExternalIdentificationItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+        ExternalIdentificationItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+        ExternalIdentificationItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+        ExternalIdentificationItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+        ExternalIdentificationItemRef::CcDesignDateAndTimeAssignment(i) => out.push(AnyId::CcDesignDateAndTimeAssignment(*i)),
+        ExternalIdentificationItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+        ExternalIdentificationItemRef::CharacterizedRepresentation(i) => out.push(AnyId::CharacterizedRepresentation(*i)),
+        ExternalIdentificationItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
+        ExternalIdentificationItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
+        ExternalIdentificationItemRef::ComplexTriangulatedFace(i) => out.push(AnyId::ComplexTriangulatedFace(*i)),
+        ExternalIdentificationItemRef::ComplexTriangulatedSurfaceSet(i) => out.push(AnyId::ComplexTriangulatedSurfaceSet(*i)),
+        ExternalIdentificationItemRef::CompositeCurve(i) => out.push(AnyId::CompositeCurve(*i)),
+        ExternalIdentificationItemRef::CompositeText(i) => out.push(AnyId::CompositeText(*i)),
+        ExternalIdentificationItemRef::ConfigurationEffectivity(i) => out.push(AnyId::ConfigurationEffectivity(*i)),
+        ExternalIdentificationItemRef::Conic(i) => out.push(AnyId::Conic(*i)),
+        ExternalIdentificationItemRef::ConicalSurface(i) => out.push(AnyId::ConicalSurface(*i)),
+        ExternalIdentificationItemRef::ConnectedFaceSet(i) => out.push(AnyId::ConnectedFaceSet(*i)),
+        ExternalIdentificationItemRef::ConstructiveGeometryRepresentation(i) => out.push(AnyId::ConstructiveGeometryRepresentation(*i)),
+        ExternalIdentificationItemRef::ContextDependentOverRidingStyledItem(i) => out.push(AnyId::ContextDependentOverRidingStyledItem(*i)),
+        ExternalIdentificationItemRef::ContextDependentUnit(i) => out.push(AnyId::ContextDependentUnit(*i)),
+        ExternalIdentificationItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+        ExternalIdentificationItemRef::ConversionBasedUnit(i) => out.push(AnyId::ConversionBasedUnit(*i)),
+        ExternalIdentificationItemRef::CoordinatesList(i) => out.push(AnyId::CoordinatesList(*i)),
+        ExternalIdentificationItemRef::Curve(i) => out.push(AnyId::Curve(*i)),
+        ExternalIdentificationItemRef::CylindricalSurface(i) => out.push(AnyId::CylindricalSurface(*i)),
+        ExternalIdentificationItemRef::DateAndTimeAssignment(i) => out.push(AnyId::DateAndTimeAssignment(*i)),
+        ExternalIdentificationItemRef::DefinedCharacterGlyph(i) => out.push(AnyId::DefinedCharacterGlyph(*i)),
+        ExternalIdentificationItemRef::DefinedSymbol(i) => out.push(AnyId::DefinedSymbol(*i)),
+        ExternalIdentificationItemRef::DefinitionalRepresentation(i) => out.push(AnyId::DefinitionalRepresentation(*i)),
+        ExternalIdentificationItemRef::DegenerateToroidalSurface(i) => out.push(AnyId::DegenerateToroidalSurface(*i)),
+        ExternalIdentificationItemRef::DerivedUnit(i) => out.push(AnyId::DerivedUnit(*i)),
+        ExternalIdentificationItemRef::DescriptiveRepresentationItem(i) => out.push(AnyId::DescriptiveRepresentationItem(*i)),
+        ExternalIdentificationItemRef::DesignContext(i) => out.push(AnyId::DesignContext(*i)),
+        ExternalIdentificationItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
+        ExternalIdentificationItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+        ExternalIdentificationItemRef::DraughtingAnnotationOccurrence(i) => out.push(AnyId::DraughtingAnnotationOccurrence(*i)),
+        ExternalIdentificationItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
+        ExternalIdentificationItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+        ExternalIdentificationItemRef::Edge(i) => out.push(AnyId::Edge(*i)),
+        ExternalIdentificationItemRef::EdgeCurve(i) => out.push(AnyId::EdgeCurve(*i)),
+        ExternalIdentificationItemRef::EdgeLoop(i) => out.push(AnyId::EdgeLoop(*i)),
+        ExternalIdentificationItemRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
+        ExternalIdentificationItemRef::ElementarySurface(i) => out.push(AnyId::ElementarySurface(*i)),
+        ExternalIdentificationItemRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+        ExternalIdentificationItemRef::ExternalSource(i) => out.push(AnyId::ExternalSource(*i)),
+        ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => out.push(AnyId::ExternallyDefinedHatchStyle(*i)),
+        ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => out.push(AnyId::ExternallyDefinedTileStyle(*i)),
+        ExternalIdentificationItemRef::Face(i) => out.push(AnyId::Face(*i)),
+        ExternalIdentificationItemRef::FaceBound(i) => out.push(AnyId::FaceBound(*i)),
+        ExternalIdentificationItemRef::FaceOuterBound(i) => out.push(AnyId::FaceOuterBound(*i)),
+        ExternalIdentificationItemRef::FaceSurface(i) => out.push(AnyId::FaceSurface(*i)),
+        ExternalIdentificationItemRef::FillAreaStyleHatching(i) => out.push(AnyId::FillAreaStyleHatching(*i)),
+        ExternalIdentificationItemRef::FillAreaStyleTileColouredRegion(i) => out.push(AnyId::FillAreaStyleTileColouredRegion(*i)),
+        ExternalIdentificationItemRef::FillAreaStyleTileCurveWithStyle(i) => out.push(AnyId::FillAreaStyleTileCurveWithStyle(*i)),
+        ExternalIdentificationItemRef::FillAreaStyleTileSymbolWithStyle(i) => out.push(AnyId::FillAreaStyleTileSymbolWithStyle(*i)),
+        ExternalIdentificationItemRef::FillAreaStyleTiles(i) => out.push(AnyId::FillAreaStyleTiles(*i)),
+        ExternalIdentificationItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+        ExternalIdentificationItemRef::GenericProductDefinitionReference(i) => out.push(AnyId::GenericProductDefinitionReference(*i)),
+        ExternalIdentificationItemRef::GeometricCurveSet(i) => out.push(AnyId::GeometricCurveSet(*i)),
+        ExternalIdentificationItemRef::GeometricRepresentationItem(i) => out.push(AnyId::GeometricRepresentationItem(*i)),
+        ExternalIdentificationItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+        ExternalIdentificationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+        ExternalIdentificationItemRef::Group(i) => out.push(AnyId::Group(*i)),
+        ExternalIdentificationItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
+        ExternalIdentificationItemRef::IntegerRepresentationItem(i) => out.push(AnyId::IntegerRepresentationItem(*i)),
+        ExternalIdentificationItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+        ExternalIdentificationItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+        ExternalIdentificationItemRef::LeaderDirectedCallout(i) => out.push(AnyId::LeaderDirectedCallout(*i)),
+        ExternalIdentificationItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
+        ExternalIdentificationItemRef::LengthUnit(i) => out.push(AnyId::LengthUnit(*i)),
+        ExternalIdentificationItemRef::Line(i) => out.push(AnyId::Line(*i)),
+        ExternalIdentificationItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
+        ExternalIdentificationItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
+        ExternalIdentificationItemRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
+        ExternalIdentificationItemRef::MappedItem(i) => out.push(AnyId::MappedItem(*i)),
+        ExternalIdentificationItemRef::MassUnit(i) => out.push(AnyId::MassUnit(*i)),
+        ExternalIdentificationItemRef::MeasureRepresentationItem(i) => out.push(AnyId::MeasureRepresentationItem(*i)),
+        ExternalIdentificationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
+        ExternalIdentificationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+        ExternalIdentificationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i)),
+        ExternalIdentificationItemRef::NamedUnit(i) => out.push(AnyId::NamedUnit(*i)),
+        ExternalIdentificationItemRef::NextAssemblyUsageOccurrence(i) => out.push(AnyId::NextAssemblyUsageOccurrence(*i)),
+        ExternalIdentificationItemRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
+        ExternalIdentificationItemRef::OneDirectionRepeatFactor(i) => out.push(AnyId::OneDirectionRepeatFactor(*i)),
+        ExternalIdentificationItemRef::OpenShell(i) => out.push(AnyId::OpenShell(*i)),
+        ExternalIdentificationItemRef::Organization(i) => out.push(AnyId::Organization(*i)),
+        ExternalIdentificationItemRef::OrganizationalAddress(i) => out.push(AnyId::OrganizationalAddress(*i)),
+        ExternalIdentificationItemRef::OrganizationalProject(i) => out.push(AnyId::OrganizationalProject(*i)),
+        ExternalIdentificationItemRef::OrientedClosedShell(i) => out.push(AnyId::OrientedClosedShell(*i)),
+        ExternalIdentificationItemRef::OrientedEdge(i) => out.push(AnyId::OrientedEdge(*i)),
+        ExternalIdentificationItemRef::OverRidingStyledItem(i) => out.push(AnyId::OverRidingStyledItem(*i)),
+        ExternalIdentificationItemRef::Path(i) => out.push(AnyId::Path(*i)),
+        ExternalIdentificationItemRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
+        ExternalIdentificationItemRef::Person(i) => out.push(AnyId::Person(*i)),
+        ExternalIdentificationItemRef::PersonAndOrganization(i) => out.push(AnyId::PersonAndOrganization(*i)),
+        ExternalIdentificationItemRef::PersonAndOrganizationAddress(i) => out.push(AnyId::PersonAndOrganizationAddress(*i)),
+        ExternalIdentificationItemRef::PersonalAddress(i) => out.push(AnyId::PersonalAddress(*i)),
+        ExternalIdentificationItemRef::Placement(i) => out.push(AnyId::Placement(*i)),
+        ExternalIdentificationItemRef::PlanarBox(i) => out.push(AnyId::PlanarBox(*i)),
+        ExternalIdentificationItemRef::PlanarExtent(i) => out.push(AnyId::PlanarExtent(*i)),
+        ExternalIdentificationItemRef::Plane(i) => out.push(AnyId::Plane(*i)),
+        ExternalIdentificationItemRef::PlaneAngleUnit(i) => out.push(AnyId::PlaneAngleUnit(*i)),
+        ExternalIdentificationItemRef::Point(i) => out.push(AnyId::Point(*i)),
+        ExternalIdentificationItemRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
+        ExternalIdentificationItemRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+        ExternalIdentificationItemRef::PrecisionQualifier(i) => out.push(AnyId::PrecisionQualifier(*i)),
+        ExternalIdentificationItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+        ExternalIdentificationItemRef::PresentationRepresentation(i) => out.push(AnyId::PresentationRepresentation(*i)),
+        ExternalIdentificationItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+        ExternalIdentificationItemRef::Product(i) => out.push(AnyId::Product(*i)),
+        ExternalIdentificationItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+        ExternalIdentificationItemRef::ProductConceptContext(i) => out.push(AnyId::ProductConceptContext(*i)),
+        ExternalIdentificationItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+        ExternalIdentificationItemRef::ProductDefinitionContext(i) => out.push(AnyId::ProductDefinitionContext(*i)),
+        ExternalIdentificationItemRef::ProductDefinitionEffectivity(i) => out.push(AnyId::ProductDefinitionEffectivity(*i)),
+        ExternalIdentificationItemRef::ProductDefinitionFormation(i) => out.push(AnyId::ProductDefinitionFormation(*i)),
+        ExternalIdentificationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i)),
+        ExternalIdentificationItemRef::ProductDefinitionOccurrence(i) => out.push(AnyId::ProductDefinitionOccurrence(*i)),
+        ExternalIdentificationItemRef::ProductDefinitionShape(i) => out.push(AnyId::ProductDefinitionShape(*i)),
+        ExternalIdentificationItemRef::ProductDefinitionWithAssociatedDocuments(i) => out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i)),
+        ExternalIdentificationItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
+        ExternalIdentificationItemRef::QualifiedRepresentationItem(i) => out.push(AnyId::QualifiedRepresentationItem(*i)),
+        ExternalIdentificationItemRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
+        ExternalIdentificationItemRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
+        ExternalIdentificationItemRef::RationalBSplineCurve(i) => out.push(AnyId::RationalBSplineCurve(*i)),
+        ExternalIdentificationItemRef::RationalBSplineSurface(i) => out.push(AnyId::RationalBSplineSurface(*i)),
+        ExternalIdentificationItemRef::RealRepresentationItem(i) => out.push(AnyId::RealRepresentationItem(*i)),
+        ExternalIdentificationItemRef::RepositionedTessellatedItem(i) => out.push(AnyId::RepositionedTessellatedItem(*i)),
+        ExternalIdentificationItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
+        ExternalIdentificationItemRef::RepresentationItem(i) => out.push(AnyId::RepresentationItem(*i)),
+        ExternalIdentificationItemRef::SeamCurve(i) => out.push(AnyId::SeamCurve(*i)),
+        ExternalIdentificationItemRef::SecurityClassification(i) => out.push(AnyId::SecurityClassification(*i)),
+        ExternalIdentificationItemRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
+        ExternalIdentificationItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+        ExternalIdentificationItemRef::ShellBasedSurfaceModel(i) => out.push(AnyId::ShellBasedSurfaceModel(*i)),
+        ExternalIdentificationItemRef::SiUnit(i) => out.push(AnyId::SiUnit(*i)),
+        ExternalIdentificationItemRef::SolidAngleUnit(i) => out.push(AnyId::SolidAngleUnit(*i)),
+        ExternalIdentificationItemRef::SolidModel(i) => out.push(AnyId::SolidModel(*i)),
+        ExternalIdentificationItemRef::SphericalSurface(i) => out.push(AnyId::SphericalSurface(*i)),
+        ExternalIdentificationItemRef::StateObserved(i) => out.push(AnyId::StateObserved(*i)),
+        ExternalIdentificationItemRef::StateType(i) => out.push(AnyId::StateType(*i)),
+        ExternalIdentificationItemRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+        ExternalIdentificationItemRef::Surface(i) => out.push(AnyId::Surface(*i)),
+        ExternalIdentificationItemRef::SurfaceCurve(i) => out.push(AnyId::SurfaceCurve(*i)),
+        ExternalIdentificationItemRef::SurfaceOfLinearExtrusion(i) => out.push(AnyId::SurfaceOfLinearExtrusion(*i)),
+        ExternalIdentificationItemRef::SurfaceOfRevolution(i) => out.push(AnyId::SurfaceOfRevolution(*i)),
+        ExternalIdentificationItemRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
+        ExternalIdentificationItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+        ExternalIdentificationItemRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+        ExternalIdentificationItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
+        ExternalIdentificationItemRef::TessellatedAnnotationOccurrence(i) => out.push(AnyId::TessellatedAnnotationOccurrence(*i)),
+        ExternalIdentificationItemRef::TessellatedCurveSet(i) => out.push(AnyId::TessellatedCurveSet(*i)),
+        ExternalIdentificationItemRef::TessellatedFace(i) => out.push(AnyId::TessellatedFace(*i)),
+        ExternalIdentificationItemRef::TessellatedGeometricSet(i) => out.push(AnyId::TessellatedGeometricSet(*i)),
+        ExternalIdentificationItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+        ExternalIdentificationItemRef::TessellatedShapeRepresentation(i) => out.push(AnyId::TessellatedShapeRepresentation(*i)),
+        ExternalIdentificationItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
+        ExternalIdentificationItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
+        ExternalIdentificationItemRef::TessellatedStructuredItem(i) => out.push(AnyId::TessellatedStructuredItem(*i)),
+        ExternalIdentificationItemRef::TessellatedSurfaceSet(i) => out.push(AnyId::TessellatedSurfaceSet(*i)),
+        ExternalIdentificationItemRef::TextLiteral(i) => out.push(AnyId::TextLiteral(*i)),
+        ExternalIdentificationItemRef::TimeUnit(i) => out.push(AnyId::TimeUnit(*i)),
+        ExternalIdentificationItemRef::TopologicalRepresentationItem(i) => out.push(AnyId::TopologicalRepresentationItem(*i)),
+        ExternalIdentificationItemRef::ToroidalSurface(i) => out.push(AnyId::ToroidalSurface(*i)),
+        ExternalIdentificationItemRef::TrimmedCurve(i) => out.push(AnyId::TrimmedCurve(*i)),
+        ExternalIdentificationItemRef::TwoDirectionRepeatFactor(i) => out.push(AnyId::TwoDirectionRepeatFactor(*i)),
+        ExternalIdentificationItemRef::TypeQualifier(i) => out.push(AnyId::TypeQualifier(*i)),
+        ExternalIdentificationItemRef::UncertaintyQualifier(i) => out.push(AnyId::UncertaintyQualifier(*i)),
+        ExternalIdentificationItemRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
+        ExternalIdentificationItemRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+        ExternalIdentificationItemRef::ValueRepresentationItem(i) => out.push(AnyId::ValueRepresentationItem(*i)),
+        ExternalIdentificationItemRef::Vector(i) => out.push(AnyId::Vector(*i)),
+        ExternalIdentificationItemRef::VersionedActionRequest(i) => out.push(AnyId::VersionedActionRequest(*i)),
+        ExternalIdentificationItemRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
+        ExternalIdentificationItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
+        ExternalIdentificationItemRef::VertexPoint(i) => out.push(AnyId::VertexPoint(*i)),
+        ExternalIdentificationItemRef::VertexShell(i) => out.push(AnyId::VertexShell(*i)),
+        ExternalIdentificationItemRef::WireShell(i) => out.push(AnyId::WireShell(*i)),
+        ExternalIdentificationItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+    }
     }
 
     fn id_of_ref_external_source(&self, r: &ExternalSourceRef) -> u64 {
@@ -9570,6 +11360,20 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_identification_role(&self, r: &IdentificationRoleRef) -> u64 {
+        match r {
+            IdentificationRoleRef::IdentificationRole(i) => {
+                self.identification_role_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_identification_role(r: &IdentificationRoleRef, out: &mut Vec<AnyId>) {
+        match r {
+            IdentificationRoleRef::IdentificationRole(i) => out.push(AnyId::IdentificationRole(*i)),
+        }
+    }
+
     fn id_of_ref_invisible_item(&self, r: &InvisibleItemRef) -> u64 {
         match r {
             InvisibleItemRef::AdvancedBrepShapeRepresentation(i) => {
@@ -10636,6 +12440,18 @@ impl<'a> Writer<'a> {
             NamedUnitRef::SolidAngleUnit(i) => out.push(AnyId::SolidAngleUnit(*i)),
             NamedUnitRef::TimeUnit(i) => out.push(AnyId::TimeUnit(*i)),
             NamedUnitRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_object_role(&self, r: &ObjectRoleRef) -> u64 {
+        match r {
+            ObjectRoleRef::ObjectRole(i) => self.object_role_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_object_role(r: &ObjectRoleRef, out: &mut Vec<AnyId>) {
+        match r {
+            ObjectRoleRef::ObjectRole(i) => out.push(AnyId::ObjectRole(*i)),
         }
     }
 
@@ -12392,6 +14208,80 @@ impl<'a> Writer<'a> {
             ResourceRequirementTypeRef::ResourceRequirementType(i) => {
                 out.push(AnyId::ResourceRequirementType(*i))
             }
+        }
+    }
+
+    fn id_of_ref_role_select(&self, r: &RoleSelectRef) -> u64 {
+        match r {
+            RoleSelectRef::ActionAssignment(i) => {
+                self.action_assignment_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::ActionRequestAssignment(i) => {
+                self.action_request_assignment_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::AppliedDocumentReference(i) => {
+                self.applied_document_reference_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::AppliedGroupAssignment(i) => {
+                self.applied_group_assignment_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::ApprovalAssignment(i) => {
+                self.approval_assignment_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::ApprovalDateTime(i) => {
+                self.approval_date_time_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::CcDesignApproval(i) => {
+                self.cc_design_approval_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::CcDesignSecurityClassification(i) => {
+                self.cc_design_security_classification_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::Change(i) => self.change_ids[i.0].expect("dep id assigned"),
+            RoleSelectRef::ChangeRequest(i) => {
+                self.change_request_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::DocumentReference(i) => {
+                self.document_reference_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::GroupAssignment(i) => {
+                self.group_assignment_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::SecurityClassificationAssignment(i) => {
+                self.security_classification_assignment_ids[i.0].expect("dep id assigned")
+            }
+            RoleSelectRef::StartRequest(i) => self.start_request_ids[i.0].expect("dep id assigned"),
+            RoleSelectRef::StartWork(i) => self.start_work_ids[i.0].expect("dep id assigned"),
+            RoleSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_role_select(r: &RoleSelectRef, out: &mut Vec<AnyId>) {
+        match r {
+            RoleSelectRef::ActionAssignment(i) => out.push(AnyId::ActionAssignment(*i)),
+            RoleSelectRef::ActionRequestAssignment(i) => {
+                out.push(AnyId::ActionRequestAssignment(*i))
+            }
+            RoleSelectRef::AppliedDocumentReference(i) => {
+                out.push(AnyId::AppliedDocumentReference(*i))
+            }
+            RoleSelectRef::AppliedGroupAssignment(i) => out.push(AnyId::AppliedGroupAssignment(*i)),
+            RoleSelectRef::ApprovalAssignment(i) => out.push(AnyId::ApprovalAssignment(*i)),
+            RoleSelectRef::ApprovalDateTime(i) => out.push(AnyId::ApprovalDateTime(*i)),
+            RoleSelectRef::CcDesignApproval(i) => out.push(AnyId::CcDesignApproval(*i)),
+            RoleSelectRef::CcDesignSecurityClassification(i) => {
+                out.push(AnyId::CcDesignSecurityClassification(*i))
+            }
+            RoleSelectRef::Change(i) => out.push(AnyId::Change(*i)),
+            RoleSelectRef::ChangeRequest(i) => out.push(AnyId::ChangeRequest(*i)),
+            RoleSelectRef::DocumentReference(i) => out.push(AnyId::DocumentReference(*i)),
+            RoleSelectRef::GroupAssignment(i) => out.push(AnyId::GroupAssignment(*i)),
+            RoleSelectRef::SecurityClassificationAssignment(i) => {
+                out.push(AnyId::SecurityClassificationAssignment(*i))
+            }
+            RoleSelectRef::StartRequest(i) => out.push(AnyId::StartRequest(*i)),
+            RoleSelectRef::StartWork(i) => out.push(AnyId::StartWork(*i)),
+            RoleSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -15357,6 +17247,24 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_date_and_time_item(e, out);
                 }
             }
+            AnyId::AppliedDocumentReference(id) => {
+                let it = self.model.applied_document_references.get(id.0);
+                Self::deps_ref_document(&it.assigned_document, out);
+                for e in &it.items {
+                    Self::deps_ref_document_reference_item(e, out);
+                }
+            }
+            AnyId::AppliedExternalIdentificationAssignment(id) => {
+                let it = self
+                    .model
+                    .applied_external_identification_assignments
+                    .get(id.0);
+                Self::deps_ref_identification_role(&it.role, out);
+                Self::deps_ref_external_source(&it.source, out);
+                for e in &it.items {
+                    Self::deps_ref_external_identification_item(e, out);
+                }
+            }
             AnyId::AppliedGroupAssignment(id) => {
                 let it = self.model.applied_group_assignments.get(id.0);
                 Self::deps_ref_group(&it.assigned_group, out);
@@ -15945,6 +17853,10 @@ impl<'a> Writer<'a> {
                 let it = self.model.document_files.get(id.0);
                 Self::deps_ref_document_type(&it.kind, out);
             }
+            AnyId::DocumentReference(id) => {
+                let it = self.model.document_references.get(id.0);
+                Self::deps_ref_document(&it.assigned_document, out);
+            }
             AnyId::DocumentType(_) => {}
             AnyId::DraughtingAnnotationOccurrence(id) => {
                 let it = self.model.draughting_annotation_occurrences.get(id.0);
@@ -16021,6 +17933,11 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_axis2_placement(&it.position, out);
             }
             AnyId::Expression(_) => {}
+            AnyId::ExternalIdentificationAssignment(id) => {
+                let it = self.model.external_identification_assignments.get(id.0);
+                Self::deps_ref_identification_role(&it.role, out);
+                Self::deps_ref_external_source(&it.source, out);
+            }
             AnyId::ExternalSource(_) => {}
             AnyId::ExternallyDefinedCharacterGlyph(id) => {
                 let it = self.model.externally_defined_character_glyphs.get(id.0);
@@ -16261,6 +18178,10 @@ impl<'a> Writer<'a> {
             AnyId::IdAttribute(id) => {
                 let it = self.model.id_attributes.get(id.0);
                 Self::deps_ref_id_attribute_select(&it.identified_item, out);
+            }
+            AnyId::IdentificationAssignment(id) => {
+                let it = self.model.identification_assignments.get(id.0);
+                Self::deps_ref_identification_role(&it.role, out);
             }
             AnyId::IdentificationRole(_) => {}
             AnyId::IntLiteral(_) => {}
@@ -16851,6 +18772,11 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_characterized_resource_definition(&it.resource, out);
             }
             AnyId::ResourceRequirementType(_) => {}
+            AnyId::RoleAssociation(id) => {
+                let it = self.model.role_associations.get(id.0);
+                Self::deps_ref_object_role(&it.role, out);
+                Self::deps_ref_role_select(&it.item_with_role, out);
+            }
             AnyId::RoundnessTolerance(id) => {
                 let it = self.model.roundness_tolerances.get(id.0);
                 if let Some(r) = &it.magnitude {
@@ -17353,6 +19279,16 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_date_and_time_item(e, out);
                             }
                         }
+                        UnitPart::AppliedDocumentReference { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_document_reference_item(e, out);
+                            }
+                        }
+                        UnitPart::AppliedExternalIdentificationAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_external_identification_item(e, out);
+                            }
+                        }
                         UnitPart::AppliedGroupAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_groupable_item(e, out);
@@ -17550,6 +19486,11 @@ impl<'a> Writer<'a> {
                         UnitPart::Document { kind, .. } => {
                             Self::deps_ref_document_type(kind, out);
                         }
+                        UnitPart::DocumentReference {
+                            assigned_document, ..
+                        } => {
+                            Self::deps_ref_document(assigned_document, out);
+                        }
                         UnitPart::DraughtingCallout { contents, .. } => {
                             for e in contents {
                                 Self::deps_ref_draughting_callout_element(e, out);
@@ -17589,6 +19530,9 @@ impl<'a> Writer<'a> {
                         }
                         UnitPart::ElementarySurface { position, .. } => {
                             Self::deps_ref_axis2_placement3d(position, out);
+                        }
+                        UnitPart::ExternalIdentificationAssignment { source, .. } => {
+                            Self::deps_ref_external_source(source, out);
                         }
                         UnitPart::ExternallyDefinedItem { source, .. } => {
                             Self::deps_ref_external_source(source, out);
@@ -17714,6 +19658,9 @@ impl<'a> Writer<'a> {
                         }
                         UnitPart::GroupAssignment { assigned_group, .. } => {
                             Self::deps_ref_group(assigned_group, out);
+                        }
+                        UnitPart::IdentificationAssignment { role, .. } => {
+                            Self::deps_ref_identification_role(role, out);
                         }
                         UnitPart::Invisibility {
                             invisible_items, ..
@@ -18870,6 +20817,47 @@ impl<'a> Writer<'a> {
                 ];
                 format!(
                     "#{n} = APPLIED_DATE_AND_TIME_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::AppliedDocumentReference(id) => {
+                let it = self.model.applied_document_references.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_document(&it.assigned_document)),
+                    step_str(&it.source),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_document_reference_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = APPLIED_DOCUMENT_REFERENCE({});\n", attrs.join(","))
+            }
+            AnyId::AppliedExternalIdentificationAssignment(id) => {
+                let it = self
+                    .model
+                    .applied_external_identification_assignments
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.assigned_id),
+                    format!("#{}", self.id_of_ref_identification_role(&it.role)),
+                    format!("#{}", self.id_of_ref_external_source(&it.source)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_external_identification_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT({});\n",
                     attrs.join(",")
                 )
             }
@@ -20830,6 +22818,15 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = DOCUMENT_FILE({});\n", attrs.join(","))
             }
+            AnyId::DocumentReference(id) => {
+                let it = self.model.document_references.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_document(&it.assigned_document)),
+                    step_str(&it.source),
+                ];
+                format!("#{n} = DOCUMENT_REFERENCE({});\n", attrs.join(","))
+            }
             AnyId::DocumentType(id) => {
                 let it = self.model.document_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -21083,6 +23080,19 @@ impl<'a> Writer<'a> {
                 let n = self.get_id(any).expect("id assigned");
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = EXPRESSION({});\n", attrs.join(","))
+            }
+            AnyId::ExternalIdentificationAssignment(id) => {
+                let it = self.model.external_identification_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.assigned_id),
+                    format!("#{}", self.id_of_ref_identification_role(&it.role)),
+                    format!("#{}", self.id_of_ref_external_source(&it.source)),
+                ];
+                format!(
+                    "#{n} = EXTERNAL_IDENTIFICATION_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::ExternalSource(id) => {
                 let it = self.model.external_sources.get(id.0);
@@ -21870,6 +23880,15 @@ impl<'a> Writer<'a> {
                     ),
                 ];
                 format!("#{n} = ID_ATTRIBUTE({});\n", attrs.join(","))
+            }
+            AnyId::IdentificationAssignment(id) => {
+                let it = self.model.identification_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.assigned_id),
+                    format!("#{}", self.id_of_ref_identification_role(&it.role)),
+                ];
+                format!("#{n} = IDENTIFICATION_ASSIGNMENT({});\n", attrs.join(","))
             }
             AnyId::IdentificationRole(id) => {
                 let it = self.model.identification_roles.get(id.0);
@@ -24057,6 +26076,15 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![step_str(&it.name), step_str(&it.description)];
                 format!("#{n} = RESOURCE_REQUIREMENT_TYPE({});\n", attrs.join(","))
             }
+            AnyId::RoleAssociation(id) => {
+                let it = self.model.role_associations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_object_role(&it.role)),
+                    format!("#{}", self.id_of_ref_role_select(&it.item_with_role)),
+                ];
+                format!("#{n} = ROLE_ASSOCIATION({});\n", attrs.join(","))
+            }
             AnyId::RoundnessTolerance(id) => {
                 let it = self.model.roundness_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -25437,6 +27465,8 @@ impl<'a> Writer<'a> {
                 UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE()".to_string(),
                 UnitPart::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
                 UnitPart::AppliedDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_and_time_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::AppliedDocumentReference { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_document_reference_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DOCUMENT_REFERENCE({})", a.join(",")) },
+                UnitPart::AppliedExternalIdentificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_external_identification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedGroupAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_groupable_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_GROUP_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
@@ -25508,6 +27538,7 @@ impl<'a> Writer<'a> {
                 UnitPart::Direction { direction_ratios, .. } => { let a: Vec<String> = vec![format!("({})", direction_ratios.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("DIRECTION({})", a.join(",")) },
                 UnitPart::Document { id, name, description, kind, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_document_type(kind))]; format!("DOCUMENT({})", a.join(",")) },
                 UnitPart::DocumentFile => "DOCUMENT_FILE()".to_string(),
+                UnitPart::DocumentReference { assigned_document, source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_document(assigned_document)), step_str(source)]; format!("DOCUMENT_REFERENCE({})", a.join(",")) },
                 UnitPart::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE()".to_string(),
                 UnitPart::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
                 UnitPart::DraughtingCalloutRelationship { name, description, relating_draughting_callout, related_draughting_callout, .. } => { let a: Vec<String> = vec![step_str(name), step_str(description), format!("#{}", self.id_of_ref_draughting_callout(relating_draughting_callout)), format!("#{}", self.id_of_ref_draughting_callout(related_draughting_callout))]; format!("DRAUGHTING_CALLOUT_RELATIONSHIP({})", a.join(",")) },
@@ -25523,6 +27554,7 @@ impl<'a> Writer<'a> {
                 UnitPart::Effectivity { id, .. } => { let a: Vec<String> = vec![step_str(id)]; format!("EFFECTIVITY({})", a.join(",")) },
                 UnitPart::ElementarySurface { position, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(position))]; format!("ELEMENTARY_SURFACE({})", a.join(",")) },
                 UnitPart::Expression => "EXPRESSION()".to_string(),
+                UnitPart::ExternalIdentificationAssignment { source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_external_source(source))]; format!("EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::ExternalSource { source_id, .. } => { let a: Vec<String> = vec![string_select(source_id)]; format!("EXTERNAL_SOURCE({})", a.join(",")) },
                 UnitPart::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH()".to_string(),
                 UnitPart::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT()".to_string(),
@@ -25566,6 +27598,7 @@ impl<'a> Writer<'a> {
                 UnitPart::GlobalUnitAssignedContext { units, .. } => { let a: Vec<String> = vec![format!("({})", units.iter().map(|e| format!("#{}", self.id_of_ref_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNIT_ASSIGNED_CONTEXT({})", a.join(",")) },
                 UnitPart::Group { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("GROUP({})", a.join(",")) },
                 UnitPart::GroupAssignment { assigned_group, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_group(assigned_group))]; format!("GROUP_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::IdentificationAssignment { assigned_id, role, .. } => { let a: Vec<String> = vec![step_str(assigned_id), format!("#{}", self.id_of_ref_identification_role(role))]; format!("IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::IntLiteral => "INT_LITERAL()".to_string(),
                 UnitPart::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM()".to_string(),
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
@@ -25896,6 +27929,21 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.applied_date_and_time_assignments.items.len() {
             roots.push(AnyId::AppliedDateAndTimeAssignment(
                 AppliedDateAndTimeAssignmentId(i),
+            ));
+        }
+        for i in 0..self.model.applied_document_references.items.len() {
+            roots.push(AnyId::AppliedDocumentReference(AppliedDocumentReferenceId(
+                i,
+            )));
+        }
+        for i in 0..self
+            .model
+            .applied_external_identification_assignments
+            .items
+            .len()
+        {
+            roots.push(AnyId::AppliedExternalIdentificationAssignment(
+                AppliedExternalIdentificationAssignmentId(i),
             ));
         }
         for i in 0..self.model.applied_group_assignments.items.len() {
@@ -26342,6 +28390,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.document_files.items.len() {
             roots.push(AnyId::DocumentFile(DocumentFileId(i)));
         }
+        for i in 0..self.model.document_references.items.len() {
+            roots.push(AnyId::DocumentReference(DocumentReferenceId(i)));
+        }
         for i in 0..self.model.document_types.items.len() {
             roots.push(AnyId::DocumentType(DocumentTypeId(i)));
         }
@@ -26411,6 +28462,11 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.expressions.items.len() {
             roots.push(AnyId::Expression(ExpressionId(i)));
+        }
+        for i in 0..self.model.external_identification_assignments.items.len() {
+            roots.push(AnyId::ExternalIdentificationAssignment(
+                ExternalIdentificationAssignmentId(i),
+            ));
         }
         for i in 0..self.model.external_sources.items.len() {
             roots.push(AnyId::ExternalSource(ExternalSourceId(i)));
@@ -26634,6 +28690,11 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.id_attributes.items.len() {
             roots.push(AnyId::IdAttribute(IdAttributeId(i)));
+        }
+        for i in 0..self.model.identification_assignments.items.len() {
+            roots.push(AnyId::IdentificationAssignment(IdentificationAssignmentId(
+                i,
+            )));
         }
         for i in 0..self.model.identification_roles.items.len() {
             roots.push(AnyId::IdentificationRole(IdentificationRoleId(i)));
@@ -27164,6 +29225,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.resource_requirement_types.items.len() {
             roots.push(AnyId::ResourceRequirementType(ResourceRequirementTypeId(i)));
+        }
+        for i in 0..self.model.role_associations.items.len() {
+            roots.push(AnyId::RoleAssociation(RoleAssociationId(i)));
         }
         for i in 0..self.model.roundness_tolerances.items.len() {
             roots.push(AnyId::RoundnessTolerance(RoundnessToleranceId(i)));

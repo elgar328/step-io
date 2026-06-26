@@ -466,6 +466,15 @@ mech_draughting = [
     "mechanical_design_presentation_representation_with_draughting",
     "mechanical_design_shaded_presentation_representation",
 ]
+# applied-* document/identification assignments + role_association. items selects
+# (document_reference_item 144 / external_identification_item 104) and role_select
+# (12) are all-entity — narrowed below to the already-covered members; the dropped
+# members are sibling applied_*/externally_defined_*/interface_* draggers. Recovery
+# is bounded to instances whose items are entirely covered.
+plm_identification = [
+    "applied_document_reference", "applied_external_identification_assignment",
+    "role_association",
+]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
@@ -557,4 +566,52 @@ date_and_time_item = [
     "property_definition_representation", "representation", "resource_property",
     "security_classification", "security_classification_level", "shape_representation",
     "state_observed", "state_type", "versioned_action_request",
+]
+# document_reference_item / external_identification_item: keep the already-covered
+# members (incl. the applied_* seeds themselves); drop sibling applied_*/interface_*
+# /breakdown_* mega draggers. role_select: keep the 6 covered assignment members.
+# All members are entities -> Kind::Ref preserved.
+document_reference_item = [
+    "action_directive", "action_method", "action_method_relationship",
+    "action_property", "action_relationship", "applied_document_reference",
+    "applied_external_identification_assignment", "approval", "approval_person_organization",
+    "assembly_component_usage", "certification", "characterized_object",
+    "configuration_design", "configuration_item", "contract",
+    "date_and_time_assignment", "descriptive_representation_item", "dimensional_size",
+    "effectivity", "externally_defined_item", "general_property",
+    "group", "measure_representation_item", "organization",
+    "organization_relationship", "organizational_address", "organizational_project",
+    "organizational_project_relationship", "person", "person_and_organization",
+    "person_and_organization_address", "presentation_area", "product",
+    "product_category", "product_concept", "product_definition",
+    "product_definition_context", "product_definition_formation", "product_definition_relationship",
+    "product_definition_usage", "product_related_product_category", "property_definition",
+    "property_definition_representation", "representation", "representation_item",
+    "representation_relationship", "resource_requirement_type", "security_classification",
+    "shape_aspect", "shape_aspect_relationship", "state_observed",
+    "state_type", "value_representation_item", "versioned_action_request",
+]
+external_identification_item = [
+    "action_directive", "action_method", "action_method_relationship",
+    "action_relationship", "address", "applied_external_identification_assignment",
+    "approval", "approval_person_organization", "approval_status",
+    "assembly_component_usage", "certification", "composite_curve",
+    "configuration_effectivity", "contract", "curve",
+    "date_and_time_assignment", "derived_unit", "document_file",
+    "effectivity", "external_source", "general_property",
+    "generic_product_definition_reference", "group", "loop",
+    "named_unit", "organization", "organizational_address",
+    "organizational_project", "person", "person_and_organization",
+    "precision_qualifier", "product", "product_concept",
+    "product_concept_context", "product_definition", "product_definition_context",
+    "product_definition_formation", "product_definition_occurrence", "property_definition",
+    "representation", "representation_item", "security_classification",
+    "shape_representation", "state_observed", "state_type",
+    "surface", "trimmed_curve", "type_qualifier",
+    "uncertainty_qualifier", "versioned_action_request", "vertex_point",
+]
+role_select = [
+    "action_assignment", "action_request_assignment", "approval_assignment",
+    "approval_date_time", "document_reference", "group_assignment",
+    "security_classification_assignment",
 ]

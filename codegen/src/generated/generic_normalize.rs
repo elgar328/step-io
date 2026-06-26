@@ -1099,6 +1099,52 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "APPLIED_DOCUMENT_REFERENCE" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "APPLIED_GROUP_ASSIGNMENT" => &[
             Slot {
                 k: Sk::Ref,
@@ -3628,6 +3674,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "DOCUMENT_REFERENCE" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "DOCUMENT_TYPE" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -3915,6 +3975,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "EXPRESSION" => &[],
+        "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "EXTERNAL_SOURCE" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -4809,6 +4889,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "ID_ATTRIBUTE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "IDENTIFICATION_ASSIGNMENT" => &[
             Slot {
                 k: Sk::Str,
                 req: true,
@@ -7464,6 +7558,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ROLE_ASSOCIATION" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ROUNDNESS_TOLERANCE" => &[
             Slot {
                 k: Sk::Str,
@@ -9431,6 +9539,18 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "APPLIED_DOCUMENT_REFERENCE" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "APPLIED_GROUP_ASSIGNMENT" => &[Slot {
             k: Sk::Vec,
             req: true,
@@ -10078,6 +10198,20 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "DOCUMENT_FILE" => &[],
+        "DOCUMENT_REFERENCE" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "DRAUGHTING_ANNOTATION_OCCURRENCE" => &[],
         "DRAUGHTING_CALLOUT" => &[Slot {
             k: Sk::Vec,
@@ -10164,6 +10298,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "EXPRESSION" => &[],
+        "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => &[Slot {
+            k: Sk::Ref,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "EXTERNAL_SOURCE" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -10488,6 +10628,20 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "IDENTIFICATION_ASSIGNMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "INT_LITERAL" => &[],
         "INTEGER_REPRESENTATION_ITEM" => &[],
         "INTERSECTION_CURVE" => &[],
