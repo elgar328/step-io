@@ -138,6 +138,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "APPLICATION_CONTEXT",
     "APPLICATION_CONTEXT_ELEMENT",
     "APPLICATION_PROTOCOL_DEFINITION",
+    "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+    "APPLIED_GROUP_ASSIGNMENT",
     "APPROVAL",
     "APPROVAL_ASSIGNMENT",
     "APPROVAL_DATE_TIME",
@@ -306,6 +308,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
     "GROUP",
+    "GROUP_ASSIGNMENT",
     "HYPERBOLA",
     "ID_ATTRIBUTE",
     "INT_LITERAL",
@@ -544,6 +547,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ANNOTATION_TEXT_CHARACTER",
     "ANNOTATION_TEXT_OCCURRENCE",
     "APPLICATION_CONTEXT_ELEMENT",
+    "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+    "APPLIED_GROUP_ASSIGNMENT",
     "APPROVAL_ASSIGNMENT",
     "ASCRIBABLE_STATE_RELATIONSHIP",
     "ASSEMBLY_COMPONENT_USAGE",
@@ -665,6 +670,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
     "GROUP",
+    "GROUP_ASSIGNMENT",
     "INT_LITERAL",
     "INTEGER_REPRESENTATION_ITEM",
     "INTERSECTION_CURVE",
@@ -2039,6 +2045,362 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "APPLIED_DATE_AND_TIME_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_date_and_time",
+                allowed: &["DATE_AND_TIME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "role",
+                allowed: &["DATE_TIME_ROLE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "items",
+                allowed: &[
+                    "ACTION",
+                    "ACTION_DIRECTIVE",
+                    "ACTION_METHOD",
+                    "ACTION_PROPERTY",
+                    "ACTION_RELATIONSHIP",
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+                    "APPROVAL",
+                    "APPROVAL_PERSON_ORGANIZATION",
+                    "APPROVAL_STATUS",
+                    "ASCRIBABLE_STATE",
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                    "CERTIFICATION",
+                    "CONFIGURATION_DESIGN",
+                    "CONFIGURATION_EFFECTIVITY",
+                    "CONFIGURATION_ITEM",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "CONTRACT",
+                    "DATE_AND_TIME_ASSIGNMENT",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DESIGN_CONTEXT",
+                    "DOCUMENT",
+                    "DOCUMENT_FILE",
+                    "DRAUGHTING_MODEL",
+                    "EFFECTIVITY",
+                    "GENERAL_PROPERTY",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "ORGANIZATION_RELATIONSHIP",
+                    "ORGANIZATIONAL_ADDRESS",
+                    "ORGANIZATIONAL_PROJECT",
+                    "PERSON",
+                    "PERSON_AND_ORGANIZATION",
+                    "PERSON_AND_ORGANIZATION_ADDRESS",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "PRODUCT",
+                    "PRODUCT_CONCEPT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_CONTEXT",
+                    "PRODUCT_DEFINITION_EFFECTIVITY",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_SHAPE",
+                    "PRODUCT_DEFINITION_USAGE",
+                    "PROPERTY_DEFINITION",
+                    "PROPERTY_DEFINITION_REPRESENTATION",
+                    "REPRESENTATION",
+                    "RESOURCE_PROPERTY",
+                    "SECURITY_CLASSIFICATION",
+                    "SECURITY_CLASSIFICATION_LEVEL",
+                    "SHAPE_DEFINITION_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "STATE_OBSERVED",
+                    "STATE_TYPE",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "VERSIONED_ACTION_REQUEST",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "APPLIED_GROUP_ASSIGNMENT" => &[
+            RefSlot {
+                idx: 0,
+                name: "assigned_group",
+                allowed: &["GROUP"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ACTION_METHOD",
+                    "ADDRESS",
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+                    "APPLIED_GROUP_ASSIGNMENT",
+                    "APPROVAL",
+                    "APPROVAL_PERSON_ORGANIZATION",
+                    "APPROVAL_STATUS",
+                    "ASCRIBABLE_STATE",
+                    "ASCRIBABLE_STATE_RELATIONSHIP",
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CALENDAR_DATE",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                    "CERTIFICATION",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMMON_DATUM",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "COMPOSITE_TEXT",
+                    "CONFIGURATION_DESIGN",
+                    "CONFIGURATION_EFFECTIVITY",
+                    "CONFIGURATION_ITEM",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+                    "CONTEXT_DEPENDENT_UNIT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "CONTRACT",
+                    "CONVERSION_BASED_UNIT",
+                    "COORDINATED_UNIVERSAL_TIME_OFFSET",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DATE_AND_TIME",
+                    "DATE_AND_TIME_ASSIGNMENT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DERIVED_UNIT",
+                    "DERIVED_UNIT_ELEMENT",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DESIGN_CONTEXT",
+                    "DIMENSIONAL_LOCATION",
+                    "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "DIRECTION",
+                    "DOCUMENT_FILE",
+                    "DRAUGHTING_CALLOUT",
+                    "DRAUGHTING_MODEL",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "EFFECTIVITY",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNAL_SOURCE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GENERAL_DATUM_REFERENCE",
+                    "GENERAL_PROPERTY",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "ITEM_DEFINED_TRANSFORMATION",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LENGTH_MEASURE_WITH_UNIT",
+                    "LENGTH_UNIT",
+                    "LINE",
+                    "LOCAL_TIME",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MASS_MEASURE_WITH_UNIT",
+                    "MASS_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "MEASURE_WITH_UNIT",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "NAMED_UNIT",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORGANIZATION",
+                    "ORGANIZATION_RELATIONSHIP",
+                    "ORGANIZATION_TYPE",
+                    "ORGANIZATIONAL_ADDRESS",
+                    "ORGANIZATIONAL_PROJECT",
+                    "ORGANIZATIONAL_PROJECT_RELATIONSHIP",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "PATH",
+                    "PCURVE",
+                    "PERSON",
+                    "PERSON_AND_ORGANIZATION",
+                    "PERSON_AND_ORGANIZATION_ADDRESS",
+                    "PERSONAL_ADDRESS",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                    "PLANE_ANGLE_UNIT",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRECISION_QUALIFIER",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "PRODUCT",
+                    "PRODUCT_CONCEPT",
+                    "PRODUCT_CONCEPT_CONTEXT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_CONTEXT",
+                    "PRODUCT_DEFINITION_EFFECTIVITY",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_SHAPE",
+                    "PRODUCT_DEFINITION_USAGE",
+                    "PROPERTY_DEFINITION",
+                    "PROPERTY_DEFINITION_REPRESENTATION",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION",
+                    "REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_ITEM",
+                    "REPRESENTATION_RELATIONSHIP",
+                    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+                    "SEAM_CURVE",
+                    "SECURITY_CLASSIFICATION",
+                    "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_RELATIONSHIP",
+                    "SHAPE_DEFINITION_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHAPE_REPRESENTATION_RELATIONSHIP",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SI_UNIT",
+                    "SOLID_ANGLE_UNIT",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STATE_OBSERVED",
+                    "STATE_TYPE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_REPRESENTATION",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TIME_UNIT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "TYPE_QUALIFIER",
+                    "UNCERTAINTY_MEASURE_WITH_UNIT",
+                    "UNCERTAINTY_QUALIFIER",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERSIONED_ACTION_REQUEST",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
         "APPROVAL" => &[RefSlot {
             idx: 0,
             name: "status",
@@ -5794,6 +6156,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             ],
             complex_ok: true,
             is_vec: true,
+        }],
+        "GROUP_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_group",
+            allowed: &["GROUP"],
+            complex_ok: true,
+            is_vec: false,
         }],
         "HYPERBOLA" => &[RefSlot {
             idx: 1,
@@ -11578,6 +11947,337 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "APPLIED_DATE_AND_TIME_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "ACTION",
+                "ACTION_DIRECTIVE",
+                "ACTION_METHOD",
+                "ACTION_PROPERTY",
+                "ACTION_RELATIONSHIP",
+                "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+                "APPROVAL",
+                "APPROVAL_PERSON_ORGANIZATION",
+                "APPROVAL_STATUS",
+                "ASCRIBABLE_STATE",
+                "ASSEMBLY_COMPONENT_USAGE",
+                "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                "CERTIFICATION",
+                "CONFIGURATION_DESIGN",
+                "CONFIGURATION_EFFECTIVITY",
+                "CONFIGURATION_ITEM",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "CONTRACT",
+                "DATE_AND_TIME_ASSIGNMENT",
+                "DEFINITIONAL_REPRESENTATION",
+                "DESIGN_CONTEXT",
+                "DOCUMENT",
+                "DOCUMENT_FILE",
+                "DRAUGHTING_MODEL",
+                "EFFECTIVITY",
+                "GENERAL_PROPERTY",
+                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "ORGANIZATION_RELATIONSHIP",
+                "ORGANIZATIONAL_ADDRESS",
+                "ORGANIZATIONAL_PROJECT",
+                "PERSON",
+                "PERSON_AND_ORGANIZATION",
+                "PERSON_AND_ORGANIZATION_ADDRESS",
+                "PRESENTATION_AREA",
+                "PRESENTATION_REPRESENTATION",
+                "PRESENTATION_VIEW",
+                "PRODUCT",
+                "PRODUCT_CONCEPT",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_CONTEXT",
+                "PRODUCT_DEFINITION_EFFECTIVITY",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "PRODUCT_DEFINITION_RELATIONSHIP",
+                "PRODUCT_DEFINITION_SHAPE",
+                "PRODUCT_DEFINITION_USAGE",
+                "PROPERTY_DEFINITION",
+                "PROPERTY_DEFINITION_REPRESENTATION",
+                "REPRESENTATION",
+                "RESOURCE_PROPERTY",
+                "SECURITY_CLASSIFICATION",
+                "SECURITY_CLASSIFICATION_LEVEL",
+                "SHAPE_DEFINITION_REPRESENTATION",
+                "SHAPE_DIMENSION_REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "STATE_OBSERVED",
+                "STATE_TYPE",
+                "SYMBOL_REPRESENTATION",
+                "TESSELLATED_SHAPE_REPRESENTATION",
+                "VERSIONED_ACTION_REQUEST",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "APPLIED_GROUP_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "ACTION_METHOD",
+                "ADDRESS",
+                "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                "ADVANCED_FACE",
+                "ALL_AROUND_SHAPE_ASPECT",
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
+                "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLANE",
+                "ANNOTATION_SYMBOL",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT",
+                "ANNOTATION_TEXT_CHARACTER",
+                "ANNOTATION_TEXT_OCCURRENCE",
+                "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+                "APPLIED_GROUP_ASSIGNMENT",
+                "APPROVAL",
+                "APPROVAL_PERSON_ORGANIZATION",
+                "APPROVAL_STATUS",
+                "ASCRIBABLE_STATE",
+                "ASCRIBABLE_STATE_RELATIONSHIP",
+                "ASSEMBLY_COMPONENT_USAGE",
+                "AXIS1_PLACEMENT",
+                "AXIS2_PLACEMENT_2D",
+                "AXIS2_PLACEMENT_3D",
+                "B_SPLINE_CURVE",
+                "B_SPLINE_CURVE_WITH_KNOTS",
+                "B_SPLINE_SURFACE",
+                "B_SPLINE_SURFACE_WITH_KNOTS",
+                "BEZIER_CURVE",
+                "BEZIER_SURFACE",
+                "BOUNDED_CURVE",
+                "BOUNDED_PCURVE",
+                "BOUNDED_SURFACE",
+                "BOUNDED_SURFACE_CURVE",
+                "BREP_WITH_VOIDS",
+                "CALENDAR_DATE",
+                "CAMERA_MODEL",
+                "CAMERA_MODEL_D3",
+                "CARTESIAN_POINT",
+                "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                "CERTIFICATION",
+                "CIRCLE",
+                "CLOSED_SHELL",
+                "COMMON_DATUM",
+                "COMPLEX_TRIANGULATED_FACE",
+                "COMPLEX_TRIANGULATED_SURFACE_SET",
+                "COMPOSITE_CURVE",
+                "COMPOSITE_GROUP_SHAPE_ASPECT",
+                "COMPOSITE_SHAPE_ASPECT",
+                "COMPOSITE_TEXT",
+                "CONFIGURATION_DESIGN",
+                "CONFIGURATION_EFFECTIVITY",
+                "CONFIGURATION_ITEM",
+                "CONIC",
+                "CONICAL_SURFACE",
+                "CONNECTED_FACE_SET",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+                "CONTEXT_DEPENDENT_UNIT",
+                "CONTINUOUS_SHAPE_ASPECT",
+                "CONTRACT",
+                "CONVERSION_BASED_UNIT",
+                "COORDINATED_UNIVERSAL_TIME_OFFSET",
+                "COORDINATES_LIST",
+                "CURVE",
+                "CYLINDRICAL_SURFACE",
+                "DATE_AND_TIME",
+                "DATE_AND_TIME_ASSIGNMENT",
+                "DATUM",
+                "DATUM_FEATURE",
+                "DATUM_REFERENCE_COMPARTMENT",
+                "DATUM_REFERENCE_ELEMENT",
+                "DATUM_SYSTEM",
+                "DATUM_TARGET",
+                "DEFINED_CHARACTER_GLYPH",
+                "DEFINED_SYMBOL",
+                "DEFINITIONAL_REPRESENTATION",
+                "DEGENERATE_TOROIDAL_SURFACE",
+                "DERIVED_UNIT",
+                "DERIVED_UNIT_ELEMENT",
+                "DESCRIPTIVE_REPRESENTATION_ITEM",
+                "DESIGN_CONTEXT",
+                "DIMENSIONAL_LOCATION",
+                "DIMENSIONAL_LOCATION_WITH_PATH",
+                "DIRECTION",
+                "DOCUMENT_FILE",
+                "DRAUGHTING_CALLOUT",
+                "DRAUGHTING_MODEL",
+                "EDGE",
+                "EDGE_CURVE",
+                "EDGE_LOOP",
+                "EFFECTIVITY",
+                "ELEMENTARY_SURFACE",
+                "ELLIPSE",
+                "EXTERNAL_SOURCE",
+                "EXTERNALLY_DEFINED_HATCH_STYLE",
+                "EXTERNALLY_DEFINED_TILE_STYLE",
+                "FACE",
+                "FACE_BOUND",
+                "FACE_OUTER_BOUND",
+                "FACE_SURFACE",
+                "FILL_AREA_STYLE_HATCHING",
+                "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                "FILL_AREA_STYLE_TILES",
+                "GENERAL_DATUM_REFERENCE",
+                "GENERAL_PROPERTY",
+                "GEOMETRIC_CURVE_SET",
+                "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+                "GEOMETRIC_REPRESENTATION_CONTEXT",
+                "GEOMETRIC_REPRESENTATION_ITEM",
+                "GEOMETRIC_SET",
+                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                "HYPERBOLA",
+                "INTEGER_REPRESENTATION_ITEM",
+                "INTERSECTION_CURVE",
+                "ITEM_DEFINED_TRANSFORMATION",
+                "LEADER_DIRECTED_CALLOUT",
+                "LENGTH_MEASURE_WITH_UNIT",
+                "LENGTH_UNIT",
+                "LINE",
+                "LOCAL_TIME",
+                "LOOP",
+                "MANIFOLD_SOLID_BREP",
+                "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                "MAPPED_ITEM",
+                "MASS_MEASURE_WITH_UNIT",
+                "MASS_UNIT",
+                "MEASURE_REPRESENTATION_ITEM",
+                "MEASURE_WITH_UNIT",
+                "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "NAMED_UNIT",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "OFFSET_SURFACE",
+                "ONE_DIRECTION_REPEAT_FACTOR",
+                "OPEN_SHELL",
+                "ORGANIZATION",
+                "ORGANIZATION_RELATIONSHIP",
+                "ORGANIZATION_TYPE",
+                "ORGANIZATIONAL_ADDRESS",
+                "ORGANIZATIONAL_PROJECT",
+                "ORGANIZATIONAL_PROJECT_RELATIONSHIP",
+                "ORIENTED_CLOSED_SHELL",
+                "ORIENTED_EDGE",
+                "OVER_RIDING_STYLED_ITEM",
+                "PARAMETRIC_REPRESENTATION_CONTEXT",
+                "PATH",
+                "PCURVE",
+                "PERSON",
+                "PERSON_AND_ORGANIZATION",
+                "PERSON_AND_ORGANIZATION_ADDRESS",
+                "PERSONAL_ADDRESS",
+                "PLACED_DATUM_TARGET_FEATURE",
+                "PLACEMENT",
+                "PLANAR_BOX",
+                "PLANAR_EXTENT",
+                "PLANE",
+                "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                "PLANE_ANGLE_UNIT",
+                "POINT",
+                "POLY_LOOP",
+                "POLYLINE",
+                "PRECISION_QUALIFIER",
+                "PRESENTATION_AREA",
+                "PRESENTATION_REPRESENTATION",
+                "PRESENTATION_VIEW",
+                "PRODUCT",
+                "PRODUCT_CONCEPT",
+                "PRODUCT_CONCEPT_CONTEXT",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_CONTEXT",
+                "PRODUCT_DEFINITION_EFFECTIVITY",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "PRODUCT_DEFINITION_RELATIONSHIP",
+                "PRODUCT_DEFINITION_SHAPE",
+                "PRODUCT_DEFINITION_USAGE",
+                "PROPERTY_DEFINITION",
+                "PROPERTY_DEFINITION_REPRESENTATION",
+                "QUALIFIED_REPRESENTATION_ITEM",
+                "QUASI_UNIFORM_CURVE",
+                "QUASI_UNIFORM_SURFACE",
+                "RATIONAL_B_SPLINE_CURVE",
+                "RATIONAL_B_SPLINE_SURFACE",
+                "REAL_REPRESENTATION_ITEM",
+                "REPOSITIONED_TESSELLATED_ITEM",
+                "REPRESENTATION",
+                "REPRESENTATION_CONTEXT",
+                "REPRESENTATION_ITEM",
+                "REPRESENTATION_RELATIONSHIP",
+                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+                "SEAM_CURVE",
+                "SECURITY_CLASSIFICATION",
+                "SHAPE_ASPECT",
+                "SHAPE_ASPECT_ASSOCIATIVITY",
+                "SHAPE_ASPECT_RELATIONSHIP",
+                "SHAPE_DEFINITION_REPRESENTATION",
+                "SHAPE_DIMENSION_REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "SHAPE_REPRESENTATION_RELATIONSHIP",
+                "SHELL_BASED_SURFACE_MODEL",
+                "SI_UNIT",
+                "SOLID_ANGLE_UNIT",
+                "SOLID_MODEL",
+                "SPHERICAL_SURFACE",
+                "STATE_OBSERVED",
+                "STATE_TYPE",
+                "STYLED_ITEM",
+                "SURFACE",
+                "SURFACE_CURVE",
+                "SURFACE_OF_LINEAR_EXTRUSION",
+                "SURFACE_OF_REVOLUTION",
+                "SWEPT_SURFACE",
+                "SYMBOL_REPRESENTATION",
+                "SYMBOL_TARGET",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
+                "TESSELLATED_CURVE_SET",
+                "TESSELLATED_FACE",
+                "TESSELLATED_GEOMETRIC_SET",
+                "TESSELLATED_ITEM",
+                "TESSELLATED_SHAPE_REPRESENTATION",
+                "TESSELLATED_SOLID",
+                "TESSELLATED_STRUCTURED_ITEM",
+                "TESSELLATED_SURFACE_SET",
+                "TEXT_LITERAL",
+                "TIME_UNIT",
+                "TOLERANCE_ZONE",
+                "TOLERANCE_ZONE_WITH_DATUM",
+                "TOPOLOGICAL_REPRESENTATION_ITEM",
+                "TOROIDAL_SURFACE",
+                "TRIMMED_CURVE",
+                "TWO_DIRECTION_REPEAT_FACTOR",
+                "TYPE_QUALIFIER",
+                "UNCERTAINTY_MEASURE_WITH_UNIT",
+                "UNCERTAINTY_QUALIFIER",
+                "UNIFORM_CURVE",
+                "UNIFORM_SURFACE",
+                "VALUE_REPRESENTATION_ITEM",
+                "VECTOR",
+                "VERSIONED_ACTION_REQUEST",
+                "VERTEX",
+                "VERTEX_LOOP",
+                "VERTEX_POINT",
+                "VERTEX_SHELL",
+                "WIRE_SHELL",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "APPROVAL_ASSIGNMENT" => &[RefSlot {
             idx: 0,
             name: "assigned_approval",
@@ -12730,6 +13430,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             ],
             complex_ok: true,
             is_vec: true,
+        }],
+        "GROUP_ASSIGNMENT" => &[RefSlot {
+            idx: 0,
+            name: "assigned_group",
+            allowed: &["GROUP"],
+            complex_ok: true,
+            is_vec: false,
         }],
         "INVISIBILITY" => &[RefSlot {
             idx: 0,
@@ -14715,6 +15422,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_application_protocol_definitions: Vec<(ApplicationProtocolDefinitionId, u64)> =
         Vec::new();
+    let mut pending_applied_date_and_time_assignments: Vec<(AppliedDateAndTimeAssignmentId, u64)> =
+        Vec::new();
+    let mut pending_applied_group_assignments: Vec<(AppliedGroupAssignmentId, u64)> = Vec::new();
     let mut pending_approvals: Vec<(ApprovalId, u64)> = Vec::new();
     let mut pending_approval_assignments: Vec<(ApprovalAssignmentId, u64)> = Vec::new();
     let mut pending_approval_date_times: Vec<(ApprovalDateTimeId, u64)> = Vec::new();
@@ -14934,6 +15644,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_global_unit_assigned_contexts: Vec<(GlobalUnitAssignedContextId, u64)> =
         Vec::new();
+    let mut pending_group_assignments: Vec<(GroupAssignmentId, u64)> = Vec::new();
     let mut pending_hyperbolas: Vec<(HyperbolaId, u64)> = Vec::new();
     let mut pending_id_attributes: Vec<(IdAttributeId, u64)> = Vec::new();
     let mut pending_intersection_curves: Vec<(IntersectionCurveId, u64)> = Vec::new();
@@ -15703,6 +16414,30 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     ApplicationProtocolDefinitionId(model.application_protocol_definitions.push(v));
                 idmap.insert(id, AnyId::ApplicationProtocolDefinition(aid));
                 pending_application_protocol_definitions.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPLIED_DATE_AND_TIME_ASSIGNMENT" => {
+                let v = AppliedDateAndTimeAssignment {
+                    assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
+                    role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
+                    items: Vec::new(),
+                };
+                let aid =
+                    AppliedDateAndTimeAssignmentId(model.applied_date_and_time_assignments.push(v));
+                idmap.insert(id, AnyId::AppliedDateAndTimeAssignment(aid));
+                pending_applied_date_and_time_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APPLIED_GROUP_ASSIGNMENT" => {
+                let v = AppliedGroupAssignment {
+                    assigned_group: GroupRef::Group(GroupId(usize::MAX)),
+                    items: Vec::new(),
+                };
+                let aid = AppliedGroupAssignmentId(model.applied_group_assignments.push(v));
+                idmap.insert(id, AnyId::AppliedGroupAssignment(aid));
+                pending_applied_group_assignments.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -18267,6 +19002,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = GroupId(model.groups.push(v));
                 idmap.insert(id, AnyId::Group(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GROUP_ASSIGNMENT" => {
+                let v = GroupAssignment {
+                    assigned_group: GroupRef::Group(GroupId(usize::MAX)),
+                };
+                let aid = GroupAssignmentId(model.group_assignments.push(v));
+                idmap.insert(id, AnyId::GroupAssignment(aid));
+                pending_group_assignments.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -21638,6 +22383,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_application_protocol_definitions(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_applied_date_and_time_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_applied_date_and_time_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_applied_group_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_applied_group_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_approvals {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_approvals(&mut model, aid, attributes, &idmap);
@@ -22301,6 +23056,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_global_unit_assigned_contexts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_global_unit_assigned_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_group_assignments {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_group_assignments(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_hyperbolas {
@@ -23597,6 +24357,47 @@ fn resolve_application_protocol_definitions(
         ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
     let it = &mut model.application_protocol_definitions.items[aid.0];
     it.application = application_v;
+}
+
+fn resolve_applied_date_and_time_assignments(
+    model: &mut Model,
+    aid: AppliedDateAndTimeAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_date_and_time_v =
+        DateAndTimeRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let role_v = DateTimeRoleRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let items_v = match &attrs[2] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DateAndTimeItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.applied_date_and_time_assignments.items[aid.0];
+    it.assigned_date_and_time = assigned_date_and_time_v;
+    it.role = role_v;
+    it.items = items_v;
+}
+
+fn resolve_applied_group_assignments(
+    model: &mut Model,
+    aid: AppliedGroupAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_group_v = GroupRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| GroupableItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.applied_group_assignments.items[aid.0];
+    it.assigned_group = assigned_group_v;
+    it.items = items_v;
 }
 
 fn resolve_approvals(
@@ -25825,6 +26626,17 @@ fn resolve_global_unit_assigned_contexts(
     };
     let it = &mut model.global_unit_assigned_contexts.items[aid.0];
     it.units = units_v;
+}
+
+fn resolve_group_assignments(
+    model: &mut Model,
+    aid: GroupAssignmentId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let assigned_group_v = GroupRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.group_assignments.items[aid.0];
+    it.assigned_group = assigned_group_v;
 }
 
 fn resolve_hyperbolas(
@@ -28371,6 +29183,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter { alignment: as_str(&p.attributes[0]), },
         "ANNOTATION_TEXT_OCCURRENCE" => UnitPart::AnnotationTextOccurrence,
         "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: as_str(&p.attributes[0]), frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(usize::MAX)), },
+        "APPLIED_DATE_AND_TIME_ASSIGNMENT" => UnitPart::AppliedDateAndTimeAssignment { items: Vec::new(), },
+        "APPLIED_GROUP_ASSIGNMENT" => UnitPart::AppliedGroupAssignment { items: Vec::new(), },
         "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)), },
         "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), },
         "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage { reference_designator: match &p.attributes[0] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[0])) }, },
@@ -28492,6 +29306,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext { uncertainty: Vec::new(), },
         "GLOBAL_UNIT_ASSIGNED_CONTEXT" => UnitPart::GlobalUnitAssignedContext { units: Vec::new(), },
         "GROUP" => UnitPart::Group { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "GROUP_ASSIGNMENT" => UnitPart::GroupAssignment { assigned_group: GroupRef::Group(GroupId(usize::MAX)), },
         "INT_LITERAL" => UnitPart::IntLiteral,
         "INTEGER_REPRESENTATION_ITEM" => UnitPart::IntegerRepresentationItem,
         "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
@@ -28743,6 +29558,28 @@ fn resolve_complex(
                 *frame_of_reference = ApplicationContextRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
+            }
+            UnitPart::AppliedDateAndTimeAssignment { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            DateAndTimeItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::AppliedGroupAssignment { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            GroupableItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::ApprovalAssignment {
                 assigned_approval, ..
@@ -29387,6 +30224,10 @@ fn resolve_complex(
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::GroupAssignment { assigned_group, .. } => {
+                *assigned_group =
+                    GroupRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
             }
             UnitPart::Invisibility {
                 invisible_items, ..

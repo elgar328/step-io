@@ -415,6 +415,12 @@ associativity_leaves = ["shape_aspect_associativity", "annotation_occurrence_ass
 # _select, whose members (box_height/width=positive_ratio_measure, box_rotate/slant
 # _angle=plane_angle_measure) are all named scalars -> MeasureSelect, no entity drag.
 text_style_box = ["text_style_with_box_characteristics"]
+# applied-* assignment mega-selects (deferred until narrow existed). items :
+# SET OF groupable_item (144) / date_and_time_item (107), all entities — narrowed
+# below to the already-covered members; the uncovered sibling applied_*/product_*
+# mega members are blocked so the closure does not explode. Recovery is bounded
+# to instances whose items are entirely covered (heterogeneous groups still drop).
+plm_assignment = ["applied_group_assignment", "applied_date_and_time_assignment"]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
@@ -462,4 +468,48 @@ draughting_model_item_definition = [
     "symmetry_tolerance",
     "total_runout_tolerance",
     "unequally_disposed_geometric_tolerance",
+]
+# groupable_item / date_and_time_item: keep the already-covered members (incl.
+# applied_group_assignment, which is itself seeded). The dropped members are the
+# sibling applied_*/product_* mega-select draggers (and other uncovered leaves).
+# All members are entities -> same Kind (Kind::Ref) preserved, no closure blow-up.
+groupable_item = [
+    "action_method", "address", "applied_group_assignment",
+    "approval", "approval_person_organization", "approval_status",
+    "ascribable_state", "ascribable_state_relationship", "assembly_component_usage",
+    "calendar_date", "certification", "configuration_design",
+    "configuration_item", "context_dependent_shape_representation", "contract",
+    "coordinated_universal_time_offset", "date_and_time", "date_and_time_assignment",
+    "derived_unit", "derived_unit_element", "document_file",
+    "effectivity", "external_source", "general_property",
+    "geometric_item_specific_usage", "geometric_representation_item", "item_defined_transformation",
+    "local_time", "mapped_item", "measure_with_unit",
+    "named_unit", "organization", "organization_relationship",
+    "organization_type", "organizational_project", "organizational_project_relationship",
+    "person", "person_and_organization", "precision_qualifier",
+    "product", "product_concept", "product_concept_context",
+    "product_definition", "product_definition_context", "product_definition_formation",
+    "product_definition_relationship", "property_definition", "property_definition_representation",
+    "representation", "representation_context", "representation_item",
+    "representation_relationship", "representation_relationship_with_transformation", "security_classification",
+    "shape_aspect", "shape_aspect_relationship", "shape_representation_relationship",
+    "state_observed", "state_type", "styled_item",
+    "topological_representation_item", "type_qualifier", "uncertainty_qualifier",
+    "versioned_action_request",
+]
+date_and_time_item = [
+    "action", "action_directive", "action_method",
+    "action_property", "action_relationship", "approval",
+    "approval_person_organization", "approval_status", "ascribable_state",
+    "certification", "configuration_design", "configuration_item",
+    "contract", "date_and_time_assignment", "document",
+    "document_file", "draughting_model", "effectivity",
+    "general_property", "mechanical_design_geometric_presentation_representation", "organization_relationship",
+    "organizational_address", "organizational_project", "person",
+    "person_and_organization", "presentation_area", "product",
+    "product_concept", "product_definition", "product_definition_context",
+    "product_definition_formation", "product_definition_relationship", "property_definition",
+    "property_definition_representation", "representation", "resource_property",
+    "security_classification", "security_classification_level", "shape_representation",
+    "state_observed", "state_type", "versioned_action_request",
 ]

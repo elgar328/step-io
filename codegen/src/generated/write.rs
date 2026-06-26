@@ -99,6 +99,8 @@ pub struct Writer<'a> {
     application_context_ids: Vec<Option<u64>>,
     application_context_element_ids: Vec<Option<u64>>,
     application_protocol_definition_ids: Vec<Option<u64>>,
+    applied_date_and_time_assignment_ids: Vec<Option<u64>>,
+    applied_group_assignment_ids: Vec<Option<u64>>,
     approval_ids: Vec<Option<u64>>,
     approval_assignment_ids: Vec<Option<u64>>,
     approval_date_time_ids: Vec<Option<u64>>,
@@ -267,6 +269,7 @@ pub struct Writer<'a> {
     global_uncertainty_assigned_context_ids: Vec<Option<u64>>,
     global_unit_assigned_context_ids: Vec<Option<u64>>,
     group_ids: Vec<Option<u64>>,
+    group_assignment_ids: Vec<Option<u64>>,
     hyperbola_ids: Vec<Option<u64>>,
     id_attribute_ids: Vec<Option<u64>>,
     int_literal_ids: Vec<Option<u64>>,
@@ -580,6 +583,14 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            applied_date_and_time_assignment_ids: vec![
+                None;
+                model
+                    .applied_date_and_time_assignments
+                    .items
+                    .len()
+            ],
+            applied_group_assignment_ids: vec![None; model.applied_group_assignments.items.len()],
             approval_ids: vec![None; model.approvals.items.len()],
             approval_assignment_ids: vec![None; model.approval_assignments.items.len()],
             approval_date_time_ids: vec![None; model.approval_date_times.items.len()],
@@ -997,6 +1008,7 @@ impl<'a> Writer<'a> {
                 model.global_unit_assigned_contexts.items.len()
             ],
             group_ids: vec![None; model.groups.items.len()],
+            group_assignment_ids: vec![None; model.group_assignments.items.len()],
             hyperbola_ids: vec![None; model.hyperbolas.items.len()],
             id_attribute_ids: vec![None; model.id_attributes.items.len()],
             int_literal_ids: vec![None; model.int_literals.items.len()],
@@ -1545,6 +1557,10 @@ impl<'a> Writer<'a> {
             AnyId::ApplicationProtocolDefinition(i) => {
                 self.application_protocol_definition_ids[i.0]
             }
+            AnyId::AppliedDateAndTimeAssignment(i) => {
+                self.applied_date_and_time_assignment_ids[i.0]
+            }
+            AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0],
             AnyId::Approval(i) => self.approval_ids[i.0],
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0],
             AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0],
@@ -1773,6 +1789,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::GlobalUnitAssignedContext(i) => self.global_unit_assigned_context_ids[i.0],
             AnyId::Group(i) => self.group_ids[i.0],
+            AnyId::GroupAssignment(i) => self.group_assignment_ids[i.0],
             AnyId::Hyperbola(i) => self.hyperbola_ids[i.0],
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0],
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0],
@@ -2102,6 +2119,10 @@ impl<'a> Writer<'a> {
             AnyId::ApplicationProtocolDefinition(i) => {
                 self.application_protocol_definition_ids[i.0] = Some(n)
             }
+            AnyId::AppliedDateAndTimeAssignment(i) => {
+                self.applied_date_and_time_assignment_ids[i.0] = Some(n)
+            }
+            AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0] = Some(n),
             AnyId::Approval(i) => self.approval_ids[i.0] = Some(n),
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0] = Some(n),
             AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0] = Some(n),
@@ -2368,6 +2389,7 @@ impl<'a> Writer<'a> {
                 self.global_unit_assigned_context_ids[i.0] = Some(n)
             }
             AnyId::Group(i) => self.group_ids[i.0] = Some(n),
+            AnyId::GroupAssignment(i) => self.group_assignment_ids[i.0] = Some(n),
             AnyId::Hyperbola(i) => self.hyperbola_ids[i.0] = Some(n),
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0] = Some(n),
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0] = Some(n),
@@ -4496,6 +4518,328 @@ impl<'a> Writer<'a> {
         match r {
             CurveStyleRef::CurveStyle(i) => out.push(AnyId::CurveStyle(*i)),
             CurveStyleRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_date_and_time_item(&self, r: &DateAndTimeItemRef) -> u64 {
+        match r {
+            DateAndTimeItemRef::Action(i) => self.action_ids[i.0].expect("dep id assigned"),
+            DateAndTimeItemRef::ActionDirective(i) => {
+                self.action_directive_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ActionMethod(i) => {
+                self.action_method_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ActionProperty(i) => {
+                self.action_property_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ActionRelationship(i) => {
+                self.action_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::AdvancedBrepShapeRepresentation(i) => {
+                self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::AppliedDateAndTimeAssignment(i) => {
+                self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Approval(i) => self.approval_ids[i.0].expect("dep id assigned"),
+            DateAndTimeItemRef::ApprovalPersonOrganization(i) => {
+                self.approval_person_organization_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ApprovalStatus(i) => {
+                self.approval_statu_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::AscribableState(i) => {
+                self.ascribable_state_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::AssemblyComponentUsage(i) => {
+                self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::CcDesignDateAndTimeAssignment(i) => {
+                self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Certification(i) => {
+                self.certification_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ConfigurationDesign(i) => {
+                self.configuration_design_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ConfigurationEffectivity(i) => {
+                self.configuration_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ConfigurationItem(i) => {
+                self.configuration_item_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ConstructiveGeometryRepresentation(i) => {
+                self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
+            DateAndTimeItemRef::DateAndTimeAssignment(i) => {
+                self.date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::DefinitionalRepresentation(i) => {
+                self.definitional_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::DesignContext(i) => {
+                self.design_context_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Document(i) => self.document_ids[i.0].expect("dep id assigned"),
+            DateAndTimeItemRef::DocumentFile(i) => {
+                self.document_file_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::DraughtingModel(i) => {
+                self.draughting_model_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Effectivity(i) => {
+                self.effectivity_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::GeneralProperty(i) => {
+                self.general_property_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
+                .geometrically_bounded_wireframe_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
+            DateAndTimeItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
+                .mechanical_design_geometric_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            DateAndTimeItemRef::NextAssemblyUsageOccurrence(i) => {
+                self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::OrganizationRelationship(i) => {
+                self.organization_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::OrganizationalAddress(i) => {
+                self.organizational_addre_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::OrganizationalProject(i) => {
+                self.organizational_project_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Person(i) => self.person_ids[i.0].expect("dep id assigned"),
+            DateAndTimeItemRef::PersonAndOrganization(i) => {
+                self.person_and_organization_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::PersonAndOrganizationAddress(i) => {
+                self.person_and_organization_addre_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::PresentationRepresentation(i) => {
+                self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+            DateAndTimeItemRef::ProductConcept(i) => {
+                self.product_concept_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinitionContext(i) => {
+                self.product_definition_context_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinitionEffectivity(i) => {
+                self.product_definition_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            DateAndTimeItemRef::ProductDefinitionRelationship(i) => {
+                self.product_definition_relationship_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinitionShape(i) => {
+                self.product_definition_shape_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinitionUsage(i) => {
+                self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::PropertyDefinition(i) => {
+                self.property_definition_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::PropertyDefinitionRepresentation(i) => {
+                self.property_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Representation(i) => {
+                self.representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ResourceProperty(i) => {
+                self.resource_property_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::SecurityClassificationLevel(i) => {
+                self.security_classification_level_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ShapeDefinitionRepresentation(i) => {
+                self.shape_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ShapeDimensionRepresentation(i) => {
+                self.shape_dimension_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ShapeRepresentation(i) => {
+                self.shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::StateObserved(i) => {
+                self.state_observed_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::StateType(i) => self.state_type_ids[i.0].expect("dep id assigned"),
+            DateAndTimeItemRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::VersionedActionRequest(i) => {
+                self.versioned_action_request_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_date_and_time_item(r: &DateAndTimeItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            DateAndTimeItemRef::Action(i) => out.push(AnyId::Action(*i)),
+            DateAndTimeItemRef::ActionDirective(i) => out.push(AnyId::ActionDirective(*i)),
+            DateAndTimeItemRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+            DateAndTimeItemRef::ActionProperty(i) => out.push(AnyId::ActionProperty(*i)),
+            DateAndTimeItemRef::ActionRelationship(i) => out.push(AnyId::ActionRelationship(*i)),
+            DateAndTimeItemRef::AdvancedBrepShapeRepresentation(i) => {
+                out.push(AnyId::AdvancedBrepShapeRepresentation(*i))
+            }
+            DateAndTimeItemRef::AppliedDateAndTimeAssignment(i) => {
+                out.push(AnyId::AppliedDateAndTimeAssignment(*i))
+            }
+            DateAndTimeItemRef::Approval(i) => out.push(AnyId::Approval(*i)),
+            DateAndTimeItemRef::ApprovalPersonOrganization(i) => {
+                out.push(AnyId::ApprovalPersonOrganization(*i))
+            }
+            DateAndTimeItemRef::ApprovalStatus(i) => out.push(AnyId::ApprovalStatus(*i)),
+            DateAndTimeItemRef::AscribableState(i) => out.push(AnyId::AscribableState(*i)),
+            DateAndTimeItemRef::AssemblyComponentUsage(i) => {
+                out.push(AnyId::AssemblyComponentUsage(*i))
+            }
+            DateAndTimeItemRef::CcDesignDateAndTimeAssignment(i) => {
+                out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
+            }
+            DateAndTimeItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            DateAndTimeItemRef::ConfigurationDesign(i) => out.push(AnyId::ConfigurationDesign(*i)),
+            DateAndTimeItemRef::ConfigurationEffectivity(i) => {
+                out.push(AnyId::ConfigurationEffectivity(*i))
+            }
+            DateAndTimeItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
+            DateAndTimeItemRef::ConstructiveGeometryRepresentation(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentation(*i))
+            }
+            DateAndTimeItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+            DateAndTimeItemRef::DateAndTimeAssignment(i) => {
+                out.push(AnyId::DateAndTimeAssignment(*i))
+            }
+            DateAndTimeItemRef::DefinitionalRepresentation(i) => {
+                out.push(AnyId::DefinitionalRepresentation(*i))
+            }
+            DateAndTimeItemRef::DesignContext(i) => out.push(AnyId::DesignContext(*i)),
+            DateAndTimeItemRef::Document(i) => out.push(AnyId::Document(*i)),
+            DateAndTimeItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+            DateAndTimeItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+            DateAndTimeItemRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
+            DateAndTimeItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+            DateAndTimeItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
+            }
+            DateAndTimeItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i))
+            }
+            DateAndTimeItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
+                AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
+            ),
+            DateAndTimeItemRef::NextAssemblyUsageOccurrence(i) => {
+                out.push(AnyId::NextAssemblyUsageOccurrence(*i))
+            }
+            DateAndTimeItemRef::OrganizationRelationship(i) => {
+                out.push(AnyId::OrganizationRelationship(*i))
+            }
+            DateAndTimeItemRef::OrganizationalAddress(i) => {
+                out.push(AnyId::OrganizationalAddress(*i))
+            }
+            DateAndTimeItemRef::OrganizationalProject(i) => {
+                out.push(AnyId::OrganizationalProject(*i))
+            }
+            DateAndTimeItemRef::Person(i) => out.push(AnyId::Person(*i)),
+            DateAndTimeItemRef::PersonAndOrganization(i) => {
+                out.push(AnyId::PersonAndOrganization(*i))
+            }
+            DateAndTimeItemRef::PersonAndOrganizationAddress(i) => {
+                out.push(AnyId::PersonAndOrganizationAddress(*i))
+            }
+            DateAndTimeItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+            DateAndTimeItemRef::PresentationRepresentation(i) => {
+                out.push(AnyId::PresentationRepresentation(*i))
+            }
+            DateAndTimeItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+            DateAndTimeItemRef::Product(i) => out.push(AnyId::Product(*i)),
+            DateAndTimeItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+            DateAndTimeItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            DateAndTimeItemRef::ProductDefinitionContext(i) => {
+                out.push(AnyId::ProductDefinitionContext(*i))
+            }
+            DateAndTimeItemRef::ProductDefinitionEffectivity(i) => {
+                out.push(AnyId::ProductDefinitionEffectivity(*i))
+            }
+            DateAndTimeItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            DateAndTimeItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            DateAndTimeItemRef::ProductDefinitionRelationship(i) => {
+                out.push(AnyId::ProductDefinitionRelationship(*i))
+            }
+            DateAndTimeItemRef::ProductDefinitionShape(i) => {
+                out.push(AnyId::ProductDefinitionShape(*i))
+            }
+            DateAndTimeItemRef::ProductDefinitionUsage(i) => {
+                out.push(AnyId::ProductDefinitionUsage(*i))
+            }
+            DateAndTimeItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
+            DateAndTimeItemRef::PropertyDefinitionRepresentation(i) => {
+                out.push(AnyId::PropertyDefinitionRepresentation(*i))
+            }
+            DateAndTimeItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
+            DateAndTimeItemRef::ResourceProperty(i) => out.push(AnyId::ResourceProperty(*i)),
+            DateAndTimeItemRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+            DateAndTimeItemRef::SecurityClassificationLevel(i) => {
+                out.push(AnyId::SecurityClassificationLevel(*i))
+            }
+            DateAndTimeItemRef::ShapeDefinitionRepresentation(i) => {
+                out.push(AnyId::ShapeDefinitionRepresentation(*i))
+            }
+            DateAndTimeItemRef::ShapeDimensionRepresentation(i) => {
+                out.push(AnyId::ShapeDimensionRepresentation(*i))
+            }
+            DateAndTimeItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+            DateAndTimeItemRef::StateObserved(i) => out.push(AnyId::StateObserved(*i)),
+            DateAndTimeItemRef::StateType(i) => out.push(AnyId::StateType(*i)),
+            DateAndTimeItemRef::SymbolRepresentation(i) => {
+                out.push(AnyId::SymbolRepresentation(*i))
+            }
+            DateAndTimeItemRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
+            DateAndTimeItemRef::VersionedActionRequest(i) => {
+                out.push(AnyId::VersionedActionRequest(*i))
+            }
+            DateAndTimeItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -6780,6 +7124,1144 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::ToleranceZoneWithDatum(*i))
             }
             GeometricToleranceTargetRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_group(&self, r: &GroupRef) -> u64 {
+        match r {
+            GroupRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
+            GroupRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_group(r: &GroupRef, out: &mut Vec<AnyId>) {
+        match r {
+            GroupRef::Group(i) => out.push(AnyId::Group(*i)),
+            GroupRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_groupable_item(&self, r: &GroupableItemRef) -> u64 {
+        match r {
+            GroupableItemRef::ActionMethod(i) => {
+                self.action_method_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Address(i) => self.addre_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::AdvancedBrepShapeRepresentation(i) => {
+                self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AdvancedFace(i) => {
+                self.advanced_face_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AllAroundShapeAspect(i) => {
+                self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationCurveOccurrence(i) => {
+                self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
+                self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationOccurrence(i) => {
+                self.annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationPlaceholderOccurrence(i) => {
+                self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationPlane(i) => {
+                self.annotation_plane_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationSymbol(i) => {
+                self.annotation_symbol_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationSymbolOccurrence(i) => {
+                self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationText(i) => {
+                self.annotation_text_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationTextCharacter(i) => {
+                self.annotation_text_character_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationTextOccurrence(i) => {
+                self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AppliedDateAndTimeAssignment(i) => {
+                self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AppliedGroupAssignment(i) => {
+                self.applied_group_assignment_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Approval(i) => self.approval_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ApprovalPersonOrganization(i) => {
+                self.approval_person_organization_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ApprovalStatus(i) => {
+                self.approval_statu_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AscribableState(i) => {
+                self.ascribable_state_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AscribableStateRelationship(i) => {
+                self.ascribable_state_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AssemblyComponentUsage(i) => {
+                self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Axis1Placement(i) => {
+                self.axis1_placement_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Axis2Placement2d(i) => {
+                self.axis2_placement2d_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Axis2Placement3d(i) => {
+                self.axis2_placement3d_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BSplineCurve(i) => {
+                self.b_spline_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BSplineCurveWithKnots(i) => {
+                self.b_spline_curve_with_knot_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BSplineSurface(i) => {
+                self.b_spline_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BSplineSurfaceWithKnots(i) => {
+                self.b_spline_surface_with_knot_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BezierCurve(i) => {
+                self.bezier_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BezierSurface(i) => {
+                self.bezier_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BoundedCurve(i) => {
+                self.bounded_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BoundedPcurve(i) => {
+                self.bounded_pcurve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BoundedSurface(i) => {
+                self.bounded_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BoundedSurfaceCurve(i) => {
+                self.bounded_surface_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::BrepWithVoids(i) => {
+                self.brep_with_void_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CalendarDate(i) => {
+                self.calendar_date_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CameraModel(i) => {
+                self.camera_model_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CartesianPoint(i) => {
+                self.cartesian_point_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CcDesignDateAndTimeAssignment(i) => {
+                self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Certification(i) => {
+                self.certification_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ClosedShell(i) => {
+                self.closed_shell_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CommonDatum(i) => {
+                self.common_datum_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ComplexTriangulatedFace(i) => {
+                self.complex_triangulated_face_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                self.complex_triangulated_surface_set_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CompositeCurve(i) => {
+                self.composite_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CompositeGroupShapeAspect(i) => {
+                self.composite_group_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CompositeShapeAspect(i) => {
+                self.composite_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CompositeText(i) => {
+                self.composite_text_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ConfigurationDesign(i) => {
+                self.configuration_design_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ConfigurationEffectivity(i) => {
+                self.configuration_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ConfigurationItem(i) => {
+                self.configuration_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Conic(i) => self.conic_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ConicalSurface(i) => {
+                self.conical_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ConnectedFaceSet(i) => {
+                self.connected_face_set_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ConstructiveGeometryRepresentation(i) => {
+                self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ContextDependentOverRidingStyledItem(i) => {
+                self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ContextDependentShapeRepresentation(i) => {
+                self.context_dependent_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ContextDependentUnit(i) => {
+                self.context_dependent_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ContinuousShapeAspect(i) => {
+                self.continuous_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Contract(i) => self.contract_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ConversionBasedUnit(i) => {
+                self.conversion_based_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CoordinatedUniversalTimeOffset(i) => {
+                self.coordinated_universal_time_offset_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CoordinatesList(i) => {
+                self.coordinates_list_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Curve(i) => self.curve_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::CylindricalSurface(i) => {
+                self.cylindrical_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DateAndTime(i) => {
+                self.date_and_time_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DateAndTimeAssignment(i) => {
+                self.date_and_time_assignment_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Datum(i) => self.datum_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::DatumFeature(i) => {
+                self.datum_feature_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DatumReferenceCompartment(i) => {
+                self.datum_reference_compartment_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DatumReferenceElement(i) => {
+                self.datum_reference_element_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DatumSystem(i) => {
+                self.datum_system_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DatumTarget(i) => {
+                self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DefinedCharacterGlyph(i) => {
+                self.defined_character_glyph_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DefinedSymbol(i) => {
+                self.defined_symbol_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DefinitionalRepresentation(i) => {
+                self.definitional_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DegenerateToroidalSurface(i) => {
+                self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DerivedUnit(i) => {
+                self.derived_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DerivedUnitElement(i) => {
+                self.derived_unit_element_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DescriptiveRepresentationItem(i) => {
+                self.descriptive_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DesignContext(i) => {
+                self.design_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DimensionalLocation(i) => {
+                self.dimensional_location_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DimensionalLocationWithPath(i) => {
+                self.dimensional_location_with_path_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Direction(i) => self.direction_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::DocumentFile(i) => {
+                self.document_file_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DraughtingCallout(i) => {
+                self.draughting_callout_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DraughtingModel(i) => {
+                self.draughting_model_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Edge(i) => self.edge_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::EdgeCurve(i) => self.edge_curve_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::EdgeLoop(i) => self.edge_loop_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Effectivity(i) => self.effectivity_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ElementarySurface(i) => {
+                self.elementary_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Ellipse(i) => self.ellipse_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ExternalSource(i) => {
+                self.external_source_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ExternallyDefinedHatchStyle(i) => {
+                self.externally_defined_hatch_style_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ExternallyDefinedTileStyle(i) => {
+                self.externally_defined_tile_style_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Face(i) => self.face_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::FaceBound(i) => self.face_bound_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::FaceOuterBound(i) => {
+                self.face_outer_bound_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::FaceSurface(i) => {
+                self.face_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::FillAreaStyleHatching(i) => {
+                self.fill_area_style_hatching_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::FillAreaStyleTileColouredRegion(i) => {
+                self.fill_area_style_tile_coloured_region_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                self.fill_area_style_tile_curve_with_style_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                self.fill_area_style_tile_symbol_with_style_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::FillAreaStyleTiles(i) => {
+                self.fill_area_style_tile_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeneralDatumReference(i) => {
+                self.general_datum_reference_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeneralProperty(i) => {
+                self.general_property_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeometricCurveSet(i) => {
+                self.geometric_curve_set_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeometricItemSpecificUsage(i) => {
+                self.geometric_item_specific_usage_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeometricRepresentationContext(i) => {
+                self.geometric_representation_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeometricRepresentationItem(i) => {
+                self.geometric_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeometricSet(i) => {
+                self.geometric_set_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
+                .geometrically_bounded_wireframe_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
+            GroupableItemRef::GlobalUncertaintyAssignedContext(i) => {
+                self.global_uncertainty_assigned_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::GlobalUnitAssignedContext(i) => {
+                self.global_unit_assigned_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::IntegerRepresentationItem(i) => {
+                self.integer_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::IntersectionCurve(i) => {
+                self.intersection_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ItemDefinedTransformation(i) => {
+                self.item_defined_transformation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::LengthMeasureWithUnit(i) => {
+                self.length_measure_with_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::LengthUnit(i) => self.length_unit_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::LocalTime(i) => self.local_time_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ManifoldSolidBrep(i) => {
+                self.manifold_solid_brep_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::MappedItem(i) => self.mapped_item_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::MassMeasureWithUnit(i) => {
+                self.mass_measure_with_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::MassUnit(i) => self.mass_unit_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::MeasureRepresentationItem(i) => {
+                self.measure_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::MeasureWithUnit(i) => {
+                self.measure_with_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
+                .mechanical_design_geometric_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            GroupableItemRef::NamedUnit(i) => self.named_unit_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::NextAssemblyUsageOccurrence(i) => {
+                self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OffsetSurface(i) => {
+                self.offset_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OneDirectionRepeatFactor(i) => {
+                self.one_direction_repeat_factor_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OpenShell(i) => self.open_shell_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Organization(i) => {
+                self.organization_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OrganizationRelationship(i) => {
+                self.organization_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OrganizationType(i) => {
+                self.organization_type_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OrganizationalAddress(i) => {
+                self.organizational_addre_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OrganizationalProject(i) => {
+                self.organizational_project_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OrganizationalProjectRelationship(i) => {
+                self.organizational_project_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OrientedClosedShell(i) => {
+                self.oriented_closed_shell_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OrientedEdge(i) => {
+                self.oriented_edge_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::OverRidingStyledItem(i) => {
+                self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ParametricRepresentationContext(i) => {
+                self.parametric_representation_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Path(i) => self.path_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Pcurve(i) => self.pcurve_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Person(i) => self.person_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::PersonAndOrganization(i) => {
+                self.person_and_organization_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PersonAndOrganizationAddress(i) => {
+                self.person_and_organization_addre_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PersonalAddress(i) => {
+                self.personal_addre_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PlacedDatumTargetFeature(i) => {
+                self.placed_datum_target_feature_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Placement(i) => self.placement_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::PlanarBox(i) => self.planar_box_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::PlanarExtent(i) => {
+                self.planar_extent_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Plane(i) => self.plane_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::PlaneAngleMeasureWithUnit(i) => {
+                self.plane_angle_measure_with_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PlaneAngleUnit(i) => {
+                self.plane_angle_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::PolyLoop(i) => self.poly_loop_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Polyline(i) => self.polyline_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::PrecisionQualifier(i) => {
+                self.precision_qualifier_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PresentationRepresentation(i) => {
+                self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ProductConcept(i) => {
+                self.product_concept_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductConceptContext(i) => {
+                self.product_concept_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinitionContext(i) => {
+                self.product_definition_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinitionEffectivity(i) => {
+                self.product_definition_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            GroupableItemRef::ProductDefinitionRelationship(i) => {
+                self.product_definition_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinitionShape(i) => {
+                self.product_definition_shape_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinitionUsage(i) => {
+                self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PropertyDefinition(i) => {
+                self.property_definition_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::PropertyDefinitionRepresentation(i) => {
+                self.property_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::QualifiedRepresentationItem(i) => {
+                self.qualified_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::QuasiUniformCurve(i) => {
+                self.quasi_uniform_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::QuasiUniformSurface(i) => {
+                self.quasi_uniform_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RationalBSplineCurve(i) => {
+                self.rational_b_spline_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RationalBSplineSurface(i) => {
+                self.rational_b_spline_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RealRepresentationItem(i) => {
+                self.real_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RepositionedTessellatedItem(i) => {
+                self.repositioned_tessellated_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Representation(i) => {
+                self.representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RepresentationContext(i) => {
+                self.representation_context_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RepresentationItem(i) => {
+                self.representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RepresentationRelationship(i) => {
+                self.representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::RepresentationRelationshipWithTransformation(i) => self
+                .representation_relationship_with_transformation_ids[i.0]
+                .expect("dep id assigned"),
+            GroupableItemRef::SeamCurve(i) => self.seam_curve_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::SecurityClassification(i) => {
+                self.security_classification_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeAspect(i) => {
+                self.shape_aspect_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeAspectRelationship(i) => {
+                self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeDefinitionRepresentation(i) => {
+                self.shape_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeDimensionRepresentation(i) => {
+                self.shape_dimension_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeRepresentation(i) => {
+                self.shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeRepresentationRelationship(i) => {
+                self.shape_representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShellBasedSurfaceModel(i) => {
+                self.shell_based_surface_model_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::SiUnit(i) => self.si_unit_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::SolidAngleUnit(i) => {
+                self.solid_angle_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::SolidModel(i) => self.solid_model_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::SphericalSurface(i) => {
+                self.spherical_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::StateObserved(i) => {
+                self.state_observed_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::StateType(i) => self.state_type_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::StyledItem(i) => self.styled_item_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Surface(i) => self.surface_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::SurfaceCurve(i) => {
+                self.surface_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::SurfaceOfLinearExtrusion(i) => {
+                self.surface_of_linear_extrusion_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::SurfaceOfRevolution(i) => {
+                self.surface_of_revolution_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::SweptSurface(i) => {
+                self.swept_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::SymbolRepresentation(i) => {
+                self.symbol_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::SymbolTarget(i) => {
+                self.symbol_target_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedAnnotationOccurrence(i) => {
+                self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedCurveSet(i) => {
+                self.tessellated_curve_set_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedFace(i) => {
+                self.tessellated_face_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedGeometricSet(i) => {
+                self.tessellated_geometric_set_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedItem(i) => {
+                self.tessellated_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedSolid(i) => {
+                self.tessellated_solid_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedStructuredItem(i) => {
+                self.tessellated_structured_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedSurfaceSet(i) => {
+                self.tessellated_surface_set_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TextLiteral(i) => {
+                self.text_literal_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TimeUnit(i) => self.time_unit_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ToleranceZone(i) => {
+                self.tolerance_zone_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ToleranceZoneWithDatum(i) => {
+                self.tolerance_zone_with_datum_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TopologicalRepresentationItem(i) => {
+                self.topological_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ToroidalSurface(i) => {
+                self.toroidal_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TrimmedCurve(i) => {
+                self.trimmed_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TwoDirectionRepeatFactor(i) => {
+                self.two_direction_repeat_factor_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TypeQualifier(i) => {
+                self.type_qualifier_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::UncertaintyMeasureWithUnit(i) => {
+                self.uncertainty_measure_with_unit_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::UncertaintyQualifier(i) => {
+                self.uncertainty_qualifier_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::UniformCurve(i) => {
+                self.uniform_curve_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::UniformSurface(i) => {
+                self.uniform_surface_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ValueRepresentationItem(i) => {
+                self.value_representation_item_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::VersionedActionRequest(i) => {
+                self.versioned_action_request_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::VertexLoop(i) => self.vertex_loop_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::VertexPoint(i) => {
+                self.vertex_point_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::VertexShell(i) => {
+                self.vertex_shell_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::WireShell(i) => self.wire_shell_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_groupable_item(r: &GroupableItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            GroupableItemRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+            GroupableItemRef::Address(i) => out.push(AnyId::Address(*i)),
+            GroupableItemRef::AdvancedBrepShapeRepresentation(i) => {
+                out.push(AnyId::AdvancedBrepShapeRepresentation(*i))
+            }
+            GroupableItemRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+            GroupableItemRef::AllAroundShapeAspect(i) => out.push(AnyId::AllAroundShapeAspect(*i)),
+            GroupableItemRef::AnnotationCurveOccurrence(i) => {
+                out.push(AnyId::AnnotationCurveOccurrence(*i))
+            }
+            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
+                out.push(AnyId::AnnotationFillAreaOccurrence(*i))
+            }
+            GroupableItemRef::AnnotationOccurrence(i) => out.push(AnyId::AnnotationOccurrence(*i)),
+            GroupableItemRef::AnnotationPlaceholderOccurrence(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            GroupableItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+            GroupableItemRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
+            GroupableItemRef::AnnotationSymbolOccurrence(i) => {
+                out.push(AnyId::AnnotationSymbolOccurrence(*i))
+            }
+            GroupableItemRef::AnnotationText(i) => out.push(AnyId::AnnotationText(*i)),
+            GroupableItemRef::AnnotationTextCharacter(i) => {
+                out.push(AnyId::AnnotationTextCharacter(*i))
+            }
+            GroupableItemRef::AnnotationTextOccurrence(i) => {
+                out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            GroupableItemRef::AppliedDateAndTimeAssignment(i) => {
+                out.push(AnyId::AppliedDateAndTimeAssignment(*i))
+            }
+            GroupableItemRef::AppliedGroupAssignment(i) => {
+                out.push(AnyId::AppliedGroupAssignment(*i))
+            }
+            GroupableItemRef::Approval(i) => out.push(AnyId::Approval(*i)),
+            GroupableItemRef::ApprovalPersonOrganization(i) => {
+                out.push(AnyId::ApprovalPersonOrganization(*i))
+            }
+            GroupableItemRef::ApprovalStatus(i) => out.push(AnyId::ApprovalStatus(*i)),
+            GroupableItemRef::AscribableState(i) => out.push(AnyId::AscribableState(*i)),
+            GroupableItemRef::AscribableStateRelationship(i) => {
+                out.push(AnyId::AscribableStateRelationship(*i))
+            }
+            GroupableItemRef::AssemblyComponentUsage(i) => {
+                out.push(AnyId::AssemblyComponentUsage(*i))
+            }
+            GroupableItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
+            GroupableItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
+            GroupableItemRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
+            GroupableItemRef::BSplineCurve(i) => out.push(AnyId::BSplineCurve(*i)),
+            GroupableItemRef::BSplineCurveWithKnots(i) => {
+                out.push(AnyId::BSplineCurveWithKnots(*i))
+            }
+            GroupableItemRef::BSplineSurface(i) => out.push(AnyId::BSplineSurface(*i)),
+            GroupableItemRef::BSplineSurfaceWithKnots(i) => {
+                out.push(AnyId::BSplineSurfaceWithKnots(*i))
+            }
+            GroupableItemRef::BezierCurve(i) => out.push(AnyId::BezierCurve(*i)),
+            GroupableItemRef::BezierSurface(i) => out.push(AnyId::BezierSurface(*i)),
+            GroupableItemRef::BoundedCurve(i) => out.push(AnyId::BoundedCurve(*i)),
+            GroupableItemRef::BoundedPcurve(i) => out.push(AnyId::BoundedPcurve(*i)),
+            GroupableItemRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
+            GroupableItemRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
+            GroupableItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            GroupableItemRef::CalendarDate(i) => out.push(AnyId::CalendarDate(*i)),
+            GroupableItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
+            GroupableItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            GroupableItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+            GroupableItemRef::CcDesignDateAndTimeAssignment(i) => {
+                out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
+            }
+            GroupableItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            GroupableItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
+            GroupableItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
+            GroupableItemRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
+            GroupableItemRef::ComplexTriangulatedFace(i) => {
+                out.push(AnyId::ComplexTriangulatedFace(*i))
+            }
+            GroupableItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                out.push(AnyId::ComplexTriangulatedSurfaceSet(*i))
+            }
+            GroupableItemRef::CompositeCurve(i) => out.push(AnyId::CompositeCurve(*i)),
+            GroupableItemRef::CompositeGroupShapeAspect(i) => {
+                out.push(AnyId::CompositeGroupShapeAspect(*i))
+            }
+            GroupableItemRef::CompositeShapeAspect(i) => out.push(AnyId::CompositeShapeAspect(*i)),
+            GroupableItemRef::CompositeText(i) => out.push(AnyId::CompositeText(*i)),
+            GroupableItemRef::ConfigurationDesign(i) => out.push(AnyId::ConfigurationDesign(*i)),
+            GroupableItemRef::ConfigurationEffectivity(i) => {
+                out.push(AnyId::ConfigurationEffectivity(*i))
+            }
+            GroupableItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
+            GroupableItemRef::Conic(i) => out.push(AnyId::Conic(*i)),
+            GroupableItemRef::ConicalSurface(i) => out.push(AnyId::ConicalSurface(*i)),
+            GroupableItemRef::ConnectedFaceSet(i) => out.push(AnyId::ConnectedFaceSet(*i)),
+            GroupableItemRef::ConstructiveGeometryRepresentation(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentation(*i))
+            }
+            GroupableItemRef::ContextDependentOverRidingStyledItem(i) => {
+                out.push(AnyId::ContextDependentOverRidingStyledItem(*i))
+            }
+            GroupableItemRef::ContextDependentShapeRepresentation(i) => {
+                out.push(AnyId::ContextDependentShapeRepresentation(*i))
+            }
+            GroupableItemRef::ContextDependentUnit(i) => out.push(AnyId::ContextDependentUnit(*i)),
+            GroupableItemRef::ContinuousShapeAspect(i) => {
+                out.push(AnyId::ContinuousShapeAspect(*i))
+            }
+            GroupableItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
+            GroupableItemRef::ConversionBasedUnit(i) => out.push(AnyId::ConversionBasedUnit(*i)),
+            GroupableItemRef::CoordinatedUniversalTimeOffset(i) => {
+                out.push(AnyId::CoordinatedUniversalTimeOffset(*i))
+            }
+            GroupableItemRef::CoordinatesList(i) => out.push(AnyId::CoordinatesList(*i)),
+            GroupableItemRef::Curve(i) => out.push(AnyId::Curve(*i)),
+            GroupableItemRef::CylindricalSurface(i) => out.push(AnyId::CylindricalSurface(*i)),
+            GroupableItemRef::DateAndTime(i) => out.push(AnyId::DateAndTime(*i)),
+            GroupableItemRef::DateAndTimeAssignment(i) => {
+                out.push(AnyId::DateAndTimeAssignment(*i))
+            }
+            GroupableItemRef::Datum(i) => out.push(AnyId::Datum(*i)),
+            GroupableItemRef::DatumFeature(i) => out.push(AnyId::DatumFeature(*i)),
+            GroupableItemRef::DatumReferenceCompartment(i) => {
+                out.push(AnyId::DatumReferenceCompartment(*i))
+            }
+            GroupableItemRef::DatumReferenceElement(i) => {
+                out.push(AnyId::DatumReferenceElement(*i))
+            }
+            GroupableItemRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
+            GroupableItemRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            GroupableItemRef::DefinedCharacterGlyph(i) => {
+                out.push(AnyId::DefinedCharacterGlyph(*i))
+            }
+            GroupableItemRef::DefinedSymbol(i) => out.push(AnyId::DefinedSymbol(*i)),
+            GroupableItemRef::DefinitionalRepresentation(i) => {
+                out.push(AnyId::DefinitionalRepresentation(*i))
+            }
+            GroupableItemRef::DegenerateToroidalSurface(i) => {
+                out.push(AnyId::DegenerateToroidalSurface(*i))
+            }
+            GroupableItemRef::DerivedUnit(i) => out.push(AnyId::DerivedUnit(*i)),
+            GroupableItemRef::DerivedUnitElement(i) => out.push(AnyId::DerivedUnitElement(*i)),
+            GroupableItemRef::DescriptiveRepresentationItem(i) => {
+                out.push(AnyId::DescriptiveRepresentationItem(*i))
+            }
+            GroupableItemRef::DesignContext(i) => out.push(AnyId::DesignContext(*i)),
+            GroupableItemRef::DimensionalLocation(i) => out.push(AnyId::DimensionalLocation(*i)),
+            GroupableItemRef::DimensionalLocationWithPath(i) => {
+                out.push(AnyId::DimensionalLocationWithPath(*i))
+            }
+            GroupableItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
+            GroupableItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+            GroupableItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
+            GroupableItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+            GroupableItemRef::Edge(i) => out.push(AnyId::Edge(*i)),
+            GroupableItemRef::EdgeCurve(i) => out.push(AnyId::EdgeCurve(*i)),
+            GroupableItemRef::EdgeLoop(i) => out.push(AnyId::EdgeLoop(*i)),
+            GroupableItemRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
+            GroupableItemRef::ElementarySurface(i) => out.push(AnyId::ElementarySurface(*i)),
+            GroupableItemRef::Ellipse(i) => out.push(AnyId::Ellipse(*i)),
+            GroupableItemRef::ExternalSource(i) => out.push(AnyId::ExternalSource(*i)),
+            GroupableItemRef::ExternallyDefinedHatchStyle(i) => {
+                out.push(AnyId::ExternallyDefinedHatchStyle(*i))
+            }
+            GroupableItemRef::ExternallyDefinedTileStyle(i) => {
+                out.push(AnyId::ExternallyDefinedTileStyle(*i))
+            }
+            GroupableItemRef::Face(i) => out.push(AnyId::Face(*i)),
+            GroupableItemRef::FaceBound(i) => out.push(AnyId::FaceBound(*i)),
+            GroupableItemRef::FaceOuterBound(i) => out.push(AnyId::FaceOuterBound(*i)),
+            GroupableItemRef::FaceSurface(i) => out.push(AnyId::FaceSurface(*i)),
+            GroupableItemRef::FillAreaStyleHatching(i) => {
+                out.push(AnyId::FillAreaStyleHatching(*i))
+            }
+            GroupableItemRef::FillAreaStyleTileColouredRegion(i) => {
+                out.push(AnyId::FillAreaStyleTileColouredRegion(*i))
+            }
+            GroupableItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                out.push(AnyId::FillAreaStyleTileCurveWithStyle(*i))
+            }
+            GroupableItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                out.push(AnyId::FillAreaStyleTileSymbolWithStyle(*i))
+            }
+            GroupableItemRef::FillAreaStyleTiles(i) => out.push(AnyId::FillAreaStyleTiles(*i)),
+            GroupableItemRef::GeneralDatumReference(i) => {
+                out.push(AnyId::GeneralDatumReference(*i))
+            }
+            GroupableItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+            GroupableItemRef::GeometricCurveSet(i) => out.push(AnyId::GeometricCurveSet(*i)),
+            GroupableItemRef::GeometricItemSpecificUsage(i) => {
+                out.push(AnyId::GeometricItemSpecificUsage(*i))
+            }
+            GroupableItemRef::GeometricRepresentationContext(i) => {
+                out.push(AnyId::GeometricRepresentationContext(*i))
+            }
+            GroupableItemRef::GeometricRepresentationItem(i) => {
+                out.push(AnyId::GeometricRepresentationItem(*i))
+            }
+            GroupableItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            GroupableItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
+            }
+            GroupableItemRef::GlobalUncertaintyAssignedContext(i) => {
+                out.push(AnyId::GlobalUncertaintyAssignedContext(*i))
+            }
+            GroupableItemRef::GlobalUnitAssignedContext(i) => {
+                out.push(AnyId::GlobalUnitAssignedContext(*i))
+            }
+            GroupableItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
+            GroupableItemRef::IntegerRepresentationItem(i) => {
+                out.push(AnyId::IntegerRepresentationItem(*i))
+            }
+            GroupableItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            GroupableItemRef::ItemDefinedTransformation(i) => {
+                out.push(AnyId::ItemDefinedTransformation(*i))
+            }
+            GroupableItemRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
+            GroupableItemRef::LengthMeasureWithUnit(i) => {
+                out.push(AnyId::LengthMeasureWithUnit(*i))
+            }
+            GroupableItemRef::LengthUnit(i) => out.push(AnyId::LengthUnit(*i)),
+            GroupableItemRef::Line(i) => out.push(AnyId::Line(*i)),
+            GroupableItemRef::LocalTime(i) => out.push(AnyId::LocalTime(*i)),
+            GroupableItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
+            GroupableItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
+            GroupableItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i))
+            }
+            GroupableItemRef::MappedItem(i) => out.push(AnyId::MappedItem(*i)),
+            GroupableItemRef::MassMeasureWithUnit(i) => out.push(AnyId::MassMeasureWithUnit(*i)),
+            GroupableItemRef::MassUnit(i) => out.push(AnyId::MassUnit(*i)),
+            GroupableItemRef::MeasureRepresentationItem(i) => {
+                out.push(AnyId::MeasureRepresentationItem(*i))
+            }
+            GroupableItemRef::MeasureWithUnit(i) => out.push(AnyId::MeasureWithUnit(*i)),
+            GroupableItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
+                AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
+            ),
+            GroupableItemRef::NamedUnit(i) => out.push(AnyId::NamedUnit(*i)),
+            GroupableItemRef::NextAssemblyUsageOccurrence(i) => {
+                out.push(AnyId::NextAssemblyUsageOccurrence(*i))
+            }
+            GroupableItemRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
+            GroupableItemRef::OneDirectionRepeatFactor(i) => {
+                out.push(AnyId::OneDirectionRepeatFactor(*i))
+            }
+            GroupableItemRef::OpenShell(i) => out.push(AnyId::OpenShell(*i)),
+            GroupableItemRef::Organization(i) => out.push(AnyId::Organization(*i)),
+            GroupableItemRef::OrganizationRelationship(i) => {
+                out.push(AnyId::OrganizationRelationship(*i))
+            }
+            GroupableItemRef::OrganizationType(i) => out.push(AnyId::OrganizationType(*i)),
+            GroupableItemRef::OrganizationalAddress(i) => {
+                out.push(AnyId::OrganizationalAddress(*i))
+            }
+            GroupableItemRef::OrganizationalProject(i) => {
+                out.push(AnyId::OrganizationalProject(*i))
+            }
+            GroupableItemRef::OrganizationalProjectRelationship(i) => {
+                out.push(AnyId::OrganizationalProjectRelationship(*i))
+            }
+            GroupableItemRef::OrientedClosedShell(i) => out.push(AnyId::OrientedClosedShell(*i)),
+            GroupableItemRef::OrientedEdge(i) => out.push(AnyId::OrientedEdge(*i)),
+            GroupableItemRef::OverRidingStyledItem(i) => out.push(AnyId::OverRidingStyledItem(*i)),
+            GroupableItemRef::ParametricRepresentationContext(i) => {
+                out.push(AnyId::ParametricRepresentationContext(*i))
+            }
+            GroupableItemRef::Path(i) => out.push(AnyId::Path(*i)),
+            GroupableItemRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
+            GroupableItemRef::Person(i) => out.push(AnyId::Person(*i)),
+            GroupableItemRef::PersonAndOrganization(i) => {
+                out.push(AnyId::PersonAndOrganization(*i))
+            }
+            GroupableItemRef::PersonAndOrganizationAddress(i) => {
+                out.push(AnyId::PersonAndOrganizationAddress(*i))
+            }
+            GroupableItemRef::PersonalAddress(i) => out.push(AnyId::PersonalAddress(*i)),
+            GroupableItemRef::PlacedDatumTargetFeature(i) => {
+                out.push(AnyId::PlacedDatumTargetFeature(*i))
+            }
+            GroupableItemRef::Placement(i) => out.push(AnyId::Placement(*i)),
+            GroupableItemRef::PlanarBox(i) => out.push(AnyId::PlanarBox(*i)),
+            GroupableItemRef::PlanarExtent(i) => out.push(AnyId::PlanarExtent(*i)),
+            GroupableItemRef::Plane(i) => out.push(AnyId::Plane(*i)),
+            GroupableItemRef::PlaneAngleMeasureWithUnit(i) => {
+                out.push(AnyId::PlaneAngleMeasureWithUnit(*i))
+            }
+            GroupableItemRef::PlaneAngleUnit(i) => out.push(AnyId::PlaneAngleUnit(*i)),
+            GroupableItemRef::Point(i) => out.push(AnyId::Point(*i)),
+            GroupableItemRef::PolyLoop(i) => out.push(AnyId::PolyLoop(*i)),
+            GroupableItemRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
+            GroupableItemRef::PrecisionQualifier(i) => out.push(AnyId::PrecisionQualifier(*i)),
+            GroupableItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+            GroupableItemRef::PresentationRepresentation(i) => {
+                out.push(AnyId::PresentationRepresentation(*i))
+            }
+            GroupableItemRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+            GroupableItemRef::Product(i) => out.push(AnyId::Product(*i)),
+            GroupableItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+            GroupableItemRef::ProductConceptContext(i) => {
+                out.push(AnyId::ProductConceptContext(*i))
+            }
+            GroupableItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            GroupableItemRef::ProductDefinitionContext(i) => {
+                out.push(AnyId::ProductDefinitionContext(*i))
+            }
+            GroupableItemRef::ProductDefinitionEffectivity(i) => {
+                out.push(AnyId::ProductDefinitionEffectivity(*i))
+            }
+            GroupableItemRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            GroupableItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            GroupableItemRef::ProductDefinitionRelationship(i) => {
+                out.push(AnyId::ProductDefinitionRelationship(*i))
+            }
+            GroupableItemRef::ProductDefinitionShape(i) => {
+                out.push(AnyId::ProductDefinitionShape(*i))
+            }
+            GroupableItemRef::ProductDefinitionUsage(i) => {
+                out.push(AnyId::ProductDefinitionUsage(*i))
+            }
+            GroupableItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
+            GroupableItemRef::PropertyDefinitionRepresentation(i) => {
+                out.push(AnyId::PropertyDefinitionRepresentation(*i))
+            }
+            GroupableItemRef::QualifiedRepresentationItem(i) => {
+                out.push(AnyId::QualifiedRepresentationItem(*i))
+            }
+            GroupableItemRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
+            GroupableItemRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
+            GroupableItemRef::RationalBSplineCurve(i) => out.push(AnyId::RationalBSplineCurve(*i)),
+            GroupableItemRef::RationalBSplineSurface(i) => {
+                out.push(AnyId::RationalBSplineSurface(*i))
+            }
+            GroupableItemRef::RealRepresentationItem(i) => {
+                out.push(AnyId::RealRepresentationItem(*i))
+            }
+            GroupableItemRef::RepositionedTessellatedItem(i) => {
+                out.push(AnyId::RepositionedTessellatedItem(*i))
+            }
+            GroupableItemRef::Representation(i) => out.push(AnyId::Representation(*i)),
+            GroupableItemRef::RepresentationContext(i) => {
+                out.push(AnyId::RepresentationContext(*i))
+            }
+            GroupableItemRef::RepresentationItem(i) => out.push(AnyId::RepresentationItem(*i)),
+            GroupableItemRef::RepresentationRelationship(i) => {
+                out.push(AnyId::RepresentationRelationship(*i))
+            }
+            GroupableItemRef::RepresentationRelationshipWithTransformation(i) => {
+                out.push(AnyId::RepresentationRelationshipWithTransformation(*i))
+            }
+            GroupableItemRef::SeamCurve(i) => out.push(AnyId::SeamCurve(*i)),
+            GroupableItemRef::SecurityClassification(i) => {
+                out.push(AnyId::SecurityClassification(*i))
+            }
+            GroupableItemRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
+            GroupableItemRef::ShapeAspectAssociativity(i) => {
+                out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            GroupableItemRef::ShapeAspectRelationship(i) => {
+                out.push(AnyId::ShapeAspectRelationship(*i))
+            }
+            GroupableItemRef::ShapeDefinitionRepresentation(i) => {
+                out.push(AnyId::ShapeDefinitionRepresentation(*i))
+            }
+            GroupableItemRef::ShapeDimensionRepresentation(i) => {
+                out.push(AnyId::ShapeDimensionRepresentation(*i))
+            }
+            GroupableItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+            GroupableItemRef::ShapeRepresentationRelationship(i) => {
+                out.push(AnyId::ShapeRepresentationRelationship(*i))
+            }
+            GroupableItemRef::ShellBasedSurfaceModel(i) => {
+                out.push(AnyId::ShellBasedSurfaceModel(*i))
+            }
+            GroupableItemRef::SiUnit(i) => out.push(AnyId::SiUnit(*i)),
+            GroupableItemRef::SolidAngleUnit(i) => out.push(AnyId::SolidAngleUnit(*i)),
+            GroupableItemRef::SolidModel(i) => out.push(AnyId::SolidModel(*i)),
+            GroupableItemRef::SphericalSurface(i) => out.push(AnyId::SphericalSurface(*i)),
+            GroupableItemRef::StateObserved(i) => out.push(AnyId::StateObserved(*i)),
+            GroupableItemRef::StateType(i) => out.push(AnyId::StateType(*i)),
+            GroupableItemRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+            GroupableItemRef::Surface(i) => out.push(AnyId::Surface(*i)),
+            GroupableItemRef::SurfaceCurve(i) => out.push(AnyId::SurfaceCurve(*i)),
+            GroupableItemRef::SurfaceOfLinearExtrusion(i) => {
+                out.push(AnyId::SurfaceOfLinearExtrusion(*i))
+            }
+            GroupableItemRef::SurfaceOfRevolution(i) => out.push(AnyId::SurfaceOfRevolution(*i)),
+            GroupableItemRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
+            GroupableItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+            GroupableItemRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+            GroupableItemRef::TessellatedAnnotationOccurrence(i) => {
+                out.push(AnyId::TessellatedAnnotationOccurrence(*i))
+            }
+            GroupableItemRef::TessellatedCurveSet(i) => out.push(AnyId::TessellatedCurveSet(*i)),
+            GroupableItemRef::TessellatedFace(i) => out.push(AnyId::TessellatedFace(*i)),
+            GroupableItemRef::TessellatedGeometricSet(i) => {
+                out.push(AnyId::TessellatedGeometricSet(*i))
+            }
+            GroupableItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            GroupableItemRef::TessellatedShapeRepresentation(i) => {
+                out.push(AnyId::TessellatedShapeRepresentation(*i))
+            }
+            GroupableItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
+            GroupableItemRef::TessellatedStructuredItem(i) => {
+                out.push(AnyId::TessellatedStructuredItem(*i))
+            }
+            GroupableItemRef::TessellatedSurfaceSet(i) => {
+                out.push(AnyId::TessellatedSurfaceSet(*i))
+            }
+            GroupableItemRef::TextLiteral(i) => out.push(AnyId::TextLiteral(*i)),
+            GroupableItemRef::TimeUnit(i) => out.push(AnyId::TimeUnit(*i)),
+            GroupableItemRef::ToleranceZone(i) => out.push(AnyId::ToleranceZone(*i)),
+            GroupableItemRef::ToleranceZoneWithDatum(i) => {
+                out.push(AnyId::ToleranceZoneWithDatum(*i))
+            }
+            GroupableItemRef::TopologicalRepresentationItem(i) => {
+                out.push(AnyId::TopologicalRepresentationItem(*i))
+            }
+            GroupableItemRef::ToroidalSurface(i) => out.push(AnyId::ToroidalSurface(*i)),
+            GroupableItemRef::TrimmedCurve(i) => out.push(AnyId::TrimmedCurve(*i)),
+            GroupableItemRef::TwoDirectionRepeatFactor(i) => {
+                out.push(AnyId::TwoDirectionRepeatFactor(*i))
+            }
+            GroupableItemRef::TypeQualifier(i) => out.push(AnyId::TypeQualifier(*i)),
+            GroupableItemRef::UncertaintyMeasureWithUnit(i) => {
+                out.push(AnyId::UncertaintyMeasureWithUnit(*i))
+            }
+            GroupableItemRef::UncertaintyQualifier(i) => out.push(AnyId::UncertaintyQualifier(*i)),
+            GroupableItemRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
+            GroupableItemRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+            GroupableItemRef::ValueRepresentationItem(i) => {
+                out.push(AnyId::ValueRepresentationItem(*i))
+            }
+            GroupableItemRef::Vector(i) => out.push(AnyId::Vector(*i)),
+            GroupableItemRef::VersionedActionRequest(i) => {
+                out.push(AnyId::VersionedActionRequest(*i))
+            }
+            GroupableItemRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
+            GroupableItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
+            GroupableItemRef::VertexPoint(i) => out.push(AnyId::VertexPoint(*i)),
+            GroupableItemRef::VertexShell(i) => out.push(AnyId::VertexShell(*i)),
+            GroupableItemRef::WireShell(i) => out.push(AnyId::WireShell(*i)),
+            GroupableItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -12547,6 +14029,21 @@ impl<'a> Writer<'a> {
                 let it = self.model.application_protocol_definitions.get(id.0);
                 Self::deps_ref_application_context(&it.application, out);
             }
+            AnyId::AppliedDateAndTimeAssignment(id) => {
+                let it = self.model.applied_date_and_time_assignments.get(id.0);
+                Self::deps_ref_date_and_time(&it.assigned_date_and_time, out);
+                Self::deps_ref_date_time_role(&it.role, out);
+                for e in &it.items {
+                    Self::deps_ref_date_and_time_item(e, out);
+                }
+            }
+            AnyId::AppliedGroupAssignment(id) => {
+                let it = self.model.applied_group_assignments.get(id.0);
+                Self::deps_ref_group(&it.assigned_group, out);
+                for e in &it.items {
+                    Self::deps_ref_groupable_item(e, out);
+                }
+            }
             AnyId::Approval(id) => {
                 let it = self.model.approvals.get(id.0);
                 Self::deps_ref_approval_status(&it.status, out);
@@ -13373,6 +14870,10 @@ impl<'a> Writer<'a> {
                 }
             }
             AnyId::Group(_) => {}
+            AnyId::GroupAssignment(id) => {
+                let it = self.model.group_assignments.get(id.0);
+                Self::deps_ref_group(&it.assigned_group, out);
+            }
             AnyId::Hyperbola(id) => {
                 let it = self.model.hyperbolas.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
@@ -14380,6 +15881,16 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_application_context(frame_of_reference, out);
                         }
+                        UnitPart::AppliedDateAndTimeAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_date_and_time_item(e, out);
+                            }
+                        }
+                        UnitPart::AppliedGroupAssignment { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_groupable_item(e, out);
+                            }
+                        }
                         UnitPart::ApprovalAssignment {
                             assigned_approval, ..
                         } => {
@@ -14725,6 +16236,9 @@ impl<'a> Writer<'a> {
                             for e in units {
                                 Self::deps_ref_unit(e, out);
                             }
+                        }
+                        UnitPart::GroupAssignment { assigned_group, .. } => {
+                            Self::deps_ref_group(assigned_group, out);
                         }
                         UnitPart::Invisibility {
                             invisible_items, ..
@@ -15716,6 +17230,45 @@ impl<'a> Writer<'a> {
                     "#{n} = APPLICATION_PROTOCOL_DEFINITION({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::AppliedDateAndTimeAssignment(id) => {
+                let it = self.model.applied_date_and_time_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_date_and_time(&it.assigned_date_and_time)
+                    ),
+                    format!("#{}", self.id_of_ref_date_time_role(&it.role)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_date_and_time_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = APPLIED_DATE_AND_TIME_ASSIGNMENT({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::AppliedGroupAssignment(id) => {
+                let it = self.model.applied_group_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_group(&it.assigned_group)),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_groupable_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = APPLIED_GROUP_ASSIGNMENT({});\n", attrs.join(","))
             }
             AnyId::Approval(id) => {
                 let it = self.model.approvals.get(id.0);
@@ -18485,6 +20038,13 @@ impl<'a> Writer<'a> {
                     },
                 ];
                 format!("#{n} = GROUP({});\n", attrs.join(","))
+            }
+            AnyId::GroupAssignment(id) => {
+                let it = self.model.group_assignments.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> =
+                    vec![format!("#{}", self.id_of_ref_group(&it.assigned_group))];
+                format!("#{n} = GROUP_ASSIGNMENT({});\n", attrs.join(","))
             }
             AnyId::Hyperbola(id) => {
                 let it = self.model.hyperbolas.get(id.0);
@@ -21819,6 +23379,8 @@ impl<'a> Writer<'a> {
                 UnitPart::AnnotationTextCharacter { alignment, .. } => { let a: Vec<String> = vec![step_str(alignment)]; format!("ANNOTATION_TEXT_CHARACTER({})", a.join(",")) },
                 UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE()".to_string(),
                 UnitPart::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
+                UnitPart::AppliedDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_and_time_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::AppliedGroupAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_groupable_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_GROUP_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
                 UnitPart::AssemblyComponentUsage { reference_designator, .. } => { let a: Vec<String> = vec![match reference_designator { Some(x) => step_str(x), None => "$".to_string() }]; format!("ASSEMBLY_COMPONENT_USAGE({})", a.join(",")) },
@@ -21940,6 +23502,7 @@ impl<'a> Writer<'a> {
                 UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => { let a: Vec<String> = vec![format!("({})", uncertainty.iter().map(|e| format!("#{}", self.id_of_ref_uncertainty_measure_with_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT({})", a.join(",")) },
                 UnitPart::GlobalUnitAssignedContext { units, .. } => { let a: Vec<String> = vec![format!("({})", units.iter().map(|e| format!("#{}", self.id_of_ref_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNIT_ASSIGNED_CONTEXT({})", a.join(",")) },
                 UnitPart::Group { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("GROUP({})", a.join(",")) },
+                UnitPart::GroupAssignment { assigned_group, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_group(assigned_group))]; format!("GROUP_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::IntLiteral => "INT_LITERAL()".to_string(),
                 UnitPart::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM()".to_string(),
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
@@ -22227,6 +23790,14 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ApplicationProtocolDefinition(
                 ApplicationProtocolDefinitionId(i),
             ));
+        }
+        for i in 0..self.model.applied_date_and_time_assignments.items.len() {
+            roots.push(AnyId::AppliedDateAndTimeAssignment(
+                AppliedDateAndTimeAssignmentId(i),
+            ));
+        }
+        for i in 0..self.model.applied_group_assignments.items.len() {
+            roots.push(AnyId::AppliedGroupAssignment(AppliedGroupAssignmentId(i)));
         }
         for i in 0..self.model.approvals.items.len() {
             roots.push(AnyId::Approval(ApprovalId(i)));
@@ -22896,6 +24467,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.groups.items.len() {
             roots.push(AnyId::Group(GroupId(i)));
+        }
+        for i in 0..self.model.group_assignments.items.len() {
+            roots.push(AnyId::GroupAssignment(GroupAssignmentId(i)));
         }
         for i in 0..self.model.hyperbolas.items.len() {
             roots.push(AnyId::Hyperbola(HyperbolaId(i)));
