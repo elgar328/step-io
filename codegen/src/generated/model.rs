@@ -110,6 +110,30 @@ impl AheadOrBehind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AngleRelator {
+    Equal,
+    Large,
+    Small,
+}
+impl AngleRelator {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "EQUAL" => Self::Equal,
+            "LARGE" => Self::Large,
+            "SMALL" => Self::Small,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Equal => ".EQUAL.",
+            Self::Large => ".LARGE.",
+            Self::Small => ".SMALL.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AnnotationPlaceholderOccurrenceRole {
     AnnotationText,
     GpsData,
@@ -1091,6 +1115,10 @@ pub struct AdvancedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AllAroundShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AngularLocationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AngularSizeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AngularityToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationCurveOccurrenceId(pub usize);
@@ -1281,6 +1309,8 @@ pub struct CompositeShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeTextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CompoundRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConcentricityToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConfigurationDesignId(pub usize);
@@ -1339,6 +1369,8 @@ pub struct DateAndTimeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateAndTimeAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DateRoleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateTimeRoleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumId(pub usize);
@@ -1357,6 +1389,8 @@ pub struct DatumSystemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumTargetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DefaultModelGeometricViewId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinedCharacterGlyphId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinedSymbolId(pub usize);
@@ -1374,6 +1408,8 @@ pub struct DerivedShapeAspectId(pub usize);
 pub struct DerivedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedUnitElementId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DescriptionAttributeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DescriptiveRepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1472,6 +1508,8 @@ pub struct FaceBoundId(pub usize);
 pub struct FaceOuterBoundId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FaceSurfaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct FeatureForDatumTargetRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1582,6 +1620,8 @@ pub struct LiteralNumberId(pub usize);
 pub struct LocalTimeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LoopId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MakeFromUsageOptionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ManifoldSolidBrepId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1735,7 +1775,11 @@ pub struct PresentationRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PresentationSizeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationStyleAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PresentationStyleByContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationViewId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1803,6 +1847,8 @@ pub struct QuasiUniformCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct QuasiUniformSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RatioMeasureWithUnitId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RatioUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RationalBSplineCurveId(pub usize);
@@ -1862,6 +1908,8 @@ pub struct ShapeDimensionRepresentationId(pub usize);
 pub struct ShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeRepresentationRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ShapeRepresentationWithParametersId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShellBasedSurfaceModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -2050,6 +2098,8 @@ pub enum AnyId {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
@@ -2145,6 +2195,7 @@ pub enum AnyId {
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     ConcentricityTolerance(ConcentricityToleranceId),
     ConfigurationDesign(ConfigurationDesignId),
     ConfigurationEffectivity(ConfigurationEffectivityId),
@@ -2176,6 +2227,7 @@ pub enum AnyId {
     Date(DateId),
     DateAndTime(DateAndTimeId),
     DateAndTimeAssignment(DateAndTimeAssignmentId),
+    DateRole(DateRoleId),
     DateTimeRole(DateTimeRoleId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
@@ -2185,6 +2237,7 @@ pub enum AnyId {
     DatumReferenceModifierWithValue(DatumReferenceModifierWithValueId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
@@ -2196,6 +2249,7 @@ pub enum AnyId {
     DerivedShapeAspect(DerivedShapeAspectId),
     DerivedUnit(DerivedUnitId),
     DerivedUnitElement(DerivedUnitElementId),
+    DescriptionAttribute(DescriptionAttributeId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     DesignContext(DesignContextId),
     DimensionalCharacteristicRepresentation(DimensionalCharacteristicRepresentationId),
@@ -2245,6 +2299,7 @@ pub enum AnyId {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FillAreaStyle(FillAreaStyleId),
     FillAreaStyleColour(FillAreaStyleColourId),
     FillAreaStyleHatching(FillAreaStyleHatchingId),
@@ -2304,6 +2359,7 @@ pub enum AnyId {
     LiteralNumber(LiteralNumberId),
     LocalTime(LocalTimeId),
     Loop(LoopId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
@@ -2386,7 +2442,9 @@ pub enum AnyId {
     PresentationLayerAssignment(PresentationLayerAssignmentId),
     PresentationRepresentation(PresentationRepresentationId),
     PresentationSet(PresentationSetId),
+    PresentationSize(PresentationSizeId),
     PresentationStyleAssignment(PresentationStyleAssignmentId),
+    PresentationStyleByContext(PresentationStyleByContextId),
     PresentationView(PresentationViewId),
     PresentedItem(PresentedItemId),
     PresentedItemRepresentation(PresentedItemRepresentationId),
@@ -2420,6 +2478,7 @@ pub enum AnyId {
     QualifiedRepresentationItem(QualifiedRepresentationItemId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
+    RatioMeasureWithUnit(RatioMeasureWithUnitId),
     RatioUnit(RatioUnitId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
@@ -2450,6 +2509,7 @@ pub enum AnyId {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SiUnit(SiUnitId),
     SimpleGenericExpression(SimpleGenericExpressionId),
@@ -2859,6 +2919,7 @@ pub enum ApprovalItemRef {
     ActionRequestSolution(ActionRequestSolutionId),
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
+    AngularLocation(AngularLocationId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
@@ -2912,6 +2973,7 @@ pub enum ApprovalItemRef {
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     CompositeCurve(CompositeCurveId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     ConfigurationDesign(ConfigurationDesignId),
     ConfigurationEffectivity(ConfigurationEffectivityId),
     ConfigurationItem(ConfigurationItemId),
@@ -2960,6 +3022,7 @@ pub enum ApprovalItemRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FillAreaStyleHatching(FillAreaStyleHatchingId),
     FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
     FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
@@ -2984,6 +3047,7 @@ pub enum ApprovalItemRef {
     LeaderTerminator(LeaderTerminatorId),
     Line(LineId),
     Loop(LoopId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
@@ -3060,6 +3124,7 @@ pub enum ApprovalItemRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
@@ -3110,6 +3175,7 @@ impl ApprovalItemRef {
             AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
@@ -3169,6 +3235,7 @@ impl ApprovalItemRef {
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
             AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
             AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
@@ -3223,6 +3290,9 @@ impl ApprovalItemRef {
             AnyId::FaceBound(i) => Self::FaceBound(i),
             AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
             AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
             AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
@@ -3247,6 +3317,7 @@ impl ApprovalItemRef {
             AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
@@ -3333,6 +3404,9 @@ impl ApprovalItemRef {
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SolidModel(i) => Self::SolidModel(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
@@ -3670,6 +3744,8 @@ impl CharacterizedActionDefinitionRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
     CentreOfSymmetry(CentreOfSymmetryId),
@@ -3690,6 +3766,7 @@ pub enum CharacterizedDefinitionRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
@@ -3700,6 +3777,7 @@ pub enum CharacterizedDefinitionRef {
     DocumentFile(DocumentFileId),
     DraughtingModelItemAssociation(DraughtingModelItemAssociationId),
     DraughtingModelItemAssociationWithPlaceholder(DraughtingModelItemAssociationWithPlaceholderId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FlatnessTolerance(FlatnessToleranceId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GeometricItemSpecificUsage(GeometricItemSpecificUsageId),
@@ -3711,6 +3789,7 @@ pub enum CharacterizedDefinitionRef {
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     ItemIdentifiedRepresentationUsage(ItemIdentifiedRepresentationUsageId),
     LineProfileTolerance(LineProfileToleranceId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ModelGeometricView(ModelGeometricViewId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
@@ -3743,6 +3822,8 @@ impl CharacterizedDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
             AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
@@ -3765,6 +3846,7 @@ impl CharacterizedDefinitionRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
@@ -3776,6 +3858,9 @@ impl CharacterizedDefinitionRef {
             AnyId::DraughtingModelItemAssociation(i) => Self::DraughtingModelItemAssociation(i),
             AnyId::DraughtingModelItemAssociationWithPlaceholder(i) => {
                 Self::DraughtingModelItemAssociationWithPlaceholder(i)
+            }
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
             }
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
@@ -3798,6 +3883,7 @@ impl CharacterizedDefinitionRef {
                 Self::ItemIdentifiedRepresentationUsage(i)
             }
             AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ModelGeometricView(i) => Self::ModelGeometricView(i),
             AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
@@ -3911,6 +3997,319 @@ impl CompositeCurveSegmentRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum CompoundItemDefinitionRef {
+    AdvancedFace(AdvancedFaceId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbol(AnnotationSymbolId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    CoordinatesList(CoordinatesListId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
+    DefinedSymbol(DefinedSymbolId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    Direction(DirectionId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    DraughtingCallout(DraughtingCalloutId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    Hyperbola(HyperbolaId),
+    IntegerRepresentationItem(IntegerRepresentationItemId),
+    IntersectionCurve(IntersectionCurveId),
+    LeaderCurve(LeaderCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
+    Line(LineId),
+    Loop(LoopId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    MappedItem(MappedItemId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    Path(PathId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
+    QualifiedRepresentationItem(QualifiedRepresentationItemId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    RealRepresentationItem(RealRepresentationItemId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
+    RepresentationItem(RepresentationItemId),
+    SeamCurve(SeamCurveId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    StyledItem(StyledItemId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolTarget(SymbolTargetId),
+    TerminatorSymbol(TerminatorSymbolId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    TessellatedCurveSet(TessellatedCurveSetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedShell(TessellatedShellId),
+    TessellatedSolid(TessellatedSolidId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    ValueRepresentationItem(ValueRepresentationItemId),
+    Vector(VectorId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
+    ListRepresentationItem(Vec<RepresentationItemRef>),
+    SetRepresentationItem(Vec<RepresentationItemRef>),
+    Complex(ComplexUnitId),
+}
+impl CompoundItemDefinitionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
+            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
+            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
+            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
+            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CameraImage(i) => Self::CameraImage(i),
+            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
+            AnyId::CameraModel(i) => Self::CameraModel(i),
+            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
+            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
+            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
+            AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::Edge(i) => Self::Edge(i),
+            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
+            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
+            AnyId::Face(i) => Self::Face(i),
+            AnyId::FaceBound(i) => Self::FaceBound(i),
+            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
+            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::Hyperbola(i) => Self::Hyperbola(i),
+            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::Loop(i) => Self::Loop(i),
+            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
+            AnyId::Path(i) => Self::Path(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::Point(i) => Self::Point(i),
+            AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
+            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
+            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
+            AnyId::SolidModel(i) => Self::SolidModel(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
+            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
+            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
+            AnyId::Vector(i) => Self::Vector(i),
+            AnyId::Vertex(i) => Self::Vertex(i),
+            AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CompoundItemDefinitionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ConfigurationDesignItemRef {
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionFormation(ProductDefinitionFormationId),
@@ -3999,6 +4398,7 @@ pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRef {
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
 }
@@ -4020,6 +4420,9 @@ impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
             }
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!(
@@ -4372,6 +4775,7 @@ pub enum DateAndTimeItemRef {
     GeometricallyBoundedWireframeShapeRepresentation(
         GeometricallyBoundedWireframeShapeRepresentationId,
     ),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
@@ -4412,6 +4816,7 @@ pub enum DateAndTimeItemRef {
     ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     StateObserved(StateObservedId),
     StateType(StateTypeId),
     SymbolRepresentation(SymbolRepresentationId),
@@ -4458,6 +4863,7 @@ impl DateAndTimeItemRef {
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 Self::GeometricallyBoundedWireframeShapeRepresentation(i)
             }
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
@@ -4504,6 +4910,9 @@ impl DateAndTimeItemRef {
             AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::StateObserved(i) => Self::StateObserved(i),
             AnyId::StateType(i) => Self::StateType(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
@@ -4781,6 +5190,8 @@ impl DefinitionalRepresentationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DerivedPropertySelectRef {
     ActionProperty(ActionPropertyId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     CoaxialityTolerance(CoaxialityToleranceId),
@@ -4819,6 +5230,8 @@ impl DerivedPropertySelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::ActionProperty(i) => Self::ActionProperty(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
@@ -4896,7 +5309,124 @@ impl DesApllPointSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DescriptionAttributeSelectRef {
+    ActionRequestSolution(ActionRequestSolutionId),
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    ApplicationContext(ApplicationContextId),
+    ApprovalRole(ApprovalRoleId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    ConfigurationDesign(ConfigurationDesignId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
+    DateRole(DateRoleId),
+    DateTimeRole(DateTimeRoleId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DraughtingModel(DraughtingModelId),
+    Effectivity(EffectivityId),
+    ExternalSource(ExternalSourceId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    OrganizationRole(OrganizationRoleId),
+    OrganizationalProject(OrganizationalProjectId),
+    PersonAndOrganization(PersonAndOrganizationId),
+    PersonAndOrganizationRole(PersonAndOrganizationRoleId),
+    PresentationArea(PresentationAreaId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationView(PresentationViewId),
+    ProductDefinitionEffectivity(ProductDefinitionEffectivityId),
+    PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
+    Representation(RepresentationId),
+    ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
+    SymbolRepresentation(SymbolRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    Complex(ComplexUnitId),
+}
+impl DescriptionAttributeSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
+            AnyId::ApprovalRole(i) => Self::ApprovalRole(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
+            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
+            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
+            AnyId::ContextDependentShapeRepresentation(i) => {
+                Self::ContextDependentShapeRepresentation(i)
+            }
+            AnyId::DateRole(i) => Self::DateRole(i),
+            AnyId::DateTimeRole(i) => Self::DateTimeRole(i),
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::Effectivity(i) => Self::Effectivity(i),
+            AnyId::ExternalSource(i) => Self::ExternalSource(i),
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+            }
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
+            AnyId::OrganizationRole(i) => Self::OrganizationRole(i),
+            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
+            AnyId::PersonAndOrganizationRole(i) => Self::PersonAndOrganizationRole(i),
+            AnyId::PresentationArea(i) => Self::PresentationArea(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::PresentationView(i) => Self::PresentationView(i),
+            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
+            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
+            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DescriptionAttributeSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DimensionalCharacteristicRef {
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
@@ -4908,6 +5438,8 @@ pub enum DimensionalCharacteristicRef {
 impl DimensionalCharacteristicRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
@@ -4975,6 +5507,8 @@ pub enum DocumentReferenceItemRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
@@ -5033,6 +5567,7 @@ pub enum DocumentReferenceItemRef {
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     ConfigurationDesign(ConfigurationDesignId),
     ConfigurationEffectivity(ConfigurationEffectivityId),
     ConfigurationItem(ConfigurationItemId),
@@ -5056,6 +5591,7 @@ pub enum DocumentReferenceItemRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
@@ -5097,6 +5633,7 @@ pub enum DocumentReferenceItemRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FillAreaStyleHatching(FillAreaStyleHatchingId),
     FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
     FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
@@ -5122,6 +5659,7 @@ pub enum DocumentReferenceItemRef {
     LeaderTerminator(LeaderTerminatorId),
     Line(LineId),
     Loop(LoopId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
@@ -5203,6 +5741,7 @@ pub enum DocumentReferenceItemRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
@@ -5257,6 +5796,8 @@ impl DocumentReferenceItemRef {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
@@ -5321,6 +5862,7 @@ impl DocumentReferenceItemRef {
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
             AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
             AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
@@ -5348,6 +5890,7 @@ impl DocumentReferenceItemRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
@@ -5391,6 +5934,9 @@ impl DocumentReferenceItemRef {
             AnyId::FaceBound(i) => Self::FaceBound(i),
             AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
             AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
             AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
@@ -5416,6 +5962,7 @@ impl DocumentReferenceItemRef {
             AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
@@ -5509,6 +6056,9 @@ impl DocumentReferenceItemRef {
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SolidModel(i) => Self::SolidModel(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
@@ -5669,6 +6219,8 @@ impl DraughtingModelItemAssociationSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingModelItemDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
     CentreOfSymmetry(CentreOfSymmetryId),
@@ -5686,6 +6238,7 @@ pub enum DraughtingModelItemDefinitionRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
@@ -5693,6 +6246,7 @@ pub enum DraughtingModelItemDefinitionRef {
     DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     DirectedDimensionalLocation(DirectedDimensionalLocationId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FlatnessTolerance(FlatnessToleranceId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GeometricTolerance(GeometricToleranceId),
@@ -5702,6 +6256,7 @@ pub enum DraughtingModelItemDefinitionRef {
     GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     LineProfileTolerance(LineProfileToleranceId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ParallelismTolerance(ParallelismToleranceId),
@@ -5730,6 +6285,8 @@ impl DraughtingModelItemDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
             AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
@@ -5747,6 +6304,7 @@ impl DraughtingModelItemDefinitionRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
@@ -5754,6 +6312,9 @@ impl DraughtingModelItemDefinitionRef {
             AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
             AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
             AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
@@ -5771,6 +6332,7 @@ impl DraughtingModelItemDefinitionRef {
             }
             AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
             AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
             AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
@@ -5882,6 +6444,7 @@ pub enum ExternalIdentificationItemRef {
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     CompositeCurve(CompositeCurveId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     ConfigurationEffectivity(ConfigurationEffectivityId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
@@ -6016,6 +6579,7 @@ pub enum ExternalIdentificationItemRef {
     SecurityClassification(SecurityClassificationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SiUnit(SiUnitId),
     SolidAngleUnit(SolidAngleUnitId),
@@ -6130,6 +6694,7 @@ impl ExternalIdentificationItemRef {
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
@@ -6276,6 +6841,9 @@ impl ExternalIdentificationItemRef {
             AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SiUnit(i) => Self::SiUnit(i),
             AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
@@ -6558,6 +7126,7 @@ impl GeneralPropertyRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricItemSpecificUsageSelectRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
     CentreOfSymmetry(CentreOfSymmetryId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
@@ -6569,11 +7138,13 @@ pub enum GeometricItemSpecificUsageSelectRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureId),
     DirectedDimensionalLocation(DirectedDimensionalLocationId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     GeneralDatumReference(GeneralDatumReferenceId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     ShapeAspect(ShapeAspectId),
@@ -6588,6 +7159,7 @@ impl GeometricItemSpecificUsageSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
             AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
@@ -6599,11 +7171,15 @@ impl GeometricItemSpecificUsageSelectRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
             AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
@@ -7036,6 +7612,8 @@ impl GeometricToleranceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceTargetRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     CentreOfSymmetry(CentreOfSymmetryId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
@@ -7047,6 +7625,7 @@ pub enum GeometricToleranceTargetRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
@@ -7066,6 +7645,8 @@ impl GeometricToleranceTargetRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
@@ -7077,6 +7658,7 @@ impl GeometricToleranceTargetRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
@@ -7120,6 +7702,7 @@ pub enum GroupableItemRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
@@ -7180,6 +7763,7 @@ pub enum GroupableItemRef {
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     ConfigurationDesign(ConfigurationDesignId),
     ConfigurationEffectivity(ConfigurationEffectivityId),
     ConfigurationItem(ConfigurationItemId),
@@ -7208,6 +7792,7 @@ pub enum GroupableItemRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
@@ -7243,6 +7828,7 @@ pub enum GroupableItemRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FillAreaStyleHatching(FillAreaStyleHatchingId),
     FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
     FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
@@ -7275,6 +7861,7 @@ pub enum GroupableItemRef {
     Line(LineId),
     LocalTime(LocalTimeId),
     Loop(LoopId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
@@ -7344,6 +7931,7 @@ pub enum GroupableItemRef {
     QualifiedRepresentationItem(QualifiedRepresentationItemId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
+    RatioMeasureWithUnit(RatioMeasureWithUnitId),
     RatioUnit(RatioUnitId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
@@ -7364,6 +7952,7 @@ pub enum GroupableItemRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SiUnit(SiUnitId),
     SolidAngleUnit(SolidAngleUnitId),
@@ -7422,6 +8011,7 @@ impl GroupableItemRef {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
@@ -7484,6 +8074,7 @@ impl GroupableItemRef {
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
             AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
             AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
@@ -7518,6 +8109,7 @@ impl GroupableItemRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
@@ -7555,6 +8147,9 @@ impl GroupableItemRef {
             AnyId::FaceBound(i) => Self::FaceBound(i),
             AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
             AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
             AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
@@ -7587,6 +8182,7 @@ impl GroupableItemRef {
             AnyId::Line(i) => Self::Line(i),
             AnyId::LocalTime(i) => Self::LocalTime(i),
             AnyId::Loop(i) => Self::Loop(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
@@ -7666,6 +8262,7 @@ impl GroupableItemRef {
             AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
             AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RatioMeasureWithUnit(i) => Self::RatioMeasureWithUnit(i),
             AnyId::RatioUnit(i) => Self::RatioUnit(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
@@ -7688,6 +8285,9 @@ impl GroupableItemRef {
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SiUnit(i) => Self::SiUnit(i),
             AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
@@ -7749,6 +8349,8 @@ pub enum IdAttributeSelectRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     ApplicationContext(ApplicationContextId),
     AscribableStateRelationship(AscribableStateRelationshipId),
@@ -7771,6 +8373,7 @@ pub enum IdAttributeSelectRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
@@ -7787,6 +8390,7 @@ pub enum IdAttributeSelectRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FlatnessTolerance(FlatnessToleranceId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GeometricTolerance(GeometricToleranceId),
@@ -7844,6 +8448,7 @@ pub enum IdAttributeSelectRef {
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     StraightnessTolerance(StraightnessToleranceId),
     SurfaceProfileTolerance(SurfaceProfileToleranceId),
     SymbolRepresentation(SymbolRepresentationId),
@@ -7869,6 +8474,8 @@ impl IdAttributeSelectRef {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
             AnyId::AscribableStateRelationship(i) => Self::AscribableStateRelationship(i),
@@ -7893,6 +8500,7 @@ impl IdAttributeSelectRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
@@ -7909,6 +8517,9 @@ impl IdAttributeSelectRef {
             AnyId::FaceBound(i) => Self::FaceBound(i),
             AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
@@ -7976,6 +8587,9 @@ impl IdAttributeSelectRef {
             AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
             AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
@@ -8057,6 +8671,7 @@ pub enum InvisibleItemRef {
     Representation(RepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     StyledItem(StyledItemId),
     SymbolRepresentation(SymbolRepresentationId),
     TerminatorSymbol(TerminatorSymbolId),
@@ -8118,6 +8733,9 @@ impl InvisibleItemRef {
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::StyledItem(i) => Self::StyledItem(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
             AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
@@ -8147,6 +8765,8 @@ impl ItemDefinedTransformationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     AppliedApprovalAssignment(AppliedApprovalAssignmentId),
     AppliedDateAndTimeAssignment(AppliedDateAndTimeAssignmentId),
@@ -8173,6 +8793,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
@@ -8181,6 +8802,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     DirectedDimensionalLocation(DirectedDimensionalLocationId),
     DocumentFile(DocumentFileId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     FlatnessTolerance(FlatnessToleranceId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GeneralProperty(GeneralPropertyId),
@@ -8191,6 +8813,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     LineProfileTolerance(LineProfileToleranceId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ModelGeometricView(ModelGeometricViewId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
@@ -8221,6 +8844,8 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::AppliedApprovalAssignment(i) => Self::AppliedApprovalAssignment(i),
             AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
@@ -8253,6 +8878,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
@@ -8261,6 +8887,9 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
             AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
             AnyId::DocumentFile(i) => Self::DocumentFile(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
@@ -8279,6 +8908,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             }
             AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
             AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ModelGeometricView(i) => Self::ModelGeometricView(i),
             AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
@@ -8357,6 +8987,7 @@ pub enum ItemIdentifiedRepresentationUsageSelectRef {
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     CompositeCurve(CompositeCurveId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -8512,6 +9143,7 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -8668,6 +9300,7 @@ pub enum LayeredItemRef {
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     CompositeCurve(CompositeCurveId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -8824,6 +9457,7 @@ impl LayeredItemRef {
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -9045,6 +9679,7 @@ pub enum MeasureWithUnitRef {
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
+    RatioMeasureWithUnit(RatioMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
     Complex(ComplexUnitId),
 }
@@ -9056,6 +9691,7 @@ impl MeasureWithUnitRef {
             AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
             AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
+            AnyId::RatioMeasureWithUnit(i) => Self::RatioMeasureWithUnit(i),
             AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("MeasureWithUnitRef ref -> {other:?}"),
@@ -9085,6 +9721,7 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRef {
     ),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
 }
@@ -9113,6 +9750,9 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
             }
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("MechanicalDesignAndDraughtingRelationshipSelectRef ref -> {other:?}"),
@@ -9387,6 +10027,7 @@ pub enum PersonAndOrganizationItemRef {
     GeometricallyBoundedWireframeShapeRepresentation(
         GeometricallyBoundedWireframeShapeRepresentationId,
     ),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
@@ -9430,6 +10071,7 @@ pub enum PersonAndOrganizationItemRef {
     ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     StateObserved(StateObservedId),
     StateType(StateTypeId),
     SymbolRepresentation(SymbolRepresentationId),
@@ -9480,6 +10122,7 @@ impl PersonAndOrganizationItemRef {
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 Self::GeometricallyBoundedWireframeShapeRepresentation(i)
             }
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
@@ -9529,6 +10172,9 @@ impl PersonAndOrganizationItemRef {
             AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::StateObserved(i) => Self::StateObserved(i),
             AnyId::StateType(i) => Self::StateType(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
@@ -9701,14 +10347,35 @@ impl PresentationSetRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum PresentationSizeAssignmentSelectRef {
+    AreaInSet(AreaInSetId),
+    PresentationArea(PresentationAreaId),
+    PresentationView(PresentationViewId),
+    Complex(ComplexUnitId),
+}
+impl PresentationSizeAssignmentSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AreaInSet(i) => Self::AreaInSet(i),
+            AnyId::PresentationArea(i) => Self::PresentationArea(i),
+            AnyId::PresentationView(i) => Self::PresentationView(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("PresentationSizeAssignmentSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum PresentationStyleAssignmentRef {
     PresentationStyleAssignment(PresentationStyleAssignmentId),
+    PresentationStyleByContext(PresentationStyleByContextId),
     Complex(ComplexUnitId),
 }
 impl PresentationStyleAssignmentRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::PresentationStyleAssignment(i) => Self::PresentationStyleAssignment(i),
+            AnyId::PresentationStyleByContext(i) => Self::PresentationStyleByContext(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("PresentationStyleAssignmentRef ref -> {other:?}"),
         }
@@ -9776,6 +10443,7 @@ pub enum PresentedItemSelectRef {
     ActionMethod(ActionMethodId),
     ActionRelationship(ActionRelationshipId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ProductConcept(ProductConceptId),
     ProductConceptFeature(ProductConceptFeatureId),
@@ -9795,6 +10463,7 @@ impl PresentedItemSelectRef {
             AnyId::ActionMethod(i) => Self::ActionMethod(i),
             AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
             AnyId::ProductConcept(i) => Self::ProductConcept(i),
             AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
@@ -9973,6 +10642,7 @@ impl ProductDefinitionRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionRelationshipRef {
     AssemblyComponentUsage(AssemblyComponentUsageId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
@@ -9982,6 +10652,7 @@ impl ProductDefinitionRelationshipRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
             AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
             AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
@@ -10164,6 +10835,7 @@ pub enum RepresentationItemRef {
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     CompositeCurve(CompositeCurveId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -10317,6 +10989,7 @@ impl RepresentationItemRef {
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -10474,6 +11147,7 @@ pub enum RepresentationOrRepresentationReferenceRef {
     RepresentationReference(RepresentationReferenceId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
@@ -10513,6 +11187,9 @@ impl RepresentationOrRepresentationReferenceRef {
             AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -10550,6 +11227,7 @@ pub enum RepresentationRef {
     Representation(RepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
@@ -10588,6 +11266,9 @@ impl RepresentationRef {
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -10599,6 +11280,7 @@ impl RepresentationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentedDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
     CentreOfSymmetry(CentreOfSymmetryId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
@@ -10610,11 +11292,13 @@ pub enum RepresentedDefinitionRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureId),
     DirectedDimensionalLocation(DirectedDimensionalLocationId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GeneralProperty(GeneralPropertyId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
@@ -10633,6 +11317,7 @@ impl RepresentedDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
             AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
@@ -10644,11 +11329,15 @@ impl RepresentedDefinitionRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
             AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Self::FeatureForDatumTargetRelationship(i)
+            }
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
@@ -10765,6 +11454,7 @@ pub enum ShapeAspectRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureId),
     GeneralDatumReference(GeneralDatumReferenceId),
@@ -10789,6 +11479,7 @@ impl ShapeAspectRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
@@ -10830,6 +11521,7 @@ pub enum ShapeModelRef {
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
 }
@@ -10851,6 +11543,9 @@ impl ShapeModelRef {
             }
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ShapeModelRef ref -> {other:?}"),
@@ -10903,6 +11598,7 @@ pub enum SizeSelectRef {
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
+    RatioMeasureWithUnit(RatioMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
     DescriptiveMeasure(String),
     PositiveLengthMeasure(f64),
@@ -10916,6 +11612,7 @@ impl SizeSelectRef {
             AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
             AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
+            AnyId::RatioMeasureWithUnit(i) => Self::RatioMeasureWithUnit(i),
             AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("SizeSelectRef ref -> {other:?}"),
@@ -11020,6 +11717,7 @@ pub enum StyleContextSelectRef {
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     CompositeCurve(CompositeCurveId),
     CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -11129,6 +11827,7 @@ pub enum StyleContextSelectRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
@@ -11218,6 +11917,7 @@ impl StyleContextSelectRef {
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -11341,6 +12041,9 @@ impl StyleContextSelectRef {
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SolidModel(i) => Self::SolidModel(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
@@ -11558,6 +12261,7 @@ pub enum StyledItemTargetRef {
     SeamCurve(SeamCurveId),
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
     ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
@@ -11725,6 +12429,9 @@ impl StyledItemTargetRef {
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeRepresentationWithParameters(i) => {
+                Self::ShapeRepresentationWithParameters(i)
+            }
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
             AnyId::SolidModel(i) => Self::SolidModel(i),
             AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
@@ -12063,6 +12770,8 @@ impl ToleranceZoneRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneTargetRef {
+    AngularLocation(AngularLocationId),
+    AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     CoaxialityTolerance(CoaxialityToleranceId),
@@ -12100,6 +12809,8 @@ pub enum ToleranceZoneTargetRef {
 impl ToleranceZoneTargetRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::AngularLocation(i) => Self::AngularLocation(i),
+            AnyId::AngularSize(i) => Self::AngularSize(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
@@ -12494,6 +13205,22 @@ pub struct AllAroundShapeAspect {
     pub description: Option<String>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AngularLocation {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
+    pub angle_selection: AngleRelator,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AngularSize {
+    pub applies_to: ShapeAspectRef,
+    pub name: String,
+    pub angle_selection: AngleRelator,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -13184,6 +13911,12 @@ pub struct CompositeText {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CompoundRepresentationItem {
+    pub name: String,
+    pub item_element: CompoundItemDefinitionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ConcentricityTolerance {
     pub name: String,
     pub description: Option<String>,
@@ -13382,6 +14115,11 @@ pub struct DateAndTimeAssignment {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DateRole {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DateTimeRole {
     pub name: String,
 }
@@ -13454,6 +14192,17 @@ pub struct DatumTarget {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DefaultModelGeometricView {
+    pub name: String,
+    pub description: Option<String>,
+    pub item: RepresentationItemRef,
+    pub rep: RepresentationRef,
+    pub name_1: String,
+    pub description_1: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DefinedCharacterGlyph {
     pub name: String,
     pub definition: DefinedGlyphSelectRef,
@@ -13516,6 +14265,12 @@ pub struct DerivedUnit {
 pub struct DerivedUnitElement {
     pub unit: NamedUnitRef,
     pub exponent: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DescriptionAttribute {
+    pub attribute_value: String,
+    pub described_item: DescriptionAttributeSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -13853,6 +14608,14 @@ pub struct FaceSurface {
     pub bounds: Vec<FaceBoundRef>,
     pub face_geometry: SurfaceRef,
     pub same_sense: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FeatureForDatumTargetRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14231,6 +14994,18 @@ pub struct LocalTime {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Loop {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MakeFromUsageOption {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_product_definition: ProductDefinitionOrReferenceRef,
+    pub related_product_definition: ProductDefinitionOrReferenceRef,
+    pub ranking: i64,
+    pub ranking_rationale: String,
+    pub quantity: MeasureWithUnitRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14761,8 +15536,20 @@ pub struct PresentationRepresentation {
 pub struct PresentationSet {}
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PresentationSize {
+    pub unit: PresentationSizeAssignmentSelectRef,
+    pub size: PlanarBoxRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PresentationStyleAssignment {
     pub styles: Vec<PresentationStyleSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationStyleByContext {
+    pub styles: Vec<PresentationStyleSelectRef>,
+    pub style_context: StyleContextSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15011,6 +15798,12 @@ pub struct QuasiUniformSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct RatioMeasureWithUnit {
+    pub value_component: MeasureValue,
+    pub unit_component: UnitRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct RatioUnit {
     pub dimensions: DimensionalExponentsRef,
 }
@@ -15165,7 +15958,7 @@ pub struct ShapeAspect {
     pub name: String,
     pub description: Option<String>,
     pub of_shape: ProductDefinitionShapeRef,
-    pub product_definitional: Logical,
+    pub product_definitional: Option<Logical>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15218,6 +16011,13 @@ pub struct ShapeRepresentationRelationship {
     pub description: Option<String>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeRepresentationWithParameters {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15987,6 +16787,9 @@ pub enum UnitPart {
     CompositeText {
         collected_text: Vec<TextOrCharacterRef>,
     },
+    CompoundRepresentationItem {
+        item_element: CompoundItemDefinitionRef,
+    },
     ConfigurationEffectivity {
         configuration: ConfigurationDesignRef,
     },
@@ -16057,6 +16860,7 @@ pub enum UnitPart {
     DatumTarget {
         target_id: String,
     },
+    DefaultModelGeometricView,
     DefinedCharacterGlyph {
         definition: DefinedGlyphSelectRef,
         placement: Axis2PlacementRef,
@@ -16395,6 +17199,9 @@ pub enum UnitPart {
     PresentationStyleAssignment {
         styles: Vec<PresentationStyleSelectRef>,
     },
+    PresentationStyleByContext {
+        style_context: StyleContextSelectRef,
+    },
     PresentationView,
     PresentedItem,
     Product {
@@ -16489,6 +17296,7 @@ pub enum UnitPart {
     },
     QuasiUniformCurve,
     QuasiUniformSurface,
+    RatioMeasureWithUnit,
     RatioUnit,
     RationalBSplineCurve {
         weights_data: Vec<f64>,
@@ -16539,7 +17347,7 @@ pub enum UnitPart {
         name: String,
         description: Option<String>,
         of_shape: ProductDefinitionShapeRef,
-        product_definitional: Logical,
+        product_definitional: Option<Logical>,
     },
     ShapeAspectRelationship {
         name: String,
@@ -16551,6 +17359,7 @@ pub enum UnitPart {
     ShapeDimensionRepresentation,
     ShapeRepresentation,
     ShapeRepresentationRelationship,
+    ShapeRepresentationWithParameters,
     ShellBasedSurfaceModel {
         sbsm_boundary: Vec<ShellRef>,
     },
@@ -16730,6 +17539,8 @@ pub struct Model {
     pub advanced_brep_shape_representations: Arena<AdvancedBrepShapeRepresentation>,
     pub advanced_faces: Arena<AdvancedFace>,
     pub all_around_shape_aspects: Arena<AllAroundShapeAspect>,
+    pub angular_locations: Arena<AngularLocation>,
+    pub angular_sizes: Arena<AngularSize>,
     pub angularity_tolerances: Arena<AngularityTolerance>,
     pub annotation_curve_occurrences: Arena<AnnotationCurveOccurrence>,
     pub annotation_fill_area_occurrences: Arena<AnnotationFillAreaOccurrence>,
@@ -16827,6 +17638,7 @@ pub struct Model {
     pub composite_group_shape_aspects: Arena<CompositeGroupShapeAspect>,
     pub composite_shape_aspects: Arena<CompositeShapeAspect>,
     pub composite_texts: Arena<CompositeText>,
+    pub compound_representation_items: Arena<CompoundRepresentationItem>,
     pub concentricity_tolerances: Arena<ConcentricityTolerance>,
     pub configuration_designs: Arena<ConfigurationDesign>,
     pub configuration_effectivitys: Arena<ConfigurationEffectivity>,
@@ -16857,6 +17669,7 @@ pub struct Model {
     pub dates: Arena<Date>,
     pub date_and_times: Arena<DateAndTime>,
     pub date_and_time_assignments: Arena<DateAndTimeAssignment>,
+    pub date_roles: Arena<DateRole>,
     pub date_time_roles: Arena<DateTimeRole>,
     pub datums: Arena<Datum>,
     pub datum_features: Arena<DatumFeature>,
@@ -16866,6 +17679,7 @@ pub struct Model {
     pub datum_reference_modifier_with_values: Arena<DatumReferenceModifierWithValue>,
     pub datum_systems: Arena<DatumSystem>,
     pub datum_targets: Arena<DatumTarget>,
+    pub default_model_geometric_views: Arena<DefaultModelGeometricView>,
     pub defined_character_glyphs: Arena<DefinedCharacterGlyph>,
     pub defined_symbols: Arena<DefinedSymbol>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
@@ -16876,6 +17690,7 @@ pub struct Model {
     pub derived_shape_aspects: Arena<DerivedShapeAspect>,
     pub derived_units: Arena<DerivedUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
+    pub description_attributes: Arena<DescriptionAttribute>,
     pub descriptive_representation_items: Arena<DescriptiveRepresentationItem>,
     pub design_contexts: Arena<DesignContext>,
     pub dimensional_characteristic_representations: Arena<DimensionalCharacteristicRepresentation>,
@@ -16926,6 +17741,7 @@ pub struct Model {
     pub face_bounds: Arena<FaceBound>,
     pub face_outer_bounds: Arena<FaceOuterBound>,
     pub face_surfaces: Arena<FaceSurface>,
+    pub feature_for_datum_target_relationships: Arena<FeatureForDatumTargetRelationship>,
     pub fill_area_styles: Arena<FillAreaStyle>,
     pub fill_area_style_colours: Arena<FillAreaStyleColour>,
     pub fill_area_style_hatchings: Arena<FillAreaStyleHatching>,
@@ -16983,6 +17799,7 @@ pub struct Model {
     pub literal_numbers: Arena<LiteralNumber>,
     pub local_times: Arena<LocalTime>,
     pub loops: Arena<Loop>,
+    pub make_from_usage_options: Arena<MakeFromUsageOption>,
     pub manifold_solid_breps: Arena<ManifoldSolidBrep>,
     pub manifold_surface_shape_representations: Arena<ManifoldSurfaceShapeRepresentation>,
     pub mapped_items: Arena<MappedItem>,
@@ -17063,7 +17880,9 @@ pub struct Model {
     pub presentation_layer_assignments: Arena<PresentationLayerAssignment>,
     pub presentation_representations: Arena<PresentationRepresentation>,
     pub presentation_sets: Arena<PresentationSet>,
+    pub presentation_sizes: Arena<PresentationSize>,
     pub presentation_style_assignments: Arena<PresentationStyleAssignment>,
+    pub presentation_style_by_contexts: Arena<PresentationStyleByContext>,
     pub presentation_views: Arena<PresentationView>,
     pub presented_items: Arena<PresentedItem>,
     pub presented_item_representations: Arena<PresentedItemRepresentation>,
@@ -17100,6 +17919,7 @@ pub struct Model {
     pub qualified_representation_items: Arena<QualifiedRepresentationItem>,
     pub quasi_uniform_curves: Arena<QuasiUniformCurve>,
     pub quasi_uniform_surfaces: Arena<QuasiUniformSurface>,
+    pub ratio_measure_with_units: Arena<RatioMeasureWithUnit>,
     pub ratio_units: Arena<RatioUnit>,
     pub rational_b_spline_curves: Arena<RationalBSplineCurve>,
     pub rational_b_spline_surfaces: Arena<RationalBSplineSurface>,
@@ -17131,6 +17951,7 @@ pub struct Model {
     pub shape_dimension_representations: Arena<ShapeDimensionRepresentation>,
     pub shape_representations: Arena<ShapeRepresentation>,
     pub shape_representation_relationships: Arena<ShapeRepresentationRelationship>,
+    pub shape_representation_with_parameterss: Arena<ShapeRepresentationWithParameters>,
     pub shell_based_surface_models: Arena<ShellBasedSurfaceModel>,
     pub si_units: Arena<SiUnit>,
     pub simple_generic_expressions: Arena<SimpleGenericExpression>,

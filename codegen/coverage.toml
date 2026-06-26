@@ -507,6 +507,20 @@ plm_assignment2 = ["applied_person_and_organization_assignment", "applied_approv
 # definition). identified_item (item_identified_representation_usage_select) needs
 # no narrow: it is list/representation_item/set, all resolving to representation_item.
 plm_item_identified = ["item_identified_representation_usage"]
+# Final scrap clusters (clean seeds, all deps covered). presentation_size/
+# style_by_context (presentation), shape_representation_with_parameters,
+# feature_for_datum_target_relationship, angular_location/size (dimensional),
+# default_model_geometric_view, make_from_usage_option, ratio_measure_with_unit
+# (the missing part of the MEASURE+RATIO complex), compound_representation_item
+# (item_element = list/set_representation_item aggregate), description_attribute
+# (+ date_role co-seed so its select is fully covered, no narrow).
+scraps = [
+    "presentation_size", "presentation_style_by_context",
+    "shape_representation_with_parameters", "feature_for_datum_target_relationship",
+    "angular_location", "angular_size", "default_model_geometric_view",
+    "make_from_usage_option", "ratio_measure_with_unit", "compound_representation_item",
+    "description_attribute", "date_role",
+]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
