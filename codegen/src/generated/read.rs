@@ -40,23 +40,23 @@ fn as_ref_id(a: &Attribute) -> u64 {
 }
 fn read_measure_value(a: &Attribute) -> MeasureValue {
     // A measure's numeric literal sits nested inside a Typed/bare attribute, so
-    // it is not a top-level slot the normalize layer rewrites; accept the REAL
-    // value written as either a real or an integer literal here.
-    fn measure_real(a: &Attribute) -> f64 {
+    // it is not a top-level slot the normalize layer rewrites; preserve the
+    // original token (integer vs real) — `number` members admit either.
+    fn measure_scalar(a: &Attribute) -> MeasureScalar {
         match a {
-            Attribute::Real(r) => *r,
-            Attribute::Integer(i) => *i as f64,
-            other => panic!("expected measure real, got {other:?}"),
+            Attribute::Real(r) => MeasureScalar::Real(*r),
+            Attribute::Integer(i) => MeasureScalar::Int(*i),
+            other => panic!("expected measure scalar, got {other:?}"),
         }
     }
     match a {
         Attribute::Typed { type_name, value } => MeasureValue {
             type_name: Some(type_name.clone()),
-            value: measure_real(value),
+            value: measure_scalar(value),
         },
         Attribute::Real(_) | Attribute::Integer(_) => MeasureValue {
             type_name: None,
-            value: measure_real(a),
+            value: measure_scalar(a),
         },
         other => panic!("expected measure_value, got {other:?}"),
     }
@@ -486,6 +486,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     "UNIFORM_CURVE",
     "UNIFORM_SURFACE",
+    "VALUE_REPRESENTATION_ITEM",
     "VECTOR",
     "VERSIONED_ACTION_REQUEST",
     "VERTEX",
@@ -762,6 +763,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     "UNIFORM_CURVE",
     "UNIFORM_SURFACE",
+    "VALUE_REPRESENTATION_ITEM",
     "VECTOR",
     "VERTEX",
     "VERTEX_POINT",
@@ -1039,6 +1041,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -1771,6 +1774,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -2461,6 +2465,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -2942,6 +2947,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -3263,6 +3269,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -3725,6 +3732,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -4141,6 +4149,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -5249,6 +5258,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -5609,6 +5619,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -5741,6 +5752,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -5966,6 +5978,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -6120,6 +6133,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -6322,6 +6336,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -7143,6 +7158,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "TWO_DIRECTION_REPEAT_FACTOR",
                 "UNIFORM_CURVE",
                 "UNIFORM_SURFACE",
+                "VALUE_REPRESENTATION_ITEM",
                 "VECTOR",
                 "VERTEX",
                 "VERTEX_LOOP",
@@ -7276,6 +7292,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -7854,6 +7871,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -8001,6 +8019,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -8479,6 +8498,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -8626,6 +8646,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -10322,6 +10343,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -10562,6 +10584,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "TWO_DIRECTION_REPEAT_FACTOR",
                 "UNIFORM_CURVE",
                 "UNIFORM_SURFACE",
+                "VALUE_REPRESENTATION_ITEM",
                 "VECTOR",
                 "VERTEX",
                 "VERTEX_LOOP",
@@ -11327,6 +11350,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -11459,6 +11483,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -11607,6 +11632,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -12200,6 +12226,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -12347,6 +12374,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TWO_DIRECTION_REPEAT_FACTOR",
                     "UNIFORM_CURVE",
                     "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
                     "VECTOR",
                     "VERTEX",
                     "VERTEX_LOOP",
@@ -19227,6 +19255,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "VALUE_REPRESENTATION_ITEM" => {
+                let v = ValueRepresentationItem {
+                    name: as_str(&attributes[0]),
+                    value_component: read_measure_value(&attributes[1]),
+                };
+                let aid = ValueRepresentationItemId(model.value_representation_items.push(v));
+                idmap.insert(id, AnyId::ValueRepresentationItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "VECTOR" => {
                 let v = Vector {
                     name: as_str(&attributes[0]),
@@ -22210,7 +22248,7 @@ fn resolve_curve_styles(
                 SizeSelectRef::DescriptiveMeasure(read_string_select(&attrs[2]).value)
             }
             Attribute::Typed { type_name, .. } if type_name == "POSITIVE_LENGTH_MEASURE" => {
-                SizeSelectRef::PositiveLengthMeasure(read_measure_value(&attrs[2]).value)
+                SizeSelectRef::PositiveLengthMeasure(read_measure_value(&attrs[2]).value.as_f64())
             }
             _ => SizeSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref")),
         }),
@@ -24139,7 +24177,7 @@ fn resolve_point_styles(
                 SizeSelectRef::DescriptiveMeasure(read_string_select(&attrs[2]).value)
             }
             Attribute::Typed { type_name, .. } if type_name == "POSITIVE_LENGTH_MEASURE" => {
-                SizeSelectRef::PositiveLengthMeasure(read_measure_value(&attrs[2]).value)
+                SizeSelectRef::PositiveLengthMeasure(read_measure_value(&attrs[2]).value.as_f64())
             }
             _ => SizeSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref")),
         }),
@@ -25574,7 +25612,7 @@ fn resolve_trimmed_curves(
             .iter()
             .map(|e| match e {
                 Attribute::Typed { type_name, .. } if type_name == "PARAMETER_VALUE" => {
-                    TrimmingSelectRef::ParameterValue(read_measure_value(e).value)
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e).value.as_f64())
                 }
                 _ => TrimmingSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")),
             })
@@ -25586,7 +25624,7 @@ fn resolve_trimmed_curves(
             .iter()
             .map(|e| match e {
                 Attribute::Typed { type_name, .. } if type_name == "PARAMETER_VALUE" => {
-                    TrimmingSelectRef::ParameterValue(read_measure_value(e).value)
+                    TrimmingSelectRef::ParameterValue(read_measure_value(e).value.as_f64())
                 }
                 _ => TrimmingSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")),
             })
@@ -26874,6 +26912,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             }
             "UNIFORM_CURVE" => UnitPart::UniformCurve,
             "UNIFORM_SURFACE" => UnitPart::UniformSurface,
+            "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem {
+                value_component: read_measure_value(&p.attributes[0]),
+            },
             "VECTOR" => UnitPart::Vector {
                 orientation: DirectionRef::Direction(DirectionId(usize::MAX)),
                 magnitude: as_real(&p.attributes[1]),
@@ -27200,7 +27241,7 @@ fn resolve_complex(
                             if type_name == "POSITIVE_LENGTH_MEASURE" =>
                         {
                             SizeSelectRef::PositiveLengthMeasure(
-                                read_measure_value(&p.attributes[2]).value,
+                                read_measure_value(&p.attributes[2]).value.as_f64(),
                             )
                         }
                         _ => SizeSelectRef::from_any(
@@ -27765,7 +27806,7 @@ fn resolve_complex(
                             if type_name == "POSITIVE_LENGTH_MEASURE" =>
                         {
                             SizeSelectRef::PositiveLengthMeasure(
-                                read_measure_value(&p.attributes[2]).value,
+                                read_measure_value(&p.attributes[2]).value.as_f64(),
                             )
                         }
                         _ => SizeSelectRef::from_any(

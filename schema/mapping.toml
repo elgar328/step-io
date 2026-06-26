@@ -1282,9 +1282,9 @@ property_leaves = ["id_attribute", "general_property_association"]
 # (draughting_callout head pulls its annotation_occurrence leaves + annotation_
 # fill_area=curve; invisibility leaf). value_format_type_qualifier (Bag A reach)
 # and apll_point (non-AP242) excluded; draughting_model_item_association mega.
-# value_representation_item deferred: its value_component=measure_value carries
-# integer tokens (COUNT_MEASURE(2)) that MeasureValue{f64} widens to 2. — needs
-# the measure_value->enum{Int,Real} fix first (integer bug #2).
-usage_geom = ["geometric_item_specific_usage"]
+# value_representation_item re-seeded: measure_value is now enum{Int,Real}, so
+# its COUNT_MEASURE(2) integer tokens round-trip as 2 (not 2.) — integer bug #2
+# fixed. It is also the carrier that exercises the measure_value integer path.
+usage_value = ["geometric_item_specific_usage", "value_representation_item"]
 curve_tess = ["composite_curve", "tessellated_geometric_set", "repositioned_tessellated_item"]
 annotation = ["draughting_callout", "annotation_plane", "invisibility"]

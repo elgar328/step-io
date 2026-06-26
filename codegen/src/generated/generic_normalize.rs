@@ -7808,6 +7808,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "VALUE_REPRESENTATION_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Meas,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "VECTOR" => &[
             Slot {
                 k: Sk::Str,
@@ -10262,6 +10276,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
         }],
         "UNIFORM_CURVE" => &[],
         "UNIFORM_SURFACE" => &[],
+        "VALUE_REPRESENTATION_ITEM" => &[Slot {
+            k: Sk::Meas,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "VECTOR" => &[
             Slot {
                 k: Sk::Ref,

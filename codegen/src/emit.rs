@@ -87,8 +87,13 @@ impl Logical {
 }
 
 /// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
+/// `value` is int-or-real because EXPRESS `number` members (count_measure,
+/// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
 #[derive(Debug, Clone, PartialEq)]
-pub struct MeasureValue { pub type_name: Option<String>, pub value: f64 }
+pub enum MeasureScalar { Int(i64), Real(f64) }
+impl MeasureScalar { pub fn as_f64(&self) -> f64 { match self { Self::Int(i) => *i as f64, Self::Real(r) => *r } } }
+#[derive(Debug, Clone, PartialEq)]
+pub struct MeasureValue { pub type_name: Option<String>, pub value: MeasureScalar }
 
 /// select-of-named-strings (e.g. SELECT(identifier, message)): `Some(type_name)`
 /// = typed member `TYPE('s')`; `None` = bare string.
@@ -356,14 +361,14 @@ fn as_ref_id(a: &Attribute) -> u64 {
 }
 fn read_measure_value(a: &Attribute) -> MeasureValue {
     // A measure's numeric literal sits nested inside a Typed/bare attribute, so
-    // it is not a top-level slot the normalize layer rewrites; accept the REAL
-    // value written as either a real or an integer literal here.
-    fn measure_real(a: &Attribute) -> f64 {
-        match a { Attribute::Real(r) => *r, Attribute::Integer(i) => *i as f64, other => panic!("expected measure real, got {other:?}") }
+    // it is not a top-level slot the normalize layer rewrites; preserve the
+    // original token (integer vs real) — `number` members admit either.
+    fn measure_scalar(a: &Attribute) -> MeasureScalar {
+        match a { Attribute::Real(r) => MeasureScalar::Real(*r), Attribute::Integer(i) => MeasureScalar::Int(*i), other => panic!("expected measure scalar, got {other:?}") }
     }
     match a {
-        Attribute::Typed { type_name, value } => MeasureValue { type_name: Some(type_name.clone()), value: measure_real(value) },
-        Attribute::Real(_) | Attribute::Integer(_) => MeasureValue { type_name: None, value: measure_real(a) },
+        Attribute::Typed { type_name, value } => MeasureValue { type_name: Some(type_name.clone()), value: measure_scalar(value) },
+        Attribute::Real(_) | Attribute::Integer(_) => MeasureValue { type_name: None, value: measure_scalar(a) },
         other => panic!("expected measure_value, got {other:?}"),
     }
 }
@@ -765,13 +770,15 @@ fn resolve_ref_one(re: &RefEnum, aref: &str) -> String {
     // fall through to `_ => single` and panic (a normalize-gap, surfaced). `.value`
     // discards the wire name (already captured by the arm).
     for (sv, sk, wire) in &re.scalar_arms {
-        let reader = match sk {
-            Kind::Real => "read_measure_value",
-            Kind::Str => "read_string_select",
+        // Real arms target an f64 ref-enum variant (positive_length_measure /
+        // parameter_value are EXPRESS `real`), so unwrap MeasureScalar via as_f64.
+        let (reader, accessor) = match sk {
+            Kind::Real => ("read_measure_value", ".as_f64()"),
+            Kind::Str => ("read_string_select", ""),
             _ => unreachable!("unsupported scalar arm kind"),
         };
         arms.push(format!(
-            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}).value),",
+            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}).value{accessor}),",
             re.rust, sv
         ));
     }
@@ -942,7 +949,8 @@ pub fn emit_write(ir: &ModelIr) -> String {
     } else { s }
 }
 fn measure(m: &MeasureValue) -> String {
-    match &m.type_name { Some(t) => format!("{t}({})", real(m.value)), None => real(m.value) }
+    let v = match &m.value { MeasureScalar::Int(i) => format!("{i}"), MeasureScalar::Real(r) => real(*r) };
+    match &m.type_name { Some(t) => format!("{t}({v})"), None => v }
 }
 fn int_measure(m: &IntMeasureValue) -> String {
     match &m.type_name { Some(t) => format!("{t}({})", m.value), None => format!("{}", m.value) }

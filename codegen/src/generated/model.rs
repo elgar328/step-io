@@ -47,10 +47,25 @@ impl Logical {
 }
 
 /// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
+/// `value` is int-or-real because EXPRESS `number` members (count_measure,
+/// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
+#[derive(Debug, Clone, PartialEq)]
+pub enum MeasureScalar {
+    Int(i64),
+    Real(f64),
+}
+impl MeasureScalar {
+    pub fn as_f64(&self) -> f64 {
+        match self {
+            Self::Int(i) => *i as f64,
+            Self::Real(r) => *r,
+        }
+    }
+}
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureValue {
     pub type_name: Option<String>,
-    pub value: f64,
+    pub value: MeasureScalar,
 }
 
 /// select-of-named-strings (e.g. SELECT(identifier, message)): `Some(type_name)`
@@ -1703,6 +1718,8 @@ pub struct UniformCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UniformSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ValueRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VectorId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VersionedActionRequestId(pub usize);
@@ -2105,6 +2122,7 @@ pub enum AnyId {
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
+    ValueRepresentationItem(ValueRepresentationItemId),
     Vector(VectorId),
     VersionedActionRequest(VersionedActionRequestId),
     Vertex(VertexId),
@@ -4619,6 +4637,7 @@ pub enum LayeredItemRef {
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
+    ValueRepresentationItem(ValueRepresentationItemId),
     Vector(VectorId),
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
@@ -4751,6 +4770,7 @@ impl LayeredItemRef {
             AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
             AnyId::UniformCurve(i) => Self::UniformCurve(i),
             AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
             AnyId::Vector(i) => Self::Vector(i),
             AnyId::Vertex(i) => Self::Vertex(i),
             AnyId::VertexLoop(i) => Self::VertexLoop(i),
@@ -5526,6 +5546,7 @@ pub enum RepresentationItemRef {
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
+    ValueRepresentationItem(ValueRepresentationItemId),
     Vector(VectorId),
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
@@ -5657,6 +5678,7 @@ impl RepresentationItemRef {
             AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
             AnyId::UniformCurve(i) => Self::UniformCurve(i),
             AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
             AnyId::Vector(i) => Self::Vector(i),
             AnyId::Vertex(i) => Self::Vertex(i),
             AnyId::VertexLoop(i) => Self::VertexLoop(i),
@@ -6219,6 +6241,7 @@ pub enum StyleContextSelectRef {
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
+    ValueRepresentationItem(ValueRepresentationItemId),
     Vector(VectorId),
     Vertex(VertexId),
     VertexLoop(VertexLoopId),
@@ -6380,6 +6403,7 @@ impl StyleContextSelectRef {
             AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
             AnyId::UniformCurve(i) => Self::UniformCurve(i),
             AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
             AnyId::Vector(i) => Self::Vector(i),
             AnyId::Vertex(i) => Self::Vertex(i),
             AnyId::VertexLoop(i) => Self::VertexLoop(i),
@@ -9870,6 +9894,12 @@ pub struct UniformSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ValueRepresentationItem {
+    pub name: String,
+    pub value_component: MeasureValue,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vector {
     pub name: String,
     pub orientation: DirectionRef,
@@ -10692,6 +10722,9 @@ pub enum UnitPart {
     },
     UniformCurve,
     UniformSurface,
+    ValueRepresentationItem {
+        value_component: MeasureValue,
+    },
     Vector {
         orientation: DirectionRef,
         magnitude: f64,
@@ -11095,6 +11128,7 @@ pub struct Model {
     pub unequally_disposed_geometric_tolerances: Arena<UnequallyDisposedGeometricTolerance>,
     pub uniform_curves: Arena<UniformCurve>,
     pub uniform_surfaces: Arena<UniformSurface>,
+    pub value_representation_items: Arena<ValueRepresentationItem>,
     pub vectors: Arena<Vector>,
     pub versioned_action_requests: Arena<VersionedActionRequest>,
     pub vertexs: Arena<Vertex>,

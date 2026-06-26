@@ -27,9 +27,13 @@ fn real(v: f64) -> String {
     }
 }
 fn measure(m: &MeasureValue) -> String {
+    let v = match &m.value {
+        MeasureScalar::Int(i) => format!("{i}"),
+        MeasureScalar::Real(r) => real(*r),
+    };
     match &m.type_name {
-        Some(t) => format!("{t}({})", real(m.value)),
-        None => real(m.value),
+        Some(t) => format!("{t}({v})"),
+        None => v,
     }
 }
 fn int_measure(m: &IntMeasureValue) -> String {
@@ -443,6 +447,7 @@ pub struct Writer<'a> {
     unequally_disposed_geometric_tolerance_ids: Vec<Option<u64>>,
     uniform_curve_ids: Vec<Option<u64>>,
     uniform_surface_ids: Vec<Option<u64>>,
+    value_representation_item_ids: Vec<Option<u64>>,
     vector_ids: Vec<Option<u64>>,
     versioned_action_request_ids: Vec<Option<u64>>,
     vertex_ids: Vec<Option<u64>>,
@@ -1373,6 +1378,7 @@ impl<'a> Writer<'a> {
             ],
             uniform_curve_ids: vec![None; model.uniform_curves.items.len()],
             uniform_surface_ids: vec![None; model.uniform_surfaces.items.len()],
+            value_representation_item_ids: vec![None; model.value_representation_items.items.len()],
             vector_ids: vec![None; model.vectors.items.len()],
             versioned_action_request_ids: vec![None; model.versioned_action_requests.items.len()],
             vertex_ids: vec![None; model.vertexs.items.len()],
@@ -1878,6 +1884,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::UniformCurve(i) => self.uniform_curve_ids[i.0],
             AnyId::UniformSurface(i) => self.uniform_surface_ids[i.0],
+            AnyId::ValueRepresentationItem(i) => self.value_representation_item_ids[i.0],
             AnyId::Vector(i) => self.vector_ids[i.0],
             AnyId::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0],
             AnyId::Vertex(i) => self.vertex_ids[i.0],
@@ -2499,6 +2506,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::UniformCurve(i) => self.uniform_curve_ids[i.0] = Some(n),
             AnyId::UniformSurface(i) => self.uniform_surface_ids[i.0] = Some(n),
+            AnyId::ValueRepresentationItem(i) => self.value_representation_item_ids[i.0] = Some(n),
             AnyId::Vector(i) => self.vector_ids[i.0] = Some(n),
             AnyId::VersionedActionRequest(i) => self.versioned_action_request_ids[i.0] = Some(n),
             AnyId::Vertex(i) => self.vertex_ids[i.0] = Some(n),
@@ -6845,6 +6853,9 @@ impl<'a> Writer<'a> {
             LayeredItemRef::UniformSurface(i) => {
                 self.uniform_surface_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::ValueRepresentationItem(i) => {
+                self.value_representation_item_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::VertexLoop(i) => self.vertex_loop_ids[i.0].expect("dep id assigned"),
@@ -7040,6 +7051,9 @@ impl<'a> Writer<'a> {
             }
             LayeredItemRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
             LayeredItemRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+            LayeredItemRef::ValueRepresentationItem(i) => {
+                out.push(AnyId::ValueRepresentationItem(*i))
+            }
             LayeredItemRef::Vector(i) => out.push(AnyId::Vector(*i)),
             LayeredItemRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
             LayeredItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
@@ -8284,6 +8298,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::UniformSurface(i) => {
                 self.uniform_surface_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::ValueRepresentationItem(i) => {
+                self.value_representation_item_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
             RepresentationItemRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
             RepresentationItemRef::VertexLoop(i) => {
@@ -8508,6 +8525,9 @@ impl<'a> Writer<'a> {
             }
             RepresentationItemRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
             RepresentationItemRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+            RepresentationItemRef::ValueRepresentationItem(i) => {
+                out.push(AnyId::ValueRepresentationItem(*i))
+            }
             RepresentationItemRef::Vector(i) => out.push(AnyId::Vector(*i)),
             RepresentationItemRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
             RepresentationItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
@@ -9480,6 +9500,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::UniformSurface(i) => {
                 self.uniform_surface_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::ValueRepresentationItem(i) => {
+                self.value_representation_item_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::Vector(i) => self.vector_ids[i.0].expect("dep id assigned"),
             StyleContextSelectRef::Vertex(i) => self.vertex_ids[i.0].expect("dep id assigned"),
             StyleContextSelectRef::VertexLoop(i) => {
@@ -9751,6 +9774,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::UniformCurve(i) => out.push(AnyId::UniformCurve(*i)),
             StyleContextSelectRef::UniformSurface(i) => out.push(AnyId::UniformSurface(*i)),
+            StyleContextSelectRef::ValueRepresentationItem(i) => {
+                out.push(AnyId::ValueRepresentationItem(*i))
+            }
             StyleContextSelectRef::Vector(i) => out.push(AnyId::Vector(*i)),
             StyleContextSelectRef::Vertex(i) => out.push(AnyId::Vertex(*i)),
             StyleContextSelectRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
@@ -12915,6 +12941,7 @@ impl<'a> Writer<'a> {
                     }
                 }
             }
+            AnyId::ValueRepresentationItem(_) => {}
             AnyId::Vector(id) => {
                 let it = self.model.vectors.get(id.0);
                 Self::deps_ref_direction(&it.orientation, out);
@@ -19841,6 +19868,12 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = UNIFORM_SURFACE({});\n", attrs.join(","))
             }
+            AnyId::ValueRepresentationItem(id) => {
+                let it = self.model.value_representation_items.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name), measure(&it.value_component)];
+                format!("#{n} = VALUE_REPRESENTATION_ITEM({});\n", attrs.join(","))
+            }
             AnyId::Vector(id) => {
                 let it = self.model.vectors.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -20190,6 +20223,7 @@ impl<'a> Writer<'a> {
                 UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(displacement))]; format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
                 UnitPart::UniformCurve => "UNIFORM_CURVE()".to_string(),
                 UnitPart::UniformSurface => "UNIFORM_SURFACE()".to_string(),
+                UnitPart::ValueRepresentationItem { value_component, .. } => { let a: Vec<String> = vec![measure(value_component)]; format!("VALUE_REPRESENTATION_ITEM({})", a.join(",")) },
                 UnitPart::Vector { orientation, magnitude, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_direction(orientation)), real(*magnitude)]; format!("VECTOR({})", a.join(",")) },
                 UnitPart::Vertex => "VERTEX()".to_string(),
                 UnitPart::VertexPoint { vertex_geometry, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(vertex_geometry))]; format!("VERTEX_POINT({})", a.join(",")) },
@@ -21675,6 +21709,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.uniform_surfaces.items.len() {
             roots.push(AnyId::UniformSurface(UniformSurfaceId(i)));
+        }
+        for i in 0..self.model.value_representation_items.items.len() {
+            roots.push(AnyId::ValueRepresentationItem(ValueRepresentationItemId(i)));
         }
         for i in 0..self.model.vectors.items.len() {
             roots.push(AnyId::Vector(VectorId(i)));
