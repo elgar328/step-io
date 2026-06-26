@@ -421,6 +421,32 @@ text_style_box = ["text_style_with_box_characteristics"]
 # mega members are blocked so the closure does not explode. Recovery is bounded
 # to instances whose items are entirely covered (heterogeneous groups still drop).
 plm_assignment = ["applied_group_assignment", "applied_date_and_time_assignment"]
+# PMI annotation / draughting leaf cluster (ed2). draughting_annotation_occurrence
+# (is_complex_part, own_attrs=[]) is the missing part of the (ANNOTATION_OCCURRENCE+
+# ..+DRAUGHTING_ANNOTATION_OCCURRENCE+..+STYLED_ITEM) bags. The rest are leaves
+# whose deps are already covered (terminator/leader/marker symbols, callout
+# relationship, model_geometric_view; centre_of_symmetry pulls derived_shape_aspect).
+pmi_annotation = [
+    "draughting_annotation_occurrence", "terminator_symbol", "leader_terminator",
+    "leader_curve", "pre_defined_terminator_symbol", "pre_defined_point_marker_symbol",
+    "draughting_callout_relationship", "model_geometric_view", "centre_of_symmetry",
+]
+# PMI leader-line cluster (ed3). Output targets ed2, but read/round-trip must
+# accept all schemas (ed3 included) — so these are seeded for round-trip fidelity,
+# not dropped. apll_point/apll_point_with_surface are cartesian_point subtypes
+# (symbol_applied = des_apll_point_symbol ENUM); annotation_placeholder_leader_line
+# (abstract) is pulled via ref. All deps covered (cartesian_point/face_surface/
+# geometric_representation_item/annotation_placeholder_occurrence).
+pmi_leader_line = [
+    "annotation_placeholder_occurrence_with_leader_line", "annotation_to_model_leader_line",
+    "annotation_to_annotation_leader_line", "auxiliary_leader_line",
+    "apll_point", "apll_point_with_surface",
+]
+# characterized_representation (is_complex_part, parents representation +
+# characterized_object both covered, own_attrs=[]) completes the
+# (CHARACTERIZED_OBJECT+CHARACTERIZED_REPRESENTATION+DRAUGHTING_MODEL+REPRESENTATION+
+# SHAPE_REPRESENTATION+TESSELLATED_SHAPE_REPRESENTATION) complex cascade root.
+characterized_rep = ["characterized_representation"]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop

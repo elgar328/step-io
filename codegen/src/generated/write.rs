@@ -89,13 +89,19 @@ pub struct Writer<'a> {
     annotation_occurrence_ids: Vec<Option<u64>>,
     annotation_occurrence_associativity_ids: Vec<Option<u64>>,
     annotation_occurrence_relationship_ids: Vec<Option<u64>>,
+    annotation_placeholder_leader_line_ids: Vec<Option<u64>>,
     annotation_placeholder_occurrence_ids: Vec<Option<u64>>,
+    annotation_placeholder_occurrence_with_leader_line_ids: Vec<Option<u64>>,
     annotation_plane_ids: Vec<Option<u64>>,
     annotation_symbol_ids: Vec<Option<u64>>,
     annotation_symbol_occurrence_ids: Vec<Option<u64>>,
     annotation_text_ids: Vec<Option<u64>>,
     annotation_text_character_ids: Vec<Option<u64>>,
     annotation_text_occurrence_ids: Vec<Option<u64>>,
+    annotation_to_annotation_leader_line_ids: Vec<Option<u64>>,
+    annotation_to_model_leader_line_ids: Vec<Option<u64>>,
+    apll_point_ids: Vec<Option<u64>>,
+    apll_point_with_surface_ids: Vec<Option<u64>>,
     application_context_ids: Vec<Option<u64>>,
     application_context_element_ids: Vec<Option<u64>>,
     application_protocol_definition_ids: Vec<Option<u64>>,
@@ -110,6 +116,7 @@ pub struct Writer<'a> {
     ascribable_state_ids: Vec<Option<u64>>,
     ascribable_state_relationship_ids: Vec<Option<u64>>,
     assembly_component_usage_ids: Vec<Option<u64>>,
+    auxiliary_leader_line_ids: Vec<Option<u64>>,
     axis1_placement_ids: Vec<Option<u64>>,
     axis2_placement2d_ids: Vec<Option<u64>>,
     axis2_placement3d_ids: Vec<Option<u64>>,
@@ -132,6 +139,7 @@ pub struct Writer<'a> {
     cc_design_date_and_time_assignment_ids: Vec<Option<u64>>,
     cc_design_person_and_organization_assignment_ids: Vec<Option<u64>>,
     cc_design_security_classification_ids: Vec<Option<u64>>,
+    centre_of_symmetry_ids: Vec<Option<u64>>,
     certification_ids: Vec<Option<u64>>,
     certification_type_ids: Vec<Option<u64>>,
     change_ids: Vec<Option<u64>>,
@@ -140,6 +148,7 @@ pub struct Writer<'a> {
     character_glyph_style_stroke_ids: Vec<Option<u64>>,
     characterized_item_within_representation_ids: Vec<Option<u64>>,
     characterized_object_ids: Vec<Option<u64>>,
+    characterized_representation_ids: Vec<Option<u64>>,
     circle_ids: Vec<Option<u64>>,
     circular_runout_tolerance_ids: Vec<Option<u64>>,
     closed_shell_ids: Vec<Option<u64>>,
@@ -196,6 +205,7 @@ pub struct Writer<'a> {
     defined_symbol_ids: Vec<Option<u64>>,
     definitional_representation_ids: Vec<Option<u64>>,
     degenerate_toroidal_surface_ids: Vec<Option<u64>>,
+    derived_shape_aspect_ids: Vec<Option<u64>>,
     derived_unit_ids: Vec<Option<u64>>,
     derived_unit_element_ids: Vec<Option<u64>>,
     descriptive_representation_item_ids: Vec<Option<u64>>,
@@ -210,7 +220,9 @@ pub struct Writer<'a> {
     document_ids: Vec<Option<u64>>,
     document_file_ids: Vec<Option<u64>>,
     document_type_ids: Vec<Option<u64>>,
+    draughting_annotation_occurrence_ids: Vec<Option<u64>>,
     draughting_callout_ids: Vec<Option<u64>>,
+    draughting_callout_relationship_ids: Vec<Option<u64>>,
     draughting_model_ids: Vec<Option<u64>>,
     draughting_model_item_association_ids: Vec<Option<u64>>,
     draughting_model_item_association_with_placeholder_ids: Vec<Option<u64>>,
@@ -277,7 +289,9 @@ pub struct Writer<'a> {
     intersection_curve_ids: Vec<Option<u64>>,
     invisibility_ids: Vec<Option<u64>>,
     item_defined_transformation_ids: Vec<Option<u64>>,
+    leader_curve_ids: Vec<Option<u64>>,
     leader_directed_callout_ids: Vec<Option<u64>>,
+    leader_terminator_ids: Vec<Option<u64>>,
     length_measure_with_unit_ids: Vec<Option<u64>>,
     length_unit_ids: Vec<Option<u64>>,
     limits_and_fit_ids: Vec<Option<u64>>,
@@ -295,6 +309,7 @@ pub struct Writer<'a> {
     measure_with_unit_ids: Vec<Option<u64>>,
     mechanical_context_ids: Vec<Option<u64>>,
     mechanical_design_geometric_presentation_representation_ids: Vec<Option<u64>>,
+    model_geometric_view_ids: Vec<Option<u64>>,
     modified_geometric_tolerance_ids: Vec<Option<u64>>,
     named_unit_ids: Vec<Option<u64>>,
     next_assembly_usage_occurrence_ids: Vec<Option<u64>>,
@@ -344,8 +359,10 @@ pub struct Writer<'a> {
     pre_defined_curve_font_ids: Vec<Option<u64>>,
     pre_defined_item_ids: Vec<Option<u64>>,
     pre_defined_marker_ids: Vec<Option<u64>>,
+    pre_defined_point_marker_symbol_ids: Vec<Option<u64>>,
     pre_defined_surface_side_style_ids: Vec<Option<u64>>,
     pre_defined_symbol_ids: Vec<Option<u64>>,
+    pre_defined_terminator_symbol_ids: Vec<Option<u64>>,
     pre_defined_text_font_ids: Vec<Option<u64>>,
     pre_defined_tile_ids: Vec<Option<u64>>,
     precision_qualifier_ids: Vec<Option<u64>>,
@@ -442,6 +459,7 @@ pub struct Writer<'a> {
     symbol_style_ids: Vec<Option<u64>>,
     symbol_target_ids: Vec<Option<u64>>,
     symmetry_tolerance_ids: Vec<Option<u64>>,
+    terminator_symbol_ids: Vec<Option<u64>>,
     tessellated_annotation_occurrence_ids: Vec<Option<u64>>,
     tessellated_curve_set_ids: Vec<Option<u64>>,
     tessellated_face_ids: Vec<Option<u64>>,
@@ -552,10 +570,24 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            annotation_placeholder_leader_line_ids: vec![
+                None;
+                model
+                    .annotation_placeholder_leader_lines
+                    .items
+                    .len()
+            ],
             annotation_placeholder_occurrence_ids: vec![
                 None;
                 model
                     .annotation_placeholder_occurrences
+                    .items
+                    .len()
+            ],
+            annotation_placeholder_occurrence_with_leader_line_ids: vec![
+                None;
+                model
+                    .annotation_placeholder_occurrence_with_leader_lines
                     .items
                     .len()
             ],
@@ -571,6 +603,22 @@ impl<'a> Writer<'a> {
                 None;
                 model.annotation_text_occurrences.items.len()
             ],
+            annotation_to_annotation_leader_line_ids: vec![
+                None;
+                model
+                    .annotation_to_annotation_leader_lines
+                    .items
+                    .len()
+            ],
+            annotation_to_model_leader_line_ids: vec![
+                None;
+                model
+                    .annotation_to_model_leader_lines
+                    .items
+                    .len()
+            ],
+            apll_point_ids: vec![None; model.apll_points.items.len()],
+            apll_point_with_surface_ids: vec![None; model.apll_point_with_surfaces.items.len()],
             application_context_ids: vec![None; model.application_contexts.items.len()],
             application_context_element_ids: vec![
                 None;
@@ -606,6 +654,7 @@ impl<'a> Writer<'a> {
                 model.ascribable_state_relationships.items.len()
             ],
             assembly_component_usage_ids: vec![None; model.assembly_component_usages.items.len()],
+            auxiliary_leader_line_ids: vec![None; model.auxiliary_leader_lines.items.len()],
             axis1_placement_ids: vec![None; model.axis1_placements.items.len()],
             axis2_placement2d_ids: vec![None; model.axis2_placement2ds.items.len()],
             axis2_placement3d_ids: vec![None; model.axis2_placement3ds.items.len()],
@@ -649,6 +698,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            centre_of_symmetry_ids: vec![None; model.centre_of_symmetrys.items.len()],
             certification_ids: vec![None; model.certifications.items.len()],
             certification_type_ids: vec![None; model.certification_types.items.len()],
             change_ids: vec![None; model.changes.items.len()],
@@ -669,6 +719,10 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             characterized_object_ids: vec![None; model.characterized_objects.items.len()],
+            characterized_representation_ids: vec![
+                None;
+                model.characterized_representations.items.len()
+            ],
             circle_ids: vec![None; model.circles.items.len()],
             circular_runout_tolerance_ids: vec![None; model.circular_runout_tolerances.items.len()],
             closed_shell_ids: vec![None; model.closed_shells.items.len()],
@@ -776,6 +830,7 @@ impl<'a> Writer<'a> {
                 None;
                 model.degenerate_toroidal_surfaces.items.len()
             ],
+            derived_shape_aspect_ids: vec![None; model.derived_shape_aspects.items.len()],
             derived_unit_ids: vec![None; model.derived_units.items.len()],
             derived_unit_element_ids: vec![None; model.derived_unit_elements.items.len()],
             descriptive_representation_item_ids: vec![
@@ -811,7 +866,21 @@ impl<'a> Writer<'a> {
             document_ids: vec![None; model.documents.items.len()],
             document_file_ids: vec![None; model.document_files.items.len()],
             document_type_ids: vec![None; model.document_types.items.len()],
+            draughting_annotation_occurrence_ids: vec![
+                None;
+                model
+                    .draughting_annotation_occurrences
+                    .items
+                    .len()
+            ],
             draughting_callout_ids: vec![None; model.draughting_callouts.items.len()],
+            draughting_callout_relationship_ids: vec![
+                None;
+                model
+                    .draughting_callout_relationships
+                    .items
+                    .len()
+            ],
             draughting_model_ids: vec![None; model.draughting_models.items.len()],
             draughting_model_item_association_ids: vec![
                 None;
@@ -1022,7 +1091,9 @@ impl<'a> Writer<'a> {
                 None;
                 model.item_defined_transformations.items.len()
             ],
+            leader_curve_ids: vec![None; model.leader_curves.items.len()],
             leader_directed_callout_ids: vec![None; model.leader_directed_callouts.items.len()],
+            leader_terminator_ids: vec![None; model.leader_terminators.items.len()],
             length_measure_with_unit_ids: vec![None; model.length_measure_with_units.items.len()],
             length_unit_ids: vec![None; model.length_units.items.len()],
             limits_and_fit_ids: vec![None; model.limits_and_fitss.items.len()],
@@ -1055,6 +1126,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            model_geometric_view_ids: vec![None; model.model_geometric_views.items.len()],
             modified_geometric_tolerance_ids: vec![
                 None;
                 model.modified_geometric_tolerances.items.len()
@@ -1158,6 +1230,13 @@ impl<'a> Writer<'a> {
             pre_defined_curve_font_ids: vec![None; model.pre_defined_curve_fonts.items.len()],
             pre_defined_item_ids: vec![None; model.pre_defined_items.items.len()],
             pre_defined_marker_ids: vec![None; model.pre_defined_markers.items.len()],
+            pre_defined_point_marker_symbol_ids: vec![
+                None;
+                model
+                    .pre_defined_point_marker_symbols
+                    .items
+                    .len()
+            ],
             pre_defined_surface_side_style_ids: vec![
                 None;
                 model
@@ -1166,6 +1245,10 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             pre_defined_symbol_ids: vec![None; model.pre_defined_symbols.items.len()],
+            pre_defined_terminator_symbol_ids: vec![
+                None;
+                model.pre_defined_terminator_symbols.items.len()
+            ],
             pre_defined_text_font_ids: vec![None; model.pre_defined_text_fonts.items.len()],
             pre_defined_tile_ids: vec![None; model.pre_defined_tiles.items.len()],
             precision_qualifier_ids: vec![None; model.precision_qualifiers.items.len()],
@@ -1406,6 +1489,7 @@ impl<'a> Writer<'a> {
             symbol_style_ids: vec![None; model.symbol_styles.items.len()],
             symbol_target_ids: vec![None; model.symbol_targets.items.len()],
             symmetry_tolerance_ids: vec![None; model.symmetry_tolerances.items.len()],
+            terminator_symbol_ids: vec![None; model.terminator_symbols.items.len()],
             tessellated_annotation_occurrence_ids: vec![
                 None;
                 model
@@ -1543,8 +1627,14 @@ impl<'a> Writer<'a> {
             AnyId::AnnotationOccurrenceRelationship(i) => {
                 self.annotation_occurrence_relationship_ids[i.0]
             }
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0]
+            }
             AnyId::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0]
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                self.annotation_placeholder_occurrence_with_leader_line_ids[i.0]
             }
             AnyId::AnnotationPlane(i) => self.annotation_plane_ids[i.0],
             AnyId::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0],
@@ -1552,6 +1642,12 @@ impl<'a> Writer<'a> {
             AnyId::AnnotationText(i) => self.annotation_text_ids[i.0],
             AnyId::AnnotationTextCharacter(i) => self.annotation_text_character_ids[i.0],
             AnyId::AnnotationTextOccurrence(i) => self.annotation_text_occurrence_ids[i.0],
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0]
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => self.annotation_to_model_leader_line_ids[i.0],
+            AnyId::ApllPoint(i) => self.apll_point_ids[i.0],
+            AnyId::ApllPointWithSurface(i) => self.apll_point_with_surface_ids[i.0],
             AnyId::ApplicationContext(i) => self.application_context_ids[i.0],
             AnyId::ApplicationContextElement(i) => self.application_context_element_ids[i.0],
             AnyId::ApplicationProtocolDefinition(i) => {
@@ -1570,6 +1666,7 @@ impl<'a> Writer<'a> {
             AnyId::AscribableState(i) => self.ascribable_state_ids[i.0],
             AnyId::AscribableStateRelationship(i) => self.ascribable_state_relationship_ids[i.0],
             AnyId::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0],
+            AnyId::AuxiliaryLeaderLine(i) => self.auxiliary_leader_line_ids[i.0],
             AnyId::Axis1Placement(i) => self.axis1_placement_ids[i.0],
             AnyId::Axis2Placement2d(i) => self.axis2_placement2d_ids[i.0],
             AnyId::Axis2Placement3d(i) => self.axis2_placement3d_ids[i.0],
@@ -1598,6 +1695,7 @@ impl<'a> Writer<'a> {
             AnyId::CcDesignSecurityClassification(i) => {
                 self.cc_design_security_classification_ids[i.0]
             }
+            AnyId::CentreOfSymmetry(i) => self.centre_of_symmetry_ids[i.0],
             AnyId::Certification(i) => self.certification_ids[i.0],
             AnyId::CertificationType(i) => self.certification_type_ids[i.0],
             AnyId::Change(i) => self.change_ids[i.0],
@@ -1608,6 +1706,7 @@ impl<'a> Writer<'a> {
                 self.characterized_item_within_representation_ids[i.0]
             }
             AnyId::CharacterizedObject(i) => self.characterized_object_ids[i.0],
+            AnyId::CharacterizedRepresentation(i) => self.characterized_representation_ids[i.0],
             AnyId::Circle(i) => self.circle_ids[i.0],
             AnyId::CircularRunoutTolerance(i) => self.circular_runout_tolerance_ids[i.0],
             AnyId::ClosedShell(i) => self.closed_shell_ids[i.0],
@@ -1676,6 +1775,7 @@ impl<'a> Writer<'a> {
             AnyId::DefinedSymbol(i) => self.defined_symbol_ids[i.0],
             AnyId::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0],
             AnyId::DegenerateToroidalSurface(i) => self.degenerate_toroidal_surface_ids[i.0],
+            AnyId::DerivedShapeAspect(i) => self.derived_shape_aspect_ids[i.0],
             AnyId::DerivedUnit(i) => self.derived_unit_ids[i.0],
             AnyId::DerivedUnitElement(i) => self.derived_unit_element_ids[i.0],
             AnyId::DescriptiveRepresentationItem(i) => {
@@ -1694,7 +1794,13 @@ impl<'a> Writer<'a> {
             AnyId::Document(i) => self.document_ids[i.0],
             AnyId::DocumentFile(i) => self.document_file_ids[i.0],
             AnyId::DocumentType(i) => self.document_type_ids[i.0],
+            AnyId::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0]
+            }
             AnyId::DraughtingCallout(i) => self.draughting_callout_ids[i.0],
+            AnyId::DraughtingCalloutRelationship(i) => {
+                self.draughting_callout_relationship_ids[i.0]
+            }
             AnyId::DraughtingModel(i) => self.draughting_model_ids[i.0],
             AnyId::DraughtingModelItemAssociation(i) => {
                 self.draughting_model_item_association_ids[i.0]
@@ -1797,7 +1903,9 @@ impl<'a> Writer<'a> {
             AnyId::IntersectionCurve(i) => self.intersection_curve_ids[i.0],
             AnyId::Invisibility(i) => self.invisibility_ids[i.0],
             AnyId::ItemDefinedTransformation(i) => self.item_defined_transformation_ids[i.0],
+            AnyId::LeaderCurve(i) => self.leader_curve_ids[i.0],
             AnyId::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0],
+            AnyId::LeaderTerminator(i) => self.leader_terminator_ids[i.0],
             AnyId::LengthMeasureWithUnit(i) => self.length_measure_with_unit_ids[i.0],
             AnyId::LengthUnit(i) => self.length_unit_ids[i.0],
             AnyId::LimitsAndFits(i) => self.limits_and_fit_ids[i.0],
@@ -1819,6 +1927,7 @@ impl<'a> Writer<'a> {
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 self.mechanical_design_geometric_presentation_representation_ids[i.0]
             }
+            AnyId::ModelGeometricView(i) => self.model_geometric_view_ids[i.0],
             AnyId::ModifiedGeometricTolerance(i) => self.modified_geometric_tolerance_ids[i.0],
             AnyId::NamedUnit(i) => self.named_unit_ids[i.0],
             AnyId::NextAssemblyUsageOccurrence(i) => self.next_assembly_usage_occurrence_ids[i.0],
@@ -1874,8 +1983,10 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedCurveFont(i) => self.pre_defined_curve_font_ids[i.0],
             AnyId::PreDefinedItem(i) => self.pre_defined_item_ids[i.0],
             AnyId::PreDefinedMarker(i) => self.pre_defined_marker_ids[i.0],
+            AnyId::PreDefinedPointMarkerSymbol(i) => self.pre_defined_point_marker_symbol_ids[i.0],
             AnyId::PreDefinedSurfaceSideStyle(i) => self.pre_defined_surface_side_style_ids[i.0],
             AnyId::PreDefinedSymbol(i) => self.pre_defined_symbol_ids[i.0],
+            AnyId::PreDefinedTerminatorSymbol(i) => self.pre_defined_terminator_symbol_ids[i.0],
             AnyId::PreDefinedTextFont(i) => self.pre_defined_text_font_ids[i.0],
             AnyId::PreDefinedTile(i) => self.pre_defined_tile_ids[i.0],
             AnyId::PrecisionQualifier(i) => self.precision_qualifier_ids[i.0],
@@ -2000,6 +2111,7 @@ impl<'a> Writer<'a> {
             AnyId::SymbolStyle(i) => self.symbol_style_ids[i.0],
             AnyId::SymbolTarget(i) => self.symbol_target_ids[i.0],
             AnyId::SymmetryTolerance(i) => self.symmetry_tolerance_ids[i.0],
+            AnyId::TerminatorSymbol(i) => self.terminator_symbol_ids[i.0],
             AnyId::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0]
             }
@@ -2099,8 +2211,14 @@ impl<'a> Writer<'a> {
             AnyId::AnnotationOccurrenceRelationship(i) => {
                 self.annotation_occurrence_relationship_ids[i.0] = Some(n)
             }
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0] = Some(n)
+            }
             AnyId::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0] = Some(n)
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                self.annotation_placeholder_occurrence_with_leader_line_ids[i.0] = Some(n)
             }
             AnyId::AnnotationPlane(i) => self.annotation_plane_ids[i.0] = Some(n),
             AnyId::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0] = Some(n),
@@ -2112,6 +2230,14 @@ impl<'a> Writer<'a> {
             AnyId::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0] = Some(n)
             }
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0] = Some(n)
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0] = Some(n)
+            }
+            AnyId::ApllPoint(i) => self.apll_point_ids[i.0] = Some(n),
+            AnyId::ApllPointWithSurface(i) => self.apll_point_with_surface_ids[i.0] = Some(n),
             AnyId::ApplicationContext(i) => self.application_context_ids[i.0] = Some(n),
             AnyId::ApplicationContextElement(i) => {
                 self.application_context_element_ids[i.0] = Some(n)
@@ -2136,6 +2262,7 @@ impl<'a> Writer<'a> {
                 self.ascribable_state_relationship_ids[i.0] = Some(n)
             }
             AnyId::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0] = Some(n),
+            AnyId::AuxiliaryLeaderLine(i) => self.auxiliary_leader_line_ids[i.0] = Some(n),
             AnyId::Axis1Placement(i) => self.axis1_placement_ids[i.0] = Some(n),
             AnyId::Axis2Placement2d(i) => self.axis2_placement2d_ids[i.0] = Some(n),
             AnyId::Axis2Placement3d(i) => self.axis2_placement3d_ids[i.0] = Some(n),
@@ -2164,6 +2291,7 @@ impl<'a> Writer<'a> {
             AnyId::CcDesignSecurityClassification(i) => {
                 self.cc_design_security_classification_ids[i.0] = Some(n)
             }
+            AnyId::CentreOfSymmetry(i) => self.centre_of_symmetry_ids[i.0] = Some(n),
             AnyId::Certification(i) => self.certification_ids[i.0] = Some(n),
             AnyId::CertificationType(i) => self.certification_type_ids[i.0] = Some(n),
             AnyId::Change(i) => self.change_ids[i.0] = Some(n),
@@ -2178,6 +2306,9 @@ impl<'a> Writer<'a> {
                 self.characterized_item_within_representation_ids[i.0] = Some(n)
             }
             AnyId::CharacterizedObject(i) => self.characterized_object_ids[i.0] = Some(n),
+            AnyId::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0] = Some(n)
+            }
             AnyId::Circle(i) => self.circle_ids[i.0] = Some(n),
             AnyId::CircularRunoutTolerance(i) => self.circular_runout_tolerance_ids[i.0] = Some(n),
             AnyId::ClosedShell(i) => self.closed_shell_ids[i.0] = Some(n),
@@ -2256,6 +2387,7 @@ impl<'a> Writer<'a> {
             AnyId::DegenerateToroidalSurface(i) => {
                 self.degenerate_toroidal_surface_ids[i.0] = Some(n)
             }
+            AnyId::DerivedShapeAspect(i) => self.derived_shape_aspect_ids[i.0] = Some(n),
             AnyId::DerivedUnit(i) => self.derived_unit_ids[i.0] = Some(n),
             AnyId::DerivedUnitElement(i) => self.derived_unit_element_ids[i.0] = Some(n),
             AnyId::DescriptiveRepresentationItem(i) => {
@@ -2276,7 +2408,13 @@ impl<'a> Writer<'a> {
             AnyId::Document(i) => self.document_ids[i.0] = Some(n),
             AnyId::DocumentFile(i) => self.document_file_ids[i.0] = Some(n),
             AnyId::DocumentType(i) => self.document_type_ids[i.0] = Some(n),
+            AnyId::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0] = Some(n)
+            }
             AnyId::DraughtingCallout(i) => self.draughting_callout_ids[i.0] = Some(n),
+            AnyId::DraughtingCalloutRelationship(i) => {
+                self.draughting_callout_relationship_ids[i.0] = Some(n)
+            }
             AnyId::DraughtingModel(i) => self.draughting_model_ids[i.0] = Some(n),
             AnyId::DraughtingModelItemAssociation(i) => {
                 self.draughting_model_item_association_ids[i.0] = Some(n)
@@ -2401,7 +2539,9 @@ impl<'a> Writer<'a> {
             AnyId::ItemDefinedTransformation(i) => {
                 self.item_defined_transformation_ids[i.0] = Some(n)
             }
+            AnyId::LeaderCurve(i) => self.leader_curve_ids[i.0] = Some(n),
             AnyId::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0] = Some(n),
+            AnyId::LeaderTerminator(i) => self.leader_terminator_ids[i.0] = Some(n),
             AnyId::LengthMeasureWithUnit(i) => self.length_measure_with_unit_ids[i.0] = Some(n),
             AnyId::LengthUnit(i) => self.length_unit_ids[i.0] = Some(n),
             AnyId::LimitsAndFits(i) => self.limits_and_fit_ids[i.0] = Some(n),
@@ -2425,6 +2565,7 @@ impl<'a> Writer<'a> {
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 self.mechanical_design_geometric_presentation_representation_ids[i.0] = Some(n)
             }
+            AnyId::ModelGeometricView(i) => self.model_geometric_view_ids[i.0] = Some(n),
             AnyId::ModifiedGeometricTolerance(i) => {
                 self.modified_geometric_tolerance_ids[i.0] = Some(n)
             }
@@ -2500,10 +2641,16 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedCurveFont(i) => self.pre_defined_curve_font_ids[i.0] = Some(n),
             AnyId::PreDefinedItem(i) => self.pre_defined_item_ids[i.0] = Some(n),
             AnyId::PreDefinedMarker(i) => self.pre_defined_marker_ids[i.0] = Some(n),
+            AnyId::PreDefinedPointMarkerSymbol(i) => {
+                self.pre_defined_point_marker_symbol_ids[i.0] = Some(n)
+            }
             AnyId::PreDefinedSurfaceSideStyle(i) => {
                 self.pre_defined_surface_side_style_ids[i.0] = Some(n)
             }
             AnyId::PreDefinedSymbol(i) => self.pre_defined_symbol_ids[i.0] = Some(n),
+            AnyId::PreDefinedTerminatorSymbol(i) => {
+                self.pre_defined_terminator_symbol_ids[i.0] = Some(n)
+            }
             AnyId::PreDefinedTextFont(i) => self.pre_defined_text_font_ids[i.0] = Some(n),
             AnyId::PreDefinedTile(i) => self.pre_defined_tile_ids[i.0] = Some(n),
             AnyId::PrecisionQualifier(i) => self.precision_qualifier_ids[i.0] = Some(n),
@@ -2662,6 +2809,7 @@ impl<'a> Writer<'a> {
             AnyId::SymbolStyle(i) => self.symbol_style_ids[i.0] = Some(n),
             AnyId::SymbolTarget(i) => self.symbol_target_ids[i.0] = Some(n),
             AnyId::SymmetryTolerance(i) => self.symmetry_tolerance_ids[i.0] = Some(n),
+            AnyId::TerminatorSymbol(i) => self.terminator_symbol_ids[i.0] = Some(n),
             AnyId::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0] = Some(n)
             }
@@ -2798,6 +2946,9 @@ impl<'a> Writer<'a> {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
             }
+            AnnotationCurveOccurrenceRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
             AnnotationCurveOccurrenceRef::Complex(i) => {
                 self.complex_ids[i.0].expect("dep id assigned")
             }
@@ -2812,6 +2963,7 @@ impl<'a> Writer<'a> {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 out.push(AnyId::AnnotationCurveOccurrence(*i))
             }
+            AnnotationCurveOccurrenceRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             AnnotationCurveOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -2830,6 +2982,9 @@ impl<'a> Writer<'a> {
             AnnotationOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            AnnotationOccurrenceRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             AnnotationOccurrenceRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -2838,6 +2993,18 @@ impl<'a> Writer<'a> {
             }
             AnnotationOccurrenceRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationOccurrenceRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
             }
             AnnotationOccurrenceRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
@@ -2860,6 +3027,9 @@ impl<'a> Writer<'a> {
             AnnotationOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
             }
+            AnnotationOccurrenceRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
             AnnotationOccurrenceRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             AnnotationOccurrenceRef::AnnotationSymbolOccurrence(i) => {
                 out.push(AnyId::AnnotationSymbolOccurrence(*i))
@@ -2867,10 +3037,56 @@ impl<'a> Writer<'a> {
             AnnotationOccurrenceRef::AnnotationTextOccurrence(i) => {
                 out.push(AnyId::AnnotationTextOccurrence(*i))
             }
+            AnnotationOccurrenceRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
+            AnnotationOccurrenceRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+            AnnotationOccurrenceRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
+            AnnotationOccurrenceRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             AnnotationOccurrenceRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
             AnnotationOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_annotation_placeholder_leader_line(
+        &self,
+        r: &AnnotationPlaceholderLeaderLineRef,
+    ) -> u64 {
+        match r {
+            AnnotationPlaceholderLeaderLineRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationPlaceholderLeaderLineRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationPlaceholderLeaderLineRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationPlaceholderLeaderLineRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_annotation_placeholder_leader_line(
+        r: &AnnotationPlaceholderLeaderLineRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            AnnotationPlaceholderLeaderLineRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
+            AnnotationPlaceholderLeaderLineRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            AnnotationPlaceholderLeaderLineRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            AnnotationPlaceholderLeaderLineRef::AuxiliaryLeaderLine(i) => {
+                out.push(AnyId::AuxiliaryLeaderLine(*i))
+            }
         }
     }
 
@@ -2882,6 +3098,10 @@ impl<'a> Writer<'a> {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrenceWithLeaderLine(
+                i,
+            ) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             AnnotationPlaceholderOccurrenceRef::Complex(i) => {
                 self.complex_ids[i.0].expect("dep id assigned")
             }
@@ -2896,6 +3116,9 @@ impl<'a> Writer<'a> {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
             }
+            AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrenceWithLeaderLine(
+                i,
+            ) => out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
             AnnotationPlaceholderOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -2914,6 +3137,9 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            AnnotationPlaneElementRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             AnnotationPlaneElementRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -2926,17 +3152,29 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::ContextDependentOverRidingStyledItem(i) => {
                 self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
+            AnnotationPlaneElementRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
             AnnotationPlaneElementRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0].expect("dep id assigned")
             }
+            AnnotationPlaneElementRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
             AnnotationPlaneElementRef::LeaderDirectedCallout(i) => {
                 self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationPlaneElementRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
             }
             AnnotationPlaneElementRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
             AnnotationPlaneElementRef::StyledItem(i) => {
                 self.styled_item_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationPlaneElementRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
             }
             AnnotationPlaneElementRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
@@ -2961,6 +3199,9 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
             }
+            AnnotationPlaneElementRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
             AnnotationPlaneElementRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             AnnotationPlaneElementRef::AnnotationSymbolOccurrence(i) => {
                 out.push(AnyId::AnnotationSymbolOccurrence(*i))
@@ -2971,16 +3212,22 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::ContextDependentOverRidingStyledItem(i) => {
                 out.push(AnyId::ContextDependentOverRidingStyledItem(*i))
             }
+            AnnotationPlaneElementRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
             AnnotationPlaneElementRef::DraughtingCallout(i) => {
                 out.push(AnyId::DraughtingCallout(*i))
             }
+            AnnotationPlaneElementRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             AnnotationPlaneElementRef::LeaderDirectedCallout(i) => {
                 out.push(AnyId::LeaderDirectedCallout(*i))
             }
+            AnnotationPlaneElementRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
             AnnotationPlaneElementRef::OverRidingStyledItem(i) => {
                 out.push(AnyId::OverRidingStyledItem(*i))
             }
             AnnotationPlaneElementRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+            AnnotationPlaneElementRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             AnnotationPlaneElementRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -3069,6 +3316,12 @@ impl<'a> Writer<'a> {
             AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
             }
+            AnnotationSymbolOccurrenceRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
+            }
+            AnnotationSymbolOccurrenceRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
             AnnotationSymbolOccurrenceRef::Complex(i) => {
                 self.complex_ids[i.0].expect("dep id assigned")
             }
@@ -3082,6 +3335,12 @@ impl<'a> Writer<'a> {
         match r {
             AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(i) => {
                 out.push(AnyId::AnnotationSymbolOccurrence(*i))
+            }
+            AnnotationSymbolOccurrenceRef::LeaderTerminator(i) => {
+                out.push(AnyId::LeaderTerminator(*i))
+            }
+            AnnotationSymbolOccurrenceRef::TerminatorSymbol(i) => {
+                out.push(AnyId::TerminatorSymbol(*i))
             }
             AnnotationSymbolOccurrenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
@@ -3130,6 +3389,25 @@ impl<'a> Writer<'a> {
             }
             AnnotationTextOccurrenceItemRef::TextLiteral(i) => out.push(AnyId::TextLiteral(*i)),
             AnnotationTextOccurrenceItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_annotation_to_model_leader_line(&self, r: &AnnotationToModelLeaderLineRef) -> u64 {
+        match r {
+            AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_annotation_to_model_leader_line(
+        r: &AnnotationToModelLeaderLineRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
         }
     }
 
@@ -3297,6 +3575,10 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_cartesian_point(&self, r: &CartesianPointRef) -> u64 {
         match r {
+            CartesianPointRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+            CartesianPointRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
             CartesianPointRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
             }
@@ -3305,6 +3587,8 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_cartesian_point(r: &CartesianPointRef, out: &mut Vec<AnyId>) {
         match r {
+            CartesianPointRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            CartesianPointRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
             CartesianPointRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
         }
     }
@@ -3532,11 +3816,17 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 self.assembly_component_usage_ids[i.0].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::CharacterizedItemWithinRepresentation(i) => {
                 self.characterized_item_within_representation_ids[i.0].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::CharacterizedObject(i) => {
                 self.characterized_object_ids[i.0].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::CircularRunoutTolerance(i) => {
                 self.circular_runout_tolerance_ids[i.0].expect("dep id assigned")
@@ -3577,6 +3867,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::DatumTarget(i) => {
                 self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::DimensionalLocation(i) => {
                 self.dimensional_location_ids[i.0].expect("dep id assigned")
@@ -3628,6 +3921,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::LineProfileTolerance(i) => {
                 self.line_profile_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::ModelGeometricView(i) => {
+                self.model_geometric_view_ids[i.0].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::ModifiedGeometricTolerance(i) => {
                 self.modified_geometric_tolerance_ids[i.0].expect("dep id assigned")
@@ -3715,11 +4011,17 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 out.push(AnyId::AssemblyComponentUsage(*i))
             }
+            CharacterizedDefinitionRef::CentreOfSymmetry(i) => {
+                out.push(AnyId::CentreOfSymmetry(*i))
+            }
             CharacterizedDefinitionRef::CharacterizedItemWithinRepresentation(i) => {
                 out.push(AnyId::CharacterizedItemWithinRepresentation(*i))
             }
             CharacterizedDefinitionRef::CharacterizedObject(i) => {
                 out.push(AnyId::CharacterizedObject(*i))
+            }
+            CharacterizedDefinitionRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
             }
             CharacterizedDefinitionRef::CircularRunoutTolerance(i) => {
                 out.push(AnyId::CircularRunoutTolerance(*i))
@@ -3753,6 +4055,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
             CharacterizedDefinitionRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            CharacterizedDefinitionRef::DerivedShapeAspect(i) => {
+                out.push(AnyId::DerivedShapeAspect(*i))
+            }
             CharacterizedDefinitionRef::DimensionalLocation(i) => {
                 out.push(AnyId::DimensionalLocation(*i))
             }
@@ -3799,6 +4104,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::LineProfileTolerance(i) => {
                 out.push(AnyId::LineProfileTolerance(*i))
+            }
+            CharacterizedDefinitionRef::ModelGeometricView(i) => {
+                out.push(AnyId::ModelGeometricView(*i))
             }
             CharacterizedDefinitionRef::ModifiedGeometricTolerance(i) => {
                 out.push(AnyId::ModifiedGeometricTolerance(*i))
@@ -4190,6 +4498,9 @@ impl<'a> Writer<'a> {
             CurveOrAnnotationCurveOccurrenceRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
+            CurveOrAnnotationCurveOccurrenceRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => {
                 self.line_ids[i.0].expect("dep id assigned")
             }
@@ -4258,6 +4569,7 @@ impl<'a> Writer<'a> {
             CurveOrAnnotationCurveOccurrenceRef::IntersectionCurve(i) => {
                 out.push(AnyId::IntersectionCurve(*i))
             }
+            CurveOrAnnotationCurveOccurrenceRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => out.push(AnyId::Line(*i)),
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => out.push(AnyId::Pcurve(*i)),
             CurveOrAnnotationCurveOccurrenceRef::Polyline(i) => out.push(AnyId::Polyline(*i)),
@@ -4561,6 +4873,9 @@ impl<'a> Writer<'a> {
             DateAndTimeItemRef::Certification(i) => {
                 self.certification_ids[i.0].expect("dep id assigned")
             }
+            DateAndTimeItemRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
+            }
             DateAndTimeItemRef::ConfigurationDesign(i) => {
                 self.configuration_design_ids[i.0].expect("dep id assigned")
             }
@@ -4731,6 +5046,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
             }
             DateAndTimeItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            DateAndTimeItemRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
             DateAndTimeItemRef::ConfigurationDesign(i) => out.push(AnyId::ConfigurationDesign(*i)),
             DateAndTimeItemRef::ConfigurationEffectivity(i) => {
                 out.push(AnyId::ConfigurationEffectivity(*i))
@@ -5123,8 +5441,14 @@ impl<'a> Writer<'a> {
             DefinedSymbolSelectRef::ExternallyDefinedSymbol(i) => {
                 self.externally_defined_symbol_ids[i.0].expect("dep id assigned")
             }
+            DefinedSymbolSelectRef::PreDefinedPointMarkerSymbol(i) => {
+                self.pre_defined_point_marker_symbol_ids[i.0].expect("dep id assigned")
+            }
             DefinedSymbolSelectRef::PreDefinedSymbol(i) => {
                 self.pre_defined_symbol_ids[i.0].expect("dep id assigned")
+            }
+            DefinedSymbolSelectRef::PreDefinedTerminatorSymbol(i) => {
+                self.pre_defined_terminator_symbol_ids[i.0].expect("dep id assigned")
             }
             DefinedSymbolSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
@@ -5135,7 +5459,13 @@ impl<'a> Writer<'a> {
             DefinedSymbolSelectRef::ExternallyDefinedSymbol(i) => {
                 out.push(AnyId::ExternallyDefinedSymbol(*i))
             }
+            DefinedSymbolSelectRef::PreDefinedPointMarkerSymbol(i) => {
+                out.push(AnyId::PreDefinedPointMarkerSymbol(*i))
+            }
             DefinedSymbolSelectRef::PreDefinedSymbol(i) => out.push(AnyId::PreDefinedSymbol(*i)),
+            DefinedSymbolSelectRef::PreDefinedTerminatorSymbol(i) => {
+                out.push(AnyId::PreDefinedTerminatorSymbol(*i))
+            }
             DefinedSymbolSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -5369,6 +5699,26 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_des_apll_point_select(&self, r: &DesApllPointSelectRef) -> u64 {
+        match r {
+            DesApllPointSelectRef::ApllPoint(i) => {
+                self.apll_point_ids[i.0].expect("dep id assigned")
+            }
+            DesApllPointSelectRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_des_apll_point_select(r: &DesApllPointSelectRef, out: &mut Vec<AnyId>) {
+        match r {
+            DesApllPointSelectRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            DesApllPointSelectRef::ApllPointWithSurface(i) => {
+                out.push(AnyId::ApllPointWithSurface(*i))
+            }
+        }
+    }
+
     fn id_of_ref_dimensional_characteristic(&self, r: &DimensionalCharacteristicRef) -> u64 {
         match r {
             DimensionalCharacteristicRef::DimensionalLocation(i) => {
@@ -5462,11 +5812,23 @@ impl<'a> Writer<'a> {
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            DraughtingCalloutElementRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             DraughtingCalloutElementRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
             }
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingCalloutElementRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingCalloutElementRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingCalloutElementRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
             }
             DraughtingCalloutElementRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
@@ -5488,11 +5850,21 @@ impl<'a> Writer<'a> {
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
             }
+            DraughtingCalloutElementRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
             DraughtingCalloutElementRef::AnnotationSymbolOccurrence(i) => {
                 out.push(AnyId::AnnotationSymbolOccurrence(*i))
             }
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            DraughtingCalloutElementRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+            DraughtingCalloutElementRef::LeaderTerminator(i) => {
+                out.push(AnyId::LeaderTerminator(*i))
+            }
+            DraughtingCalloutElementRef::TerminatorSymbol(i) => {
+                out.push(AnyId::TerminatorSymbol(*i))
             }
             DraughtingCalloutElementRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
@@ -5501,45 +5873,50 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_draughting_callout(&self, r: &DraughtingCalloutRef) -> u64 {
+        match r {
+            DraughtingCalloutRef::DraughtingCallout(i) => {
+                self.draughting_callout_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingCalloutRef::LeaderDirectedCallout(i) => {
+                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingCalloutRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_draughting_callout(r: &DraughtingCalloutRef, out: &mut Vec<AnyId>) {
+        match r {
+            DraughtingCalloutRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
+            DraughtingCalloutRef::LeaderDirectedCallout(i) => {
+                out.push(AnyId::LeaderDirectedCallout(*i))
+            }
+            DraughtingCalloutRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_draughting_model_item_association_select(
         &self,
         r: &DraughtingModelItemAssociationSelectRef,
     ) -> u64 {
         match r {
-            DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => {
-                self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => {
-                self.annotation_occurrence_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => {
-                self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationPlane(i) => {
-                self.annotation_plane_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationSymbolOccurrence(i) => {
-                self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => {
-                self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => {
-                self.draughting_callout_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => {
-                self.leader_directed_callout_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => {
-                self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
-            }
-            DraughtingModelItemAssociationSelectRef::Complex(i) => {
-                self.complex_ids[i.0].expect("dep id assigned")
-            }
-        }
+        DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::AnnotationPlane(i) => self.annotation_plane_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::AnnotationSymbolOccurrence(i) => self.annotation_symbol_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => self.annotation_text_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => self.draughting_callout_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => self.leader_curve_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => self.leader_terminator_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::TerminatorSymbol(i) => self.terminator_symbol_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+    }
     }
 
     fn deps_ref_draughting_model_item_association_select(
@@ -5547,38 +5924,23 @@ impl<'a> Writer<'a> {
         out: &mut Vec<AnyId>,
     ) {
         match r {
-            DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => {
-                out.push(AnyId::AnnotationCurveOccurrence(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(AnyId::AnnotationFillAreaOccurrence(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => {
-                out.push(AnyId::AnnotationOccurrence(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => {
-                out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationPlane(i) => {
-                out.push(AnyId::AnnotationPlane(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationSymbolOccurrence(i) => {
-                out.push(AnyId::AnnotationSymbolOccurrence(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => {
-                out.push(AnyId::AnnotationTextOccurrence(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => {
-                out.push(AnyId::DraughtingCallout(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => {
-                out.push(AnyId::LeaderDirectedCallout(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => {
-                out.push(AnyId::TessellatedAnnotationOccurrence(*i))
-            }
-            DraughtingModelItemAssociationSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
-        }
+        DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => out.push(AnyId::AnnotationCurveOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => out.push(AnyId::AnnotationFillAreaOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => out.push(AnyId::AnnotationOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => out.push(AnyId::AnnotationPlaceholderOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+        DraughtingModelItemAssociationSelectRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+        DraughtingModelItemAssociationSelectRef::AnnotationSymbolOccurrence(i) => out.push(AnyId::AnnotationSymbolOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => out.push(AnyId::AnnotationTextOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => out.push(AnyId::DraughtingAnnotationOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
+        DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+        DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => out.push(AnyId::LeaderDirectedCallout(*i)),
+        DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
+        DraughtingModelItemAssociationSelectRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
+        DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => out.push(AnyId::TessellatedAnnotationOccurrence(*i)),
+        DraughtingModelItemAssociationSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+    }
     }
 
     fn id_of_ref_draughting_model_item_definition(
@@ -5594,6 +5956,9 @@ impl<'a> Writer<'a> {
             }
             DraughtingModelItemDefinitionRef::AssemblyComponentUsage(i) => {
                 self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
             }
             DraughtingModelItemDefinitionRef::CircularRunoutTolerance(i) => {
                 self.circular_runout_tolerance_ids[i.0].expect("dep id assigned")
@@ -5636,6 +6001,9 @@ impl<'a> Writer<'a> {
             }
             DraughtingModelItemDefinitionRef::DatumTarget(i) => {
                 self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             DraughtingModelItemDefinitionRef::DimensionalLocation(i) => {
                 self.dimensional_location_ids[i.0].expect("dep id assigned")
@@ -5759,6 +6127,9 @@ impl<'a> Writer<'a> {
             DraughtingModelItemDefinitionRef::AssemblyComponentUsage(i) => {
                 out.push(AnyId::AssemblyComponentUsage(*i))
             }
+            DraughtingModelItemDefinitionRef::CentreOfSymmetry(i) => {
+                out.push(AnyId::CentreOfSymmetry(*i))
+            }
             DraughtingModelItemDefinitionRef::CircularRunoutTolerance(i) => {
                 out.push(AnyId::CircularRunoutTolerance(*i))
             }
@@ -5791,6 +6162,9 @@ impl<'a> Writer<'a> {
             }
             DraughtingModelItemDefinitionRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
             DraughtingModelItemDefinitionRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            DraughtingModelItemDefinitionRef::DerivedShapeAspect(i) => {
+                out.push(AnyId::DerivedShapeAspect(*i))
+            }
             DraughtingModelItemDefinitionRef::DimensionalLocation(i) => {
                 out.push(AnyId::DimensionalLocation(*i))
             }
@@ -6065,6 +6439,24 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_face_surface(&self, r: &FaceSurfaceRef) -> u64 {
+        match r {
+            FaceSurfaceRef::AdvancedFace(i) => {
+                self.advanced_face_ids[i.0].expect("dep id assigned")
+            }
+            FaceSurfaceRef::FaceSurface(i) => self.face_surface_ids[i.0].expect("dep id assigned"),
+            FaceSurfaceRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_face_surface(r: &FaceSurfaceRef, out: &mut Vec<AnyId>) {
+        match r {
+            FaceSurfaceRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+            FaceSurfaceRef::FaceSurface(i) => out.push(AnyId::FaceSurface(*i)),
+            FaceSurfaceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_fill_area_style(&self, r: &FillAreaStyleRef) -> u64 {
         match r {
             FillAreaStyleRef::FillAreaStyle(i) => {
@@ -6235,6 +6627,9 @@ impl<'a> Writer<'a> {
             GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
                 self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            GeometricItemSpecificUsageSelectRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
             GeometricItemSpecificUsageSelectRef::CommonDatum(i) => {
                 self.common_datum_ids[i.0].expect("dep id assigned")
             }
@@ -6264,6 +6659,9 @@ impl<'a> Writer<'a> {
             }
             GeometricItemSpecificUsageSelectRef::DatumTarget(i) => {
                 self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            GeometricItemSpecificUsageSelectRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             GeometricItemSpecificUsageSelectRef::DimensionalLocation(i) => {
                 self.dimensional_location_ids[i.0].expect("dep id assigned")
@@ -6306,6 +6704,9 @@ impl<'a> Writer<'a> {
             GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
                 out.push(AnyId::AllAroundShapeAspect(*i))
             }
+            GeometricItemSpecificUsageSelectRef::CentreOfSymmetry(i) => {
+                out.push(AnyId::CentreOfSymmetry(*i))
+            }
             GeometricItemSpecificUsageSelectRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             GeometricItemSpecificUsageSelectRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
@@ -6328,6 +6729,9 @@ impl<'a> Writer<'a> {
             }
             GeometricItemSpecificUsageSelectRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
             GeometricItemSpecificUsageSelectRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            GeometricItemSpecificUsageSelectRef::DerivedShapeAspect(i) => {
+                out.push(AnyId::DerivedShapeAspect(*i))
+            }
             GeometricItemSpecificUsageSelectRef::DimensionalLocation(i) => {
                 out.push(AnyId::DimensionalLocation(*i))
             }
@@ -6362,11 +6766,32 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::AdvancedFace(i) => {
                 self.advanced_face_ids[i.0].expect("dep id assigned")
             }
+            GeometricModelItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
             GeometricModelItemRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            GeometricModelItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             GeometricModelItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::ApllPoint(i) => {
+                self.apll_point_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
             }
             GeometricModelItemRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0].expect("dep id assigned")
@@ -6637,10 +7062,29 @@ impl<'a> Writer<'a> {
     fn deps_ref_geometric_model_item(r: &GeometricModelItemRef, out: &mut Vec<AnyId>) {
         match r {
             GeometricModelItemRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+            GeometricModelItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
             GeometricModelItemRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
             }
+            GeometricModelItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
             GeometricModelItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
+            GeometricModelItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            GeometricModelItemRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            GeometricModelItemRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            GeometricModelItemRef::ApllPointWithSurface(i) => {
+                out.push(AnyId::ApllPointWithSurface(*i))
+            }
+            GeometricModelItemRef::AuxiliaryLeaderLine(i) => {
+                out.push(AnyId::AuxiliaryLeaderLine(*i))
+            }
             GeometricModelItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
             GeometricModelItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
             GeometricModelItemRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
@@ -6804,6 +7248,12 @@ impl<'a> Writer<'a> {
             GeometricSetSelectRef::AnnotationText(i) => {
                 self.annotation_text_ids[i.0].expect("dep id assigned")
             }
+            GeometricSetSelectRef::ApllPoint(i) => {
+                self.apll_point_ids[i.0].expect("dep id assigned")
+            }
+            GeometricSetSelectRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
             GeometricSetSelectRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0].expect("dep id assigned")
             }
@@ -6935,6 +7385,10 @@ impl<'a> Writer<'a> {
     fn deps_ref_geometric_set_select(r: &GeometricSetSelectRef, out: &mut Vec<AnyId>) {
         match r {
             GeometricSetSelectRef::AnnotationText(i) => out.push(AnyId::AnnotationText(*i)),
+            GeometricSetSelectRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            GeometricSetSelectRef::ApllPointWithSurface(i) => {
+                out.push(AnyId::ApllPointWithSurface(*i))
+            }
             GeometricSetSelectRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
             GeometricSetSelectRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
             GeometricSetSelectRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
@@ -7010,6 +7464,9 @@ impl<'a> Writer<'a> {
             GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
                 self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            GeometricToleranceTargetRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
             GeometricToleranceTargetRef::CommonDatum(i) => {
                 self.common_datum_ids[i.0].expect("dep id assigned")
             }
@@ -7037,6 +7494,9 @@ impl<'a> Writer<'a> {
             }
             GeometricToleranceTargetRef::DatumTarget(i) => {
                 self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceTargetRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             GeometricToleranceTargetRef::DimensionalLocation(i) => {
                 self.dimensional_location_ids[i.0].expect("dep id assigned")
@@ -7079,6 +7539,9 @@ impl<'a> Writer<'a> {
             GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
                 out.push(AnyId::AllAroundShapeAspect(*i))
             }
+            GeometricToleranceTargetRef::CentreOfSymmetry(i) => {
+                out.push(AnyId::CentreOfSymmetry(*i))
+            }
             GeometricToleranceTargetRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             GeometricToleranceTargetRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
@@ -7099,6 +7562,9 @@ impl<'a> Writer<'a> {
             }
             GeometricToleranceTargetRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
             GeometricToleranceTargetRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            GeometricToleranceTargetRef::DerivedShapeAspect(i) => {
+                out.push(AnyId::DerivedShapeAspect(*i))
+            }
             GeometricToleranceTargetRef::DimensionalLocation(i) => {
                 out.push(AnyId::DimensionalLocation(*i))
             }
@@ -7165,9 +7631,15 @@ impl<'a> Writer<'a> {
             GroupableItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             GroupableItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -7185,6 +7657,16 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+            GroupableItemRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::AppliedDateAndTimeAssignment(i) => {
                 self.applied_date_and_time_assignment_ids[i.0].expect("dep id assigned")
@@ -7207,6 +7689,9 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::AssemblyComponentUsage(i) => {
                 self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0].expect("dep id assigned")
@@ -7265,8 +7750,14 @@ impl<'a> Writer<'a> {
             GroupableItemRef::CcDesignDateAndTimeAssignment(i) => {
                 self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::Certification(i) => {
                 self.certification_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::ClosedShell(i) => {
@@ -7372,6 +7863,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::DegenerateToroidalSurface(i) => {
                 self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::DerivedUnit(i) => {
                 self.derived_unit_ids[i.0].expect("dep id assigned")
             }
@@ -7393,6 +7887,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::Direction(i) => self.direction_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::DocumentFile(i) => {
                 self.document_file_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0].expect("dep id assigned")
@@ -7480,8 +7977,14 @@ impl<'a> Writer<'a> {
             GroupableItemRef::ItemDefinedTransformation(i) => {
                 self.item_defined_transformation_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::LeaderDirectedCallout(i) => {
                 self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::LengthMeasureWithUnit(i) => {
                 self.length_measure_with_unit_ids[i.0].expect("dep id assigned")
@@ -7726,6 +8229,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::SymbolTarget(i) => {
                 self.symbol_target_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -7826,8 +8332,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::AnnotationFillAreaOccurrence(*i))
             }
             GroupableItemRef::AnnotationOccurrence(i) => out.push(AnyId::AnnotationOccurrence(*i)),
+            GroupableItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
             GroupableItemRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            GroupableItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             GroupableItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             GroupableItemRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
@@ -7841,6 +8353,14 @@ impl<'a> Writer<'a> {
             GroupableItemRef::AnnotationTextOccurrence(i) => {
                 out.push(AnyId::AnnotationTextOccurrence(*i))
             }
+            GroupableItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            GroupableItemRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            GroupableItemRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            GroupableItemRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
             GroupableItemRef::AppliedDateAndTimeAssignment(i) => {
                 out.push(AnyId::AppliedDateAndTimeAssignment(*i))
             }
@@ -7859,6 +8379,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::AssemblyComponentUsage(i) => {
                 out.push(AnyId::AssemblyComponentUsage(*i))
             }
+            GroupableItemRef::AuxiliaryLeaderLine(i) => out.push(AnyId::AuxiliaryLeaderLine(*i)),
             GroupableItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
             GroupableItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
             GroupableItemRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
@@ -7884,7 +8405,11 @@ impl<'a> Writer<'a> {
             GroupableItemRef::CcDesignDateAndTimeAssignment(i) => {
                 out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
             }
+            GroupableItemRef::CentreOfSymmetry(i) => out.push(AnyId::CentreOfSymmetry(*i)),
             GroupableItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
+            GroupableItemRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
             GroupableItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
             GroupableItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
             GroupableItemRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
@@ -7953,6 +8478,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::DegenerateToroidalSurface(i) => {
                 out.push(AnyId::DegenerateToroidalSurface(*i))
             }
+            GroupableItemRef::DerivedShapeAspect(i) => out.push(AnyId::DerivedShapeAspect(*i)),
             GroupableItemRef::DerivedUnit(i) => out.push(AnyId::DerivedUnit(*i)),
             GroupableItemRef::DerivedUnitElement(i) => out.push(AnyId::DerivedUnitElement(*i)),
             GroupableItemRef::DescriptiveRepresentationItem(i) => {
@@ -7965,6 +8491,9 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
             GroupableItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+            GroupableItemRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
             GroupableItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
             GroupableItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
             GroupableItemRef::Edge(i) => out.push(AnyId::Edge(*i)),
@@ -8029,9 +8558,11 @@ impl<'a> Writer<'a> {
             GroupableItemRef::ItemDefinedTransformation(i) => {
                 out.push(AnyId::ItemDefinedTransformation(*i))
             }
+            GroupableItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             GroupableItemRef::LeaderDirectedCallout(i) => {
                 out.push(AnyId::LeaderDirectedCallout(*i))
             }
+            GroupableItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
             GroupableItemRef::LengthMeasureWithUnit(i) => {
                 out.push(AnyId::LengthMeasureWithUnit(*i))
             }
@@ -8209,6 +8740,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
             GroupableItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
             GroupableItemRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+            GroupableItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             GroupableItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -8287,6 +8819,12 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::AscribableStateRelationship(i) => {
                 self.ascribable_state_relationship_ids[i.0].expect("dep id assigned")
             }
+            IdAttributeSelectRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
+            }
             IdAttributeSelectRef::CircularRunoutTolerance(i) => {
                 self.circular_runout_tolerance_ids[i.0].expect("dep id assigned")
             }
@@ -8338,6 +8876,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::DefinitionalRepresentation(i) => {
                 self.definitional_representation_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             IdAttributeSelectRef::DimensionalLocation(i) => {
                 self.dimensional_location_ids[i.0].expect("dep id assigned")
@@ -8552,6 +9093,10 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::AscribableStateRelationship(i) => {
                 out.push(AnyId::AscribableStateRelationship(*i))
             }
+            IdAttributeSelectRef::CentreOfSymmetry(i) => out.push(AnyId::CentreOfSymmetry(*i)),
+            IdAttributeSelectRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
             IdAttributeSelectRef::CircularRunoutTolerance(i) => {
                 out.push(AnyId::CircularRunoutTolerance(*i))
             }
@@ -8592,6 +9137,7 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::DefinitionalRepresentation(i) => {
                 out.push(AnyId::DefinitionalRepresentation(*i))
             }
+            IdAttributeSelectRef::DerivedShapeAspect(i) => out.push(AnyId::DerivedShapeAspect(*i)),
             IdAttributeSelectRef::DimensionalLocation(i) => {
                 out.push(AnyId::DimensionalLocation(*i))
             }
@@ -8755,6 +9301,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            InvisibleItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             InvisibleItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -8763,6 +9312,9 @@ impl<'a> Writer<'a> {
             }
             InvisibleItemRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            InvisibleItemRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
             }
             InvisibleItemRef::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
@@ -8773,6 +9325,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::DefinitionalRepresentation(i) => {
                 self.definitional_representation_ids[i.0].expect("dep id assigned")
             }
+            InvisibleItemRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
             InvisibleItemRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0].expect("dep id assigned")
             }
@@ -8782,8 +9337,14 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
+            InvisibleItemRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
             InvisibleItemRef::LeaderDirectedCallout(i) => {
                 self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            InvisibleItemRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
             }
             InvisibleItemRef::ManifoldSurfaceShapeRepresentation(i) => {
                 self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned")
@@ -8819,6 +9380,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::SymbolRepresentation(i) => {
                 self.symbol_representation_ids[i.0].expect("dep id assigned")
             }
+            InvisibleItemRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
             InvisibleItemRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -8844,12 +9408,18 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
             }
+            InvisibleItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
             InvisibleItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             InvisibleItemRef::AnnotationSymbolOccurrence(i) => {
                 out.push(AnyId::AnnotationSymbolOccurrence(*i))
             }
             InvisibleItemRef::AnnotationTextOccurrence(i) => {
                 out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            InvisibleItemRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
             }
             InvisibleItemRef::ConstructiveGeometryRepresentation(i) => {
                 out.push(AnyId::ConstructiveGeometryRepresentation(*i))
@@ -8860,14 +9430,19 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::DefinitionalRepresentation(i) => {
                 out.push(AnyId::DefinitionalRepresentation(*i))
             }
+            InvisibleItemRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
             InvisibleItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
             InvisibleItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
             InvisibleItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
+            InvisibleItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             InvisibleItemRef::LeaderDirectedCallout(i) => {
                 out.push(AnyId::LeaderDirectedCallout(*i))
             }
+            InvisibleItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
             InvisibleItemRef::ManifoldSurfaceShapeRepresentation(i) => {
                 out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i))
             }
@@ -8890,6 +9465,7 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
             InvisibleItemRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
             InvisibleItemRef::SymbolRepresentation(i) => out.push(AnyId::SymbolRepresentation(*i)),
+            InvisibleItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             InvisibleItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -8937,9 +9513,15 @@ impl<'a> Writer<'a> {
             LayeredItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             LayeredItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -8957,6 +9539,19 @@ impl<'a> Writer<'a> {
             }
             LayeredItemRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+            LayeredItemRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0].expect("dep id assigned")
@@ -9049,6 +9644,9 @@ impl<'a> Writer<'a> {
                 self.descriptive_representation_item_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::Direction(i) => self.direction_ids[i.0].expect("dep id assigned"),
+            LayeredItemRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0].expect("dep id assigned")
             }
@@ -9102,8 +9700,12 @@ impl<'a> Writer<'a> {
             LayeredItemRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::LeaderCurve(i) => self.leader_curve_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::LeaderDirectedCallout(i) => {
                 self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
@@ -9199,6 +9801,9 @@ impl<'a> Writer<'a> {
             LayeredItemRef::SymbolTarget(i) => {
                 self.symbol_target_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -9265,8 +9870,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::AnnotationFillAreaOccurrence(*i))
             }
             LayeredItemRef::AnnotationOccurrence(i) => out.push(AnyId::AnnotationOccurrence(*i)),
+            LayeredItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
             LayeredItemRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            LayeredItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             LayeredItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             LayeredItemRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
@@ -9280,6 +9891,15 @@ impl<'a> Writer<'a> {
             LayeredItemRef::AnnotationTextOccurrence(i) => {
                 out.push(AnyId::AnnotationTextOccurrence(*i))
             }
+            LayeredItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            LayeredItemRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            LayeredItemRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            LayeredItemRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
+            LayeredItemRef::AuxiliaryLeaderLine(i) => out.push(AnyId::AuxiliaryLeaderLine(*i)),
             LayeredItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
             LayeredItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
             LayeredItemRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
@@ -9327,6 +9947,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DescriptiveRepresentationItem(*i))
             }
             LayeredItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
+            LayeredItemRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
             LayeredItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
             LayeredItemRef::Edge(i) => out.push(AnyId::Edge(*i)),
             LayeredItemRef::EdgeCurve(i) => out.push(AnyId::EdgeCurve(*i)),
@@ -9364,7 +9987,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::IntegerRepresentationItem(*i))
             }
             LayeredItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            LayeredItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             LayeredItemRef::LeaderDirectedCallout(i) => out.push(AnyId::LeaderDirectedCallout(*i)),
+            LayeredItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
             LayeredItemRef::Line(i) => out.push(AnyId::Line(*i)),
             LayeredItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
             LayeredItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
@@ -9425,6 +10050,7 @@ impl<'a> Writer<'a> {
             LayeredItemRef::SurfaceOfRevolution(i) => out.push(AnyId::SurfaceOfRevolution(*i)),
             LayeredItemRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
             LayeredItemRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+            LayeredItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             LayeredItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -9572,6 +10198,9 @@ impl<'a> Writer<'a> {
             MarkerSelectRef::PreDefinedMarker(i) => {
                 self.pre_defined_marker_ids[i.0].expect("dep id assigned")
             }
+            MarkerSelectRef::PreDefinedPointMarkerSymbol(i) => {
+                self.pre_defined_point_marker_symbol_ids[i.0].expect("dep id assigned")
+            }
             MarkerSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
             MarkerSelectRef::MarkerType(_) => panic!("enum via single id_of"),
         }
@@ -9580,6 +10209,9 @@ impl<'a> Writer<'a> {
     fn deps_ref_marker_select(r: &MarkerSelectRef, out: &mut Vec<AnyId>) {
         match r {
             MarkerSelectRef::PreDefinedMarker(i) => out.push(AnyId::PreDefinedMarker(*i)),
+            MarkerSelectRef::PreDefinedPointMarkerSymbol(i) => {
+                out.push(AnyId::PreDefinedPointMarkerSymbol(*i))
+            }
             MarkerSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
             MarkerSelectRef::MarkerType(_) => {}
         }
@@ -9958,6 +10590,10 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_point(&self, r: &PointRef) -> u64 {
         match r {
+            PointRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+            PointRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
             PointRef::CartesianPoint(i) => self.cartesian_point_ids[i.0].expect("dep id assigned"),
             PointRef::Point(i) => self.point_ids[i.0].expect("dep id assigned"),
             PointRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
@@ -9966,6 +10602,8 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_point(r: &PointRef, out: &mut Vec<AnyId>) {
         match r {
+            PointRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            PointRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
             PointRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             PointRef::Point(i) => out.push(AnyId::Point(*i)),
             PointRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
@@ -10427,9 +11065,15 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             RepresentationItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -10447,6 +11091,21 @@ impl<'a> Writer<'a> {
             }
             RepresentationItemRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::ApllPoint(i) => {
+                self.apll_point_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
             }
             RepresentationItemRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0].expect("dep id assigned")
@@ -10547,6 +11206,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Direction(i) => {
                 self.direction_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0].expect("dep id assigned")
             }
@@ -10608,8 +11270,14 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::LeaderDirectedCallout(i) => {
                 self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
             }
             RepresentationItemRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             RepresentationItemRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
@@ -10710,6 +11378,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::SymbolTarget(i) => {
                 self.symbol_target_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -10788,8 +11459,14 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::AnnotationOccurrence(i) => {
                 out.push(AnyId::AnnotationOccurrence(*i))
             }
+            RepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
             RepresentationItemRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            RepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             RepresentationItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             RepresentationItemRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
@@ -10802,6 +11479,19 @@ impl<'a> Writer<'a> {
             }
             RepresentationItemRef::AnnotationTextOccurrence(i) => {
                 out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            RepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            RepresentationItemRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            RepresentationItemRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            RepresentationItemRef::ApllPointWithSurface(i) => {
+                out.push(AnyId::ApllPointWithSurface(*i))
+            }
+            RepresentationItemRef::AuxiliaryLeaderLine(i) => {
+                out.push(AnyId::AuxiliaryLeaderLine(*i))
             }
             RepresentationItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
             RepresentationItemRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
@@ -10856,6 +11546,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DescriptiveRepresentationItem(*i))
             }
             RepresentationItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
+            RepresentationItemRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
             RepresentationItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
             RepresentationItemRef::Edge(i) => out.push(AnyId::Edge(*i)),
             RepresentationItemRef::EdgeCurve(i) => out.push(AnyId::EdgeCurve(*i)),
@@ -10895,9 +11588,11 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::IntegerRepresentationItem(*i))
             }
             RepresentationItemRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            RepresentationItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             RepresentationItemRef::LeaderDirectedCallout(i) => {
                 out.push(AnyId::LeaderDirectedCallout(*i))
             }
+            RepresentationItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
             RepresentationItemRef::Line(i) => out.push(AnyId::Line(*i)),
             RepresentationItemRef::Loop(i) => out.push(AnyId::Loop(*i)),
             RepresentationItemRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
@@ -10963,6 +11658,7 @@ impl<'a> Writer<'a> {
             }
             RepresentationItemRef::SweptSurface(i) => out.push(AnyId::SweptSurface(*i)),
             RepresentationItemRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+            RepresentationItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             RepresentationItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -11027,6 +11723,7 @@ impl<'a> Writer<'a> {
     ) -> u64 {
         match r {
         RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::CharacterizedRepresentation(i) => self.characterized_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::DraughtingModel(i) => self.draughting_model_ids[i.0].expect("dep id assigned"),
@@ -11052,6 +11749,7 @@ impl<'a> Writer<'a> {
     ) {
         match r {
         RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
+        RepresentationOrRepresentationReferenceRef::CharacterizedRepresentation(i) => out.push(AnyId::CharacterizedRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::ConstructiveGeometryRepresentation(i) => out.push(AnyId::ConstructiveGeometryRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(i) => out.push(AnyId::DefinitionalRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
@@ -11075,6 +11773,9 @@ impl<'a> Writer<'a> {
         match r {
             RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
                 self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
             }
             RepresentationRef::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
@@ -11127,6 +11828,9 @@ impl<'a> Writer<'a> {
             RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
                 out.push(AnyId::AdvancedBrepShapeRepresentation(*i))
             }
+            RepresentationRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
             RepresentationRef::ConstructiveGeometryRepresentation(i) => {
                 out.push(AnyId::ConstructiveGeometryRepresentation(*i))
             }
@@ -11166,6 +11870,9 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
                 self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            RepresentedDefinitionRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
             RepresentedDefinitionRef::CommonDatum(i) => {
                 self.common_datum_ids[i.0].expect("dep id assigned")
             }
@@ -11193,6 +11900,9 @@ impl<'a> Writer<'a> {
             }
             RepresentedDefinitionRef::DatumTarget(i) => {
                 self.datum_target_ids[i.0].expect("dep id assigned")
+            }
+            RepresentedDefinitionRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
             }
             RepresentedDefinitionRef::DimensionalLocation(i) => {
                 self.dimensional_location_ids[i.0].expect("dep id assigned")
@@ -11242,6 +11952,7 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
                 out.push(AnyId::AllAroundShapeAspect(*i))
             }
+            RepresentedDefinitionRef::CentreOfSymmetry(i) => out.push(AnyId::CentreOfSymmetry(*i)),
             RepresentedDefinitionRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             RepresentedDefinitionRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
@@ -11262,6 +11973,9 @@ impl<'a> Writer<'a> {
             }
             RepresentedDefinitionRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
             RepresentedDefinitionRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            RepresentedDefinitionRef::DerivedShapeAspect(i) => {
+                out.push(AnyId::DerivedShapeAspect(*i))
+            }
             RepresentedDefinitionRef::DimensionalLocation(i) => {
                 out.push(AnyId::DimensionalLocation(*i))
             }
@@ -11355,6 +12069,9 @@ impl<'a> Writer<'a> {
             ShapeAspectRef::AllAroundShapeAspect(i) => {
                 self.all_around_shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            ShapeAspectRef::CentreOfSymmetry(i) => {
+                self.centre_of_symmetry_ids[i.0].expect("dep id assigned")
+            }
             ShapeAspectRef::CommonDatum(i) => self.common_datum_ids[i.0].expect("dep id assigned"),
             ShapeAspectRef::CompositeGroupShapeAspect(i) => {
                 self.composite_group_shape_aspect_ids[i.0].expect("dep id assigned")
@@ -11377,6 +12094,9 @@ impl<'a> Writer<'a> {
             }
             ShapeAspectRef::DatumSystem(i) => self.datum_system_ids[i.0].expect("dep id assigned"),
             ShapeAspectRef::DatumTarget(i) => self.datum_target_ids[i.0].expect("dep id assigned"),
+            ShapeAspectRef::DerivedShapeAspect(i) => {
+                self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
+            }
             ShapeAspectRef::GeneralDatumReference(i) => {
                 self.general_datum_reference_ids[i.0].expect("dep id assigned")
             }
@@ -11397,6 +12117,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_shape_aspect(r: &ShapeAspectRef, out: &mut Vec<AnyId>) {
         match r {
             ShapeAspectRef::AllAroundShapeAspect(i) => out.push(AnyId::AllAroundShapeAspect(*i)),
+            ShapeAspectRef::CentreOfSymmetry(i) => out.push(AnyId::CentreOfSymmetry(*i)),
             ShapeAspectRef::CommonDatum(i) => out.push(AnyId::CommonDatum(*i)),
             ShapeAspectRef::CompositeGroupShapeAspect(i) => {
                 out.push(AnyId::CompositeGroupShapeAspect(*i))
@@ -11411,6 +12132,7 @@ impl<'a> Writer<'a> {
             ShapeAspectRef::DatumReferenceElement(i) => out.push(AnyId::DatumReferenceElement(*i)),
             ShapeAspectRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
             ShapeAspectRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
+            ShapeAspectRef::DerivedShapeAspect(i) => out.push(AnyId::DerivedShapeAspect(*i)),
             ShapeAspectRef::GeneralDatumReference(i) => out.push(AnyId::GeneralDatumReference(*i)),
             ShapeAspectRef::PlacedDatumTargetFeature(i) => {
                 out.push(AnyId::PlacedDatumTargetFeature(*i))
@@ -11666,9 +12388,15 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             StyleContextSelectRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -11686,6 +12414,21 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::ApllPoint(i) => {
+                self.apll_point_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0].expect("dep id assigned")
@@ -11737,6 +12480,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
             StyleContextSelectRef::ClosedShell(i) => {
@@ -11794,6 +12540,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::Direction(i) => {
                 self.direction_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0].expect("dep id assigned")
@@ -11863,8 +12612,14 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::IntersectionCurve(i) => {
                 self.intersection_curve_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::LeaderCurve(i) => {
+                self.leader_curve_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::LeaderDirectedCallout(i) => {
                 self.leader_directed_callout_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::Line(i) => self.line_ids[i.0].expect("dep id assigned"),
             StyleContextSelectRef::Loop(i) => self.loop_ids[i.0].expect("dep id assigned"),
@@ -12007,6 +12762,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::SymbolTarget(i) => {
                 self.symbol_target_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -12091,8 +12849,14 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::AnnotationOccurrence(i) => {
                 out.push(AnyId::AnnotationOccurrence(*i))
             }
+            StyleContextSelectRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
             StyleContextSelectRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            StyleContextSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             StyleContextSelectRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             StyleContextSelectRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
@@ -12105,6 +12869,19 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::AnnotationTextOccurrence(i) => {
                 out.push(AnyId::AnnotationTextOccurrence(*i))
+            }
+            StyleContextSelectRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            StyleContextSelectRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            StyleContextSelectRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            StyleContextSelectRef::ApllPointWithSurface(i) => {
+                out.push(AnyId::ApllPointWithSurface(*i))
+            }
+            StyleContextSelectRef::AuxiliaryLeaderLine(i) => {
+                out.push(AnyId::AuxiliaryLeaderLine(*i))
             }
             StyleContextSelectRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
             StyleContextSelectRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
@@ -12129,6 +12906,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             StyleContextSelectRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
             StyleContextSelectRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+            StyleContextSelectRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
             StyleContextSelectRef::Circle(i) => out.push(AnyId::Circle(*i)),
             StyleContextSelectRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
             StyleContextSelectRef::ComplexTriangulatedFace(i) => {
@@ -12168,6 +12948,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DescriptiveRepresentationItem(*i))
             }
             StyleContextSelectRef::Direction(i) => out.push(AnyId::Direction(*i)),
+            StyleContextSelectRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
             StyleContextSelectRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
             StyleContextSelectRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
             StyleContextSelectRef::Edge(i) => out.push(AnyId::Edge(*i)),
@@ -12212,9 +12995,11 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::IntegerRepresentationItem(*i))
             }
             StyleContextSelectRef::IntersectionCurve(i) => out.push(AnyId::IntersectionCurve(*i)),
+            StyleContextSelectRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
             StyleContextSelectRef::LeaderDirectedCallout(i) => {
                 out.push(AnyId::LeaderDirectedCallout(*i))
             }
+            StyleContextSelectRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
             StyleContextSelectRef::Line(i) => out.push(AnyId::Line(*i)),
             StyleContextSelectRef::Loop(i) => out.push(AnyId::Loop(*i)),
             StyleContextSelectRef::ManifoldSolidBrep(i) => out.push(AnyId::ManifoldSolidBrep(*i)),
@@ -12315,6 +13100,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::SymbolRepresentation(*i))
             }
             StyleContextSelectRef::SymbolTarget(i) => out.push(AnyId::SymbolTarget(*i)),
+            StyleContextSelectRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             StyleContextSelectRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -12374,6 +13160,9 @@ impl<'a> Writer<'a> {
             StyledItemRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            StyledItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             StyledItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -12386,10 +13175,20 @@ impl<'a> Writer<'a> {
             StyledItemRef::ContextDependentOverRidingStyledItem(i) => {
                 self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
+            StyledItemRef::DraughtingAnnotationOccurrence(i) => {
+                self.draughting_annotation_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemRef::LeaderCurve(i) => self.leader_curve_ids[i.0].expect("dep id assigned"),
+            StyledItemRef::LeaderTerminator(i) => {
+                self.leader_terminator_ids[i.0].expect("dep id assigned")
+            }
             StyledItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
             StyledItemRef::StyledItem(i) => self.styled_item_ids[i.0].expect("dep id assigned"),
+            StyledItemRef::TerminatorSymbol(i) => {
+                self.terminator_symbol_ids[i.0].expect("dep id assigned")
+            }
             StyledItemRef::TessellatedAnnotationOccurrence(i) => {
                 self.tessellated_annotation_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -12409,6 +13208,9 @@ impl<'a> Writer<'a> {
             StyledItemRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
             }
+            StyledItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
             StyledItemRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             StyledItemRef::AnnotationSymbolOccurrence(i) => {
                 out.push(AnyId::AnnotationSymbolOccurrence(*i))
@@ -12419,8 +13221,14 @@ impl<'a> Writer<'a> {
             StyledItemRef::ContextDependentOverRidingStyledItem(i) => {
                 out.push(AnyId::ContextDependentOverRidingStyledItem(*i))
             }
+            StyledItemRef::DraughtingAnnotationOccurrence(i) => {
+                out.push(AnyId::DraughtingAnnotationOccurrence(*i))
+            }
+            StyledItemRef::LeaderCurve(i) => out.push(AnyId::LeaderCurve(*i)),
+            StyledItemRef::LeaderTerminator(i) => out.push(AnyId::LeaderTerminator(*i)),
             StyledItemRef::OverRidingStyledItem(i) => out.push(AnyId::OverRidingStyledItem(*i)),
             StyledItemRef::StyledItem(i) => out.push(AnyId::StyledItem(*i)),
+            StyledItemRef::TerminatorSymbol(i) => out.push(AnyId::TerminatorSymbol(*i)),
             StyledItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(AnyId::TessellatedAnnotationOccurrence(*i))
             }
@@ -12436,9 +13244,15 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::AdvancedFace(i) => {
                 self.advanced_face_ids[i.0].expect("dep id assigned")
             }
+            StyledItemTargetRef::AnnotationPlaceholderLeaderLine(i) => {
+                self.annotation_placeholder_leader_line_ids[i.0].expect("dep id assigned")
+            }
             StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0].expect("dep id assigned")
             }
+            StyledItemTargetRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
+                .annotation_placeholder_occurrence_with_leader_line_ids[i.0]
+                .expect("dep id assigned"),
             StyledItemTargetRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0].expect("dep id assigned")
             }
@@ -12450,6 +13264,19 @@ impl<'a> Writer<'a> {
             }
             StyledItemTargetRef::AnnotationTextCharacter(i) => {
                 self.annotation_text_character_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::AnnotationToAnnotationLeaderLine(i) => {
+                self.annotation_to_annotation_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::AnnotationToModelLeaderLine(i) => {
+                self.annotation_to_model_leader_line_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+            StyledItemTargetRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::AuxiliaryLeaderLine(i) => {
+                self.auxiliary_leader_line_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0].expect("dep id assigned")
@@ -12501,6 +13328,9 @@ impl<'a> Writer<'a> {
             }
             StyledItemTargetRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::CharacterizedRepresentation(i) => {
+                self.characterized_representation_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::Circle(i) => self.circle_ids[i.0].expect("dep id assigned"),
             StyledItemTargetRef::ClosedShell(i) => {
@@ -12779,8 +13609,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::AdvancedBrepShapeRepresentation(*i))
             }
             StyledItemTargetRef::AdvancedFace(i) => out.push(AnyId::AdvancedFace(*i)),
+            StyledItemTargetRef::AnnotationPlaceholderLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderLeaderLine(*i))
+            }
             StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(AnyId::AnnotationPlaceholderOccurrence(*i))
+            }
+            StyledItemTargetRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                out.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             StyledItemTargetRef::AnnotationPlane(i) => out.push(AnyId::AnnotationPlane(*i)),
             StyledItemTargetRef::AnnotationSymbol(i) => out.push(AnyId::AnnotationSymbol(*i)),
@@ -12788,6 +13624,17 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::AnnotationTextCharacter(i) => {
                 out.push(AnyId::AnnotationTextCharacter(*i))
             }
+            StyledItemTargetRef::AnnotationToAnnotationLeaderLine(i) => {
+                out.push(AnyId::AnnotationToAnnotationLeaderLine(*i))
+            }
+            StyledItemTargetRef::AnnotationToModelLeaderLine(i) => {
+                out.push(AnyId::AnnotationToModelLeaderLine(*i))
+            }
+            StyledItemTargetRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            StyledItemTargetRef::ApllPointWithSurface(i) => {
+                out.push(AnyId::ApllPointWithSurface(*i))
+            }
+            StyledItemTargetRef::AuxiliaryLeaderLine(i) => out.push(AnyId::AuxiliaryLeaderLine(*i)),
             StyledItemTargetRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
             StyledItemTargetRef::Axis2Placement2d(i) => out.push(AnyId::Axis2Placement2d(*i)),
             StyledItemTargetRef::Axis2Placement3d(i) => out.push(AnyId::Axis2Placement3d(*i)),
@@ -12809,6 +13656,9 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             StyledItemTargetRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
             StyledItemTargetRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
+            StyledItemTargetRef::CharacterizedRepresentation(i) => {
+                out.push(AnyId::CharacterizedRepresentation(*i))
+            }
             StyledItemTargetRef::Circle(i) => out.push(AnyId::Circle(*i)),
             StyledItemTargetRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
             StyledItemTargetRef::ComplexTriangulatedFace(i) => {
@@ -13643,6 +14493,10 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_trimming_select(&self, r: &TrimmingSelectRef) -> u64 {
         match r {
+            TrimmingSelectRef::ApllPoint(i) => self.apll_point_ids[i.0].expect("dep id assigned"),
+            TrimmingSelectRef::ApllPointWithSurface(i) => {
+                self.apll_point_with_surface_ids[i.0].expect("dep id assigned")
+            }
             TrimmingSelectRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
             }
@@ -13652,6 +14506,8 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_trimming_select(r: &TrimmingSelectRef, out: &mut Vec<AnyId>) {
         match r {
+            TrimmingSelectRef::ApllPoint(i) => out.push(AnyId::ApllPoint(*i)),
+            TrimmingSelectRef::ApllPointWithSurface(i) => out.push(AnyId::ApllPointWithSurface(*i)),
             TrimmingSelectRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             TrimmingSelectRef::ParameterValue(_) => {}
         }
@@ -13972,12 +14828,31 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_annotation_occurrence(&it.relating_annotation_occurrence, out);
                 Self::deps_ref_annotation_occurrence(&it.related_annotation_occurrence, out);
             }
+            AnyId::AnnotationPlaceholderLeaderLine(id) => {
+                let it = self.model.annotation_placeholder_leader_lines.get(id.0);
+                for e in &it.geometric_elements {
+                    Self::deps_ref_des_apll_point_select(e, out);
+                }
+            }
             AnyId::AnnotationPlaceholderOccurrence(id) => {
                 let it = self.model.annotation_placeholder_occurrences.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_styled_item_target(&it.item, out);
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(id) => {
+                let it = self
+                    .model
+                    .annotation_placeholder_occurrence_with_leader_lines
+                    .get(id.0);
+                for e in &it.styles {
+                    Self::deps_ref_presentation_style_assignment(e, out);
+                }
+                Self::deps_ref_styled_item_target(&it.item, out);
+                for e in &it.leader_line {
+                    Self::deps_ref_annotation_placeholder_leader_line(e, out);
+                }
             }
             AnyId::AnnotationPlane(id) => {
                 let it = self.model.annotation_planes.get(id.0);
@@ -14019,6 +14894,23 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_annotation_text_occurrence_item(&it.item, out);
+            }
+            AnyId::AnnotationToAnnotationLeaderLine(id) => {
+                let it = self.model.annotation_to_annotation_leader_lines.get(id.0);
+                for e in &it.geometric_elements {
+                    Self::deps_ref_des_apll_point_select(e, out);
+                }
+            }
+            AnyId::AnnotationToModelLeaderLine(id) => {
+                let it = self.model.annotation_to_model_leader_lines.get(id.0);
+                for e in &it.geometric_elements {
+                    Self::deps_ref_des_apll_point_select(e, out);
+                }
+            }
+            AnyId::ApllPoint(_) => {}
+            AnyId::ApllPointWithSurface(id) => {
+                let it = self.model.apll_point_with_surfaces.get(id.0);
+                Self::deps_ref_face_surface(&it.associated_surface, out);
             }
             AnyId::ApplicationContext(_) => {}
             AnyId::ApplicationContextElement(id) => {
@@ -14082,6 +14974,13 @@ impl<'a> Writer<'a> {
                     out,
                 );
                 Self::deps_ref_product_definition_or_reference(&it.related_product_definition, out);
+            }
+            AnyId::AuxiliaryLeaderLine(id) => {
+                let it = self.model.auxiliary_leader_lines.get(id.0);
+                for e in &it.geometric_elements {
+                    Self::deps_ref_des_apll_point_select(e, out);
+                }
+                Self::deps_ref_annotation_to_model_leader_line(&it.controlling_leader_line, out);
             }
             AnyId::Axis1Placement(id) => {
                 let it = self.model.axis1_placements.get(id.0);
@@ -14211,6 +15110,10 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_cc_classified_item(e, out);
                 }
             }
+            AnyId::CentreOfSymmetry(id) => {
+                let it = self.model.centre_of_symmetrys.get(id.0);
+                Self::deps_ref_product_definition_shape(&it.of_shape, out);
+            }
             AnyId::Certification(id) => {
                 let it = self.model.certifications.get(id.0);
                 Self::deps_ref_certification_type(&it.kind, out);
@@ -14247,6 +15150,13 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation(&it.rep, out);
             }
             AnyId::CharacterizedObject(_) => {}
+            AnyId::CharacterizedRepresentation(id) => {
+                let it = self.model.characterized_representations.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
             AnyId::Circle(id) => {
                 let it = self.model.circles.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
@@ -14524,6 +15434,10 @@ impl<'a> Writer<'a> {
                 let it = self.model.degenerate_toroidal_surfaces.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
+            AnyId::DerivedShapeAspect(id) => {
+                let it = self.model.derived_shape_aspects.get(id.0);
+                Self::deps_ref_product_definition_shape(&it.of_shape, out);
+            }
             AnyId::DerivedUnit(id) => {
                 let it = self.model.derived_units.get(id.0);
                 for e in &it.elements {
@@ -14578,11 +15492,23 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_document_type(&it.kind, out);
             }
             AnyId::DocumentType(_) => {}
+            AnyId::DraughtingAnnotationOccurrence(id) => {
+                let it = self.model.draughting_annotation_occurrences.get(id.0);
+                for e in &it.styles {
+                    Self::deps_ref_presentation_style_assignment(e, out);
+                }
+                Self::deps_ref_styled_item_target(&it.item, out);
+            }
             AnyId::DraughtingCallout(id) => {
                 let it = self.model.draughting_callouts.get(id.0);
                 for e in &it.contents {
                     Self::deps_ref_draughting_callout_element(e, out);
                 }
+            }
+            AnyId::DraughtingCalloutRelationship(id) => {
+                let it = self.model.draughting_callout_relationships.get(id.0);
+                Self::deps_ref_draughting_callout(&it.relating_draughting_callout, out);
+                Self::deps_ref_draughting_callout(&it.related_draughting_callout, out);
             }
             AnyId::DraughtingModel(id) => {
                 let it = self.model.draughting_models.get(id.0);
@@ -14902,11 +15828,26 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_item(&it.transform_item_1, out);
                 Self::deps_ref_representation_item(&it.transform_item_2, out);
             }
+            AnyId::LeaderCurve(id) => {
+                let it = self.model.leader_curves.get(id.0);
+                for e in &it.styles {
+                    Self::deps_ref_presentation_style_assignment(e, out);
+                }
+                Self::deps_ref_curve_or_curve_set(&it.item, out);
+            }
             AnyId::LeaderDirectedCallout(id) => {
                 let it = self.model.leader_directed_callouts.get(id.0);
                 for e in &it.contents {
                     Self::deps_ref_draughting_callout_element(e, out);
                 }
+            }
+            AnyId::LeaderTerminator(id) => {
+                let it = self.model.leader_terminators.get(id.0);
+                for e in &it.styles {
+                    Self::deps_ref_presentation_style_assignment(e, out);
+                }
+                Self::deps_ref_annotation_symbol_occurrence_item(&it.item, out);
+                Self::deps_ref_annotation_curve_occurrence(&it.annotated_curve, out);
             }
             AnyId::LengthMeasureWithUnit(id) => {
                 let it = self.model.length_measure_with_units.get(id.0);
@@ -14980,6 +15921,11 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
+            AnyId::ModelGeometricView(id) => {
+                let it = self.model.model_geometric_views.get(id.0);
+                Self::deps_ref_representation_item(&it.item, out);
+                Self::deps_ref_representation(&it.rep, out);
             }
             AnyId::ModifiedGeometricTolerance(id) => {
                 let it = self.model.modified_geometric_tolerances.get(id.0);
@@ -15187,8 +16133,10 @@ impl<'a> Writer<'a> {
             AnyId::PreDefinedCurveFont(_) => {}
             AnyId::PreDefinedItem(_) => {}
             AnyId::PreDefinedMarker(_) => {}
+            AnyId::PreDefinedPointMarkerSymbol(_) => {}
             AnyId::PreDefinedSurfaceSideStyle(_) => {}
             AnyId::PreDefinedSymbol(_) => {}
+            AnyId::PreDefinedTerminatorSymbol(_) => {}
             AnyId::PreDefinedTextFont(_) => {}
             AnyId::PreDefinedTile(_) => {}
             AnyId::PrecisionQualifier(_) => {}
@@ -15630,6 +16578,14 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_datum_system_or_reference(e, out);
                 }
             }
+            AnyId::TerminatorSymbol(id) => {
+                let it = self.model.terminator_symbols.get(id.0);
+                for e in &it.styles {
+                    Self::deps_ref_presentation_style_assignment(e, out);
+                }
+                Self::deps_ref_annotation_symbol_occurrence_item(&it.item, out);
+                Self::deps_ref_annotation_curve_occurrence(&it.annotated_curve, out);
+            }
             AnyId::TessellatedAnnotationOccurrence(id) => {
                 let it = self.model.tessellated_annotation_occurrences.get(id.0);
                 for e in &it.styles {
@@ -15876,6 +16832,14 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
+                        UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine {
+                            leader_line,
+                            ..
+                        } => {
+                            for e in leader_line {
+                                Self::deps_ref_annotation_placeholder_leader_line(e, out);
+                            }
+                        }
                         UnitPart::ApplicationContextElement {
                             frame_of_reference, ..
                         } => {
@@ -16087,6 +17051,14 @@ impl<'a> Writer<'a> {
                             for e in contents {
                                 Self::deps_ref_draughting_callout_element(e, out);
                             }
+                        }
+                        UnitPart::DraughtingCalloutRelationship {
+                            relating_draughting_callout,
+                            related_draughting_callout,
+                            ..
+                        } => {
+                            Self::deps_ref_draughting_callout(relating_draughting_callout, out);
+                            Self::deps_ref_draughting_callout(related_draughting_callout, out);
                         }
                         UnitPart::DraughtingModelItemAssociationWithPlaceholder {
                             annotation_placeholder,
@@ -16573,6 +17545,11 @@ impl<'a> Writer<'a> {
                         }
                         UnitPart::SymbolTarget { placement, .. } => {
                             Self::deps_ref_axis2_placement(placement, out);
+                        }
+                        UnitPart::TerminatorSymbol {
+                            annotated_curve, ..
+                        } => {
+                            Self::deps_ref_annotation_curve_occurrence(annotated_curve, out);
                         }
                         UnitPart::TessellatedGeometricSet { children, .. } => {
                             for e in children {
@@ -17061,6 +18038,25 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::AnnotationPlaceholderLeaderLine(id) => {
+                let it = self.model.annotation_placeholder_leader_lines.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.geometric_elements
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_des_apll_point_select(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = ANNOTATION_PLACEHOLDER_LEADER_LINE({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::AnnotationPlaceholderOccurrence(id) => {
                 let it = self.model.annotation_placeholder_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -17083,6 +18079,45 @@ impl<'a> Writer<'a> {
                 ];
                 format!(
                     "#{n} = ANNOTATION_PLACEHOLDER_OCCURRENCE({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(id) => {
+                let it = self
+                    .model
+                    .annotation_placeholder_occurrence_with_leader_lines
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.styles
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_presentation_style_assignment(e)
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    it.role.token().to_string(),
+                    real(it.line_spacing),
+                    format!(
+                        "({})",
+                        it.leader_line
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_annotation_placeholder_leader_line(e)
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE({});\n",
                     attrs.join(",")
                 )
             }
@@ -17198,6 +18233,79 @@ impl<'a> Writer<'a> {
                     ),
                 ];
                 format!("#{n} = ANNOTATION_TEXT_OCCURRENCE({});\n", attrs.join(","))
+            }
+            AnyId::AnnotationToAnnotationLeaderLine(id) => {
+                let it = self.model.annotation_to_annotation_leader_lines.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.geometric_elements
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_des_apll_point_select(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = ANNOTATION_TO_ANNOTATION_LEADER_LINE({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::AnnotationToModelLeaderLine(id) => {
+                let it = self.model.annotation_to_model_leader_lines.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.geometric_elements
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_des_apll_point_select(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = ANNOTATION_TO_MODEL_LEADER_LINE({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::ApllPoint(id) => {
+                let it = self.model.apll_points.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.coordinates
+                            .iter()
+                            .map(|e| real(*e))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    it.symbol_applied.token().to_string(),
+                ];
+                format!("#{n} = APLL_POINT({});\n", attrs.join(","))
+            }
+            AnyId::ApllPointWithSurface(id) => {
+                let it = self.model.apll_point_with_surfaces.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.coordinates
+                            .iter()
+                            .map(|e| real(*e))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    it.symbol_applied.token().to_string(),
+                    format!("#{}", self.id_of_ref_face_surface(&it.associated_surface)),
+                ];
+                format!("#{n} = APLL_POINT_WITH_SURFACE({});\n", attrs.join(","))
             }
             AnyId::ApplicationContext(id) => {
                 let it = self.model.application_contexts.get(id.0);
@@ -17393,6 +18501,26 @@ impl<'a> Writer<'a> {
                     },
                 ];
                 format!("#{n} = ASSEMBLY_COMPONENT_USAGE({});\n", attrs.join(","))
+            }
+            AnyId::AuxiliaryLeaderLine(id) => {
+                let it = self.model.auxiliary_leader_lines.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.geometric_elements
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_des_apll_point_select(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_to_model_leader_line(&it.controlling_leader_line)
+                    ),
+                ];
+                format!("#{n} = AUXILIARY_LEADER_LINE({});\n", attrs.join(","))
             }
             AnyId::Axis1Placement(id) => {
                 let it = self.model.axis1_placements.get(id.0);
@@ -17827,6 +18955,20 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::CentreOfSymmetry(id) => {
+                let it = self.model.centre_of_symmetrys.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
+                    it.product_definitional.token().to_string(),
+                ];
+                format!("#{n} = CENTRE_OF_SYMMETRY({});\n", attrs.join(","))
+            }
             AnyId::Certification(id) => {
                 let it = self.model.certifications.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -17924,13 +19066,41 @@ impl<'a> Writer<'a> {
                 let it = self.model.characterized_objects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
                 let attrs: Vec<String> = vec![
-                    step_str(&it.name),
+                    match &it.name {
+                        Some(x) => step_str(x),
+                        None => "*".to_string(),
+                    },
                     match &it.description {
                         Some(x) => step_str(x),
-                        None => "$".to_string(),
+                        None => "*".to_string(),
                     },
                 ];
                 format!("#{n} = CHARACTERIZED_OBJECT({});\n", attrs.join(","))
+            }
+            AnyId::CharacterizedRepresentation(id) => {
+                let it = self.model.characterized_representations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    "*".to_string(),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                    "*".to_string(),
+                    "*".to_string(),
+                ];
+                format!(
+                    "#{n} = CHARACTERIZED_REPRESENTATION({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::Circle(id) => {
                 let it = self.model.circles.get(id.0);
@@ -18886,6 +20056,20 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = DEGENERATE_TOROIDAL_SURFACE({});\n", attrs.join(","))
             }
+            AnyId::DerivedShapeAspect(id) => {
+                let it = self.model.derived_shape_aspects.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
+                    it.product_definitional.token().to_string(),
+                ];
+                format!("#{n} = DERIVED_SHAPE_ASPECT({});\n", attrs.join(","))
+            }
             AnyId::DerivedUnit(id) => {
                 let it = self.model.derived_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -19077,6 +20261,29 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![step_str(&it.product_data_type)];
                 format!("#{n} = DOCUMENT_TYPE({});\n", attrs.join(","))
             }
+            AnyId::DraughtingAnnotationOccurrence(id) => {
+                let it = self.model.draughting_annotation_occurrences.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.styles
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_presentation_style_assignment(e)
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                ];
+                format!(
+                    "#{n} = DRAUGHTING_ANNOTATION_OCCURRENCE({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::DraughtingCallout(id) => {
                 let it = self.model.draughting_callouts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -19092,6 +20299,26 @@ impl<'a> Writer<'a> {
                     ),
                 ];
                 format!("#{n} = DRAUGHTING_CALLOUT({});\n", attrs.join(","))
+            }
+            AnyId::DraughtingCalloutRelationship(id) => {
+                let it = self.model.draughting_callout_relationships.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.description),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_draughting_callout(&it.relating_draughting_callout)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_draughting_callout(&it.related_draughting_callout)
+                    ),
+                ];
+                format!(
+                    "#{n} = DRAUGHTING_CALLOUT_RELATIONSHIP({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::DraughtingModel(id) => {
                 let it = self.model.draughting_models.get(id.0);
@@ -20132,6 +21359,26 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = ITEM_DEFINED_TRANSFORMATION({});\n", attrs.join(","))
             }
+            AnyId::LeaderCurve(id) => {
+                let it = self.model.leader_curves.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.styles
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_presentation_style_assignment(e)
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!("#{}", self.id_of_ref_curve_or_curve_set(&it.item)),
+                ];
+                format!("#{n} = LEADER_CURVE({});\n", attrs.join(","))
+            }
             AnyId::LeaderDirectedCallout(id) => {
                 let it = self.model.leader_directed_callouts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -20147,6 +21394,33 @@ impl<'a> Writer<'a> {
                     ),
                 ];
                 format!("#{n} = LEADER_DIRECTED_CALLOUT({});\n", attrs.join(","))
+            }
+            AnyId::LeaderTerminator(id) => {
+                let it = self.model.leader_terminators.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.styles
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_presentation_style_assignment(e)
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_symbol_occurrence_item(&it.item)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_curve_occurrence(&it.annotated_curve)
+                    ),
+                ];
+                format!("#{n} = LEADER_TERMINATOR({});\n", attrs.join(","))
             }
             AnyId::LengthMeasureWithUnit(id) => {
                 let it = self.model.length_measure_with_units.get(id.0);
@@ -20359,6 +21633,20 @@ impl<'a> Writer<'a> {
                     "#{n} = MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::ModelGeometricView(id) => {
+                let it = self.model.model_geometric_views.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_representation_item(&it.item)),
+                    format!("#{}", self.id_of_ref_representation(&it.rep)),
+                ];
+                format!("#{n} = MODEL_GEOMETRIC_VIEW({});\n", attrs.join(","))
             }
             AnyId::ModifiedGeometricTolerance(id) => {
                 let it = self.model.modified_geometric_tolerances.get(id.0);
@@ -21228,6 +22516,15 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = PRE_DEFINED_MARKER({});\n", attrs.join(","))
             }
+            AnyId::PreDefinedPointMarkerSymbol(id) => {
+                let it = self.model.pre_defined_point_marker_symbols.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!(
+                    "#{n} = PRE_DEFINED_POINT_MARKER_SYMBOL({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::PreDefinedSurfaceSideStyle(id) => {
                 let it = self.model.pre_defined_surface_side_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -21242,6 +22539,15 @@ impl<'a> Writer<'a> {
                 let n = self.get_id(any).expect("id assigned");
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = PRE_DEFINED_SYMBOL({});\n", attrs.join(","))
+            }
+            AnyId::PreDefinedTerminatorSymbol(id) => {
+                let it = self.model.pre_defined_terminator_symbols.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!(
+                    "#{n} = PRE_DEFINED_TERMINATOR_SYMBOL({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::PreDefinedTextFont(id) => {
                 let it = self.model.pre_defined_text_fonts.get(id.0);
@@ -22715,6 +24021,33 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = SYMMETRY_TOLERANCE({});\n", attrs.join(","))
             }
+            AnyId::TerminatorSymbol(id) => {
+                let it = self.model.terminator_symbols.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.styles
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_presentation_style_assignment(e)
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_symbol_occurrence_item(&it.item)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_annotation_curve_occurrence(&it.annotated_curve)
+                    ),
+                ];
+                format!("#{n} = TERMINATOR_SYMBOL({});\n", attrs.join(","))
+            }
             AnyId::TessellatedAnnotationOccurrence(id) => {
                 let it = self.model.tessellated_annotation_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -23373,6 +24706,7 @@ impl<'a> Writer<'a> {
                 UnitPart::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY()".to_string(),
                 UnitPart::AnnotationOccurrenceRelationship { name, description, relating_annotation_occurrence, related_annotation_occurrence, .. } => { let a: Vec<String> = vec![step_str(name), step_str(description), format!("#{}", self.id_of_ref_annotation_occurrence(relating_annotation_occurrence)), format!("#{}", self.id_of_ref_annotation_occurrence(related_annotation_occurrence))]; format!("ANNOTATION_OCCURRENCE_RELATIONSHIP({})", a.join(",")) },
                 UnitPart::AnnotationPlaceholderOccurrence { role, line_spacing, .. } => { let a: Vec<String> = vec![role.token().to_string(), real(*line_spacing)]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE({})", a.join(",")) },
+                UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => { let a: Vec<String> = vec![format!("({})", leader_line.iter().map(|e| format!("#{}", self.id_of_ref_annotation_placeholder_leader_line(e))).collect::<Vec<_>>().join(","))]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE({})", a.join(",")) },
                 UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL()".to_string(),
                 UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE()".to_string(),
                 UnitPart::AnnotationText => "ANNOTATION_TEXT()".to_string(),
@@ -23405,7 +24739,8 @@ impl<'a> Writer<'a> {
                 UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(outline_style))]; format!("CHARACTER_GLYPH_STYLE_OUTLINE({})", a.join(",")) },
                 UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(stroke_style))]; format!("CHARACTER_GLYPH_STYLE_STROKE({})", a.join(",")) },
                 UnitPart::CharacterizedItemWithinRepresentation { item, rep, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(item)), format!("#{}", self.id_of_ref_representation(rep))]; format!("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION({})", a.join(",")) },
-                UnitPart::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("CHARACTERIZED_OBJECT({})", a.join(",")) },
+                UnitPart::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![match name { Some(x) => step_str(x), None => "*".to_string() }, match description { Some(x) => step_str(x), None => "*".to_string() }]; format!("CHARACTERIZED_OBJECT({})", a.join(",")) },
+                UnitPart::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION()".to_string(),
                 UnitPart::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE()".to_string(),
                 UnitPart::ClosedShell => "CLOSED_SHELL()".to_string(),
                 UnitPart::Colour => "COLOUR()".to_string(),
@@ -23447,7 +24782,9 @@ impl<'a> Writer<'a> {
                 UnitPart::Direction { direction_ratios, .. } => { let a: Vec<String> = vec![format!("({})", direction_ratios.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("DIRECTION({})", a.join(",")) },
                 UnitPart::Document { id, name, description, kind, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_document_type(kind))]; format!("DOCUMENT({})", a.join(",")) },
                 UnitPart::DocumentFile => "DOCUMENT_FILE()".to_string(),
+                UnitPart::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE()".to_string(),
                 UnitPart::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
+                UnitPart::DraughtingCalloutRelationship { name, description, relating_draughting_callout, related_draughting_callout, .. } => { let a: Vec<String> = vec![step_str(name), step_str(description), format!("#{}", self.id_of_ref_draughting_callout(relating_draughting_callout)), format!("#{}", self.id_of_ref_draughting_callout(related_draughting_callout))]; format!("DRAUGHTING_CALLOUT_RELATIONSHIP({})", a.join(",")) },
                 UnitPart::DraughtingModel => "DRAUGHTING_MODEL()".to_string(),
                 UnitPart::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION()".to_string(),
                 UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_placeholder_occurrence(annotation_placeholder))]; format!("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER({})", a.join(",")) },
@@ -23508,7 +24845,9 @@ impl<'a> Writer<'a> {
                 UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
                 UnitPart::Invisibility { invisible_items, .. } => { let a: Vec<String> = vec![format!("({})", invisible_items.iter().map(|e| format!("#{}", self.id_of_ref_invisible_item(e))).collect::<Vec<_>>().join(","))]; format!("INVISIBILITY({})", a.join(",")) },
                 UnitPart::ItemDefinedTransformation { name, description, transform_item_1, transform_item_2, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_item(transform_item_1)), format!("#{}", self.id_of_ref_representation_item(transform_item_2))]; format!("ITEM_DEFINED_TRANSFORMATION({})", a.join(",")) },
+                UnitPart::LeaderCurve => "LEADER_CURVE()".to_string(),
                 UnitPart::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT()".to_string(),
+                UnitPart::LeaderTerminator => "LEADER_TERMINATOR()".to_string(),
                 UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
                 UnitPart::LengthUnit => "LENGTH_UNIT()".to_string(),
                 UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE()".to_string(),
@@ -23521,6 +24860,7 @@ impl<'a> Writer<'a> {
                 UnitPart::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM()".to_string(),
                 UnitPart::MeasureWithUnit { value_component, unit_component, .. } => { let a: Vec<String> = vec![measure(value_component), format!("#{}", self.id_of_ref_unit(unit_component))]; format!("MEASURE_WITH_UNIT({})", a.join(",")) },
                 UnitPart::MechanicalContext => "MECHANICAL_CONTEXT()".to_string(),
+                UnitPart::ModelGeometricView => "MODEL_GEOMETRIC_VIEW()".to_string(),
                 UnitPart::ModifiedGeometricTolerance { modifier, .. } => { let a: Vec<String> = vec![modifier.token().to_string()]; format!("MODIFIED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
                 UnitPart::NamedUnit { dimensions, .. } => { let a: Vec<String> = vec![match dimensions { Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)), None => "*".to_string() }]; format!("NAMED_UNIT({})", a.join(",")) },
                 UnitPart::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE()".to_string(),
@@ -23554,8 +24894,10 @@ impl<'a> Writer<'a> {
                 UnitPart::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT()".to_string(),
                 UnitPart::PreDefinedItem { name, .. } => { let a: Vec<String> = vec![step_str(name)]; format!("PRE_DEFINED_ITEM({})", a.join(",")) },
                 UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER()".to_string(),
+                UnitPart::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL()".to_string(),
                 UnitPart::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE()".to_string(),
                 UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL()".to_string(),
+                UnitPart::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL()".to_string(),
                 UnitPart::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT()".to_string(),
                 UnitPart::PreDefinedTile => "PRE_DEFINED_TILE()".to_string(),
                 UnitPart::PresentationArea => "PRESENTATION_AREA()".to_string(),
@@ -23632,6 +24974,7 @@ impl<'a> Writer<'a> {
                 UnitPart::SymbolRepresentation => "SYMBOL_REPRESENTATION()".to_string(),
                 UnitPart::SymbolStyle { name, style_of_symbol, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_symbol_style_select(style_of_symbol))]; format!("SYMBOL_STYLE({})", a.join(",")) },
                 UnitPart::SymbolTarget { placement, x_scale, y_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement)), real(*x_scale), real(*y_scale)]; format!("SYMBOL_TARGET({})", a.join(",")) },
+                UnitPart::TerminatorSymbol { annotated_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_curve_occurrence(annotated_curve))]; format!("TERMINATOR_SYMBOL({})", a.join(",")) },
                 UnitPart::TessellatedGeometricSet { children, .. } => { let a: Vec<String> = vec![format!("({})", children.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_item(e))).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_GEOMETRIC_SET({})", a.join(",")) },
                 UnitPart::TessellatedItem => "TESSELLATED_ITEM()".to_string(),
                 UnitPart::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION()".to_string(),
@@ -23751,9 +25094,24 @@ impl<'a> Writer<'a> {
                 AnnotationOccurrenceRelationshipId(i),
             ));
         }
+        for i in 0..self.model.annotation_placeholder_leader_lines.items.len() {
+            roots.push(AnyId::AnnotationPlaceholderLeaderLine(
+                AnnotationPlaceholderLeaderLineId(i),
+            ));
+        }
         for i in 0..self.model.annotation_placeholder_occurrences.items.len() {
             roots.push(AnyId::AnnotationPlaceholderOccurrence(
                 AnnotationPlaceholderOccurrenceId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .annotation_placeholder_occurrence_with_leader_lines
+            .items
+            .len()
+        {
+            roots.push(AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(
+                AnnotationPlaceholderOccurrenceWithLeaderLineId(i),
             ));
         }
         for i in 0..self.model.annotation_planes.items.len() {
@@ -23777,6 +25135,22 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::AnnotationTextOccurrence(AnnotationTextOccurrenceId(
                 i,
             )));
+        }
+        for i in 0..self.model.annotation_to_annotation_leader_lines.items.len() {
+            roots.push(AnyId::AnnotationToAnnotationLeaderLine(
+                AnnotationToAnnotationLeaderLineId(i),
+            ));
+        }
+        for i in 0..self.model.annotation_to_model_leader_lines.items.len() {
+            roots.push(AnyId::AnnotationToModelLeaderLine(
+                AnnotationToModelLeaderLineId(i),
+            ));
+        }
+        for i in 0..self.model.apll_points.items.len() {
+            roots.push(AnyId::ApllPoint(ApllPointId(i)));
+        }
+        for i in 0..self.model.apll_point_with_surfaces.items.len() {
+            roots.push(AnyId::ApllPointWithSurface(ApllPointWithSurfaceId(i)));
         }
         for i in 0..self.model.application_contexts.items.len() {
             roots.push(AnyId::ApplicationContext(ApplicationContextId(i)));
@@ -23829,6 +25203,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.assembly_component_usages.items.len() {
             roots.push(AnyId::AssemblyComponentUsage(AssemblyComponentUsageId(i)));
+        }
+        for i in 0..self.model.auxiliary_leader_lines.items.len() {
+            roots.push(AnyId::AuxiliaryLeaderLine(AuxiliaryLeaderLineId(i)));
         }
         for i in 0..self.model.axis1_placements.items.len() {
             roots.push(AnyId::Axis1Placement(Axis1PlacementId(i)));
@@ -23907,6 +25284,9 @@ impl<'a> Writer<'a> {
                 CcDesignSecurityClassificationId(i),
             ));
         }
+        for i in 0..self.model.centre_of_symmetrys.items.len() {
+            roots.push(AnyId::CentreOfSymmetry(CentreOfSymmetryId(i)));
+        }
         for i in 0..self.model.certifications.items.len() {
             roots.push(AnyId::Certification(CertificationId(i)));
         }
@@ -23941,6 +25321,11 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.characterized_objects.items.len() {
             roots.push(AnyId::CharacterizedObject(CharacterizedObjectId(i)));
+        }
+        for i in 0..self.model.characterized_representations.items.len() {
+            roots.push(AnyId::CharacterizedRepresentation(
+                CharacterizedRepresentationId(i),
+            ));
         }
         for i in 0..self.model.circles.items.len() {
             roots.push(AnyId::Circle(CircleId(i)));
@@ -24144,6 +25529,9 @@ impl<'a> Writer<'a> {
                 DegenerateToroidalSurfaceId(i),
             ));
         }
+        for i in 0..self.model.derived_shape_aspects.items.len() {
+            roots.push(AnyId::DerivedShapeAspect(DerivedShapeAspectId(i)));
+        }
         for i in 0..self.model.derived_units.items.len() {
             roots.push(AnyId::DerivedUnit(DerivedUnitId(i)));
         }
@@ -24197,8 +25585,18 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.document_types.items.len() {
             roots.push(AnyId::DocumentType(DocumentTypeId(i)));
         }
+        for i in 0..self.model.draughting_annotation_occurrences.items.len() {
+            roots.push(AnyId::DraughtingAnnotationOccurrence(
+                DraughtingAnnotationOccurrenceId(i),
+            ));
+        }
         for i in 0..self.model.draughting_callouts.items.len() {
             roots.push(AnyId::DraughtingCallout(DraughtingCalloutId(i)));
+        }
+        for i in 0..self.model.draughting_callout_relationships.items.len() {
+            roots.push(AnyId::DraughtingCalloutRelationship(
+                DraughtingCalloutRelationshipId(i),
+            ));
         }
         for i in 0..self.model.draughting_models.items.len() {
             roots.push(AnyId::DraughtingModel(DraughtingModelId(i)));
@@ -24496,8 +25894,14 @@ impl<'a> Writer<'a> {
                 ItemDefinedTransformationId(i),
             ));
         }
+        for i in 0..self.model.leader_curves.items.len() {
+            roots.push(AnyId::LeaderCurve(LeaderCurveId(i)));
+        }
         for i in 0..self.model.leader_directed_callouts.items.len() {
             roots.push(AnyId::LeaderDirectedCallout(LeaderDirectedCalloutId(i)));
+        }
+        for i in 0..self.model.leader_terminators.items.len() {
+            roots.push(AnyId::LeaderTerminator(LeaderTerminatorId(i)));
         }
         for i in 0..self.model.length_measure_with_units.items.len() {
             roots.push(AnyId::LengthMeasureWithUnit(LengthMeasureWithUnitId(i)));
@@ -24565,6 +25969,9 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(
                 MechanicalDesignGeometricPresentationRepresentationId(i),
             ));
+        }
+        for i in 0..self.model.model_geometric_views.items.len() {
+            roots.push(AnyId::ModelGeometricView(ModelGeometricViewId(i)));
         }
         for i in 0..self.model.modified_geometric_tolerances.items.len() {
             roots.push(AnyId::ModifiedGeometricTolerance(
@@ -24741,6 +26148,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.pre_defined_markers.items.len() {
             roots.push(AnyId::PreDefinedMarker(PreDefinedMarkerId(i)));
         }
+        for i in 0..self.model.pre_defined_point_marker_symbols.items.len() {
+            roots.push(AnyId::PreDefinedPointMarkerSymbol(
+                PreDefinedPointMarkerSymbolId(i),
+            ));
+        }
         for i in 0..self.model.pre_defined_surface_side_styles.items.len() {
             roots.push(AnyId::PreDefinedSurfaceSideStyle(
                 PreDefinedSurfaceSideStyleId(i),
@@ -24748,6 +26160,11 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.pre_defined_symbols.items.len() {
             roots.push(AnyId::PreDefinedSymbol(PreDefinedSymbolId(i)));
+        }
+        for i in 0..self.model.pre_defined_terminator_symbols.items.len() {
+            roots.push(AnyId::PreDefinedTerminatorSymbol(
+                PreDefinedTerminatorSymbolId(i),
+            ));
         }
         for i in 0..self.model.pre_defined_text_fonts.items.len() {
             roots.push(AnyId::PreDefinedTextFont(PreDefinedTextFontId(i)));
@@ -25118,6 +26535,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.symmetry_tolerances.items.len() {
             roots.push(AnyId::SymmetryTolerance(SymmetryToleranceId(i)));
+        }
+        for i in 0..self.model.terminator_symbols.items.len() {
+            roots.push(AnyId::TerminatorSymbol(TerminatorSymbolId(i)));
         }
         for i in 0..self.model.tessellated_annotation_occurrences.items.len() {
             roots.push(AnyId::TessellatedAnnotationOccurrence(

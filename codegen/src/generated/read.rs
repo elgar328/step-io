@@ -128,13 +128,19 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ANNOTATION_OCCURRENCE",
     "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
     "ANNOTATION_OCCURRENCE_RELATIONSHIP",
+    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
     "ANNOTATION_PLANE",
     "ANNOTATION_SYMBOL",
     "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
     "ANNOTATION_TEXT_CHARACTER",
     "ANNOTATION_TEXT_OCCURRENCE",
+    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+    "ANNOTATION_TO_MODEL_LEADER_LINE",
+    "APLL_POINT",
+    "APLL_POINT_WITH_SURFACE",
     "APPLICATION_CONTEXT",
     "APPLICATION_CONTEXT_ELEMENT",
     "APPLICATION_PROTOCOL_DEFINITION",
@@ -149,6 +155,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ASCRIBABLE_STATE",
     "ASCRIBABLE_STATE_RELATIONSHIP",
     "ASSEMBLY_COMPONENT_USAGE",
+    "AUXILIARY_LEADER_LINE",
     "AXIS1_PLACEMENT",
     "AXIS2_PLACEMENT_2D",
     "AXIS2_PLACEMENT_3D",
@@ -171,6 +178,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
     "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
     "CC_DESIGN_SECURITY_CLASSIFICATION",
+    "CENTRE_OF_SYMMETRY",
     "CERTIFICATION",
     "CERTIFICATION_TYPE",
     "CHANGE",
@@ -179,6 +187,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CHARACTER_GLYPH_STYLE_STROKE",
     "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
     "CHARACTERIZED_OBJECT",
+    "CHARACTERIZED_REPRESENTATION",
     "CIRCLE",
     "CIRCULAR_RUNOUT_TOLERANCE",
     "CLOSED_SHELL",
@@ -235,6 +244,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
     "DEGENERATE_TOROIDAL_SURFACE",
+    "DERIVED_SHAPE_ASPECT",
     "DERIVED_UNIT",
     "DERIVED_UNIT_ELEMENT",
     "DESCRIPTIVE_REPRESENTATION_ITEM",
@@ -249,7 +259,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DOCUMENT",
     "DOCUMENT_FILE",
     "DOCUMENT_TYPE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
     "DRAUGHTING_CALLOUT",
+    "DRAUGHTING_CALLOUT_RELATIONSHIP",
     "DRAUGHTING_MODEL",
     "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
     "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
@@ -316,7 +328,9 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "INTERSECTION_CURVE",
     "INVISIBILITY",
     "ITEM_DEFINED_TRANSFORMATION",
+    "LEADER_CURVE",
     "LEADER_DIRECTED_CALLOUT",
+    "LEADER_TERMINATOR",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
     "LIMITS_AND_FITS",
@@ -334,6 +348,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "MEASURE_WITH_UNIT",
     "MECHANICAL_CONTEXT",
     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+    "MODEL_GEOMETRIC_VIEW",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
@@ -383,8 +398,10 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRE_DEFINED_CURVE_FONT",
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
+    "PRE_DEFINED_POINT_MARKER_SYMBOL",
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
+    "PRE_DEFINED_TERMINATOR_SYMBOL",
     "PRE_DEFINED_TEXT_FONT",
     "PRE_DEFINED_TILE",
     "PRECISION_QUALIFIER",
@@ -481,6 +498,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SYMBOL_STYLE",
     "SYMBOL_TARGET",
     "SYMMETRY_TOLERANCE",
+    "TERMINATOR_SYMBOL",
     "TESSELLATED_ANNOTATION_OCCURRENCE",
     "TESSELLATED_CURVE_SET",
     "TESSELLATED_FACE",
@@ -541,6 +559,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
     "ANNOTATION_OCCURRENCE_RELATIONSHIP",
     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
     "ANNOTATION_SYMBOL",
     "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
@@ -574,6 +593,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "CHARACTER_GLYPH_STYLE_STROKE",
     "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
     "CHARACTERIZED_OBJECT",
+    "CHARACTERIZED_REPRESENTATION",
     "CIRCULAR_RUNOUT_TOLERANCE",
     "CLOSED_SHELL",
     "COLOUR",
@@ -615,7 +635,9 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DIRECTION",
     "DOCUMENT",
     "DOCUMENT_FILE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
     "DRAUGHTING_CALLOUT",
+    "DRAUGHTING_CALLOUT_RELATIONSHIP",
     "DRAUGHTING_MODEL",
     "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
     "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
@@ -676,7 +698,9 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "INTERSECTION_CURVE",
     "INVISIBILITY",
     "ITEM_DEFINED_TRANSFORMATION",
+    "LEADER_CURVE",
     "LEADER_DIRECTED_CALLOUT",
+    "LEADER_TERMINATOR",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
     "LINE_PROFILE_TOLERANCE",
@@ -689,6 +713,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "MEASURE_REPRESENTATION_ITEM",
     "MEASURE_WITH_UNIT",
     "MECHANICAL_CONTEXT",
+    "MODEL_GEOMETRIC_VIEW",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
@@ -722,8 +747,10 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRE_DEFINED_CURVE_FONT",
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
+    "PRE_DEFINED_POINT_MARKER_SYMBOL",
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
+    "PRE_DEFINED_TERMINATOR_SYMBOL",
     "PRE_DEFINED_TEXT_FONT",
     "PRE_DEFINED_TILE",
     "PRESENTATION_AREA",
@@ -800,6 +827,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SYMBOL_REPRESENTATION",
     "SYMBOL_STYLE",
     "SYMBOL_TARGET",
+    "TERMINATOR_SYMBOL",
     "TESSELLATED_GEOMETRIC_SET",
     "TESSELLATED_ITEM",
     "TESSELLATED_SHAPE_REPRESENTATION",
@@ -984,13 +1012,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1026,6 +1061,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -1049,7 +1085,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -1089,6 +1127,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -1185,6 +1224,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -1195,6 +1235,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -1271,11 +1312,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1293,6 +1341,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -1407,7 +1456,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "fill_style_target",
-                allowed: &["CARTESIAN_POINT", "POINT"],
+                allowed: &[
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "CARTESIAN_POINT",
+                    "POINT",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -1426,11 +1480,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1448,6 +1509,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -1569,9 +1631,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -1585,9 +1652,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -1603,9 +1675,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -1619,15 +1696,27 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
+        "ANNOTATION_PLACEHOLDER_LEADER_LINE" => &[RefSlot {
+            idx: 1,
+            name: "geometric_elements",
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE"],
+            complex_ok: false,
+            is_vec: true,
+        }],
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => &[
             RefSlot {
                 idx: 1,
@@ -1642,11 +1731,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1664,6 +1760,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -1776,6 +1873,174 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "DRAUGHTING_MODEL",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
+                    "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_REPRESENTATION",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 5,
+                name: "leader_line",
+                allowed: &[
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "AUXILIARY_LEADER_LINE",
+                ],
+                complex_ok: false,
+                is_vec: true,
+            },
+        ],
         "ANNOTATION_PLANE" => &[
             RefSlot {
                 idx: 1,
@@ -1799,14 +2064,19 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "OVER_RIDING_STYLED_ITEM",
                     "STYLED_ITEM",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -1829,13 +2099,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1871,6 +2148,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -1894,7 +2172,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -1934,6 +2214,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -2031,6 +2312,27 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "ANNOTATION_TO_ANNOTATION_LEADER_LINE" => &[RefSlot {
+            idx: 1,
+            name: "geometric_elements",
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE"],
+            complex_ok: false,
+            is_vec: true,
+        }],
+        "ANNOTATION_TO_MODEL_LEADER_LINE" => &[RefSlot {
+            idx: 1,
+            name: "geometric_elements",
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE"],
+            complex_ok: false,
+            is_vec: true,
+        }],
+        "APLL_POINT_WITH_SURFACE" => &[RefSlot {
+            idx: 3,
+            name: "associated_surface",
+            allowed: &["ADVANCED_FACE", "FACE_SURFACE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "APPLICATION_CONTEXT_ELEMENT" => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
@@ -2078,6 +2380,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ASSEMBLY_COMPONENT_USAGE",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                     "CERTIFICATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONFIGURATION_DESIGN",
                     "CONFIGURATION_EFFECTIVITY",
                     "CONFIGURATION_ITEM",
@@ -2153,13 +2456,19 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
                     "APPLIED_DATE_AND_TIME_ASSIGNMENT",
                     "APPLIED_GROUP_ASSIGNMENT",
                     "APPROVAL",
@@ -2168,6 +2477,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ASCRIBABLE_STATE",
                     "ASCRIBABLE_STATE_RELATIONSHIP",
                     "ASSEMBLY_COMPONENT_USAGE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -2187,7 +2497,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                    "CENTRE_OF_SYMMETRY",
                     "CERTIFICATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMMON_DATUM",
@@ -2226,6 +2538,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
                     "DEGENERATE_TOROIDAL_SURFACE",
+                    "DERIVED_SHAPE_ASPECT",
                     "DERIVED_UNIT",
                     "DERIVED_UNIT_ELEMENT",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
@@ -2234,6 +2547,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIRECTION",
                     "DOCUMENT_FILE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
@@ -2268,7 +2582,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
                     "ITEM_DEFINED_TRANSFORMATION",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LENGTH_MEASURE_WITH_UNIT",
                     "LENGTH_UNIT",
                     "LINE",
@@ -2366,6 +2682,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SWEPT_SURFACE",
                     "SYMBOL_REPRESENTATION",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -2510,11 +2827,27 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "AUXILIARY_LEADER_LINE" => &[
+            RefSlot {
+                idx: 1,
+                name: "geometric_elements",
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE"],
+                complex_ok: false,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "controlling_leader_line",
+                allowed: &["ANNOTATION_TO_MODEL_LEADER_LINE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "AXIS1_PLACEMENT" => &[
             RefSlot {
                 idx: 1,
                 name: "location",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -2530,7 +2863,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "location",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -2546,7 +2879,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "location",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -2568,21 +2901,21 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "B_SPLINE_CURVE" => &[RefSlot {
             idx: 2,
             name: "control_points_list",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
         "B_SPLINE_CURVE_WITH_KNOTS" => &[RefSlot {
             idx: 2,
             name: "control_points_list",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
         "BEZIER_CURVE" => &[RefSlot {
             idx: 2,
             name: "control_points_list",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
@@ -2831,6 +3164,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "CENTRE_OF_SYMMETRY" => &[RefSlot {
+            idx: 2,
+            name: "of_shape",
+            allowed: &["PRODUCT_DEFINITION_SHAPE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "CERTIFICATION" => &[RefSlot {
             idx: 2,
             name: "kind",
@@ -2899,13 +3239,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -2941,6 +3288,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -2964,7 +3312,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -3004,6 +3354,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -3035,6 +3386,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -3049,6 +3401,171 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SHAPE_REPRESENTATION",
                     "SYMBOL_REPRESENTATION",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "CHARACTERIZED_REPRESENTATION" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3074,6 +3591,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -3084,6 +3602,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -3126,6 +3645,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -3136,6 +3656,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -3287,6 +3808,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -3297,6 +3819,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -3398,13 +3921,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -3440,6 +3970,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -3463,7 +3994,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -3503,6 +4036,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -3557,11 +4091,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -3579,6 +4120,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -3698,12 +4240,17 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
                     "OVER_RIDING_STYLED_ITEM",
                     "STYLED_ITEM",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -3718,13 +4265,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -3742,6 +4296,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -3763,6 +4318,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
@@ -3789,7 +4345,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -3843,6 +4401,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SWEPT_SURFACE",
                     "SYMBOL_REPRESENTATION",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -4019,6 +4578,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4029,6 +4589,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -4196,7 +4757,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "definition",
-                allowed: &["EXTERNALLY_DEFINED_SYMBOL", "PRE_DEFINED_SYMBOL"],
+                allowed: &[
+                    "EXTERNALLY_DEFINED_SYMBOL",
+                    "PRE_DEFINED_POINT_MARKER_SYMBOL",
+                    "PRE_DEFINED_SYMBOL",
+                    "PRE_DEFINED_TERMINATOR_SYMBOL",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4217,13 +4783,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -4259,6 +4832,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -4282,7 +4856,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -4322,6 +4898,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -4367,6 +4944,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "position",
             allowed: &["AXIS2_PLACEMENT_3D"],
             complex_ok: false,
+            is_vec: false,
+        }],
+        "DERIVED_SHAPE_ASPECT" => &[RefSlot {
+            idx: 2,
+            name: "of_shape",
+            allowed: &["PRODUCT_DEFINITION_SHAPE"],
+            complex_ok: true,
             is_vec: false,
         }],
         "DERIVED_UNIT" => &[RefSlot {
@@ -4427,6 +5011,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4437,6 +5022,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -4451,6 +5037,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4461,6 +5048,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -4477,6 +5065,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4487,6 +5076,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -4501,6 +5091,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4511,6 +5102,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -4525,6 +5117,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "path",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4535,6 +5128,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -4550,6 +5144,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "applies_to",
             allowed: &[
                 "ALL_AROUND_SHAPE_ASPECT",
+                "CENTRE_OF_SYMMETRY",
                 "COMMON_DATUM",
                 "COMPOSITE_GROUP_SHAPE_ASPECT",
                 "COMPOSITE_SHAPE_ASPECT",
@@ -4560,6 +5155,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_REFERENCE_ELEMENT",
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
+                "DERIVED_SHAPE_ASPECT",
                 "GENERAL_DATUM_REFERENCE",
                 "PLACED_DATUM_TARGET_FEATURE",
                 "SHAPE_ASPECT",
@@ -4575,6 +5171,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "applies_to",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4585,6 +5182,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -4599,6 +5197,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "path",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -4609,6 +5208,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -4633,6 +5233,162 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "DRAUGHTING_ANNOTATION_OCCURRENCE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "DRAUGHTING_MODEL",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "HYPERBOLA",
+                    "INTERSECTION_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_REPRESENTATION",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "DRAUGHTING_CALLOUT" => &[RefSlot {
             idx: 1,
             name: "contents",
@@ -4640,13 +5396,33 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_CURVE_OCCURRENCE",
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "LEADER_CURVE",
+                "LEADER_TERMINATOR",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
             ],
             complex_ok: true,
             is_vec: true,
         }],
+        "DRAUGHTING_CALLOUT_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_draughting_callout",
+                allowed: &["DRAUGHTING_CALLOUT", "LEADER_DIRECTED_CALLOUT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_draughting_callout",
+                allowed: &["DRAUGHTING_CALLOUT", "LEADER_DIRECTED_CALLOUT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "DRAUGHTING_MODEL" => &[
             RefSlot {
                 idx: 1,
@@ -4656,13 +5432,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -4698,6 +5481,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -4721,7 +5505,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -4761,6 +5547,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -4809,6 +5596,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ALL_AROUND_SHAPE_ASPECT",
                     "ANGULARITY_TOLERANCE",
                     "ASSEMBLY_COMPONENT_USAGE",
+                    "CENTRE_OF_SYMMETRY",
                     "CIRCULAR_RUNOUT_TOLERANCE",
                     "COAXIALITY_TOLERANCE",
                     "COMMON_DATUM",
@@ -4823,6 +5611,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -4881,11 +5670,16 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -4900,6 +5694,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ALL_AROUND_SHAPE_ASPECT",
                     "ANGULARITY_TOLERANCE",
                     "ASSEMBLY_COMPONENT_USAGE",
+                    "CENTRE_OF_SYMMETRY",
                     "CIRCULAR_RUNOUT_TOLERANCE",
                     "COAXIALITY_TOLERANCE",
                     "COMMON_DATUM",
@@ -4914,6 +5709,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -4972,11 +5768,16 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -4985,7 +5786,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 5,
                 name: "annotation_placeholder",
-                allowed: &["ANNOTATION_PLACEHOLDER_OCCURRENCE"],
+                allowed: &[
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5239,14 +6043,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "point_of_reference_hatch_line",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "pattern_start",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -5270,6 +6074,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ELLIPSE",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LINE",
                     "PCURVE",
                     "POLYLINE",
@@ -5300,14 +6105,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => &[RefSlot {
             idx: 1,
             name: "styled_curve",
-            allowed: &["ANNOTATION_CURVE_OCCURRENCE"],
+            allowed: &["ANNOTATION_CURVE_OCCURRENCE", "LEADER_CURVE"],
             complex_ok: true,
             is_vec: false,
         }],
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => &[RefSlot {
             idx: 1,
             name: "symbol",
-            allowed: &["ANNOTATION_SYMBOL_OCCURRENCE"],
+            allowed: &[
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "LEADER_TERMINATOR",
+                "TERMINATOR_SYMBOL",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -5346,6 +6155,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5356,6 +6166,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -5454,6 +6265,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "elements",
             allowed: &[
                 "ANNOTATION_TEXT",
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -5512,6 +6325,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "definition",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5522,6 +6336,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "GENERAL_DATUM_REFERENCE",
@@ -5555,8 +6370,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "identified_item",
                 allowed: &[
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -5663,6 +6485,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             name: "elements",
             allowed: &[
                 "ANNOTATION_TEXT",
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -5728,6 +6552,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5738,6 +6563,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -5766,6 +6592,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5776,6 +6603,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -5811,6 +6639,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5821,6 +6650,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -5863,6 +6693,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5873,6 +6704,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -5908,6 +6740,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5918,6 +6751,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -5953,6 +6787,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -5963,6 +6798,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -5987,13 +6823,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6029,6 +6872,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -6052,7 +6896,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6092,6 +6938,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -6183,6 +7030,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANGULARITY_TOLERANCE",
                 "APPLICATION_CONTEXT",
                 "ASCRIBABLE_STATE_RELATIONSHIP",
+                "CENTRE_OF_SYMMETRY",
+                "CHARACTERIZED_REPRESENTATION",
                 "CIRCULAR_RUNOUT_TOLERANCE",
                 "CLOSED_SHELL",
                 "COAXIALITY_TOLERANCE",
@@ -6201,6 +7050,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
                 "DEFINITIONAL_REPRESENTATION",
+                "DERIVED_SHAPE_ASPECT",
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
@@ -6344,16 +7194,21 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "CHARACTERIZED_REPRESENTATION",
                 "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                 "DEFINITIONAL_REPRESENTATION",
+                "DRAUGHTING_ANNOTATION_OCCURRENCE",
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "LEADER_CURVE",
                 "LEADER_DIRECTED_CALLOUT",
+                "LEADER_TERMINATOR",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                 "OVER_RIDING_STYLED_ITEM",
@@ -6366,6 +7221,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "SHAPE_REPRESENTATION",
                 "STYLED_ITEM",
                 "SYMBOL_REPRESENTATION",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
                 "TESSELLATED_SHAPE_REPRESENTATION",
             ],
@@ -6381,13 +7237,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6423,6 +7286,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -6446,7 +7310,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6486,6 +7352,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -6520,13 +7387,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6562,6 +7436,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -6585,7 +7460,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6625,6 +7502,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -6652,6 +7530,46 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "LEADER_CURVE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "CIRCLE",
+                    "COMPOSITE_CURVE",
+                    "CONIC",
+                    "CURVE",
+                    "ELLIPSE",
+                    "GEOMETRIC_CURVE_SET",
+                    "HYPERBOLA",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "PCURVE",
+                    "POLYLINE",
+                    "QUASI_UNIFORM_CURVE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "SEAM_CURVE",
+                    "SURFACE_CURVE",
+                    "TRIMMED_CURVE",
+                    "UNIFORM_CURVE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "LEADER_DIRECTED_CALLOUT" => &[RefSlot {
             idx: 1,
             name: "contents",
@@ -6659,13 +7577,40 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_CURVE_OCCURRENCE",
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "LEADER_CURVE",
+                "LEADER_TERMINATOR",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
             ],
             complex_ok: true,
             is_vec: true,
         }],
+        "LEADER_TERMINATOR" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &["ANNOTATION_SYMBOL", "DEFINED_SYMBOL"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "annotated_curve",
+                allowed: &["ANNOTATION_CURVE_OCCURRENCE", "LEADER_CURVE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "LENGTH_MEASURE_WITH_UNIT" => &[RefSlot {
             idx: 1,
             name: "unit_component",
@@ -6695,7 +7640,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "pnt",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -6720,6 +7665,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -6730,6 +7676,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -6768,13 +7715,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6810,6 +7764,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -6833,7 +7788,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -6873,6 +7830,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -6929,13 +7887,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6971,6 +7936,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -6994,7 +7960,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -7034,6 +8002,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -7138,13 +8107,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -7180,6 +8156,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -7203,7 +8180,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -7243,6 +8222,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -7283,6 +8263,182 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "MODEL_GEOMETRIC_VIEW" => &[
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "rep",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "MODIFIED_GEOMETRIC_TOLERANCE" => &[
             RefSlot {
                 idx: 2,
@@ -7296,6 +8452,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -7306,6 +8463,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -7492,11 +8650,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -7514,6 +8679,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -7633,12 +8799,17 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
                     "OVER_RIDING_STYLED_ITEM",
                     "STYLED_ITEM",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -7658,6 +8829,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -7668,6 +8840,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -7746,6 +8919,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -7756,6 +8930,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -7843,7 +9018,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "PLACEMENT" => &[RefSlot {
             idx: 1,
             name: "location",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: false,
         }],
@@ -7911,7 +9086,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "marker",
-                allowed: &["PRE_DEFINED_MARKER"],
+                allowed: &["PRE_DEFINED_MARKER", "PRE_DEFINED_POINT_MARKER_SYMBOL"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7946,14 +9121,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "POLY_LOOP" => &[RefSlot {
             idx: 1,
             name: "polygon",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
         "POLYLINE" => &[RefSlot {
             idx: 1,
             name: "points",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
@@ -7970,6 +9145,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -7980,6 +9156,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -8004,13 +9181,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -8046,6 +9230,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -8069,7 +9254,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -8109,6 +9296,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -8157,13 +9345,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_CURVE_OCCURRENCE",
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT",
                 "ANNOTATION_TEXT_CHARACTER",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                "ANNOTATION_TO_MODEL_LEADER_LINE",
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
+                "AUXILIARY_LEADER_LINE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -8199,6 +9394,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "DESCRIPTIVE_REPRESENTATION_ITEM",
                 "DIRECTION",
+                "DRAUGHTING_ANNOTATION_OCCURRENCE",
                 "DRAUGHTING_CALLOUT",
                 "EDGE",
                 "EDGE_CURVE",
@@ -8222,7 +9418,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "HYPERBOLA",
                 "INTEGER_REPRESENTATION_ITEM",
                 "INTERSECTION_CURVE",
+                "LEADER_CURVE",
                 "LEADER_DIRECTED_CALLOUT",
+                "LEADER_TERMINATOR",
                 "LINE",
                 "LOOP",
                 "MANIFOLD_SOLID_BREP",
@@ -8265,6 +9463,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "SURFACE_OF_REVOLUTION",
                 "SWEPT_SURFACE",
                 "SYMBOL_TARGET",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
                 "TESSELLATED_CURVE_SET",
                 "TESSELLATED_FACE",
@@ -8300,13 +9499,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -8342,6 +9548,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -8365,7 +9572,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -8405,6 +9614,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -8471,13 +9681,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -8513,6 +9730,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -8536,7 +9754,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -8576,6 +9796,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -8796,8 +10017,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ALL_AROUND_SHAPE_ASPECT",
                 "ANGULARITY_TOLERANCE",
                 "ASSEMBLY_COMPONENT_USAGE",
+                "CENTRE_OF_SYMMETRY",
                 "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
                 "CHARACTERIZED_OBJECT",
+                "CHARACTERIZED_REPRESENTATION",
                 "CIRCULAR_RUNOUT_TOLERANCE",
                 "COAXIALITY_TOLERANCE",
                 "COMMON_DATUM",
@@ -8812,6 +10035,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_REFERENCE_ELEMENT",
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
+                "DERIVED_SHAPE_ASPECT",
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
@@ -8829,6 +10053,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
                 "LINE_PROFILE_TOLERANCE",
+                "MODEL_GEOMETRIC_VIEW",
                 "MODIFIED_GEOMETRIC_TOLERANCE",
                 "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "PARALLELISM_TOLERANCE",
@@ -8894,8 +10119,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ALL_AROUND_SHAPE_ASPECT",
                 "ANGULARITY_TOLERANCE",
                 "ASSEMBLY_COMPONENT_USAGE",
+                "CENTRE_OF_SYMMETRY",
                 "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
                 "CHARACTERIZED_OBJECT",
+                "CHARACTERIZED_REPRESENTATION",
                 "CIRCULAR_RUNOUT_TOLERANCE",
                 "COAXIALITY_TOLERANCE",
                 "COMMON_DATUM",
@@ -8910,6 +10137,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_REFERENCE_ELEMENT",
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
+                "DERIVED_SHAPE_ASPECT",
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
@@ -8927,6 +10155,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
                 "LINE_PROFILE_TOLERANCE",
+                "MODEL_GEOMETRIC_VIEW",
                 "MODIFIED_GEOMETRIC_TOLERANCE",
                 "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "PARALLELISM_TOLERANCE",
@@ -8976,6 +10205,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "definition",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -8986,6 +10216,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "GENERAL_DATUM_REFERENCE",
@@ -9008,6 +10239,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "used_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -9042,14 +10274,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "QUASI_UNIFORM_CURVE" => &[RefSlot {
             idx: 2,
             name: "control_points_list",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
         "RATIONAL_B_SPLINE_CURVE" => &[RefSlot {
             idx: 2,
             name: "control_points_list",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
@@ -9069,13 +10301,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -9111,6 +10350,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -9134,7 +10374,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -9174,6 +10416,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -9223,13 +10466,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -9265,6 +10515,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -9288,7 +10539,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -9328,6 +10581,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -9359,6 +10613,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "mapped_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -9391,6 +10646,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -9415,6 +10671,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -9441,6 +10698,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -9465,6 +10723,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -9519,6 +10778,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -9529,6 +10789,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -9632,6 +10893,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -9642,6 +10904,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -9656,6 +10919,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -9666,6 +10930,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -9682,6 +10947,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -9692,6 +10958,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -9706,6 +10973,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -9716,6 +10984,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -9732,6 +11001,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "definition",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -9742,6 +11012,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "GENERAL_DATUM_REFERENCE",
@@ -9764,6 +11035,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "used_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -9792,13 +11064,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -9834,6 +11113,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -9857,7 +11137,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -9897,6 +11179,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -9946,13 +11229,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -9988,6 +11278,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -10011,7 +11302,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -10051,6 +11344,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -10097,6 +11391,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -10121,6 +11416,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -10226,6 +11522,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -10236,6 +11533,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -10265,11 +11563,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -10287,6 +11592,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -10551,6 +11857,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -10561,6 +11868,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -10744,13 +12052,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -10786,6 +12101,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -10809,7 +12125,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -10849,6 +12167,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -10916,6 +12235,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -10926,6 +12246,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -10948,6 +12269,29 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "TERMINATOR_SYMBOL" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &["ANNOTATION_SYMBOL", "DEFINED_SYMBOL"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "annotated_curve",
+                allowed: &["ANNOTATION_CURVE_OCCURRENCE", "LEADER_CURVE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "TESSELLATED_ANNOTATION_OCCURRENCE" => &[
             RefSlot {
                 idx: 1,
@@ -10962,11 +12306,18 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -10984,6 +12335,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -11169,13 +12521,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -11211,6 +12570,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -11234,7 +12594,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -11274,6 +12636,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -11501,6 +12864,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "boundaries",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -11511,6 +12875,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -11602,6 +12967,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -11612,6 +12978,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -11668,14 +13035,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "trim_1",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: true,
             },
             RefSlot {
                 idx: 3,
                 name: "trim_2",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: true,
             },
@@ -11727,6 +13094,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -11737,6 +13105,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -11762,7 +13131,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "UNIFORM_CURVE" => &[RefSlot {
             idx: 2,
             name: "control_points_list",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
@@ -11783,7 +13152,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "VERTEX_POINT" => &[RefSlot {
             idx: 1,
             name: "vertex_geometry",
-            allowed: &["CARTESIAN_POINT", "POINT"],
+            allowed: &[
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
+                "CARTESIAN_POINT",
+                "POINT",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -11798,7 +13172,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "projection_point",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -11915,9 +13289,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
@@ -11931,15 +13310,32 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "LEADER_CURVE",
+                    "LEADER_TERMINATOR",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => &[RefSlot {
+            idx: 0,
+            name: "leader_line",
+            allowed: &[
+                "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                "ANNOTATION_TO_MODEL_LEADER_LINE",
+                "AUXILIARY_LEADER_LINE",
+            ],
+            complex_ok: false,
+            is_vec: true,
+        }],
         "APPLICATION_CONTEXT_ELEMENT" => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
@@ -11965,6 +13361,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ASSEMBLY_COMPONENT_USAGE",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                 "CERTIFICATION",
+                "CHARACTERIZED_REPRESENTATION",
                 "CONFIGURATION_DESIGN",
                 "CONFIGURATION_EFFECTIVITY",
                 "CONFIGURATION_ITEM",
@@ -12031,13 +13428,19 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_CURVE_OCCURRENCE",
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT",
                 "ANNOTATION_TEXT_CHARACTER",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                "ANNOTATION_TO_MODEL_LEADER_LINE",
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
                 "APPLIED_DATE_AND_TIME_ASSIGNMENT",
                 "APPLIED_GROUP_ASSIGNMENT",
                 "APPROVAL",
@@ -12046,6 +13449,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ASCRIBABLE_STATE",
                 "ASCRIBABLE_STATE_RELATIONSHIP",
                 "ASSEMBLY_COMPONENT_USAGE",
+                "AUXILIARY_LEADER_LINE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -12065,7 +13469,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_MODEL_D3",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                "CENTRE_OF_SYMMETRY",
                 "CERTIFICATION",
+                "CHARACTERIZED_REPRESENTATION",
                 "CIRCLE",
                 "CLOSED_SHELL",
                 "COMMON_DATUM",
@@ -12104,6 +13510,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEFINED_SYMBOL",
                 "DEFINITIONAL_REPRESENTATION",
                 "DEGENERATE_TOROIDAL_SURFACE",
+                "DERIVED_SHAPE_ASPECT",
                 "DERIVED_UNIT",
                 "DERIVED_UNIT_ELEMENT",
                 "DESCRIPTIVE_REPRESENTATION_ITEM",
@@ -12112,6 +13519,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIRECTION",
                 "DOCUMENT_FILE",
+                "DRAUGHTING_ANNOTATION_OCCURRENCE",
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
                 "EDGE",
@@ -12146,7 +13554,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "INTEGER_REPRESENTATION_ITEM",
                 "INTERSECTION_CURVE",
                 "ITEM_DEFINED_TRANSFORMATION",
+                "LEADER_CURVE",
                 "LEADER_DIRECTED_CALLOUT",
+                "LEADER_TERMINATOR",
                 "LENGTH_MEASURE_WITH_UNIT",
                 "LENGTH_UNIT",
                 "LINE",
@@ -12244,6 +13654,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "SWEPT_SURFACE",
                 "SYMBOL_REPRESENTATION",
                 "SYMBOL_TARGET",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
                 "TESSELLATED_CURVE_SET",
                 "TESSELLATED_FACE",
@@ -12304,7 +13715,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "B_SPLINE_CURVE" => &[RefSlot {
             idx: 1,
             name: "control_points_list",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
@@ -12430,13 +13841,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -12472,6 +13890,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -12495,7 +13914,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -12535,6 +13956,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -12566,6 +13988,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -12665,13 +14088,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_CURVE_OCCURRENCE",
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT",
                 "ANNOTATION_TEXT_CHARACTER",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                "ANNOTATION_TO_MODEL_LEADER_LINE",
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
+                "AUXILIARY_LEADER_LINE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -12689,6 +14119,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
                 "CARTESIAN_POINT",
+                "CHARACTERIZED_REPRESENTATION",
                 "CIRCLE",
                 "CLOSED_SHELL",
                 "COMPLEX_TRIANGULATED_FACE",
@@ -12710,6 +14141,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "DESCRIPTIVE_REPRESENTATION_ITEM",
                 "DIRECTION",
+                "DRAUGHTING_ANNOTATION_OCCURRENCE",
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
                 "EDGE",
@@ -12736,7 +14168,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "HYPERBOLA",
                 "INTEGER_REPRESENTATION_ITEM",
                 "INTERSECTION_CURVE",
+                "LEADER_CURVE",
                 "LEADER_DIRECTED_CALLOUT",
+                "LEADER_TERMINATOR",
                 "LINE",
                 "LOOP",
                 "MANIFOLD_SOLID_BREP",
@@ -12790,6 +14224,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "SWEPT_SURFACE",
                 "SYMBOL_REPRESENTATION",
                 "SYMBOL_TARGET",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
                 "TESSELLATED_CURVE_SET",
                 "TESSELLATED_FACE",
@@ -12961,7 +14396,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "definition",
-                allowed: &["EXTERNALLY_DEFINED_SYMBOL", "PRE_DEFINED_SYMBOL"],
+                allowed: &[
+                    "EXTERNALLY_DEFINED_SYMBOL",
+                    "PRE_DEFINED_POINT_MARKER_SYMBOL",
+                    "PRE_DEFINED_SYMBOL",
+                    "PRE_DEFINED_TERMINATOR_SYMBOL",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -12985,6 +14425,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             name: "applies_to",
             allowed: &[
                 "ALL_AROUND_SHAPE_ASPECT",
+                "CENTRE_OF_SYMMETRY",
                 "COMMON_DATUM",
                 "COMPOSITE_GROUP_SHAPE_ASPECT",
                 "COMPOSITE_SHAPE_ASPECT",
@@ -12995,6 +14436,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_REFERENCE_ELEMENT",
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
+                "DERIVED_SHAPE_ASPECT",
                 "GENERAL_DATUM_REFERENCE",
                 "PLACED_DATUM_TARGET_FEATURE",
                 "SHAPE_ASPECT",
@@ -13018,17 +14460,40 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_CURVE_OCCURRENCE",
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "LEADER_CURVE",
+                "LEADER_TERMINATOR",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
             ],
             complex_ok: true,
             is_vec: true,
         }],
+        "DRAUGHTING_CALLOUT_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_draughting_callout",
+                allowed: &["DRAUGHTING_CALLOUT", "LEADER_DIRECTED_CALLOUT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_draughting_callout",
+                allowed: &["DRAUGHTING_CALLOUT", "LEADER_DIRECTED_CALLOUT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => &[RefSlot {
             idx: 0,
             name: "annotation_placeholder",
-            allowed: &["ANNOTATION_PLACEHOLDER_OCCURRENCE"],
+            allowed: &[
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -13166,14 +14631,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "point_of_reference_hatch_line",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "pattern_start",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -13197,6 +14662,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ELLIPSE",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LINE",
                     "PCURVE",
                     "POLYLINE",
@@ -13227,14 +14693,18 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => &[RefSlot {
             idx: 0,
             name: "styled_curve",
-            allowed: &["ANNOTATION_CURVE_OCCURRENCE"],
+            allowed: &["ANNOTATION_CURVE_OCCURRENCE", "LEADER_CURVE"],
             complex_ok: true,
             is_vec: false,
         }],
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => &[RefSlot {
             idx: 0,
             name: "symbol",
-            allowed: &["ANNOTATION_SYMBOL_OCCURRENCE"],
+            allowed: &[
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "LEADER_TERMINATOR",
+                "TERMINATOR_SYMBOL",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -13288,6 +14758,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             name: "elements",
             allowed: &[
                 "ANNOTATION_TEXT",
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -13353,6 +14825,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -13363,6 +14836,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
@@ -13447,16 +14921,21 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT_OCCURRENCE",
+                "CHARACTERIZED_REPRESENTATION",
                 "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                 "DEFINITIONAL_REPRESENTATION",
+                "DRAUGHTING_ANNOTATION_OCCURRENCE",
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "LEADER_CURVE",
                 "LEADER_DIRECTED_CALLOUT",
+                "LEADER_TERMINATOR",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
                 "OVER_RIDING_STYLED_ITEM",
@@ -13469,6 +14948,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "SHAPE_REPRESENTATION",
                 "STYLED_ITEM",
                 "SYMBOL_REPRESENTATION",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
                 "TESSELLATED_SHAPE_REPRESENTATION",
             ],
@@ -13484,13 +14964,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -13526,6 +15013,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -13549,7 +15037,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -13589,6 +15079,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -13623,13 +15114,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -13665,6 +15163,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -13688,7 +15187,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -13728,6 +15229,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -13778,13 +15280,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -13820,6 +15329,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -13843,7 +15353,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -13883,6 +15395,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -13971,12 +15484,17 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                 "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT_OCCURRENCE",
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                "LEADER_CURVE",
+                "LEADER_TERMINATOR",
                 "OVER_RIDING_STYLED_ITEM",
                 "STYLED_ITEM",
+                "TERMINATOR_SYMBOL",
                 "TESSELLATED_ANNOTATION_OCCURRENCE",
             ],
             complex_ok: true,
@@ -14051,7 +15569,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "PLACEMENT" => &[RefSlot {
             idx: 0,
             name: "location",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: false,
         }],
@@ -14066,7 +15584,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "marker",
-                allowed: &["PRE_DEFINED_MARKER"],
+                allowed: &["PRE_DEFINED_MARKER", "PRE_DEFINED_POINT_MARKER_SYMBOL"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -14101,7 +15619,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "POLY_LOOP" => &[RefSlot {
             idx: 0,
             name: "polygon",
-            allowed: &["CARTESIAN_POINT"],
+            allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
         }],
@@ -14265,8 +15783,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ALL_AROUND_SHAPE_ASPECT",
                 "ANGULARITY_TOLERANCE",
                 "ASSEMBLY_COMPONENT_USAGE",
+                "CENTRE_OF_SYMMETRY",
                 "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
                 "CHARACTERIZED_OBJECT",
+                "CHARACTERIZED_REPRESENTATION",
                 "CIRCULAR_RUNOUT_TOLERANCE",
                 "COAXIALITY_TOLERANCE",
                 "COMMON_DATUM",
@@ -14281,6 +15801,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_REFERENCE_ELEMENT",
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
+                "DERIVED_SHAPE_ASPECT",
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
@@ -14298,6 +15819,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
                 "LINE_PROFILE_TOLERANCE",
+                "MODEL_GEOMETRIC_VIEW",
                 "MODIFIED_GEOMETRIC_TOLERANCE",
                 "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "PARALLELISM_TOLERANCE",
@@ -14331,6 +15853,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "definition",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -14341,6 +15864,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "GENERAL_DATUM_REFERENCE",
@@ -14363,6 +15887,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "used_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -14410,13 +15935,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -14452,6 +15984,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -14475,7 +16008,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -14515,6 +16050,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -14564,13 +16100,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "ANNOTATION_CURVE_OCCURRENCE",
                     "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -14606,6 +16149,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
                     "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
@@ -14629,7 +16173,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "HYPERBOLA",
                     "INTEGER_REPRESENTATION_ITEM",
                     "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
                     "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
                     "LINE",
                     "LOOP",
                     "MANIFOLD_SOLID_BREP",
@@ -14669,6 +16215,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
                     "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
@@ -14700,6 +16247,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "mapped_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -14732,6 +16280,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -14756,6 +16305,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
@@ -14806,6 +16356,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -14816,6 +16367,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -14830,6 +16382,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -14840,6 +16393,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -14887,11 +16441,18 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -14909,6 +16470,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
                     "CARTESIAN_POINT",
+                    "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
@@ -15184,6 +16746,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "TERMINATOR_SYMBOL" => &[RefSlot {
+            idx: 0,
+            name: "annotated_curve",
+            allowed: &["ANNOTATION_CURVE_OCCURRENCE", "LEADER_CURVE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "TESSELLATED_GEOMETRIC_SET" => &[RefSlot {
             idx: 0,
             name: "children",
@@ -15295,6 +16864,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "boundaries",
                 allowed: &[
                     "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
                     "COMMON_DATUM",
                     "COMPOSITE_GROUP_SHAPE_ASPECT",
                     "COMPOSITE_SHAPE_ASPECT",
@@ -15305,6 +16875,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_REFERENCE_ELEMENT",
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -15346,7 +16917,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "VERTEX_POINT" => &[RefSlot {
             idx: 0,
             name: "vertex_geometry",
-            allowed: &["CARTESIAN_POINT", "POINT"],
+            allowed: &[
+                "APLL_POINT",
+                "APLL_POINT_WITH_SURFACE",
+                "CARTESIAN_POINT",
+                "POINT",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -15354,7 +16930,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "projection_point",
-                allowed: &["CARTESIAN_POINT"],
+                allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -15406,8 +16982,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         AnnotationOccurrenceRelationshipId,
         u64,
     )> = Vec::new();
+    let mut pending_annotation_placeholder_leader_lines: Vec<(
+        AnnotationPlaceholderLeaderLineId,
+        u64,
+    )> = Vec::new();
     let mut pending_annotation_placeholder_occurrences: Vec<(
         AnnotationPlaceholderOccurrenceId,
+        u64,
+    )> = Vec::new();
+    let mut pending_annotation_placeholder_occurrence_with_leader_lines: Vec<(
+        AnnotationPlaceholderOccurrenceWithLeaderLineId,
         u64,
     )> = Vec::new();
     let mut pending_annotation_planes: Vec<(AnnotationPlaneId, u64)> = Vec::new();
@@ -15418,6 +17002,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_annotation_text_characters: Vec<(AnnotationTextCharacterId, u64)> = Vec::new();
     let mut pending_annotation_text_occurrences: Vec<(AnnotationTextOccurrenceId, u64)> =
         Vec::new();
+    let mut pending_annotation_to_annotation_leader_lines: Vec<(
+        AnnotationToAnnotationLeaderLineId,
+        u64,
+    )> = Vec::new();
+    let mut pending_annotation_to_model_leader_lines: Vec<(AnnotationToModelLeaderLineId, u64)> =
+        Vec::new();
+    let mut pending_apll_point_with_surfaces: Vec<(ApllPointWithSurfaceId, u64)> = Vec::new();
     let mut pending_application_context_elements: Vec<(ApplicationContextElementId, u64)> =
         Vec::new();
     let mut pending_application_protocol_definitions: Vec<(ApplicationProtocolDefinitionId, u64)> =
@@ -15434,6 +17025,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_ascribable_state_relationships: Vec<(AscribableStateRelationshipId, u64)> =
         Vec::new();
     let mut pending_assembly_component_usages: Vec<(AssemblyComponentUsageId, u64)> = Vec::new();
+    let mut pending_auxiliary_leader_lines: Vec<(AuxiliaryLeaderLineId, u64)> = Vec::new();
     let mut pending_axis1_placements: Vec<(Axis1PlacementId, u64)> = Vec::new();
     let mut pending_axis2_placement2ds: Vec<(Axis2Placement2dId, u64)> = Vec::new();
     let mut pending_axis2_placement3ds: Vec<(Axis2Placement3dId, u64)> = Vec::new();
@@ -15461,6 +17053,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         CcDesignSecurityClassificationId,
         u64,
     )> = Vec::new();
+    let mut pending_centre_of_symmetrys: Vec<(CentreOfSymmetryId, u64)> = Vec::new();
     let mut pending_certifications: Vec<(CertificationId, u64)> = Vec::new();
     let mut pending_changes: Vec<(ChangeId, u64)> = Vec::new();
     let mut pending_change_requests: Vec<(ChangeRequestId, u64)> = Vec::new();
@@ -15472,6 +17065,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         CharacterizedItemWithinRepresentationId,
         u64,
     )> = Vec::new();
+    let mut pending_characterized_representations: Vec<(CharacterizedRepresentationId, u64)> =
+        Vec::new();
     let mut pending_circles: Vec<(CircleId, u64)> = Vec::new();
     let mut pending_circular_runout_tolerances: Vec<(CircularRunoutToleranceId, u64)> = Vec::new();
     let mut pending_closed_shells: Vec<(ClosedShellId, u64)> = Vec::new();
@@ -15536,6 +17131,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_degenerate_toroidal_surfaces: Vec<(DegenerateToroidalSurfaceId, u64)> =
         Vec::new();
+    let mut pending_derived_shape_aspects: Vec<(DerivedShapeAspectId, u64)> = Vec::new();
     let mut pending_derived_units: Vec<(DerivedUnitId, u64)> = Vec::new();
     let mut pending_derived_unit_elements: Vec<(DerivedUnitElementId, u64)> = Vec::new();
     let mut pending_design_contexts: Vec<(DesignContextId, u64)> = Vec::new();
@@ -15550,7 +17146,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_dimensional_size_with_paths: Vec<(DimensionalSizeWithPathId, u64)> = Vec::new();
     let mut pending_documents: Vec<(DocumentId, u64)> = Vec::new();
     let mut pending_document_files: Vec<(DocumentFileId, u64)> = Vec::new();
+    let mut pending_draughting_annotation_occurrences: Vec<(
+        DraughtingAnnotationOccurrenceId,
+        u64,
+    )> = Vec::new();
     let mut pending_draughting_callouts: Vec<(DraughtingCalloutId, u64)> = Vec::new();
+    let mut pending_draughting_callout_relationships: Vec<(DraughtingCalloutRelationshipId, u64)> =
+        Vec::new();
     let mut pending_draughting_models: Vec<(DraughtingModelId, u64)> = Vec::new();
     let mut pending_draughting_model_item_associations: Vec<(
         DraughtingModelItemAssociationId,
@@ -15651,7 +17253,9 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_invisibilitys: Vec<(InvisibilityId, u64)> = Vec::new();
     let mut pending_item_defined_transformations: Vec<(ItemDefinedTransformationId, u64)> =
         Vec::new();
+    let mut pending_leader_curves: Vec<(LeaderCurveId, u64)> = Vec::new();
     let mut pending_leader_directed_callouts: Vec<(LeaderDirectedCalloutId, u64)> = Vec::new();
+    let mut pending_leader_terminators: Vec<(LeaderTerminatorId, u64)> = Vec::new();
     let mut pending_length_measure_with_units: Vec<(LengthMeasureWithUnitId, u64)> = Vec::new();
     let mut pending_length_units: Vec<(LengthUnitId, u64)> = Vec::new();
     let mut pending_lines: Vec<(LineId, u64)> = Vec::new();
@@ -15673,6 +17277,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         MechanicalDesignGeometricPresentationRepresentationId,
         u64,
     )> = Vec::new();
+    let mut pending_model_geometric_views: Vec<(ModelGeometricViewId, u64)> = Vec::new();
     let mut pending_modified_geometric_tolerances: Vec<(ModifiedGeometricToleranceId, u64)> =
         Vec::new();
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
@@ -15838,6 +17443,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_symbol_styles: Vec<(SymbolStyleId, u64)> = Vec::new();
     let mut pending_symbol_targets: Vec<(SymbolTargetId, u64)> = Vec::new();
     let mut pending_symmetry_tolerances: Vec<(SymmetryToleranceId, u64)> = Vec::new();
+    let mut pending_terminator_symbols: Vec<(TerminatorSymbolId, u64)> = Vec::new();
     let mut pending_tessellated_annotation_occurrences: Vec<(
         TessellatedAnnotationOccurrenceId,
         u64,
@@ -16204,7 +17810,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
                         AdvancedBrepShapeRepresentationId(usize::MAX),
                     ),
-                    fill_style_target: PointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    fill_style_target: PointRef::ApllPoint(ApllPointId(usize::MAX)),
                 };
                 let aid =
                     AnnotationFillAreaOccurrenceId(model.annotation_fill_area_occurrences.push(v));
@@ -16269,6 +17875,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "ANNOTATION_PLACEHOLDER_LEADER_LINE" => {
+                let v = AnnotationPlaceholderLeaderLine {
+                    name: as_str(&attributes[0]),
+                    geometric_elements: Vec::new(),
+                };
+                let aid = AnnotationPlaceholderLeaderLineId(
+                    model.annotation_placeholder_leader_lines.push(v),
+                );
+                idmap.insert(id, AnyId::AnnotationPlaceholderLeaderLine(aid));
+                pending_annotation_placeholder_leader_lines.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "ANNOTATION_PLACEHOLDER_OCCURRENCE" => {
                 let v = AnnotationPlaceholderOccurrence {
                     name: as_str(&attributes[0]),
@@ -16288,6 +17907,34 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 );
                 idmap.insert(id, AnyId::AnnotationPlaceholderOccurrence(aid));
                 pending_annotation_placeholder_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => {
+                let v = AnnotationPlaceholderOccurrenceWithLeaderLine {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                    role: match &attributes[3] {
+                        Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s)
+                            .expect("annotation_placeholder_occurrence_role"),
+                        other => panic!("enum annotation_placeholder_occurrence_role: {other:?}"),
+                    },
+                    line_spacing: as_real(&attributes[4]),
+                    leader_line: Vec::new(),
+                };
+                let aid = AnnotationPlaceholderOccurrenceWithLeaderLineId(
+                    model
+                        .annotation_placeholder_occurrence_with_leader_lines
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(aid),
+                );
+                pending_annotation_placeholder_occurrence_with_leader_lines.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -16376,6 +18023,71 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = AnnotationTextOccurrenceId(model.annotation_text_occurrences.push(v));
                 idmap.insert(id, AnyId::AnnotationTextOccurrence(aid));
                 pending_annotation_text_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_TO_ANNOTATION_LEADER_LINE" => {
+                let v = AnnotationToAnnotationLeaderLine {
+                    name: as_str(&attributes[0]),
+                    geometric_elements: Vec::new(),
+                };
+                let aid = AnnotationToAnnotationLeaderLineId(
+                    model.annotation_to_annotation_leader_lines.push(v),
+                );
+                idmap.insert(id, AnyId::AnnotationToAnnotationLeaderLine(aid));
+                pending_annotation_to_annotation_leader_lines.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_TO_MODEL_LEADER_LINE" => {
+                let v = AnnotationToModelLeaderLine {
+                    name: as_str(&attributes[0]),
+                    geometric_elements: Vec::new(),
+                };
+                let aid =
+                    AnnotationToModelLeaderLineId(model.annotation_to_model_leader_lines.push(v));
+                idmap.insert(id, AnyId::AnnotationToModelLeaderLine(aid));
+                pending_annotation_to_model_leader_lines.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APLL_POINT" => {
+                let v = ApllPoint {
+                    name: as_str(&attributes[0]),
+                    coordinates: match &attributes[1] {
+                        Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    symbol_applied: match &attributes[2] {
+                        Attribute::Enum(s) => {
+                            DesApllPointSymbol::parse(s).expect("des_apll_point_symbol")
+                        }
+                        other => panic!("enum des_apll_point_symbol: {other:?}"),
+                    },
+                };
+                let aid = ApllPointId(model.apll_points.push(v));
+                idmap.insert(id, AnyId::ApllPoint(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "APLL_POINT_WITH_SURFACE" => {
+                let v = ApllPointWithSurface {
+                    name: as_str(&attributes[0]),
+                    coordinates: match &attributes[1] {
+                        Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(),
+                        other => panic!("vec: {other:?}"),
+                    },
+                    symbol_applied: match &attributes[2] {
+                        Attribute::Enum(s) => {
+                            DesApllPointSymbol::parse(s).expect("des_apll_point_symbol")
+                        }
+                        other => panic!("enum des_apll_point_symbol: {other:?}"),
+                    },
+                    associated_surface: FaceSurfaceRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                };
+                let aid = ApllPointWithSurfaceId(model.apll_point_with_surfaces.push(v));
+                idmap.insert(id, AnyId::ApllPointWithSurface(aid));
+                pending_apll_point_with_surfaces.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -16571,10 +18283,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "AUXILIARY_LEADER_LINE" => {
+                let v = AuxiliaryLeaderLine {
+                    name: as_str(&attributes[0]),
+                    geometric_elements: Vec::new(),
+                    controlling_leader_line:
+                        AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(
+                            AnnotationToModelLeaderLineId(usize::MAX),
+                        ),
+                };
+                let aid = AuxiliaryLeaderLineId(model.auxiliary_leader_lines.push(v));
+                idmap.insert(id, AnyId::AuxiliaryLeaderLine(aid));
+                pending_auxiliary_leader_lines.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "AXIS1_PLACEMENT" => {
                 let v = Axis1Placement {
                     name: as_str(&attributes[0]),
-                    location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
                     axis: None,
                 };
                 let aid = Axis1PlacementId(model.axis1_placements.push(v));
@@ -16586,7 +18313,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "AXIS2_PLACEMENT_2D" => {
                 let v = Axis2Placement2d {
                     name: as_str(&attributes[0]),
-                    location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
                     ref_direction: None,
                 };
                 let aid = Axis2Placement2dId(model.axis2_placement2ds.push(v));
@@ -16598,7 +18325,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "AXIS2_PLACEMENT_3D" => {
                 let v = Axis2Placement3d {
                     name: as_str(&attributes[0]),
-                    location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
                     axis: None,
                     ref_direction: None,
                 };
@@ -16934,6 +18661,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CENTRE_OF_SYMMETRY" => {
+                let v = CentreOfSymmetry {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                };
+                let aid = CentreOfSymmetryId(model.centre_of_symmetrys.push(v));
+                idmap.insert(id, AnyId::CentreOfSymmetry(aid));
+                pending_centre_of_symmetrys.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CERTIFICATION" => {
                 let v = Certification {
                     name: as_str(&attributes[0]),
@@ -17022,14 +18767,31 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 name, attributes, ..
             } if name == "CHARACTERIZED_OBJECT" => {
                 let v = CharacterizedObject {
-                    name: as_str(&attributes[0]),
+                    name: match &attributes[0] {
+                        Attribute::Derived => None,
+                        _ => Some(as_str(&attributes[0])),
+                    },
                     description: match &attributes[1] {
-                        Attribute::Unset => None,
+                        Attribute::Derived => None,
                         _ => Some(as_str(&attributes[1])),
                     },
                 };
                 let aid = CharacterizedObjectId(model.characterized_objects.push(v));
                 idmap.insert(id, AnyId::CharacterizedObject(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CHARACTERIZED_REPRESENTATION" => {
+                let v = CharacterizedRepresentation {
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid =
+                    CharacterizedRepresentationId(model.characterized_representations.push(v));
+                idmap.insert(id, AnyId::CharacterizedRepresentation(aid));
+                pending_characterized_representations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -17936,6 +19698,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DERIVED_SHAPE_ASPECT" => {
+                let v = DerivedShapeAspect {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                };
+                let aid = DerivedShapeAspectId(model.derived_shape_aspects.push(v));
+                idmap.insert(id, AnyId::DerivedShapeAspect(aid));
+                pending_derived_shape_aspects.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DERIVED_UNIT" => {
                 let v = DerivedUnit {
                     elements: Vec::new(),
@@ -18142,6 +19922,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DRAUGHTING_ANNOTATION_OCCURRENCE" => {
+                let v = DraughtingAnnotationOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = DraughtingAnnotationOccurrenceId(
+                    model.draughting_annotation_occurrences.push(v),
+                );
+                idmap.insert(id, AnyId::DraughtingAnnotationOccurrence(aid));
+                pending_draughting_annotation_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DRAUGHTING_CALLOUT" => {
                 let v = DraughtingCallout {
                     name: as_str(&attributes[0]),
@@ -18150,6 +19946,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = DraughtingCalloutId(model.draughting_callouts.push(v));
                 idmap.insert(id, AnyId::DraughtingCallout(aid));
                 pending_draughting_callouts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DRAUGHTING_CALLOUT_RELATIONSHIP" => {
+                let v = DraughtingCalloutRelationship {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                    relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(
+                        DraughtingCalloutId(usize::MAX),
+                    ),
+                    related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(
+                        DraughtingCalloutId(usize::MAX),
+                    ),
+                };
+                let aid =
+                    DraughtingCalloutRelationshipId(model.draughting_callout_relationships.push(v));
+                idmap.insert(id, AnyId::DraughtingCalloutRelationship(aid));
+                pending_draughting_callout_relationships.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -18528,10 +20342,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(
                         OneDirectionRepeatFactorId(usize::MAX),
                     ),
-                    point_of_reference_hatch_line: CartesianPointRef::CartesianPoint(
-                        CartesianPointId(usize::MAX),
-                    ),
-                    pattern_start: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(
+                        usize::MAX,
+                    )),
+                    pattern_start: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
                     hatch_line_angle: as_real(&attributes[5]),
                 };
                 let aid = FillAreaStyleHatchingId(model.fill_area_style_hatchings.push(v));
@@ -19105,6 +20919,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "LEADER_CURVE" => {
+                let v = LeaderCurve {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+                };
+                let aid = LeaderCurveId(model.leader_curves.push(v));
+                idmap.insert(id, AnyId::LeaderCurve(aid));
+                pending_leader_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "LEADER_DIRECTED_CALLOUT" => {
                 let v = LeaderDirectedCallout {
                     name: as_str(&attributes[0]),
@@ -19113,6 +20939,23 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = LeaderDirectedCalloutId(model.leader_directed_callouts.push(v));
                 idmap.insert(id, AnyId::LeaderDirectedCallout(aid));
                 pending_leader_directed_callouts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "LEADER_TERMINATOR" => {
+                let v = LeaderTerminator {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(
+                        usize::MAX,
+                    )),
+                    annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
+                        AnnotationCurveOccurrenceId(usize::MAX),
+                    ),
+                };
+                let aid = LeaderTerminatorId(model.leader_terminators.push(v));
+                idmap.insert(id, AnyId::LeaderTerminator(aid));
+                pending_leader_terminators.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -19156,7 +20999,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "LINE" => {
                 let v = Line {
                     name: as_str(&attributes[0]),
-                    pnt: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    pnt: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
                     dir: VectorRef::Vector(VectorId(usize::MAX)),
                 };
                 let aid = LineId(model.lines.push(v));
@@ -19347,6 +21190,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     AnyId::MechanicalDesignGeometricPresentationRepresentation(aid),
                 );
                 pending_mechanical_design_geometric_presentation_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "MODEL_GEOMETRIC_VIEW" => {
+                let v = ModelGeometricView {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                    rep: RepresentationRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = ModelGeometricViewId(model.model_geometric_views.push(v));
+                idmap.insert(id, AnyId::ModelGeometricView(aid));
+                pending_model_geometric_views.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -19986,7 +21847,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "PLACEMENT" => {
                 let v = Placement {
                     name: as_str(&attributes[0]),
-                    location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
                 };
                 let aid = PlacementId(model.placements.push(v));
                 idmap.insert(id, AnyId::Placement(aid));
@@ -20174,6 +22035,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRE_DEFINED_POINT_MARKER_SYMBOL" => {
+                let v = PreDefinedPointMarkerSymbol {
+                    name: as_str(&attributes[0]),
+                };
+                let aid =
+                    PreDefinedPointMarkerSymbolId(model.pre_defined_point_marker_symbols.push(v));
+                idmap.insert(id, AnyId::PreDefinedPointMarkerSymbol(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRE_DEFINED_SURFACE_SIDE_STYLE" => {
                 let v = PreDefinedSurfaceSideStyle {
                     name: as_str(&attributes[0]),
@@ -20190,6 +22061,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = PreDefinedSymbolId(model.pre_defined_symbols.push(v));
                 idmap.insert(id, AnyId::PreDefinedSymbol(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_TERMINATOR_SYMBOL" => {
+                let v = PreDefinedTerminatorSymbol {
+                    name: as_str(&attributes[0]),
+                };
+                let aid =
+                    PreDefinedTerminatorSymbolId(model.pre_defined_terminator_symbols.push(v));
+                idmap.insert(id, AnyId::PreDefinedTerminatorSymbol(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -21610,6 +23491,23 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TERMINATOR_SYMBOL" => {
+                let v = TerminatorSymbol {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(
+                        usize::MAX,
+                    )),
+                    annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
+                        AnnotationCurveOccurrenceId(usize::MAX),
+                    ),
+                };
+                let aid = TerminatorSymbolId(model.terminator_symbols.push(v));
+                idmap.insert(id, AnyId::TerminatorSymbol(aid));
+                pending_terminator_symbols.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "TESSELLATED_ANNOTATION_OCCURRENCE" => {
                 let v = TessellatedAnnotationOccurrence {
                     name: as_str(&attributes[0]),
@@ -22181,7 +24079,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "VERTEX_POINT" => {
                 let v = VertexPoint {
                     name: as_str(&attributes[0]),
-                    vertex_geometry: PointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                    vertex_geometry: PointRef::ApllPoint(ApllPointId(usize::MAX)),
                 };
                 let aid = VertexPointId(model.vertex_points.push(v));
                 idmap.insert(id, AnyId::VertexPoint(aid));
@@ -22208,9 +24106,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         }
                         other => panic!("enum central_or_parallel: {other:?}"),
                     },
-                    projection_point: CartesianPointRef::CartesianPoint(CartesianPointId(
-                        usize::MAX,
-                    )),
+                    projection_point: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
                     view_plane_distance: as_real(&attributes[2]),
                     front_plane_distance: as_real(&attributes[3]),
                     front_plane_clipping: matches!(&attributes[4], Attribute::Enum(s) if s == "T"),
@@ -22338,9 +24234,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_annotation_occurrence_relationships(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_annotation_placeholder_leader_lines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_placeholder_leader_lines(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_annotation_placeholder_occurrences {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_annotation_placeholder_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_placeholder_occurrence_with_leader_lines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_placeholder_occurrence_with_leader_lines(
+                &mut model, aid, attributes, &idmap,
+            );
         }
     }
     for (aid, raw) in pending_annotation_planes {
@@ -22371,6 +24279,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_annotation_text_occurrences {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_annotation_text_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_to_annotation_leader_lines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_to_annotation_leader_lines(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_to_model_leader_lines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_to_model_leader_lines(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_apll_point_with_surfaces {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_apll_point_with_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_application_context_elements {
@@ -22426,6 +24349,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_assembly_component_usages {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_assembly_component_usages(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_auxiliary_leader_lines {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_auxiliary_leader_lines(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_axis1_placements {
@@ -22515,6 +24443,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_cc_design_security_classifications(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_centre_of_symmetrys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_centre_of_symmetrys(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_certifications {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_certifications(&mut model, aid, attributes, &idmap);
@@ -22543,6 +24476,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_characterized_item_within_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_characterized_item_within_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_characterized_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_characterized_representations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_circles {
@@ -22775,6 +24713,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_degenerate_toroidal_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_derived_shape_aspects {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_derived_shape_aspects(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_derived_units {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_derived_units(&mut model, aid, attributes, &idmap);
@@ -22825,9 +24768,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_document_files(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_draughting_annotation_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_draughting_annotation_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_draughting_callouts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_draughting_callouts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_draughting_callout_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_draughting_callout_relationships(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_draughting_models {
@@ -23088,9 +25041,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_item_defined_transformations(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_leader_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_leader_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_leader_directed_callouts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_leader_directed_callouts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_leader_terminators {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_leader_terminators(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_length_measure_with_units {
@@ -23163,6 +25126,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_mechanical_design_geometric_presentation_representations(
                 &mut model, aid, attributes, &idmap,
             );
+        }
+    }
+    for (aid, raw) in pending_model_geometric_views {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_model_geometric_views(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_modified_geometric_tolerances {
@@ -23711,6 +25679,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_symmetry_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_terminator_symbols {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_terminator_symbols(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_tessellated_annotation_occurrences {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_tessellated_annotation_occurrences(&mut model, aid, attributes, &idmap);
@@ -24190,6 +26163,23 @@ fn resolve_annotation_occurrence_relationships(
     it.related_annotation_occurrence = related_annotation_occurrence_v;
 }
 
+fn resolve_annotation_placeholder_leader_lines(
+    model: &mut Model,
+    aid: AnnotationPlaceholderLeaderLineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let geometric_elements_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DesApllPointSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.annotation_placeholder_leader_lines.items[aid.0];
+    it.geometric_elements = geometric_elements_v;
+}
+
 fn resolve_annotation_placeholder_occurrences(
     model: &mut Model,
     aid: AnnotationPlaceholderOccurrenceId,
@@ -24209,6 +26199,41 @@ fn resolve_annotation_placeholder_occurrences(
     let it = &mut model.annotation_placeholder_occurrences.items[aid.0];
     it.styles = styles_v;
     it.item = item_v;
+}
+
+fn resolve_annotation_placeholder_occurrence_with_leader_lines(
+    model: &mut Model,
+    aid: AnnotationPlaceholderOccurrenceWithLeaderLineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let leader_line_v = match &attrs[5] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                AnnotationPlaceholderLeaderLineRef::from_any(
+                    *idmap.get(&as_ref_id(e)).expect("ref"),
+                )
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model
+        .annotation_placeholder_occurrence_with_leader_lines
+        .items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+    it.leader_line = leader_line_v;
 }
 
 fn resolve_annotation_planes(
@@ -24333,6 +26358,52 @@ fn resolve_annotation_text_occurrences(
     let it = &mut model.annotation_text_occurrences.items[aid.0];
     it.styles = styles_v;
     it.item = item_v;
+}
+
+fn resolve_annotation_to_annotation_leader_lines(
+    model: &mut Model,
+    aid: AnnotationToAnnotationLeaderLineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let geometric_elements_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DesApllPointSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.annotation_to_annotation_leader_lines.items[aid.0];
+    it.geometric_elements = geometric_elements_v;
+}
+
+fn resolve_annotation_to_model_leader_lines(
+    model: &mut Model,
+    aid: AnnotationToModelLeaderLineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let geometric_elements_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DesApllPointSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.annotation_to_model_leader_lines.items[aid.0];
+    it.geometric_elements = geometric_elements_v;
+}
+
+fn resolve_apll_point_with_surfaces(
+    model: &mut Model,
+    aid: ApllPointWithSurfaceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let associated_surface_v =
+        FaceSurfaceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.apll_point_with_surfaces.items[aid.0];
+    it.associated_surface = associated_surface_v;
 }
 
 fn resolve_application_context_elements(
@@ -24496,6 +26567,26 @@ fn resolve_assembly_component_usages(
     let it = &mut model.assembly_component_usages.items[aid.0];
     it.relating_product_definition = relating_product_definition_v;
     it.related_product_definition = related_product_definition_v;
+}
+
+fn resolve_auxiliary_leader_lines(
+    model: &mut Model,
+    aid: AuxiliaryLeaderLineId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let geometric_elements_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DesApllPointSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let controlling_leader_line_v =
+        AnnotationToModelLeaderLineRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.auxiliary_leader_lines.items[aid.0];
+    it.geometric_elements = geometric_elements_v;
+    it.controlling_leader_line = controlling_leader_line_v;
 }
 
 fn resolve_axis1_placements(
@@ -24831,6 +26922,18 @@ fn resolve_cc_design_security_classifications(
     it.items = items_v;
 }
 
+fn resolve_centre_of_symmetrys(
+    model: &mut Model,
+    aid: CentreOfSymmetryId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.centre_of_symmetrys.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
 fn resolve_certifications(
     model: &mut Model,
     aid: CertificationId,
@@ -24914,6 +27017,26 @@ fn resolve_characterized_item_within_representations(
     let it = &mut model.characterized_item_within_representations.items[aid.0];
     it.item = item_v;
     it.rep = rep_v;
+}
+
+fn resolve_characterized_representations(
+    model: &mut Model,
+    aid: CharacterizedRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.characterized_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
 }
 
 fn resolve_circles(
@@ -25719,6 +27842,18 @@ fn resolve_degenerate_toroidal_surfaces(
     it.position = position_v;
 }
 
+fn resolve_derived_shape_aspects(
+    model: &mut Model,
+    aid: DerivedShapeAspectId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.derived_shape_aspects.items[aid.0];
+    it.of_shape = of_shape_v;
+}
+
 fn resolve_derived_units(
     model: &mut Model,
     aid: DerivedUnitId,
@@ -25852,6 +27987,27 @@ fn resolve_document_files(
     it.kind = kind_v;
 }
 
+fn resolve_draughting_annotation_occurrences(
+    model: &mut Model,
+    aid: DraughtingAnnotationOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.draughting_annotation_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
 fn resolve_draughting_callouts(
     model: &mut Model,
     aid: DraughtingCalloutId,
@@ -25867,6 +28023,21 @@ fn resolve_draughting_callouts(
     };
     let it = &mut model.draughting_callouts.items[aid.0];
     it.contents = contents_v;
+}
+
+fn resolve_draughting_callout_relationships(
+    model: &mut Model,
+    aid: DraughtingCalloutRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_draughting_callout_v =
+        DraughtingCalloutRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_draughting_callout_v =
+        DraughtingCalloutRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.draughting_callout_relationships.items[aid.0];
+    it.relating_draughting_callout = relating_draughting_callout_v;
+    it.related_draughting_callout = related_draughting_callout_v;
 }
 
 fn resolve_draughting_models(
@@ -26713,6 +28884,27 @@ fn resolve_item_defined_transformations(
     it.transform_item_2 = transform_item_2_v;
 }
 
+fn resolve_leader_curves(
+    model: &mut Model,
+    aid: LeaderCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = CurveOrCurveSetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.leader_curves.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
 fn resolve_leader_directed_callouts(
     model: &mut Model,
     aid: LeaderDirectedCalloutId,
@@ -26728,6 +28920,32 @@ fn resolve_leader_directed_callouts(
     };
     let it = &mut model.leader_directed_callouts.items[aid.0];
     it.contents = contents_v;
+}
+
+fn resolve_leader_terminators(
+    model: &mut Model,
+    aid: LeaderTerminatorId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = AnnotationSymbolOccurrenceItemRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let annotated_curve_v =
+        AnnotationCurveOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.leader_terminators.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+    it.annotated_curve = annotated_curve_v;
 }
 
 fn resolve_length_measure_with_units(
@@ -26921,6 +29139,19 @@ fn resolve_mechanical_design_geometric_presentation_representations(
         .items[aid.0];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
+}
+
+fn resolve_model_geometric_views(
+    model: &mut Model,
+    aid: ModelGeometricViewId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let item_v = RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let rep_v = RepresentationRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.model_geometric_views.items[aid.0];
+    it.item = item_v;
+    it.rep = rep_v;
 }
 
 fn resolve_modified_geometric_tolerances(
@@ -28654,6 +30885,32 @@ fn resolve_symmetry_tolerances(
     it.datum_system = datum_system_v;
 }
 
+fn resolve_terminator_symbols(
+    model: &mut Model,
+    aid: TerminatorSymbolId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = AnnotationSymbolOccurrenceItemRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let annotated_curve_v =
+        AnnotationCurveOccurrenceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.terminator_symbols.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+    it.annotated_curve = annotated_curve_v;
+}
+
 fn resolve_tessellated_annotation_occurrences(
     model: &mut Model,
     aid: TessellatedAnnotationOccurrenceId,
@@ -29177,6 +31434,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => UnitPart::AnnotationOccurrenceAssociativity,
         "ANNOTATION_OCCURRENCE_RELATIONSHIP" => UnitPart::AnnotationOccurrenceRelationship { name: as_str(&p.attributes[0]), description: as_str(&p.attributes[1]), relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence { role: match &p.attributes[0] { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).expect("annotation_placeholder_occurrence_role"), other => panic!("enum annotation_placeholder_occurrence_role: {other:?}") }, line_spacing: as_real(&p.attributes[1]), },
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line: Vec::new(), },
         "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
         "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
         "ANNOTATION_TEXT" => UnitPart::AnnotationText,
@@ -29209,7 +31467,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), },
         "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), },
         "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => UnitPart::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
-        "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: match &p.attributes[0] { Attribute::Derived => None, _ => Some(as_str(&p.attributes[0])) }, description: match &p.attributes[1] { Attribute::Derived => None, _ => Some(as_str(&p.attributes[1])) }, },
+        "CHARACTERIZED_REPRESENTATION" => UnitPart::CharacterizedRepresentation,
         "CIRCULAR_RUNOUT_TOLERANCE" => UnitPart::CircularRunoutTolerance,
         "CLOSED_SHELL" => UnitPart::ClosedShell,
         "COLOUR" => UnitPart::Colour,
@@ -29251,7 +31510,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "DIRECTION" => UnitPart::Direction { direction_ratios: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, },
         "DOCUMENT" => UnitPart::Document { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)), },
         "DOCUMENT_FILE" => UnitPart::DocumentFile,
+        "DRAUGHTING_ANNOTATION_OCCURRENCE" => UnitPart::DraughtingAnnotationOccurrence,
         "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout { contents: Vec::new(), },
+        "DRAUGHTING_CALLOUT_RELATIONSHIP" => UnitPart::DraughtingCalloutRelationship { name: as_str(&p.attributes[0]), description: as_str(&p.attributes[1]), relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(usize::MAX)), related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(usize::MAX)), },
         "DRAUGHTING_MODEL" => UnitPart::DraughtingModel,
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION" => UnitPart::DraughtingModelItemAssociation,
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder: AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId(usize::MAX)), },
@@ -29279,7 +31540,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "FACE_OUTER_BOUND" => UnitPart::FaceOuterBound,
         "FACE_SURFACE" => UnitPart::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)), same_sense: matches!(&p.attributes[1], Attribute::Enum(s) if s == "T"), },
         "FILL_AREA_STYLE" => UnitPart::FillAreaStyle { name: as_str(&p.attributes[0]), fill_styles: Vec::new(), },
-        "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(usize::MAX)), point_of_reference_hatch_line: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), pattern_start: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), hatch_line_angle: as_real(&p.attributes[4]), },
+        "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(usize::MAX)), point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), pattern_start: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), hatch_line_angle: as_real(&p.attributes[4]), },
         "FILL_AREA_STYLE_TILE_COLOURED_REGION" => UnitPart::FillAreaStyleTileColouredRegion { closed_curve: CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), region_colour: ColourRef::Colour(ColourId(usize::MAX)), },
         "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => UnitPart::FillAreaStyleTileCurveWithStyle { styled_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => UnitPart::FillAreaStyleTileSymbolWithStyle { symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId(usize::MAX)), },
@@ -29312,7 +31573,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
         "INVISIBILITY" => UnitPart::Invisibility { invisible_items: Vec::new(), },
         "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
+        "LEADER_CURVE" => UnitPart::LeaderCurve,
         "LEADER_DIRECTED_CALLOUT" => UnitPart::LeaderDirectedCallout,
+        "LEADER_TERMINATOR" => UnitPart::LeaderTerminator,
         "LENGTH_MEASURE_WITH_UNIT" => UnitPart::LengthMeasureWithUnit,
         "LENGTH_UNIT" => UnitPart::LengthUnit,
         "LINE_PROFILE_TOLERANCE" => UnitPart::LineProfileTolerance,
@@ -29325,6 +31588,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
         "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: read_measure_value(&p.attributes[0]), unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)), },
         "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
+        "MODEL_GEOMETRIC_VIEW" => UnitPart::ModelGeometricView,
         "MODIFIED_GEOMETRIC_TOLERANCE" => UnitPart::ModifiedGeometricTolerance { modifier: match &p.attributes[0] { Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"), other => panic!("enum limit_condition: {other:?}") }, },
         "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None, },
         "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => UnitPart::NextAssemblyUsageOccurrence,
@@ -29344,7 +31608,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(usize::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(usize::MAX)), },
         "PERSONAL_ADDRESS" => UnitPart::PersonalAddress { people: Vec::new(), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
         "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
-        "PLACEMENT" => UnitPart::Placement { location: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), },
+        "PLACEMENT" => UnitPart::Placement { location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), },
         "PLANAR_BOX" => UnitPart::PlanarBox { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), },
         "PLANAR_EXTENT" => UnitPart::PlanarExtent { size_in_x: as_real(&p.attributes[0]), size_in_y: as_real(&p.attributes[1]), },
         "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
@@ -29358,8 +31622,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
         "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem { name: as_str(&p.attributes[0]), },
         "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
+        "PRE_DEFINED_POINT_MARKER_SYMBOL" => UnitPart::PreDefinedPointMarkerSymbol,
         "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
         "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
+        "PRE_DEFINED_TERMINATOR_SYMBOL" => UnitPart::PreDefinedTerminatorSymbol,
         "PRE_DEFINED_TEXT_FONT" => UnitPart::PreDefinedTextFont,
         "PRE_DEFINED_TILE" => UnitPart::PreDefinedTile,
         "PRESENTATION_AREA" => UnitPart::PresentationArea,
@@ -29436,6 +31702,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "SYMBOL_REPRESENTATION" => UnitPart::SymbolRepresentation,
         "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: as_str(&p.attributes[0]), style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)), },
         "SYMBOL_TARGET" => UnitPart::SymbolTarget { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), x_scale: as_real(&p.attributes[1]), y_scale: as_real(&p.attributes[2]), },
+        "TERMINATOR_SYMBOL" => UnitPart::TerminatorSymbol { annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
         "TESSELLATED_GEOMETRIC_SET" => UnitPart::TessellatedGeometricSet { children: Vec::new(), },
         "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
         "TESSELLATED_SHAPE_REPRESENTATION" => UnitPart::TessellatedShapeRepresentation,
@@ -29458,8 +31725,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem { value_component: read_measure_value(&p.attributes[0]), },
         "VECTOR" => UnitPart::Vector { orientation: DirectionRef::Direction(DirectionId(usize::MAX)), magnitude: as_real(&p.attributes[1]), },
         "VERTEX" => UnitPart::Vertex,
-        "VERTEX_POINT" => UnitPart::VertexPoint { vertex_geometry: PointRef::CartesianPoint(CartesianPointId(usize::MAX)), },
-        "VIEW_VOLUME" => UnitPart::ViewVolume { projection_type: match &p.attributes[0] { Attribute::Enum(s) => CentralOrParallel::parse(s).expect("central_or_parallel"), other => panic!("enum central_or_parallel: {other:?}") }, projection_point: CartesianPointRef::CartesianPoint(CartesianPointId(usize::MAX)), view_plane_distance: as_real(&p.attributes[2]), front_plane_distance: as_real(&p.attributes[3]), front_plane_clipping: matches!(&p.attributes[4], Attribute::Enum(s) if s == "T"), back_plane_distance: as_real(&p.attributes[5]), back_plane_clipping: matches!(&p.attributes[6], Attribute::Enum(s) if s == "T"), view_volume_sides_clipping: matches!(&p.attributes[7], Attribute::Enum(s) if s == "T"), view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)), },
+        "VERTEX_POINT" => UnitPart::VertexPoint { vertex_geometry: PointRef::ApllPoint(ApllPointId(usize::MAX)), },
+        "VIEW_VOLUME" => UnitPart::ViewVolume { projection_type: match &p.attributes[0] { Attribute::Enum(s) => CentralOrParallel::parse(s).expect("central_or_parallel"), other => panic!("enum central_or_parallel: {other:?}") }, projection_point: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), view_plane_distance: as_real(&p.attributes[2]), front_plane_distance: as_real(&p.attributes[3]), front_plane_clipping: matches!(&p.attributes[4], Attribute::Enum(s) if s == "T"), back_plane_distance: as_real(&p.attributes[5]), back_plane_clipping: matches!(&p.attributes[6], Attribute::Enum(s) if s == "T"), view_volume_sides_clipping: matches!(&p.attributes[7], Attribute::Enum(s) if s == "T"), view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)), },
         other => panic!("unknown complex part: {other}"),
     }).collect()
 }
@@ -29551,6 +31818,19 @@ fn resolve_complex(
                 *related_annotation_occurrence = AnnotationOccurrenceRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
                 );
+            }
+            UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => {
+                *leader_line = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            AnnotationPlaceholderLeaderLineRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::ApplicationContextElement {
                 frame_of_reference, ..
@@ -29951,6 +32231,18 @@ fn resolve_complex(
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::DraughtingCalloutRelationship {
+                relating_draughting_callout,
+                related_draughting_callout,
+                ..
+            } => {
+                *relating_draughting_callout = DraughtingCalloutRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"),
+                );
+                *related_draughting_callout = DraughtingCalloutRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
             }
             UnitPart::DraughtingModelItemAssociationWithPlaceholder {
                 annotation_placeholder,
@@ -30801,6 +33093,13 @@ fn resolve_complex(
             }
             UnitPart::SymbolTarget { placement, .. } => {
                 *placement = Axis2PlacementRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+            }
+            UnitPart::TerminatorSymbol {
+                annotated_curve, ..
+            } => {
+                *annotated_curve = AnnotationCurveOccurrenceRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
             }

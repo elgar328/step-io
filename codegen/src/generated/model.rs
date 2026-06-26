@@ -290,6 +290,42 @@ impl DatumReferenceModifierType {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DesApllPointSymbol {
+    Circle,
+    Dot,
+    InternalPairForwardArrowhead,
+    InternalPairReverseArrowhead,
+    None,
+    PositiveArrowhead,
+    Triangle,
+}
+impl DesApllPointSymbol {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "CIRCLE" => Self::Circle,
+            "DOT" => Self::Dot,
+            "INTERNAL_PAIR_FORWARD_ARROWHEAD" => Self::InternalPairForwardArrowhead,
+            "INTERNAL_PAIR_REVERSE_ARROWHEAD" => Self::InternalPairReverseArrowhead,
+            "NONE" => Self::None,
+            "POSITIVE_ARROWHEAD" => Self::PositiveArrowhead,
+            "TRIANGLE" => Self::Triangle,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Circle => ".CIRCLE.",
+            Self::Dot => ".DOT.",
+            Self::InternalPairForwardArrowhead => ".INTERNAL_PAIR_FORWARD_ARROWHEAD.",
+            Self::InternalPairReverseArrowhead => ".INTERNAL_PAIR_REVERSE_ARROWHEAD.",
+            Self::None => ".NONE.",
+            Self::PositiveArrowhead => ".POSITIVE_ARROWHEAD.",
+            Self::Triangle => ".TRIANGLE.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GeometricToleranceModifier {
     StandardDeviation,
     ValleyDepth,
@@ -1023,7 +1059,11 @@ pub struct AnnotationOccurrenceAssociativityId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationPlaceholderLeaderLineId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaceholderOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationPlaceholderOccurrenceWithLeaderLineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaneId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1036,6 +1076,14 @@ pub struct AnnotationTextId(pub usize);
 pub struct AnnotationTextCharacterId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationTextOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationToAnnotationLeaderLineId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationToModelLeaderLineId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApllPointId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ApllPointWithSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApplicationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1064,6 +1112,8 @@ pub struct AscribableStateId(pub usize);
 pub struct AscribableStateRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AssemblyComponentUsageId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AuxiliaryLeaderLineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Axis1PlacementId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1109,6 +1159,8 @@ pub struct CcDesignPersonAndOrganizationAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CcDesignSecurityClassificationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CentreOfSymmetryId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CertificationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CertificationTypeId(pub usize);
@@ -1124,6 +1176,8 @@ pub struct CharacterGlyphStyleStrokeId(pub usize);
 pub struct CharacterizedItemWithinRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterizedObjectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CharacterizedRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CircleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1237,6 +1291,8 @@ pub struct DefinitionalRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DegenerateToroidalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DerivedShapeAspectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedUnitElementId(pub usize);
@@ -1265,7 +1321,11 @@ pub struct DocumentFileId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentTypeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DraughtingAnnotationOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingCalloutId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DraughtingCalloutRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1399,7 +1459,11 @@ pub struct InvisibilityId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemDefinedTransformationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LeaderCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LeaderDirectedCalloutId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LeaderTerminatorId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LengthMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1434,6 +1498,8 @@ pub struct MeasureWithUnitId(pub usize);
 pub struct MechanicalContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalDesignGeometricPresentationRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ModelGeometricViewId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ModifiedGeometricToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1533,9 +1599,13 @@ pub struct PreDefinedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedMarkerId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PreDefinedPointMarkerSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedSurfaceSideStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PreDefinedTerminatorSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedTextFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1729,6 +1799,8 @@ pub struct SymbolTargetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymmetryToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TerminatorSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedAnnotationOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedCurveSetId(pub usize);
@@ -1841,13 +1913,19 @@ pub enum AnyId {
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationOccurrenceAssociativity(AnnotationOccurrenceAssociativityId),
     AnnotationOccurrenceRelationship(AnnotationOccurrenceRelationshipId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
     ApplicationContext(ApplicationContextId),
     ApplicationContextElement(ApplicationContextElementId),
     ApplicationProtocolDefinition(ApplicationProtocolDefinitionId),
@@ -1862,6 +1940,7 @@ pub enum AnyId {
     AscribableState(AscribableStateId),
     AscribableStateRelationship(AscribableStateRelationshipId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -1884,6 +1963,7 @@ pub enum AnyId {
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
     CcDesignPersonAndOrganizationAssignment(CcDesignPersonAndOrganizationAssignmentId),
     CcDesignSecurityClassification(CcDesignSecurityClassificationId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     Certification(CertificationId),
     CertificationType(CertificationTypeId),
     Change(ChangeId),
@@ -1892,6 +1972,7 @@ pub enum AnyId {
     CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
     CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentationId),
     CharacterizedObject(CharacterizedObjectId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     Circle(CircleId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     ClosedShell(ClosedShellId),
@@ -1948,6 +2029,7 @@ pub enum AnyId {
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DerivedUnit(DerivedUnitId),
     DerivedUnitElement(DerivedUnitElementId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
@@ -1962,7 +2044,9 @@ pub enum AnyId {
     Document(DocumentId),
     DocumentFile(DocumentFileId),
     DocumentType(DocumentTypeId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
+    DraughtingCalloutRelationship(DraughtingCalloutRelationshipId),
     DraughtingModel(DraughtingModelId),
     DraughtingModelItemAssociation(DraughtingModelItemAssociationId),
     DraughtingModelItemAssociationWithPlaceholder(DraughtingModelItemAssociationWithPlaceholderId),
@@ -2031,7 +2115,9 @@ pub enum AnyId {
     IntersectionCurve(IntersectionCurveId),
     Invisibility(InvisibilityId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     LengthUnit(LengthUnitId),
     LimitsAndFits(LimitsAndFitsId),
@@ -2051,6 +2137,7 @@ pub enum AnyId {
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
     ),
+    ModelGeometricView(ModelGeometricViewId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NamedUnit(NamedUnitId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
@@ -2100,8 +2187,10 @@ pub enum AnyId {
     PreDefinedCurveFont(PreDefinedCurveFontId),
     PreDefinedItem(PreDefinedItemId),
     PreDefinedMarker(PreDefinedMarkerId),
+    PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
     PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
     PreDefinedSymbol(PreDefinedSymbolId),
+    PreDefinedTerminatorSymbol(PreDefinedTerminatorSymbolId),
     PreDefinedTextFont(PreDefinedTextFontId),
     PreDefinedTile(PreDefinedTileId),
     PrecisionQualifier(PrecisionQualifierId),
@@ -2198,6 +2287,7 @@ pub enum AnyId {
     SymbolStyle(SymbolStyleId),
     SymbolTarget(SymbolTargetId),
     SymmetryTolerance(SymmetryToleranceId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
@@ -2305,12 +2395,14 @@ impl ActionResourceTypeRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationCurveOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    LeaderCurve(LeaderCurveId),
     Complex(ComplexUnitId),
 }
 impl AnnotationCurveOccurrenceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationCurveOccurrenceRef ref -> {other:?}"),
         }
@@ -2323,9 +2415,14 @@ pub enum AnnotationOccurrenceRef {
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    LeaderCurve(LeaderCurveId),
+    LeaderTerminator(LeaderTerminatorId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     Complex(ComplexUnitId),
 }
@@ -2336,9 +2433,16 @@ impl AnnotationOccurrenceRef {
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationOccurrenceRef ref -> {other:?}"),
@@ -2347,14 +2451,37 @@ impl AnnotationOccurrenceRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationPlaceholderLeaderLineRef {
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
+}
+impl AnnotationPlaceholderLeaderLineRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
+            other => panic!("AnnotationPlaceholderLeaderLineRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationPlaceholderOccurrenceRef {
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     Complex(ComplexUnitId),
 }
 impl AnnotationPlaceholderOccurrenceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationPlaceholderOccurrenceRef ref -> {other:?}"),
         }
@@ -2367,14 +2494,19 @@ pub enum AnnotationPlaneElementRef {
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
     OverRidingStyledItem(OverRidingStyledItemId),
     StyledItem(StyledItemId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     Complex(ComplexUnitId),
 }
@@ -2385,16 +2517,23 @@ impl AnnotationPlaneElementRef {
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
             AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationPlaneElementRef ref -> {other:?}"),
@@ -2443,12 +2582,16 @@ impl AnnotationSymbolOccurrenceItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationSymbolOccurrenceRef {
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    LeaderTerminator(LeaderTerminatorId),
+    TerminatorSymbol(TerminatorSymbolId),
     Complex(ComplexUnitId),
 }
 impl AnnotationSymbolOccurrenceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationSymbolOccurrenceRef ref -> {other:?}"),
         }
@@ -2474,6 +2617,19 @@ impl AnnotationTextOccurrenceItemRef {
             AnyId::TextLiteral(i) => Self::TextLiteral(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationTextOccurrenceItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationToModelLeaderLineRef {
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+}
+impl AnnotationToModelLeaderLineRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            other => panic!("AnnotationToModelLeaderLineRef ref -> {other:?}"),
         }
     }
 }
@@ -2619,11 +2775,15 @@ impl Axis2PlacementRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CartesianPointRef {
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
     CartesianPoint(CartesianPointId),
 }
 impl CartesianPointRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             other => panic!("CartesianPointRef ref -> {other:?}"),
         }
@@ -2767,8 +2927,10 @@ pub enum CharacterizedDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
     AngularityTolerance(AngularityToleranceId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentationId),
     CharacterizedObject(CharacterizedObjectId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     CoaxialityTolerance(CoaxialityToleranceId),
     CommonDatum(CommonDatumId),
@@ -2783,6 +2945,7 @@ pub enum CharacterizedDefinitionRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
@@ -2800,6 +2963,7 @@ pub enum CharacterizedDefinitionRef {
     GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
     LineProfileTolerance(LineProfileToleranceId),
+    ModelGeometricView(ModelGeometricViewId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ParallelismTolerance(ParallelismToleranceId),
@@ -2831,10 +2995,12 @@ impl CharacterizedDefinitionRef {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CharacterizedItemWithinRepresentation(i) => {
                 Self::CharacterizedItemWithinRepresentation(i)
             }
             AnyId::CharacterizedObject(i) => Self::CharacterizedObject(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
@@ -2849,6 +3015,7 @@ impl CharacterizedDefinitionRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
@@ -2876,6 +3043,7 @@ impl CharacterizedDefinitionRef {
             }
             AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
             AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::ModelGeometricView(i) => Self::ModelGeometricView(i),
             AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
             AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
@@ -3112,6 +3280,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     Ellipse(EllipseId),
     Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderCurve(LeaderCurveId),
     Line(LineId),
     Pcurve(PcurveId),
     Polyline(PolylineId),
@@ -3140,6 +3309,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             AnyId::Ellipse(i) => Self::Ellipse(i),
             AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
             AnyId::Polyline(i) => Self::Polyline(i),
@@ -3355,6 +3525,7 @@ pub enum DateAndTimeItemRef {
     AssemblyComponentUsage(AssemblyComponentUsageId),
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
     Certification(CertificationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     ConfigurationDesign(ConfigurationDesignId),
     ConfigurationEffectivity(ConfigurationEffectivityId),
     ConfigurationItem(ConfigurationItemId),
@@ -3428,6 +3599,7 @@ impl DateAndTimeItemRef {
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
             AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
             AnyId::Certification(i) => Self::Certification(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
             AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
             AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
@@ -3720,14 +3892,18 @@ impl DefinedGlyphSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinedSymbolSelectRef {
     ExternallyDefinedSymbol(ExternallyDefinedSymbolId),
+    PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
     PreDefinedSymbol(PreDefinedSymbolId),
+    PreDefinedTerminatorSymbol(PreDefinedTerminatorSymbolId),
     Complex(ComplexUnitId),
 }
 impl DefinedSymbolSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::ExternallyDefinedSymbol(i) => Self::ExternallyDefinedSymbol(i),
+            AnyId::PreDefinedPointMarkerSymbol(i) => Self::PreDefinedPointMarkerSymbol(i),
             AnyId::PreDefinedSymbol(i) => Self::PreDefinedSymbol(i),
+            AnyId::PreDefinedTerminatorSymbol(i) => Self::PreDefinedTerminatorSymbol(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DefinedSymbolSelectRef ref -> {other:?}"),
         }
@@ -3848,6 +4024,21 @@ impl DerivedUnitElementRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DesApllPointSelectRef {
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+}
+impl DesApllPointSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            other => panic!("DesApllPointSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DimensionalCharacteristicRef {
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
@@ -3914,8 +4105,12 @@ pub enum DraughtingCalloutElementRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    LeaderCurve(LeaderCurveId),
+    LeaderTerminator(LeaderTerminatorId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     Complex(ComplexUnitId),
 }
@@ -3925,11 +4120,34 @@ impl DraughtingCalloutElementRef {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DraughtingCalloutElementRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DraughtingCalloutRef {
+    DraughtingCallout(DraughtingCalloutId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
+    Complex(ComplexUnitId),
+}
+impl DraughtingCalloutRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DraughtingCalloutRef ref -> {other:?}"),
         }
     }
 }
@@ -3940,11 +4158,16 @@ pub enum DraughtingModelItemAssociationSelectRef {
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     Complex(ComplexUnitId),
 }
@@ -3955,11 +4178,18 @@ impl DraughtingModelItemAssociationSelectRef {
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DraughtingModelItemAssociationSelectRef ref -> {other:?}"),
@@ -3972,6 +4202,7 @@ pub enum DraughtingModelItemDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
     AngularityTolerance(AngularityToleranceId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     CoaxialityTolerance(CoaxialityToleranceId),
     CommonDatum(CommonDatumId),
@@ -3986,6 +4217,7 @@ pub enum DraughtingModelItemDefinitionRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
@@ -4028,6 +4260,7 @@ impl DraughtingModelItemDefinitionRef {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
@@ -4042,6 +4275,7 @@ impl DraughtingModelItemDefinitionRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
@@ -4218,6 +4452,23 @@ impl FaceRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum FaceSurfaceRef {
+    AdvancedFace(AdvancedFaceId),
+    FaceSurface(FaceSurfaceId),
+    Complex(ComplexUnitId),
+}
+impl FaceSurfaceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("FaceSurfaceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum FillAreaStyleRef {
     FillAreaStyle(FillAreaStyleId),
     Complex(ComplexUnitId),
@@ -4323,6 +4574,7 @@ impl GeneralPropertyRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricItemSpecificUsageSelectRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -4333,6 +4585,7 @@ pub enum GeometricItemSpecificUsageSelectRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     GeneralDatumReference(GeneralDatumReferenceId),
@@ -4348,6 +4601,7 @@ impl GeometricItemSpecificUsageSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
@@ -4358,6 +4612,7 @@ impl GeometricItemSpecificUsageSelectRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
@@ -4376,8 +4631,15 @@ impl GeometricItemSpecificUsageSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricModelItemRef {
     AdvancedFace(AdvancedFaceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -4480,8 +4742,17 @@ impl GeometricModelItemRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -4587,6 +4858,8 @@ impl GeometricModelItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricSetSelectRef {
     AnnotationText(AnnotationTextId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -4641,6 +4914,8 @@ impl GeometricSetSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -4698,6 +4973,7 @@ impl GeometricSetSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceTargetRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -4708,6 +4984,7 @@ pub enum GeometricToleranceTargetRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
@@ -4724,6 +5001,7 @@ impl GeometricToleranceTargetRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
@@ -4734,6 +5012,7 @@ impl GeometricToleranceTargetRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
@@ -4775,13 +5054,19 @@ pub enum GroupableItemRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
     AppliedDateAndTimeAssignment(AppliedDateAndTimeAssignmentId),
     AppliedGroupAssignment(AppliedGroupAssignmentId),
     Approval(ApprovalId),
@@ -4790,6 +5075,7 @@ pub enum GroupableItemRef {
     AscribableState(AscribableStateId),
     AscribableStateRelationship(AscribableStateRelationshipId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -4809,7 +5095,9 @@ pub enum GroupableItemRef {
     CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
     CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     Certification(CertificationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
     CommonDatum(CommonDatumId),
@@ -4848,6 +5136,7 @@ pub enum GroupableItemRef {
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DerivedUnit(DerivedUnitId),
     DerivedUnitElement(DerivedUnitElementId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
@@ -4856,6 +5145,7 @@ pub enum GroupableItemRef {
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     Direction(DirectionId),
     DocumentFile(DocumentFileId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
     DraughtingModel(DraughtingModelId),
     Edge(EdgeId),
@@ -4892,7 +5182,9 @@ pub enum GroupableItemRef {
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     LengthUnit(LengthUnitId),
     Line(LineId),
@@ -4992,6 +5284,7 @@ pub enum GroupableItemRef {
     SweptSurface(SweptSurfaceId),
     SymbolRepresentation(SymbolRepresentationId),
     SymbolTarget(SymbolTargetId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
@@ -5035,13 +5328,21 @@ impl GroupableItemRef {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
             AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
             AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
             AnyId::AppliedGroupAssignment(i) => Self::AppliedGroupAssignment(i),
             AnyId::Approval(i) => Self::Approval(i),
@@ -5050,6 +5351,7 @@ impl GroupableItemRef {
             AnyId::AscribableState(i) => Self::AscribableState(i),
             AnyId::AscribableStateRelationship(i) => Self::AscribableStateRelationship(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -5069,7 +5371,9 @@ impl GroupableItemRef {
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::Certification(i) => Self::Certification(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
@@ -5114,6 +5418,7 @@ impl GroupableItemRef {
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DerivedUnit(i) => Self::DerivedUnit(i),
             AnyId::DerivedUnitElement(i) => Self::DerivedUnitElement(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
@@ -5122,6 +5427,7 @@ impl GroupableItemRef {
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::Direction(i) => Self::Direction(i),
             AnyId::DocumentFile(i) => Self::DocumentFile(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::Edge(i) => Self::Edge(i),
@@ -5158,7 +5464,9 @@ impl GroupableItemRef {
             AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::ItemDefinedTransformation(i) => Self::ItemDefinedTransformation(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
             AnyId::LengthUnit(i) => Self::LengthUnit(i),
             AnyId::Line(i) => Self::Line(i),
@@ -5266,6 +5574,7 @@ impl GroupableItemRef {
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
@@ -5312,6 +5621,8 @@ pub enum IdAttributeSelectRef {
     AngularityTolerance(AngularityToleranceId),
     ApplicationContext(ApplicationContextId),
     AscribableStateRelationship(AscribableStateRelationshipId),
+    CentreOfSymmetry(CentreOfSymmetryId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     ClosedShell(ClosedShellId),
     CoaxialityTolerance(CoaxialityToleranceId),
@@ -5330,6 +5641,7 @@ pub enum IdAttributeSelectRef {
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
@@ -5416,6 +5728,8 @@ impl IdAttributeSelectRef {
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
             AnyId::AscribableStateRelationship(i) => Self::AscribableStateRelationship(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
@@ -5436,6 +5750,7 @@ impl IdAttributeSelectRef {
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
@@ -5534,18 +5849,23 @@ pub enum InvisibleItemRef {
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
     DraughtingModel(DraughtingModelId),
     GeometricallyBoundedWireframeShapeRepresentation(
         GeometricallyBoundedWireframeShapeRepresentationId,
     ),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
@@ -5560,6 +5880,7 @@ pub enum InvisibleItemRef {
     ShapeRepresentation(ShapeRepresentationId),
     StyledItem(StyledItemId),
     SymbolRepresentation(SymbolRepresentationId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     Complex(ComplexUnitId),
@@ -5572,9 +5893,13 @@ impl InvisibleItemRef {
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 Self::ConstructiveGeometryRepresentation(i)
             }
@@ -5582,12 +5907,15 @@ impl InvisibleItemRef {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 Self::GeometricallyBoundedWireframeShapeRepresentation(i)
             }
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
@@ -5604,6 +5932,7 @@ impl InvisibleItemRef {
             AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
             AnyId::StyledItem(i) => Self::StyledItem(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -5633,13 +5962,20 @@ pub enum LayeredItemRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -5675,6 +6011,7 @@ pub enum LayeredItemRef {
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -5698,7 +6035,9 @@ pub enum LayeredItemRef {
     Hyperbola(HyperbolaId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
@@ -5741,6 +6080,7 @@ pub enum LayeredItemRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
@@ -5772,13 +6112,22 @@ impl LayeredItemRef {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
             AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -5816,6 +6165,7 @@ impl LayeredItemRef {
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
@@ -5839,7 +6189,9 @@ impl LayeredItemRef {
             AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
@@ -5882,6 +6234,7 @@ impl LayeredItemRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
@@ -5996,6 +6349,7 @@ impl ManifoldSolidBrepRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum MarkerSelectRef {
     PreDefinedMarker(PreDefinedMarkerId),
+    PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
     MarkerType(MarkerType),
     Complex(ComplexUnitId),
 }
@@ -6003,6 +6357,7 @@ impl MarkerSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::PreDefinedMarker(i) => Self::PreDefinedMarker(i),
+            AnyId::PreDefinedPointMarkerSymbol(i) => Self::PreDefinedPointMarkerSymbol(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("MarkerSelectRef ref -> {other:?}"),
         }
@@ -6283,6 +6638,8 @@ impl PlaneOrPlanarBoxRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PointRef {
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
     CartesianPoint(CartesianPointId),
     Point(PointId),
     Complex(ComplexUnitId),
@@ -6290,6 +6647,8 @@ pub enum PointRef {
 impl PointRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Point(i) => Self::Point(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
@@ -6593,13 +6952,20 @@ pub enum RepresentationItemRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -6635,6 +7001,7 @@ pub enum RepresentationItemRef {
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -6658,7 +7025,9 @@ pub enum RepresentationItemRef {
     Hyperbola(HyperbolaId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
@@ -6698,6 +7067,7 @@ pub enum RepresentationItemRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
@@ -6729,13 +7099,22 @@ impl RepresentationItemRef {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
             AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -6773,6 +7152,7 @@ impl RepresentationItemRef {
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
@@ -6796,7 +7176,9 @@ impl RepresentationItemRef {
             AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
@@ -6836,6 +7218,7 @@ impl RepresentationItemRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
@@ -6882,6 +7265,7 @@ impl RepresentationMapRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationOrRepresentationReferenceRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DraughtingModel(DraughtingModelId),
@@ -6907,6 +7291,7 @@ impl RepresentationOrRepresentationReferenceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 Self::ConstructiveGeometryRepresentation(i)
             }
@@ -6939,6 +7324,7 @@ impl RepresentationOrRepresentationReferenceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DraughtingModel(DraughtingModelId),
@@ -6963,6 +7349,7 @@ impl RepresentationRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 Self::ConstructiveGeometryRepresentation(i)
             }
@@ -6994,6 +7381,7 @@ impl RepresentationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentedDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -7004,6 +7392,7 @@ pub enum RepresentedDefinitionRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     DimensionalLocation(DimensionalLocationId),
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     GeneralDatumReference(GeneralDatumReferenceId),
@@ -7023,6 +7412,7 @@ impl RepresentedDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
@@ -7033,6 +7423,7 @@ impl RepresentedDefinitionRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
@@ -7094,6 +7485,7 @@ impl SecurityClassificationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeAspectRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
+    CentreOfSymmetry(CentreOfSymmetryId),
     CommonDatum(CommonDatumId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
@@ -7104,6 +7496,7 @@ pub enum ShapeAspectRef {
     DatumReferenceElement(DatumReferenceElementId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DerivedShapeAspect(DerivedShapeAspectId),
     GeneralDatumReference(GeneralDatumReferenceId),
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
     ShapeAspect(ShapeAspectId),
@@ -7115,6 +7508,7 @@ impl ShapeAspectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
+            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
             AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
@@ -7125,6 +7519,7 @@ impl ShapeAspectRef {
             AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
             AnyId::DatumSystem(i) => Self::DatumSystem(i),
             AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
@@ -7307,13 +7702,20 @@ pub enum StyleContextSelectRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -7331,6 +7733,7 @@ pub enum StyleContextSelectRef {
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
@@ -7352,6 +7755,7 @@ pub enum StyleContextSelectRef {
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
     DraughtingModel(DraughtingModelId),
     Edge(EdgeId),
@@ -7380,7 +7784,9 @@ pub enum StyleContextSelectRef {
     Hyperbola(HyperbolaId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
+    LeaderCurve(LeaderCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
     Line(LineId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
@@ -7436,6 +7842,7 @@ pub enum StyleContextSelectRef {
     SweptSurface(SweptSurfaceId),
     SymbolRepresentation(SymbolRepresentationId),
     SymbolTarget(SymbolTargetId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
@@ -7469,13 +7876,22 @@ impl StyleContextSelectRef {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
             AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -7493,6 +7909,7 @@ impl StyleContextSelectRef {
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
@@ -7520,6 +7937,7 @@ impl StyleContextSelectRef {
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
             AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::Edge(i) => Self::Edge(i),
@@ -7548,7 +7966,9 @@ impl StyleContextSelectRef {
             AnyId::Hyperbola(i) => Self::Hyperbola(i),
             AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
             AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
             AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
@@ -7608,6 +8028,7 @@ impl StyleContextSelectRef {
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
@@ -7643,12 +8064,17 @@ pub enum StyledItemRef {
     AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    LeaderCurve(LeaderCurveId),
+    LeaderTerminator(LeaderTerminatorId),
     OverRidingStyledItem(OverRidingStyledItemId),
     StyledItem(StyledItemId),
+    TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     Complex(ComplexUnitId),
 }
@@ -7659,14 +8085,21 @@ impl StyledItemRef {
             AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
+            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
+            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
+            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
             AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
             AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
             AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("StyledItemRef ref -> {other:?}"),
@@ -7678,11 +8111,18 @@ impl StyledItemRef {
 pub enum StyledItemTargetRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
+    AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
+    AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -7700,6 +8140,7 @@ pub enum StyledItemTargetRef {
     CameraModel(CameraModelId),
     CameraModelD3(CameraModelD3Id),
     CartesianPoint(CartesianPointId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
     Circle(CircleId),
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
@@ -7818,11 +8259,20 @@ impl StyledItemTargetRef {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
             AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            }
             AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
             AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
+            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
+            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -7840,6 +8290,7 @@ impl StyledItemTargetRef {
             AnyId::CameraModel(i) => Self::CameraModel(i),
             AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
@@ -8347,12 +8798,16 @@ impl TransformationRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrimmingSelectRef {
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
     CartesianPoint(CartesianPointId),
     ParameterValue(f64),
 }
 impl TrimmingSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
+            AnyId::ApllPoint(i) => Self::ApllPoint(i),
+            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             other => panic!("TrimmingSelectRef ref -> {other:?}"),
         }
@@ -8704,12 +9159,28 @@ pub struct AnnotationOccurrenceRelationship {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationPlaceholderLeaderLine {
+    pub name: String,
+    pub geometric_elements: Vec<DesApllPointSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub role: AnnotationPlaceholderOccurrenceRole,
     pub line_spacing: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+    pub role: AnnotationPlaceholderOccurrenceRole,
+    pub line_spacing: f64,
+    pub leader_line: Vec<AnnotationPlaceholderLeaderLineRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8754,6 +9225,33 @@ pub struct AnnotationTextOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationTextOccurrenceItemRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationToAnnotationLeaderLine {
+    pub name: String,
+    pub geometric_elements: Vec<DesApllPointSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationToModelLeaderLine {
+    pub name: String,
+    pub geometric_elements: Vec<DesApllPointSelectRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApllPoint {
+    pub name: String,
+    pub coordinates: Vec<f64>,
+    pub symbol_applied: DesApllPointSymbol,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApllPointWithSurface {
+    pub name: String,
+    pub coordinates: Vec<f64>,
+    pub symbol_applied: DesApllPointSymbol,
+    pub associated_surface: FaceSurfaceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8846,6 +9344,13 @@ pub struct AssemblyComponentUsage {
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
     pub reference_designator: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AuxiliaryLeaderLine {
+    pub name: String,
+    pub geometric_elements: Vec<DesApllPointSelectRef>,
+    pub controlling_leader_line: AnnotationToModelLeaderLineRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -9028,6 +9533,14 @@ pub struct CcDesignSecurityClassification {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CentreOfSymmetry {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Certification {
     pub name: String,
     pub purpose: String,
@@ -9071,8 +9584,14 @@ pub struct CharacterizedItemWithinRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CharacterizedObject {
-    pub name: String,
+    pub name: Option<String>,
     pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CharacterizedRepresentation {
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -9483,6 +10002,14 @@ pub struct DegenerateToroidalSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DerivedShapeAspect {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DerivedUnit {
     pub elements: Vec<DerivedUnitElementRef>,
 }
@@ -9583,9 +10110,24 @@ pub struct DocumentType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingAnnotationOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingCallout {
     pub name: String,
     pub contents: Vec<DraughtingCalloutElementRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingCalloutRelationship {
+    pub name: String,
+    pub description: String,
+    pub relating_draughting_callout: DraughtingCalloutRef,
+    pub related_draughting_callout: DraughtingCalloutRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10032,9 +10574,24 @@ pub struct ItemDefinedTransformation {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct LeaderCurve {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: CurveOrCurveSetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct LeaderDirectedCallout {
     pub name: String,
     pub contents: Vec<DraughtingCalloutElementRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LeaderTerminator {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: AnnotationSymbolOccurrenceItemRef,
+    pub annotated_curve: AnnotationCurveOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10145,6 +10702,14 @@ pub struct MechanicalDesignGeometricPresentationRepresentation {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModelGeometricView {
+    pub name: String,
+    pub description: Option<String>,
+    pub item: RepresentationItemRef,
+    pub rep: RepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10509,12 +11074,22 @@ pub struct PreDefinedMarker {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedPointMarkerSymbol {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSurfaceSideStyle {
     pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSymbol {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedTerminatorSymbol {
     pub name: String,
 }
 
@@ -11161,6 +11736,14 @@ pub struct SymmetryTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TerminatorSymbol {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: AnnotationSymbolOccurrenceItemRef,
+    pub annotated_curve: AnnotationCurveOccurrenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedAnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentRef>,
@@ -11531,6 +12114,9 @@ pub enum UnitPart {
         role: AnnotationPlaceholderOccurrenceRole,
         line_spacing: f64,
     },
+    AnnotationPlaceholderOccurrenceWithLeaderLine {
+        leader_line: Vec<AnnotationPlaceholderLeaderLineRef>,
+    },
     AnnotationSymbol,
     AnnotationSymbolOccurrence,
     AnnotationText,
@@ -11628,9 +12214,10 @@ pub enum UnitPart {
         rep: RepresentationRef,
     },
     CharacterizedObject {
-        name: String,
+        name: Option<String>,
         description: Option<String>,
     },
+    CharacterizedRepresentation,
     CircularRunoutTolerance,
     ClosedShell,
     Colour,
@@ -11756,8 +12343,15 @@ pub enum UnitPart {
         kind: DocumentTypeRef,
     },
     DocumentFile,
+    DraughtingAnnotationOccurrence,
     DraughtingCallout {
         contents: Vec<DraughtingCalloutElementRef>,
+    },
+    DraughtingCalloutRelationship {
+        name: String,
+        description: String,
+        relating_draughting_callout: DraughtingCalloutRef,
+        related_draughting_callout: DraughtingCalloutRef,
     },
     DraughtingModel,
     DraughtingModelItemAssociation,
@@ -11912,7 +12506,9 @@ pub enum UnitPart {
         transform_item_1: RepresentationItemRef,
         transform_item_2: RepresentationItemRef,
     },
+    LeaderCurve,
     LeaderDirectedCallout,
+    LeaderTerminator,
     LengthMeasureWithUnit,
     LengthUnit,
     LineProfileTolerance,
@@ -11935,6 +12531,7 @@ pub enum UnitPart {
         unit_component: UnitRef,
     },
     MechanicalContext,
+    ModelGeometricView,
     ModifiedGeometricTolerance {
         modifier: LimitCondition,
     },
@@ -12012,8 +12609,10 @@ pub enum UnitPart {
         name: String,
     },
     PreDefinedMarker,
+    PreDefinedPointMarkerSymbol,
     PreDefinedSurfaceSideStyle,
     PreDefinedSymbol,
+    PreDefinedTerminatorSymbol,
     PreDefinedTextFont,
     PreDefinedTile,
     PresentationArea,
@@ -12244,6 +12843,9 @@ pub enum UnitPart {
         x_scale: f64,
         y_scale: f64,
     },
+    TerminatorSymbol {
+        annotated_curve: AnnotationCurveOccurrenceRef,
+    },
     TessellatedGeometricSet {
         children: Vec<TessellatedItemRef>,
     },
@@ -12344,13 +12946,20 @@ pub struct Model {
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
     pub annotation_occurrence_associativitys: Arena<AnnotationOccurrenceAssociativity>,
     pub annotation_occurrence_relationships: Arena<AnnotationOccurrenceRelationship>,
+    pub annotation_placeholder_leader_lines: Arena<AnnotationPlaceholderLeaderLine>,
     pub annotation_placeholder_occurrences: Arena<AnnotationPlaceholderOccurrence>,
+    pub annotation_placeholder_occurrence_with_leader_lines:
+        Arena<AnnotationPlaceholderOccurrenceWithLeaderLine>,
     pub annotation_planes: Arena<AnnotationPlane>,
     pub annotation_symbols: Arena<AnnotationSymbol>,
     pub annotation_symbol_occurrences: Arena<AnnotationSymbolOccurrence>,
     pub annotation_texts: Arena<AnnotationText>,
     pub annotation_text_characters: Arena<AnnotationTextCharacter>,
     pub annotation_text_occurrences: Arena<AnnotationTextOccurrence>,
+    pub annotation_to_annotation_leader_lines: Arena<AnnotationToAnnotationLeaderLine>,
+    pub annotation_to_model_leader_lines: Arena<AnnotationToModelLeaderLine>,
+    pub apll_points: Arena<ApllPoint>,
+    pub apll_point_with_surfaces: Arena<ApllPointWithSurface>,
     pub application_contexts: Arena<ApplicationContext>,
     pub application_context_elements: Arena<ApplicationContextElement>,
     pub application_protocol_definitions: Arena<ApplicationProtocolDefinition>,
@@ -12365,6 +12974,7 @@ pub struct Model {
     pub ascribable_states: Arena<AscribableState>,
     pub ascribable_state_relationships: Arena<AscribableStateRelationship>,
     pub assembly_component_usages: Arena<AssemblyComponentUsage>,
+    pub auxiliary_leader_lines: Arena<AuxiliaryLeaderLine>,
     pub axis1_placements: Arena<Axis1Placement>,
     pub axis2_placement2ds: Arena<Axis2Placement2d>,
     pub axis2_placement3ds: Arena<Axis2Placement3d>,
@@ -12388,6 +12998,7 @@ pub struct Model {
     pub cc_design_person_and_organization_assignments:
         Arena<CcDesignPersonAndOrganizationAssignment>,
     pub cc_design_security_classifications: Arena<CcDesignSecurityClassification>,
+    pub centre_of_symmetrys: Arena<CentreOfSymmetry>,
     pub certifications: Arena<Certification>,
     pub certification_types: Arena<CertificationType>,
     pub changes: Arena<Change>,
@@ -12396,6 +13007,7 @@ pub struct Model {
     pub character_glyph_style_strokes: Arena<CharacterGlyphStyleStroke>,
     pub characterized_item_within_representations: Arena<CharacterizedItemWithinRepresentation>,
     pub characterized_objects: Arena<CharacterizedObject>,
+    pub characterized_representations: Arena<CharacterizedRepresentation>,
     pub circles: Arena<Circle>,
     pub circular_runout_tolerances: Arena<CircularRunoutTolerance>,
     pub closed_shells: Arena<ClosedShell>,
@@ -12452,6 +13064,7 @@ pub struct Model {
     pub defined_symbols: Arena<DefinedSymbol>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
     pub degenerate_toroidal_surfaces: Arena<DegenerateToroidalSurface>,
+    pub derived_shape_aspects: Arena<DerivedShapeAspect>,
     pub derived_units: Arena<DerivedUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
     pub descriptive_representation_items: Arena<DescriptiveRepresentationItem>,
@@ -12466,7 +13079,9 @@ pub struct Model {
     pub documents: Arena<Document>,
     pub document_files: Arena<DocumentFile>,
     pub document_types: Arena<DocumentType>,
+    pub draughting_annotation_occurrences: Arena<DraughtingAnnotationOccurrence>,
     pub draughting_callouts: Arena<DraughtingCallout>,
+    pub draughting_callout_relationships: Arena<DraughtingCalloutRelationship>,
     pub draughting_models: Arena<DraughtingModel>,
     pub draughting_model_item_associations: Arena<DraughtingModelItemAssociation>,
     pub draughting_model_item_association_with_placeholders:
@@ -12535,7 +13150,9 @@ pub struct Model {
     pub intersection_curves: Arena<IntersectionCurve>,
     pub invisibilitys: Arena<Invisibility>,
     pub item_defined_transformations: Arena<ItemDefinedTransformation>,
+    pub leader_curves: Arena<LeaderCurve>,
     pub leader_directed_callouts: Arena<LeaderDirectedCallout>,
+    pub leader_terminators: Arena<LeaderTerminator>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
     pub length_units: Arena<LengthUnit>,
     pub limits_and_fitss: Arena<LimitsAndFits>,
@@ -12554,6 +13171,7 @@ pub struct Model {
     pub mechanical_contexts: Arena<MechanicalContext>,
     pub mechanical_design_geometric_presentation_representations:
         Arena<MechanicalDesignGeometricPresentationRepresentation>,
+    pub model_geometric_views: Arena<ModelGeometricView>,
     pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
     pub next_assembly_usage_occurrences: Arena<NextAssemblyUsageOccurrence>,
@@ -12603,8 +13221,10 @@ pub struct Model {
     pub pre_defined_curve_fonts: Arena<PreDefinedCurveFont>,
     pub pre_defined_items: Arena<PreDefinedItem>,
     pub pre_defined_markers: Arena<PreDefinedMarker>,
+    pub pre_defined_point_marker_symbols: Arena<PreDefinedPointMarkerSymbol>,
     pub pre_defined_surface_side_styles: Arena<PreDefinedSurfaceSideStyle>,
     pub pre_defined_symbols: Arena<PreDefinedSymbol>,
+    pub pre_defined_terminator_symbols: Arena<PreDefinedTerminatorSymbol>,
     pub pre_defined_text_fonts: Arena<PreDefinedTextFont>,
     pub pre_defined_tiles: Arena<PreDefinedTile>,
     pub precision_qualifiers: Arena<PrecisionQualifier>,
@@ -12704,6 +13324,7 @@ pub struct Model {
     pub symbol_styles: Arena<SymbolStyle>,
     pub symbol_targets: Arena<SymbolTarget>,
     pub symmetry_tolerances: Arena<SymmetryTolerance>,
+    pub terminator_symbols: Arena<TerminatorSymbol>,
     pub tessellated_annotation_occurrences: Arena<TessellatedAnnotationOccurrence>,
     pub tessellated_curve_sets: Arena<TessellatedCurveSet>,
     pub tessellated_faces: Arena<TessellatedFace>,
