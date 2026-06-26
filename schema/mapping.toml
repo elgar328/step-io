@@ -1276,3 +1276,15 @@ geometry_leaves = ["composite_curve_segment", "degenerate_toroidal_surface"]
 shape_rep_leaves = ["geometrically_bounded_wireframe_shape_representation",
   "integer_representation_item", "draughting_model"]
 property_leaves = ["id_attribute", "general_property_association"]
+# low-risk residual: usage/value (geometric_item_specific_usage pulls only
+# constructive_geometry_representation; value_representation_item via Repr
+# ItemRef), curve/tessellated leaves (deps already seeded), annotation cluster
+# (draughting_callout head pulls its annotation_occurrence leaves + annotation_
+# fill_area=curve; invisibility leaf). value_format_type_qualifier (Bag A reach)
+# and apll_point (non-AP242) excluded; draughting_model_item_association mega.
+# value_representation_item deferred: its value_component=measure_value carries
+# integer tokens (COUNT_MEASURE(2)) that MeasureValue{f64} widens to 2. — needs
+# the measure_value->enum{Int,Real} fix first (integer bug #2).
+usage_geom = ["geometric_item_specific_usage"]
+curve_tess = ["composite_curve", "tessellated_geometric_set", "repositioned_tessellated_item"]
+annotation = ["draughting_callout", "annotation_plane", "invisibility"]

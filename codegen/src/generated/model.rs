@@ -95,6 +95,27 @@ impl AheadOrBehind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AnnotationPlaceholderOccurrenceRole {
+    AnnotationText,
+    GpsData,
+}
+impl AnnotationPlaceholderOccurrenceRole {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "ANNOTATION_TEXT" => Self::AnnotationText,
+            "GPS_DATA" => Self::GpsData,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::AnnotationText => ".ANNOTATION_TEXT.",
+            Self::GpsData => ".GPS_DATA.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AreaUnitType {
     Spherical,
     Cylindrical,
@@ -844,6 +865,33 @@ impl SurfaceSide {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TextPath {
+    Left,
+    Right,
+    Up,
+    Down,
+}
+impl TextPath {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "LEFT" => Self::Left,
+            "RIGHT" => Self::Right,
+            "UP" => Self::Up,
+            "DOWN" => Self::Down,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Left => ".LEFT.",
+            Self::Right => ".RIGHT.",
+            Self::Up => ".UP.",
+            Self::Down => ".DOWN.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TransitionCode {
     Discontinuous,
     Continuous,
@@ -929,13 +977,23 @@ pub struct AngularityToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationCurveOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationFillAreaOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationPlaceholderOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationPlaneId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationSymbolOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationTextId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationTextCharacterId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AnnotationTextOccurrenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApplicationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1037,11 +1095,15 @@ pub struct ComplexTriangulatedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ComplexTriangulatedSurfaceSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CompositeCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeCurveSegmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeGroupShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeShapeAspectId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CompositeTextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConcentricityToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1056,6 +1118,8 @@ pub struct ConicId(pub usize);
 pub struct ConicalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConnectedFaceSetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ConstructiveGeometryRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentOverRidingStyledItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1113,6 +1177,8 @@ pub struct DatumSystemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumTargetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DefinedCharacterGlyphId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinedSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinitionalRepresentationId(pub usize);
@@ -1147,6 +1213,8 @@ pub struct DocumentFileId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentTypeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DraughtingCalloutId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedColourId(pub usize);
@@ -1169,6 +1237,8 @@ pub struct ExpressionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternalSourceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ExternallyDefinedCharacterGlyphId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedCurveFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedHatchStyleId(pub usize);
@@ -1178,6 +1248,8 @@ pub struct ExternallyDefinedItemId(pub usize);
 pub struct ExternallyDefinedStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ExternallyDefinedTextFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedTileId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1225,6 +1297,8 @@ pub struct GenericProductDefinitionReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricCurveSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GeometricItemSpecificUsageId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricRepresentationContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricRepresentationItemId(pub usize);
@@ -1258,6 +1332,8 @@ pub struct IntLiteralId(pub usize);
 pub struct IntegerRepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntersectionCurveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct InvisibilityId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemDefinedTransformationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1377,6 +1453,8 @@ pub struct PolylineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PositionToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PreDefinedCharacterGlyphId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedColourId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedCurveFontId(pub usize);
@@ -1388,6 +1466,8 @@ pub struct PreDefinedMarkerId(pub usize);
 pub struct PreDefinedSurfaceSideStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedSymbolId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PreDefinedTextFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedTileId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1450,6 +1530,8 @@ pub struct RationalBSplineSurfaceId(pub usize);
 pub struct RealLiteralId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RealRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RepositionedTessellatedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1565,15 +1647,23 @@ pub struct SymbolTargetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymmetryToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TessellatedAnnotationOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedCurveSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedFaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TessellatedGeometricSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedStructuredItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedSurfaceSetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TextFontId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TextLiteralId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1648,10 +1738,15 @@ pub enum AnyId {
     AdvancedFace(AdvancedFaceId),
     AngularityTolerance(AngularityToleranceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     ApplicationContext(ApplicationContextId),
     ApplicationContextElement(ApplicationContextElementId),
     ApplicationProtocolDefinition(ApplicationProtocolDefinitionId),
@@ -1702,9 +1797,11 @@ pub enum AnyId {
     CommonDatum(CommonDatumId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
     CompositeCurveSegment(CompositeCurveSegmentId),
     CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
+    CompositeText(CompositeTextId),
     ConcentricityTolerance(ConcentricityToleranceId),
     ConfigurationDesign(ConfigurationDesignId),
     ConfigurationEffectivity(ConfigurationEffectivityId),
@@ -1712,6 +1809,7 @@ pub enum AnyId {
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     ContextDependentUnit(ContextDependentUnitId),
@@ -1740,6 +1838,7 @@ pub enum AnyId {
     DatumReferenceModifierWithValue(DatumReferenceModifierWithValueId),
     DatumSystem(DatumSystemId),
     DatumTarget(DatumTargetId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
@@ -1757,6 +1856,7 @@ pub enum AnyId {
     Document(DocumentId),
     DocumentFile(DocumentFileId),
     DocumentType(DocumentTypeId),
+    DraughtingCallout(DraughtingCalloutId),
     DraughtingModel(DraughtingModelId),
     DraughtingPreDefinedColour(DraughtingPreDefinedColourId),
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
@@ -1768,11 +1868,13 @@ pub enum AnyId {
     Ellipse(EllipseId),
     Expression(ExpressionId),
     ExternalSource(ExternalSourceId),
+    ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
     ExternallyDefinedItem(ExternallyDefinedItemId),
     ExternallyDefinedStyle(ExternallyDefinedStyleId),
     ExternallyDefinedSymbol(ExternallyDefinedSymbolId),
+    ExternallyDefinedTextFont(ExternallyDefinedTextFontId),
     ExternallyDefinedTile(ExternallyDefinedTileId),
     ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
     Face(FaceId),
@@ -1796,6 +1898,7 @@ pub enum AnyId {
     GenericLiteral(GenericLiteralId),
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     GeometricCurveSet(GeometricCurveSetId),
+    GeometricItemSpecificUsage(GeometricItemSpecificUsageId),
     GeometricRepresentationContext(GeometricRepresentationContextId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
@@ -1815,6 +1918,7 @@ pub enum AnyId {
     IntLiteral(IntLiteralId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
+    Invisibility(InvisibilityId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     LengthUnit(LengthUnitId),
@@ -1876,12 +1980,14 @@ pub enum AnyId {
     PolyLoop(PolyLoopId),
     Polyline(PolylineId),
     PositionTolerance(PositionToleranceId),
+    PreDefinedCharacterGlyph(PreDefinedCharacterGlyphId),
     PreDefinedColour(PreDefinedColourId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
     PreDefinedItem(PreDefinedItemId),
     PreDefinedMarker(PreDefinedMarkerId),
     PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
     PreDefinedSymbol(PreDefinedSymbolId),
+    PreDefinedTextFont(PreDefinedTextFontId),
     PreDefinedTile(PreDefinedTileId),
     PresentationLayerAssignment(PresentationLayerAssignmentId),
     PresentationRepresentation(PresentationRepresentationId),
@@ -1913,6 +2019,7 @@ pub enum AnyId {
     RationalBSplineSurface(RationalBSplineSurfaceId),
     RealLiteral(RealLiteralId),
     RealRepresentationItem(RealRepresentationItemId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
     Representation(RepresentationId),
     RepresentationContext(RepresentationContextId),
     RepresentationContextReference(RepresentationContextReferenceId),
@@ -1970,11 +2077,15 @@ pub enum AnyId {
     SymbolStyle(SymbolStyleId),
     SymbolTarget(SymbolTargetId),
     SymmetryTolerance(SymmetryToleranceId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextFont(TextFontId),
+    TextLiteral(TextLiteralId),
     TextStyle(TextStyleId),
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
     TextureStyleSpecification(TextureStyleSpecificationId),
@@ -2076,6 +2187,45 @@ impl AnnotationCurveOccurrenceRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationPlaneElementRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    DraughtingCallout(DraughtingCalloutId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    StyledItem(StyledItemId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexUnitId),
+}
+impl AnnotationPlaneElementRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("AnnotationPlaneElementRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationSymbolOccurrenceItemRef {
     AnnotationSymbol(AnnotationSymbolId),
     DefinedSymbol(DefinedSymbolId),
@@ -2103,6 +2253,29 @@ impl AnnotationSymbolOccurrenceRef {
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("AnnotationSymbolOccurrenceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationTextOccurrenceItemRef {
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    CompositeText(CompositeTextId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
+    TextLiteral(TextLiteralId),
+    Complex(ComplexUnitId),
+}
+impl AnnotationTextOccurrenceItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("AnnotationTextOccurrenceItemRef ref -> {other:?}"),
         }
     }
 }
@@ -2417,6 +2590,7 @@ pub enum CharacterizedDefinitionRef {
     DocumentFile(DocumentFileId),
     FlatnessTolerance(FlatnessToleranceId),
     GeneralDatumReference(GeneralDatumReferenceId),
+    GeometricItemSpecificUsage(GeometricItemSpecificUsageId),
     GeometricTolerance(GeometricToleranceId),
     GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
     GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
@@ -2477,6 +2651,7 @@ impl CharacterizedDefinitionRef {
             AnyId::DocumentFile(i) => Self::DocumentFile(i),
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
+            AnyId::GeometricItemSpecificUsage(i) => Self::GeometricItemSpecificUsage(i),
             AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
             AnyId::GeometricToleranceWithDatumReference(i) => {
                 Self::GeometricToleranceWithDatumReference(i)
@@ -2579,6 +2754,21 @@ impl ColourRef {
             AnyId::PreDefinedColour(i) => Self::PreDefinedColour(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ColourRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CompositeCurveSegmentRef {
+    CompositeCurveSegment(CompositeCurveSegmentId),
+    Complex(ComplexUnitId),
+}
+impl CompositeCurveSegmentRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CompositeCurveSegment(i) => Self::CompositeCurveSegment(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CompositeCurveSegmentRef ref -> {other:?}"),
         }
     }
 }
@@ -2706,6 +2896,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     BoundedPcurve(BoundedPcurveId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     Circle(CircleId),
+    CompositeCurve(CompositeCurveId),
     Conic(ConicId),
     Curve(CurveId),
     Ellipse(EllipseId),
@@ -2732,6 +2923,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::Circle(i) => Self::Circle(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
@@ -2760,6 +2952,7 @@ pub enum CurveOrCurveSetRef {
     BoundedPcurve(BoundedPcurveId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     Circle(CircleId),
+    CompositeCurve(CompositeCurveId),
     Conic(ConicId),
     Curve(CurveId),
     Ellipse(EllipseId),
@@ -2786,6 +2979,7 @@ impl CurveOrCurveSetRef {
             AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::Circle(i) => Self::Circle(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
@@ -2832,6 +3026,7 @@ pub enum CurveRef {
     BoundedPcurve(BoundedPcurveId),
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     Circle(CircleId),
+    CompositeCurve(CompositeCurveId),
     Conic(ConicId),
     Curve(CurveId),
     Ellipse(EllipseId),
@@ -2857,6 +3052,7 @@ impl CurveRef {
             AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::Circle(i) => Self::Circle(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
@@ -3134,6 +3330,23 @@ impl DatumSystemRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DefinedGlyphSelectRef {
+    ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId),
+    PreDefinedCharacterGlyph(PreDefinedCharacterGlyphId),
+    Complex(ComplexUnitId),
+}
+impl DefinedGlyphSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ExternallyDefinedCharacterGlyph(i) => Self::ExternallyDefinedCharacterGlyph(i),
+            AnyId::PreDefinedCharacterGlyph(i) => Self::PreDefinedCharacterGlyph(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DefinedGlyphSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DefinedSymbolSelectRef {
     ExternallyDefinedSymbol(ExternallyDefinedSymbolId),
     PreDefinedSymbol(PreDefinedSymbolId),
@@ -3321,6 +3534,31 @@ impl DocumentTypeRef {
         match a {
             AnyId::DocumentType(i) => Self::DocumentType(i),
             other => panic!("DocumentTypeRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DraughtingCalloutElementRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexUnitId),
+}
+impl DraughtingCalloutElementRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DraughtingCalloutElementRef ref -> {other:?}"),
         }
     }
 }
@@ -3518,6 +3756,25 @@ impl FillStyleSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum FontSelectRef {
+    ExternallyDefinedTextFont(ExternallyDefinedTextFontId),
+    PreDefinedTextFont(PreDefinedTextFontId),
+    TextFont(TextFontId),
+    Complex(ComplexUnitId),
+}
+impl FontSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ExternallyDefinedTextFont(i) => Self::ExternallyDefinedTextFont(i),
+            AnyId::PreDefinedTextFont(i) => Self::PreDefinedTextFont(i),
+            AnyId::TextFont(i) => Self::TextFont(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("FontSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeneralPropertyRef {
     GeneralProperty(GeneralPropertyId),
     Complex(ComplexUnitId),
@@ -3528,6 +3785,254 @@ impl GeneralPropertyRef {
             AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("GeneralPropertyRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeometricItemSpecificUsageSelectRef {
+    CommonDatum(CommonDatumId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    GeneralDatumReference(GeneralDatumReferenceId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    ShapeAspect(ShapeAspectId),
+    ShapeAspectRelationship(ShapeAspectRelationshipId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    Complex(ComplexUnitId),
+}
+impl GeometricItemSpecificUsageSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
+            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
+            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
+            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
+            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
+            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("GeometricItemSpecificUsageSelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeometricModelItemRef {
+    AdvancedFace(AdvancedFaceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    CoordinatesList(CoordinatesListId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
+    DefinedSymbol(DefinedSymbolId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    Direction(DirectionId),
+    DraughtingCallout(DraughtingCalloutId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
+    SeamCurve(SeamCurveId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolTarget(SymbolTargetId),
+    TessellatedCurveSet(TessellatedCurveSetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    Vector(VectorId),
+    VertexPoint(VertexPointId),
+    Complex(ComplexUnitId),
+}
+impl GeometricModelItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
+            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
+            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
+            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
+            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
+            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
+            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
+            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
+            AnyId::BezierCurve(i) => Self::BezierCurve(i),
+            AnyId::BezierSurface(i) => Self::BezierSurface(i),
+            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
+            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
+            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
+            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
+            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
+            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
+            AnyId::Circle(i) => Self::Circle(i),
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::Conic(i) => Self::Conic(i),
+            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
+            AnyId::Curve(i) => Self::Curve(i),
+            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
+            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
+            AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
+            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
+            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
+            AnyId::Ellipse(i) => Self::Ellipse(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
+            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
+            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
+            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
+            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
+            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
+            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
+            AnyId::Line(i) => Self::Line(i),
+            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
+            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::Pcurve(i) => Self::Pcurve(i),
+            AnyId::Placement(i) => Self::Placement(i),
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::Point(i) => Self::Point(i),
+            AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::Polyline(i) => Self::Polyline(i),
+            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
+            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
+            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
+            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
+            AnyId::SeamCurve(i) => Self::SeamCurve(i),
+            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
+            AnyId::SolidModel(i) => Self::SolidModel(i),
+            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
+            AnyId::Surface(i) => Self::Surface(i),
+            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
+            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
+            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
+            AnyId::SweptSurface(i) => Self::SweptSurface(i),
+            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
+            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
+            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
+            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
+            AnyId::UniformCurve(i) => Self::UniformCurve(i),
+            AnyId::UniformSurface(i) => Self::UniformSurface(i),
+            AnyId::Vector(i) => Self::Vector(i),
+            AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("GeometricModelItemRef ref -> {other:?}"),
         }
     }
 }
@@ -3550,6 +4055,7 @@ pub enum GeometricSetSelectRef {
     BoundedSurfaceCurve(BoundedSurfaceCurveId),
     CartesianPoint(CartesianPointId),
     Circle(CircleId),
+    CompositeCurve(CompositeCurveId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     Curve(CurveId),
@@ -3602,6 +4108,7 @@ impl GeometricSetSelectRef {
             AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
             AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
             AnyId::Circle(i) => Self::Circle(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::Curve(i) => Self::Curve(i),
@@ -3707,6 +4214,7 @@ pub enum IdAttributeSelectRef {
     CompositeShapeAspect(CompositeShapeAspectId),
     ConcentricityTolerance(ConcentricityToleranceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     CylindricityTolerance(CylindricityToleranceId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
@@ -3803,6 +4311,9 @@ impl IdAttributeSelectRef {
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
             AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
@@ -3898,6 +4409,81 @@ impl IdAttributeSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum InvisibleItemRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DraughtingCallout(DraughtingCalloutId),
+    DraughtingModel(DraughtingModelId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    PresentationLayerAssignment(PresentationLayerAssignmentId),
+    PresentationRepresentation(PresentationRepresentationId),
+    Representation(RepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    StyledItem(StyledItemId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexUnitId),
+}
+impl InvisibleItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
+            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
+            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
+            AnyId::ContextDependentOverRidingStyledItem(i) => {
+                Self::ContextDependentOverRidingStyledItem(i)
+            }
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
+            AnyId::PresentationLayerAssignment(i) => Self::PresentationLayerAssignment(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("InvisibleItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ItemDefinedTransformationRef {
     ItemDefinedTransformation(ItemDefinedTransformationId),
     Complex(ComplexUnitId),
@@ -3916,10 +4502,15 @@ impl ItemDefinedTransformationRef {
 pub enum LayeredItemRef {
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -3939,6 +4530,8 @@ pub enum LayeredItemRef {
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -3946,10 +4539,12 @@ pub enum LayeredItemRef {
     CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
+    DraughtingCallout(DraughtingCalloutId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
@@ -3997,6 +4592,7 @@ pub enum LayeredItemRef {
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
     RealRepresentationItem(RealRepresentationItemId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
     RepresentationItem(RepresentationItemId),
     SeamCurve(SeamCurveId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
@@ -4009,11 +4605,14 @@ pub enum LayeredItemRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -4033,10 +4632,15 @@ impl LayeredItemRef {
         match a {
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -4056,6 +4660,8 @@ impl LayeredItemRef {
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -4065,10 +4671,12 @@ impl LayeredItemRef {
             AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
             AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
@@ -4116,6 +4724,7 @@ impl LayeredItemRef {
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
             AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
             AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
@@ -4128,11 +4737,14 @@ impl LayeredItemRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -4474,6 +5086,23 @@ impl PersonRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum PlaneOrPlanarBoxRef {
+    PlanarBox(PlanarBoxId),
+    Plane(PlaneId),
+    Complex(ComplexUnitId),
+}
+impl PlaneOrPlanarBoxRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::PlanarBox(i) => Self::PlanarBox(i),
+            AnyId::Plane(i) => Self::Plane(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("PlaneOrPlanarBoxRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum PointRef {
     CartesianPoint(CartesianPointId),
     Point(PointId),
@@ -4781,10 +5410,15 @@ impl RepresentationContextReferenceRef {
 pub enum RepresentationItemRef {
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -4804,6 +5438,8 @@ pub enum RepresentationItemRef {
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -4811,10 +5447,12 @@ pub enum RepresentationItemRef {
     CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
+    DraughtingCallout(DraughtingCalloutId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
@@ -4861,6 +5499,7 @@ pub enum RepresentationItemRef {
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
     RealRepresentationItem(RealRepresentationItemId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
     RepresentationItem(RepresentationItemId),
     SeamCurve(SeamCurveId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
@@ -4873,11 +5512,14 @@ pub enum RepresentationItemRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -4897,10 +5539,15 @@ impl RepresentationItemRef {
         match a {
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -4920,6 +5567,8 @@ impl RepresentationItemRef {
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -4929,10 +5578,12 @@ impl RepresentationItemRef {
             AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
             AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
@@ -4979,6 +5630,7 @@ impl RepresentationItemRef {
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
             AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
             AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
@@ -4991,11 +5643,14 @@ impl RepresentationItemRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -5032,6 +5687,7 @@ impl RepresentationMapRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationOrRepresentationReferenceRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DraughtingModel(DraughtingModelId),
     GeometricallyBoundedWireframeShapeRepresentation(
@@ -5052,6 +5708,9 @@ impl RepresentationOrRepresentationReferenceRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
             AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
@@ -5077,6 +5736,7 @@ impl RepresentationOrRepresentationReferenceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DraughtingModel(DraughtingModelId),
     GeometricallyBoundedWireframeShapeRepresentation(
@@ -5096,6 +5756,9 @@ impl RepresentationRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
             AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
@@ -5268,6 +5931,39 @@ impl ShapeDimensionRepresentationRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ShapeModelRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    Complex(ComplexUnitId),
+}
+impl ShapeModelRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ShapeModelRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ShapeRepresentationRelationshipRef {
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
     Complex(ComplexUnitId),
@@ -5386,10 +6082,15 @@ pub enum StyleContextSelectRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -5409,19 +6110,24 @@ pub enum StyleContextSelectRef {
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
+    DraughtingCallout(DraughtingCalloutId),
     DraughtingModel(DraughtingModelId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -5480,6 +6186,7 @@ pub enum StyleContextSelectRef {
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
     RealRepresentationItem(RealRepresentationItemId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
     Representation(RepresentationId),
     RepresentationItem(RepresentationItemId),
     RepresentationRelationship(RepresentationRelationshipId),
@@ -5498,11 +6205,14 @@ pub enum StyleContextSelectRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -5523,10 +6233,15 @@ impl StyleContextSelectRef {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -5546,9 +6261,14 @@ impl StyleContextSelectRef {
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
@@ -5558,11 +6278,13 @@ impl StyleContextSelectRef {
             AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
@@ -5623,6 +6345,7 @@ impl StyleContextSelectRef {
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
             AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
             AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
@@ -5643,11 +6366,14 @@ impl StyleContextSelectRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -5669,24 +6395,34 @@ impl StyleContextSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyledItemRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     OverRidingStyledItem(OverRidingStyledItemId),
     StyledItem(StyledItemId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     Complex(ComplexUnitId),
 }
 impl StyledItemRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
+            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
             AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
+            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
             AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
             AnyId::StyledItem(i) => Self::StyledItem(i),
+            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("StyledItemRef ref -> {other:?}"),
         }
@@ -5697,8 +6433,11 @@ impl StyledItemRef {
 pub enum StyledItemTargetRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
     AnnotationSymbol(AnnotationSymbolId),
     AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
     Axis2Placement3d(Axis2Placement3dId),
@@ -5718,16 +6457,21 @@ pub enum StyledItemTargetRef {
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     Direction(DirectionId),
+    DraughtingCallout(DraughtingCalloutId),
     DraughtingModel(DraughtingModelId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -5779,6 +6523,7 @@ pub enum StyledItemTargetRef {
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
     Representation(RepresentationId),
     RepresentationReference(RepresentationReferenceId),
     SeamCurve(SeamCurveId),
@@ -5795,9 +6540,11 @@ pub enum StyledItemTargetRef {
     SymbolTarget(SymbolTargetId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -5817,8 +6564,11 @@ impl StyledItemTargetRef {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
             AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
             AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
             AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
             AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
             AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
@@ -5838,16 +6588,23 @@ impl StyledItemTargetRef {
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
             AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
             AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
             AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
@@ -5901,6 +6658,7 @@ impl StyledItemTargetRef {
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
@@ -5917,9 +6675,11 @@ impl StyledItemTargetRef {
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
             AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -6093,6 +6853,62 @@ impl SymbolTargetRef {
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("SymbolTargetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TessellatedItemRef {
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CoordinatesList(CoordinatesListId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
+    TessellatedCurveSet(TessellatedCurveSetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    Complex(ComplexUnitId),
+}
+impl TessellatedItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
+            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
+            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
+            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
+            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
+            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("TessellatedItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TextOrCharacterRef {
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    CompositeText(CompositeTextId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
+    TextLiteral(TextLiteralId),
+    Complex(ComplexUnitId),
+}
+impl TextOrCharacterRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AnnotationText(i) => Self::AnnotationText(i),
+            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
+            AnyId::CompositeText(i) => Self::CompositeText(i),
+            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
+            AnyId::TextLiteral(i) => Self::TextLiteral(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("TextOrCharacterRef ref -> {other:?}"),
         }
     }
 }
@@ -6516,10 +7332,35 @@ pub struct AnnotationCurveOccurrence {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationFillAreaOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+    pub fill_style_target: PointRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationPlaceholderOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+    pub role: AnnotationPlaceholderOccurrenceRole,
+    pub line_spacing: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationPlane {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: PlaneOrPlanarBoxRef,
+    pub elements: Option<Vec<AnnotationPlaneElementRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6541,6 +7382,21 @@ pub struct AnnotationText {
     pub name: String,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: Axis2PlacementRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationTextCharacter {
+    pub name: String,
+    pub mapping_source: RepresentationMapRef,
+    pub mapping_target: Axis2PlacementRef,
+    pub alignment: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationTextOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: AnnotationTextOccurrenceItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6917,6 +7773,13 @@ pub struct ComplexTriangulatedSurfaceSet {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CompositeCurve {
+    pub name: String,
+    pub segments: Vec<CompositeCurveSegmentRef>,
+    pub self_intersect: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompositeCurveSegment {
     pub transition: TransitionCode,
     pub same_sense: bool,
@@ -6937,6 +7800,12 @@ pub struct CompositeShapeAspect {
     pub description: Option<String>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeText {
+    pub name: String,
+    pub collected_text: Vec<TextOrCharacterRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6988,6 +7857,13 @@ pub struct ConicalSurface {
 pub struct ConnectedFaceSet {
     pub name: String,
     pub cfs_faces: Option<Vec<FaceRef>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConstructiveGeometryRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7187,6 +8063,13 @@ pub struct DatumTarget {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DefinedCharacterGlyph {
+    pub name: String,
+    pub definition: DefinedGlyphSelectRef,
+    pub placement: Axis2PlacementRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DefinedSymbol {
     pub name: String,
     pub definition: DefinedSymbolSelectRef,
@@ -7310,6 +8193,12 @@ pub struct DocumentType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingCallout {
+    pub name: String,
+    pub contents: Vec<DraughtingCalloutElementRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingModel {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
@@ -7376,6 +8265,12 @@ pub struct ExternalSource {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedCharacterGlyph {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ExternallyDefinedCurveFont {
     pub item_id: StringSelectValue,
     pub source: ExternalSourceRef,
@@ -7402,6 +8297,12 @@ pub struct ExternallyDefinedStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExternallyDefinedSymbol {
+    pub item_id: StringSelectValue,
+    pub source: ExternalSourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternallyDefinedTextFont {
     pub item_id: StringSelectValue,
     pub source: ExternalSourceRef,
 }
@@ -7556,6 +8457,15 @@ pub struct GeometricCurveSet {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct GeometricItemSpecificUsage {
+    pub name: String,
+    pub description: Option<String>,
+    pub definition: GeometricItemSpecificUsageSelectRef,
+    pub used_representation: ShapeModelRef,
+    pub identified_item: GeometricModelItemRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationContext {
     pub context_identifier: String,
     pub context_type: String,
@@ -7679,6 +8589,11 @@ pub struct IntersectionCurve {
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Invisibility {
+    pub invisible_items: Vec<InvisibleItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8116,6 +9031,11 @@ pub struct PositionTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedCharacterGlyph {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedColour {
     pub name: String,
 }
@@ -8142,6 +9062,11 @@ pub struct PreDefinedSurfaceSideStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSymbol {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedTextFont {
     pub name: String,
 }
 
@@ -8378,6 +9303,12 @@ pub struct RealLiteral {
 pub struct RealRepresentationItem {
     pub name: String,
     pub the_value: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepositionedTessellatedItem {
+    pub name: String,
+    pub location: Axis2Placement3dRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8737,6 +9668,13 @@ pub struct SymmetryTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedAnnotationOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentRef>,
+    pub item: StyledItemTargetRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedCurveSet {
     pub name: String,
     pub coordinates: CoordinatesListRef,
@@ -8750,6 +9688,12 @@ pub struct TessellatedFace {
     pub pnmax: i64,
     pub normals: Vec<Vec<f64>>,
     pub geometric_link: Option<FaceOrSurfaceRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedGeometricSet {
+    pub name: String,
+    pub children: Vec<TessellatedItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8768,6 +9712,23 @@ pub struct TessellatedSurfaceSet {
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
     pub normals: Vec<Vec<f64>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextFont {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextLiteral {
+    pub name: String,
+    pub literal: String,
+    pub placement: Axis2PlacementRef,
+    pub alignment: String,
+    pub path: TextPath,
+    pub font: FontSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -9009,9 +9970,16 @@ pub enum UnitPart {
     AdvancedBrepShapeRepresentation,
     AdvancedFace,
     AnnotationOccurrence,
+    AnnotationPlaceholderOccurrence {
+        role: AnnotationPlaceholderOccurrenceRole,
+        line_spacing: f64,
+    },
     AnnotationSymbol,
     AnnotationSymbolOccurrence,
     AnnotationText,
+    AnnotationTextCharacter {
+        alignment: String,
+    },
     ApplicationContextElement {
         name: String,
         frame_of_reference: ApplicationContextRef,
@@ -9105,12 +10073,19 @@ pub enum UnitPart {
         name: String,
     },
     CommonDatum,
+    CompositeCurve {
+        segments: Vec<CompositeCurveSegmentRef>,
+        self_intersect: Logical,
+    },
     CompositeCurveSegment {
         transition: TransitionCode,
         same_sense: bool,
         parent_curve: CurveRef,
     },
     CompositeShapeAspect,
+    CompositeText {
+        collected_text: Vec<TextOrCharacterRef>,
+    },
     ConfigurationEffectivity {
         configuration: ConfigurationDesignRef,
     },
@@ -9180,6 +10155,10 @@ pub enum UnitPart {
     DatumTarget {
         target_id: String,
     },
+    DefinedCharacterGlyph {
+        definition: DefinedGlyphSelectRef,
+        placement: Axis2PlacementRef,
+    },
     DefinedSymbol {
         definition: DefinedSymbolSelectRef,
         target: SymbolTargetRef,
@@ -9206,6 +10185,9 @@ pub enum UnitPart {
         kind: DocumentTypeRef,
     },
     DocumentFile,
+    DraughtingCallout {
+        contents: Vec<DraughtingCalloutElementRef>,
+    },
     DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont,
     Edge {
@@ -9227,6 +10209,7 @@ pub enum UnitPart {
     ExternalSource {
         source_id: StringSelectValue,
     },
+    ExternallyDefinedCharacterGlyph,
     ExternallyDefinedCurveFont,
     ExternallyDefinedHatchStyle,
     ExternallyDefinedItem {
@@ -9235,6 +10218,7 @@ pub enum UnitPart {
     },
     ExternallyDefinedStyle,
     ExternallyDefinedSymbol,
+    ExternallyDefinedTextFont,
     ExternallyDefinedTile,
     ExternallyDefinedTileStyle,
     Face {
@@ -9295,6 +10279,7 @@ pub enum UnitPart {
     GenericProductDefinitionReference {
         source: ExternalSourceRef,
     },
+    GeometricItemSpecificUsage,
     GeometricRepresentationContext {
         coordinate_space_dimension: i64,
     },
@@ -9338,6 +10323,9 @@ pub enum UnitPart {
     IntLiteral,
     IntegerRepresentationItem,
     IntersectionCurve,
+    Invisibility {
+        invisible_items: Vec<InvisibleItemRef>,
+    },
     ItemDefinedTransformation {
         name: String,
         description: Option<String>,
@@ -9434,6 +10422,7 @@ pub enum UnitPart {
         polygon: Vec<CartesianPointRef>,
     },
     PositionTolerance,
+    PreDefinedCharacterGlyph,
     PreDefinedColour,
     PreDefinedCurveFont,
     PreDefinedItem {
@@ -9442,6 +10431,7 @@ pub enum UnitPart {
     PreDefinedMarker,
     PreDefinedSurfaceSideStyle,
     PreDefinedSymbol,
+    PreDefinedTextFont,
     PreDefinedTile,
     PresentationRepresentation,
     PresentationSet,
@@ -9664,6 +10654,13 @@ pub enum UnitPart {
     },
     TessellatedItem,
     TessellatedStructuredItem,
+    TextLiteral {
+        literal: String,
+        placement: Axis2PlacementRef,
+        alignment: String,
+        path: TextPath,
+        font: FontSelectRef,
+    },
     TextStyle {
         name: String,
         character_appearance: CharacterStyleSelectRef,
@@ -9729,10 +10726,15 @@ pub struct Model {
     pub advanced_faces: Arena<AdvancedFace>,
     pub angularity_tolerances: Arena<AngularityTolerance>,
     pub annotation_curve_occurrences: Arena<AnnotationCurveOccurrence>,
+    pub annotation_fill_area_occurrences: Arena<AnnotationFillAreaOccurrence>,
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
+    pub annotation_placeholder_occurrences: Arena<AnnotationPlaceholderOccurrence>,
+    pub annotation_planes: Arena<AnnotationPlane>,
     pub annotation_symbols: Arena<AnnotationSymbol>,
     pub annotation_symbol_occurrences: Arena<AnnotationSymbolOccurrence>,
     pub annotation_texts: Arena<AnnotationText>,
+    pub annotation_text_characters: Arena<AnnotationTextCharacter>,
+    pub annotation_text_occurrences: Arena<AnnotationTextOccurrence>,
     pub application_contexts: Arena<ApplicationContext>,
     pub application_context_elements: Arena<ApplicationContextElement>,
     pub application_protocol_definitions: Arena<ApplicationProtocolDefinition>,
@@ -9784,9 +10786,11 @@ pub struct Model {
     pub common_datums: Arena<CommonDatum>,
     pub complex_triangulated_faces: Arena<ComplexTriangulatedFace>,
     pub complex_triangulated_surface_sets: Arena<ComplexTriangulatedSurfaceSet>,
+    pub composite_curves: Arena<CompositeCurve>,
     pub composite_curve_segments: Arena<CompositeCurveSegment>,
     pub composite_group_shape_aspects: Arena<CompositeGroupShapeAspect>,
     pub composite_shape_aspects: Arena<CompositeShapeAspect>,
+    pub composite_texts: Arena<CompositeText>,
     pub concentricity_tolerances: Arena<ConcentricityTolerance>,
     pub configuration_designs: Arena<ConfigurationDesign>,
     pub configuration_effectivitys: Arena<ConfigurationEffectivity>,
@@ -9794,6 +10798,7 @@ pub struct Model {
     pub conics: Arena<Conic>,
     pub conical_surfaces: Arena<ConicalSurface>,
     pub connected_face_sets: Arena<ConnectedFaceSet>,
+    pub constructive_geometry_representations: Arena<ConstructiveGeometryRepresentation>,
     pub context_dependent_over_riding_styled_items: Arena<ContextDependentOverRidingStyledItem>,
     pub context_dependent_shape_representations: Arena<ContextDependentShapeRepresentation>,
     pub context_dependent_units: Arena<ContextDependentUnit>,
@@ -9822,6 +10827,7 @@ pub struct Model {
     pub datum_reference_modifier_with_values: Arena<DatumReferenceModifierWithValue>,
     pub datum_systems: Arena<DatumSystem>,
     pub datum_targets: Arena<DatumTarget>,
+    pub defined_character_glyphs: Arena<DefinedCharacterGlyph>,
     pub defined_symbols: Arena<DefinedSymbol>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
     pub degenerate_toroidal_surfaces: Arena<DegenerateToroidalSurface>,
@@ -9839,6 +10845,7 @@ pub struct Model {
     pub documents: Arena<Document>,
     pub document_files: Arena<DocumentFile>,
     pub document_types: Arena<DocumentType>,
+    pub draughting_callouts: Arena<DraughtingCallout>,
     pub draughting_models: Arena<DraughtingModel>,
     pub draughting_pre_defined_colours: Arena<DraughtingPreDefinedColour>,
     pub draughting_pre_defined_curve_fonts: Arena<DraughtingPreDefinedCurveFont>,
@@ -9850,11 +10857,13 @@ pub struct Model {
     pub ellipses: Arena<Ellipse>,
     pub expressions: Arena<Expression>,
     pub external_sources: Arena<ExternalSource>,
+    pub externally_defined_character_glyphs: Arena<ExternallyDefinedCharacterGlyph>,
     pub externally_defined_curve_fonts: Arena<ExternallyDefinedCurveFont>,
     pub externally_defined_hatch_styles: Arena<ExternallyDefinedHatchStyle>,
     pub externally_defined_items: Arena<ExternallyDefinedItem>,
     pub externally_defined_styles: Arena<ExternallyDefinedStyle>,
     pub externally_defined_symbols: Arena<ExternallyDefinedSymbol>,
+    pub externally_defined_text_fonts: Arena<ExternallyDefinedTextFont>,
     pub externally_defined_tiles: Arena<ExternallyDefinedTile>,
     pub externally_defined_tile_styles: Arena<ExternallyDefinedTileStyle>,
     pub faces: Arena<Face>,
@@ -9878,6 +10887,7 @@ pub struct Model {
     pub generic_literals: Arena<GenericLiteral>,
     pub generic_product_definition_references: Arena<GenericProductDefinitionReference>,
     pub geometric_curve_sets: Arena<GeometricCurveSet>,
+    pub geometric_item_specific_usages: Arena<GeometricItemSpecificUsage>,
     pub geometric_representation_contexts: Arena<GeometricRepresentationContext>,
     pub geometric_representation_items: Arena<GeometricRepresentationItem>,
     pub geometric_sets: Arena<GeometricSet>,
@@ -9896,6 +10906,7 @@ pub struct Model {
     pub int_literals: Arena<IntLiteral>,
     pub integer_representation_items: Arena<IntegerRepresentationItem>,
     pub intersection_curves: Arena<IntersectionCurve>,
+    pub invisibilitys: Arena<Invisibility>,
     pub item_defined_transformations: Arena<ItemDefinedTransformation>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
     pub length_units: Arena<LengthUnit>,
@@ -9956,12 +10967,14 @@ pub struct Model {
     pub poly_loops: Arena<PolyLoop>,
     pub polylines: Arena<Polyline>,
     pub position_tolerances: Arena<PositionTolerance>,
+    pub pre_defined_character_glyphs: Arena<PreDefinedCharacterGlyph>,
     pub pre_defined_colours: Arena<PreDefinedColour>,
     pub pre_defined_curve_fonts: Arena<PreDefinedCurveFont>,
     pub pre_defined_items: Arena<PreDefinedItem>,
     pub pre_defined_markers: Arena<PreDefinedMarker>,
     pub pre_defined_surface_side_styles: Arena<PreDefinedSurfaceSideStyle>,
     pub pre_defined_symbols: Arena<PreDefinedSymbol>,
+    pub pre_defined_text_fonts: Arena<PreDefinedTextFont>,
     pub pre_defined_tiles: Arena<PreDefinedTile>,
     pub presentation_layer_assignments: Arena<PresentationLayerAssignment>,
     pub presentation_representations: Arena<PresentationRepresentation>,
@@ -9995,6 +11008,7 @@ pub struct Model {
     pub rational_b_spline_surfaces: Arena<RationalBSplineSurface>,
     pub real_literals: Arena<RealLiteral>,
     pub real_representation_items: Arena<RealRepresentationItem>,
+    pub repositioned_tessellated_items: Arena<RepositionedTessellatedItem>,
     pub representations: Arena<Representation>,
     pub representation_contexts: Arena<RepresentationContext>,
     pub representation_context_references: Arena<RepresentationContextReference>,
@@ -10053,11 +11067,15 @@ pub struct Model {
     pub symbol_styles: Arena<SymbolStyle>,
     pub symbol_targets: Arena<SymbolTarget>,
     pub symmetry_tolerances: Arena<SymmetryTolerance>,
+    pub tessellated_annotation_occurrences: Arena<TessellatedAnnotationOccurrence>,
     pub tessellated_curve_sets: Arena<TessellatedCurveSet>,
     pub tessellated_faces: Arena<TessellatedFace>,
+    pub tessellated_geometric_sets: Arena<TessellatedGeometricSet>,
     pub tessellated_items: Arena<TessellatedItem>,
     pub tessellated_structured_items: Arena<TessellatedStructuredItem>,
     pub tessellated_surface_sets: Arena<TessellatedSurfaceSet>,
+    pub text_fonts: Arena<TextFont>,
+    pub text_literals: Arena<TextLiteral>,
     pub text_styles: Arena<TextStyle>,
     pub text_style_for_defined_fonts: Arena<TextStyleForDefinedFont>,
     pub texture_style_specifications: Arena<TextureStyleSpecification>,

@@ -123,10 +123,15 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ADVANCED_FACE",
     "ANGULARITY_TOLERANCE",
     "ANNOTATION_CURVE_OCCURRENCE",
+    "ANNOTATION_FILL_AREA_OCCURRENCE",
     "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+    "ANNOTATION_PLANE",
     "ANNOTATION_SYMBOL",
     "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
+    "ANNOTATION_TEXT_CHARACTER",
+    "ANNOTATION_TEXT_OCCURRENCE",
     "APPLICATION_CONTEXT",
     "APPLICATION_CONTEXT_ELEMENT",
     "APPLICATION_PROTOCOL_DEFINITION",
@@ -177,9 +182,11 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "COMMON_DATUM",
     "COMPLEX_TRIANGULATED_FACE",
     "COMPLEX_TRIANGULATED_SURFACE_SET",
+    "COMPOSITE_CURVE",
     "COMPOSITE_CURVE_SEGMENT",
     "COMPOSITE_GROUP_SHAPE_ASPECT",
     "COMPOSITE_SHAPE_ASPECT",
+    "COMPOSITE_TEXT",
     "CONCENTRICITY_TOLERANCE",
     "CONFIGURATION_DESIGN",
     "CONFIGURATION_EFFECTIVITY",
@@ -187,6 +194,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONIC",
     "CONICAL_SURFACE",
     "CONNECTED_FACE_SET",
+    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
     "CONTEXT_DEPENDENT_UNIT",
@@ -215,6 +223,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DATUM_REFERENCE_MODIFIER_WITH_VALUE",
     "DATUM_SYSTEM",
     "DATUM_TARGET",
+    "DEFINED_CHARACTER_GLYPH",
     "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
     "DEGENERATE_TOROIDAL_SURFACE",
@@ -232,6 +241,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DOCUMENT",
     "DOCUMENT_FILE",
     "DOCUMENT_TYPE",
+    "DRAUGHTING_CALLOUT",
     "DRAUGHTING_MODEL",
     "DRAUGHTING_PRE_DEFINED_COLOUR",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
@@ -243,11 +253,13 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ELLIPSE",
     "EXPRESSION",
     "EXTERNAL_SOURCE",
+    "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
     "EXTERNALLY_DEFINED_CURVE_FONT",
     "EXTERNALLY_DEFINED_HATCH_STYLE",
     "EXTERNALLY_DEFINED_ITEM",
     "EXTERNALLY_DEFINED_STYLE",
     "EXTERNALLY_DEFINED_SYMBOL",
+    "EXTERNALLY_DEFINED_TEXT_FONT",
     "EXTERNALLY_DEFINED_TILE",
     "EXTERNALLY_DEFINED_TILE_STYLE",
     "FACE",
@@ -271,6 +283,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GENERIC_LITERAL",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
     "GEOMETRIC_CURVE_SET",
+    "GEOMETRIC_ITEM_SPECIFIC_USAGE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
     "GEOMETRIC_SET",
@@ -288,6 +301,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "INT_LITERAL",
     "INTEGER_REPRESENTATION_ITEM",
     "INTERSECTION_CURVE",
+    "INVISIBILITY",
     "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
@@ -347,12 +361,14 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "POLY_LOOP",
     "POLYLINE",
     "POSITION_TOLERANCE",
+    "PRE_DEFINED_CHARACTER_GLYPH",
     "PRE_DEFINED_COLOUR",
     "PRE_DEFINED_CURVE_FONT",
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
+    "PRE_DEFINED_TEXT_FONT",
     "PRE_DEFINED_TILE",
     "PRESENTATION_LAYER_ASSIGNMENT",
     "PRESENTATION_REPRESENTATION",
@@ -384,6 +400,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "RATIONAL_B_SPLINE_SURFACE",
     "REAL_LITERAL",
     "REAL_REPRESENTATION_ITEM",
+    "REPOSITIONED_TESSELLATED_ITEM",
     "REPRESENTATION",
     "REPRESENTATION_CONTEXT",
     "REPRESENTATION_CONTEXT_REFERENCE",
@@ -441,11 +458,15 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SYMBOL_STYLE",
     "SYMBOL_TARGET",
     "SYMMETRY_TOLERANCE",
+    "TESSELLATED_ANNOTATION_OCCURRENCE",
     "TESSELLATED_CURVE_SET",
     "TESSELLATED_FACE",
+    "TESSELLATED_GEOMETRIC_SET",
     "TESSELLATED_ITEM",
     "TESSELLATED_STRUCTURED_ITEM",
     "TESSELLATED_SURFACE_SET",
+    "TEXT_FONT",
+    "TEXT_LITERAL",
     "TEXT_STYLE",
     "TEXT_STYLE_FOR_DEFINED_FONT",
     "TEXTURE_STYLE_SPECIFICATION",
@@ -485,9 +506,11 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
     "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
     "ANNOTATION_SYMBOL",
     "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
+    "ANNOTATION_TEXT_CHARACTER",
     "APPLICATION_CONTEXT_ELEMENT",
     "APPROVAL_ASSIGNMENT",
     "ASCRIBABLE_STATE_RELATIONSHIP",
@@ -517,8 +540,10 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "COLOUR_RGB",
     "COLOUR_SPECIFICATION",
     "COMMON_DATUM",
+    "COMPOSITE_CURVE",
     "COMPOSITE_CURVE_SEGMENT",
     "COMPOSITE_SHAPE_ASPECT",
+    "COMPOSITE_TEXT",
     "CONFIGURATION_EFFECTIVITY",
     "CONFIGURATION_ITEM",
     "CONNECTED_FACE_SET",
@@ -539,6 +564,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DATUM_REFERENCE",
     "DATUM_SYSTEM",
     "DATUM_TARGET",
+    "DEFINED_CHARACTER_GLYPH",
     "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
     "DEGENERATE_TOROIDAL_SURFACE",
@@ -548,6 +574,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DIRECTION",
     "DOCUMENT",
     "DOCUMENT_FILE",
+    "DRAUGHTING_CALLOUT",
     "DRAUGHTING_PRE_DEFINED_COLOUR",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
     "EDGE",
@@ -557,11 +584,13 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "ELEMENTARY_SURFACE",
     "EXPRESSION",
     "EXTERNAL_SOURCE",
+    "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
     "EXTERNALLY_DEFINED_CURVE_FONT",
     "EXTERNALLY_DEFINED_HATCH_STYLE",
     "EXTERNALLY_DEFINED_ITEM",
     "EXTERNALLY_DEFINED_STYLE",
     "EXTERNALLY_DEFINED_SYMBOL",
+    "EXTERNALLY_DEFINED_TEXT_FONT",
     "EXTERNALLY_DEFINED_TILE",
     "EXTERNALLY_DEFINED_TILE_STYLE",
     "FACE",
@@ -582,6 +611,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "GENERIC_EXPRESSION",
     "GENERIC_LITERAL",
     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+    "GEOMETRIC_ITEM_SPECIFIC_USAGE",
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "GEOMETRIC_REPRESENTATION_ITEM",
     "GEOMETRIC_SET",
@@ -598,6 +628,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "INT_LITERAL",
     "INTEGER_REPRESENTATION_ITEM",
     "INTERSECTION_CURVE",
+    "INVISIBILITY",
     "ITEM_DEFINED_TRANSFORMATION",
     "LENGTH_MEASURE_WITH_UNIT",
     "LENGTH_UNIT",
@@ -637,12 +668,14 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "POINT_STYLE",
     "POLY_LOOP",
     "POSITION_TOLERANCE",
+    "PRE_DEFINED_CHARACTER_GLYPH",
     "PRE_DEFINED_COLOUR",
     "PRE_DEFINED_CURVE_FONT",
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
     "PRE_DEFINED_SURFACE_SIDE_STYLE",
     "PRE_DEFINED_SYMBOL",
+    "PRE_DEFINED_TEXT_FONT",
     "PRE_DEFINED_TILE",
     "PRESENTATION_REPRESENTATION",
     "PRESENTATION_SET",
@@ -715,6 +748,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "SYMBOL_TARGET",
     "TESSELLATED_ITEM",
     "TESSELLATED_STRUCTURED_ITEM",
+    "TEXT_LITERAL",
     "TEXT_STYLE",
     "TEXTURE_STYLE_SPECIFICATION",
     "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
@@ -889,10 +923,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -912,6 +951,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -919,10 +960,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -969,6 +1012,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -981,11 +1025,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -1114,6 +1161,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -1133,7 +1181,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        "ANNOTATION_OCCURRENCE" => &[
+        "ANNOTATION_FILL_AREA_OCCURRENCE" => &[
             RefSlot {
                 idx: 1,
                 name: "styles",
@@ -1147,8 +1195,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1168,16 +1219,21 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
                     "EDGE_CURVE",
@@ -1225,6 +1281,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SEAM_CURVE",
@@ -1241,9 +1298,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SYMBOL_TARGET",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -1260,25 +1319,33 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 complex_ok: true,
                 is_vec: false,
             },
-        ],
-        "ANNOTATION_SYMBOL" => &[
             RefSlot {
-                idx: 1,
-                name: "mapping_source",
-                allowed: &["REPRESENTATION_MAP"],
+                idx: 3,
+                name: "fill_style_target",
+                allowed: &["CARTESIAN_POINT", "POINT"],
                 complex_ok: true,
                 is_vec: false,
             },
+        ],
+        "ANNOTATION_OCCURRENCE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
             RefSlot {
                 idx: 2,
-                name: "mapping_target",
+                name: "item",
                 allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
-                    "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
-                    "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1298,6 +1365,326 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "DRAUGHTING_MODEL",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "DRAUGHTING_MODEL",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "ANNOTATION_PLANE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &["PLANAR_BOX", "PLANE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "elements",
+                allowed: &[
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "DRAUGHTING_CALLOUT",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "STYLED_ITEM",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+        ],
+        "ANNOTATION_SYMBOL" => &[
+            RefSlot {
+                idx: 1,
+                name: "mapping_source",
+                allowed: &["REPRESENTATION_MAP"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "mapping_target",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -1305,10 +1692,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -1355,6 +1744,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -1367,11 +1757,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -1418,6 +1811,44 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "mapping_target",
                 allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
                 complex_ok: false,
+                is_vec: false,
+            },
+        ],
+        "ANNOTATION_TEXT_CHARACTER" => &[
+            RefSlot {
+                idx: 1,
+                name: "mapping_source",
+                allowed: &["REPRESENTATION_MAP"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "mapping_target",
+                allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
+        "ANNOTATION_TEXT_OCCURRENCE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "COMPOSITE_TEXT",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "TEXT_LITERAL",
+                ],
+                complex_ok: true,
                 is_vec: false,
             },
         ],
@@ -1668,6 +2099,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -1913,10 +2345,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -1936,6 +2373,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -1943,10 +2382,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -1993,6 +2434,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -2005,11 +2447,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -2031,6 +2476,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -2197,6 +2643,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "COMPOSITE_CURVE" => &[RefSlot {
+            idx: 1,
+            name: "segments",
+            allowed: &["COMPOSITE_CURVE_SEGMENT"],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "COMPOSITE_CURVE_SEGMENT" => &[RefSlot {
             idx: 2,
             name: "parent_curve",
@@ -2208,6 +2661,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_PCURVE",
                 "BOUNDED_SURFACE_CURVE",
                 "CIRCLE",
+                "COMPOSITE_CURVE",
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
@@ -2238,6 +2692,19 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             allowed: &["PRODUCT_DEFINITION_SHAPE"],
             complex_ok: true,
             is_vec: false,
+        }],
+        "COMPOSITE_TEXT" => &[RefSlot {
+            idx: 1,
+            name: "collected_text",
+            allowed: &[
+                "ANNOTATION_TEXT",
+                "ANNOTATION_TEXT_CHARACTER",
+                "COMPOSITE_TEXT",
+                "DEFINED_CHARACTER_GLYPH",
+                "TEXT_LITERAL",
+            ],
+            complex_ok: true,
+            is_vec: true,
         }],
         "CONCENTRICITY_TOLERANCE" => &[
             RefSlot {
@@ -2352,22 +2819,22 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
-        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION" => &[
             RefSlot {
                 idx: 1,
-                name: "styles",
-                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
-                complex_ok: true,
-                is_vec: true,
-            },
-            RefSlot {
-                idx: 2,
-                name: "item",
+                name: "items",
                 allowed: &[
-                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -2387,16 +2854,171 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
                     "EDGE_CURVE",
@@ -2444,6 +3066,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SEAM_CURVE",
@@ -2460,9 +3083,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SYMBOL_TARGET",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -2484,11 +3109,16 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "over_ridden_style",
                 allowed: &[
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "OVER_RIDING_STYLED_ITEM",
                     "STYLED_ITEM",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2500,10 +3130,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -2523,19 +3158,24 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
                     "EDGE_CURVE",
@@ -2590,6 +3230,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION",
                     "REPRESENTATION_ITEM",
                     "REPRESENTATION_RELATIONSHIP",
@@ -2608,11 +3249,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -2923,6 +3567,25 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "DEFINED_CHARACTER_GLYPH" => &[
+            RefSlot {
+                idx: 1,
+                name: "definition",
+                allowed: &[
+                    "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
+                    "PRE_DEFINED_CHARACTER_GLYPH",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "placement",
+                allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "DEFINED_SYMBOL" => &[
             RefSlot {
                 idx: 1,
@@ -2946,10 +3609,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -2969,6 +3637,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -2976,10 +3646,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -3026,6 +3698,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -3038,11 +3711,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -3328,6 +4004,20 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "DRAUGHTING_CALLOUT" => &[RefSlot {
+            idx: 1,
+            name: "contents",
+            allowed: &[
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT_OCCURRENCE",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "DRAUGHTING_MODEL" => &[
             RefSlot {
                 idx: 1,
@@ -3335,10 +4025,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -3358,6 +4053,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -3365,10 +4062,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -3415,6 +4114,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -3427,11 +4127,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -3504,6 +4207,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -3543,6 +4247,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => &[RefSlot {
+            idx: 1,
+            name: "source",
+            allowed: &["EXTERNAL_SOURCE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "EXTERNALLY_DEFINED_CURVE_FONT" => &[RefSlot {
             idx: 1,
             name: "source",
@@ -3572,6 +4283,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             is_vec: false,
         }],
         "EXTERNALLY_DEFINED_SYMBOL" => &[RefSlot {
+            idx: 1,
+            name: "source",
+            allowed: &["EXTERNAL_SOURCE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        "EXTERNALLY_DEFINED_TEXT_FONT" => &[RefSlot {
             idx: 1,
             name: "source",
             allowed: &["EXTERNAL_SOURCE"],
@@ -3720,6 +4438,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -3921,6 +4640,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE_CURVE",
                 "CARTESIAN_POINT",
                 "CIRCLE",
+                "COMPOSITE_CURVE",
                 "CONIC",
                 "CONICAL_SURFACE",
                 "CURVE",
@@ -3956,6 +4676,149 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "GEOMETRIC_ITEM_SPECIFIC_USAGE" => &[
+            RefSlot {
+                idx: 2,
+                name: "definition",
+                allowed: &[
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DIMENSIONAL_LOCATION",
+                    "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_RELATIONSHIP",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "used_representation",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "identified_item",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "MANIFOLD_SOLID_BREP",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX_POINT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "GEOMETRIC_SET" => &[RefSlot {
             idx: 1,
             name: "elements",
@@ -3976,6 +4839,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE_CURVE",
                 "CARTESIAN_POINT",
                 "CIRCLE",
+                "COMPOSITE_CURVE",
                 "CONIC",
                 "CONICAL_SURFACE",
                 "CURVE",
@@ -4269,10 +5133,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -4292,6 +5161,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -4299,10 +5170,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -4349,6 +5222,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -4361,11 +5235,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -4440,6 +5317,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "COMPOSITE_SHAPE_ASPECT",
                 "CONCENTRICITY_TOLERANCE",
                 "CONNECTED_FACE_SET",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                 "CYLINDRICITY_TOLERANCE",
                 "DATUM",
                 "DATUM_FEATURE",
@@ -4528,6 +5406,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -4575,6 +5454,38 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "INVISIBILITY" => &[RefSlot {
+            idx: 0,
+            name: "invisible_items",
+            allowed: &[
+                "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
+                "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLANE",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT_OCCURRENCE",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                "DEFINITIONAL_REPRESENTATION",
+                "DRAUGHTING_CALLOUT",
+                "DRAUGHTING_MODEL",
+                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "OVER_RIDING_STYLED_ITEM",
+                "PRESENTATION_LAYER_ASSIGNMENT",
+                "PRESENTATION_REPRESENTATION",
+                "REPRESENTATION",
+                "SHAPE_DIMENSION_REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "STYLED_ITEM",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "ITEM_DEFINED_TRANSFORMATION" => &[
             RefSlot {
                 idx: 2,
@@ -4582,10 +5493,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -4605,6 +5521,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -4612,10 +5530,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -4662,6 +5582,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -4674,11 +5595,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -4701,10 +5625,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -4724,6 +5653,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -4731,10 +5662,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -4781,6 +5714,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -4793,11 +5727,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -4913,10 +5850,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -4936,6 +5878,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -4943,10 +5887,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -4993,6 +5939,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -5005,11 +5952,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -5054,10 +6004,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -5077,6 +6032,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -5084,10 +6041,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -5134,6 +6093,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -5146,11 +6106,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -5243,10 +6206,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -5266,6 +6234,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -5273,10 +6243,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -5323,6 +6295,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -5335,11 +6308,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -5577,8 +6553,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -5598,16 +6577,21 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
                     "EDGE_CURVE",
@@ -5655,6 +6639,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SEAM_CURVE",
@@ -5671,9 +6656,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SYMBOL_TARGET",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -5695,11 +6682,16 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "over_ridden_style",
                 allowed: &[
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "OVER_RIDING_STYLED_ITEM",
                     "STYLED_ITEM",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6034,10 +7026,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             allowed: &[
                 "ADVANCED_FACE",
                 "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT",
+                "ANNOTATION_TEXT_CHARACTER",
+                "ANNOTATION_TEXT_OCCURRENCE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -6057,6 +7054,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "CLOSED_SHELL",
                 "COMPLEX_TRIANGULATED_FACE",
                 "COMPLEX_TRIANGULATED_SURFACE_SET",
+                "COMPOSITE_CURVE",
+                "COMPOSITE_TEXT",
                 "CONIC",
                 "CONICAL_SURFACE",
                 "CONNECTED_FACE_SET",
@@ -6064,10 +7063,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "COORDINATES_LIST",
                 "CURVE",
                 "CYLINDRICAL_SURFACE",
+                "DEFINED_CHARACTER_GLYPH",
                 "DEFINED_SYMBOL",
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "DESCRIPTIVE_REPRESENTATION_ITEM",
                 "DIRECTION",
+                "DRAUGHTING_CALLOUT",
                 "EDGE",
                 "EDGE_CURVE",
                 "EDGE_LOOP",
@@ -6115,6 +7116,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "RATIONAL_B_SPLINE_CURVE",
                 "RATIONAL_B_SPLINE_SURFACE",
                 "REAL_REPRESENTATION_ITEM",
+                "REPOSITIONED_TESSELLATED_ITEM",
                 "REPRESENTATION_ITEM",
                 "SEAM_CURVE",
                 "SHELL_BASED_SURFACE_MODEL",
@@ -6127,11 +7129,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "SURFACE_OF_REVOLUTION",
                 "SWEPT_SURFACE",
                 "SYMBOL_TARGET",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
                 "TESSELLATED_CURVE_SET",
                 "TESSELLATED_FACE",
+                "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
+                "TEXT_LITERAL",
                 "TOPOLOGICAL_REPRESENTATION_ITEM",
                 "TOROIDAL_SURFACE",
                 "TRIMMED_CURVE",
@@ -6155,10 +7160,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6178,6 +7188,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -6185,10 +7197,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -6235,6 +7249,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -6247,11 +7262,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -6499,6 +7517,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DOCUMENT_FILE",
                 "FLATNESS_TOLERANCE",
                 "GENERAL_DATUM_REFERENCE",
+                "GEOMETRIC_ITEM_SPECIFIC_USAGE",
                 "GEOMETRIC_TOLERANCE",
                 "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
                 "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
@@ -6591,6 +7610,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DOCUMENT_FILE",
                 "FLATNESS_TOLERANCE",
                 "GENERAL_DATUM_REFERENCE",
+                "GEOMETRIC_ITEM_SPECIFIC_USAGE",
                 "GEOMETRIC_TOLERANCE",
                 "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
                 "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
@@ -6675,6 +7695,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "used_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -6703,6 +7724,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: true,
         }],
+        "REPOSITIONED_TESSELLATED_ITEM" => &[RefSlot {
+            idx: 1,
+            name: "location",
+            allowed: &["AXIS2_PLACEMENT_3D"],
+            complex_ok: false,
+            is_vec: false,
+        }],
         "REPRESENTATION" => &[
             RefSlot {
                 idx: 1,
@@ -6710,10 +7738,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6733,6 +7766,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -6740,10 +7775,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -6790,6 +7827,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -6802,11 +7840,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -6844,10 +7885,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -6867,6 +7913,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -6874,10 +7922,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -6924,6 +7974,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -6936,11 +7987,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -6962,6 +8016,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "mapped_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -6989,6 +8044,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -7008,6 +8064,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -7029,6 +8086,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -7048,6 +8106,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -7132,6 +8191,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -7281,6 +8341,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "used_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -7302,10 +8363,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -7325,6 +8391,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -7332,10 +8400,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -7382,6 +8452,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -7394,11 +8465,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -7436,10 +8510,15 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -7459,6 +8538,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -7466,10 +8547,12 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -7516,6 +8599,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -7528,11 +8612,14 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -7569,6 +8656,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -7588,6 +8676,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -7725,8 +8814,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -7746,16 +8838,21 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
                     "EDGE_CURVE",
@@ -7803,6 +8900,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SEAM_CURVE",
@@ -7819,9 +8917,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SYMBOL_TARGET",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -7851,6 +8951,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -7910,6 +9011,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -7947,6 +9049,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -8135,6 +9238,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_PCURVE",
                 "BOUNDED_SURFACE_CURVE",
                 "CIRCLE",
+                "COMPOSITE_CURVE",
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
@@ -8222,6 +9326,145 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "TESSELLATED_ANNOTATION_OCCURRENCE" => &[
+            RefSlot {
+                idx: 1,
+                name: "styles",
+                allowed: &["PRESENTATION_STYLE_ASSIGNMENT"],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "item",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
+                    "DRAUGHTING_MODEL",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "PRESENTATION_REPRESENTATION",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SEAM_CURVE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "TESSELLATED_CURVE_SET" => &[RefSlot {
             idx: 1,
             name: "coordinates",
@@ -8267,6 +9510,24 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "TESSELLATED_GEOMETRIC_SET" => &[RefSlot {
+            idx: 1,
+            name: "children",
+            allowed: &[
+                "COMPLEX_TRIANGULATED_FACE",
+                "COMPLEX_TRIANGULATED_SURFACE_SET",
+                "COORDINATES_LIST",
+                "REPOSITIONED_TESSELLATED_ITEM",
+                "TESSELLATED_CURVE_SET",
+                "TESSELLATED_FACE",
+                "TESSELLATED_GEOMETRIC_SET",
+                "TESSELLATED_ITEM",
+                "TESSELLATED_STRUCTURED_ITEM",
+                "TESSELLATED_SURFACE_SET",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "TESSELLATED_SURFACE_SET" => &[RefSlot {
             idx: 1,
             name: "coordinates",
@@ -8274,6 +9535,26 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "TEXT_LITERAL" => &[
+            RefSlot {
+                idx: 2,
+                name: "placement",
+                allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 5,
+                name: "font",
+                allowed: &[
+                    "EXTERNALLY_DEFINED_TEXT_FONT",
+                    "PRE_DEFINED_TEXT_FONT",
+                    "TEXT_FONT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "TEXT_STYLE" => &[RefSlot {
             idx: 1,
             name: "character_appearance",
@@ -8543,6 +9824,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -8924,10 +10206,15 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -8947,6 +10234,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -8954,10 +10243,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -9004,6 +10295,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -9016,11 +10308,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -9042,6 +10337,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -9056,6 +10352,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "COMPOSITE_CURVE" => &[RefSlot {
+            idx: 0,
+            name: "segments",
+            allowed: &["COMPOSITE_CURVE_SEGMENT"],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "COMPOSITE_CURVE_SEGMENT" => &[RefSlot {
             idx: 2,
             name: "parent_curve",
@@ -9067,6 +10370,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_PCURVE",
                 "BOUNDED_SURFACE_CURVE",
                 "CIRCLE",
+                "COMPOSITE_CURVE",
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
@@ -9083,6 +10387,19 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             ],
             complex_ok: true,
             is_vec: false,
+        }],
+        "COMPOSITE_TEXT" => &[RefSlot {
+            idx: 0,
+            name: "collected_text",
+            allowed: &[
+                "ANNOTATION_TEXT",
+                "ANNOTATION_TEXT_CHARACTER",
+                "COMPOSITE_TEXT",
+                "DEFINED_CHARACTER_GLYPH",
+                "TEXT_LITERAL",
+            ],
+            complex_ok: true,
+            is_vec: true,
         }],
         "CONFIGURATION_EFFECTIVITY" => &[RefSlot {
             idx: 0,
@@ -9112,10 +10429,15 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ADVANCED_BREP_SHAPE_REPRESENTATION",
                 "ADVANCED_FACE",
                 "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
                 "ANNOTATION_TEXT",
+                "ANNOTATION_TEXT_CHARACTER",
+                "ANNOTATION_TEXT_OCCURRENCE",
                 "AXIS1_PLACEMENT",
                 "AXIS2_PLACEMENT_2D",
                 "AXIS2_PLACEMENT_3D",
@@ -9135,19 +10457,24 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CLOSED_SHELL",
                 "COMPLEX_TRIANGULATED_FACE",
                 "COMPLEX_TRIANGULATED_SURFACE_SET",
+                "COMPOSITE_CURVE",
+                "COMPOSITE_TEXT",
                 "CONIC",
                 "CONICAL_SURFACE",
                 "CONNECTED_FACE_SET",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                 "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
                 "COORDINATES_LIST",
                 "CURVE",
                 "CYLINDRICAL_SURFACE",
+                "DEFINED_CHARACTER_GLYPH",
                 "DEFINED_SYMBOL",
                 "DEFINITIONAL_REPRESENTATION",
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "DESCRIPTIVE_REPRESENTATION_ITEM",
                 "DIRECTION",
+                "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
                 "EDGE",
                 "EDGE_CURVE",
@@ -9202,6 +10529,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "RATIONAL_B_SPLINE_CURVE",
                 "RATIONAL_B_SPLINE_SURFACE",
                 "REAL_REPRESENTATION_ITEM",
+                "REPOSITIONED_TESSELLATED_ITEM",
                 "REPRESENTATION",
                 "REPRESENTATION_ITEM",
                 "REPRESENTATION_RELATIONSHIP",
@@ -9220,11 +10548,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "SURFACE_OF_REVOLUTION",
                 "SWEPT_SURFACE",
                 "SYMBOL_TARGET",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
                 "TESSELLATED_CURVE_SET",
                 "TESSELLATED_FACE",
+                "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
+                "TEXT_LITERAL",
                 "TOPOLOGICAL_REPRESENTATION_ITEM",
                 "TOROIDAL_SURFACE",
                 "TRIMMED_CURVE",
@@ -9362,6 +10693,25 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: true,
         }],
+        "DEFINED_CHARACTER_GLYPH" => &[
+            RefSlot {
+                idx: 0,
+                name: "definition",
+                allowed: &[
+                    "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
+                    "PRE_DEFINED_CHARACTER_GLYPH",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "placement",
+                allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "DEFINED_SYMBOL" => &[
             RefSlot {
                 idx: 0,
@@ -9414,6 +10764,20 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "DRAUGHTING_CALLOUT" => &[RefSlot {
+            idx: 0,
+            name: "contents",
+            allowed: &[
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT_OCCURRENCE",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "EDGE" => &[
             RefSlot {
                 idx: 0,
@@ -9441,6 +10805,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_PCURVE",
                 "BOUNDED_SURFACE_CURVE",
                 "CIRCLE",
+                "COMPOSITE_CURVE",
                 "CONIC",
                 "CURVE",
                 "ELLIPSE",
@@ -9571,6 +10936,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -9681,6 +11047,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE_CURVE",
                 "CARTESIAN_POINT",
                 "CIRCLE",
+                "COMPOSITE_CURVE",
                 "CONIC",
                 "CONICAL_SURFACE",
                 "CURVE",
@@ -9805,6 +11172,38 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "INVISIBILITY" => &[RefSlot {
+            idx: 0,
+            name: "invisible_items",
+            allowed: &[
+                "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
+                "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLANE",
+                "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT_OCCURRENCE",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                "DEFINITIONAL_REPRESENTATION",
+                "DRAUGHTING_CALLOUT",
+                "DRAUGHTING_MODEL",
+                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "OVER_RIDING_STYLED_ITEM",
+                "PRESENTATION_LAYER_ASSIGNMENT",
+                "PRESENTATION_REPRESENTATION",
+                "REPRESENTATION",
+                "SHAPE_DIMENSION_REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "STYLED_ITEM",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "ITEM_DEFINED_TRANSFORMATION" => &[
             RefSlot {
                 idx: 2,
@@ -9812,10 +11211,15 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -9835,6 +11239,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -9842,10 +11248,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -9892,6 +11300,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -9904,11 +11313,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -9931,10 +11343,15 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -9954,6 +11371,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -9961,10 +11380,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -10011,6 +11432,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -10023,11 +11445,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -10066,10 +11491,15 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -10089,6 +11519,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -10096,10 +11528,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -10146,6 +11580,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -10158,11 +11593,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -10238,11 +11676,16 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             name: "over_ridden_style",
             allowed: &[
                 "ANNOTATION_CURVE_OCCURRENCE",
+                "ANNOTATION_FILL_AREA_OCCURRENCE",
                 "ANNOTATION_OCCURRENCE",
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                "ANNOTATION_PLANE",
                 "ANNOTATION_SYMBOL_OCCURRENCE",
+                "ANNOTATION_TEXT_OCCURRENCE",
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                 "OVER_RIDING_STYLED_ITEM",
                 "STYLED_ITEM",
+                "TESSELLATED_ANNOTATION_OCCURRENCE",
             ],
             complex_ok: true,
             is_vec: false,
@@ -10550,6 +11993,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DOCUMENT_FILE",
                 "FLATNESS_TOLERANCE",
                 "GENERAL_DATUM_REFERENCE",
+                "GEOMETRIC_ITEM_SPECIFIC_USAGE",
                 "GEOMETRIC_TOLERANCE",
                 "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
                 "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
@@ -10618,6 +12062,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "used_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -10639,10 +12084,15 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -10662,6 +12112,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -10669,10 +12121,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -10719,6 +12173,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -10731,11 +12186,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -10773,10 +12231,15 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -10796,6 +12259,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
@@ -10803,10 +12268,12 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "EDGE",
                     "EDGE_CURVE",
                     "EDGE_LOOP",
@@ -10853,6 +12320,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION_ITEM",
                     "SEAM_CURVE",
                     "SHELL_BASED_SURFACE_MODEL",
@@ -10865,11 +12333,14 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SURFACE_OF_REVOLUTION",
                     "SWEPT_SURFACE",
                     "SYMBOL_TARGET",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -10891,6 +12362,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "mapped_representation",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -10918,6 +12390,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_1",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -10937,6 +12410,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 name: "rep_2",
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
@@ -11059,8 +12533,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
                     "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
                     "AXIS1_PLACEMENT",
                     "AXIS2_PLACEMENT_2D",
                     "AXIS2_PLACEMENT_3D",
@@ -11080,16 +12557,21 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CLOSED_SHELL",
                     "COMPLEX_TRIANGULATED_FACE",
                     "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
                     "CONIC",
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "COORDINATES_LIST",
                     "CURVE",
                     "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DIRECTION",
+                    "DRAUGHTING_CALLOUT",
                     "DRAUGHTING_MODEL",
                     "EDGE",
                     "EDGE_CURVE",
@@ -11137,6 +12619,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
+                    "REPOSITIONED_TESSELLATED_ITEM",
                     "REPRESENTATION",
                     "REPRESENTATION_REFERENCE",
                     "SEAM_CURVE",
@@ -11153,9 +12636,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "SYMBOL_TARGET",
                     "TESSELLATED_CURVE_SET",
                     "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
                     "TOPOLOGICAL_REPRESENTATION_ITEM",
                     "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
@@ -11185,6 +12670,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_PCURVE",
                     "BOUNDED_SURFACE_CURVE",
                     "CIRCLE",
+                    "COMPOSITE_CURVE",
                     "CONIC",
                     "CURVE",
                     "ELLIPSE",
@@ -11334,6 +12820,26 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "TEXT_LITERAL" => &[
+            RefSlot {
+                idx: 1,
+                name: "placement",
+                allowed: &["AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "font",
+                allowed: &[
+                    "EXTERNALLY_DEFINED_TEXT_FONT",
+                    "PRE_DEFINED_TEXT_FONT",
+                    "TEXT_FONT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "TEXT_STYLE" => &[RefSlot {
             idx: 1,
             name: "character_appearance",
@@ -11486,11 +12992,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_angularity_tolerances: Vec<(AngularityToleranceId, u64)> = Vec::new();
     let mut pending_annotation_curve_occurrences: Vec<(AnnotationCurveOccurrenceId, u64)> =
         Vec::new();
+    let mut pending_annotation_fill_area_occurrences: Vec<(AnnotationFillAreaOccurrenceId, u64)> =
+        Vec::new();
     let mut pending_annotation_occurrences: Vec<(AnnotationOccurrenceId, u64)> = Vec::new();
+    let mut pending_annotation_placeholder_occurrences: Vec<(
+        AnnotationPlaceholderOccurrenceId,
+        u64,
+    )> = Vec::new();
+    let mut pending_annotation_planes: Vec<(AnnotationPlaneId, u64)> = Vec::new();
     let mut pending_annotation_symbols: Vec<(AnnotationSymbolId, u64)> = Vec::new();
     let mut pending_annotation_symbol_occurrences: Vec<(AnnotationSymbolOccurrenceId, u64)> =
         Vec::new();
     let mut pending_annotation_texts: Vec<(AnnotationTextId, u64)> = Vec::new();
+    let mut pending_annotation_text_characters: Vec<(AnnotationTextCharacterId, u64)> = Vec::new();
+    let mut pending_annotation_text_occurrences: Vec<(AnnotationTextOccurrenceId, u64)> =
+        Vec::new();
     let mut pending_application_context_elements: Vec<(ApplicationContextElementId, u64)> =
         Vec::new();
     let mut pending_application_protocol_definitions: Vec<(ApplicationProtocolDefinitionId, u64)> =
@@ -11549,10 +13065,12 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_complex_triangulated_faces: Vec<(ComplexTriangulatedFaceId, u64)> = Vec::new();
     let mut pending_complex_triangulated_surface_sets: Vec<(ComplexTriangulatedSurfaceSetId, u64)> =
         Vec::new();
+    let mut pending_composite_curves: Vec<(CompositeCurveId, u64)> = Vec::new();
     let mut pending_composite_curve_segments: Vec<(CompositeCurveSegmentId, u64)> = Vec::new();
     let mut pending_composite_group_shape_aspects: Vec<(CompositeGroupShapeAspectId, u64)> =
         Vec::new();
     let mut pending_composite_shape_aspects: Vec<(CompositeShapeAspectId, u64)> = Vec::new();
+    let mut pending_composite_texts: Vec<(CompositeTextId, u64)> = Vec::new();
     let mut pending_concentricity_tolerances: Vec<(ConcentricityToleranceId, u64)> = Vec::new();
     let mut pending_configuration_designs: Vec<(ConfigurationDesignId, u64)> = Vec::new();
     let mut pending_configuration_effectivitys: Vec<(ConfigurationEffectivityId, u64)> = Vec::new();
@@ -11560,6 +13078,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_conics: Vec<(ConicId, u64)> = Vec::new();
     let mut pending_conical_surfaces: Vec<(ConicalSurfaceId, u64)> = Vec::new();
     let mut pending_connected_face_sets: Vec<(ConnectedFaceSetId, u64)> = Vec::new();
+    let mut pending_constructive_geometry_representations: Vec<(
+        ConstructiveGeometryRepresentationId,
+        u64,
+    )> = Vec::new();
     let mut pending_context_dependent_over_riding_styled_items: Vec<(
         ContextDependentOverRidingStyledItemId,
         u64,
@@ -11592,6 +13114,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_datum_systems: Vec<(DatumSystemId, u64)> = Vec::new();
     let mut pending_datum_targets: Vec<(DatumTargetId, u64)> = Vec::new();
+    let mut pending_defined_character_glyphs: Vec<(DefinedCharacterGlyphId, u64)> = Vec::new();
     let mut pending_defined_symbols: Vec<(DefinedSymbolId, u64)> = Vec::new();
     let mut pending_definitional_representations: Vec<(DefinitionalRepresentationId, u64)> =
         Vec::new();
@@ -11611,12 +13134,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_dimensional_size_with_paths: Vec<(DimensionalSizeWithPathId, u64)> = Vec::new();
     let mut pending_documents: Vec<(DocumentId, u64)> = Vec::new();
     let mut pending_document_files: Vec<(DocumentFileId, u64)> = Vec::new();
+    let mut pending_draughting_callouts: Vec<(DraughtingCalloutId, u64)> = Vec::new();
     let mut pending_draughting_models: Vec<(DraughtingModelId, u64)> = Vec::new();
     let mut pending_edges: Vec<(EdgeId, u64)> = Vec::new();
     let mut pending_edge_curves: Vec<(EdgeCurveId, u64)> = Vec::new();
     let mut pending_edge_loops: Vec<(EdgeLoopId, u64)> = Vec::new();
     let mut pending_elementary_surfaces: Vec<(ElementarySurfaceId, u64)> = Vec::new();
     let mut pending_ellipses: Vec<(EllipseId, u64)> = Vec::new();
+    let mut pending_externally_defined_character_glyphs: Vec<(
+        ExternallyDefinedCharacterGlyphId,
+        u64,
+    )> = Vec::new();
     let mut pending_externally_defined_curve_fonts: Vec<(ExternallyDefinedCurveFontId, u64)> =
         Vec::new();
     let mut pending_externally_defined_hatch_styles: Vec<(ExternallyDefinedHatchStyleId, u64)> =
@@ -11624,6 +13152,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_externally_defined_items: Vec<(ExternallyDefinedItemId, u64)> = Vec::new();
     let mut pending_externally_defined_styles: Vec<(ExternallyDefinedStyleId, u64)> = Vec::new();
     let mut pending_externally_defined_symbols: Vec<(ExternallyDefinedSymbolId, u64)> = Vec::new();
+    let mut pending_externally_defined_text_fonts: Vec<(ExternallyDefinedTextFontId, u64)> =
+        Vec::new();
     let mut pending_externally_defined_tiles: Vec<(ExternallyDefinedTileId, u64)> = Vec::new();
     let mut pending_externally_defined_tile_styles: Vec<(ExternallyDefinedTileStyleId, u64)> =
         Vec::new();
@@ -11656,6 +13186,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_geometric_curve_sets: Vec<(GeometricCurveSetId, u64)> = Vec::new();
+    let mut pending_geometric_item_specific_usages: Vec<(GeometricItemSpecificUsageId, u64)> =
+        Vec::new();
     let mut pending_geometric_sets: Vec<(GeometricSetId, u64)> = Vec::new();
     let mut pending_geometric_tolerances: Vec<(GeometricToleranceId, u64)> = Vec::new();
     let mut pending_geometric_tolerance_with_datum_references: Vec<(
@@ -11690,6 +13222,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_id_attributes: Vec<(IdAttributeId, u64)> = Vec::new();
     let mut pending_intersection_curves: Vec<(IntersectionCurveId, u64)> = Vec::new();
+    let mut pending_invisibilitys: Vec<(InvisibilityId, u64)> = Vec::new();
     let mut pending_item_defined_transformations: Vec<(ItemDefinedTransformationId, u64)> =
         Vec::new();
     let mut pending_length_measure_with_units: Vec<(LengthMeasureWithUnitId, u64)> = Vec::new();
@@ -11805,6 +13338,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_quasi_uniform_surfaces: Vec<(QuasiUniformSurfaceId, u64)> = Vec::new();
     let mut pending_rational_b_spline_curves: Vec<(RationalBSplineCurveId, u64)> = Vec::new();
     let mut pending_rational_b_spline_surfaces: Vec<(RationalBSplineSurfaceId, u64)> = Vec::new();
+    let mut pending_repositioned_tessellated_items: Vec<(RepositionedTessellatedItemId, u64)> =
+        Vec::new();
     let mut pending_representations: Vec<(RepresentationId, u64)> = Vec::new();
     let mut pending_representation_maps: Vec<(RepresentationMapId, u64)> = Vec::new();
     let mut pending_representation_references: Vec<(RepresentationReferenceId, u64)> = Vec::new();
@@ -11868,9 +13403,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_symbol_styles: Vec<(SymbolStyleId, u64)> = Vec::new();
     let mut pending_symbol_targets: Vec<(SymbolTargetId, u64)> = Vec::new();
     let mut pending_symmetry_tolerances: Vec<(SymmetryToleranceId, u64)> = Vec::new();
+    let mut pending_tessellated_annotation_occurrences: Vec<(
+        TessellatedAnnotationOccurrenceId,
+        u64,
+    )> = Vec::new();
     let mut pending_tessellated_curve_sets: Vec<(TessellatedCurveSetId, u64)> = Vec::new();
     let mut pending_tessellated_faces: Vec<(TessellatedFaceId, u64)> = Vec::new();
+    let mut pending_tessellated_geometric_sets: Vec<(TessellatedGeometricSetId, u64)> = Vec::new();
     let mut pending_tessellated_surface_sets: Vec<(TessellatedSurfaceSetId, u64)> = Vec::new();
+    let mut pending_text_literals: Vec<(TextLiteralId, u64)> = Vec::new();
     let mut pending_text_styles: Vec<(TextStyleId, u64)> = Vec::new();
     let mut pending_text_style_for_defined_fonts: Vec<(TextStyleForDefinedFontId, u64)> =
         Vec::new();
@@ -12193,6 +13734,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "ANNOTATION_FILL_AREA_OCCURRENCE" => {
+                let v = AnnotationFillAreaOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                    fill_style_target: PointRef::CartesianPoint(CartesianPointId(usize::MAX)),
+                };
+                let aid =
+                    AnnotationFillAreaOccurrenceId(model.annotation_fill_area_occurrences.push(v));
+                idmap.insert(id, AnyId::AnnotationFillAreaOccurrence(aid));
+                pending_annotation_fill_area_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "ANNOTATION_OCCURRENCE" => {
                 let v = AnnotationOccurrence {
                     name: as_str(&attributes[0]),
@@ -12204,6 +13761,41 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = AnnotationOccurrenceId(model.annotation_occurrences.push(v));
                 idmap.insert(id, AnyId::AnnotationOccurrence(aid));
                 pending_annotation_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_PLACEHOLDER_OCCURRENCE" => {
+                let v = AnnotationPlaceholderOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                    role: match &attributes[3] {
+                        Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s)
+                            .expect("annotation_placeholder_occurrence_role"),
+                        other => panic!("enum annotation_placeholder_occurrence_role: {other:?}"),
+                    },
+                    line_spacing: as_real(&attributes[4]),
+                };
+                let aid = AnnotationPlaceholderOccurrenceId(
+                    model.annotation_placeholder_occurrences.push(v),
+                );
+                idmap.insert(id, AnyId::AnnotationPlaceholderOccurrence(aid));
+                pending_annotation_placeholder_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_PLANE" => {
+                let v = AnnotationPlane {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: PlaneOrPlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)),
+                    elements: None,
+                };
+                let aid = AnnotationPlaneId(model.annotation_planes.push(v));
+                idmap.insert(id, AnyId::AnnotationPlane(aid));
+                pending_annotation_planes.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -12248,6 +13840,37 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = AnnotationTextId(model.annotation_texts.push(v));
                 idmap.insert(id, AnyId::AnnotationText(aid));
                 pending_annotation_texts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_TEXT_CHARACTER" => {
+                let v = AnnotationTextCharacter {
+                    name: as_str(&attributes[0]),
+                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
+                        usize::MAX,
+                    )),
+                    mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(
+                        usize::MAX,
+                    )),
+                    alignment: as_str(&attributes[3]),
+                };
+                let aid = AnnotationTextCharacterId(model.annotation_text_characters.push(v));
+                idmap.insert(id, AnyId::AnnotationTextCharacter(aid));
+                pending_annotation_text_characters.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ANNOTATION_TEXT_OCCURRENCE" => {
+                let v = AnnotationTextOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: AnnotationTextOccurrenceItemRef::AnnotationText(AnnotationTextId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = AnnotationTextOccurrenceId(model.annotation_text_occurrences.push(v));
+                idmap.insert(id, AnyId::AnnotationTextOccurrence(aid));
+                pending_annotation_text_occurrences.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -13073,6 +14696,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "COMPOSITE_CURVE" => {
+                let v = CompositeCurve {
+                    name: as_str(&attributes[0]),
+                    segments: Vec::new(),
+                    self_intersect: as_logical(&attributes[2]),
+                };
+                let aid = CompositeCurveId(model.composite_curves.push(v));
+                idmap.insert(id, AnyId::CompositeCurve(aid));
+                pending_composite_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "COMPOSITE_CURVE_SEGMENT" => {
                 let v = CompositeCurveSegment {
                     transition: match &attributes[0] {
@@ -13121,6 +14756,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = CompositeShapeAspectId(model.composite_shape_aspects.push(v));
                 idmap.insert(id, AnyId::CompositeShapeAspect(aid));
                 pending_composite_shape_aspects.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "COMPOSITE_TEXT" => {
+                let v = CompositeText {
+                    name: as_str(&attributes[0]),
+                    collected_text: Vec::new(),
+                };
+                let aid = CompositeTextId(model.composite_texts.push(v));
+                idmap.insert(id, AnyId::CompositeText(aid));
+                pending_composite_texts.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -13226,6 +14872,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ConnectedFaceSetId(model.connected_face_sets.push(v));
                 idmap.insert(id, AnyId::ConnectedFaceSet(aid));
                 pending_connected_face_sets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CONSTRUCTIVE_GEOMETRY_REPRESENTATION" => {
+                let v = ConstructiveGeometryRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = ConstructiveGeometryRepresentationId(
+                    model.constructive_geometry_representations.push(v),
+                );
+                idmap.insert(id, AnyId::ConstructiveGeometryRepresentation(aid));
+                pending_constructive_geometry_representations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -13648,6 +15310,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DEFINED_CHARACTER_GLYPH" => {
+                let v = DefinedCharacterGlyph {
+                    name: as_str(&attributes[0]),
+                    definition: DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(
+                        ExternallyDefinedCharacterGlyphId(usize::MAX),
+                    ),
+                    placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+                };
+                let aid = DefinedCharacterGlyphId(model.defined_character_glyphs.push(v));
+                idmap.insert(id, AnyId::DefinedCharacterGlyph(aid));
+                pending_defined_character_glyphs.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DEFINED_SYMBOL" => {
                 let v = DefinedSymbol {
                     name: as_str(&attributes[0]),
@@ -13884,6 +15560,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DRAUGHTING_CALLOUT" => {
+                let v = DraughtingCallout {
+                    name: as_str(&attributes[0]),
+                    contents: Vec::new(),
+                };
+                let aid = DraughtingCalloutId(model.draughting_callouts.push(v));
+                idmap.insert(id, AnyId::DraughtingCallout(aid));
+                pending_draughting_callouts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DRAUGHTING_MODEL" => {
                 let v = DraughtingModel {
                     name: as_str(&attributes[0]),
@@ -14005,6 +15692,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => {
+                let v = ExternallyDefinedCharacterGlyph {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                };
+                let aid = ExternallyDefinedCharacterGlyphId(
+                    model.externally_defined_character_glyphs.push(v),
+                );
+                idmap.insert(id, AnyId::ExternallyDefinedCharacterGlyph(aid));
+                pending_externally_defined_character_glyphs.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "EXTERNALLY_DEFINED_CURVE_FONT" => {
                 let v = ExternallyDefinedCurveFont {
                     item_id: read_string_select(&attributes[0]),
@@ -14060,6 +15760,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ExternallyDefinedSymbolId(model.externally_defined_symbols.push(v));
                 idmap.insert(id, AnyId::ExternallyDefinedSymbol(aid));
                 pending_externally_defined_symbols.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "EXTERNALLY_DEFINED_TEXT_FONT" => {
+                let v = ExternallyDefinedTextFont {
+                    item_id: read_string_select(&attributes[0]),
+                    source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+                };
+                let aid = ExternallyDefinedTextFontId(model.externally_defined_text_fonts.push(v));
+                idmap.insert(id, AnyId::ExternallyDefinedTextFont(aid));
+                pending_externally_defined_text_fonts.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -14368,6 +16079,30 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "GEOMETRIC_ITEM_SPECIFIC_USAGE" => {
+                let v = GeometricItemSpecificUsage {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    definition: GeometricItemSpecificUsageSelectRef::CommonDatum(CommonDatumId(
+                        usize::MAX,
+                    )),
+                    used_representation: ShapeModelRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                    identified_item: GeometricModelItemRef::AdvancedFace(AdvancedFaceId(
+                        usize::MAX,
+                    )),
+                };
+                let aid =
+                    GeometricItemSpecificUsageId(model.geometric_item_specific_usages.push(v));
+                idmap.insert(id, AnyId::GeometricItemSpecificUsage(aid));
+                pending_geometric_item_specific_usages.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "GEOMETRIC_REPRESENTATION_CONTEXT" => {
                 let v = GeometricRepresentationContext {
                     context_identifier: as_str(&attributes[0]),
@@ -14661,6 +16396,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = IntersectionCurveId(model.intersection_curves.push(v));
                 idmap.insert(id, AnyId::IntersectionCurve(aid));
                 pending_intersection_curves.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "INVISIBILITY" => {
+                let v = Invisibility {
+                    invisible_items: Vec::new(),
+                };
+                let aid = InvisibilityId(model.invisibilitys.push(v));
+                idmap.insert(id, AnyId::Invisibility(aid));
+                pending_invisibilitys.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -15659,6 +17404,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRE_DEFINED_CHARACTER_GLYPH" => {
+                let v = PreDefinedCharacterGlyph {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedCharacterGlyphId(model.pre_defined_character_glyphs.push(v));
+                idmap.insert(id, AnyId::PreDefinedCharacterGlyph(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRE_DEFINED_COLOUR" => {
                 let v = PreDefinedColour {
                     name: as_str(&attributes[0]),
@@ -15711,6 +17465,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = PreDefinedSymbolId(model.pre_defined_symbols.push(v));
                 idmap.insert(id, AnyId::PreDefinedSymbol(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRE_DEFINED_TEXT_FONT" => {
+                let v = PreDefinedTextFont {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedTextFontId(model.pre_defined_text_fonts.push(v));
+                idmap.insert(id, AnyId::PreDefinedTextFont(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -16241,6 +18004,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 };
                 let aid = RealRepresentationItemId(model.real_representation_items.push(v));
                 idmap.insert(id, AnyId::RealRepresentationItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "REPOSITIONED_TESSELLATED_ITEM" => {
+                let v = RepositionedTessellatedItem {
+                    name: as_str(&attributes[0]),
+                    location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+                };
+                let aid =
+                    RepositionedTessellatedItemId(model.repositioned_tessellated_items.push(v));
+                idmap.insert(id, AnyId::RepositionedTessellatedItem(aid));
+                pending_repositioned_tessellated_items.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -17019,6 +18794,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TESSELLATED_ANNOTATION_OCCURRENCE" => {
+                let v = TessellatedAnnotationOccurrence {
+                    name: as_str(&attributes[0]),
+                    styles: Vec::new(),
+                    item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = TessellatedAnnotationOccurrenceId(
+                    model.tessellated_annotation_occurrences.push(v),
+                );
+                idmap.insert(id, AnyId::TessellatedAnnotationOccurrence(aid));
+                pending_tessellated_annotation_occurrences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "TESSELLATED_CURVE_SET" => {
                 let v = TessellatedCurveSet {
                     name: as_str(&attributes[0]),
@@ -17067,6 +18858,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TESSELLATED_GEOMETRIC_SET" => {
+                let v = TessellatedGeometricSet {
+                    name: as_str(&attributes[0]),
+                    children: Vec::new(),
+                };
+                let aid = TessellatedGeometricSetId(model.tessellated_geometric_sets.push(v));
+                idmap.insert(id, AnyId::TessellatedGeometricSet(aid));
+                pending_tessellated_geometric_sets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "TESSELLATED_ITEM" => {
                 let v = TessellatedItem {
                     name: as_str(&attributes[0]),
@@ -17106,6 +18908,37 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = TessellatedSurfaceSetId(model.tessellated_surface_sets.push(v));
                 idmap.insert(id, AnyId::TessellatedSurfaceSet(aid));
                 pending_tessellated_surface_sets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TEXT_FONT" => {
+                let v = TextFont {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: as_str(&attributes[2]),
+                };
+                let aid = TextFontId(model.text_fonts.push(v));
+                idmap.insert(id, AnyId::TextFont(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "TEXT_LITERAL" => {
+                let v = TextLiteral {
+                    name: as_str(&attributes[0]),
+                    literal: as_str(&attributes[1]),
+                    placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+                    alignment: as_str(&attributes[3]),
+                    path: match &attributes[4] {
+                        Attribute::Enum(s) => TextPath::parse(s).expect("text_path"),
+                        other => panic!("enum text_path: {other:?}"),
+                    },
+                    font: FontSelectRef::ExternallyDefinedTextFont(ExternallyDefinedTextFontId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = TextLiteralId(model.text_literals.push(v));
+                idmap.insert(id, AnyId::TextLiteral(aid));
+                pending_text_literals.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -17554,9 +19387,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_annotation_curve_occurrences(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_annotation_fill_area_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_fill_area_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_annotation_occurrences {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_annotation_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_placeholder_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_placeholder_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_planes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_planes(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_annotation_symbols {
@@ -17572,6 +19420,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_annotation_texts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_annotation_texts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_text_characters {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_text_characters(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_annotation_text_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_annotation_text_occurrences(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_application_context_elements {
@@ -17766,6 +19624,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_complex_triangulated_surface_sets(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_composite_curves {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_composite_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_composite_curve_segments {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_composite_curve_segments(&mut model, aid, attributes, &idmap);
@@ -17779,6 +19642,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_composite_shape_aspects {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_composite_shape_aspects(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_composite_texts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_composite_texts(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_concentricity_tolerances {
@@ -17814,6 +19682,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_connected_face_sets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_connected_face_sets(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_constructive_geometry_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_constructive_geometry_representations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_context_dependent_over_riding_styled_items {
@@ -17921,6 +19794,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_datum_targets(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_defined_character_glyphs {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_defined_character_glyphs(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_defined_symbols {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_defined_symbols(&mut model, aid, attributes, &idmap);
@@ -17986,6 +19864,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_document_files(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_draughting_callouts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_draughting_callouts(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_draughting_models {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_draughting_models(&mut model, aid, attributes, &idmap);
@@ -18016,6 +19899,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_ellipses(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_externally_defined_character_glyphs {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_character_glyphs(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_externally_defined_curve_fonts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_externally_defined_curve_fonts(&mut model, aid, attributes, &idmap);
@@ -18039,6 +19927,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_externally_defined_symbols {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_externally_defined_symbols(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_externally_defined_text_fonts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_externally_defined_text_fonts(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_externally_defined_tiles {
@@ -18131,6 +20024,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_geometric_curve_sets(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_geometric_item_specific_usages {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_item_specific_usages(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_geometric_sets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_geometric_sets(&mut model, aid, attributes, &idmap);
@@ -18195,6 +20093,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_intersection_curves {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_intersection_curves(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_invisibilitys {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_invisibilitys(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_item_defined_transformations {
@@ -18563,6 +20466,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_rational_b_spline_surfaces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_repositioned_tessellated_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_repositioned_tessellated_items(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_representations(&mut model, aid, attributes, &idmap);
@@ -18785,6 +20693,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_symmetry_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_tessellated_annotation_occurrences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tessellated_annotation_occurrences(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_tessellated_curve_sets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_tessellated_curve_sets(&mut model, aid, attributes, &idmap);
@@ -18795,9 +20708,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_tessellated_faces(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_tessellated_geometric_sets {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tessellated_geometric_sets(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_tessellated_surface_sets {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_tessellated_surface_sets(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_text_literals {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_text_literals(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_text_styles {
@@ -19143,6 +21066,29 @@ fn resolve_annotation_curve_occurrences(
     it.item = item_v;
 }
 
+fn resolve_annotation_fill_area_occurrences(
+    model: &mut Model,
+    aid: AnnotationFillAreaOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let fill_style_target_v = PointRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.annotation_fill_area_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+    it.fill_style_target = fill_style_target_v;
+}
+
 fn resolve_annotation_occurrences(
     model: &mut Model,
     aid: AnnotationOccurrenceId,
@@ -19162,6 +21108,61 @@ fn resolve_annotation_occurrences(
     let it = &mut model.annotation_occurrences.items[aid.0];
     it.styles = styles_v;
     it.item = item_v;
+}
+
+fn resolve_annotation_placeholder_occurrences(
+    model: &mut Model,
+    aid: AnnotationPlaceholderOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.annotation_placeholder_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
+fn resolve_annotation_planes(
+    model: &mut Model,
+    aid: AnnotationPlaneId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = PlaneOrPlanarBoxRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let elements_v = match &attrs[3] {
+        Attribute::Unset => None,
+        _ => Some(match &attrs[3] {
+            Attribute::List(l) => l
+                .iter()
+                .map(|e| {
+                    AnnotationPlaneElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                })
+                .collect(),
+            other => panic!("vec ref: {other:?}"),
+        }),
+    };
+    let it = &mut model.annotation_planes.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+    it.elements = elements_v;
 }
 
 fn resolve_annotation_symbols(
@@ -19215,6 +21216,43 @@ fn resolve_annotation_texts(
     let it = &mut model.annotation_texts.items[aid.0];
     it.mapping_source = mapping_source_v;
     it.mapping_target = mapping_target_v;
+}
+
+fn resolve_annotation_text_characters(
+    model: &mut Model,
+    aid: AnnotationTextCharacterId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_source_v =
+        RepresentationMapRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let mapping_target_v =
+        Axis2PlacementRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.annotation_text_characters.items[aid.0];
+    it.mapping_source = mapping_source_v;
+    it.mapping_target = mapping_target_v;
+}
+
+fn resolve_annotation_text_occurrences(
+    model: &mut Model,
+    aid: AnnotationTextOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v =
+        AnnotationTextOccurrenceItemRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.annotation_text_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
 }
 
 fn resolve_application_context_elements(
@@ -19867,6 +21905,23 @@ fn resolve_complex_triangulated_surface_sets(
     it.coordinates = coordinates_v;
 }
 
+fn resolve_composite_curves(
+    model: &mut Model,
+    aid: CompositeCurveId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let segments_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| CompositeCurveSegmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.composite_curves.items[aid.0];
+    it.segments = segments_v;
+}
+
 fn resolve_composite_curve_segments(
     model: &mut Model,
     aid: CompositeCurveSegmentId,
@@ -19900,6 +21955,23 @@ fn resolve_composite_shape_aspects(
         ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
     let it = &mut model.composite_shape_aspects.items[aid.0];
     it.of_shape = of_shape_v;
+}
+
+fn resolve_composite_texts(
+    model: &mut Model,
+    aid: CompositeTextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let collected_text_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| TextOrCharacterRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.composite_texts.items[aid.0];
+    it.collected_text = collected_text_v;
 }
 
 fn resolve_concentricity_tolerances(
@@ -20011,6 +22083,26 @@ fn resolve_connected_face_sets(
     };
     let it = &mut model.connected_face_sets.items[aid.0];
     it.cfs_faces = cfs_faces_v;
+}
+
+fn resolve_constructive_geometry_representations(
+    model: &mut Model,
+    aid: ConstructiveGeometryRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.constructive_geometry_representations.items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
 }
 
 fn resolve_context_dependent_over_riding_styled_items(
@@ -20420,6 +22512,20 @@ fn resolve_datum_targets(
     it.of_shape = of_shape_v;
 }
 
+fn resolve_defined_character_glyphs(
+    model: &mut Model,
+    aid: DefinedCharacterGlyphId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v =
+        DefinedGlyphSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let placement_v = Axis2PlacementRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.defined_character_glyphs.items[aid.0];
+    it.definition = definition_v;
+    it.placement = placement_v;
+}
+
 fn resolve_defined_symbols(
     model: &mut Model,
     aid: DefinedSymbolId,
@@ -20598,6 +22704,23 @@ fn resolve_document_files(
     it.kind = kind_v;
 }
 
+fn resolve_draughting_callouts(
+    model: &mut Model,
+    aid: DraughtingCalloutId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let contents_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DraughtingCalloutElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.draughting_callouts.items[aid.0];
+    it.contents = contents_v;
+}
+
 fn resolve_draughting_models(
     model: &mut Model,
     aid: DraughtingModelId,
@@ -20695,6 +22818,17 @@ fn resolve_ellipses(
     it.position = position_v;
 }
 
+fn resolve_externally_defined_character_glyphs(
+    model: &mut Model,
+    aid: ExternallyDefinedCharacterGlyphId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_character_glyphs.items[aid.0];
+    it.source = source_v;
+}
+
 fn resolve_externally_defined_curve_fonts(
     model: &mut Model,
     aid: ExternallyDefinedCurveFontId,
@@ -20747,6 +22881,17 @@ fn resolve_externally_defined_symbols(
 ) {
     let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.externally_defined_symbols.items[aid.0];
+    it.source = source_v;
+}
+
+fn resolve_externally_defined_text_fonts(
+    model: &mut Model,
+    aid: ExternallyDefinedTextFontId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let source_v = ExternalSourceRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.externally_defined_text_fonts.items[aid.0];
     it.source = source_v;
 }
 
@@ -21055,6 +23200,25 @@ fn resolve_geometric_curve_sets(
     it.elements = elements_v;
 }
 
+fn resolve_geometric_item_specific_usages(
+    model: &mut Model,
+    aid: GeometricItemSpecificUsageId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v = GeometricItemSpecificUsageSelectRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let used_representation_v =
+        ShapeModelRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let identified_item_v =
+        GeometricModelItemRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.geometric_item_specific_usages.items[aid.0];
+    it.definition = definition_v;
+    it.used_representation = used_representation_v;
+    it.identified_item = identified_item_v;
+}
+
 fn resolve_geometric_sets(
     model: &mut Model,
     aid: GeometricSetId,
@@ -21299,6 +23463,23 @@ fn resolve_intersection_curves(
     let it = &mut model.intersection_curves.items[aid.0];
     it.curve_3d = curve_3d_v;
     it.associated_geometry = associated_geometry_v;
+}
+
+fn resolve_invisibilitys(
+    model: &mut Model,
+    aid: InvisibilityId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let invisible_items_v = match &attrs[0] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| InvisibleItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.invisibilitys.items[aid.0];
+    it.invisible_items = invisible_items_v;
 }
 
 fn resolve_item_defined_transformations(
@@ -22439,6 +24620,17 @@ fn resolve_rational_b_spline_surfaces(
     it.control_points_list = control_points_list_v;
 }
 
+fn resolve_repositioned_tessellated_items(
+    model: &mut Model,
+    aid: RepositionedTessellatedItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let location_v = Axis2Placement3dRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.repositioned_tessellated_items.items[aid.0];
+    it.location = location_v;
+}
+
 fn resolve_representations(
     model: &mut Model,
     aid: RepresentationId,
@@ -23122,6 +25314,27 @@ fn resolve_symmetry_tolerances(
     it.datum_system = datum_system_v;
 }
 
+fn resolve_tessellated_annotation_occurrences(
+    model: &mut Model,
+    aid: TessellatedAnnotationOccurrenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let styles_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                PresentationStyleAssignmentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let item_v = StyledItemTargetRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.tessellated_annotation_occurrences.items[aid.0];
+    it.styles = styles_v;
+    it.item = item_v;
+}
+
 fn resolve_tessellated_curve_sets(
     model: &mut Model,
     aid: TessellatedCurveSetId,
@@ -23153,6 +25366,23 @@ fn resolve_tessellated_faces(
     it.geometric_link = geometric_link_v;
 }
 
+fn resolve_tessellated_geometric_sets(
+    model: &mut Model,
+    aid: TessellatedGeometricSetId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let children_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| TessellatedItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.tessellated_geometric_sets.items[aid.0];
+    it.children = children_v;
+}
+
 fn resolve_tessellated_surface_sets(
     model: &mut Model,
     aid: TessellatedSurfaceSetId,
@@ -23163,6 +25393,19 @@ fn resolve_tessellated_surface_sets(
         CoordinatesListRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.tessellated_surface_sets.items[aid.0];
     it.coordinates = coordinates_v;
+}
+
+fn resolve_text_literals(
+    model: &mut Model,
+    aid: TextLiteralId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let placement_v = Axis2PlacementRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let font_v = FontSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[5])).expect("ref"));
+    let it = &mut model.text_literals.items[aid.0];
+    it.placement = placement_v;
+    it.font = font_v;
 }
 
 fn resolve_text_styles(
@@ -23619,9 +25862,20 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
             "ADVANCED_FACE" => UnitPart::AdvancedFace,
             "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
+            "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence {
+                role: match &p.attributes[0] {
+                    Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s)
+                        .expect("annotation_placeholder_occurrence_role"),
+                    other => panic!("enum annotation_placeholder_occurrence_role: {other:?}"),
+                },
+                line_spacing: as_real(&p.attributes[1]),
+            },
             "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
             "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
             "ANNOTATION_TEXT" => UnitPart::AnnotationText,
+            "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter {
+                alignment: as_str(&p.attributes[0]),
+            },
             "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement {
                 name: as_str(&p.attributes[0]),
                 frame_of_reference: ApplicationContextRef::ApplicationContext(
@@ -23760,6 +26014,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 name: as_str(&p.attributes[0]),
             },
             "COMMON_DATUM" => UnitPart::CommonDatum,
+            "COMPOSITE_CURVE" => UnitPart::CompositeCurve {
+                segments: Vec::new(),
+                self_intersect: as_logical(&p.attributes[1]),
+            },
             "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment {
                 transition: match &p.attributes[0] {
                     Attribute::Enum(s) => TransitionCode::parse(s).expect("transition_code"),
@@ -23769,6 +26027,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 parent_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
             },
             "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
+            "COMPOSITE_TEXT" => UnitPart::CompositeText {
+                collected_text: Vec::new(),
+            },
             "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity {
                 configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(
                     usize::MAX,
@@ -23848,6 +26109,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "DATUM_TARGET" => UnitPart::DatumTarget {
                 target_id: as_str(&p.attributes[0]),
             },
+            "DEFINED_CHARACTER_GLYPH" => UnitPart::DefinedCharacterGlyph {
+                definition: DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(
+                    ExternallyDefinedCharacterGlyphId(usize::MAX),
+                ),
+                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+            },
             "DEFINED_SYMBOL" => UnitPart::DefinedSymbol {
                 definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(
                     ExternallyDefinedSymbolId(usize::MAX),
@@ -23882,6 +26149,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)),
             },
             "DOCUMENT_FILE" => UnitPart::DocumentFile,
+            "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout {
+                contents: Vec::new(),
+            },
             "DRAUGHTING_PRE_DEFINED_COLOUR" => UnitPart::DraughtingPreDefinedColour,
             "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
             "EDGE" => UnitPart::Edge {
@@ -23903,6 +26173,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "EXTERNAL_SOURCE" => UnitPart::ExternalSource {
                 source_id: read_string_select(&p.attributes[0]),
             },
+            "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => UnitPart::ExternallyDefinedCharacterGlyph,
             "EXTERNALLY_DEFINED_CURVE_FONT" => UnitPart::ExternallyDefinedCurveFont,
             "EXTERNALLY_DEFINED_HATCH_STYLE" => UnitPart::ExternallyDefinedHatchStyle,
             "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem {
@@ -23911,6 +26182,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "EXTERNALLY_DEFINED_STYLE" => UnitPart::ExternallyDefinedStyle,
             "EXTERNALLY_DEFINED_SYMBOL" => UnitPart::ExternallyDefinedSymbol,
+            "EXTERNALLY_DEFINED_TEXT_FONT" => UnitPart::ExternallyDefinedTextFont,
             "EXTERNALLY_DEFINED_TILE" => UnitPart::ExternallyDefinedTile,
             "EXTERNALLY_DEFINED_TILE_STYLE" => UnitPart::ExternallyDefinedTileStyle,
             "FACE" => UnitPart::Face { bounds: Vec::new() },
@@ -23989,6 +26261,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference {
                 source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
             },
+            "GEOMETRIC_ITEM_SPECIFIC_USAGE" => UnitPart::GeometricItemSpecificUsage,
             "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext {
                 coordinate_space_dimension: as_int(&p.attributes[0]),
             },
@@ -24067,6 +26340,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "INT_LITERAL" => UnitPart::IntLiteral,
             "INTEGER_REPRESENTATION_ITEM" => UnitPart::IntegerRepresentationItem,
             "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
+            "INVISIBILITY" => UnitPart::Invisibility {
+                invisible_items: Vec::new(),
+            },
             "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation {
                 name: as_str(&p.attributes[0]),
                 description: match &p.attributes[1] {
@@ -24183,6 +26459,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 polygon: Vec::new(),
             },
             "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
+            "PRE_DEFINED_CHARACTER_GLYPH" => UnitPart::PreDefinedCharacterGlyph,
             "PRE_DEFINED_COLOUR" => UnitPart::PreDefinedColour,
             "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
             "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem {
@@ -24191,6 +26468,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
             "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
             "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
+            "PRE_DEFINED_TEXT_FONT" => UnitPart::PreDefinedTextFont,
             "PRE_DEFINED_TILE" => UnitPart::PreDefinedTile,
             "PRESENTATION_REPRESENTATION" => UnitPart::PresentationRepresentation,
             "PRESENTATION_SET" => UnitPart::PresentationSet,
@@ -24545,6 +26823,18 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             },
             "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
             "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
+            "TEXT_LITERAL" => UnitPart::TextLiteral {
+                literal: as_str(&p.attributes[0]),
+                placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+                alignment: as_str(&p.attributes[2]),
+                path: match &p.attributes[3] {
+                    Attribute::Enum(s) => TextPath::parse(s).expect("text_path"),
+                    other => panic!("enum text_path: {other:?}"),
+                },
+                font: FontSelectRef::ExternallyDefinedTextFont(ExternallyDefinedTextFontId(
+                    usize::MAX,
+                )),
+            },
             "TEXT_STYLE" => UnitPart::TextStyle {
                 name: as_str(&p.attributes[0]),
                 character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
@@ -24816,9 +27106,33 @@ fn resolve_complex(
                     *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
                 );
             }
+            UnitPart::CompositeCurve { segments, .. } => {
+                *segments = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            CompositeCurveSegmentRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
             UnitPart::CompositeCurveSegment { parent_curve, .. } => {
                 *parent_curve =
                     CurveRef::from_any(*idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"));
+            }
+            UnitPart::CompositeText { collected_text, .. } => {
+                *collected_text = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            TextOrCharacterRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::ConfigurationEffectivity { configuration, .. } => {
                 *configuration = ConfigurationDesignRef::from_any(
@@ -24960,6 +27274,18 @@ fn resolve_complex(
                     other => panic!("vec ref: {other:?}"),
                 };
             }
+            UnitPart::DefinedCharacterGlyph {
+                definition,
+                placement,
+                ..
+            } => {
+                *definition = DefinedGlyphSelectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *placement = Axis2PlacementRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+            }
             UnitPart::DefinedSymbol {
                 definition, target, ..
             } => {
@@ -24990,6 +27316,19 @@ fn resolve_complex(
                 *kind = DocumentTypeRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
                 );
+            }
+            UnitPart::DraughtingCallout { contents, .. } => {
+                *contents = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            DraughtingCalloutElementRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::Edge {
                 edge_start,
@@ -25252,6 +27591,19 @@ fn resolve_complex(
                     Attribute::List(l) => l
                         .iter()
                         .map(|e| UnitRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
+            UnitPart::Invisibility {
+                invisible_items, ..
+            } => {
+                *invisible_items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            InvisibleItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+                        })
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
@@ -25801,6 +28153,15 @@ fn resolve_complex(
                 *placement = Axis2PlacementRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
                 );
+            }
+            UnitPart::TextLiteral {
+                placement, font, ..
+            } => {
+                *placement = Axis2PlacementRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
+                *font =
+                    FontSelectRef::from_any(*idmap.get(&as_ref_id(&p.attributes[4])).expect("ref"));
             }
             UnitPart::TextStyle {
                 character_appearance,
