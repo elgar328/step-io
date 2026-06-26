@@ -227,6 +227,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "ACTION_DIRECTIVE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ACTION_METHOD" => &[
             Slot {
                 k: Sk::Str,
@@ -253,8 +285,164 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ACTION_METHOD_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ACTION_PROPERTY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ACTION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ACTION_REQUEST_ASSIGNMENT" => &[Slot {
             k: Sk::Ref,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "ACTION_RESOURCE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ACTION_RESOURCE_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ACTION_RESOURCE_REQUIREMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ACTION_RESOURCE_TYPE" => &[Slot {
+            k: Sk::Str,
             req: true,
             der: false,
             swire: None,
@@ -623,6 +811,58 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "ASCRIBABLE_STATE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ASCRIBABLE_STATE_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ASSEMBLY_COMPONENT_USAGE" => &[
             Slot {
                 k: Sk::Str,
@@ -1285,6 +1525,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "CHARACTERIZED_OBJECT" => &[
             Slot {
                 k: Sk::Str,
@@ -1507,6 +1773,96 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "COMPLEX_TRIANGULATED_SURFACE_SET" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "COMPOSITE_CURVE_SEGMENT" => &[
+            Slot {
+                k: Sk::Enum,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Bool,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "COMPOSITE_GROUP_SHAPE_ASPECT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Log,
                 req: true,
                 der: false,
                 swire: None,
@@ -2282,6 +2638,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "DEGENERATE_TOROIDAL_SURFACE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Real,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Real,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Bool,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "DERIVED_UNIT" => &[Slot {
             k: Sk::Vec,
             req: true,
@@ -2500,6 +2888,96 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "DOCUMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DOCUMENT_FILE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DOCUMENT_TYPE" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "DRAUGHTING_MODEL" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "DRAUGHTING_PRE_DEFINED_COLOUR" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -2624,6 +3102,7 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "EXPRESSION" => &[],
         "EXTERNAL_SOURCE" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -3059,6 +3538,34 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "GENERAL_PROPERTY_ASSOCIATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "GENERIC_EXPRESSION" => &[],
+        "GENERIC_LITERAL" => &[],
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -3323,6 +3830,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => &[
             Slot {
                 k: Sk::Str,
@@ -3373,6 +3900,40 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Str,
                 req: false,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ID_ATTRIBUTE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "INT_LITERAL" => &[Slot {
+            k: Sk::Int,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "INTEGER_REPRESENTATION_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: true,
                 der: false,
                 swire: None,
             },
@@ -3495,6 +4056,12 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "LITERAL_NUMBER" => &[Slot {
+            k: Sk::Real,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "LOCAL_TIME" => &[
             Slot {
                 k: Sk::Int,
@@ -3570,6 +4137,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "MASS_MEASURE_WITH_UNIT" => &[
+            Slot {
+                k: Sk::Meas,
                 req: true,
                 der: false,
                 swire: None,
@@ -3737,6 +4318,7 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "NUMERIC_EXPRESSION" => &[],
         "OFFSET_SURFACE" => &[
             Slot {
                 k: Sk::Str,
@@ -5436,6 +6018,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "REAL_LITERAL" => &[Slot {
+            k: Sk::Real,
+            req: true,
+            der: false,
+            swire: None,
+        }],
+        "REAL_REPRESENTATION_ITEM" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Real,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "REPRESENTATION" => &[
             Slot {
                 k: Sk::Str,
@@ -5563,6 +6165,40 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "RESOURCE_PROPERTY" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "RESOURCE_REQUIREMENT_TYPE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
                 req: true,
                 der: false,
                 swire: None,
@@ -5818,6 +6454,8 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "SIMPLE_GENERIC_EXPRESSION" => &[],
+        "SIMPLE_NUMERIC_EXPRESSION" => &[],
         "SOLID_ANGLE_UNIT" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -5874,6 +6512,34 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "STATE_OBSERVED" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
+        "STATE_TYPE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
                 der: false,
                 swire: None,
             },
@@ -6238,6 +6904,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "TESSELLATED_CURVE_SET" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "TESSELLATED_FACE" => &[
             Slot {
                 k: Sk::Str,
@@ -6282,6 +6968,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "TESSELLATED_SURFACE_SET" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Int,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "TEXT_STYLE" => &[
             Slot {
                 k: Sk::Str,
@@ -6854,12 +7566,116 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "ACTION_METHOD_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ACTION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ACTION_REQUEST_ASSIGNMENT" => &[Slot {
             k: Sk::Ref,
             req: true,
             der: false,
             swire: None,
         }],
+        "ACTION_RESOURCE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "ACTION_RESOURCE_REQUIREMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ADDRESS" => &[
             Slot {
                 k: Sk::Str,
@@ -6960,6 +7776,32 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "ASCRIBABLE_STATE_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "ASSEMBLY_COMPONENT_USAGE" => &[Slot {
             k: Sk::Str,
             req: false,
@@ -7148,6 +7990,20 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "CHARACTERIZED_OBJECT" => &[
             Slot {
                 k: Sk::Str,
@@ -7191,6 +8047,26 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "COMMON_DATUM" => &[],
+        "COMPOSITE_CURVE_SEGMENT" => &[
+            Slot {
+                k: Sk::Enum,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Bool,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "COMPOSITE_SHAPE_ASPECT" => &[],
         "CONFIGURATION_EFFECTIVITY" => &[Slot {
             k: Sk::Ref,
@@ -7420,6 +8296,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "DEFINITIONAL_REPRESENTATION" => &[],
+        "DEGENERATE_TOROIDAL_SURFACE" => &[Slot {
+            k: Sk::Bool,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "DERIVED_UNIT" => &[Slot {
             k: Sk::Vec,
             req: true,
@@ -7447,6 +8329,33 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "DOCUMENT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DOCUMENT_FILE" => &[],
         "DRAUGHTING_PRE_DEFINED_COLOUR" => &[],
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => &[],
         "EDGE" => &[
@@ -7490,6 +8399,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "EXPRESSION" => &[],
         "EXTERNAL_SOURCE" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -7693,6 +8603,8 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "GENERIC_EXPRESSION" => &[],
+        "GENERIC_LITERAL" => &[],
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -7776,6 +8688,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => &[],
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => &[Slot {
             k: Sk::Vec,
             req: true,
@@ -7802,6 +8715,8 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "INT_LITERAL" => &[],
+        "INTEGER_REPRESENTATION_ITEM" => &[],
         "INTERSECTION_CURVE" => &[],
         "ITEM_DEFINED_TRANSFORMATION" => &[
             Slot {
@@ -7832,6 +8747,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
         "LENGTH_MEASURE_WITH_UNIT" => &[],
         "LENGTH_UNIT" => &[],
         "LINE_PROFILE_TOLERANCE" => &[],
+        "LITERAL_NUMBER" => &[Slot {
+            k: Sk::Real,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "LOOP" => &[],
         "MANIFOLD_SOLID_BREP" => &[Slot {
             k: Sk::Ref,
@@ -7884,6 +8805,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => &[],
+        "NUMERIC_EXPRESSION" => &[],
         "ONE_DIRECTION_REPEAT_FACTOR" => &[Slot {
             k: Sk::Ref,
             req: true,
@@ -8360,6 +9282,8 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "REAL_LITERAL" => &[],
+        "REAL_REPRESENTATION_ITEM" => &[],
         "REPRESENTATION" => &[
             Slot {
                 k: Sk::Str,
@@ -8544,6 +9468,8 @@ fn part_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "SIMPLE_GENERIC_EXPRESSION" => &[],
+        "SIMPLE_NUMERIC_EXPRESSION" => &[],
         "SOLID_ANGLE_UNIT" => &[],
         "SOLID_MODEL" => &[],
         "START_REQUEST" => &[Slot {
@@ -8552,6 +9478,34 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "STATE_OBSERVED" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
+        "STATE_TYPE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "STRAIGHTNESS_TOLERANCE" => &[],
         "STYLED_ITEM" => &[
             Slot {

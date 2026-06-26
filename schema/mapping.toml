@@ -1266,3 +1266,13 @@ change_management = [
     "change", "change_request", "start_request", "start_work",
     "contract", "certification", "configuration_item", "configuration_effectivity",
 ]
+# cascade roots (via-<TYPE> diagnostic) + low-risk leaves. draughting_pre_defined
+# _colour already seeded above (9bfe92e). All narrow: scalar / already-built refs
+# (MeasureValue/IntMeasureValue/RepresentationItemRef) / bounded selects.
+cascade_roots = ["mass_measure_with_unit", "composite_group_shape_aspect",
+  "characterized_item_within_representation", "real_representation_item", "document_file"]
+tessellation_leaves = ["tessellated_curve_set", "complex_triangulated_surface_set"]
+geometry_leaves = ["composite_curve_segment", "degenerate_toroidal_surface"]
+shape_rep_leaves = ["geometrically_bounded_wireframe_shape_representation",
+  "integer_representation_item", "draughting_model"]
+property_leaves = ["id_attribute", "general_property_association"]

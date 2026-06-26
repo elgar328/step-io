@@ -844,6 +844,33 @@ impl SurfaceSide {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransitionCode {
+    Discontinuous,
+    Continuous,
+    ContSameGradient,
+    ContSameGradientSameCurvature,
+}
+impl TransitionCode {
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "DISCONTINUOUS" => Self::Discontinuous,
+            "CONTINUOUS" => Self::Continuous,
+            "CONT_SAME_GRADIENT" => Self::ContSameGradient,
+            "CONT_SAME_GRADIENT_SAME_CURVATURE" => Self::ContSameGradientSameCurvature,
+            _ => return None,
+        })
+    }
+    pub fn token(self) -> &'static str {
+        match self {
+            Self::Discontinuous => ".DISCONTINUOUS.",
+            Self::Continuous => ".CONTINUOUS.",
+            Self::ContSameGradient => ".CONT_SAME_GRADIENT.",
+            Self::ContSameGradientSameCurvature => ".CONT_SAME_GRADIENT_SAME_CURVATURE.",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrimmingPreference {
     Cartesian,
     Parameter,
@@ -872,9 +899,25 @@ pub struct ActionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionAssignmentId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionDirectiveId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionMethodId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionMethodRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionPropertyId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionRequestAssignmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionResourceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionResourceRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionResourceRequirementId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ActionResourceTypeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AddressId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -911,6 +954,10 @@ pub struct ApprovalPersonOrganizationId(pub usize);
 pub struct ApprovalRoleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalStatusId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AscribableStateId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AscribableStateRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AssemblyComponentUsageId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -966,6 +1013,8 @@ pub struct CharacterGlyphStyleOutlineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterGlyphStyleStrokeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CharacterizedItemWithinRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterizedObjectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CircleId(pub usize);
@@ -985,6 +1034,12 @@ pub struct ColourSpecificationId(pub usize);
 pub struct CommonDatumId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ComplexTriangulatedFaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ComplexTriangulatedSurfaceSetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CompositeCurveSegmentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CompositeGroupShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeShapeAspectId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1062,6 +1117,8 @@ pub struct DefinedSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinitionalRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DegenerateToroidalSurfaceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedUnitElementId(pub usize);
@@ -1084,6 +1141,14 @@ pub struct DimensionalSizeWithPathId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DirectionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DocumentId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DocumentFileId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DocumentTypeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DraughtingModelId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedColourId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedCurveFontId(pub usize);
@@ -1099,6 +1164,8 @@ pub struct EffectivityId(pub usize);
 pub struct ElementarySurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EllipseId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ExpressionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternalSourceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1148,6 +1215,12 @@ pub struct GeneralDatumReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeneralPropertyId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GeneralPropertyAssociationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GenericExpressionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GenericLiteralId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GenericProductDefinitionReferenceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricCurveSetId(pub usize);
@@ -1170,11 +1243,19 @@ pub struct GeometricToleranceWithMaximumToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceWithModifiersId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GeometricallyBoundedWireframeShapeRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GlobalUncertaintyAssignedContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GlobalUnitAssignedContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GroupId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IdAttributeId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IntLiteralId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IntegerRepresentationItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntersectionCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1188,6 +1269,8 @@ pub struct LineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LineProfileToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LiteralNumberId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LocalTimeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LoopId(pub usize);
@@ -1197,6 +1280,8 @@ pub struct ManifoldSolidBrepId(pub usize);
 pub struct ManifoldSurfaceShapeRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MappedItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MassMeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MassUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1213,6 +1298,8 @@ pub struct ModifiedGeometricToleranceId(pub usize);
 pub struct NamedUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NextAssemblyUsageOccurrenceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct NumericExpressionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OffsetSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1360,6 +1447,10 @@ pub struct RationalBSplineCurveId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RationalBSplineSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RealLiteralId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RealRepresentationItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationContextId(pub usize);
@@ -1375,6 +1466,10 @@ pub struct RepresentationReferenceId(pub usize);
 pub struct RepresentationRelationshipId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationRelationshipWithTransformationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ResourcePropertyId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ResourceRequirementTypeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RoundnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1402,6 +1497,10 @@ pub struct ShellBasedSurfaceModelId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SiUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SimpleGenericExpressionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SimpleNumericExpressionId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SolidAngleUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SolidModelId(pub usize);
@@ -1411,6 +1510,10 @@ pub struct SphericalSurfaceId(pub usize);
 pub struct StartRequestId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StartWorkId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct StateObservedId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct StateTypeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StraightnessToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1462,11 +1565,15 @@ pub struct SymbolTargetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymmetryToleranceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TessellatedCurveSetId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedFaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedStructuredItemId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TessellatedSurfaceSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextStyleId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1526,8 +1633,16 @@ pub struct ComplexUnitId(pub usize);
 pub enum AnyId {
     Action(ActionId),
     ActionAssignment(ActionAssignmentId),
+    ActionDirective(ActionDirectiveId),
     ActionMethod(ActionMethodId),
+    ActionMethodRelationship(ActionMethodRelationshipId),
+    ActionProperty(ActionPropertyId),
+    ActionRelationship(ActionRelationshipId),
     ActionRequestAssignment(ActionRequestAssignmentId),
+    ActionResource(ActionResourceId),
+    ActionResourceRelationship(ActionResourceRelationshipId),
+    ActionResourceRequirement(ActionResourceRequirementId),
+    ActionResourceType(ActionResourceTypeId),
     Address(AddressId),
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
@@ -1546,6 +1661,8 @@ pub enum AnyId {
     ApprovalPersonOrganization(ApprovalPersonOrganizationId),
     ApprovalRole(ApprovalRoleId),
     ApprovalStatus(ApprovalStatusId),
+    AscribableState(AscribableStateId),
+    AscribableStateRelationship(AscribableStateRelationshipId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
     Axis1Placement(Axis1PlacementId),
     Axis2Placement2d(Axis2Placement2dId),
@@ -1573,6 +1690,7 @@ pub enum AnyId {
     ChangeRequest(ChangeRequestId),
     CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
     CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
+    CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentationId),
     CharacterizedObject(CharacterizedObjectId),
     Circle(CircleId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
@@ -1583,6 +1701,9 @@ pub enum AnyId {
     ColourSpecification(ColourSpecificationId),
     CommonDatum(CommonDatumId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurveSegment(CompositeCurveSegmentId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     ConcentricityTolerance(ConcentricityToleranceId),
     ConfigurationDesign(ConfigurationDesignId),
@@ -1621,6 +1742,7 @@ pub enum AnyId {
     DatumTarget(DatumTargetId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DerivedUnit(DerivedUnitId),
     DerivedUnitElement(DerivedUnitElementId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
@@ -1632,6 +1754,10 @@ pub enum AnyId {
     DimensionalSize(DimensionalSizeId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     Direction(DirectionId),
+    Document(DocumentId),
+    DocumentFile(DocumentFileId),
+    DocumentType(DocumentTypeId),
+    DraughtingModel(DraughtingModelId),
     DraughtingPreDefinedColour(DraughtingPreDefinedColourId),
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     Edge(EdgeId),
@@ -1640,6 +1766,7 @@ pub enum AnyId {
     Effectivity(EffectivityId),
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
+    Expression(ExpressionId),
     ExternalSource(ExternalSourceId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
@@ -1664,6 +1791,9 @@ pub enum AnyId {
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GeneralProperty(GeneralPropertyId),
+    GeneralPropertyAssociation(GeneralPropertyAssociationId),
+    GenericExpression(GenericExpressionId),
+    GenericLiteral(GenericLiteralId),
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationContext(GeometricRepresentationContextId),
@@ -1675,20 +1805,28 @@ pub enum AnyId {
     GeometricToleranceWithDefinedUnit(GeometricToleranceWithDefinedUnitId),
     GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
     GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
     GlobalUncertaintyAssignedContext(GlobalUncertaintyAssignedContextId),
     GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
     Group(GroupId),
+    IdAttribute(IdAttributeId),
+    IntLiteral(IntLiteralId),
+    IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
     ItemDefinedTransformation(ItemDefinedTransformationId),
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     LengthUnit(LengthUnitId),
     Line(LineId),
     LineProfileTolerance(LineProfileToleranceId),
+    LiteralNumber(LiteralNumberId),
     LocalTime(LocalTimeId),
     Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
+    MassMeasureWithUnit(MassMeasureWithUnitId),
     MassUnit(MassUnitId),
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
@@ -1699,6 +1837,7 @@ pub enum AnyId {
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     NamedUnit(NamedUnitId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    NumericExpression(NumericExpressionId),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
@@ -1772,6 +1911,8 @@ pub enum AnyId {
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
+    RealLiteral(RealLiteralId),
+    RealRepresentationItem(RealRepresentationItemId),
     Representation(RepresentationId),
     RepresentationContext(RepresentationContextId),
     RepresentationContextReference(RepresentationContextReferenceId),
@@ -1780,6 +1921,8 @@ pub enum AnyId {
     RepresentationReference(RepresentationReferenceId),
     RepresentationRelationship(RepresentationRelationshipId),
     RepresentationRelationshipWithTransformation(RepresentationRelationshipWithTransformationId),
+    ResourceProperty(ResourcePropertyId),
+    ResourceRequirementType(ResourceRequirementTypeId),
     RoundnessTolerance(RoundnessToleranceId),
     SeamCurve(SeamCurveId),
     SecurityClassification(SecurityClassificationId),
@@ -1793,11 +1936,15 @@ pub enum AnyId {
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SiUnit(SiUnitId),
+    SimpleGenericExpression(SimpleGenericExpressionId),
+    SimpleNumericExpression(SimpleNumericExpressionId),
     SolidAngleUnit(SolidAngleUnitId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
+    StateObserved(StateObservedId),
+    StateType(StateTypeId),
     StraightnessTolerance(StraightnessToleranceId),
     StyledItem(StyledItemId),
     Surface(SurfaceId),
@@ -1823,9 +1970,11 @@ pub enum AnyId {
     SymbolStyle(SymbolStyleId),
     SymbolTarget(SymbolTargetId),
     SymmetryTolerance(SymmetryToleranceId),
+    TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextStyle(TextStyleId),
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
     TextureStyleSpecification(TextureStyleSpecificationId),
@@ -1881,6 +2030,34 @@ impl ActionRef {
             AnyId::Action(i) => Self::Action(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ActionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ActionResourceRef {
+    ActionResource(ActionResourceId),
+    Complex(ComplexUnitId),
+}
+impl ActionResourceRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ActionResource(i) => Self::ActionResource(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ActionResourceRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ActionResourceTypeRef {
+    ActionResourceType(ActionResourceTypeId),
+}
+impl ActionResourceTypeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ActionResourceType(i) => Self::ActionResourceType(i),
+            other => panic!("ActionResourceTypeRef ref -> {other:?}"),
         }
     }
 }
@@ -2011,6 +2188,19 @@ impl ApprovedItemRef {
             AnyId::StartWork(i) => Self::StartWork(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ApprovedItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AscribableStateRef {
+    AscribableState(AscribableStateId),
+}
+impl AscribableStateRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AscribableState(i) => Self::AscribableState(i),
+            other => panic!("AscribableStateRef ref -> {other:?}"),
         }
     }
 }
@@ -2181,13 +2371,36 @@ impl CharacterStyleSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum CharacterizedActionDefinitionRef {
+    Action(ActionId),
+    ActionMethod(ActionMethodId),
+    ActionMethodRelationship(ActionMethodRelationshipId),
+    ActionRelationship(ActionRelationshipId),
+    Complex(ComplexUnitId),
+}
+impl CharacterizedActionDefinitionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Action(i) => Self::Action(i),
+            AnyId::ActionMethod(i) => Self::ActionMethod(i),
+            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
+            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CharacterizedActionDefinitionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedDefinitionRef {
     AngularityTolerance(AngularityToleranceId),
     AssemblyComponentUsage(AssemblyComponentUsageId),
+    CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentationId),
     CharacterizedObject(CharacterizedObjectId),
     CircularRunoutTolerance(CircularRunoutToleranceId),
     CoaxialityTolerance(CoaxialityToleranceId),
     CommonDatum(CommonDatumId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     ConcentricityTolerance(ConcentricityToleranceId),
     CylindricityTolerance(CylindricityToleranceId),
@@ -2201,6 +2414,7 @@ pub enum CharacterizedDefinitionRef {
     DimensionalLocationWithPath(DimensionalLocationWithPathId),
     DimensionalSize(DimensionalSizeId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    DocumentFile(DocumentFileId),
     FlatnessTolerance(FlatnessToleranceId),
     GeneralDatumReference(GeneralDatumReferenceId),
     GeometricTolerance(GeometricToleranceId),
@@ -2239,10 +2453,14 @@ impl CharacterizedDefinitionRef {
         match a {
             AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
             AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
+            AnyId::CharacterizedItemWithinRepresentation(i) => {
+                Self::CharacterizedItemWithinRepresentation(i)
+            }
             AnyId::CharacterizedObject(i) => Self::CharacterizedObject(i),
             AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
             AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
             AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
@@ -2256,6 +2474,7 @@ impl CharacterizedDefinitionRef {
             AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
             AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
             AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::DocumentFile(i) => Self::DocumentFile(i),
             AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
             AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
             AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
@@ -2301,6 +2520,25 @@ impl CharacterizedDefinitionRef {
             }
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("CharacterizedDefinitionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CharacterizedResourceDefinitionRef {
+    ActionResource(ActionResourceId),
+    ActionResourceRelationship(ActionResourceRelationshipId),
+    ActionResourceRequirement(ActionResourceRequirementId),
+    Complex(ComplexUnitId),
+}
+impl CharacterizedResourceDefinitionRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ActionResource(i) => Self::ActionResource(i),
+            AnyId::ActionResourceRelationship(i) => Self::ActionResourceRelationship(i),
+            AnyId::ActionResourceRequirement(i) => Self::ActionResourceRequirement(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("CharacterizedResourceDefinitionRef ref -> {other:?}"),
         }
     }
 }
@@ -2928,6 +3166,91 @@ impl DefinitionalRepresentationRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DerivedPropertySelectRef {
+    ActionProperty(ActionPropertyId),
+    AngularityTolerance(AngularityToleranceId),
+    CircularRunoutTolerance(CircularRunoutToleranceId),
+    CoaxialityTolerance(CoaxialityToleranceId),
+    ConcentricityTolerance(ConcentricityToleranceId),
+    CylindricityTolerance(CylindricityToleranceId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSize(DimensionalSizeId),
+    DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    FlatnessTolerance(FlatnessToleranceId),
+    GeometricTolerance(GeometricToleranceId),
+    GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
+    GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
+    GeometricToleranceWithDefinedUnit(GeometricToleranceWithDefinedUnitId),
+    GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
+    GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
+    LineProfileTolerance(LineProfileToleranceId),
+    ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
+    ParallelismTolerance(ParallelismToleranceId),
+    PerpendicularityTolerance(PerpendicularityToleranceId),
+    PositionTolerance(PositionToleranceId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    PropertyDefinition(PropertyDefinitionId),
+    ResourceProperty(ResourcePropertyId),
+    RoundnessTolerance(RoundnessToleranceId),
+    StraightnessTolerance(StraightnessToleranceId),
+    SurfaceProfileTolerance(SurfaceProfileToleranceId),
+    SymmetryTolerance(SymmetryToleranceId),
+    TotalRunoutTolerance(TotalRunoutToleranceId),
+    UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
+    Complex(ComplexUnitId),
+}
+impl DerivedPropertySelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ActionProperty(i) => Self::ActionProperty(i),
+            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
+            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
+            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
+            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
+            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
+            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
+            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::GeometricToleranceWithDatumReference(i) => {
+                Self::GeometricToleranceWithDatumReference(i)
+            }
+            AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
+                Self::GeometricToleranceWithDefinedAreaUnit(i)
+            }
+            AnyId::GeometricToleranceWithDefinedUnit(i) => {
+                Self::GeometricToleranceWithDefinedUnit(i)
+            }
+            AnyId::GeometricToleranceWithMaximumTolerance(i) => {
+                Self::GeometricToleranceWithMaximumTolerance(i)
+            }
+            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
+            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
+            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
+            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
+            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
+            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
+            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
+            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
+            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
+            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
+            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::UnequallyDisposedGeometricTolerance(i) => {
+                Self::UnequallyDisposedGeometricTolerance(i)
+            }
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DerivedPropertySelectRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DerivedUnitElementRef {
     DerivedUnitElement(DerivedUnitElementId),
 }
@@ -2985,6 +3308,19 @@ impl DirectionRef {
             AnyId::Direction(i) => Self::Direction(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DirectionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DocumentTypeRef {
+    DocumentType(DocumentTypeId),
+}
+impl DocumentTypeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::DocumentType(i) => Self::DocumentType(i),
+            other => panic!("DocumentTypeRef ref -> {other:?}"),
         }
     }
 }
@@ -3049,6 +3385,7 @@ pub enum FaceOrSurfaceRef {
     BoundedSurface(BoundedSurfaceId),
     ConicalSurface(ConicalSurfaceId),
     CylindricalSurface(CylindricalSurfaceId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     ElementarySurface(ElementarySurfaceId),
     FaceSurface(FaceSurfaceId),
     OffsetSurface(OffsetSurfaceId),
@@ -3074,6 +3411,7 @@ impl FaceOrSurfaceRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
             AnyId::FaceSurface(i) => Self::FaceSurface(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
@@ -3180,6 +3518,21 @@ impl FillStyleSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum GeneralPropertyRef {
+    GeneralProperty(GeneralPropertyId),
+    Complex(ComplexUnitId),
+}
+impl GeneralPropertyRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("GeneralPropertyRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeometricSetSelectRef {
     AnnotationText(AnnotationTextId),
     Axis1Placement(Axis1PlacementId),
@@ -3201,6 +3554,7 @@ pub enum GeometricSetSelectRef {
     ConicalSurface(ConicalSurfaceId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
     IntersectionCurve(IntersectionCurveId),
@@ -3252,6 +3606,7 @@ impl GeometricSetSelectRef {
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
             AnyId::Ellipse(i) => Self::Ellipse(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
@@ -3287,6 +3642,7 @@ impl GeometricSetSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceTargetRef {
     CommonDatum(CommonDatumId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
@@ -3310,6 +3666,7 @@ impl GeometricToleranceTargetRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
@@ -3329,6 +3686,213 @@ impl GeometricToleranceTargetRef {
             AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("GeometricToleranceTargetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum IdAttributeSelectRef {
+    Action(ActionId),
+    Address(AddressId),
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AdvancedFace(AdvancedFaceId),
+    AngularityTolerance(AngularityToleranceId),
+    ApplicationContext(ApplicationContextId),
+    AscribableStateRelationship(AscribableStateRelationshipId),
+    CircularRunoutTolerance(CircularRunoutToleranceId),
+    ClosedShell(ClosedShellId),
+    CoaxialityTolerance(CoaxialityToleranceId),
+    CommonDatum(CommonDatumId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    ConcentricityTolerance(ConcentricityToleranceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    CylindricityTolerance(CylindricityToleranceId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSize(DimensionalSizeId),
+    DimensionalSizeWithPath(DimensionalSizeWithPathId),
+    DraughtingModel(DraughtingModelId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FlatnessTolerance(FlatnessToleranceId),
+    GeneralDatumReference(GeneralDatumReferenceId),
+    GeometricTolerance(GeometricToleranceId),
+    GeometricToleranceWithDatumReference(GeometricToleranceWithDatumReferenceId),
+    GeometricToleranceWithDefinedAreaUnit(GeometricToleranceWithDefinedAreaUnitId),
+    GeometricToleranceWithDefinedUnit(GeometricToleranceWithDefinedUnitId),
+    GeometricToleranceWithMaximumTolerance(GeometricToleranceWithMaximumToleranceId),
+    GeometricToleranceWithModifiers(GeometricToleranceWithModifiersId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    Group(GroupId),
+    LineProfileTolerance(LineProfileToleranceId),
+    Loop(LoopId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
+    OpenShell(OpenShellId),
+    OrganizationalAddress(OrganizationalAddressId),
+    OrganizationalProject(OrganizationalProjectId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    ParallelismTolerance(ParallelismToleranceId),
+    Path(PathId),
+    PerpendicularityTolerance(PerpendicularityToleranceId),
+    PersonAndOrganizationAddress(PersonAndOrganizationAddressId),
+    PersonalAddress(PersonalAddressId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    PolyLoop(PolyLoopId),
+    PositionTolerance(PositionToleranceId),
+    PresentationRepresentation(PresentationRepresentationId),
+    ProductCategory(ProductCategoryId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductRelatedProductCategory(ProductRelatedProductCategoryId),
+    PropertyDefinition(PropertyDefinitionId),
+    Representation(RepresentationId),
+    RoundnessTolerance(RoundnessToleranceId),
+    ShapeAspect(ShapeAspectId),
+    ShapeAspectRelationship(ShapeAspectRelationshipId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    StraightnessTolerance(StraightnessToleranceId),
+    SurfaceProfileTolerance(SurfaceProfileToleranceId),
+    SymmetryTolerance(SymmetryToleranceId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    TotalRunoutTolerance(TotalRunoutToleranceId),
+    UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
+    Complex(ComplexUnitId),
+}
+impl IdAttributeSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Action(i) => Self::Action(i),
+            AnyId::Address(i) => Self::Address(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
+            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
+            AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
+            AnyId::AscribableStateRelationship(i) => Self::AscribableStateRelationship(i),
+            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
+            AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
+            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
+            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
+            AnyId::Datum(i) => Self::Datum(i),
+            AnyId::DatumFeature(i) => Self::DatumFeature(i),
+            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
+            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
+            AnyId::DatumSystem(i) => Self::DatumSystem(i),
+            AnyId::DatumTarget(i) => Self::DatumTarget(i),
+            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
+            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
+            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
+            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::Edge(i) => Self::Edge(i),
+            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
+            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
+            AnyId::Face(i) => Self::Face(i),
+            AnyId::FaceBound(i) => Self::FaceBound(i),
+            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
+            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
+            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
+            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::GeometricToleranceWithDatumReference(i) => {
+                Self::GeometricToleranceWithDatumReference(i)
+            }
+            AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
+                Self::GeometricToleranceWithDefinedAreaUnit(i)
+            }
+            AnyId::GeometricToleranceWithDefinedUnit(i) => {
+                Self::GeometricToleranceWithDefinedUnit(i)
+            }
+            AnyId::GeometricToleranceWithMaximumTolerance(i) => {
+                Self::GeometricToleranceWithMaximumTolerance(i)
+            }
+            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::Group(i) => Self::Group(i),
+            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
+            AnyId::Loop(i) => Self::Loop(i),
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
+            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
+            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
+            AnyId::Path(i) => Self::Path(i),
+            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
+            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
+            AnyId::PersonalAddress(i) => Self::PersonalAddress(i),
+            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
+            AnyId::PolyLoop(i) => Self::PolyLoop(i),
+            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
+            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
+            AnyId::ProductCategory(i) => Self::ProductCategory(i),
+            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ProductRelatedProductCategory(i) => Self::ProductRelatedProductCategory(i),
+            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
+            AnyId::Representation(i) => Self::Representation(i),
+            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
+            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
+            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
+            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
+            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
+            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
+            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
+            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
+            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::UnequallyDisposedGeometricTolerance(i) => {
+                Self::UnequallyDisposedGeometricTolerance(i)
+            }
+            AnyId::Vertex(i) => Self::Vertex(i),
+            AnyId::VertexLoop(i) => Self::VertexLoop(i),
+            AnyId::VertexPoint(i) => Self::VertexPoint(i),
+            AnyId::VertexShell(i) => Self::VertexShell(i),
+            AnyId::WireShell(i) => Self::WireShell(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("IdAttributeSelectRef ref -> {other:?}"),
         }
     }
 }
@@ -3374,6 +3938,7 @@ pub enum LayeredItemRef {
     Circle(CircleId),
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -3382,6 +3947,7 @@ pub enum LayeredItemRef {
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
     DefinedSymbol(DefinedSymbolId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
     Edge(EdgeId),
@@ -3403,6 +3969,7 @@ pub enum LayeredItemRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
+    IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Loop(LoopId),
@@ -3429,6 +3996,7 @@ pub enum LayeredItemRef {
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
+    RealRepresentationItem(RealRepresentationItemId),
     RepresentationItem(RepresentationItemId),
     SeamCurve(SeamCurveId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
@@ -3441,9 +4009,11 @@ pub enum LayeredItemRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -3485,6 +4055,7 @@ impl LayeredItemRef {
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -3495,6 +4066,7 @@ impl LayeredItemRef {
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
             AnyId::Edge(i) => Self::Edge(i),
@@ -3516,6 +4088,7 @@ impl LayeredItemRef {
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
             AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
@@ -3542,6 +4115,7 @@ impl LayeredItemRef {
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
             AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
@@ -3554,9 +4128,11 @@ impl LayeredItemRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -3660,6 +4236,7 @@ impl MarkerSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum MeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    MassMeasureWithUnit(MassMeasureWithUnitId),
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
@@ -3670,6 +4247,7 @@ impl MeasureWithUnitRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
+            AnyId::MassMeasureWithUnit(i) => Self::MassMeasureWithUnit(i),
             AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
             AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
@@ -3793,6 +4371,7 @@ pub enum PcurveOrSurfaceRef {
     BoundedSurface(BoundedSurfaceId),
     ConicalSurface(ConicalSurfaceId),
     CylindricalSurface(CylindricalSurfaceId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     ElementarySurface(ElementarySurfaceId),
     OffsetSurface(OffsetSurfaceId),
     Pcurve(PcurveId),
@@ -3818,6 +4397,7 @@ impl PcurveOrSurfaceRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::Pcurve(i) => Self::Pcurve(i),
@@ -4223,6 +4803,7 @@ pub enum RepresentationItemRef {
     Circle(CircleId),
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -4231,6 +4812,7 @@ pub enum RepresentationItemRef {
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
     DefinedSymbol(DefinedSymbolId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
     Edge(EdgeId),
@@ -4252,6 +4834,7 @@ pub enum RepresentationItemRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
+    IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Loop(LoopId),
@@ -4277,6 +4860,7 @@ pub enum RepresentationItemRef {
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
+    RealRepresentationItem(RealRepresentationItemId),
     RepresentationItem(RepresentationItemId),
     SeamCurve(SeamCurveId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
@@ -4289,9 +4873,11 @@ pub enum RepresentationItemRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -4333,6 +4919,7 @@ impl RepresentationItemRef {
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -4343,6 +4930,7 @@ impl RepresentationItemRef {
             AnyId::Curve(i) => Self::Curve(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
             AnyId::Edge(i) => Self::Edge(i),
@@ -4364,6 +4952,7 @@ impl RepresentationItemRef {
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
             AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
@@ -4389,6 +4978,7 @@ impl RepresentationItemRef {
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
             AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
             AnyId::SeamCurve(i) => Self::SeamCurve(i),
             AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
@@ -4401,9 +4991,11 @@ impl RepresentationItemRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -4441,6 +5033,10 @@ impl RepresentationMapRef {
 pub enum RepresentationOrRepresentationReferenceRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DraughtingModel(DraughtingModelId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
@@ -4457,6 +5053,10 @@ impl RepresentationOrRepresentationReferenceRef {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
@@ -4478,6 +5078,10 @@ impl RepresentationOrRepresentationReferenceRef {
 pub enum RepresentationRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DraughtingModel(DraughtingModelId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
@@ -4493,6 +5097,10 @@ impl RepresentationRef {
         match a {
             AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
                 Self::ManifoldSurfaceShapeRepresentation(i)
             }
@@ -4512,6 +5120,7 @@ impl RepresentationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentedDefinitionRef {
     CommonDatum(CommonDatumId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
@@ -4537,6 +5146,7 @@ impl RepresentedDefinitionRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
@@ -4558,6 +5168,19 @@ impl RepresentedDefinitionRef {
             AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("RepresentedDefinitionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResourceRequirementTypeRef {
+    ResourceRequirementType(ResourceRequirementTypeId),
+}
+impl ResourceRequirementTypeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ResourceRequirementType(i) => Self::ResourceRequirementType(i),
+            other => panic!("ResourceRequirementTypeRef ref -> {other:?}"),
         }
     }
 }
@@ -4591,6 +5214,7 @@ impl SecurityClassificationRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeAspectRef {
     CommonDatum(CommonDatumId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
     CompositeShapeAspect(CompositeShapeAspectId),
     Datum(DatumId),
     DatumFeature(DatumFeatureId),
@@ -4609,6 +5233,7 @@ impl ShapeAspectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::CommonDatum(i) => Self::CommonDatum(i),
+            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
             AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
             AnyId::Datum(i) => Self::Datum(i),
             AnyId::DatumFeature(i) => Self::DatumFeature(i),
@@ -4683,6 +5308,7 @@ impl ShellRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum SizeSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    MassMeasureWithUnit(MassMeasureWithUnitId),
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
@@ -4695,6 +5321,7 @@ impl SizeSelectRef {
     pub fn from_any(a: AnyId) -> Self {
         match a {
             AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
+            AnyId::MassMeasureWithUnit(i) => Self::MassMeasureWithUnit(i),
             AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
             AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
@@ -4720,6 +5347,36 @@ impl StartRequestItemRef {
             }
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("StartRequestItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StateObservedRef {
+    StateObserved(StateObservedId),
+    Complex(ComplexUnitId),
+}
+impl StateObservedRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::StateObserved(i) => Self::StateObserved(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("StateObservedRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StateTypeRef {
+    StateType(StateTypeId),
+    Complex(ComplexUnitId),
+}
+impl StateTypeRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::StateType(i) => Self::StateType(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("StateTypeRef ref -> {other:?}"),
         }
     }
 }
@@ -4751,6 +5408,7 @@ pub enum StyleContextSelectRef {
     Circle(CircleId),
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -4761,8 +5419,10 @@ pub enum StyleContextSelectRef {
     CylindricalSurface(CylindricalSurfaceId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
+    DraughtingModel(DraughtingModelId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
@@ -4782,7 +5442,11 @@ pub enum StyleContextSelectRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
     Group(GroupId),
+    IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Loop(LoopId),
@@ -4815,6 +5479,7 @@ pub enum StyleContextSelectRef {
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
+    RealRepresentationItem(RealRepresentationItemId),
     Representation(RepresentationId),
     RepresentationItem(RepresentationItemId),
     RepresentationRelationship(RepresentationRelationshipId),
@@ -4833,9 +5498,11 @@ pub enum StyleContextSelectRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -4878,6 +5545,7 @@ impl StyleContextSelectRef {
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -4892,8 +5560,10 @@ impl StyleContextSelectRef {
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
             AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
@@ -4913,7 +5583,11 @@ impl StyleContextSelectRef {
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
             AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
             AnyId::Group(i) => Self::Group(i),
+            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
@@ -4948,6 +5622,7 @@ impl StyleContextSelectRef {
             AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
             AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
             AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
+            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
             AnyId::Representation(i) => Self::Representation(i),
             AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
             AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
@@ -4968,9 +5643,11 @@ impl StyleContextSelectRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -5040,6 +5717,7 @@ pub enum StyledItemTargetRef {
     Circle(CircleId),
     ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
@@ -5048,7 +5726,9 @@ pub enum StyledItemTargetRef {
     CylindricalSurface(CylindricalSurfaceId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     Direction(DirectionId),
+    DraughtingModel(DraughtingModelId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     EdgeLoop(EdgeLoopId),
@@ -5068,6 +5748,9 @@ pub enum StyledItemTargetRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     Loop(LoopId),
@@ -5110,9 +5793,11 @@ pub enum StyledItemTargetRef {
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
     SymbolTarget(SymbolTargetId),
+    TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
     TessellatedItem(TessellatedItemId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
@@ -5152,6 +5837,7 @@ impl StyledItemTargetRef {
             AnyId::Circle(i) => Self::Circle(i),
             AnyId::ClosedShell(i) => Self::ClosedShell(i),
             AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
             AnyId::Conic(i) => Self::Conic(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
@@ -5160,7 +5846,9 @@ impl StyledItemTargetRef {
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::Direction(i) => Self::Direction(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
             AnyId::Edge(i) => Self::Edge(i),
             AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
             AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
@@ -5180,6 +5868,9 @@ impl StyledItemTargetRef {
             AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
             AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
             AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
             AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
             AnyId::Line(i) => Self::Line(i),
             AnyId::Loop(i) => Self::Loop(i),
@@ -5224,9 +5915,11 @@ impl StyledItemTargetRef {
             AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
             AnyId::SweptSurface(i) => Self::SweptSurface(i),
             AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
+            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
+            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
             AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
             AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
             AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
@@ -5246,6 +5939,25 @@ impl StyledItemTargetRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum SupportedItemRef {
+    Action(ActionId),
+    ActionDirective(ActionDirectiveId),
+    ActionMethod(ActionMethodId),
+    Complex(ComplexUnitId),
+}
+impl SupportedItemRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Action(i) => Self::Action(i),
+            AnyId::ActionDirective(i) => Self::ActionDirective(i),
+            AnyId::ActionMethod(i) => Self::ActionMethod(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("SupportedItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceRef {
     BSplineSurface(BSplineSurfaceId),
     BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
@@ -5253,6 +5965,7 @@ pub enum SurfaceRef {
     BoundedSurface(BoundedSurfaceId),
     ConicalSurface(ConicalSurfaceId),
     CylindricalSurface(CylindricalSurfaceId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     ElementarySurface(ElementarySurfaceId),
     OffsetSurface(OffsetSurfaceId),
     Plane(PlaneId),
@@ -5276,6 +5989,7 @@ impl SurfaceRef {
             AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
             AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
             AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
+            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::Plane(i) => Self::Plane(i),
@@ -5681,6 +6395,15 @@ pub struct ActionAssignment {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ActionDirective {
+    pub name: String,
+    pub description: Option<String>,
+    pub analysis: String,
+    pub comment: String,
+    pub requests: Vec<VersionedActionRequestRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ActionMethod {
     pub name: String,
     pub description: Option<String>,
@@ -5689,8 +6412,60 @@ pub struct ActionMethod {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ActionMethodRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_method: ActionMethodRef,
+    pub related_method: ActionMethodRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionProperty {
+    pub name: String,
+    pub description: String,
+    pub definition: CharacterizedActionDefinitionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_action: ActionRef,
+    pub related_action: ActionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ActionRequestAssignment {
     pub assigned_action_request: VersionedActionRequestRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionResource {
+    pub name: String,
+    pub description: Option<String>,
+    pub usage: Vec<SupportedItemRef>,
+    pub kind: ActionResourceTypeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionResourceRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_resource: ActionResourceRef,
+    pub related_resource: ActionResourceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionResourceRequirement {
+    pub name: String,
+    pub description: String,
+    pub kind: ResourceRequirementTypeRef,
+    pub operations: Vec<CharacterizedActionDefinitionRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActionResourceType {
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5819,6 +6594,22 @@ pub struct ApprovalRole {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApprovalStatus {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AscribableState {
+    pub name: String,
+    pub description: Option<String>,
+    pub pertaining_state_type: StateTypeRef,
+    pub ascribed_state_observed: StateObservedRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AscribableStateRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_ascribable_state: AscribableStateRef,
+    pub related_ascribable_state: AscribableStateRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6033,6 +6824,14 @@ pub struct CharacterGlyphStyleStroke {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct CharacterizedItemWithinRepresentation {
+    pub name: String,
+    pub description: Option<String>,
+    pub item: RepresentationItemRef,
+    pub rep: RepresentationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CharacterizedObject {
     pub name: String,
     pub description: Option<String>,
@@ -6104,6 +6903,32 @@ pub struct ComplexTriangulatedFace {
     pub pnindex: Vec<i64>,
     pub triangle_strips: Vec<Vec<i64>>,
     pub triangle_fans: Vec<Vec<i64>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ComplexTriangulatedSurfaceSet {
+    pub name: String,
+    pub coordinates: CoordinatesListRef,
+    pub pnmax: i64,
+    pub normals: Vec<Vec<f64>>,
+    pub pnindex: Vec<i64>,
+    pub triangle_strips: Vec<Vec<i64>>,
+    pub triangle_fans: Vec<Vec<i64>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeCurveSegment {
+    pub transition: TransitionCode,
+    pub same_sense: bool,
+    pub parent_curve: CurveRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeGroupShapeAspect {
+    pub name: String,
+    pub description: Option<String>,
+    pub of_shape: ProductDefinitionShapeRef,
+    pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6376,6 +7201,15 @@ pub struct DefinitionalRepresentation {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DegenerateToroidalSurface {
+    pub name: String,
+    pub position: Axis2Placement3dRef,
+    pub major_radius: f64,
+    pub minor_radius: f64,
+    pub select_outer: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DerivedUnit {
     pub elements: Vec<DerivedUnitElementRef>,
 }
@@ -6453,6 +7287,36 @@ pub struct Direction {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Document {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub kind: DocumentTypeRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DocumentFile {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub kind: DocumentTypeRef,
+    pub name_1: String,
+    pub description_1: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DocumentType {
+    pub product_data_type: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingModel {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedColour {
     pub name: String,
 }
@@ -6502,6 +7366,9 @@ pub struct Ellipse {
     pub semi_axis_1: f64,
     pub semi_axis_2: f64,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Expression {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExternalSource {
@@ -6664,6 +7531,20 @@ pub struct GeneralProperty {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct GeneralPropertyAssociation {
+    pub name: String,
+    pub description: Option<String>,
+    pub base_definition: GeneralPropertyRef,
+    pub derived_definition: DerivedPropertySelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GenericExpression {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GenericLiteral {}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct GenericProductDefinitionReference {
     pub source: ExternalSourceRef,
 }
@@ -6749,6 +7630,13 @@ pub struct GeometricToleranceWithModifiers {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct GeometricallyBoundedWireframeShapeRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct GlobalUncertaintyAssignedContext {
     pub context_identifier: String,
     pub context_type: String,
@@ -6766,6 +7654,23 @@ pub struct GlobalUnitAssignedContext {
 pub struct Group {
     pub name: String,
     pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct IdAttribute {
+    pub attribute_value: String,
+    pub identified_item: IdAttributeSelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct IntLiteral {
+    pub the_value: i64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct IntegerRepresentationItem {
+    pub name: String,
+    pub the_value: i64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6811,6 +7716,11 @@ pub struct LineProfileTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct LiteralNumber {
+    pub the_value: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct LocalTime {
     pub hour_component: i64,
     pub minute_component: Option<i64>,
@@ -6841,6 +7751,12 @@ pub struct MappedItem {
     pub name: String,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MassMeasureWithUnit {
+    pub value_component: MeasureValue,
+    pub unit_component: UnitRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6898,6 +7814,9 @@ pub struct NextAssemblyUsageOccurrence {
     pub related_product_definition: ProductDefinitionOrReferenceRef,
     pub reference_designator: Option<String>,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NumericExpression {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetSurface {
@@ -7451,6 +8370,17 @@ pub struct RationalBSplineSurface {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct RealLiteral {
+    pub the_value: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RealRepresentationItem {
+    pub name: String,
+    pub the_value: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Representation {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
@@ -7500,6 +8430,19 @@ pub struct RepresentationRelationshipWithTransformation {
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
     pub transformation_operator: TransformationRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResourceProperty {
+    pub name: String,
+    pub description: String,
+    pub resource: CharacterizedResourceDefinitionRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResourceRequirementType {
+    pub name: String,
+    pub description: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7592,6 +8535,12 @@ pub struct SiUnit {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct SimpleGenericExpression {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SimpleNumericExpression {}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct SolidAngleUnit {
     pub dimensions: DimensionalExponentsRef,
 }
@@ -7618,6 +8567,18 @@ pub struct StartRequest {
 pub struct StartWork {
     pub assigned_action: ActionRef,
     pub items: Vec<WorkItemRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StateObserved {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StateType {
+    pub name: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7776,6 +8737,13 @@ pub struct SymmetryTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedCurveSet {
+    pub name: String,
+    pub coordinates: CoordinatesListRef,
+    pub line_strips: Vec<Vec<i64>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedFace {
     pub name: String,
     pub coordinates: CoordinatesListRef,
@@ -7792,6 +8760,14 @@ pub struct TessellatedItem {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedStructuredItem {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedSurfaceSet {
+    pub name: String,
+    pub coordinates: CoordinatesListRef,
+    pub pnmax: i64,
+    pub normals: Vec<Vec<f64>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7989,8 +8965,32 @@ pub enum UnitPart {
         consequence: String,
         purpose: String,
     },
+    ActionMethodRelationship {
+        name: String,
+        description: Option<String>,
+        relating_method: ActionMethodRef,
+        related_method: ActionMethodRef,
+    },
+    ActionRelationship {
+        name: String,
+        description: Option<String>,
+        relating_action: ActionRef,
+        related_action: ActionRef,
+    },
     ActionRequestAssignment {
         assigned_action_request: VersionedActionRequestRef,
+    },
+    ActionResource {
+        name: String,
+        description: Option<String>,
+        usage: Vec<SupportedItemRef>,
+        kind: ActionResourceTypeRef,
+    },
+    ActionResourceRequirement {
+        name: String,
+        description: String,
+        kind: ResourceRequirementTypeRef,
+        operations: Vec<CharacterizedActionDefinitionRef>,
     },
     Address {
         internal_location: Option<String>,
@@ -8018,6 +9018,12 @@ pub enum UnitPart {
     },
     ApprovalAssignment {
         assigned_approval: ApprovalRef,
+    },
+    AscribableStateRelationship {
+        name: String,
+        description: Option<String>,
+        relating_ascribable_state: AscribableStateRef,
+        related_ascribable_state: AscribableStateRef,
     },
     AssemblyComponentUsage {
         reference_designator: Option<String>,
@@ -8080,6 +9086,10 @@ pub enum UnitPart {
     CharacterGlyphStyleStroke {
         stroke_style: CurveStyleRef,
     },
+    CharacterizedItemWithinRepresentation {
+        item: RepresentationItemRef,
+        rep: RepresentationRef,
+    },
     CharacterizedObject {
         name: String,
         description: Option<String>,
@@ -8095,6 +9105,11 @@ pub enum UnitPart {
         name: String,
     },
     CommonDatum,
+    CompositeCurveSegment {
+        transition: TransitionCode,
+        same_sense: bool,
+        parent_curve: CurveRef,
+    },
     CompositeShapeAspect,
     ConfigurationEffectivity {
         configuration: ConfigurationDesignRef,
@@ -8170,6 +9185,9 @@ pub enum UnitPart {
         target: SymbolTargetRef,
     },
     DefinitionalRepresentation,
+    DegenerateToroidalSurface {
+        select_outer: bool,
+    },
     DerivedUnit {
         elements: Vec<DerivedUnitElementRef>,
     },
@@ -8181,6 +9199,13 @@ pub enum UnitPart {
     Direction {
         direction_ratios: Vec<f64>,
     },
+    Document {
+        id: String,
+        name: String,
+        description: Option<String>,
+        kind: DocumentTypeRef,
+    },
+    DocumentFile,
     DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont,
     Edge {
@@ -8198,6 +9223,7 @@ pub enum UnitPart {
     ElementarySurface {
         position: Axis2Placement3dRef,
     },
+    Expression,
     ExternalSource {
         source_id: StringSelectValue,
     },
@@ -8264,6 +9290,8 @@ pub enum UnitPart {
         name: String,
         description: Option<String>,
     },
+    GenericExpression,
+    GenericLiteral,
     GenericProductDefinitionReference {
         source: ExternalSourceRef,
     },
@@ -8296,6 +9324,7 @@ pub enum UnitPart {
     GeometricToleranceWithModifiers {
         modifiers: Vec<GeometricToleranceModifier>,
     },
+    GeometricallyBoundedWireframeShapeRepresentation,
     GlobalUncertaintyAssignedContext {
         uncertainty: Vec<UncertaintyMeasureWithUnitRef>,
     },
@@ -8306,6 +9335,8 @@ pub enum UnitPart {
         name: String,
         description: Option<String>,
     },
+    IntLiteral,
+    IntegerRepresentationItem,
     IntersectionCurve,
     ItemDefinedTransformation {
         name: String,
@@ -8316,6 +9347,9 @@ pub enum UnitPart {
     LengthMeasureWithUnit,
     LengthUnit,
     LineProfileTolerance,
+    LiteralNumber {
+        the_value: f64,
+    },
     Loop,
     ManifoldSolidBrep {
         outer: ClosedShellRef,
@@ -8339,6 +9373,7 @@ pub enum UnitPart {
         dimensions: Option<DimensionalExponentsRef>,
     },
     NextAssemblyUsageOccurrence,
+    NumericExpression,
     OneDirectionRepeatFactor {
         repeat_factor: VectorRef,
     },
@@ -8495,6 +9530,8 @@ pub enum UnitPart {
     RationalBSplineSurface {
         weights_data: Vec<Vec<f64>>,
     },
+    RealLiteral,
+    RealRepresentationItem,
     Representation {
         name: String,
         items: Vec<RepresentationItemRef>,
@@ -8552,10 +9589,20 @@ pub enum UnitPart {
         prefix: Option<SiPrefix>,
         name: SiUnitName,
     },
+    SimpleGenericExpression,
+    SimpleNumericExpression,
     SolidAngleUnit,
     SolidModel,
     StartRequest {
         items: Vec<StartRequestItemRef>,
+    },
+    StateObserved {
+        name: String,
+        description: Option<String>,
+    },
+    StateType {
+        name: String,
+        description: Option<String>,
     },
     StraightnessTolerance,
     StyledItem {
@@ -8667,8 +9714,16 @@ pub struct ComplexUnit {
 pub struct Model {
     pub actions: Arena<Action>,
     pub action_assignments: Arena<ActionAssignment>,
+    pub action_directives: Arena<ActionDirective>,
     pub action_methods: Arena<ActionMethod>,
+    pub action_method_relationships: Arena<ActionMethodRelationship>,
+    pub action_propertys: Arena<ActionProperty>,
+    pub action_relationships: Arena<ActionRelationship>,
     pub action_request_assignments: Arena<ActionRequestAssignment>,
+    pub action_resources: Arena<ActionResource>,
+    pub action_resource_relationships: Arena<ActionResourceRelationship>,
+    pub action_resource_requirements: Arena<ActionResourceRequirement>,
+    pub action_resource_types: Arena<ActionResourceType>,
     pub addresss: Arena<Address>,
     pub advanced_brep_shape_representations: Arena<AdvancedBrepShapeRepresentation>,
     pub advanced_faces: Arena<AdvancedFace>,
@@ -8687,6 +9742,8 @@ pub struct Model {
     pub approval_person_organizations: Arena<ApprovalPersonOrganization>,
     pub approval_roles: Arena<ApprovalRole>,
     pub approval_statuss: Arena<ApprovalStatus>,
+    pub ascribable_states: Arena<AscribableState>,
+    pub ascribable_state_relationships: Arena<AscribableStateRelationship>,
     pub assembly_component_usages: Arena<AssemblyComponentUsage>,
     pub axis1_placements: Arena<Axis1Placement>,
     pub axis2_placement2ds: Arena<Axis2Placement2d>,
@@ -8715,6 +9772,7 @@ pub struct Model {
     pub change_requests: Arena<ChangeRequest>,
     pub character_glyph_style_outlines: Arena<CharacterGlyphStyleOutline>,
     pub character_glyph_style_strokes: Arena<CharacterGlyphStyleStroke>,
+    pub characterized_item_within_representations: Arena<CharacterizedItemWithinRepresentation>,
     pub characterized_objects: Arena<CharacterizedObject>,
     pub circles: Arena<Circle>,
     pub circular_runout_tolerances: Arena<CircularRunoutTolerance>,
@@ -8725,6 +9783,9 @@ pub struct Model {
     pub colour_specifications: Arena<ColourSpecification>,
     pub common_datums: Arena<CommonDatum>,
     pub complex_triangulated_faces: Arena<ComplexTriangulatedFace>,
+    pub complex_triangulated_surface_sets: Arena<ComplexTriangulatedSurfaceSet>,
+    pub composite_curve_segments: Arena<CompositeCurveSegment>,
+    pub composite_group_shape_aspects: Arena<CompositeGroupShapeAspect>,
     pub composite_shape_aspects: Arena<CompositeShapeAspect>,
     pub concentricity_tolerances: Arena<ConcentricityTolerance>,
     pub configuration_designs: Arena<ConfigurationDesign>,
@@ -8763,6 +9824,7 @@ pub struct Model {
     pub datum_targets: Arena<DatumTarget>,
     pub defined_symbols: Arena<DefinedSymbol>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
+    pub degenerate_toroidal_surfaces: Arena<DegenerateToroidalSurface>,
     pub derived_units: Arena<DerivedUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
     pub descriptive_representation_items: Arena<DescriptiveRepresentationItem>,
@@ -8774,6 +9836,10 @@ pub struct Model {
     pub dimensional_sizes: Arena<DimensionalSize>,
     pub dimensional_size_with_paths: Arena<DimensionalSizeWithPath>,
     pub directions: Arena<Direction>,
+    pub documents: Arena<Document>,
+    pub document_files: Arena<DocumentFile>,
+    pub document_types: Arena<DocumentType>,
+    pub draughting_models: Arena<DraughtingModel>,
     pub draughting_pre_defined_colours: Arena<DraughtingPreDefinedColour>,
     pub draughting_pre_defined_curve_fonts: Arena<DraughtingPreDefinedCurveFont>,
     pub edges: Arena<Edge>,
@@ -8782,6 +9848,7 @@ pub struct Model {
     pub effectivitys: Arena<Effectivity>,
     pub elementary_surfaces: Arena<ElementarySurface>,
     pub ellipses: Arena<Ellipse>,
+    pub expressions: Arena<Expression>,
     pub external_sources: Arena<ExternalSource>,
     pub externally_defined_curve_fonts: Arena<ExternallyDefinedCurveFont>,
     pub externally_defined_hatch_styles: Arena<ExternallyDefinedHatchStyle>,
@@ -8806,6 +9873,9 @@ pub struct Model {
     pub functionally_defined_transformations: Arena<FunctionallyDefinedTransformation>,
     pub general_datum_references: Arena<GeneralDatumReference>,
     pub general_propertys: Arena<GeneralProperty>,
+    pub general_property_associations: Arena<GeneralPropertyAssociation>,
+    pub generic_expressions: Arena<GenericExpression>,
+    pub generic_literals: Arena<GenericLiteral>,
     pub generic_product_definition_references: Arena<GenericProductDefinitionReference>,
     pub geometric_curve_sets: Arena<GeometricCurveSet>,
     pub geometric_representation_contexts: Arena<GeometricRepresentationContext>,
@@ -8817,20 +9887,27 @@ pub struct Model {
     pub geometric_tolerance_with_defined_units: Arena<GeometricToleranceWithDefinedUnit>,
     pub geometric_tolerance_with_maximum_tolerances: Arena<GeometricToleranceWithMaximumTolerance>,
     pub geometric_tolerance_with_modifierss: Arena<GeometricToleranceWithModifiers>,
+    pub geometrically_bounded_wireframe_shape_representations:
+        Arena<GeometricallyBoundedWireframeShapeRepresentation>,
     pub global_uncertainty_assigned_contexts: Arena<GlobalUncertaintyAssignedContext>,
     pub global_unit_assigned_contexts: Arena<GlobalUnitAssignedContext>,
     pub groups: Arena<Group>,
+    pub id_attributes: Arena<IdAttribute>,
+    pub int_literals: Arena<IntLiteral>,
+    pub integer_representation_items: Arena<IntegerRepresentationItem>,
     pub intersection_curves: Arena<IntersectionCurve>,
     pub item_defined_transformations: Arena<ItemDefinedTransformation>,
     pub length_measure_with_units: Arena<LengthMeasureWithUnit>,
     pub length_units: Arena<LengthUnit>,
     pub lines: Arena<Line>,
     pub line_profile_tolerances: Arena<LineProfileTolerance>,
+    pub literal_numbers: Arena<LiteralNumber>,
     pub local_times: Arena<LocalTime>,
     pub loops: Arena<Loop>,
     pub manifold_solid_breps: Arena<ManifoldSolidBrep>,
     pub manifold_surface_shape_representations: Arena<ManifoldSurfaceShapeRepresentation>,
     pub mapped_items: Arena<MappedItem>,
+    pub mass_measure_with_units: Arena<MassMeasureWithUnit>,
     pub mass_units: Arena<MassUnit>,
     pub measure_representation_items: Arena<MeasureRepresentationItem>,
     pub measure_with_units: Arena<MeasureWithUnit>,
@@ -8840,6 +9917,7 @@ pub struct Model {
     pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
     pub next_assembly_usage_occurrences: Arena<NextAssemblyUsageOccurrence>,
+    pub numeric_expressions: Arena<NumericExpression>,
     pub offset_surfaces: Arena<OffsetSurface>,
     pub one_direction_repeat_factors: Arena<OneDirectionRepeatFactor>,
     pub open_shells: Arena<OpenShell>,
@@ -8915,6 +9993,8 @@ pub struct Model {
     pub quasi_uniform_surfaces: Arena<QuasiUniformSurface>,
     pub rational_b_spline_curves: Arena<RationalBSplineCurve>,
     pub rational_b_spline_surfaces: Arena<RationalBSplineSurface>,
+    pub real_literals: Arena<RealLiteral>,
+    pub real_representation_items: Arena<RealRepresentationItem>,
     pub representations: Arena<Representation>,
     pub representation_contexts: Arena<RepresentationContext>,
     pub representation_context_references: Arena<RepresentationContextReference>,
@@ -8924,6 +10004,8 @@ pub struct Model {
     pub representation_relationships: Arena<RepresentationRelationship>,
     pub representation_relationship_with_transformations:
         Arena<RepresentationRelationshipWithTransformation>,
+    pub resource_propertys: Arena<ResourceProperty>,
+    pub resource_requirement_types: Arena<ResourceRequirementType>,
     pub roundness_tolerances: Arena<RoundnessTolerance>,
     pub seam_curves: Arena<SeamCurve>,
     pub security_classifications: Arena<SecurityClassification>,
@@ -8937,11 +10019,15 @@ pub struct Model {
     pub shape_representation_relationships: Arena<ShapeRepresentationRelationship>,
     pub shell_based_surface_models: Arena<ShellBasedSurfaceModel>,
     pub si_units: Arena<SiUnit>,
+    pub simple_generic_expressions: Arena<SimpleGenericExpression>,
+    pub simple_numeric_expressions: Arena<SimpleNumericExpression>,
     pub solid_angle_units: Arena<SolidAngleUnit>,
     pub solid_models: Arena<SolidModel>,
     pub spherical_surfaces: Arena<SphericalSurface>,
     pub start_requests: Arena<StartRequest>,
     pub start_works: Arena<StartWork>,
+    pub state_observeds: Arena<StateObserved>,
+    pub state_types: Arena<StateType>,
     pub straightness_tolerances: Arena<StraightnessTolerance>,
     pub styled_items: Arena<StyledItem>,
     pub surfaces: Arena<Surface>,
@@ -8967,9 +10053,11 @@ pub struct Model {
     pub symbol_styles: Arena<SymbolStyle>,
     pub symbol_targets: Arena<SymbolTarget>,
     pub symmetry_tolerances: Arena<SymmetryTolerance>,
+    pub tessellated_curve_sets: Arena<TessellatedCurveSet>,
     pub tessellated_faces: Arena<TessellatedFace>,
     pub tessellated_items: Arena<TessellatedItem>,
     pub tessellated_structured_items: Arena<TessellatedStructuredItem>,
+    pub tessellated_surface_sets: Arena<TessellatedSurfaceSet>,
     pub text_styles: Arena<TextStyle>,
     pub text_style_for_defined_fonts: Arena<TextStyleForDefinedFont>,
     pub texture_style_specifications: Arena<TextureStyleSpecification>,
