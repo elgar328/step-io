@@ -166,6 +166,28 @@ fn drop_pass(
     (map, drops)
 }
 
+/// Provenance accounting: every input entity (plus every synthetic entity added
+/// by normalization) must be either kept (round-trip compared via merkle) or
+/// dropped with a recorded reason. `n_base` = input + synthetic count, `validated`
+/// = kept count, `drops` = reasoned drops (all kinds, slot-local folded in).
+/// Returns `Some(msg)` if `validated + sum(drops) != n_base` — an unexplained loss
+/// (an entity vanished with no reason = a silent-drop bug). The oracle treats this
+/// as a Fail, so the corpus gate proves the kept/reasoned partition is total
+/// (nothing slips out unaccounted).
+fn account(n_base: usize, validated: usize, drops: &BTreeMap<DropReason, usize>) -> Option<String> {
+    let dropped: usize = drops.values().sum();
+    let accounted = validated + dropped;
+    if accounted == n_base {
+        None
+    } else {
+        Some(format!(
+            "unexplained loss: base={n_base}, validated={validated}, drops={dropped} \
+             (accounted={accounted}, missing={})",
+            n_base as i64 - accounted as i64
+        ))
+    }
+}
+
 /// Slot-aware nonstandard-ref check: does any ref slot of `ent` point at a kept,
 /// in-closure target whose type the slot's SELECT does not admit? Returns the
 /// first `<ENT>.<slot>-><TYPE>` label. Out-of-closure / dangling targets are NOT
@@ -226,13 +248,20 @@ fn normalize_all(
     BTreeMap<u64, RawEntity>,
     Vec<&'static str>,
     Vec<&'static str>,
+    usize,
 ) {
     let mut raw = graph_of(g);
     let mut norm: Vec<&'static str> = Vec::new();
+    let before = raw.len();
     crate::entity_normalize::apply(&mut raw, &mut norm);
+    // entity_normalize is add-only (materializes synthetic entities, never removes),
+    // so the count delta is exactly the number of synthetic entities added. The
+    // accounting baseline is input + synthetic (those additions are legitimate
+    // normalization output, not input loss).
+    let n_synth = raw.len() - before;
     let (normalized, gnorm, slot_drops) = crate::generated::generic_normalize::normalize(raw);
     norm.extend(gnorm);
-    (normalized, norm, slot_drops)
+    (normalized, norm, slot_drops, n_synth)
 }
 
 fn ent_name(e: &RawEntity) -> String {
@@ -251,7 +280,7 @@ fn ent_name(e: &RawEntity) -> String {
 /// shapes the generator round-trips wrong.
 pub fn dump_type(src: &str, type_name: &str) -> (Vec<String>, Vec<String>) {
     let g = parse(src).expect("parse");
-    let (normalized, _, _) = normalize_all(&g);
+    let (normalized, _, _, _) = normalize_all(&g);
     let (a, _) = drop_pass(&normalized);
     let mut left: Vec<String> = a
         .values()
@@ -299,7 +328,7 @@ pub fn check_roundtrip(src: &str) -> CheckResult {
 /// code panic propagates with a backtrace (the normal path swallows it as Fail).
 pub fn check_roundtrip_raw(src: &[u8]) {
     let g = parse_bytes(src).expect("source parse");
-    let (normalized, _norm, _slot_drops) = normalize_all(&g);
+    let (normalized, _norm, _slot_drops, _n_synth) = normalize_all(&g);
     let (a, _drops) = drop_pass(&normalized);
     let (model, _idmap) = read(&a);
     let body = Writer::new(&model).emit_all();
@@ -320,16 +349,28 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
     // or drop non-normalizable entities. Slot-local drops come back separately;
     // the drop pass below adds unimplemented/cascade. The strict model only ever
     // sees standard data.
-    let (normalized, norm, slot_drops) = normalize_all(&g);
+    let n_in = g.entities.len();
+    let (normalized, norm, slot_drops, n_synth) = normalize_all(&g);
     let (a, mut drops) = drop_pass(&normalized);
     // Fold the slot-local drops (from generic_normalize) into the same channel.
     for r in slot_drops {
         bump(&mut drops, DropKind::SlotLocal, r);
     }
+    let validated = a.len();
+    // Provenance accounting: input + synthetic == kept + reasoned-drops, else a
+    // silent-drop bug. Checked before the empty Skip so all-dropped files are
+    // accounted too.
+    if let Some(reason) = account(n_in + n_synth, validated, &drops) {
+        return CheckResult::Fail {
+            reason,
+            validated,
+            drops,
+            norm,
+        };
+    }
     if a.is_empty() {
         return CheckResult::Skip("no in-scope entities".to_string());
     }
-    let validated = a.len();
 
     // The generator (read/write) may panic on shapes not yet handled; treat a
     // panic as a generator bug (Fail), not a run-aborting crash at scale.
@@ -351,8 +392,11 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
     };
 
     // Output reparse failure = generator produced malformed text = our bug.
+    // The output is compared UNFILTERED (no output-side drop_pass): it is the emit
+    // of the kept model, so it must equal the kept input `a` exactly. Re-filtering
+    // would hide a generator emitting an out-of-subset/extra entity.
     let b = match parse(&file) {
-        Ok(bg) => drop_pass(&graph_of(&bg)).0,
+        Ok(bg) => graph_of(&bg),
         Err(e) => {
             return CheckResult::Fail {
                 reason: format!("output reparse failed: {e}"),
@@ -375,5 +419,55 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
             drops,
             norm,
         },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn drops_of(pairs: &[(DropKind, &str, usize)]) -> BTreeMap<DropReason, usize> {
+        let mut m = BTreeMap::new();
+        for (kind, key, n) in pairs {
+            m.insert(
+                DropReason {
+                    kind: kind.clone(),
+                    key: key.to_string(),
+                },
+                *n,
+            );
+        }
+        m
+    }
+
+    /// Totality holds: validated + sum(drops) == input → no unexplained loss.
+    #[test]
+    fn account_balanced_is_ok() {
+        let drops = drops_of(&[
+            (DropKind::Unimplemented, "FOO", 3),
+            (DropKind::Cascade, "via-FOO", 2),
+        ]);
+        // 10 = 5 kept + 5 dropped
+        assert!(account(10, 5, &drops).is_none());
+    }
+
+    /// Negative check: an entity vanished with no recorded reason (validated +
+    /// drops < input). The accounting MUST flag it — proves the gate is
+    /// load-bearing, not vacuous.
+    #[test]
+    fn account_silent_loss_fails() {
+        let drops = drops_of(&[(DropKind::Unimplemented, "FOO", 2)]);
+        // input 10, but only 5 kept + 2 reasoned = 7 accounted → 3 silent
+        let r = account(10, 5, &drops);
+        assert!(r.is_some());
+        assert!(r.unwrap().contains("missing=3"));
+    }
+
+    /// Symmetric negative check: over-counting (phantom drops) also fails.
+    #[test]
+    fn account_overcount_fails() {
+        let drops = drops_of(&[(DropKind::Unimplemented, "FOO", 9)]);
+        // 5 kept + 9 dropped = 14 > input 10
+        assert!(account(10, 5, &drops).is_some());
     }
 }
