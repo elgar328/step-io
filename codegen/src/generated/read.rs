@@ -114,6 +114,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ACTION_PROPERTY",
     "ACTION_RELATIONSHIP",
     "ACTION_REQUEST_ASSIGNMENT",
+    "ACTION_REQUEST_SOLUTION",
     "ACTION_RESOURCE",
     "ACTION_RESOURCE_RELATIONSHIP",
     "ACTION_RESOURCE_REQUIREMENT",
@@ -148,6 +149,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "APPLIED_DOCUMENT_REFERENCE",
     "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
     "APPLIED_GROUP_ASSIGNMENT",
+    "APPLIED_PRESENTED_ITEM",
     "APPROVAL",
     "APPROVAL_ASSIGNMENT",
     "APPROVAL_DATE_TIME",
@@ -157,6 +159,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "APPROXIMATION_TOLERANCE",
     "APPROXIMATION_TOLERANCE_DEVIATION",
     "APPROXIMATION_TOLERANCE_PARAMETER",
+    "AREA_IN_SET",
+    "AREA_UNIT",
     "ASCRIBABLE_STATE",
     "ASCRIBABLE_STATE_RELATIONSHIP",
     "ASSEMBLY_COMPONENT_USAGE",
@@ -176,8 +180,12 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
     "CALENDAR_DATE",
+    "CAMERA_IMAGE",
+    "CAMERA_IMAGE_3D_WITH_SCALE",
     "CAMERA_MODEL",
     "CAMERA_MODEL_D3",
+    "CAMERA_MODEL_D3_WITH_HLHSR",
+    "CAMERA_USAGE",
     "CARTESIAN_POINT",
     "CC_DESIGN_APPROVAL",
     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
@@ -262,11 +270,16 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DIMENSIONAL_LOCATION",
     "DIMENSIONAL_LOCATION_WITH_PATH",
     "DIMENSIONAL_SIZE",
+    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
     "DIMENSIONAL_SIZE_WITH_PATH",
+    "DIRECTED_DIMENSIONAL_LOCATION",
     "DIRECTION",
     "DOCUMENT",
     "DOCUMENT_FILE",
+    "DOCUMENT_PRODUCT_ASSOCIATION",
+    "DOCUMENT_PRODUCT_EQUIVALENCE",
     "DOCUMENT_REFERENCE",
+    "DOCUMENT_REPRESENTATION_TYPE",
     "DOCUMENT_TYPE",
     "DRAUGHTING_ANNOTATION_OCCURRENCE",
     "DRAUGHTING_CALLOUT",
@@ -321,11 +334,13 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GEOMETRIC_REPRESENTATION_ITEM",
     "GEOMETRIC_SET",
     "GEOMETRIC_TOLERANCE",
+    "GEOMETRIC_TOLERANCE_RELATIONSHIP",
     "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
     "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
     "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
     "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
@@ -356,6 +371,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "MAPPED_ITEM",
     "MASS_MEASURE_WITH_UNIT",
     "MASS_UNIT",
+    "MEASURE_QUALIFICATION",
     "MEASURE_REPRESENTATION_ITEM",
     "MEASURE_WITH_UNIT",
     "MECHANICAL_CONTEXT",
@@ -365,6 +381,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
     "MODEL_GEOMETRIC_VIEW",
     "MODIFIED_GEOMETRIC_TOLERANCE",
+    "NAME_ATTRIBUTE",
     "NAMED_UNIT",
     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
     "NUMERIC_EXPRESSION",
@@ -427,14 +444,20 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRESENTATION_SET",
     "PRESENTATION_STYLE_ASSIGNMENT",
     "PRESENTATION_VIEW",
+    "PRESENTED_ITEM",
+    "PRESENTED_ITEM_REPRESENTATION",
     "PRODUCT",
     "PRODUCT_CATEGORY",
     "PRODUCT_CATEGORY_RELATIONSHIP",
     "PRODUCT_CONCEPT",
     "PRODUCT_CONCEPT_CONTEXT",
+    "PRODUCT_CONCEPT_FEATURE",
+    "PRODUCT_CONCEPT_FEATURE_CATEGORY",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
     "PRODUCT_DEFINITION_CONTEXT",
+    "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION",
+    "PRODUCT_DEFINITION_CONTEXT_ROLE",
     "PRODUCT_DEFINITION_EFFECTIVITY",
     "PRODUCT_DEFINITION_FORMATION",
     "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
@@ -442,15 +465,18 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_RELATIONSHIP",
     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
     "PRODUCT_DEFINITION_SHAPE",
+    "PRODUCT_DEFINITION_SUBSTITUTE",
     "PRODUCT_DEFINITION_USAGE",
     "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
+    "PROJECTED_ZONE_DEFINITION",
     "PROPERTY_DEFINITION",
     "PROPERTY_DEFINITION_RELATIONSHIP",
     "PROPERTY_DEFINITION_REPRESENTATION",
     "QUALIFIED_REPRESENTATION_ITEM",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
+    "RATIO_UNIT",
     "RATIONAL_B_SPLINE_CURVE",
     "RATIONAL_B_SPLINE_SURFACE",
     "REAL_LITERAL",
@@ -474,6 +500,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "SECURITY_CLASSIFICATION_LEVEL",
     "SHAPE_ASPECT",
     "SHAPE_ASPECT_ASSOCIATIVITY",
+    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
     "SHAPE_ASPECT_RELATIONSHIP",
     "SHAPE_DEFINITION_REPRESENTATION",
     "SHAPE_DIMENSION_REPRESENTATION",
@@ -560,6 +587,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "VERTEX_POINT",
     "VERTEX_SHELL",
     "VIEW_VOLUME",
+    "VOLUME_UNIT",
     "WIRE_SHELL",
 ];
 pub const COMPLEX_PART_NAMES: &[&str] = &[
@@ -589,7 +617,9 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "APPLIED_DOCUMENT_REFERENCE",
     "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
     "APPLIED_GROUP_ASSIGNMENT",
+    "APPLIED_PRESENTED_ITEM",
     "APPROVAL_ASSIGNMENT",
+    "AREA_IN_SET",
     "ASCRIBABLE_STATE_RELATIONSHIP",
     "ASSEMBLY_COMPONENT_USAGE",
     "B_SPLINE_CURVE",
@@ -603,8 +633,12 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "BOUNDED_SURFACE",
     "BOUNDED_SURFACE_CURVE",
     "BREP_WITH_VOIDS",
+    "CAMERA_IMAGE",
+    "CAMERA_IMAGE_3D_WITH_SCALE",
     "CAMERA_MODEL",
     "CAMERA_MODEL_D3",
+    "CAMERA_MODEL_D3_WITH_HLHSR",
+    "CAMERA_USAGE",
     "CC_DESIGN_APPROVAL",
     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
     "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
@@ -659,6 +693,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DIRECTION",
     "DOCUMENT",
     "DOCUMENT_FILE",
+    "DOCUMENT_PRODUCT_ASSOCIATION",
+    "DOCUMENT_PRODUCT_EQUIVALENCE",
     "DOCUMENT_REFERENCE",
     "DRAUGHTING_ANNOTATION_OCCURRENCE",
     "DRAUGHTING_CALLOUT",
@@ -714,6 +750,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
     "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
     "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
@@ -787,9 +824,12 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRESENTATION_SET",
     "PRESENTATION_STYLE_ASSIGNMENT",
     "PRESENTATION_VIEW",
+    "PRESENTED_ITEM",
     "PRODUCT",
     "PRODUCT_CATEGORY",
     "PRODUCT_CONCEPT",
+    "PRODUCT_CONCEPT_FEATURE",
+    "PRODUCT_CONCEPT_FEATURE_CATEGORY",
     "PRODUCT_CONTEXT",
     "PRODUCT_DEFINITION",
     "PRODUCT_DEFINITION_CONTEXT",
@@ -803,11 +843,13 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_USAGE",
     "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
+    "PROJECTED_ZONE_DEFINITION",
     "PROPERTY_DEFINITION",
     "PROPERTY_DEFINITION_REPRESENTATION",
     "QUALIFIED_REPRESENTATION_ITEM",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
+    "RATIO_UNIT",
     "RATIONAL_B_SPLINE_CURVE",
     "RATIONAL_B_SPLINE_SURFACE",
     "REAL_LITERAL",
@@ -980,6 +1022,22 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "ACTION_REQUEST_SOLUTION" => &[
+            RefSlot {
+                idx: 0,
+                name: "method",
+                allowed: &["ACTION_METHOD"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "request",
+                allowed: &["VERSIONED_ACTION_REQUEST"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "ACTION_RESOURCE" => &[
             RefSlot {
                 idx: 2,
@@ -1070,8 +1128,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -1270,7 +1331,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -1369,8 +1432,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -1412,6 +1478,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -1540,8 +1607,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -1583,6 +1653,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -1794,8 +1865,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -1837,6 +1911,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -1953,8 +2028,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -1996,6 +2074,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -2130,7 +2209,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &["REPRESENTATION_MAP"],
+                allowed: &["CAMERA_USAGE", "REPRESENTATION_MAP"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2170,8 +2249,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -2306,7 +2388,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &["REPRESENTATION_MAP"],
+                allowed: &["CAMERA_USAGE", "REPRESENTATION_MAP"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2322,7 +2404,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &["REPRESENTATION_MAP"],
+                allowed: &["CAMERA_USAGE", "REPRESENTATION_MAP"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2438,6 +2520,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DRAUGHTING_MODEL",
                     "EFFECTIVITY",
                     "GENERAL_PROPERTY",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -2540,8 +2623,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                     "CENTRE_OF_SYMMETRY",
@@ -2591,7 +2677,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "DIRECTION",
                     "DOCUMENT_FILE",
                     "DRAUGHTING_ANNOTATION_OCCURRENCE",
@@ -2626,6 +2714,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "GROUP",
                     "HYPERBOLA",
@@ -2676,6 +2765,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PRODUCT",
                     "PRODUCT_CATEGORY",
                     "PRODUCT_CONCEPT",
+                    "PRODUCT_CONCEPT_FEATURE_CATEGORY",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_CONTEXT",
                     "PRODUCT_DEFINITION_EFFECTIVITY",
@@ -2704,6 +2794,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SECURITY_CLASSIFICATION",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "SHAPE_DEFINITION_REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -2802,6 +2893,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "APPROVAL",
                     "APPROVAL_PERSON_ORGANIZATION",
                     "APPROVAL_STATUS",
+                    "AREA_UNIT",
                     "ASSEMBLY_COMPONENT_USAGE",
                     "AUXILIARY_LEADER_LINE",
                     "AXIS1_PLACEMENT",
@@ -2818,8 +2910,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                     "CERTIFICATION",
@@ -2878,6 +2973,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "GROUP",
                     "HYPERBOLA",
@@ -2929,6 +3025,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PRODUCT",
                     "PRODUCT_CONCEPT",
                     "PRODUCT_CONCEPT_CONTEXT",
+                    "PRODUCT_CONCEPT_FEATURE_CATEGORY",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_CONTEXT",
                     "PRODUCT_DEFINITION_EFFECTIVITY",
@@ -2941,6 +3038,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "QUALIFIED_REPRESENTATION_ITEM",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
+                    "RATIO_UNIT",
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
@@ -2994,6 +3092,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "VERTEX_LOOP",
                     "VERTEX_POINT",
                     "VERTEX_SHELL",
+                    "VOLUME_UNIT",
                     "WIRE_SHELL",
                 ],
                 complex_ok: true,
@@ -3004,7 +3103,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_group",
-                allowed: &["GROUP"],
+                allowed: &["GROUP", "PRODUCT_CONCEPT_FEATURE_CATEGORY"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3038,6 +3137,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "APPROVAL",
                     "APPROVAL_PERSON_ORGANIZATION",
                     "APPROVAL_STATUS",
+                    "AREA_UNIT",
                     "ASCRIBABLE_STATE",
                     "ASCRIBABLE_STATE_RELATIONSHIP",
                     "ASSEMBLY_COMPONENT_USAGE",
@@ -3057,8 +3157,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
                     "CALENDAR_DATE",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                     "CENTRE_OF_SYMMETRY",
@@ -3112,6 +3215,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DESIGN_CONTEXT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "DIRECTION",
                     "DOCUMENT_FILE",
                     "DRAUGHTING_ANNOTATION_OCCURRENCE",
@@ -3142,6 +3247,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_REPRESENTATION_CONTEXT",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
                     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
@@ -3220,6 +3326,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "QUALIFIED_REPRESENTATION_ITEM",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
+                    "RATIO_UNIT",
                     "RATIONAL_B_SPLINE_CURVE",
                     "RATIONAL_B_SPLINE_SURFACE",
                     "REAL_REPRESENTATION_ITEM",
@@ -3233,6 +3340,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "SECURITY_CLASSIFICATION",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "SHAPE_DEFINITION_REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -3284,12 +3392,35 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "VERTEX_LOOP",
                     "VERTEX_POINT",
                     "VERTEX_SHELL",
+                    "VOLUME_UNIT",
                     "WIRE_SHELL",
                 ],
                 complex_ok: true,
                 is_vec: true,
             },
         ],
+        "APPLIED_PRESENTED_ITEM" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "ACTION",
+                "ACTION_METHOD",
+                "ACTION_RELATIONSHIP",
+                "ASSEMBLY_COMPONENT_USAGE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "PRODUCT_CONCEPT",
+                "PRODUCT_CONCEPT_FEATURE",
+                "PRODUCT_CONCEPT_FEATURE_CATEGORY",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "PRODUCT_DEFINITION_RELATIONSHIP",
+                "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "APPROVAL" => &[RefSlot {
             idx: 0,
             name: "status",
@@ -3352,6 +3483,29 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             ],
             complex_ok: false,
             is_vec: false,
+        }],
+        "AREA_IN_SET" => &[
+            RefSlot {
+                idx: 0,
+                name: "area",
+                allowed: &["PRESENTATION_AREA"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "in_set",
+                allowed: &["PRESENTATION_SET"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "AREA_UNIT" => &[RefSlot {
+            idx: 0,
+            name: "elements",
+            allowed: &["DERIVED_UNIT_ELEMENT"],
+            complex_ok: false,
+            is_vec: true,
         }],
         "ASCRIBABLE_STATE" => &[
             RefSlot {
@@ -3616,6 +3770,332 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
+        "CAMERA_IMAGE" => &[
+            RefSlot {
+                idx: 1,
+                name: "mapping_source",
+                allowed: &["CAMERA_USAGE", "REPRESENTATION_MAP"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "mapping_target",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "CAMERA_IMAGE_3D_WITH_SCALE" => &[
+            RefSlot {
+                idx: 1,
+                name: "mapping_source",
+                allowed: &["CAMERA_USAGE", "REPRESENTATION_MAP"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "mapping_target",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "CAMERA_MODEL_D3" => &[
             RefSlot {
                 idx: 1,
@@ -3628,6 +4108,205 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 idx: 2,
                 name: "perspective_of_volume",
                 allowed: &["VIEW_VOLUME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "CAMERA_MODEL_D3_WITH_HLHSR" => &[
+            RefSlot {
+                idx: 1,
+                name: "view_reference_system",
+                allowed: &["AXIS2_PLACEMENT_3D"],
+                complex_ok: false,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "perspective_of_volume",
+                allowed: &["VIEW_VOLUME"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "CAMERA_USAGE" => &[
+            RefSlot {
+                idx: 0,
+                name: "mapping_origin",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "mapped_representation",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3857,8 +4536,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -3981,6 +4663,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -4036,8 +4719,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -4200,7 +4886,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -4254,7 +4942,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -4418,7 +5108,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -4545,8 +5237,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -4681,6 +5376,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -4699,6 +5395,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -4758,8 +5455,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -4801,6 +5501,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -4937,8 +5638,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -4987,6 +5691,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "GROUP",
                     "HYPERBOLA",
@@ -5025,6 +5730,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_SET",
                     "PRESENTATION_VIEW",
+                    "PRODUCT_CONCEPT_FEATURE_CATEGORY",
                     "QUALIFIED_REPRESENTATION_ITEM",
                     "QUASI_UNIFORM_CURVE",
                     "QUASI_UNIFORM_SURFACE",
@@ -5244,7 +5950,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -5462,8 +6170,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -5601,6 +6312,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -5628,6 +6340,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -5657,6 +6370,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -5684,6 +6398,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -5734,6 +6449,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
@@ -5756,7 +6472,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5787,6 +6505,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -5813,6 +6532,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -5841,6 +6561,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -5867,6 +6588,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -5893,6 +6615,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -5920,6 +6643,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
                 "DERIVED_SHAPE_ASPECT",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                 "GENERAL_DATUM_REFERENCE",
                 "PLACED_DATUM_TARGET_FEATURE",
                 "SHAPE_ASPECT",
@@ -5929,6 +6653,42 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE" => &[
+            RefSlot {
+                idx: 2,
+                name: "of_shape",
+                allowed: &["PRODUCT_DEFINITION_SHAPE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "applies_to",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "DIMENSIONAL_SIZE_WITH_PATH" => &[
             RefSlot {
                 idx: 0,
@@ -5947,6 +6707,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -5973,6 +6734,63 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "DIRECTED_DIMENSIONAL_LOCATION" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_shape_aspect",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_shape_aspect",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -5997,9 +6815,60 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "DOCUMENT_PRODUCT_ASSOCIATION" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_document",
+                allowed: &["DOCUMENT", "DOCUMENT_FILE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_product",
+                allowed: &[
+                    "PRODUCT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "DOCUMENT_PRODUCT_EQUIVALENCE" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_document",
+                allowed: &["DOCUMENT", "DOCUMENT_FILE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_product",
+                allowed: &[
+                    "PRODUCT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "DOCUMENT_REFERENCE" => &[RefSlot {
             idx: 0,
             name: "assigned_document",
+            allowed: &["DOCUMENT", "DOCUMENT_FILE"],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        "DOCUMENT_REPRESENTATION_TYPE" => &[RefSlot {
+            idx: 1,
+            name: "represented_document",
             allowed: &["DOCUMENT", "DOCUMENT_FILE"],
             complex_ok: true,
             is_vec: false,
@@ -6044,8 +6913,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -6087,6 +6959,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -6234,8 +7107,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -6390,7 +7266,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "FLATNESS_TOLERANCE",
                     "GENERAL_DATUM_REFERENCE",
                     "GEOMETRIC_TOLERANCE",
@@ -6413,6 +7291,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ROUNDNESS_TOLERANCE",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "STRAIGHTNESS_TOLERANCE",
                     "SURFACE_PROFILE_TOLERANCE",
@@ -6488,7 +7367,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "FLATNESS_TOLERANCE",
                     "GENERAL_DATUM_REFERENCE",
                     "GEOMETRIC_TOLERANCE",
@@ -6511,6 +7392,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "ROUNDNESS_TOLERANCE",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "STRAIGHTNESS_TOLERANCE",
                     "SURFACE_PROFILE_TOLERANCE",
@@ -6961,7 +7843,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -7017,7 +7901,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "FLATNESS_TOLERANCE",
                     "GEOMETRIC_TOLERANCE",
                     "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
@@ -7130,10 +8016,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -7147,6 +8036,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "SHAPE_DIMENSION_REPRESENTATION",
@@ -7186,6 +8076,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BREP_WITH_VOIDS",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -7359,13 +8250,79 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
                     "SHAPE_ASPECT",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "GEOMETRIC_TOLERANCE_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_geometric_tolerance",
+                allowed: &[
+                    "ANGULARITY_TOLERANCE",
+                    "CIRCULAR_RUNOUT_TOLERANCE",
+                    "COAXIALITY_TOLERANCE",
+                    "CONCENTRICITY_TOLERANCE",
+                    "CYLINDRICITY_TOLERANCE",
+                    "FLATNESS_TOLERANCE",
+                    "GEOMETRIC_TOLERANCE",
+                    "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+                    "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
+                    "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+                    "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
+                    "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+                    "LINE_PROFILE_TOLERANCE",
+                    "MODIFIED_GEOMETRIC_TOLERANCE",
+                    "PARALLELISM_TOLERANCE",
+                    "PERPENDICULARITY_TOLERANCE",
+                    "POSITION_TOLERANCE",
+                    "ROUNDNESS_TOLERANCE",
+                    "STRAIGHTNESS_TOLERANCE",
+                    "SURFACE_PROFILE_TOLERANCE",
+                    "SYMMETRY_TOLERANCE",
+                    "TOTAL_RUNOUT_TOLERANCE",
+                    "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_geometric_tolerance",
+                allowed: &[
+                    "ANGULARITY_TOLERANCE",
+                    "CIRCULAR_RUNOUT_TOLERANCE",
+                    "COAXIALITY_TOLERANCE",
+                    "CONCENTRICITY_TOLERANCE",
+                    "CYLINDRICITY_TOLERANCE",
+                    "FLATNESS_TOLERANCE",
+                    "GEOMETRIC_TOLERANCE",
+                    "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+                    "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
+                    "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+                    "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
+                    "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+                    "LINE_PROFILE_TOLERANCE",
+                    "MODIFIED_GEOMETRIC_TOLERANCE",
+                    "PARALLELISM_TOLERANCE",
+                    "PERPENDICULARITY_TOLERANCE",
+                    "POSITION_TOLERANCE",
+                    "ROUNDNESS_TOLERANCE",
+                    "STRAIGHTNESS_TOLERANCE",
+                    "SURFACE_PROFILE_TOLERANCE",
+                    "SYMMETRY_TOLERANCE",
+                    "TOTAL_RUNOUT_TOLERANCE",
+                    "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7399,7 +8356,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -7446,7 +8405,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -7500,7 +8461,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -7547,7 +8510,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -7594,13 +8559,184 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
                     "SHAPE_ASPECT",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7643,8 +8779,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -7783,6 +8922,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 2,
             name: "units",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -7790,9 +8930,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: true,
@@ -7800,7 +8942,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "GROUP_ASSIGNMENT" => &[RefSlot {
             idx: 0,
             name: "assigned_group",
-            allowed: &["GROUP"],
+            allowed: &["GROUP", "PRODUCT_CONCEPT_FEATURE_CATEGORY"],
             complex_ok: true,
             is_vec: false,
         }],
@@ -7847,7 +8989,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                 "DIMENSIONAL_SIZE_WITH_PATH",
+                "DIRECTED_DIMENSIONAL_LOCATION",
                 "DRAUGHTING_MODEL",
                 "EDGE",
                 "EDGE_CURVE",
@@ -7864,6 +9008,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
                 "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "GROUP",
                 "LINE_PROFILE_TOLERANCE",
@@ -7890,6 +9035,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRESENTATION_REPRESENTATION",
                 "PRESENTATION_VIEW",
                 "PRODUCT_CATEGORY",
+                "PRODUCT_CONCEPT_FEATURE_CATEGORY",
                 "PRODUCT_DEFINITION_SHAPE",
                 "PRODUCT_RELATED_PRODUCT_CATEGORY",
                 "PROPERTY_DEFINITION",
@@ -7897,6 +9043,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
+                "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "SHAPE_DIMENSION_REPRESENTATION",
                 "SHAPE_REPRESENTATION",
@@ -8007,6 +9154,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DRAUGHTING_ANNOTATION_OCCURRENCE",
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "LEADER_CURVE",
                 "LEADER_DIRECTED_CALLOUT",
@@ -8069,8 +9217,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -8220,8 +9371,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -8421,6 +9575,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -8428,9 +9583,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -8486,7 +9643,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -8549,8 +9708,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -8682,7 +9844,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &["REPRESENTATION_MAP"],
+                allowed: &["CAMERA_USAGE", "REPRESENTATION_MAP"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8722,8 +9884,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -8842,6 +10007,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -8849,9 +10015,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -8863,10 +10031,39 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "MEASURE_QUALIFICATION" => &[
+            RefSlot {
+                idx: 2,
+                name: "qualified_measure",
+                allowed: &[
+                    "LENGTH_MEASURE_WITH_UNIT",
+                    "MASS_MEASURE_WITH_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "MEASURE_WITH_UNIT",
+                    "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                    "UNCERTAINTY_MEASURE_WITH_UNIT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "qualifiers",
+                allowed: &[
+                    "PRECISION_QUALIFIER",
+                    "TYPE_QUALIFIER",
+                    "UNCERTAINTY_QUALIFIER",
+                    "VALUE_FORMAT_TYPE_QUALIFIER",
+                ],
+                complex_ok: false,
+                is_vec: true,
+            },
+        ],
         "MEASURE_REPRESENTATION_ITEM" => &[RefSlot {
             idx: 2,
             name: "unit_component",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -8874,9 +10071,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -8885,6 +10084,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -8892,9 +10092,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -8913,6 +10115,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -8931,6 +10134,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 allowed: &[
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -8981,8 +10185,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -9147,8 +10354,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -9313,8 +10523,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -9479,8 +10692,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -9603,6 +10819,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -9649,7 +10866,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -9661,6 +10880,33 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "NAME_ATTRIBUTE" => &[RefSlot {
+            idx: 1,
+            name: "named_item",
+            allowed: &[
+                "ACTION_REQUEST_SOLUTION",
+                "ADDRESS",
+                "AREA_UNIT",
+                "CONFIGURATION_DESIGN",
+                "CONFIGURATION_EFFECTIVITY",
+                "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+                "DERIVED_UNIT",
+                "EFFECTIVITY",
+                "ORGANIZATIONAL_ADDRESS",
+                "PERSON_AND_ORGANIZATION",
+                "PERSON_AND_ORGANIZATION_ADDRESS",
+                "PERSONAL_ADDRESS",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_EFFECTIVITY",
+                "PRODUCT_DEFINITION_SUBSTITUTE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                "PROPERTY_DEFINITION_REPRESENTATION",
+                "SHAPE_DEFINITION_REPRESENTATION",
+                "VOLUME_UNIT",
+            ],
+            complex_ok: true,
+            is_vec: false,
+        }],
         "NAMED_UNIT" => &[RefSlot {
             idx: 0,
             name: "dimensions",
@@ -9860,8 +11106,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -9903,6 +11152,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -10031,7 +11281,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -10121,7 +11373,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -10227,6 +11481,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -10234,9 +11489,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -10263,7 +11520,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -10347,7 +11606,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -10396,8 +11657,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -10561,8 +11825,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE",
                 "BOUNDED_SURFACE_CURVE",
                 "BREP_WITH_VOIDS",
+                "CAMERA_IMAGE",
+                "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CIRCLE",
                 "CLOSED_SHELL",
@@ -10716,8 +11983,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -10901,8 +12171,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -11030,6 +12303,27 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "PRESENTED_ITEM_REPRESENTATION" => &[
+            RefSlot {
+                idx: 0,
+                name: "presentation",
+                allowed: &[
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_SET",
+                    "PRESENTATION_VIEW",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "item",
+                allowed: &["APPLIED_PRESENTED_ITEM", "PRESENTED_ITEM"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "PRODUCT" => &[RefSlot {
             idx: 3,
             name: "frame_of_reference",
@@ -11100,6 +12394,32 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION" => &[
+            RefSlot {
+                idx: 0,
+                name: "definition",
+                allowed: &[
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "frame_of_reference",
+                allowed: &["DESIGN_CONTEXT", "PRODUCT_DEFINITION_CONTEXT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "role",
+                allowed: &["PRODUCT_DEFINITION_CONTEXT_ROLE"],
+                complex_ok: false,
+                is_vec: false,
+            },
+        ],
         "PRODUCT_DEFINITION_EFFECTIVITY" => &[RefSlot {
             idx: 1,
             name: "usage",
@@ -11235,7 +12555,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                 "DIMENSIONAL_SIZE_WITH_PATH",
+                "DIRECTED_DIMENSIONAL_LOCATION",
                 "DOCUMENT_FILE",
                 "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
                 "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
@@ -11266,6 +12588,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
+                "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "STRAIGHTNESS_TOLERANCE",
                 "SURFACE_PROFILE_TOLERANCE",
@@ -11278,6 +12601,30 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: false,
         }],
+        "PRODUCT_DEFINITION_SUBSTITUTE" => &[
+            RefSlot {
+                idx: 1,
+                name: "context_relationship",
+                allowed: &[
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_USAGE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "substitute_definition",
+                allowed: &[
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "PRODUCT_DEFINITION_USAGE" => &[
             RefSlot {
                 idx: 3,
@@ -11337,6 +12684,76 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "PROJECTED_ZONE_DEFINITION" => &[
+            RefSlot {
+                idx: 0,
+                name: "zone",
+                allowed: &["TOLERANCE_ZONE", "TOLERANCE_ZONE_WITH_DATUM"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "boundaries",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "projection_end",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "projected_length",
+                allowed: &["LENGTH_MEASURE_WITH_UNIT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "PROPERTY_DEFINITION" => &[RefSlot {
             idx: 2,
             name: "definition",
@@ -11366,7 +12783,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                 "DIMENSIONAL_SIZE_WITH_PATH",
+                "DIRECTED_DIMENSIONAL_LOCATION",
                 "DOCUMENT_FILE",
                 "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
                 "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
@@ -11397,6 +12816,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
+                "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "STRAIGHTNESS_TOLERANCE",
                 "SURFACE_PROFILE_TOLERANCE",
@@ -11445,6 +12865,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "GENERAL_PROPERTY",
                     "PLACED_DATUM_TARGET_FEATURE",
@@ -11453,6 +12875,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION_RELATIONSHIP",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -11469,6 +12892,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -11505,6 +12929,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             allowed: &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"],
             complex_ok: false,
             is_vec: true,
+        }],
+        "RATIO_UNIT" => &[RefSlot {
+            idx: 0,
+            name: "dimensions",
+            allowed: &["DIMENSIONAL_EXPONENTS"],
+            complex_ok: false,
+            is_vec: false,
         }],
         "RATIONAL_B_SPLINE_CURVE" => &[RefSlot {
             idx: 2,
@@ -11557,8 +12988,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -11723,8 +13157,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -11847,6 +13284,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -11882,6 +13320,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -11909,6 +13348,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -11938,6 +13378,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -11965,6 +13406,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -12065,7 +13507,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -12177,6 +13621,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -12203,6 +13648,63 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "SHAPE_ASPECT_DERIVING_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_shape_aspect",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_shape_aspect",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -12231,6 +13733,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -12257,6 +13760,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -12287,6 +13791,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "GENERAL_PROPERTY",
                     "PLACED_DATUM_TARGET_FEATURE",
@@ -12295,6 +13801,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION_RELATIONSHIP",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -12311,6 +13818,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -12366,8 +13874,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -12532,8 +14043,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -12671,6 +14185,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -12698,6 +14213,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -12817,7 +14333,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -12869,8 +14387,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -12912,6 +14433,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -13155,7 +14677,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -13363,8 +14887,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -13534,7 +15061,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -13616,8 +15145,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -13659,6 +15191,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -13838,8 +15371,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -14134,7 +15670,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "FLATNESS_TOLERANCE",
                     "GENERAL_DATUM_REFERENCE",
                     "GEOMETRIC_TOLERANCE",
@@ -14191,6 +15729,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -14223,7 +15762,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "FLATNESS_TOLERANCE",
                     "GENERAL_DATUM_REFERENCE",
                     "GEOMETRIC_TOLERANCE",
@@ -14297,7 +15838,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -14382,6 +15925,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -14389,9 +15933,11 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -14424,7 +15970,9 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -14499,6 +16047,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "VOLUME_UNIT" => &[RefSlot {
+            idx: 0,
+            name: "elements",
+            allowed: &["DERIVED_UNIT_ELEMENT"],
+            complex_ok: false,
+            is_vec: true,
+        }],
         "WIRE_SHELL" => &[RefSlot {
             idx: 1,
             name: "wire_shell_extent",
@@ -14690,6 +16245,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DRAUGHTING_MODEL",
                 "EFFECTIVITY",
                 "GENERAL_PROPERTY",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -14783,8 +16339,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE",
                 "BOUNDED_SURFACE_CURVE",
                 "BREP_WITH_VOIDS",
+                "CAMERA_IMAGE",
+                "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                 "CENTRE_OF_SYMMETRY",
@@ -14834,7 +16393,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                 "DIMENSIONAL_SIZE_WITH_PATH",
+                "DIRECTED_DIMENSIONAL_LOCATION",
                 "DIRECTION",
                 "DOCUMENT_FILE",
                 "DRAUGHTING_ANNOTATION_OCCURRENCE",
@@ -14869,6 +16430,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_CURVE_SET",
                 "GEOMETRIC_REPRESENTATION_ITEM",
                 "GEOMETRIC_SET",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "GROUP",
                 "HYPERBOLA",
@@ -14919,6 +16481,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT",
                 "PRODUCT_CATEGORY",
                 "PRODUCT_CONCEPT",
+                "PRODUCT_CONCEPT_FEATURE_CATEGORY",
                 "PRODUCT_DEFINITION",
                 "PRODUCT_DEFINITION_CONTEXT",
                 "PRODUCT_DEFINITION_EFFECTIVITY",
@@ -14947,6 +16510,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "SECURITY_CLASSIFICATION",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
+                "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "SHAPE_DEFINITION_REPRESENTATION",
                 "SHAPE_DIMENSION_REPRESENTATION",
@@ -15029,6 +16593,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "APPROVAL",
                 "APPROVAL_PERSON_ORGANIZATION",
                 "APPROVAL_STATUS",
+                "AREA_UNIT",
                 "ASSEMBLY_COMPONENT_USAGE",
                 "AUXILIARY_LEADER_LINE",
                 "AXIS1_PLACEMENT",
@@ -15045,8 +16610,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE",
                 "BOUNDED_SURFACE_CURVE",
                 "BREP_WITH_VOIDS",
+                "CAMERA_IMAGE",
+                "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                 "CERTIFICATION",
@@ -15105,6 +16673,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_CURVE_SET",
                 "GEOMETRIC_REPRESENTATION_ITEM",
                 "GEOMETRIC_SET",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "GROUP",
                 "HYPERBOLA",
@@ -15156,6 +16725,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT",
                 "PRODUCT_CONCEPT",
                 "PRODUCT_CONCEPT_CONTEXT",
+                "PRODUCT_CONCEPT_FEATURE_CATEGORY",
                 "PRODUCT_DEFINITION",
                 "PRODUCT_DEFINITION_CONTEXT",
                 "PRODUCT_DEFINITION_EFFECTIVITY",
@@ -15168,6 +16738,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "QUALIFIED_REPRESENTATION_ITEM",
                 "QUASI_UNIFORM_CURVE",
                 "QUASI_UNIFORM_SURFACE",
+                "RATIO_UNIT",
                 "RATIONAL_B_SPLINE_CURVE",
                 "RATIONAL_B_SPLINE_SURFACE",
                 "REAL_REPRESENTATION_ITEM",
@@ -15221,6 +16792,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "VERTEX_LOOP",
                 "VERTEX_POINT",
                 "VERTEX_SHELL",
+                "VOLUME_UNIT",
                 "WIRE_SHELL",
             ],
             complex_ok: true,
@@ -15256,6 +16828,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "APPROVAL",
                 "APPROVAL_PERSON_ORGANIZATION",
                 "APPROVAL_STATUS",
+                "AREA_UNIT",
                 "ASCRIBABLE_STATE",
                 "ASCRIBABLE_STATE_RELATIONSHIP",
                 "ASSEMBLY_COMPONENT_USAGE",
@@ -15275,8 +16848,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE_CURVE",
                 "BREP_WITH_VOIDS",
                 "CALENDAR_DATE",
+                "CAMERA_IMAGE",
+                "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
                 "CENTRE_OF_SYMMETRY",
@@ -15330,6 +16906,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DESIGN_CONTEXT",
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                "DIRECTED_DIMENSIONAL_LOCATION",
                 "DIRECTION",
                 "DOCUMENT_FILE",
                 "DRAUGHTING_ANNOTATION_OCCURRENCE",
@@ -15360,6 +16938,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_REPRESENTATION_CONTEXT",
                 "GEOMETRIC_REPRESENTATION_ITEM",
                 "GEOMETRIC_SET",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
                 "GLOBAL_UNIT_ASSIGNED_CONTEXT",
@@ -15438,6 +17017,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "QUALIFIED_REPRESENTATION_ITEM",
                 "QUASI_UNIFORM_CURVE",
                 "QUASI_UNIFORM_SURFACE",
+                "RATIO_UNIT",
                 "RATIONAL_B_SPLINE_CURVE",
                 "RATIONAL_B_SPLINE_SURFACE",
                 "REAL_REPRESENTATION_ITEM",
@@ -15451,6 +17031,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "SECURITY_CLASSIFICATION",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
+                "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "SHAPE_DEFINITION_REPRESENTATION",
                 "SHAPE_DIMENSION_REPRESENTATION",
@@ -15502,7 +17083,30 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "VERTEX_LOOP",
                 "VERTEX_POINT",
                 "VERTEX_SHELL",
+                "VOLUME_UNIT",
                 "WIRE_SHELL",
+            ],
+            complex_ok: true,
+            is_vec: true,
+        }],
+        "APPLIED_PRESENTED_ITEM" => &[RefSlot {
+            idx: 0,
+            name: "items",
+            allowed: &[
+                "ACTION",
+                "ACTION_METHOD",
+                "ACTION_RELATIONSHIP",
+                "ASSEMBLY_COMPONENT_USAGE",
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                "PRODUCT_CONCEPT",
+                "PRODUCT_CONCEPT_FEATURE",
+                "PRODUCT_CONCEPT_FEATURE_CATEGORY",
+                "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_FORMATION",
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "PRODUCT_DEFINITION_RELATIONSHIP",
+                "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
             ],
             complex_ok: true,
             is_vec: true,
@@ -15514,6 +17118,22 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "AREA_IN_SET" => &[
+            RefSlot {
+                idx: 0,
+                name: "area",
+                allowed: &["PRESENTATION_AREA"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "in_set",
+                allowed: &["PRESENTATION_SET"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "ASCRIBABLE_STATE_RELATIONSHIP" => &[
             RefSlot {
                 idx: 2,
@@ -15693,8 +17313,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -15817,6 +17440,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -15943,8 +17567,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "BOUNDED_SURFACE",
                 "BOUNDED_SURFACE_CURVE",
                 "BREP_WITH_VOIDS",
+                "CAMERA_IMAGE",
+                "CAMERA_IMAGE_3D_WITH_SCALE",
                 "CAMERA_MODEL",
                 "CAMERA_MODEL_D3",
+                "CAMERA_MODEL_D3_WITH_HLHSR",
                 "CARTESIAN_POINT",
                 "CHARACTERIZED_REPRESENTATION",
                 "CIRCLE",
@@ -15993,6 +17620,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRIC_CURVE_SET",
                 "GEOMETRIC_REPRESENTATION_ITEM",
                 "GEOMETRIC_SET",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "GROUP",
                 "HYPERBOLA",
@@ -16031,6 +17659,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRESENTATION_REPRESENTATION",
                 "PRESENTATION_SET",
                 "PRESENTATION_VIEW",
+                "PRODUCT_CONCEPT_FEATURE_CATEGORY",
                 "QUALIFIED_REPRESENTATION_ITEM",
                 "QUASI_UNIFORM_CURVE",
                 "QUASI_UNIFORM_SURFACE",
@@ -16271,6 +17900,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DATUM_SYSTEM",
                 "DATUM_TARGET",
                 "DERIVED_SHAPE_ASPECT",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                 "GENERAL_DATUM_REFERENCE",
                 "PLACED_DATUM_TARGET_FEATURE",
                 "SHAPE_ASPECT",
@@ -16287,6 +17917,28 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "DOCUMENT_PRODUCT_ASSOCIATION" => &[
+            RefSlot {
+                idx: 2,
+                name: "relating_document",
+                allowed: &["DOCUMENT", "DOCUMENT_FILE"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_product",
+                allowed: &[
+                    "PRODUCT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "DOCUMENT_REFERENCE" => &[RefSlot {
             idx: 0,
             name: "assigned_document",
@@ -16688,7 +18340,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "PRODUCT_DEFINITION_SHAPE",
@@ -16739,6 +18393,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 0,
             name: "units",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -16746,9 +18401,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: true,
@@ -16756,7 +18413,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "GROUP_ASSIGNMENT" => &[RefSlot {
             idx: 0,
             name: "assigned_group",
-            allowed: &["GROUP"],
+            allowed: &["GROUP", "PRODUCT_CONCEPT_FEATURE_CATEGORY"],
             complex_ok: true,
             is_vec: false,
         }],
@@ -16787,6 +18444,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DRAUGHTING_ANNOTATION_OCCURRENCE",
                 "DRAUGHTING_CALLOUT",
                 "DRAUGHTING_MODEL",
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "LEADER_CURVE",
                 "LEADER_DIRECTED_CALLOUT",
@@ -16849,8 +18507,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -17000,8 +18661,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -17127,7 +18791,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "mapping_source",
-                allowed: &["REPRESENTATION_MAP"],
+                allowed: &["CAMERA_USAGE", "REPRESENTATION_MAP"],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -17167,8 +18831,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -17287,6 +18954,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
+                "AREA_UNIT",
                 "CONTEXT_DEPENDENT_UNIT",
                 "CONVERSION_BASED_UNIT",
                 "DERIVED_UNIT",
@@ -17294,9 +18962,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "NAMED_UNIT",
                 "PLANE_ANGLE_UNIT",
+                "RATIO_UNIT",
                 "SI_UNIT",
                 "SOLID_ANGLE_UNIT",
                 "TIME_UNIT",
+                "VOLUME_UNIT",
             ],
             complex_ok: true,
             is_vec: false,
@@ -17648,6 +19318,42 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: true,
             is_vec: true,
         }],
+        "PROJECTED_ZONE_DEFINITION" => &[
+            RefSlot {
+                idx: 0,
+                name: "projection_end",
+                allowed: &[
+                    "ALL_AROUND_SHAPE_ASPECT",
+                    "CENTRE_OF_SYMMETRY",
+                    "COMMON_DATUM",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "CONTINUOUS_SHAPE_ASPECT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_REFERENCE_COMPARTMENT",
+                    "DATUM_REFERENCE_ELEMENT",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "SHAPE_ASPECT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 1,
+                name: "projected_length",
+                allowed: &["LENGTH_MEASURE_WITH_UNIT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "PROPERTY_DEFINITION" => &[RefSlot {
             idx: 2,
             name: "definition",
@@ -17677,7 +19383,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DIMENSIONAL_LOCATION",
                 "DIMENSIONAL_LOCATION_WITH_PATH",
                 "DIMENSIONAL_SIZE",
+                "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                 "DIMENSIONAL_SIZE_WITH_PATH",
+                "DIRECTED_DIMENSIONAL_LOCATION",
                 "DOCUMENT_FILE",
                 "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
                 "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
@@ -17708,6 +19416,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
+                "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                 "SHAPE_ASPECT_RELATIONSHIP",
                 "STRAIGHTNESS_TOLERANCE",
                 "SURFACE_PROFILE_TOLERANCE",
@@ -17740,6 +19449,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DERIVED_SHAPE_ASPECT",
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "GENERAL_DATUM_REFERENCE",
                     "GENERAL_PROPERTY",
                     "PLACED_DATUM_TARGET_FEATURE",
@@ -17748,6 +19459,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "PROPERTY_DEFINITION_RELATIONSHIP",
                     "SHAPE_ASPECT",
                     "SHAPE_ASPECT_ASSOCIATIVITY",
+                    "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
                     "SHAPE_ASPECT_RELATIONSHIP",
                     "TOLERANCE_ZONE",
                     "TOLERANCE_ZONE_WITH_DATUM",
@@ -17764,6 +19476,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -17838,8 +19551,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -18004,8 +19720,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CIRCLE",
                     "CLOSED_SHELL",
@@ -18128,6 +19847,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -18163,6 +19883,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -18190,6 +19911,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                     "DEFINITIONAL_REPRESENTATION",
                     "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
@@ -18251,6 +19973,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -18277,6 +20000,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -18350,8 +20074,11 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "BOUNDED_SURFACE",
                     "BOUNDED_SURFACE_CURVE",
                     "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
                     "CAMERA_MODEL",
                     "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
                     "CARTESIAN_POINT",
                     "CHARACTERIZED_REPRESENTATION",
                     "CIRCLE",
@@ -18393,6 +20120,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRIC_CURVE_SET",
                     "GEOMETRIC_REPRESENTATION_ITEM",
                     "GEOMETRIC_SET",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "HYPERBOLA",
                     "INTERSECTION_CURVE",
@@ -18706,7 +20434,9 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DIMENSIONAL_LOCATION",
                     "DIMENSIONAL_LOCATION_WITH_PATH",
                     "DIMENSIONAL_SIZE",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "DIMENSIONAL_SIZE_WITH_PATH",
+                    "DIRECTED_DIMENSIONAL_LOCATION",
                     "FLATNESS_TOLERANCE",
                     "GENERAL_DATUM_REFERENCE",
                     "GEOMETRIC_TOLERANCE",
@@ -18763,6 +20493,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "DATUM_SYSTEM",
                     "DATUM_TARGET",
                     "DERIVED_SHAPE_ASPECT",
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
                     "GENERAL_DATUM_REFERENCE",
                     "PLACED_DATUM_TARGET_FEATURE",
                     "SHAPE_ASPECT",
@@ -18844,6 +20575,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_action_propertys: Vec<(ActionPropertyId, u64)> = Vec::new();
     let mut pending_action_relationships: Vec<(ActionRelationshipId, u64)> = Vec::new();
     let mut pending_action_request_assignments: Vec<(ActionRequestAssignmentId, u64)> = Vec::new();
+    let mut pending_action_request_solutions: Vec<(ActionRequestSolutionId, u64)> = Vec::new();
     let mut pending_action_resources: Vec<(ActionResourceId, u64)> = Vec::new();
     let mut pending_action_resource_relationships: Vec<(ActionResourceRelationshipId, u64)> =
         Vec::new();
@@ -18909,12 +20641,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_applied_group_assignments: Vec<(AppliedGroupAssignmentId, u64)> = Vec::new();
+    let mut pending_applied_presented_items: Vec<(AppliedPresentedItemId, u64)> = Vec::new();
     let mut pending_approvals: Vec<(ApprovalId, u64)> = Vec::new();
     let mut pending_approval_assignments: Vec<(ApprovalAssignmentId, u64)> = Vec::new();
     let mut pending_approval_date_times: Vec<(ApprovalDateTimeId, u64)> = Vec::new();
     let mut pending_approval_person_organizations: Vec<(ApprovalPersonOrganizationId, u64)> =
         Vec::new();
     let mut pending_approximation_tolerances: Vec<(ApproximationToleranceId, u64)> = Vec::new();
+    let mut pending_area_in_sets: Vec<(AreaInSetId, u64)> = Vec::new();
+    let mut pending_area_units: Vec<(AreaUnitId, u64)> = Vec::new();
     let mut pending_ascribable_states: Vec<(AscribableStateId, u64)> = Vec::new();
     let mut pending_ascribable_state_relationships: Vec<(AscribableStateRelationshipId, u64)> =
         Vec::new();
@@ -18933,7 +20668,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_bounded_pcurves: Vec<(BoundedPcurveId, u64)> = Vec::new();
     let mut pending_bounded_surface_curves: Vec<(BoundedSurfaceCurveId, u64)> = Vec::new();
     let mut pending_brep_with_voidss: Vec<(BrepWithVoidsId, u64)> = Vec::new();
+    let mut pending_camera_images: Vec<(CameraImageId, u64)> = Vec::new();
+    let mut pending_camera_image3d_with_scales: Vec<(CameraImage3dWithScaleId, u64)> = Vec::new();
     let mut pending_camera_model_d3s: Vec<(CameraModelD3Id, u64)> = Vec::new();
+    let mut pending_camera_model_d3_with_hlhsrs: Vec<(CameraModelD3WithHlhsrId, u64)> = Vec::new();
+    let mut pending_camera_usages: Vec<(CameraUsageId, u64)> = Vec::new();
     let mut pending_cc_design_approvals: Vec<(CcDesignApprovalId, u64)> = Vec::new();
     let mut pending_cc_design_date_and_time_assignments: Vec<(
         CcDesignDateAndTimeAssignmentId,
@@ -19049,10 +20788,22 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_dimensional_location_with_paths: Vec<(DimensionalLocationWithPathId, u64)> =
         Vec::new();
     let mut pending_dimensional_sizes: Vec<(DimensionalSizeId, u64)> = Vec::new();
+    let mut pending_dimensional_size_with_datum_features: Vec<(
+        DimensionalSizeWithDatumFeatureId,
+        u64,
+    )> = Vec::new();
     let mut pending_dimensional_size_with_paths: Vec<(DimensionalSizeWithPathId, u64)> = Vec::new();
+    let mut pending_directed_dimensional_locations: Vec<(DirectedDimensionalLocationId, u64)> =
+        Vec::new();
     let mut pending_documents: Vec<(DocumentId, u64)> = Vec::new();
     let mut pending_document_files: Vec<(DocumentFileId, u64)> = Vec::new();
+    let mut pending_document_product_associations: Vec<(DocumentProductAssociationId, u64)> =
+        Vec::new();
+    let mut pending_document_product_equivalences: Vec<(DocumentProductEquivalenceId, u64)> =
+        Vec::new();
     let mut pending_document_references: Vec<(DocumentReferenceId, u64)> = Vec::new();
+    let mut pending_document_representation_types: Vec<(DocumentRepresentationTypeId, u64)> =
+        Vec::new();
     let mut pending_draughting_annotation_occurrences: Vec<(
         DraughtingAnnotationOccurrenceId,
         u64,
@@ -19127,6 +20878,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_geometric_sets: Vec<(GeometricSetId, u64)> = Vec::new();
     let mut pending_geometric_tolerances: Vec<(GeometricToleranceId, u64)> = Vec::new();
+    let mut pending_geometric_tolerance_relationships: Vec<(
+        GeometricToleranceRelationshipId,
+        u64,
+    )> = Vec::new();
     let mut pending_geometric_tolerance_with_datum_references: Vec<(
         GeometricToleranceWithDatumReferenceId,
         u64,
@@ -19145,6 +20900,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_geometric_tolerance_with_modifierss: Vec<(
         GeometricToleranceWithModifiersId,
+        u64,
+    )> = Vec::new();
+    let mut pending_geometrically_bounded_surface_shape_representations: Vec<(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
         u64,
     )> = Vec::new();
     let mut pending_geometrically_bounded_wireframe_shape_representations: Vec<(
@@ -19181,6 +20940,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_mapped_items: Vec<(MappedItemId, u64)> = Vec::new();
     let mut pending_mass_measure_with_units: Vec<(MassMeasureWithUnitId, u64)> = Vec::new();
     let mut pending_mass_units: Vec<(MassUnitId, u64)> = Vec::new();
+    let mut pending_measure_qualifications: Vec<(MeasureQualificationId, u64)> = Vec::new();
     let mut pending_measure_representation_items: Vec<(MeasureRepresentationItemId, u64)> =
         Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
@@ -19204,6 +20964,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_model_geometric_views: Vec<(ModelGeometricViewId, u64)> = Vec::new();
     let mut pending_modified_geometric_tolerances: Vec<(ModifiedGeometricToleranceId, u64)> =
         Vec::new();
+    let mut pending_name_attributes: Vec<(NameAttributeId, u64)> = Vec::new();
     let mut pending_named_units: Vec<(NamedUnitId, u64)> = Vec::new();
     let mut pending_next_assembly_usage_occurrences: Vec<(NextAssemblyUsageOccurrenceId, u64)> =
         Vec::new();
@@ -19255,6 +21016,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_presentation_style_assignments: Vec<(PresentationStyleAssignmentId, u64)> =
         Vec::new();
     let mut pending_presentation_views: Vec<(PresentationViewId, u64)> = Vec::new();
+    let mut pending_presented_item_representations: Vec<(PresentedItemRepresentationId, u64)> =
+        Vec::new();
     let mut pending_products: Vec<(ProductId, u64)> = Vec::new();
     let mut pending_product_category_relationships: Vec<(ProductCategoryRelationshipId, u64)> =
         Vec::new();
@@ -19264,6 +21027,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_product_definitions: Vec<(ProductDefinitionId, u64)> = Vec::new();
     let mut pending_product_definition_contexts: Vec<(ProductDefinitionContextId, u64)> =
         Vec::new();
+    let mut pending_product_definition_context_associations: Vec<(
+        ProductDefinitionContextAssociationId,
+        u64,
+    )> = Vec::new();
     let mut pending_product_definition_effectivitys: Vec<(ProductDefinitionEffectivityId, u64)> =
         Vec::new();
     let mut pending_product_definition_formations: Vec<(ProductDefinitionFormationId, u64)> =
@@ -19281,6 +21048,8 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         u64,
     )> = Vec::new();
     let mut pending_product_definition_shapes: Vec<(ProductDefinitionShapeId, u64)> = Vec::new();
+    let mut pending_product_definition_substitutes: Vec<(ProductDefinitionSubstituteId, u64)> =
+        Vec::new();
     let mut pending_product_definition_usages: Vec<(ProductDefinitionUsageId, u64)> = Vec::new();
     let mut pending_product_definition_with_associated_documentss: Vec<(
         ProductDefinitionWithAssociatedDocumentsId,
@@ -19288,6 +21057,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_product_related_product_categorys: Vec<(ProductRelatedProductCategoryId, u64)> =
         Vec::new();
+    let mut pending_projected_zone_definitions: Vec<(ProjectedZoneDefinitionId, u64)> = Vec::new();
     let mut pending_property_definitions: Vec<(PropertyDefinitionId, u64)> = Vec::new();
     let mut pending_property_definition_relationships: Vec<(
         PropertyDefinitionRelationshipId,
@@ -19301,6 +21071,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_quasi_uniform_curves: Vec<(QuasiUniformCurveId, u64)> = Vec::new();
     let mut pending_quasi_uniform_surfaces: Vec<(QuasiUniformSurfaceId, u64)> = Vec::new();
+    let mut pending_ratio_units: Vec<(RatioUnitId, u64)> = Vec::new();
     let mut pending_rational_b_spline_curves: Vec<(RationalBSplineCurveId, u64)> = Vec::new();
     let mut pending_rational_b_spline_surfaces: Vec<(RationalBSplineSurfaceId, u64)> = Vec::new();
     let mut pending_repositioned_tessellated_items: Vec<(RepositionedTessellatedItemId, u64)> =
@@ -19326,6 +21097,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_shape_aspects: Vec<(ShapeAspectId, u64)> = Vec::new();
     let mut pending_shape_aspect_associativitys: Vec<(ShapeAspectAssociativityId, u64)> =
         Vec::new();
+    let mut pending_shape_aspect_deriving_relationships: Vec<(
+        ShapeAspectDerivingRelationshipId,
+        u64,
+    )> = Vec::new();
     let mut pending_shape_aspect_relationships: Vec<(ShapeAspectRelationshipId, u64)> = Vec::new();
     let mut pending_shape_definition_representations: Vec<(ShapeDefinitionRepresentationId, u64)> =
         Vec::new();
@@ -19418,6 +21193,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_vertex_points: Vec<(VertexPointId, u64)> = Vec::new();
     let mut pending_vertex_shells: Vec<(VertexShellId, u64)> = Vec::new();
     let mut pending_view_volumes: Vec<(ViewVolumeId, u64)> = Vec::new();
+    let mut pending_volume_units: Vec<(VolumeUnitId, u64)> = Vec::new();
     let mut pending_wire_shells: Vec<(WireShellId, u64)> = Vec::new();
     let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();
     for (&id, ent) in map {
@@ -19534,6 +21310,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ActionRequestAssignmentId(model.action_request_assignments.push(v));
                 idmap.insert(id, AnyId::ActionRequestAssignment(aid));
                 pending_action_request_assignments.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "ACTION_REQUEST_SOLUTION" => {
+                let v = ActionRequestSolution {
+                    method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
+                    request: VersionedActionRequestRef::VersionedActionRequest(
+                        VersionedActionRequestId(usize::MAX),
+                    ),
+                };
+                let aid = ActionRequestSolutionId(model.action_request_solutions.push(v));
+                idmap.insert(id, AnyId::ActionRequestSolution(aid));
+                pending_action_request_solutions.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -19884,9 +21673,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "ANNOTATION_SYMBOL" => {
                 let v = AnnotationSymbol {
                     name: as_str(&attributes[0]),
-                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
-                        usize::MAX,
-                    )),
+                    mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
                     mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
                 };
                 let aid = AnnotationSymbolId(model.annotation_symbols.push(v));
@@ -19912,9 +21699,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "ANNOTATION_TEXT" => {
                 let v = AnnotationText {
                     name: as_str(&attributes[0]),
-                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
-                        usize::MAX,
-                    )),
+                    mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
                     mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(
                         usize::MAX,
                     )),
@@ -19928,9 +21713,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "ANNOTATION_TEXT_CHARACTER" => {
                 let v = AnnotationTextCharacter {
                     name: as_str(&attributes[0]),
-                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
-                        usize::MAX,
-                    )),
+                    mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
                     mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(
                         usize::MAX,
                     )),
@@ -20112,6 +21895,14 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "APPLIED_PRESENTED_ITEM" => {
+                let v = AppliedPresentedItem { items: Vec::new() };
+                let aid = AppliedPresentedItemId(model.applied_presented_items.push(v));
+                idmap.insert(id, AnyId::AppliedPresentedItem(aid));
+                pending_applied_presented_items.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "APPROVAL" => {
                 let v = Approval {
                     status: ApprovalStatusRef::ApprovalStatus(ApprovalStatusId(usize::MAX)),
@@ -20224,6 +22015,27 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     model.approximation_tolerance_parameters.push(v),
                 );
                 idmap.insert(id, AnyId::ApproximationToleranceParameter(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "AREA_IN_SET" => {
+                let v = AreaInSet {
+                    area: PresentationAreaRef::PresentationArea(PresentationAreaId(usize::MAX)),
+                    in_set: PresentationSetRef::PresentationSet(PresentationSetId(usize::MAX)),
+                };
+                let aid = AreaInSetId(model.area_in_sets.push(v));
+                idmap.insert(id, AnyId::AreaInSet(aid));
+                pending_area_in_sets.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "AREA_UNIT" => {
+                let v = AreaUnit {
+                    elements: Vec::new(),
+                };
+                let aid = AreaUnitId(model.area_units.push(v));
+                idmap.insert(id, AnyId::AreaUnit(aid));
+                pending_area_units.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -20575,6 +22387,30 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CAMERA_IMAGE" => {
+                let v = CameraImage {
+                    name: as_str(&attributes[0]),
+                    mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
+                    mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                };
+                let aid = CameraImageId(model.camera_images.push(v));
+                idmap.insert(id, AnyId::CameraImage(aid));
+                pending_camera_images.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CAMERA_IMAGE_3D_WITH_SCALE" => {
+                let v = CameraImage3dWithScale {
+                    name: as_str(&attributes[0]),
+                    mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
+                    mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                };
+                let aid = CameraImage3dWithScaleId(model.camera_image3d_with_scales.push(v));
+                idmap.insert(id, AnyId::CameraImage3dWithScale(aid));
+                pending_camera_image3d_with_scales.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CAMERA_MODEL" => {
                 let v = CameraModel {
                     name: as_str(&attributes[0]),
@@ -20595,6 +22431,34 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = CameraModelD3Id(model.camera_model_d3s.push(v));
                 idmap.insert(id, AnyId::CameraModelD3(aid));
                 pending_camera_model_d3s.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CAMERA_MODEL_D3_WITH_HLHSR" => {
+                let v = CameraModelD3WithHlhsr {
+                    name: as_str(&attributes[0]),
+                    view_reference_system: Axis2Placement3dRef::Axis2Placement3d(
+                        Axis2Placement3dId(usize::MAX),
+                    ),
+                    perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)),
+                    hidden_line_surface_removal: matches!(&attributes[3], Attribute::Enum(s) if s == "T"),
+                };
+                let aid = CameraModelD3WithHlhsrId(model.camera_model_d3_with_hlhsrs.push(v));
+                idmap.insert(id, AnyId::CameraModelD3WithHlhsr(aid));
+                pending_camera_model_d3_with_hlhsrs.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "CAMERA_USAGE" => {
+                let v = CameraUsage {
+                    mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+                    mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
+                        AdvancedBrepShapeRepresentationId(usize::MAX),
+                    ),
+                };
+                let aid = CameraUsageId(model.camera_usages.push(v));
+                idmap.insert(id, AnyId::CameraUsage(aid));
+                pending_camera_usages.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -21932,6 +23796,30 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE" => {
+                let v = DimensionalSizeWithDatumFeature {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(
+                        ProductDefinitionShapeId(usize::MAX),
+                    ),
+                    product_definitional: as_logical(&attributes[3]),
+                    applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
+                        usize::MAX,
+                    )),
+                    name_1: as_str(&attributes[5]),
+                };
+                let aid = DimensionalSizeWithDatumFeatureId(
+                    model.dimensional_size_with_datum_features.push(v),
+                );
+                idmap.insert(id, AnyId::DimensionalSizeWithDatumFeature(aid));
+                pending_dimensional_size_with_datum_features.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DIMENSIONAL_SIZE_WITH_PATH" => {
                 let v = DimensionalSizeWithPath {
                     applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
@@ -21943,6 +23831,27 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = DimensionalSizeWithPathId(model.dimensional_size_with_paths.push(v));
                 idmap.insert(id, AnyId::DimensionalSizeWithPath(aid));
                 pending_dimensional_size_with_paths.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DIRECTED_DIMENSIONAL_LOCATION" => {
+                let v = DirectedDimensionalLocation {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                    related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                };
+                let aid =
+                    DirectedDimensionalLocationId(model.directed_dimensional_locations.push(v));
+                idmap.insert(id, AnyId::DirectedDimensionalLocation(aid));
+                pending_directed_dimensional_locations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -21996,6 +23905,42 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DOCUMENT_PRODUCT_ASSOCIATION" => {
+                let v = DocumentProductAssociation {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_document: DocumentRef::Document(DocumentId(usize::MAX)),
+                    related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = DocumentProductAssociationId(model.document_product_associations.push(v));
+                idmap.insert(id, AnyId::DocumentProductAssociation(aid));
+                pending_document_product_associations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DOCUMENT_PRODUCT_EQUIVALENCE" => {
+                let v = DocumentProductEquivalence {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_document: DocumentRef::Document(DocumentId(usize::MAX)),
+                    related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(
+                        usize::MAX,
+                    )),
+                };
+                let aid = DocumentProductEquivalenceId(model.document_product_equivalences.push(v));
+                idmap.insert(id, AnyId::DocumentProductEquivalence(aid));
+                pending_document_product_equivalences.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DOCUMENT_REFERENCE" => {
                 let v = DocumentReference {
                     assigned_document: DocumentRef::Document(DocumentId(usize::MAX)),
@@ -22004,6 +23949,17 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = DocumentReferenceId(model.document_references.push(v));
                 idmap.insert(id, AnyId::DocumentReference(aid));
                 pending_document_references.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DOCUMENT_REPRESENTATION_TYPE" => {
+                let v = DocumentRepresentationType {
+                    name: as_str(&attributes[0]),
+                    represented_document: DocumentRef::Document(DocumentId(usize::MAX)),
+                };
+                let aid = DocumentRepresentationTypeId(model.document_representation_types.push(v));
+                idmap.insert(id, AnyId::DocumentRepresentationType(aid));
+                pending_document_representation_types.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -22732,6 +24688,25 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "GEOMETRIC_TOLERANCE_RELATIONSHIP" => {
+                let v = GeometricToleranceRelationship {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                    relating_geometric_tolerance: GeometricToleranceRef::AngularityTolerance(
+                        AngularityToleranceId(usize::MAX),
+                    ),
+                    related_geometric_tolerance: GeometricToleranceRef::AngularityTolerance(
+                        AngularityToleranceId(usize::MAX),
+                    ),
+                };
+                let aid = GeometricToleranceRelationshipId(
+                    model.geometric_tolerance_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::GeometricToleranceRelationship(aid));
+                pending_geometric_tolerance_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => {
                 let v = GeometricToleranceWithDatumReference {
                     name: as_str(&attributes[0]),
@@ -22866,6 +24841,27 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 );
                 idmap.insert(id, AnyId::GeometricToleranceWithModifiers(aid));
                 pending_geometric_tolerance_with_modifierss.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => {
+                let v = GeometricallyBoundedSurfaceShapeRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = GeometricallyBoundedSurfaceShapeRepresentationId(
+                    model
+                        .geometrically_bounded_surface_shape_representations
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::GeometricallyBoundedSurfaceShapeRepresentation(aid),
+                );
+                pending_geometrically_bounded_surface_shape_representations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -23098,9 +25094,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "LENGTH_MEASURE_WITH_UNIT" => {
                 let v = LengthMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
-                        usize::MAX,
-                    )),
+                    unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
                 };
                 let aid = LengthMeasureWithUnitId(model.length_measure_with_units.push(v));
                 idmap.insert(id, AnyId::LengthMeasureWithUnit(aid));
@@ -23231,9 +25225,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "MAPPED_ITEM" => {
                 let v = MappedItem {
                     name: as_str(&attributes[0]),
-                    mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(
-                        usize::MAX,
-                    )),
+                    mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
                     mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
                 };
                 let aid = MappedItemId(model.mapped_items.push(v));
@@ -23245,9 +25237,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "MASS_MEASURE_WITH_UNIT" => {
                 let v = MassMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
-                        usize::MAX,
-                    )),
+                    unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
                 };
                 let aid = MassMeasureWithUnitId(model.mass_measure_with_units.push(v));
                 idmap.insert(id, AnyId::MassMeasureWithUnit(aid));
@@ -23267,13 +25257,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "MEASURE_QUALIFICATION" => {
+                let v = MeasureQualification {
+                    name: as_str(&attributes[0]),
+                    description: as_str(&attributes[1]),
+                    qualified_measure: MeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                    qualifiers: Vec::new(),
+                };
+                let aid = MeasureQualificationId(model.measure_qualifications.push(v));
+                idmap.insert(id, AnyId::MeasureQualification(aid));
+                pending_measure_qualifications.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "MEASURE_REPRESENTATION_ITEM" => {
                 let v = MeasureRepresentationItem {
                     name: as_str(&attributes[0]),
                     value_component: read_measure_value(&attributes[1]),
-                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
-                        usize::MAX,
-                    )),
+                    unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
                 };
                 let aid = MeasureRepresentationItemId(model.measure_representation_items.push(v));
                 idmap.insert(id, AnyId::MeasureRepresentationItem(aid));
@@ -23284,9 +25287,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "MEASURE_WITH_UNIT" => {
                 let v = MeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
-                        usize::MAX,
-                    )),
+                    unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
                 };
                 let aid = MeasureWithUnitId(model.measure_with_units.push(v));
                 idmap.insert(id, AnyId::MeasureWithUnit(aid));
@@ -23424,6 +25425,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ModifiedGeometricToleranceId(model.modified_geometric_tolerances.push(v));
                 idmap.insert(id, AnyId::ModifiedGeometricTolerance(aid));
                 pending_modified_geometric_tolerances.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "NAME_ATTRIBUTE" => {
+                let v = NameAttribute {
+                    attribute_value: as_str(&attributes[0]),
+                    named_item: NameAttributeSelectRef::ActionRequestSolution(
+                        ActionRequestSolutionId(usize::MAX),
+                    ),
+                };
+                let aid = NameAttributeId(model.name_attributes.push(v));
+                idmap.insert(id, AnyId::NameAttribute(aid));
+                pending_name_attributes.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -24087,9 +26101,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "PLANE_ANGLE_MEASURE_WITH_UNIT" => {
                 let v = PlaneAngleMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
-                        usize::MAX,
-                    )),
+                    unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
                 };
                 let aid = PlaneAngleMeasureWithUnitId(model.plane_angle_measure_with_units.push(v));
                 idmap.insert(id, AnyId::PlaneAngleMeasureWithUnit(aid));
@@ -24376,6 +26388,29 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRESENTED_ITEM" => {
+                let v = PresentedItem {};
+                let aid = PresentedItemId(model.presented_items.push(v));
+                idmap.insert(id, AnyId::PresentedItem(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRESENTED_ITEM_REPRESENTATION" => {
+                let v = PresentedItemRepresentation {
+                    presentation: PresentationRepresentationSelectRef::PresentationArea(
+                        PresentationAreaId(usize::MAX),
+                    ),
+                    item: PresentedItemRef::AppliedPresentedItem(AppliedPresentedItemId(
+                        usize::MAX,
+                    )),
+                };
+                let aid =
+                    PresentedItemRepresentationId(model.presented_item_representations.push(v));
+                idmap.insert(id, AnyId::PresentedItemRepresentation(aid));
+                pending_presented_item_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRODUCT" => {
                 let v = Product {
                     id: as_str(&attributes[0]),
@@ -24456,6 +26491,35 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRODUCT_CONCEPT_FEATURE" => {
+                let v = ProductConceptFeature {
+                    id: as_str(&attributes[0]),
+                    name: as_str(&attributes[1]),
+                    description: match &attributes[2] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[2])),
+                    },
+                };
+                let aid = ProductConceptFeatureId(model.product_concept_features.push(v));
+                idmap.insert(id, AnyId::ProductConceptFeature(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_CONCEPT_FEATURE_CATEGORY" => {
+                let v = ProductConceptFeatureCategory {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = ProductConceptFeatureCategoryId(
+                    model.product_concept_feature_categorys.push(v),
+                );
+                idmap.insert(id, AnyId::ProductConceptFeatureCategory(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRODUCT_CONTEXT" => {
                 let v = ProductContext {
                     name: as_str(&attributes[0]),
@@ -24501,6 +26565,40 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ProductDefinitionContextId(model.product_definition_contexts.push(v));
                 idmap.insert(id, AnyId::ProductDefinitionContext(aid));
                 pending_product_definition_contexts.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION" => {
+                let v = ProductDefinitionContextAssociation {
+                    definition: ProductDefinitionRef::ProductDefinition(ProductDefinitionId(
+                        usize::MAX,
+                    )),
+                    frame_of_reference: ProductDefinitionContextRef::DesignContext(
+                        DesignContextId(usize::MAX),
+                    ),
+                    role: ProductDefinitionContextRoleRef::ProductDefinitionContextRole(
+                        ProductDefinitionContextRoleId(usize::MAX),
+                    ),
+                };
+                let aid = ProductDefinitionContextAssociationId(
+                    model.product_definition_context_associations.push(v),
+                );
+                idmap.insert(id, AnyId::ProductDefinitionContextAssociation(aid));
+                pending_product_definition_context_associations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_CONTEXT_ROLE" => {
+                let v = ProductDefinitionContextRole {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid =
+                    ProductDefinitionContextRoleId(model.product_definition_context_roles.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionContextRole(aid));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -24644,6 +26742,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_SUBSTITUTE" => {
+                let v = ProductDefinitionSubstitute {
+                    description: match &attributes[0] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[0])),
+                    },
+                    context_relationship: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
+                        AssemblyComponentUsageId(usize::MAX),
+                    ),
+                    substitute_definition: ProductDefinitionRef::ProductDefinition(
+                        ProductDefinitionId(usize::MAX),
+                    ),
+                };
+                let aid =
+                    ProductDefinitionSubstituteId(model.product_definition_substitutes.push(v));
+                idmap.insert(id, AnyId::ProductDefinitionSubstitute(aid));
+                pending_product_definition_substitutes.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRODUCT_DEFINITION_USAGE" => {
                 let v = ProductDefinitionUsage {
                     id: as_str(&attributes[0]),
@@ -24704,6 +26822,23 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 );
                 idmap.insert(id, AnyId::ProductRelatedProductCategory(aid));
                 pending_product_related_product_categorys.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "PROJECTED_ZONE_DEFINITION" => {
+                let v = ProjectedZoneDefinition {
+                    zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)),
+                    boundaries: Vec::new(),
+                    projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
+                        usize::MAX,
+                    )),
+                    projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(
+                        LengthMeasureWithUnitId(usize::MAX),
+                    ),
+                };
+                let aid = ProjectedZoneDefinitionId(model.projected_zone_definitions.push(v));
+                idmap.insert(id, AnyId::ProjectedZoneDefinition(aid));
+                pending_projected_zone_definitions.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -24811,6 +26946,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = QuasiUniformSurfaceId(model.quasi_uniform_surfaces.push(v));
                 idmap.insert(id, AnyId::QuasiUniformSurface(aid));
                 pending_quasi_uniform_surfaces.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "RATIO_UNIT" => {
+                let v = RatioUnit {
+                    dimensions: DimensionalExponentsRef::DimensionalExponents(
+                        DimensionalExponentsId(usize::MAX),
+                    ),
+                };
+                let aid = RatioUnitId(model.ratio_units.push(v));
+                idmap.insert(id, AnyId::RatioUnit(aid));
+                pending_ratio_units.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -25169,6 +27316,28 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = ShapeAspectAssociativityId(model.shape_aspect_associativitys.push(v));
                 idmap.insert(id, AnyId::ShapeAspectAssociativity(aid));
                 pending_shape_aspect_associativitys.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "SHAPE_ASPECT_DERIVING_RELATIONSHIP" => {
+                let v = ShapeAspectDerivingRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                    related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(
+                        AllAroundShapeAspectId(usize::MAX),
+                    ),
+                };
+                let aid = ShapeAspectDerivingRelationshipId(
+                    model.shape_aspect_deriving_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::ShapeAspectDerivingRelationship(aid));
+                pending_shape_aspect_deriving_relationships.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -26166,9 +28335,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             } if name == "UNCERTAINTY_MEASURE_WITH_UNIT" => {
                 let v = UncertaintyMeasureWithUnit {
                     value_component: read_measure_value(&attributes[0]),
-                    unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(
-                        usize::MAX,
-                    )),
+                    unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
                     name: as_str(&attributes[2]),
                     description: match &attributes[3] {
                         Attribute::Unset => None,
@@ -26371,6 +28538,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "VOLUME_UNIT" => {
+                let v = VolumeUnit {
+                    elements: Vec::new(),
+                };
+                let aid = VolumeUnitId(model.volume_units.push(v));
+                idmap.insert(id, AnyId::VolumeUnit(aid));
+                pending_volume_units.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "WIRE_SHELL" => {
                 let v = WireShell {
                     name: as_str(&attributes[0]),
@@ -26422,6 +28599,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_action_request_assignments {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_action_request_assignments(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_action_request_solutions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_action_request_solutions(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_action_resources {
@@ -26578,6 +28760,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_applied_group_assignments(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_applied_presented_items {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_applied_presented_items(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_approvals {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_approvals(&mut model, aid, attributes, &idmap);
@@ -26601,6 +28788,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_approximation_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_approximation_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_area_in_sets {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_area_in_sets(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_area_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_area_units(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_ascribable_states {
@@ -26683,9 +28880,29 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_brep_with_voidss(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_camera_images {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_camera_images(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_camera_image3d_with_scales {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_camera_image3d_with_scales(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_camera_model_d3s {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_camera_model_d3s(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_camera_model_d3_with_hlhsrs {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_camera_model_d3_with_hlhsrs(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_camera_usages {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_camera_usages(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_cc_design_approvals {
@@ -27039,9 +29256,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_dimensional_sizes(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_dimensional_size_with_datum_features {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_dimensional_size_with_datum_features(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_dimensional_size_with_paths {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_dimensional_size_with_paths(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_directed_dimensional_locations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_directed_dimensional_locations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_documents {
@@ -27054,9 +29281,24 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_document_files(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_document_product_associations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_document_product_associations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_document_product_equivalences {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_document_product_equivalences(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_document_references {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_document_references(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_document_representation_types {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_document_representation_types(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_draughting_annotation_occurrences {
@@ -27261,6 +29503,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_geometric_tolerances(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_geometric_tolerance_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometric_tolerance_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_geometric_tolerance_with_datum_references {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_geometric_tolerance_with_datum_references(&mut model, aid, attributes, &idmap);
@@ -27288,6 +29535,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_geometric_tolerance_with_modifierss {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_geometric_tolerance_with_modifierss(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_geometrically_bounded_surface_shape_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_geometrically_bounded_surface_shape_representations(
+                &mut model, aid, attributes, &idmap,
+            );
         }
     }
     for (aid, raw) in pending_geometrically_bounded_wireframe_shape_representations {
@@ -27407,6 +29661,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_mass_units(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_measure_qualifications {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_measure_qualifications(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_measure_representation_items {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_measure_representation_items(&mut model, aid, attributes, &idmap);
@@ -27458,6 +29717,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_modified_geometric_tolerances {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_modified_geometric_tolerances(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_name_attributes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_name_attributes(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_named_units {
@@ -27640,6 +29904,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_presentation_views(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_presented_item_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_presented_item_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_products {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_products(&mut model, aid, attributes, &idmap);
@@ -27673,6 +29942,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_product_definition_contexts {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_definition_contexts(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_context_associations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_context_associations(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_product_definition_effectivitys {
@@ -27714,6 +29988,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_product_definition_shapes(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_product_definition_substitutes {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_substitutes(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_product_definition_usages {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_definition_usages(&mut model, aid, attributes, &idmap);
@@ -27729,6 +30008,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_product_related_product_categorys {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_related_product_categorys(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_projected_zone_definitions {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_projected_zone_definitions(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_property_definitions {
@@ -27759,6 +30043,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_quasi_uniform_surfaces {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_quasi_uniform_surfaces(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_ratio_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_ratio_units(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_rational_b_spline_curves {
@@ -27841,6 +30130,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_shape_aspect_associativitys {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_shape_aspect_associativitys(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_shape_aspect_deriving_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_shape_aspect_deriving_relationships(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_shape_aspect_relationships {
@@ -28168,6 +30462,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_view_volumes(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_volume_units {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_volume_units(&mut model, aid, attributes, &idmap);
+        }
+    }
     for (aid, raw) in pending_wire_shells {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_wire_shells(&mut model, aid, attributes, &idmap);
@@ -28271,6 +30570,20 @@ fn resolve_action_request_assignments(
         VersionedActionRequestRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.action_request_assignments.items[aid.0];
     it.assigned_action_request = assigned_action_request_v;
+}
+
+fn resolve_action_request_solutions(
+    model: &mut Model,
+    aid: ActionRequestSolutionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let method_v = ActionMethodRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let request_v =
+        VersionedActionRequestRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.action_request_solutions.items[aid.0];
+    it.method = method_v;
+    it.request = request_v;
 }
 
 fn resolve_action_resources(
@@ -28853,6 +31166,23 @@ fn resolve_applied_group_assignments(
     it.items = items_v;
 }
 
+fn resolve_applied_presented_items(
+    model: &mut Model,
+    aid: AppliedPresentedItemId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[0] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| PresentedItemSelectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.applied_presented_items.items[aid.0];
+    it.items = items_v;
+}
+
 fn resolve_approvals(
     model: &mut Model,
     aid: ApprovalId,
@@ -28915,6 +31245,36 @@ fn resolve_approximation_tolerances(
     let tolerance_v = ToleranceSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.approximation_tolerances.items[aid.0];
     it.tolerance = tolerance_v;
+}
+
+fn resolve_area_in_sets(
+    model: &mut Model,
+    aid: AreaInSetId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let area_v = PresentationAreaRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let in_set_v = PresentationSetRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.area_in_sets.items[aid.0];
+    it.area = area_v;
+    it.in_set = in_set_v;
+}
+
+fn resolve_area_units(
+    model: &mut Model,
+    aid: AreaUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let elements_v = match &attrs[0] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DerivedUnitElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.area_units.items[aid.0];
+    it.elements = elements_v;
 }
 
 fn resolve_ascribable_states(
@@ -29215,6 +31575,36 @@ fn resolve_brep_with_voidss(
     it.voids = voids_v;
 }
 
+fn resolve_camera_images(
+    model: &mut Model,
+    aid: CameraImageId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_source_v =
+        RepresentationMapRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let mapping_target_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.camera_images.items[aid.0];
+    it.mapping_source = mapping_source_v;
+    it.mapping_target = mapping_target_v;
+}
+
+fn resolve_camera_image3d_with_scales(
+    model: &mut Model,
+    aid: CameraImage3dWithScaleId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_source_v =
+        RepresentationMapRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let mapping_target_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.camera_image3d_with_scales.items[aid.0];
+    it.mapping_source = mapping_source_v;
+    it.mapping_target = mapping_target_v;
+}
+
 fn resolve_camera_model_d3s(
     model: &mut Model,
     aid: CameraModelD3Id,
@@ -29228,6 +31618,36 @@ fn resolve_camera_model_d3s(
     let it = &mut model.camera_model_d3s.items[aid.0];
     it.view_reference_system = view_reference_system_v;
     it.perspective_of_volume = perspective_of_volume_v;
+}
+
+fn resolve_camera_model_d3_with_hlhsrs(
+    model: &mut Model,
+    aid: CameraModelD3WithHlhsrId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let view_reference_system_v =
+        Axis2Placement3dRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let perspective_of_volume_v =
+        ViewVolumeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.camera_model_d3_with_hlhsrs.items[aid.0];
+    it.view_reference_system = view_reference_system_v;
+    it.perspective_of_volume = perspective_of_volume_v;
+}
+
+fn resolve_camera_usages(
+    model: &mut Model,
+    aid: CameraUsageId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let mapping_origin_v =
+        RepresentationItemRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let mapped_representation_v =
+        RepresentationRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.camera_usages.items[aid.0];
+    it.mapping_origin = mapping_origin_v;
+    it.mapped_representation = mapped_representation_v;
 }
 
 fn resolve_cc_design_approvals(
@@ -30400,6 +32820,20 @@ fn resolve_dimensional_sizes(
     it.applies_to = applies_to_v;
 }
 
+fn resolve_dimensional_size_with_datum_features(
+    model: &mut Model,
+    aid: DimensionalSizeWithDatumFeatureId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let of_shape_v =
+        ProductDefinitionShapeRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let applies_to_v = ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[4])).expect("ref"));
+    let it = &mut model.dimensional_size_with_datum_features.items[aid.0];
+    it.of_shape = of_shape_v;
+    it.applies_to = applies_to_v;
+}
+
 fn resolve_dimensional_size_with_paths(
     model: &mut Model,
     aid: DimensionalSizeWithPathId,
@@ -30411,6 +32845,21 @@ fn resolve_dimensional_size_with_paths(
     let it = &mut model.dimensional_size_with_paths.items[aid.0];
     it.applies_to = applies_to_v;
     it.path = path_v;
+}
+
+fn resolve_directed_dimensional_locations(
+    model: &mut Model,
+    aid: DirectedDimensionalLocationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.directed_dimensional_locations.items[aid.0];
+    it.relating_shape_aspect = relating_shape_aspect_v;
+    it.related_shape_aspect = related_shape_aspect_v;
 }
 
 fn resolve_documents(
@@ -30435,6 +32884,38 @@ fn resolve_document_files(
     it.kind = kind_v;
 }
 
+fn resolve_document_product_associations(
+    model: &mut Model,
+    aid: DocumentProductAssociationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_document_v =
+        DocumentRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_product_v = ProductOrFormationOrDefinitionRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model.document_product_associations.items[aid.0];
+    it.relating_document = relating_document_v;
+    it.related_product = related_product_v;
+}
+
+fn resolve_document_product_equivalences(
+    model: &mut Model,
+    aid: DocumentProductEquivalenceId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_document_v =
+        DocumentRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_product_v = ProductOrFormationOrDefinitionRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model.document_product_equivalences.items[aid.0];
+    it.relating_document = relating_document_v;
+    it.related_product = related_product_v;
+}
+
 fn resolve_document_references(
     model: &mut Model,
     aid: DocumentReferenceId,
@@ -30445,6 +32926,18 @@ fn resolve_document_references(
         DocumentRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
     let it = &mut model.document_references.items[aid.0];
     it.assigned_document = assigned_document_v;
+}
+
+fn resolve_document_representation_types(
+    model: &mut Model,
+    aid: DocumentRepresentationTypeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let represented_document_v =
+        DocumentRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.document_representation_types.items[aid.0];
+    it.represented_document = represented_document_v;
 }
 
 fn resolve_draughting_annotation_occurrences(
@@ -31093,6 +33586,21 @@ fn resolve_geometric_tolerances(
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
 }
 
+fn resolve_geometric_tolerance_relationships(
+    model: &mut Model,
+    aid: GeometricToleranceRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_geometric_tolerance_v =
+        GeometricToleranceRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_geometric_tolerance_v =
+        GeometricToleranceRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.geometric_tolerance_relationships.items[aid.0];
+    it.relating_geometric_tolerance = relating_geometric_tolerance_v;
+    it.related_geometric_tolerance = related_geometric_tolerance_v;
+}
+
 fn resolve_geometric_tolerance_with_datum_references(
     model: &mut Model,
     aid: GeometricToleranceWithDatumReferenceId,
@@ -31212,6 +33720,28 @@ fn resolve_geometric_tolerance_with_modifierss(
     let it = &mut model.geometric_tolerance_with_modifierss.items[aid.0];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_geometrically_bounded_surface_shape_representations(
+    model: &mut Model,
+    aid: GeometricallyBoundedSurfaceShapeRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model
+        .geometrically_bounded_surface_shape_representations
+        .items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
 }
 
 fn resolve_geometrically_bounded_wireframe_shape_representations(
@@ -31569,6 +34099,26 @@ fn resolve_mass_units(
     it.dimensions = dimensions_v;
 }
 
+fn resolve_measure_qualifications(
+    model: &mut Model,
+    aid: MeasureQualificationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let qualified_measure_v =
+        MeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let qualifiers_v = match &attrs[3] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ValueQualifierRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.measure_qualifications.items[aid.0];
+    it.qualified_measure = qualified_measure_v;
+    it.qualifiers = qualifiers_v;
+}
+
 fn resolve_measure_representation_items(
     model: &mut Model,
     aid: MeasureRepresentationItemId,
@@ -31716,6 +34266,18 @@ fn resolve_modified_geometric_tolerances(
     let it = &mut model.modified_geometric_tolerances.items[aid.0];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
+}
+
+fn resolve_name_attributes(
+    model: &mut Model,
+    aid: NameAttributeId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let named_item_v =
+        NameAttributeSelectRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.name_attributes.items[aid.0];
+    it.named_item = named_item_v;
 }
 
 fn resolve_named_units(
@@ -32335,6 +34897,21 @@ fn resolve_presentation_views(
     it.context_of_items = context_of_items_v;
 }
 
+fn resolve_presented_item_representations(
+    model: &mut Model,
+    aid: PresentedItemRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let presentation_v = PresentationRepresentationSelectRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[0])).expect("ref"),
+    );
+    let item_v = PresentedItemRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let it = &mut model.presented_item_representations.items[aid.0];
+    it.presentation = presentation_v;
+    it.item = item_v;
+}
+
 fn resolve_products(
     model: &mut Model,
     aid: ProductId,
@@ -32427,6 +35004,24 @@ fn resolve_product_definition_contexts(
         ApplicationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
     let it = &mut model.product_definition_contexts.items[aid.0];
     it.frame_of_reference = frame_of_reference_v;
+}
+
+fn resolve_product_definition_context_associations(
+    model: &mut Model,
+    aid: ProductDefinitionContextAssociationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let definition_v =
+        ProductDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let frame_of_reference_v =
+        ProductDefinitionContextRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let role_v =
+        ProductDefinitionContextRoleRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.product_definition_context_associations.items[aid.0];
+    it.definition = definition_v;
+    it.frame_of_reference = frame_of_reference_v;
+    it.role = role_v;
 }
 
 fn resolve_product_definition_effectivitys(
@@ -32530,6 +35125,21 @@ fn resolve_product_definition_shapes(
     it.definition = definition_v;
 }
 
+fn resolve_product_definition_substitutes(
+    model: &mut Model,
+    aid: ProductDefinitionSubstituteId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let context_relationship_v =
+        ProductDefinitionRelationshipRef::from_any(*idmap.get(&as_ref_id(&attrs[1])).expect("ref"));
+    let substitute_definition_v =
+        ProductDefinitionRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model.product_definition_substitutes.items[aid.0];
+    it.context_relationship = context_relationship_v;
+    it.substitute_definition = substitute_definition_v;
+}
+
 fn resolve_product_definition_usages(
     model: &mut Model,
     aid: ProductDefinitionUsageId,
@@ -32583,6 +35193,31 @@ fn resolve_product_related_product_categorys(
     };
     let it = &mut model.product_related_product_categorys.items[aid.0];
     it.products = products_v;
+}
+
+fn resolve_projected_zone_definitions(
+    model: &mut Model,
+    aid: ProjectedZoneDefinitionId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let zone_v = ToleranceZoneRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let boundaries_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| ShapeAspectRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let projection_end_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let projected_length_v =
+        LengthMeasureWithUnitRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.projected_zone_definitions.items[aid.0];
+    it.zone = zone_v;
+    it.boundaries = boundaries_v;
+    it.projection_end = projection_end_v;
+    it.projected_length = projected_length_v;
 }
 
 fn resolve_property_definitions(
@@ -32682,6 +35317,18 @@ fn resolve_quasi_uniform_surfaces(
     };
     let it = &mut model.quasi_uniform_surfaces.items[aid.0];
     it.control_points_list = control_points_list_v;
+}
+
+fn resolve_ratio_units(
+    model: &mut Model,
+    aid: RatioUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let dimensions_v =
+        DimensionalExponentsRef::from_any(*idmap.get(&as_ref_id(&attrs[0])).expect("ref"));
+    let it = &mut model.ratio_units.items[aid.0];
+    it.dimensions = dimensions_v;
 }
 
 fn resolve_rational_b_spline_curves(
@@ -32960,6 +35607,21 @@ fn resolve_shape_aspect_associativitys(
     let related_shape_aspect_v =
         ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
     let it = &mut model.shape_aspect_associativitys.items[aid.0];
+    it.relating_shape_aspect = relating_shape_aspect_v;
+    it.related_shape_aspect = related_shape_aspect_v;
+}
+
+fn resolve_shape_aspect_deriving_relationships(
+    model: &mut Model,
+    aid: ShapeAspectDerivingRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let relating_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let related_shape_aspect_v =
+        ShapeAspectRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let it = &mut model.shape_aspect_deriving_relationships.items[aid.0];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
 }
@@ -34022,6 +36684,23 @@ fn resolve_view_volumes(
     it.view_window = view_window_v;
 }
 
+fn resolve_volume_units(
+    model: &mut Model,
+    aid: VolumeUnitId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let elements_v = match &attrs[0] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DerivedUnitElementRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.volume_units.items[aid.0];
+    it.elements = elements_v;
+}
+
 fn resolve_wire_shells(
     model: &mut Model,
     aid: WireShellId,
@@ -34067,7 +36746,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "APPLIED_DOCUMENT_REFERENCE" => UnitPart::AppliedDocumentReference { items: Vec::new(), },
         "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT" => UnitPart::AppliedExternalIdentificationAssignment { items: Vec::new(), },
         "APPLIED_GROUP_ASSIGNMENT" => UnitPart::AppliedGroupAssignment { items: Vec::new(), },
+        "APPLIED_PRESENTED_ITEM" => UnitPart::AppliedPresentedItem { items: Vec::new(), },
         "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)), },
+        "AREA_IN_SET" => UnitPart::AreaInSet { area: PresentationAreaRef::PresentationArea(PresentationAreaId(usize::MAX)), in_set: PresentationSetRef::PresentationSet(PresentationSetId(usize::MAX)), },
         "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), },
         "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage { reference_designator: match &p.attributes[0] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[0])) }, },
         "B_SPLINE_CURVE" => UnitPart::BSplineCurve { degree: as_int(&p.attributes[0]), control_points_list: Vec::new(), curve_form: match &p.attributes[2] { Attribute::Enum(s) => BSplineCurveForm::parse(s).expect("b_spline_curve_form"), other => panic!("enum b_spline_curve_form: {other:?}") }, closed_curve: as_logical(&p.attributes[3]), self_intersect: as_logical(&p.attributes[4]), },
@@ -34081,8 +36762,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
         "BOUNDED_SURFACE_CURVE" => UnitPart::BoundedSurfaceCurve,
         "BREP_WITH_VOIDS" => UnitPart::BrepWithVoids { voids: Vec::new(), },
+        "CAMERA_IMAGE" => UnitPart::CameraImage,
+        "CAMERA_IMAGE_3D_WITH_SCALE" => UnitPart::CameraImage3dWithScale,
         "CAMERA_MODEL" => UnitPart::CameraModel,
         "CAMERA_MODEL_D3" => UnitPart::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)), },
+        "CAMERA_MODEL_D3_WITH_HLHSR" => UnitPart::CameraModelD3WithHlhsr { hidden_line_surface_removal: matches!(&p.attributes[0], Attribute::Enum(s) if s == "T"), },
+        "CAMERA_USAGE" => UnitPart::CameraUsage,
         "CC_DESIGN_APPROVAL" => UnitPart::CcDesignApproval { items: Vec::new(), },
         "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => UnitPart::CcDesignDateAndTimeAssignment { items: Vec::new(), },
         "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::CcDesignPersonAndOrganizationAssignment { items: Vec::new(), },
@@ -34137,6 +36822,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "DIRECTION" => UnitPart::Direction { direction_ratios: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, },
         "DOCUMENT" => UnitPart::Document { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)), },
         "DOCUMENT_FILE" => UnitPart::DocumentFile,
+        "DOCUMENT_PRODUCT_ASSOCIATION" => UnitPart::DocumentProductAssociation { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, relating_document: DocumentRef::Document(DocumentId(usize::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(usize::MAX)), },
+        "DOCUMENT_PRODUCT_EQUIVALENCE" => UnitPart::DocumentProductEquivalence,
         "DOCUMENT_REFERENCE" => UnitPart::DocumentReference { assigned_document: DocumentRef::Document(DocumentId(usize::MAX)), source: as_str(&p.attributes[1]), },
         "DRAUGHTING_ANNOTATION_OCCURRENCE" => UnitPart::DraughtingAnnotationOccurrence,
         "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout { contents: Vec::new(), },
@@ -34192,6 +36879,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => UnitPart::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => UnitPart::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => UnitPart::GeometricToleranceWithModifiers { modifiers: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).expect("geometric_tolerance_modifier"), o => panic!("{o:?}") }).collect(), other => panic!("vec: {other:?}") }, },
+        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedSurfaceShapeRepresentation,
         "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedWireframeShapeRepresentation,
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext { uncertainty: Vec::new(), },
         "GLOBAL_UNIT_ASSIGNED_CONTEXT" => UnitPart::GlobalUnitAssignedContext { units: Vec::new(), },
@@ -34213,10 +36901,10 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "LOOP" => UnitPart::Loop,
         "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep { outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)), },
         "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => UnitPart::ManifoldSurfaceShapeRepresentation,
-        "MAPPED_ITEM" => UnitPart::MappedItem { mapping_source: RepresentationMapRef::RepresentationMap(RepresentationMapId(usize::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
+        "MAPPED_ITEM" => UnitPart::MappedItem { mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
         "MASS_UNIT" => UnitPart::MassUnit,
         "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
-        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: read_measure_value(&p.attributes[0]), unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)), },
+        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: read_measure_value(&p.attributes[0]), unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)), },
         "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
         "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => UnitPart::MechanicalDesignAndDraughtingRelationship,
         "MODEL_GEOMETRIC_VIEW" => UnitPart::ModelGeometricView,
@@ -34265,9 +36953,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "PRESENTATION_SET" => UnitPart::PresentationSet,
         "PRESENTATION_STYLE_ASSIGNMENT" => UnitPart::PresentationStyleAssignment { styles: Vec::new(), },
         "PRESENTATION_VIEW" => UnitPart::PresentationView,
+        "PRESENTED_ITEM" => UnitPart::PresentedItem,
         "PRODUCT" => UnitPart::Product { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, frame_of_reference: Vec::new(), },
         "PRODUCT_CATEGORY" => UnitPart::ProductCategory { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, },
         "PRODUCT_CONCEPT" => UnitPart::ProductConcept { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(usize::MAX)), },
+        "PRODUCT_CONCEPT_FEATURE" => UnitPart::ProductConceptFeature { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, },
+        "PRODUCT_CONCEPT_FEATURE_CATEGORY" => UnitPart::ProductConceptFeatureCategory,
         "PRODUCT_CONTEXT" => UnitPart::ProductContext { discipline_type: as_str(&p.attributes[0]), },
         "PRODUCT_DEFINITION" => UnitPart::ProductDefinition { id: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(usize::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(usize::MAX)), },
         "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext { life_cycle_stage: as_str(&p.attributes[0]), },
@@ -34281,11 +36972,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
         "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids: Vec::new(), },
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory { products: Vec::new(), },
+        "PROJECTED_ZONE_DEFINITION" => UnitPart::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
         "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
         "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
         "QUALIFIED_REPRESENTATION_ITEM" => UnitPart::QualifiedRepresentationItem { qualifiers: Vec::new(), },
         "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
         "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
+        "RATIO_UNIT" => UnitPart::RatioUnit,
         "RATIONAL_B_SPLINE_CURVE" => UnitPart::RationalBSplineCurve { weights_data: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect(), other => panic!("vec: {other:?}") }, },
         "RATIONAL_B_SPLINE_SURFACE" => UnitPart::RationalBSplineSurface { weights_data: match &p.attributes[0] { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_real(e)).collect::<Vec<_>>(), o => panic!("nested vec: {o:?}") }).collect(), other => panic!("vec: {other:?}") }, },
         "REAL_LITERAL" => UnitPart::RealLiteral,
@@ -34520,11 +37213,32 @@ fn resolve_complex(
                     other => panic!("vec ref: {other:?}"),
                 };
             }
+            UnitPart::AppliedPresentedItem { items, .. } => {
+                *items = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| {
+                            PresentedItemSelectRef::from_any(
+                                *idmap.get(&as_ref_id(e)).expect("ref"),
+                            )
+                        })
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
+            }
             UnitPart::ApprovalAssignment {
                 assigned_approval, ..
             } => {
                 *assigned_approval =
                     ApprovalRef::from_any(*idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"));
+            }
+            UnitPart::AreaInSet { area, in_set, .. } => {
+                *area = PresentationAreaRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *in_set = PresentationSetRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
             }
             UnitPart::AscribableStateRelationship {
                 relating_ascribable_state,
@@ -34875,6 +37589,17 @@ fn resolve_complex(
             }
             UnitPart::Document { kind, .. } => {
                 *kind = DocumentTypeRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
+                );
+            }
+            UnitPart::DocumentProductAssociation {
+                relating_document,
+                related_product,
+                ..
+            } => {
+                *relating_document =
+                    DocumentRef::from_any(*idmap.get(&as_ref_id(&p.attributes[2])).expect("ref"));
+                *related_product = ProductOrFormationOrDefinitionRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[3])).expect("ref"),
                 );
             }
@@ -35509,6 +38234,18 @@ fn resolve_complex(
                         .collect(),
                     other => panic!("vec ref: {other:?}"),
                 };
+            }
+            UnitPart::ProjectedZoneDefinition {
+                projection_end,
+                projected_length,
+                ..
+            } => {
+                *projection_end = ShapeAspectRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[0])).expect("ref"),
+                );
+                *projected_length = LengthMeasureWithUnitRef::from_any(
+                    *idmap.get(&as_ref_id(&p.attributes[1])).expect("ref"),
+                );
             }
             UnitPart::PropertyDefinition { definition, .. } => {
                 *definition = CharacterizedDefinitionRef::from_any(

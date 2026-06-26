@@ -75,6 +75,7 @@ pub struct Writer<'a> {
     action_property_ids: Vec<Option<u64>>,
     action_relationship_ids: Vec<Option<u64>>,
     action_request_assignment_ids: Vec<Option<u64>>,
+    action_request_solution_ids: Vec<Option<u64>>,
     action_resource_ids: Vec<Option<u64>>,
     action_resource_relationship_ids: Vec<Option<u64>>,
     action_resource_requirement_ids: Vec<Option<u64>>,
@@ -109,6 +110,7 @@ pub struct Writer<'a> {
     applied_document_reference_ids: Vec<Option<u64>>,
     applied_external_identification_assignment_ids: Vec<Option<u64>>,
     applied_group_assignment_ids: Vec<Option<u64>>,
+    applied_presented_item_ids: Vec<Option<u64>>,
     approval_ids: Vec<Option<u64>>,
     approval_assignment_ids: Vec<Option<u64>>,
     approval_date_time_ids: Vec<Option<u64>>,
@@ -118,6 +120,8 @@ pub struct Writer<'a> {
     approximation_tolerance_ids: Vec<Option<u64>>,
     approximation_tolerance_deviation_ids: Vec<Option<u64>>,
     approximation_tolerance_parameter_ids: Vec<Option<u64>>,
+    area_in_set_ids: Vec<Option<u64>>,
+    area_unit_ids: Vec<Option<u64>>,
     ascribable_state_ids: Vec<Option<u64>>,
     ascribable_state_relationship_ids: Vec<Option<u64>>,
     assembly_component_usage_ids: Vec<Option<u64>>,
@@ -137,8 +141,12 @@ pub struct Writer<'a> {
     bounded_surface_curve_ids: Vec<Option<u64>>,
     brep_with_void_ids: Vec<Option<u64>>,
     calendar_date_ids: Vec<Option<u64>>,
+    camera_image_ids: Vec<Option<u64>>,
+    camera_image3d_with_scale_ids: Vec<Option<u64>>,
     camera_model_ids: Vec<Option<u64>>,
     camera_model_d3_ids: Vec<Option<u64>>,
+    camera_model_d3_with_hlhsr_ids: Vec<Option<u64>>,
+    camera_usage_ids: Vec<Option<u64>>,
     cartesian_point_ids: Vec<Option<u64>>,
     cc_design_approval_ids: Vec<Option<u64>>,
     cc_design_date_and_time_assignment_ids: Vec<Option<u64>>,
@@ -223,11 +231,16 @@ pub struct Writer<'a> {
     dimensional_location_ids: Vec<Option<u64>>,
     dimensional_location_with_path_ids: Vec<Option<u64>>,
     dimensional_size_ids: Vec<Option<u64>>,
+    dimensional_size_with_datum_feature_ids: Vec<Option<u64>>,
     dimensional_size_with_path_ids: Vec<Option<u64>>,
+    directed_dimensional_location_ids: Vec<Option<u64>>,
     direction_ids: Vec<Option<u64>>,
     document_ids: Vec<Option<u64>>,
     document_file_ids: Vec<Option<u64>>,
+    document_product_association_ids: Vec<Option<u64>>,
+    document_product_equivalence_ids: Vec<Option<u64>>,
     document_reference_ids: Vec<Option<u64>>,
+    document_representation_type_ids: Vec<Option<u64>>,
     document_type_ids: Vec<Option<u64>>,
     draughting_annotation_occurrence_ids: Vec<Option<u64>>,
     draughting_callout_ids: Vec<Option<u64>>,
@@ -282,11 +295,13 @@ pub struct Writer<'a> {
     geometric_representation_item_ids: Vec<Option<u64>>,
     geometric_set_ids: Vec<Option<u64>>,
     geometric_tolerance_ids: Vec<Option<u64>>,
+    geometric_tolerance_relationship_ids: Vec<Option<u64>>,
     geometric_tolerance_with_datum_reference_ids: Vec<Option<u64>>,
     geometric_tolerance_with_defined_area_unit_ids: Vec<Option<u64>>,
     geometric_tolerance_with_defined_unit_ids: Vec<Option<u64>>,
     geometric_tolerance_with_maximum_tolerance_ids: Vec<Option<u64>>,
     geometric_tolerance_with_modifier_ids: Vec<Option<u64>>,
+    geometrically_bounded_surface_shape_representation_ids: Vec<Option<u64>>,
     geometrically_bounded_wireframe_shape_representation_ids: Vec<Option<u64>>,
     global_uncertainty_assigned_context_ids: Vec<Option<u64>>,
     global_unit_assigned_context_ids: Vec<Option<u64>>,
@@ -317,6 +332,7 @@ pub struct Writer<'a> {
     mapped_item_ids: Vec<Option<u64>>,
     mass_measure_with_unit_ids: Vec<Option<u64>>,
     mass_unit_ids: Vec<Option<u64>>,
+    measure_qualification_ids: Vec<Option<u64>>,
     measure_representation_item_ids: Vec<Option<u64>>,
     measure_with_unit_ids: Vec<Option<u64>>,
     mechanical_context_ids: Vec<Option<u64>>,
@@ -326,6 +342,7 @@ pub struct Writer<'a> {
     mechanical_design_shaded_presentation_representation_ids: Vec<Option<u64>>,
     model_geometric_view_ids: Vec<Option<u64>>,
     modified_geometric_tolerance_ids: Vec<Option<u64>>,
+    name_attribute_ids: Vec<Option<u64>>,
     named_unit_ids: Vec<Option<u64>>,
     next_assembly_usage_occurrence_ids: Vec<Option<u64>>,
     numeric_expression_ids: Vec<Option<u64>>,
@@ -388,14 +405,20 @@ pub struct Writer<'a> {
     presentation_set_ids: Vec<Option<u64>>,
     presentation_style_assignment_ids: Vec<Option<u64>>,
     presentation_view_ids: Vec<Option<u64>>,
+    presented_item_ids: Vec<Option<u64>>,
+    presented_item_representation_ids: Vec<Option<u64>>,
     product_ids: Vec<Option<u64>>,
     product_category_ids: Vec<Option<u64>>,
     product_category_relationship_ids: Vec<Option<u64>>,
     product_concept_ids: Vec<Option<u64>>,
     product_concept_context_ids: Vec<Option<u64>>,
+    product_concept_feature_ids: Vec<Option<u64>>,
+    product_concept_feature_category_ids: Vec<Option<u64>>,
     product_context_ids: Vec<Option<u64>>,
     product_definition_ids: Vec<Option<u64>>,
     product_definition_context_ids: Vec<Option<u64>>,
+    product_definition_context_association_ids: Vec<Option<u64>>,
+    product_definition_context_role_ids: Vec<Option<u64>>,
     product_definition_effectivity_ids: Vec<Option<u64>>,
     product_definition_formation_ids: Vec<Option<u64>>,
     product_definition_formation_with_specified_source_ids: Vec<Option<u64>>,
@@ -403,15 +426,18 @@ pub struct Writer<'a> {
     product_definition_relationship_ids: Vec<Option<u64>>,
     product_definition_relationship_relationship_ids: Vec<Option<u64>>,
     product_definition_shape_ids: Vec<Option<u64>>,
+    product_definition_substitute_ids: Vec<Option<u64>>,
     product_definition_usage_ids: Vec<Option<u64>>,
     product_definition_with_associated_document_ids: Vec<Option<u64>>,
     product_related_product_category_ids: Vec<Option<u64>>,
+    projected_zone_definition_ids: Vec<Option<u64>>,
     property_definition_ids: Vec<Option<u64>>,
     property_definition_relationship_ids: Vec<Option<u64>>,
     property_definition_representation_ids: Vec<Option<u64>>,
     qualified_representation_item_ids: Vec<Option<u64>>,
     quasi_uniform_curve_ids: Vec<Option<u64>>,
     quasi_uniform_surface_ids: Vec<Option<u64>>,
+    ratio_unit_ids: Vec<Option<u64>>,
     rational_b_spline_curve_ids: Vec<Option<u64>>,
     rational_b_spline_surface_ids: Vec<Option<u64>>,
     real_literal_ids: Vec<Option<u64>>,
@@ -435,6 +461,7 @@ pub struct Writer<'a> {
     security_classification_level_ids: Vec<Option<u64>>,
     shape_aspect_ids: Vec<Option<u64>>,
     shape_aspect_associativity_ids: Vec<Option<u64>>,
+    shape_aspect_deriving_relationship_ids: Vec<Option<u64>>,
     shape_aspect_relationship_ids: Vec<Option<u64>>,
     shape_definition_representation_ids: Vec<Option<u64>>,
     shape_dimension_representation_ids: Vec<Option<u64>>,
@@ -521,6 +548,7 @@ pub struct Writer<'a> {
     vertex_point_ids: Vec<Option<u64>>,
     vertex_shell_ids: Vec<Option<u64>>,
     view_volume_ids: Vec<Option<u64>>,
+    volume_unit_ids: Vec<Option<u64>>,
     wire_shell_ids: Vec<Option<u64>>,
     complex_ids: Vec<Option<u64>>,
 }
@@ -542,6 +570,7 @@ impl<'a> Writer<'a> {
             action_property_ids: vec![None; model.action_propertys.items.len()],
             action_relationship_ids: vec![None; model.action_relationships.items.len()],
             action_request_assignment_ids: vec![None; model.action_request_assignments.items.len()],
+            action_request_solution_ids: vec![None; model.action_request_solutions.items.len()],
             action_resource_ids: vec![None; model.action_resources.items.len()],
             action_resource_relationship_ids: vec![
                 None;
@@ -669,6 +698,7 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             applied_group_assignment_ids: vec![None; model.applied_group_assignments.items.len()],
+            applied_presented_item_ids: vec![None; model.applied_presented_items.items.len()],
             approval_ids: vec![None; model.approvals.items.len()],
             approval_assignment_ids: vec![None; model.approval_assignments.items.len()],
             approval_date_time_ids: vec![None; model.approval_date_times.items.len()],
@@ -693,6 +723,8 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            area_in_set_ids: vec![None; model.area_in_sets.items.len()],
+            area_unit_ids: vec![None; model.area_units.items.len()],
             ascribable_state_ids: vec![None; model.ascribable_states.items.len()],
             ascribable_state_relationship_ids: vec![
                 None;
@@ -718,8 +750,15 @@ impl<'a> Writer<'a> {
             bounded_surface_curve_ids: vec![None; model.bounded_surface_curves.items.len()],
             brep_with_void_ids: vec![None; model.brep_with_voidss.items.len()],
             calendar_date_ids: vec![None; model.calendar_dates.items.len()],
+            camera_image_ids: vec![None; model.camera_images.items.len()],
+            camera_image3d_with_scale_ids: vec![None; model.camera_image3d_with_scales.items.len()],
             camera_model_ids: vec![None; model.camera_models.items.len()],
             camera_model_d3_ids: vec![None; model.camera_model_d3s.items.len()],
+            camera_model_d3_with_hlhsr_ids: vec![
+                None;
+                model.camera_model_d3_with_hlhsrs.items.len()
+            ],
+            camera_usage_ids: vec![None; model.camera_usages.items.len()],
             cartesian_point_ids: vec![None; model.cartesian_points.items.len()],
             cc_design_approval_ids: vec![None; model.cc_design_approvals.items.len()],
             cc_design_date_and_time_assignment_ids: vec![
@@ -924,14 +963,37 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             dimensional_size_ids: vec![None; model.dimensional_sizes.items.len()],
+            dimensional_size_with_datum_feature_ids: vec![
+                None;
+                model
+                    .dimensional_size_with_datum_features
+                    .items
+                    .len()
+            ],
             dimensional_size_with_path_ids: vec![
                 None;
                 model.dimensional_size_with_paths.items.len()
             ],
+            directed_dimensional_location_ids: vec![
+                None;
+                model.directed_dimensional_locations.items.len()
+            ],
             direction_ids: vec![None; model.directions.items.len()],
             document_ids: vec![None; model.documents.items.len()],
             document_file_ids: vec![None; model.document_files.items.len()],
+            document_product_association_ids: vec![
+                None;
+                model.document_product_associations.items.len()
+            ],
+            document_product_equivalence_ids: vec![
+                None;
+                model.document_product_equivalences.items.len()
+            ],
             document_reference_ids: vec![None; model.document_references.items.len()],
+            document_representation_type_ids: vec![
+                None;
+                model.document_representation_types.items.len()
+            ],
             document_type_ids: vec![None; model.document_types.items.len()],
             draughting_annotation_occurrence_ids: vec![
                 None;
@@ -1097,6 +1159,13 @@ impl<'a> Writer<'a> {
             ],
             geometric_set_ids: vec![None; model.geometric_sets.items.len()],
             geometric_tolerance_ids: vec![None; model.geometric_tolerances.items.len()],
+            geometric_tolerance_relationship_ids: vec![
+                None;
+                model
+                    .geometric_tolerance_relationships
+                    .items
+                    .len()
+            ],
             geometric_tolerance_with_datum_reference_ids: vec![
                 None;
                 model
@@ -1129,6 +1198,13 @@ impl<'a> Writer<'a> {
                 None;
                 model
                     .geometric_tolerance_with_modifierss
+                    .items
+                    .len()
+            ],
+            geometrically_bounded_surface_shape_representation_ids: vec![
+                None;
+                model
+                    .geometrically_bounded_surface_shape_representations
                     .items
                     .len()
             ],
@@ -1189,6 +1265,7 @@ impl<'a> Writer<'a> {
             mapped_item_ids: vec![None; model.mapped_items.items.len()],
             mass_measure_with_unit_ids: vec![None; model.mass_measure_with_units.items.len()],
             mass_unit_ids: vec![None; model.mass_units.items.len()],
+            measure_qualification_ids: vec![None; model.measure_qualifications.items.len()],
             measure_representation_item_ids: vec![
                 None;
                 model.measure_representation_items.items.len()
@@ -1228,6 +1305,7 @@ impl<'a> Writer<'a> {
                 None;
                 model.modified_geometric_tolerances.items.len()
             ],
+            name_attribute_ids: vec![None; model.name_attributes.items.len()],
             named_unit_ids: vec![None; model.named_units.items.len()],
             next_assembly_usage_occurrence_ids: vec![
                 None;
@@ -1371,6 +1449,11 @@ impl<'a> Writer<'a> {
                 model.presentation_style_assignments.items.len()
             ],
             presentation_view_ids: vec![None; model.presentation_views.items.len()],
+            presented_item_ids: vec![None; model.presented_items.items.len()],
+            presented_item_representation_ids: vec![
+                None;
+                model.presented_item_representations.items.len()
+            ],
             product_ids: vec![None; model.products.items.len()],
             product_category_ids: vec![None; model.product_categorys.items.len()],
             product_category_relationship_ids: vec![
@@ -1379,11 +1462,33 @@ impl<'a> Writer<'a> {
             ],
             product_concept_ids: vec![None; model.product_concepts.items.len()],
             product_concept_context_ids: vec![None; model.product_concept_contexts.items.len()],
+            product_concept_feature_ids: vec![None; model.product_concept_features.items.len()],
+            product_concept_feature_category_ids: vec![
+                None;
+                model
+                    .product_concept_feature_categorys
+                    .items
+                    .len()
+            ],
             product_context_ids: vec![None; model.product_contexts.items.len()],
             product_definition_ids: vec![None; model.product_definitions.items.len()],
             product_definition_context_ids: vec![
                 None;
                 model.product_definition_contexts.items.len()
+            ],
+            product_definition_context_association_ids: vec![
+                None;
+                model
+                    .product_definition_context_associations
+                    .items
+                    .len()
+            ],
+            product_definition_context_role_ids: vec![
+                None;
+                model
+                    .product_definition_context_roles
+                    .items
+                    .len()
             ],
             product_definition_effectivity_ids: vec![
                 None;
@@ -1422,6 +1527,10 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             product_definition_shape_ids: vec![None; model.product_definition_shapes.items.len()],
+            product_definition_substitute_ids: vec![
+                None;
+                model.product_definition_substitutes.items.len()
+            ],
             product_definition_usage_ids: vec![None; model.product_definition_usages.items.len()],
             product_definition_with_associated_document_ids: vec![
                 None;
@@ -1437,6 +1546,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            projected_zone_definition_ids: vec![None; model.projected_zone_definitions.items.len()],
             property_definition_ids: vec![None; model.property_definitions.items.len()],
             property_definition_relationship_ids: vec![
                 None;
@@ -1458,6 +1568,7 @@ impl<'a> Writer<'a> {
             ],
             quasi_uniform_curve_ids: vec![None; model.quasi_uniform_curves.items.len()],
             quasi_uniform_surface_ids: vec![None; model.quasi_uniform_surfaces.items.len()],
+            ratio_unit_ids: vec![None; model.ratio_units.items.len()],
             rational_b_spline_curve_ids: vec![None; model.rational_b_spline_curves.items.len()],
             rational_b_spline_surface_ids: vec![None; model.rational_b_spline_surfaces.items.len()],
             real_literal_ids: vec![None; model.real_literals.items.len()],
@@ -1510,6 +1621,13 @@ impl<'a> Writer<'a> {
             shape_aspect_associativity_ids: vec![
                 None;
                 model.shape_aspect_associativitys.items.len()
+            ],
+            shape_aspect_deriving_relationship_ids: vec![
+                None;
+                model
+                    .shape_aspect_deriving_relationships
+                    .items
+                    .len()
             ],
             shape_aspect_relationship_ids: vec![None; model.shape_aspect_relationships.items.len()],
             shape_definition_representation_ids: vec![
@@ -1699,6 +1817,7 @@ impl<'a> Writer<'a> {
             vertex_point_ids: vec![None; model.vertex_points.items.len()],
             vertex_shell_ids: vec![None; model.vertex_shells.items.len()],
             view_volume_ids: vec![None; model.view_volumes.items.len()],
+            volume_unit_ids: vec![None; model.volume_units.items.len()],
             wire_shell_ids: vec![None; model.wire_shells.items.len()],
             complex_ids: vec![None; model.complex_units.items.len()],
         }
@@ -1720,6 +1839,7 @@ impl<'a> Writer<'a> {
             AnyId::ActionProperty(i) => self.action_property_ids[i.0],
             AnyId::ActionRelationship(i) => self.action_relationship_ids[i.0],
             AnyId::ActionRequestAssignment(i) => self.action_request_assignment_ids[i.0],
+            AnyId::ActionRequestSolution(i) => self.action_request_solution_ids[i.0],
             AnyId::ActionResource(i) => self.action_resource_ids[i.0],
             AnyId::ActionResourceRelationship(i) => self.action_resource_relationship_ids[i.0],
             AnyId::ActionResourceRequirement(i) => self.action_resource_requirement_ids[i.0],
@@ -1774,6 +1894,7 @@ impl<'a> Writer<'a> {
                 self.applied_external_identification_assignment_ids[i.0]
             }
             AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0],
+            AnyId::AppliedPresentedItem(i) => self.applied_presented_item_ids[i.0],
             AnyId::Approval(i) => self.approval_ids[i.0],
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0],
             AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0],
@@ -1787,6 +1908,8 @@ impl<'a> Writer<'a> {
             AnyId::ApproximationToleranceParameter(i) => {
                 self.approximation_tolerance_parameter_ids[i.0]
             }
+            AnyId::AreaInSet(i) => self.area_in_set_ids[i.0],
+            AnyId::AreaUnit(i) => self.area_unit_ids[i.0],
             AnyId::AscribableState(i) => self.ascribable_state_ids[i.0],
             AnyId::AscribableStateRelationship(i) => self.ascribable_state_relationship_ids[i.0],
             AnyId::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0],
@@ -1806,8 +1929,12 @@ impl<'a> Writer<'a> {
             AnyId::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0],
             AnyId::BrepWithVoids(i) => self.brep_with_void_ids[i.0],
             AnyId::CalendarDate(i) => self.calendar_date_ids[i.0],
+            AnyId::CameraImage(i) => self.camera_image_ids[i.0],
+            AnyId::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0],
             AnyId::CameraModel(i) => self.camera_model_ids[i.0],
             AnyId::CameraModelD3(i) => self.camera_model_d3_ids[i.0],
+            AnyId::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0],
+            AnyId::CameraUsage(i) => self.camera_usage_ids[i.0],
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0],
             AnyId::CcDesignApproval(i) => self.cc_design_approval_ids[i.0],
             AnyId::CcDesignDateAndTimeAssignment(i) => {
@@ -1922,11 +2049,18 @@ impl<'a> Writer<'a> {
             AnyId::DimensionalLocation(i) => self.dimensional_location_ids[i.0],
             AnyId::DimensionalLocationWithPath(i) => self.dimensional_location_with_path_ids[i.0],
             AnyId::DimensionalSize(i) => self.dimensional_size_ids[i.0],
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0]
+            }
             AnyId::DimensionalSizeWithPath(i) => self.dimensional_size_with_path_ids[i.0],
+            AnyId::DirectedDimensionalLocation(i) => self.directed_dimensional_location_ids[i.0],
             AnyId::Direction(i) => self.direction_ids[i.0],
             AnyId::Document(i) => self.document_ids[i.0],
             AnyId::DocumentFile(i) => self.document_file_ids[i.0],
+            AnyId::DocumentProductAssociation(i) => self.document_product_association_ids[i.0],
+            AnyId::DocumentProductEquivalence(i) => self.document_product_equivalence_ids[i.0],
             AnyId::DocumentReference(i) => self.document_reference_ids[i.0],
+            AnyId::DocumentRepresentationType(i) => self.document_representation_type_ids[i.0],
             AnyId::DocumentType(i) => self.document_type_ids[i.0],
             AnyId::DraughtingAnnotationOccurrence(i) => {
                 self.draughting_annotation_occurrence_ids[i.0]
@@ -2009,6 +2143,9 @@ impl<'a> Writer<'a> {
             AnyId::GeometricRepresentationItem(i) => self.geometric_representation_item_ids[i.0],
             AnyId::GeometricSet(i) => self.geometric_set_ids[i.0],
             AnyId::GeometricTolerance(i) => self.geometric_tolerance_ids[i.0],
+            AnyId::GeometricToleranceRelationship(i) => {
+                self.geometric_tolerance_relationship_ids[i.0]
+            }
             AnyId::GeometricToleranceWithDatumReference(i) => {
                 self.geometric_tolerance_with_datum_reference_ids[i.0]
             }
@@ -2023,6 +2160,9 @@ impl<'a> Writer<'a> {
             }
             AnyId::GeometricToleranceWithModifiers(i) => {
                 self.geometric_tolerance_with_modifier_ids[i.0]
+            }
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                self.geometrically_bounded_surface_shape_representation_ids[i.0]
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 self.geometrically_bounded_wireframe_shape_representation_ids[i.0]
@@ -2060,6 +2200,7 @@ impl<'a> Writer<'a> {
             AnyId::MappedItem(i) => self.mapped_item_ids[i.0],
             AnyId::MassMeasureWithUnit(i) => self.mass_measure_with_unit_ids[i.0],
             AnyId::MassUnit(i) => self.mass_unit_ids[i.0],
+            AnyId::MeasureQualification(i) => self.measure_qualification_ids[i.0],
             AnyId::MeasureRepresentationItem(i) => self.measure_representation_item_ids[i.0],
             AnyId::MeasureWithUnit(i) => self.measure_with_unit_ids[i.0],
             AnyId::MechanicalContext(i) => self.mechanical_context_ids[i.0],
@@ -2077,6 +2218,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::ModelGeometricView(i) => self.model_geometric_view_ids[i.0],
             AnyId::ModifiedGeometricTolerance(i) => self.modified_geometric_tolerance_ids[i.0],
+            AnyId::NameAttribute(i) => self.name_attribute_ids[i.0],
             AnyId::NamedUnit(i) => self.named_unit_ids[i.0],
             AnyId::NextAssemblyUsageOccurrence(i) => self.next_assembly_usage_occurrence_ids[i.0],
             AnyId::NumericExpression(i) => self.numeric_expression_ids[i.0],
@@ -2145,14 +2287,24 @@ impl<'a> Writer<'a> {
             AnyId::PresentationSet(i) => self.presentation_set_ids[i.0],
             AnyId::PresentationStyleAssignment(i) => self.presentation_style_assignment_ids[i.0],
             AnyId::PresentationView(i) => self.presentation_view_ids[i.0],
+            AnyId::PresentedItem(i) => self.presented_item_ids[i.0],
+            AnyId::PresentedItemRepresentation(i) => self.presented_item_representation_ids[i.0],
             AnyId::Product(i) => self.product_ids[i.0],
             AnyId::ProductCategory(i) => self.product_category_ids[i.0],
             AnyId::ProductCategoryRelationship(i) => self.product_category_relationship_ids[i.0],
             AnyId::ProductConcept(i) => self.product_concept_ids[i.0],
             AnyId::ProductConceptContext(i) => self.product_concept_context_ids[i.0],
+            AnyId::ProductConceptFeature(i) => self.product_concept_feature_ids[i.0],
+            AnyId::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0]
+            }
             AnyId::ProductContext(i) => self.product_context_ids[i.0],
             AnyId::ProductDefinition(i) => self.product_definition_ids[i.0],
             AnyId::ProductDefinitionContext(i) => self.product_definition_context_ids[i.0],
+            AnyId::ProductDefinitionContextAssociation(i) => {
+                self.product_definition_context_association_ids[i.0]
+            }
+            AnyId::ProductDefinitionContextRole(i) => self.product_definition_context_role_ids[i.0],
             AnyId::ProductDefinitionEffectivity(i) => self.product_definition_effectivity_ids[i.0],
             AnyId::ProductDefinitionFormation(i) => self.product_definition_formation_ids[i.0],
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
@@ -2166,6 +2318,7 @@ impl<'a> Writer<'a> {
                 self.product_definition_relationship_relationship_ids[i.0]
             }
             AnyId::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0],
+            AnyId::ProductDefinitionSubstitute(i) => self.product_definition_substitute_ids[i.0],
             AnyId::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0],
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
                 self.product_definition_with_associated_document_ids[i.0]
@@ -2173,6 +2326,7 @@ impl<'a> Writer<'a> {
             AnyId::ProductRelatedProductCategory(i) => {
                 self.product_related_product_category_ids[i.0]
             }
+            AnyId::ProjectedZoneDefinition(i) => self.projected_zone_definition_ids[i.0],
             AnyId::PropertyDefinition(i) => self.property_definition_ids[i.0],
             AnyId::PropertyDefinitionRelationship(i) => {
                 self.property_definition_relationship_ids[i.0]
@@ -2183,6 +2337,7 @@ impl<'a> Writer<'a> {
             AnyId::QualifiedRepresentationItem(i) => self.qualified_representation_item_ids[i.0],
             AnyId::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0],
             AnyId::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0],
+            AnyId::RatioUnit(i) => self.ratio_unit_ids[i.0],
             AnyId::RationalBSplineCurve(i) => self.rational_b_spline_curve_ids[i.0],
             AnyId::RationalBSplineSurface(i) => self.rational_b_spline_surface_ids[i.0],
             AnyId::RealLiteral(i) => self.real_literal_ids[i.0],
@@ -2212,6 +2367,9 @@ impl<'a> Writer<'a> {
             AnyId::SecurityClassificationLevel(i) => self.security_classification_level_ids[i.0],
             AnyId::ShapeAspect(i) => self.shape_aspect_ids[i.0],
             AnyId::ShapeAspectAssociativity(i) => self.shape_aspect_associativity_ids[i.0],
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0]
+            }
             AnyId::ShapeAspectRelationship(i) => self.shape_aspect_relationship_ids[i.0],
             AnyId::ShapeDefinitionRepresentation(i) => {
                 self.shape_definition_representation_ids[i.0]
@@ -2320,6 +2478,7 @@ impl<'a> Writer<'a> {
             AnyId::VertexPoint(i) => self.vertex_point_ids[i.0],
             AnyId::VertexShell(i) => self.vertex_shell_ids[i.0],
             AnyId::ViewVolume(i) => self.view_volume_ids[i.0],
+            AnyId::VolumeUnit(i) => self.volume_unit_ids[i.0],
             AnyId::WireShell(i) => self.wire_shell_ids[i.0],
             AnyId::ComplexUnit(i) => self.complex_ids[i.0],
         }
@@ -2337,6 +2496,7 @@ impl<'a> Writer<'a> {
             AnyId::ActionProperty(i) => self.action_property_ids[i.0] = Some(n),
             AnyId::ActionRelationship(i) => self.action_relationship_ids[i.0] = Some(n),
             AnyId::ActionRequestAssignment(i) => self.action_request_assignment_ids[i.0] = Some(n),
+            AnyId::ActionRequestSolution(i) => self.action_request_solution_ids[i.0] = Some(n),
             AnyId::ActionResource(i) => self.action_resource_ids[i.0] = Some(n),
             AnyId::ActionResourceRelationship(i) => {
                 self.action_resource_relationship_ids[i.0] = Some(n)
@@ -2409,6 +2569,7 @@ impl<'a> Writer<'a> {
                 self.applied_external_identification_assignment_ids[i.0] = Some(n)
             }
             AnyId::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0] = Some(n),
+            AnyId::AppliedPresentedItem(i) => self.applied_presented_item_ids[i.0] = Some(n),
             AnyId::Approval(i) => self.approval_ids[i.0] = Some(n),
             AnyId::ApprovalAssignment(i) => self.approval_assignment_ids[i.0] = Some(n),
             AnyId::ApprovalDateTime(i) => self.approval_date_time_ids[i.0] = Some(n),
@@ -2424,6 +2585,8 @@ impl<'a> Writer<'a> {
             AnyId::ApproximationToleranceParameter(i) => {
                 self.approximation_tolerance_parameter_ids[i.0] = Some(n)
             }
+            AnyId::AreaInSet(i) => self.area_in_set_ids[i.0] = Some(n),
+            AnyId::AreaUnit(i) => self.area_unit_ids[i.0] = Some(n),
             AnyId::AscribableState(i) => self.ascribable_state_ids[i.0] = Some(n),
             AnyId::AscribableStateRelationship(i) => {
                 self.ascribable_state_relationship_ids[i.0] = Some(n)
@@ -2445,8 +2608,12 @@ impl<'a> Writer<'a> {
             AnyId::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0] = Some(n),
             AnyId::BrepWithVoids(i) => self.brep_with_void_ids[i.0] = Some(n),
             AnyId::CalendarDate(i) => self.calendar_date_ids[i.0] = Some(n),
+            AnyId::CameraImage(i) => self.camera_image_ids[i.0] = Some(n),
+            AnyId::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0] = Some(n),
             AnyId::CameraModel(i) => self.camera_model_ids[i.0] = Some(n),
             AnyId::CameraModelD3(i) => self.camera_model_d3_ids[i.0] = Some(n),
+            AnyId::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0] = Some(n),
+            AnyId::CameraUsage(i) => self.camera_usage_ids[i.0] = Some(n),
             AnyId::CartesianPoint(i) => self.cartesian_point_ids[i.0] = Some(n),
             AnyId::CcDesignApproval(i) => self.cc_design_approval_ids[i.0] = Some(n),
             AnyId::CcDesignDateAndTimeAssignment(i) => {
@@ -2579,11 +2746,26 @@ impl<'a> Writer<'a> {
                 self.dimensional_location_with_path_ids[i.0] = Some(n)
             }
             AnyId::DimensionalSize(i) => self.dimensional_size_ids[i.0] = Some(n),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0] = Some(n)
+            }
             AnyId::DimensionalSizeWithPath(i) => self.dimensional_size_with_path_ids[i.0] = Some(n),
+            AnyId::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0] = Some(n)
+            }
             AnyId::Direction(i) => self.direction_ids[i.0] = Some(n),
             AnyId::Document(i) => self.document_ids[i.0] = Some(n),
             AnyId::DocumentFile(i) => self.document_file_ids[i.0] = Some(n),
+            AnyId::DocumentProductAssociation(i) => {
+                self.document_product_association_ids[i.0] = Some(n)
+            }
+            AnyId::DocumentProductEquivalence(i) => {
+                self.document_product_equivalence_ids[i.0] = Some(n)
+            }
             AnyId::DocumentReference(i) => self.document_reference_ids[i.0] = Some(n),
+            AnyId::DocumentRepresentationType(i) => {
+                self.document_representation_type_ids[i.0] = Some(n)
+            }
             AnyId::DocumentType(i) => self.document_type_ids[i.0] = Some(n),
             AnyId::DraughtingAnnotationOccurrence(i) => {
                 self.draughting_annotation_occurrence_ids[i.0] = Some(n)
@@ -2682,6 +2864,9 @@ impl<'a> Writer<'a> {
             }
             AnyId::GeometricSet(i) => self.geometric_set_ids[i.0] = Some(n),
             AnyId::GeometricTolerance(i) => self.geometric_tolerance_ids[i.0] = Some(n),
+            AnyId::GeometricToleranceRelationship(i) => {
+                self.geometric_tolerance_relationship_ids[i.0] = Some(n)
+            }
             AnyId::GeometricToleranceWithDatumReference(i) => {
                 self.geometric_tolerance_with_datum_reference_ids[i.0] = Some(n)
             }
@@ -2696,6 +2881,9 @@ impl<'a> Writer<'a> {
             }
             AnyId::GeometricToleranceWithModifiers(i) => {
                 self.geometric_tolerance_with_modifier_ids[i.0] = Some(n)
+            }
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                self.geometrically_bounded_surface_shape_representation_ids[i.0] = Some(n)
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 self.geometrically_bounded_wireframe_shape_representation_ids[i.0] = Some(n)
@@ -2739,6 +2927,7 @@ impl<'a> Writer<'a> {
             AnyId::MappedItem(i) => self.mapped_item_ids[i.0] = Some(n),
             AnyId::MassMeasureWithUnit(i) => self.mass_measure_with_unit_ids[i.0] = Some(n),
             AnyId::MassUnit(i) => self.mass_unit_ids[i.0] = Some(n),
+            AnyId::MeasureQualification(i) => self.measure_qualification_ids[i.0] = Some(n),
             AnyId::MeasureRepresentationItem(i) => {
                 self.measure_representation_item_ids[i.0] = Some(n)
             }
@@ -2761,6 +2950,7 @@ impl<'a> Writer<'a> {
             AnyId::ModifiedGeometricTolerance(i) => {
                 self.modified_geometric_tolerance_ids[i.0] = Some(n)
             }
+            AnyId::NameAttribute(i) => self.name_attribute_ids[i.0] = Some(n),
             AnyId::NamedUnit(i) => self.named_unit_ids[i.0] = Some(n),
             AnyId::NextAssemblyUsageOccurrence(i) => {
                 self.next_assembly_usage_occurrence_ids[i.0] = Some(n)
@@ -2861,6 +3051,10 @@ impl<'a> Writer<'a> {
                 self.presentation_style_assignment_ids[i.0] = Some(n)
             }
             AnyId::PresentationView(i) => self.presentation_view_ids[i.0] = Some(n),
+            AnyId::PresentedItem(i) => self.presented_item_ids[i.0] = Some(n),
+            AnyId::PresentedItemRepresentation(i) => {
+                self.presented_item_representation_ids[i.0] = Some(n)
+            }
             AnyId::Product(i) => self.product_ids[i.0] = Some(n),
             AnyId::ProductCategory(i) => self.product_category_ids[i.0] = Some(n),
             AnyId::ProductCategoryRelationship(i) => {
@@ -2868,10 +3062,20 @@ impl<'a> Writer<'a> {
             }
             AnyId::ProductConcept(i) => self.product_concept_ids[i.0] = Some(n),
             AnyId::ProductConceptContext(i) => self.product_concept_context_ids[i.0] = Some(n),
+            AnyId::ProductConceptFeature(i) => self.product_concept_feature_ids[i.0] = Some(n),
+            AnyId::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0] = Some(n)
+            }
             AnyId::ProductContext(i) => self.product_context_ids[i.0] = Some(n),
             AnyId::ProductDefinition(i) => self.product_definition_ids[i.0] = Some(n),
             AnyId::ProductDefinitionContext(i) => {
                 self.product_definition_context_ids[i.0] = Some(n)
+            }
+            AnyId::ProductDefinitionContextAssociation(i) => {
+                self.product_definition_context_association_ids[i.0] = Some(n)
+            }
+            AnyId::ProductDefinitionContextRole(i) => {
+                self.product_definition_context_role_ids[i.0] = Some(n)
             }
             AnyId::ProductDefinitionEffectivity(i) => {
                 self.product_definition_effectivity_ids[i.0] = Some(n)
@@ -2892,6 +3096,9 @@ impl<'a> Writer<'a> {
                 self.product_definition_relationship_relationship_ids[i.0] = Some(n)
             }
             AnyId::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0] = Some(n),
+            AnyId::ProductDefinitionSubstitute(i) => {
+                self.product_definition_substitute_ids[i.0] = Some(n)
+            }
             AnyId::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0] = Some(n),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
                 self.product_definition_with_associated_document_ids[i.0] = Some(n)
@@ -2899,6 +3106,7 @@ impl<'a> Writer<'a> {
             AnyId::ProductRelatedProductCategory(i) => {
                 self.product_related_product_category_ids[i.0] = Some(n)
             }
+            AnyId::ProjectedZoneDefinition(i) => self.projected_zone_definition_ids[i.0] = Some(n),
             AnyId::PropertyDefinition(i) => self.property_definition_ids[i.0] = Some(n),
             AnyId::PropertyDefinitionRelationship(i) => {
                 self.property_definition_relationship_ids[i.0] = Some(n)
@@ -2911,6 +3119,7 @@ impl<'a> Writer<'a> {
             }
             AnyId::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0] = Some(n),
             AnyId::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0] = Some(n),
+            AnyId::RatioUnit(i) => self.ratio_unit_ids[i.0] = Some(n),
             AnyId::RationalBSplineCurve(i) => self.rational_b_spline_curve_ids[i.0] = Some(n),
             AnyId::RationalBSplineSurface(i) => self.rational_b_spline_surface_ids[i.0] = Some(n),
             AnyId::RealLiteral(i) => self.real_literal_ids[i.0] = Some(n),
@@ -2947,6 +3156,9 @@ impl<'a> Writer<'a> {
             AnyId::ShapeAspect(i) => self.shape_aspect_ids[i.0] = Some(n),
             AnyId::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0] = Some(n)
+            }
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0] = Some(n)
             }
             AnyId::ShapeAspectRelationship(i) => self.shape_aspect_relationship_ids[i.0] = Some(n),
             AnyId::ShapeDefinitionRepresentation(i) => {
@@ -3076,6 +3288,7 @@ impl<'a> Writer<'a> {
             AnyId::VertexPoint(i) => self.vertex_point_ids[i.0] = Some(n),
             AnyId::VertexShell(i) => self.vertex_shell_ids[i.0] = Some(n),
             AnyId::ViewVolume(i) => self.view_volume_ids[i.0] = Some(n),
+            AnyId::VolumeUnit(i) => self.volume_unit_ids[i.0] = Some(n),
             AnyId::WireShell(i) => self.wire_shell_ids[i.0] = Some(n),
             AnyId::ComplexUnit(i) => self.complex_ids[i.0] = Some(n),
         }
@@ -4108,8 +4321,14 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::DocumentFile(i) => {
                 self.document_file_ids[i.0].expect("dep id assigned")
@@ -4200,6 +4419,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
@@ -4296,8 +4518,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
             CharacterizedDefinitionRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+            CharacterizedDefinitionRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             CharacterizedDefinitionRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            CharacterizedDefinitionRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             CharacterizedDefinitionRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
             CharacterizedDefinitionRef::DraughtingModelItemAssociation(i) => {
@@ -4384,6 +4612,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
             CharacterizedDefinitionRef::ShapeAspectAssociativity(i) => {
                 out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            CharacterizedDefinitionRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
             }
             CharacterizedDefinitionRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
@@ -4624,6 +4855,7 @@ impl<'a> Writer<'a> {
         match r {
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
@@ -4640,6 +4872,7 @@ impl<'a> Writer<'a> {
         match r {
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => out.push(AnyId::ConstructiveGeometryRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
@@ -5209,6 +5442,9 @@ impl<'a> Writer<'a> {
             DateAndTimeItemRef::GeneralProperty(i) => {
                 self.general_property_ids[i.0].expect("dep id assigned")
             }
+            DateAndTimeItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             DateAndTimeItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -5377,6 +5613,9 @@ impl<'a> Writer<'a> {
             DateAndTimeItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
             DateAndTimeItemRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
             DateAndTimeItemRef::GeneralProperty(i) => out.push(AnyId::GeneralProperty(*i)),
+            DateAndTimeItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
             DateAndTimeItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
@@ -5844,8 +6083,14 @@ impl<'a> Writer<'a> {
             DerivedPropertySelectRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            DerivedPropertySelectRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             DerivedPropertySelectRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DerivedPropertySelectRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             DerivedPropertySelectRef::FlatnessTolerance(i) => {
                 self.flatness_tolerance_ids[i.0].expect("dep id assigned")
@@ -5939,8 +6184,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
             DerivedPropertySelectRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+            DerivedPropertySelectRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             DerivedPropertySelectRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            DerivedPropertySelectRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             DerivedPropertySelectRef::FlatnessTolerance(i) => {
                 out.push(AnyId::FlatnessTolerance(*i))
@@ -6052,8 +6303,14 @@ impl<'a> Writer<'a> {
             DimensionalCharacteristicRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            DimensionalCharacteristicRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             DimensionalCharacteristicRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DimensionalCharacteristicRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             DimensionalCharacteristicRef::Complex(i) => {
                 self.complex_ids[i.0].expect("dep id assigned")
@@ -6072,8 +6329,14 @@ impl<'a> Writer<'a> {
             DimensionalCharacteristicRef::DimensionalSize(i) => {
                 out.push(AnyId::DimensionalSize(*i))
             }
+            DimensionalCharacteristicRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             DimensionalCharacteristicRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            DimensionalCharacteristicRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             DimensionalCharacteristicRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
@@ -6262,11 +6525,20 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::CameraImage(i) => {
+                self.camera_image_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CameraImage3dWithScale(i) => {
+                self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::CameraModel(i) => {
                 self.camera_model_ids[i.0].expect("dep id assigned")
             }
             DocumentReferenceItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
             DocumentReferenceItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
@@ -6408,8 +6680,14 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             DocumentReferenceItemRef::Direction(i) => {
                 self.direction_ids[i.0].expect("dep id assigned")
@@ -6507,6 +6785,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::GeometricSet(i) => {
                 self.geometric_set_ids[i.0].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             DocumentReferenceItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -6641,6 +6922,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::ProductConcept(i) => {
                 self.product_concept_ids[i.0].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::ProductDefinition(i) => {
                 self.product_definition_ids[i.0].expect("dep id assigned")
             }
@@ -6724,6 +7008,9 @@ impl<'a> Writer<'a> {
             }
             DocumentReferenceItemRef::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
             }
             DocumentReferenceItemRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
@@ -6958,8 +7245,15 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::BoundedSurfaceCurve(*i))
             }
             DocumentReferenceItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            DocumentReferenceItemRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+            DocumentReferenceItemRef::CameraImage3dWithScale(i) => {
+                out.push(AnyId::CameraImage3dWithScale(*i))
+            }
             DocumentReferenceItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             DocumentReferenceItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            DocumentReferenceItemRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
             DocumentReferenceItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             DocumentReferenceItemRef::CcDesignDateAndTimeAssignment(i) => {
                 out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
@@ -7065,8 +7359,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
             DocumentReferenceItemRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+            DocumentReferenceItemRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             DocumentReferenceItemRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            DocumentReferenceItemRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             DocumentReferenceItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
             DocumentReferenceItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
@@ -7142,6 +7442,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricRepresentationItem(*i))
             }
             DocumentReferenceItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            DocumentReferenceItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
             DocumentReferenceItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
@@ -7241,6 +7544,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::Product(i) => out.push(AnyId::Product(*i)),
             DocumentReferenceItemRef::ProductCategory(i) => out.push(AnyId::ProductCategory(*i)),
             DocumentReferenceItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+            DocumentReferenceItemRef::ProductConceptFeatureCategory(i) => {
+                out.push(AnyId::ProductConceptFeatureCategory(*i))
+            }
             DocumentReferenceItemRef::ProductDefinition(i) => {
                 out.push(AnyId::ProductDefinition(*i))
             }
@@ -7318,6 +7624,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
             DocumentReferenceItemRef::ShapeAspectAssociativity(i) => {
                 out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            DocumentReferenceItemRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
             }
             DocumentReferenceItemRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
@@ -7636,8 +7945,14 @@ impl<'a> Writer<'a> {
             DraughtingModelItemDefinitionRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            DraughtingModelItemDefinitionRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             DraughtingModelItemDefinitionRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             DraughtingModelItemDefinitionRef::FlatnessTolerance(i) => {
                 self.flatness_tolerance_ids[i.0].expect("dep id assigned")
@@ -7704,6 +8019,9 @@ impl<'a> Writer<'a> {
             }
             DraughtingModelItemDefinitionRef::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            DraughtingModelItemDefinitionRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
             }
             DraughtingModelItemDefinitionRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
@@ -7796,8 +8114,14 @@ impl<'a> Writer<'a> {
             DraughtingModelItemDefinitionRef::DimensionalSize(i) => {
                 out.push(AnyId::DimensionalSize(*i))
             }
+            DraughtingModelItemDefinitionRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             DraughtingModelItemDefinitionRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            DraughtingModelItemDefinitionRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             DraughtingModelItemDefinitionRef::FlatnessTolerance(i) => {
                 out.push(AnyId::FlatnessTolerance(*i))
@@ -7862,6 +8186,9 @@ impl<'a> Writer<'a> {
             DraughtingModelItemDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
             DraughtingModelItemDefinitionRef::ShapeAspectAssociativity(i) => {
                 out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            DraughtingModelItemDefinitionRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
             }
             DraughtingModelItemDefinitionRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
@@ -7939,6 +8266,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::Approval(i) => self.approval_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::ApprovalPersonOrganization(i) => self.approval_person_organization_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::ApprovalStatus(i) => self.approval_statu_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::AreaUnit(i) => self.area_unit_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::AuxiliaryLeaderLine(i) => self.auxiliary_leader_line_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::Axis1Placement(i) => self.axis1_placement_ids[i.0].expect("dep id assigned"),
@@ -7955,8 +8283,11 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::BoundedSurface(i) => self.bounded_surface_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::BrepWithVoids(i) => self.brep_with_void_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CameraImage(i) => self.camera_image_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CameraModelD3(i) => self.camera_model_d3_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CartesianPoint(i) => self.cartesian_point_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::CcDesignDateAndTimeAssignment(i) => self.cc_design_date_and_time_assignment_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::Certification(i) => self.certification_ids[i.0].expect("dep id assigned"),
@@ -8015,6 +8346,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::GeometricCurveSet(i) => self.geometric_curve_set_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::GeometricRepresentationItem(i) => self.geometric_representation_item_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::GeometricSet(i) => self.geometric_set_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::Hyperbola(i) => self.hyperbola_ids[i.0].expect("dep id assigned"),
@@ -8066,6 +8398,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::Product(i) => self.product_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::ProductConcept(i) => self.product_concept_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::ProductConceptContext(i) => self.product_concept_context_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ProductConceptFeatureCategory(i) => self.product_concept_feature_category_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::ProductDefinition(i) => self.product_definition_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::ProductDefinitionContext(i) => self.product_definition_context_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::ProductDefinitionEffectivity(i) => self.product_definition_effectivity_ids[i.0].expect("dep id assigned"),
@@ -8078,6 +8411,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::QualifiedRepresentationItem(i) => self.qualified_representation_item_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::RatioUnit(i) => self.ratio_unit_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::RationalBSplineCurve(i) => self.rational_b_spline_curve_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::RationalBSplineSurface(i) => self.rational_b_spline_surface_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::RealRepresentationItem(i) => self.real_representation_item_ids[i.0].expect("dep id assigned"),
@@ -8131,6 +8465,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::VertexLoop(i) => self.vertex_loop_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::VertexPoint(i) => self.vertex_point_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::VertexShell(i) => self.vertex_shell_ids[i.0].expect("dep id assigned"),
+        ExternalIdentificationItemRef::VolumeUnit(i) => self.volume_unit_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::WireShell(i) => self.wire_shell_ids[i.0].expect("dep id assigned"),
         ExternalIdentificationItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
     }
@@ -8169,6 +8504,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::Approval(i) => out.push(AnyId::Approval(*i)),
         ExternalIdentificationItemRef::ApprovalPersonOrganization(i) => out.push(AnyId::ApprovalPersonOrganization(*i)),
         ExternalIdentificationItemRef::ApprovalStatus(i) => out.push(AnyId::ApprovalStatus(*i)),
+        ExternalIdentificationItemRef::AreaUnit(i) => out.push(AnyId::AreaUnit(*i)),
         ExternalIdentificationItemRef::AssemblyComponentUsage(i) => out.push(AnyId::AssemblyComponentUsage(*i)),
         ExternalIdentificationItemRef::AuxiliaryLeaderLine(i) => out.push(AnyId::AuxiliaryLeaderLine(*i)),
         ExternalIdentificationItemRef::Axis1Placement(i) => out.push(AnyId::Axis1Placement(*i)),
@@ -8185,8 +8521,11 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
         ExternalIdentificationItemRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
         ExternalIdentificationItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+        ExternalIdentificationItemRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+        ExternalIdentificationItemRef::CameraImage3dWithScale(i) => out.push(AnyId::CameraImage3dWithScale(*i)),
         ExternalIdentificationItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
         ExternalIdentificationItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+        ExternalIdentificationItemRef::CameraModelD3WithHlhsr(i) => out.push(AnyId::CameraModelD3WithHlhsr(*i)),
         ExternalIdentificationItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
         ExternalIdentificationItemRef::CcDesignDateAndTimeAssignment(i) => out.push(AnyId::CcDesignDateAndTimeAssignment(*i)),
         ExternalIdentificationItemRef::Certification(i) => out.push(AnyId::Certification(*i)),
@@ -8245,6 +8584,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::GeometricCurveSet(i) => out.push(AnyId::GeometricCurveSet(*i)),
         ExternalIdentificationItemRef::GeometricRepresentationItem(i) => out.push(AnyId::GeometricRepresentationItem(*i)),
         ExternalIdentificationItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+        ExternalIdentificationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
         ExternalIdentificationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
         ExternalIdentificationItemRef::Group(i) => out.push(AnyId::Group(*i)),
         ExternalIdentificationItemRef::Hyperbola(i) => out.push(AnyId::Hyperbola(*i)),
@@ -8296,6 +8636,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::Product(i) => out.push(AnyId::Product(*i)),
         ExternalIdentificationItemRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
         ExternalIdentificationItemRef::ProductConceptContext(i) => out.push(AnyId::ProductConceptContext(*i)),
+        ExternalIdentificationItemRef::ProductConceptFeatureCategory(i) => out.push(AnyId::ProductConceptFeatureCategory(*i)),
         ExternalIdentificationItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
         ExternalIdentificationItemRef::ProductDefinitionContext(i) => out.push(AnyId::ProductDefinitionContext(*i)),
         ExternalIdentificationItemRef::ProductDefinitionEffectivity(i) => out.push(AnyId::ProductDefinitionEffectivity(*i)),
@@ -8308,6 +8649,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::QualifiedRepresentationItem(i) => out.push(AnyId::QualifiedRepresentationItem(*i)),
         ExternalIdentificationItemRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
         ExternalIdentificationItemRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
+        ExternalIdentificationItemRef::RatioUnit(i) => out.push(AnyId::RatioUnit(*i)),
         ExternalIdentificationItemRef::RationalBSplineCurve(i) => out.push(AnyId::RationalBSplineCurve(*i)),
         ExternalIdentificationItemRef::RationalBSplineSurface(i) => out.push(AnyId::RationalBSplineSurface(*i)),
         ExternalIdentificationItemRef::RealRepresentationItem(i) => out.push(AnyId::RealRepresentationItem(*i)),
@@ -8361,6 +8703,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
         ExternalIdentificationItemRef::VertexPoint(i) => out.push(AnyId::VertexPoint(*i)),
         ExternalIdentificationItemRef::VertexShell(i) => out.push(AnyId::VertexShell(*i)),
+        ExternalIdentificationItemRef::VolumeUnit(i) => out.push(AnyId::VolumeUnit(*i)),
         ExternalIdentificationItemRef::WireShell(i) => out.push(AnyId::WireShell(*i)),
         ExternalIdentificationItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
     }
@@ -8750,6 +9093,12 @@ impl<'a> Writer<'a> {
             GeometricItemSpecificUsageSelectRef::DimensionalLocationWithPath(i) => {
                 self.dimensional_location_with_path_ids[i.0].expect("dep id assigned")
             }
+            GeometricItemSpecificUsageSelectRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
+            GeometricItemSpecificUsageSelectRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
+            }
             GeometricItemSpecificUsageSelectRef::GeneralDatumReference(i) => {
                 self.general_datum_reference_ids[i.0].expect("dep id assigned")
             }
@@ -8761,6 +9110,9 @@ impl<'a> Writer<'a> {
             }
             GeometricItemSpecificUsageSelectRef::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            GeometricItemSpecificUsageSelectRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
             }
             GeometricItemSpecificUsageSelectRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
@@ -8819,6 +9171,12 @@ impl<'a> Writer<'a> {
             GeometricItemSpecificUsageSelectRef::DimensionalLocationWithPath(i) => {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
+            GeometricItemSpecificUsageSelectRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
+            GeometricItemSpecificUsageSelectRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
+            }
             GeometricItemSpecificUsageSelectRef::GeneralDatumReference(i) => {
                 out.push(AnyId::GeneralDatumReference(*i))
             }
@@ -8828,6 +9186,9 @@ impl<'a> Writer<'a> {
             GeometricItemSpecificUsageSelectRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
             GeometricItemSpecificUsageSelectRef::ShapeAspectAssociativity(i) => {
                 out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            GeometricItemSpecificUsageSelectRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
             }
             GeometricItemSpecificUsageSelectRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
@@ -8921,6 +9282,9 @@ impl<'a> Writer<'a> {
             }
             GeometricModelItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            GeometricModelItemRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
             GeometricModelItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
@@ -9191,6 +9555,9 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
             GeometricModelItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             GeometricModelItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            GeometricModelItemRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
             GeometricModelItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             GeometricModelItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
             GeometricModelItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -9544,6 +9911,146 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_geometric_tolerance(&self, r: &GeometricToleranceRef) -> u64 {
+        match r {
+            GeometricToleranceRef::AngularityTolerance(i) => {
+                self.angularity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::CircularRunoutTolerance(i) => {
+                self.circular_runout_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::CoaxialityTolerance(i) => {
+                self.coaxiality_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::ConcentricityTolerance(i) => {
+                self.concentricity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::CylindricityTolerance(i) => {
+                self.cylindricity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::FlatnessTolerance(i) => {
+                self.flatness_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::GeometricTolerance(i) => {
+                self.geometric_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::GeometricToleranceWithDatumReference(i) => {
+                self.geometric_tolerance_with_datum_reference_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::GeometricToleranceWithDefinedAreaUnit(i) => {
+                self.geometric_tolerance_with_defined_area_unit_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::GeometricToleranceWithDefinedUnit(i) => {
+                self.geometric_tolerance_with_defined_unit_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::GeometricToleranceWithMaximumTolerance(i) => {
+                self.geometric_tolerance_with_maximum_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::GeometricToleranceWithModifiers(i) => {
+                self.geometric_tolerance_with_modifier_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::LineProfileTolerance(i) => {
+                self.line_profile_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::ModifiedGeometricTolerance(i) => {
+                self.modified_geometric_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::ParallelismTolerance(i) => {
+                self.parallelism_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::PerpendicularityTolerance(i) => {
+                self.perpendicularity_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::PositionTolerance(i) => {
+                self.position_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::RoundnessTolerance(i) => {
+                self.roundness_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::StraightnessTolerance(i) => {
+                self.straightness_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::SurfaceProfileTolerance(i) => {
+                self.surface_profile_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::SymmetryTolerance(i) => {
+                self.symmetry_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::TotalRunoutTolerance(i) => {
+                self.total_runout_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::UnequallyDisposedGeometricTolerance(i) => {
+                self.unequally_disposed_geometric_tolerance_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_geometric_tolerance(r: &GeometricToleranceRef, out: &mut Vec<AnyId>) {
+        match r {
+            GeometricToleranceRef::AngularityTolerance(i) => {
+                out.push(AnyId::AngularityTolerance(*i))
+            }
+            GeometricToleranceRef::CircularRunoutTolerance(i) => {
+                out.push(AnyId::CircularRunoutTolerance(*i))
+            }
+            GeometricToleranceRef::CoaxialityTolerance(i) => {
+                out.push(AnyId::CoaxialityTolerance(*i))
+            }
+            GeometricToleranceRef::ConcentricityTolerance(i) => {
+                out.push(AnyId::ConcentricityTolerance(*i))
+            }
+            GeometricToleranceRef::CylindricityTolerance(i) => {
+                out.push(AnyId::CylindricityTolerance(*i))
+            }
+            GeometricToleranceRef::FlatnessTolerance(i) => out.push(AnyId::FlatnessTolerance(*i)),
+            GeometricToleranceRef::GeometricTolerance(i) => out.push(AnyId::GeometricTolerance(*i)),
+            GeometricToleranceRef::GeometricToleranceWithDatumReference(i) => {
+                out.push(AnyId::GeometricToleranceWithDatumReference(*i))
+            }
+            GeometricToleranceRef::GeometricToleranceWithDefinedAreaUnit(i) => {
+                out.push(AnyId::GeometricToleranceWithDefinedAreaUnit(*i))
+            }
+            GeometricToleranceRef::GeometricToleranceWithDefinedUnit(i) => {
+                out.push(AnyId::GeometricToleranceWithDefinedUnit(*i))
+            }
+            GeometricToleranceRef::GeometricToleranceWithMaximumTolerance(i) => {
+                out.push(AnyId::GeometricToleranceWithMaximumTolerance(*i))
+            }
+            GeometricToleranceRef::GeometricToleranceWithModifiers(i) => {
+                out.push(AnyId::GeometricToleranceWithModifiers(*i))
+            }
+            GeometricToleranceRef::LineProfileTolerance(i) => {
+                out.push(AnyId::LineProfileTolerance(*i))
+            }
+            GeometricToleranceRef::ModifiedGeometricTolerance(i) => {
+                out.push(AnyId::ModifiedGeometricTolerance(*i))
+            }
+            GeometricToleranceRef::ParallelismTolerance(i) => {
+                out.push(AnyId::ParallelismTolerance(*i))
+            }
+            GeometricToleranceRef::PerpendicularityTolerance(i) => {
+                out.push(AnyId::PerpendicularityTolerance(*i))
+            }
+            GeometricToleranceRef::PositionTolerance(i) => out.push(AnyId::PositionTolerance(*i)),
+            GeometricToleranceRef::RoundnessTolerance(i) => out.push(AnyId::RoundnessTolerance(*i)),
+            GeometricToleranceRef::StraightnessTolerance(i) => {
+                out.push(AnyId::StraightnessTolerance(*i))
+            }
+            GeometricToleranceRef::SurfaceProfileTolerance(i) => {
+                out.push(AnyId::SurfaceProfileTolerance(*i))
+            }
+            GeometricToleranceRef::SymmetryTolerance(i) => out.push(AnyId::SymmetryTolerance(*i)),
+            GeometricToleranceRef::TotalRunoutTolerance(i) => {
+                out.push(AnyId::TotalRunoutTolerance(*i))
+            }
+            GeometricToleranceRef::UnequallyDisposedGeometricTolerance(i) => {
+                out.push(AnyId::UnequallyDisposedGeometricTolerance(*i))
+            }
+            GeometricToleranceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_geometric_tolerance_target(&self, r: &GeometricToleranceTargetRef) -> u64 {
         match r {
             GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
@@ -9592,8 +10099,14 @@ impl<'a> Writer<'a> {
             GeometricToleranceTargetRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            GeometricToleranceTargetRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             GeometricToleranceTargetRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            GeometricToleranceTargetRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 self.general_datum_reference_ids[i.0].expect("dep id assigned")
@@ -9657,8 +10170,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
             GeometricToleranceTargetRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+            GeometricToleranceTargetRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             GeometricToleranceTargetRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            GeometricToleranceTargetRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 out.push(AnyId::GeneralDatumReference(*i))
@@ -9681,6 +10200,9 @@ impl<'a> Writer<'a> {
     fn id_of_ref_group(&self, r: &GroupRef) -> u64 {
         match r {
             GroupRef::Group(i) => self.group_ids[i.0].expect("dep id assigned"),
+            GroupRef::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0].expect("dep id assigned")
+            }
             GroupRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
     }
@@ -9688,6 +10210,9 @@ impl<'a> Writer<'a> {
     fn deps_ref_group(r: &GroupRef, out: &mut Vec<AnyId>) {
         match r {
             GroupRef::Group(i) => out.push(AnyId::Group(*i)),
+            GroupRef::ProductConceptFeatureCategory(i) => {
+                out.push(AnyId::ProductConceptFeatureCategory(*i))
+            }
             GroupRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -9766,6 +10291,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::ApprovalStatus(i) => {
                 self.approval_statu_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::AreaUnit(i) => self.area_unit_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::AscribableState(i) => {
                 self.ascribable_state_ids[i.0].expect("dep id assigned")
             }
@@ -9823,11 +10349,20 @@ impl<'a> Writer<'a> {
             GroupableItemRef::CalendarDate(i) => {
                 self.calendar_date_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::CameraImage(i) => {
+                self.camera_image_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CameraImage3dWithScale(i) => {
+                self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::CameraModel(i) => {
                 self.camera_model_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
@@ -9978,6 +10513,12 @@ impl<'a> Writer<'a> {
             GroupableItemRef::DimensionalLocationWithPath(i) => {
                 self.dimensional_location_with_path_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
+            }
             GroupableItemRef::Direction(i) => self.direction_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::DocumentFile(i) => {
                 self.document_file_ids[i.0].expect("dep id assigned")
@@ -10052,6 +10593,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::GeometricSet(i) => {
                 self.geometric_set_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             GroupableItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -10248,6 +10792,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::QuasiUniformSurface(i) => {
                 self.quasi_uniform_surface_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::RatioUnit(i) => self.ratio_unit_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::RationalBSplineCurve(i) => {
                 self.rational_b_spline_curve_ids[i.0].expect("dep id assigned")
             }
@@ -10284,6 +10829,9 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
@@ -10420,6 +10968,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::VertexShell(i) => {
                 self.vertex_shell_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::VolumeUnit(i) => self.volume_unit_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::WireShell(i) => self.wire_shell_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
@@ -10481,6 +11030,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::ApprovalPersonOrganization(*i))
             }
             GroupableItemRef::ApprovalStatus(i) => out.push(AnyId::ApprovalStatus(*i)),
+            GroupableItemRef::AreaUnit(i) => out.push(AnyId::AreaUnit(*i)),
             GroupableItemRef::AscribableState(i) => out.push(AnyId::AscribableState(*i)),
             GroupableItemRef::AscribableStateRelationship(i) => {
                 out.push(AnyId::AscribableStateRelationship(*i))
@@ -10508,8 +11058,15 @@ impl<'a> Writer<'a> {
             GroupableItemRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
             GroupableItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
             GroupableItemRef::CalendarDate(i) => out.push(AnyId::CalendarDate(*i)),
+            GroupableItemRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+            GroupableItemRef::CameraImage3dWithScale(i) => {
+                out.push(AnyId::CameraImage3dWithScale(*i))
+            }
             GroupableItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             GroupableItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            GroupableItemRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
             GroupableItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             GroupableItemRef::CcDesignDateAndTimeAssignment(i) => {
                 out.push(AnyId::CcDesignDateAndTimeAssignment(*i))
@@ -10607,6 +11164,12 @@ impl<'a> Writer<'a> {
             GroupableItemRef::DimensionalLocationWithPath(i) => {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
+            GroupableItemRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
+            GroupableItemRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
+            }
             GroupableItemRef::Direction(i) => out.push(AnyId::Direction(*i)),
             GroupableItemRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
             GroupableItemRef::DraughtingAnnotationOccurrence(i) => {
@@ -10659,6 +11222,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricRepresentationItem(*i))
             }
             GroupableItemRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            GroupableItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
             GroupableItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
@@ -10809,6 +11375,7 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::QuasiUniformCurve(i) => out.push(AnyId::QuasiUniformCurve(*i)),
             GroupableItemRef::QuasiUniformSurface(i) => out.push(AnyId::QuasiUniformSurface(*i)),
+            GroupableItemRef::RatioUnit(i) => out.push(AnyId::RatioUnit(*i)),
             GroupableItemRef::RationalBSplineCurve(i) => out.push(AnyId::RationalBSplineCurve(*i)),
             GroupableItemRef::RationalBSplineSurface(i) => {
                 out.push(AnyId::RationalBSplineSurface(*i))
@@ -10837,6 +11404,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
             GroupableItemRef::ShapeAspectAssociativity(i) => {
                 out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            GroupableItemRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
             }
             GroupableItemRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
@@ -10923,6 +11493,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::VertexLoop(i) => out.push(AnyId::VertexLoop(*i)),
             GroupableItemRef::VertexPoint(i) => out.push(AnyId::VertexPoint(*i)),
             GroupableItemRef::VertexShell(i) => out.push(AnyId::VertexShell(*i)),
+            GroupableItemRef::VolumeUnit(i) => out.push(AnyId::VolumeUnit(*i)),
             GroupableItemRef::WireShell(i) => out.push(AnyId::WireShell(*i)),
             GroupableItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
@@ -11020,8 +11591,14 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            IdAttributeSelectRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             IdAttributeSelectRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             IdAttributeSelectRef::DraughtingModel(i) => {
                 self.draughting_model_ids[i.0].expect("dep id assigned")
@@ -11065,6 +11642,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::GeometricToleranceWithModifiers(i) => {
                 self.geometric_tolerance_with_modifier_ids[i.0].expect("dep id assigned")
             }
+            IdAttributeSelectRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             IdAttributeSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -11136,6 +11716,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::ProductCategory(i) => {
                 self.product_category_ids[i.0].expect("dep id assigned")
             }
+            IdAttributeSelectRef::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0].expect("dep id assigned")
+            }
             IdAttributeSelectRef::ProductDefinitionShape(i) => {
                 self.product_definition_shape_ids[i.0].expect("dep id assigned")
             }
@@ -11156,6 +11739,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            IdAttributeSelectRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
             }
             IdAttributeSelectRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
@@ -11283,8 +11869,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
             IdAttributeSelectRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+            IdAttributeSelectRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             IdAttributeSelectRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            IdAttributeSelectRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             IdAttributeSelectRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
             IdAttributeSelectRef::Edge(i) => out.push(AnyId::Edge(*i)),
@@ -11313,6 +11905,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::GeometricToleranceWithModifiers(i) => {
                 out.push(AnyId::GeometricToleranceWithModifiers(*i))
+            }
+            IdAttributeSelectRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
             }
             IdAttributeSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
@@ -11371,6 +11966,9 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
             IdAttributeSelectRef::ProductCategory(i) => out.push(AnyId::ProductCategory(*i)),
+            IdAttributeSelectRef::ProductConceptFeatureCategory(i) => {
+                out.push(AnyId::ProductConceptFeatureCategory(*i))
+            }
             IdAttributeSelectRef::ProductDefinitionShape(i) => {
                 out.push(AnyId::ProductDefinitionShape(*i))
             }
@@ -11383,6 +11981,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
             IdAttributeSelectRef::ShapeAspectAssociativity(i) => {
                 out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            IdAttributeSelectRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
             }
             IdAttributeSelectRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
@@ -11492,6 +12093,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::DraughtingModel(i) => {
                 self.draughting_model_ids[i.0].expect("dep id assigned")
             }
+            InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             InvisibleItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -11599,6 +12203,9 @@ impl<'a> Writer<'a> {
             }
             InvisibleItemRef::DraughtingCallout(i) => out.push(AnyId::DraughtingCallout(*i)),
             InvisibleItemRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+            InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
             InvisibleItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
@@ -11763,9 +12370,16 @@ impl<'a> Writer<'a> {
             LayeredItemRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::CameraImage(i) => self.camera_image_ids[i.0].expect("dep id assigned"),
+            LayeredItemRef::CameraImage3dWithScale(i) => {
+                self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::CameraModel(i) => self.camera_model_ids[i.0].expect("dep id assigned"),
             LayeredItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            LayeredItemRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
             LayeredItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
@@ -12089,8 +12703,15 @@ impl<'a> Writer<'a> {
             LayeredItemRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
             LayeredItemRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
             LayeredItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            LayeredItemRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+            LayeredItemRef::CameraImage3dWithScale(i) => {
+                out.push(AnyId::CameraImage3dWithScale(*i))
+            }
             LayeredItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             LayeredItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            LayeredItemRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
             LayeredItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             LayeredItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
             LayeredItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -12442,6 +13063,7 @@ impl<'a> Writer<'a> {
         match r {
         MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
         MechanicalDesignAndDraughtingRelationshipSelectRef::DraughtingModel(i) => self.draughting_model_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         MechanicalDesignAndDraughtingRelationshipSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
         MechanicalDesignAndDraughtingRelationshipSelectRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
@@ -12461,6 +13083,7 @@ impl<'a> Writer<'a> {
         match r {
         MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
         MechanicalDesignAndDraughtingRelationshipSelectRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
         MechanicalDesignAndDraughtingRelationshipSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
         MechanicalDesignAndDraughtingRelationshipSelectRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
         MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
@@ -12471,6 +13094,116 @@ impl<'a> Writer<'a> {
         MechanicalDesignAndDraughtingRelationshipSelectRef::TessellatedShapeRepresentation(i) => out.push(AnyId::TessellatedShapeRepresentation(*i)),
         MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
     }
+    }
+
+    fn id_of_ref_name_attribute_select(&self, r: &NameAttributeSelectRef) -> u64 {
+        match r {
+            NameAttributeSelectRef::ActionRequestSolution(i) => {
+                self.action_request_solution_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::Address(i) => self.addre_ids[i.0].expect("dep id assigned"),
+            NameAttributeSelectRef::AreaUnit(i) => {
+                self.area_unit_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ConfigurationDesign(i) => {
+                self.configuration_design_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ConfigurationEffectivity(i) => {
+                self.configuration_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ContextDependentShapeRepresentation(i) => {
+                self.context_dependent_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::DerivedUnit(i) => {
+                self.derived_unit_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::Effectivity(i) => {
+                self.effectivity_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::OrganizationalAddress(i) => {
+                self.organizational_addre_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::PersonAndOrganization(i) => {
+                self.person_and_organization_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::PersonAndOrganizationAddress(i) => {
+                self.person_and_organization_addre_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::PersonalAddress(i) => {
+                self.personal_addre_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ProductDefinitionEffectivity(i) => {
+                self.product_definition_effectivity_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ProductDefinitionSubstitute(i) => {
+                self.product_definition_substitute_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::PropertyDefinitionRepresentation(i) => {
+                self.property_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::ShapeDefinitionRepresentation(i) => {
+                self.shape_definition_representation_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::VolumeUnit(i) => {
+                self.volume_unit_ids[i.0].expect("dep id assigned")
+            }
+            NameAttributeSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_name_attribute_select(r: &NameAttributeSelectRef, out: &mut Vec<AnyId>) {
+        match r {
+            NameAttributeSelectRef::ActionRequestSolution(i) => {
+                out.push(AnyId::ActionRequestSolution(*i))
+            }
+            NameAttributeSelectRef::Address(i) => out.push(AnyId::Address(*i)),
+            NameAttributeSelectRef::AreaUnit(i) => out.push(AnyId::AreaUnit(*i)),
+            NameAttributeSelectRef::ConfigurationDesign(i) => {
+                out.push(AnyId::ConfigurationDesign(*i))
+            }
+            NameAttributeSelectRef::ConfigurationEffectivity(i) => {
+                out.push(AnyId::ConfigurationEffectivity(*i))
+            }
+            NameAttributeSelectRef::ContextDependentShapeRepresentation(i) => {
+                out.push(AnyId::ContextDependentShapeRepresentation(*i))
+            }
+            NameAttributeSelectRef::DerivedUnit(i) => out.push(AnyId::DerivedUnit(*i)),
+            NameAttributeSelectRef::Effectivity(i) => out.push(AnyId::Effectivity(*i)),
+            NameAttributeSelectRef::OrganizationalAddress(i) => {
+                out.push(AnyId::OrganizationalAddress(*i))
+            }
+            NameAttributeSelectRef::PersonAndOrganization(i) => {
+                out.push(AnyId::PersonAndOrganization(*i))
+            }
+            NameAttributeSelectRef::PersonAndOrganizationAddress(i) => {
+                out.push(AnyId::PersonAndOrganizationAddress(*i))
+            }
+            NameAttributeSelectRef::PersonalAddress(i) => out.push(AnyId::PersonalAddress(*i)),
+            NameAttributeSelectRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            NameAttributeSelectRef::ProductDefinitionEffectivity(i) => {
+                out.push(AnyId::ProductDefinitionEffectivity(*i))
+            }
+            NameAttributeSelectRef::ProductDefinitionSubstitute(i) => {
+                out.push(AnyId::ProductDefinitionSubstitute(*i))
+            }
+            NameAttributeSelectRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
+            NameAttributeSelectRef::PropertyDefinitionRepresentation(i) => {
+                out.push(AnyId::PropertyDefinitionRepresentation(*i))
+            }
+            NameAttributeSelectRef::ShapeDefinitionRepresentation(i) => {
+                out.push(AnyId::ShapeDefinitionRepresentation(*i))
+            }
+            NameAttributeSelectRef::VolumeUnit(i) => out.push(AnyId::VolumeUnit(*i)),
+            NameAttributeSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
     }
 
     fn id_of_ref_named_unit(&self, r: &NamedUnitRef) -> u64 {
@@ -12487,6 +13220,7 @@ impl<'a> Writer<'a> {
             NamedUnitRef::PlaneAngleUnit(i) => {
                 self.plane_angle_unit_ids[i.0].expect("dep id assigned")
             }
+            NamedUnitRef::RatioUnit(i) => self.ratio_unit_ids[i.0].expect("dep id assigned"),
             NamedUnitRef::SiUnit(i) => self.si_unit_ids[i.0].expect("dep id assigned"),
             NamedUnitRef::SolidAngleUnit(i) => {
                 self.solid_angle_unit_ids[i.0].expect("dep id assigned")
@@ -12504,6 +13238,7 @@ impl<'a> Writer<'a> {
             NamedUnitRef::MassUnit(i) => out.push(AnyId::MassUnit(*i)),
             NamedUnitRef::NamedUnit(i) => out.push(AnyId::NamedUnit(*i)),
             NamedUnitRef::PlaneAngleUnit(i) => out.push(AnyId::PlaneAngleUnit(*i)),
+            NamedUnitRef::RatioUnit(i) => out.push(AnyId::RatioUnit(*i)),
             NamedUnitRef::SiUnit(i) => out.push(AnyId::SiUnit(*i)),
             NamedUnitRef::SolidAngleUnit(i) => out.push(AnyId::SolidAngleUnit(*i)),
             NamedUnitRef::TimeUnit(i) => out.push(AnyId::TimeUnit(*i)),
@@ -12834,6 +13569,82 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_presentation_area(&self, r: &PresentationAreaRef) -> u64 {
+        match r {
+            PresentationAreaRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
+            PresentationAreaRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_presentation_area(r: &PresentationAreaRef, out: &mut Vec<AnyId>) {
+        match r {
+            PresentationAreaRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
+            PresentationAreaRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_presentation_representation_select(
+        &self,
+        r: &PresentationRepresentationSelectRef,
+    ) -> u64 {
+        match r {
+            PresentationRepresentationSelectRef::PresentationArea(i) => {
+                self.presentation_area_ids[i.0].expect("dep id assigned")
+            }
+            PresentationRepresentationSelectRef::PresentationRepresentation(i) => {
+                self.presentation_representation_ids[i.0].expect("dep id assigned")
+            }
+            PresentationRepresentationSelectRef::PresentationSet(i) => {
+                self.presentation_set_ids[i.0].expect("dep id assigned")
+            }
+            PresentationRepresentationSelectRef::PresentationView(i) => {
+                self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            PresentationRepresentationSelectRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_presentation_representation_select(
+        r: &PresentationRepresentationSelectRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            PresentationRepresentationSelectRef::PresentationArea(i) => {
+                out.push(AnyId::PresentationArea(*i))
+            }
+            PresentationRepresentationSelectRef::PresentationRepresentation(i) => {
+                out.push(AnyId::PresentationRepresentation(*i))
+            }
+            PresentationRepresentationSelectRef::PresentationSet(i) => {
+                out.push(AnyId::PresentationSet(*i))
+            }
+            PresentationRepresentationSelectRef::PresentationView(i) => {
+                out.push(AnyId::PresentationView(*i))
+            }
+            PresentationRepresentationSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_presentation_set(&self, r: &PresentationSetRef) -> u64 {
+        match r {
+            PresentationSetRef::PresentationSet(i) => {
+                self.presentation_set_ids[i.0].expect("dep id assigned")
+            }
+            PresentationSetRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_presentation_set(r: &PresentationSetRef, out: &mut Vec<AnyId>) {
+        match r {
+            PresentationSetRef::PresentationSet(i) => out.push(AnyId::PresentationSet(*i)),
+            PresentationSetRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_presentation_style_assignment(&self, r: &PresentationStyleAssignmentRef) -> u64 {
         match r {
             PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
@@ -12926,6 +13737,112 @@ impl<'a> Writer<'a> {
             }
             PresentationStyleSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
             PresentationStyleSelectRef::NullStyle(_) => {}
+        }
+    }
+
+    fn id_of_ref_presented_item(&self, r: &PresentedItemRef) -> u64 {
+        match r {
+            PresentedItemRef::AppliedPresentedItem(i) => {
+                self.applied_presented_item_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemRef::PresentedItem(i) => {
+                self.presented_item_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_presented_item(r: &PresentedItemRef, out: &mut Vec<AnyId>) {
+        match r {
+            PresentedItemRef::AppliedPresentedItem(i) => out.push(AnyId::AppliedPresentedItem(*i)),
+            PresentedItemRef::PresentedItem(i) => out.push(AnyId::PresentedItem(*i)),
+            PresentedItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_presented_item_select(&self, r: &PresentedItemSelectRef) -> u64 {
+        match r {
+            PresentedItemSelectRef::Action(i) => self.action_ids[i.0].expect("dep id assigned"),
+            PresentedItemSelectRef::ActionMethod(i) => {
+                self.action_method_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ActionRelationship(i) => {
+                self.action_relationship_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::AssemblyComponentUsage(i) => {
+                self.assembly_component_usage_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::NextAssemblyUsageOccurrence(i) => {
+                self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductConcept(i) => {
+                self.product_concept_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductConceptFeature(i) => {
+                self.product_concept_feature_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
+                .product_definition_formation_with_specified_source_ids[i.0]
+                .expect("dep id assigned"),
+            PresentedItemSelectRef::ProductDefinitionRelationship(i) => {
+                self.product_definition_relationship_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductDefinitionUsage(i) => {
+                self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
+            PresentedItemSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_presented_item_select(r: &PresentedItemSelectRef, out: &mut Vec<AnyId>) {
+        match r {
+            PresentedItemSelectRef::Action(i) => out.push(AnyId::Action(*i)),
+            PresentedItemSelectRef::ActionMethod(i) => out.push(AnyId::ActionMethod(*i)),
+            PresentedItemSelectRef::ActionRelationship(i) => {
+                out.push(AnyId::ActionRelationship(*i))
+            }
+            PresentedItemSelectRef::AssemblyComponentUsage(i) => {
+                out.push(AnyId::AssemblyComponentUsage(*i))
+            }
+            PresentedItemSelectRef::NextAssemblyUsageOccurrence(i) => {
+                out.push(AnyId::NextAssemblyUsageOccurrence(*i))
+            }
+            PresentedItemSelectRef::ProductConcept(i) => out.push(AnyId::ProductConcept(*i)),
+            PresentedItemSelectRef::ProductConceptFeature(i) => {
+                out.push(AnyId::ProductConceptFeature(*i))
+            }
+            PresentedItemSelectRef::ProductConceptFeatureCategory(i) => {
+                out.push(AnyId::ProductConceptFeatureCategory(*i))
+            }
+            PresentedItemSelectRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            PresentedItemSelectRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            PresentedItemSelectRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            PresentedItemSelectRef::ProductDefinitionRelationship(i) => {
+                out.push(AnyId::ProductDefinitionRelationship(*i))
+            }
+            PresentedItemSelectRef::ProductDefinitionUsage(i) => {
+                out.push(AnyId::ProductDefinitionUsage(*i))
+            }
+            PresentedItemSelectRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
+            PresentedItemSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -13027,6 +13944,28 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_product_definition_context_role(
+        &self,
+        r: &ProductDefinitionContextRoleRef,
+    ) -> u64 {
+        match r {
+            ProductDefinitionContextRoleRef::ProductDefinitionContextRole(i) => {
+                self.product_definition_context_role_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_product_definition_context_role(
+        r: &ProductDefinitionContextRoleRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            ProductDefinitionContextRoleRef::ProductDefinitionContextRole(i) => {
+                out.push(AnyId::ProductDefinitionContextRole(*i))
+            }
+        }
+    }
+
     fn id_of_ref_product_definition_formation(&self, r: &ProductDefinitionFormationRef) -> u64 {
         match r {
             ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
@@ -13100,6 +14039,28 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_product_definition(&self, r: &ProductDefinitionRef) -> u64 {
+        match r {
+            ProductDefinitionRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            ProductDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
+            ProductDefinitionRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_product_definition(r: &ProductDefinitionRef, out: &mut Vec<AnyId>) {
+        match r {
+            ProductDefinitionRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            ProductDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
+            ProductDefinitionRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
     fn id_of_ref_product_definition_relationship(
         &self,
         r: &ProductDefinitionRelationshipRef,
@@ -13161,6 +14122,55 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::ProductDefinitionShape(*i))
             }
             ProductDefinitionShapeRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_product_or_formation_or_definition(
+        &self,
+        r: &ProductOrFormationOrDefinitionRef,
+    ) -> u64 {
+        match r {
+            ProductOrFormationOrDefinitionRef::Product(i) => {
+                self.product_ids[i.0].expect("dep id assigned")
+            }
+            ProductOrFormationOrDefinitionRef::ProductDefinition(i) => {
+                self.product_definition_ids[i.0].expect("dep id assigned")
+            }
+            ProductOrFormationOrDefinitionRef::ProductDefinitionFormation(i) => {
+                self.product_definition_formation_ids[i.0].expect("dep id assigned")
+            }
+            ProductOrFormationOrDefinitionRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                self.product_definition_formation_with_specified_source_ids[i.0]
+                    .expect("dep id assigned")
+            }
+            ProductOrFormationOrDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
+            ProductOrFormationOrDefinitionRef::Complex(i) => {
+                self.complex_ids[i.0].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_product_or_formation_or_definition(
+        r: &ProductOrFormationOrDefinitionRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+            ProductOrFormationOrDefinitionRef::Product(i) => out.push(AnyId::Product(*i)),
+            ProductOrFormationOrDefinitionRef::ProductDefinition(i) => {
+                out.push(AnyId::ProductDefinition(*i))
+            }
+            ProductOrFormationOrDefinitionRef::ProductDefinitionFormation(i) => {
+                out.push(AnyId::ProductDefinitionFormation(*i))
+            }
+            ProductOrFormationOrDefinitionRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            ProductOrFormationOrDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
+            ProductOrFormationOrDefinitionRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -13391,11 +14401,20 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::CameraImage(i) => {
+                self.camera_image_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::CameraImage3dWithScale(i) => {
+                self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::CameraModel(i) => {
                 self.camera_model_ids[i.0].expect("dep id assigned")
             }
             RepresentationItemRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            RepresentationItemRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
             RepresentationItemRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
@@ -13758,8 +14777,15 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::BoundedSurfaceCurve(*i))
             }
             RepresentationItemRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            RepresentationItemRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+            RepresentationItemRef::CameraImage3dWithScale(i) => {
+                out.push(AnyId::CameraImage3dWithScale(*i))
+            }
             RepresentationItemRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             RepresentationItemRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            RepresentationItemRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
             RepresentationItemRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             RepresentationItemRef::Circle(i) => out.push(AnyId::Circle(*i)),
             RepresentationItemRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
@@ -13949,6 +14975,9 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_representation_map(&self, r: &RepresentationMapRef) -> u64 {
         match r {
+            RepresentationMapRef::CameraUsage(i) => {
+                self.camera_usage_ids[i.0].expect("dep id assigned")
+            }
             RepresentationMapRef::RepresentationMap(i) => {
                 self.representation_map_ids[i.0].expect("dep id assigned")
             }
@@ -13958,6 +14987,7 @@ impl<'a> Writer<'a> {
 
     fn deps_ref_representation_map(r: &RepresentationMapRef, out: &mut Vec<AnyId>) {
         match r {
+            RepresentationMapRef::CameraUsage(i) => out.push(AnyId::CameraUsage(*i)),
             RepresentationMapRef::RepresentationMap(i) => out.push(AnyId::RepresentationMap(*i)),
             RepresentationMapRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
@@ -13973,6 +15003,7 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::DraughtingModel(i) => self.draughting_model_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
@@ -14001,6 +15032,7 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::ConstructiveGeometryRepresentation(i) => out.push(AnyId::ConstructiveGeometryRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::DefinitionalRepresentation(i) => out.push(AnyId::DefinitionalRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+        RepresentationOrRepresentationReferenceRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
@@ -14036,6 +15068,9 @@ impl<'a> Writer<'a> {
             RepresentationRef::DraughtingModel(i) => {
                 self.draughting_model_ids[i.0].expect("dep id assigned")
             }
+            RepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -14094,6 +15129,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DefinitionalRepresentation(*i))
             }
             RepresentationRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+            RepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
             RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
@@ -14172,6 +15210,12 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::DimensionalLocationWithPath(i) => {
                 self.dimensional_location_with_path_ids[i.0].expect("dep id assigned")
             }
+            RepresentedDefinitionRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
+            RepresentedDefinitionRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
+            }
             RepresentedDefinitionRef::GeneralDatumReference(i) => {
                 self.general_datum_reference_ids[i.0].expect("dep id assigned")
             }
@@ -14195,6 +15239,9 @@ impl<'a> Writer<'a> {
             }
             RepresentedDefinitionRef::ShapeAspectAssociativity(i) => {
                 self.shape_aspect_associativity_ids[i.0].expect("dep id assigned")
+            }
+            RepresentedDefinitionRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0].expect("dep id assigned")
             }
             RepresentedDefinitionRef::ShapeAspectRelationship(i) => {
                 self.shape_aspect_relationship_ids[i.0].expect("dep id assigned")
@@ -14244,6 +15291,12 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::DimensionalLocationWithPath(i) => {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
+            RepresentedDefinitionRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
+            RepresentedDefinitionRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
+            }
             RepresentedDefinitionRef::GeneralDatumReference(i) => {
                 out.push(AnyId::GeneralDatumReference(*i))
             }
@@ -14263,6 +15316,9 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::ShapeAspect(i) => out.push(AnyId::ShapeAspect(*i)),
             RepresentedDefinitionRef::ShapeAspectAssociativity(i) => {
                 out.push(AnyId::ShapeAspectAssociativity(*i))
+            }
+            RepresentedDefinitionRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(AnyId::ShapeAspectDerivingRelationship(*i))
             }
             RepresentedDefinitionRef::ShapeAspectRelationship(i) => {
                 out.push(AnyId::ShapeAspectRelationship(*i))
@@ -14433,6 +15489,9 @@ impl<'a> Writer<'a> {
             ShapeAspectRef::DerivedShapeAspect(i) => {
                 self.derived_shape_aspect_ids[i.0].expect("dep id assigned")
             }
+            ShapeAspectRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             ShapeAspectRef::GeneralDatumReference(i) => {
                 self.general_datum_reference_ids[i.0].expect("dep id assigned")
             }
@@ -14469,6 +15528,9 @@ impl<'a> Writer<'a> {
             ShapeAspectRef::DatumSystem(i) => out.push(AnyId::DatumSystem(*i)),
             ShapeAspectRef::DatumTarget(i) => out.push(AnyId::DatumTarget(*i)),
             ShapeAspectRef::DerivedShapeAspect(i) => out.push(AnyId::DerivedShapeAspect(*i)),
+            ShapeAspectRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             ShapeAspectRef::GeneralDatumReference(i) => out.push(AnyId::GeneralDatumReference(*i)),
             ShapeAspectRef::PlacedDatumTargetFeature(i) => {
                 out.push(AnyId::PlacedDatumTargetFeature(*i))
@@ -14513,6 +15575,9 @@ impl<'a> Writer<'a> {
             ShapeModelRef::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
             }
+            ShapeModelRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             ShapeModelRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -14539,6 +15604,9 @@ impl<'a> Writer<'a> {
             }
             ShapeModelRef::ConstructiveGeometryRepresentation(i) => {
                 out.push(AnyId::ConstructiveGeometryRepresentation(*i))
+            }
+            ShapeModelRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
             }
             ShapeModelRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
@@ -14808,11 +15876,20 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::CameraImage(i) => {
+                self.camera_image_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::CameraImage3dWithScale(i) => {
+                self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::CameraModel(i) => {
                 self.camera_model_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
@@ -14944,6 +16021,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::GeometricSet(i) => {
                 self.geometric_set_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             StyleContextSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -15040,6 +16120,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::PresentationView(i) => {
                 self.presentation_view_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::ProductConceptFeatureCategory(i) => {
+                self.product_concept_feature_category_ids[i.0].expect("dep id assigned")
             }
             StyleContextSelectRef::QualifiedRepresentationItem(i) => {
                 self.qualified_representation_item_ids[i.0].expect("dep id assigned")
@@ -15261,8 +16344,15 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::BoundedSurfaceCurve(*i))
             }
             StyleContextSelectRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            StyleContextSelectRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+            StyleContextSelectRef::CameraImage3dWithScale(i) => {
+                out.push(AnyId::CameraImage3dWithScale(*i))
+            }
             StyleContextSelectRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             StyleContextSelectRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            StyleContextSelectRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
             StyleContextSelectRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             StyleContextSelectRef::CharacterizedRepresentation(i) => {
                 out.push(AnyId::CharacterizedRepresentation(*i))
@@ -15353,6 +16443,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricRepresentationItem(*i))
             }
             StyleContextSelectRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            StyleContextSelectRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
             StyleContextSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
@@ -15420,6 +16513,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::PresentationSet(i) => out.push(AnyId::PresentationSet(*i)),
             StyleContextSelectRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
+            StyleContextSelectRef::ProductConceptFeatureCategory(i) => {
+                out.push(AnyId::ProductConceptFeatureCategory(*i))
+            }
             StyleContextSelectRef::QualifiedRepresentationItem(i) => {
                 out.push(AnyId::QualifiedRepresentationItem(*i))
             }
@@ -15697,11 +16793,20 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::BrepWithVoids(i) => {
                 self.brep_with_void_ids[i.0].expect("dep id assigned")
             }
+            StyledItemTargetRef::CameraImage(i) => {
+                self.camera_image_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::CameraImage3dWithScale(i) => {
+                self.camera_image3d_with_scale_ids[i.0].expect("dep id assigned")
+            }
             StyledItemTargetRef::CameraModel(i) => {
                 self.camera_model_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::CameraModelD3(i) => {
                 self.camera_model_d3_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0].expect("dep id assigned")
@@ -15806,6 +16911,9 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::GeometricSet(i) => {
                 self.geometric_set_ids[i.0].expect("dep id assigned")
             }
+            StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0]
+                .expect("dep id assigned"),
             StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
                 .geometrically_bounded_wireframe_shape_representation_ids[i.0]
                 .expect("dep id assigned"),
@@ -16040,8 +17148,15 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::BoundedSurface(i) => out.push(AnyId::BoundedSurface(*i)),
             StyledItemTargetRef::BoundedSurfaceCurve(i) => out.push(AnyId::BoundedSurfaceCurve(*i)),
             StyledItemTargetRef::BrepWithVoids(i) => out.push(AnyId::BrepWithVoids(*i)),
+            StyledItemTargetRef::CameraImage(i) => out.push(AnyId::CameraImage(*i)),
+            StyledItemTargetRef::CameraImage3dWithScale(i) => {
+                out.push(AnyId::CameraImage3dWithScale(*i))
+            }
             StyledItemTargetRef::CameraModel(i) => out.push(AnyId::CameraModel(*i)),
             StyledItemTargetRef::CameraModelD3(i) => out.push(AnyId::CameraModelD3(*i)),
+            StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
+                out.push(AnyId::CameraModelD3WithHlhsr(*i))
+            }
             StyledItemTargetRef::CartesianPoint(i) => out.push(AnyId::CartesianPoint(*i)),
             StyledItemTargetRef::CharacterizedRepresentation(i) => {
                 out.push(AnyId::CharacterizedRepresentation(*i))
@@ -16111,6 +17226,9 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::GeometricRepresentationItem(*i))
             }
             StyledItemTargetRef::GeometricSet(i) => out.push(AnyId::GeometricSet(*i)),
+            StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                out.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(*i))
+            }
             StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
                 out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i))
             }
@@ -16727,8 +17845,14 @@ impl<'a> Writer<'a> {
             ToleranceZoneTargetRef::DimensionalSize(i) => {
                 self.dimensional_size_ids[i.0].expect("dep id assigned")
             }
+            ToleranceZoneTargetRef::DimensionalSizeWithDatumFeature(i) => {
+                self.dimensional_size_with_datum_feature_ids[i.0].expect("dep id assigned")
+            }
             ToleranceZoneTargetRef::DimensionalSizeWithPath(i) => {
                 self.dimensional_size_with_path_ids[i.0].expect("dep id assigned")
+            }
+            ToleranceZoneTargetRef::DirectedDimensionalLocation(i) => {
+                self.directed_dimensional_location_ids[i.0].expect("dep id assigned")
             }
             ToleranceZoneTargetRef::FlatnessTolerance(i) => {
                 self.flatness_tolerance_ids[i.0].expect("dep id assigned")
@@ -16821,8 +17945,14 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::DimensionalLocationWithPath(*i))
             }
             ToleranceZoneTargetRef::DimensionalSize(i) => out.push(AnyId::DimensionalSize(*i)),
+            ToleranceZoneTargetRef::DimensionalSizeWithDatumFeature(i) => {
+                out.push(AnyId::DimensionalSizeWithDatumFeature(*i))
+            }
             ToleranceZoneTargetRef::DimensionalSizeWithPath(i) => {
                 out.push(AnyId::DimensionalSizeWithPath(*i))
+            }
+            ToleranceZoneTargetRef::DirectedDimensionalLocation(i) => {
+                out.push(AnyId::DirectedDimensionalLocation(*i))
             }
             ToleranceZoneTargetRef::FlatnessTolerance(i) => out.push(AnyId::FlatnessTolerance(*i)),
             ToleranceZoneTargetRef::GeneralDatumReference(i) => {
@@ -16982,6 +18112,7 @@ impl<'a> Writer<'a> {
 
     fn id_of_ref_unit(&self, r: &UnitRef) -> u64 {
         match r {
+            UnitRef::AreaUnit(i) => self.area_unit_ids[i.0].expect("dep id assigned"),
             UnitRef::ContextDependentUnit(i) => {
                 self.context_dependent_unit_ids[i.0].expect("dep id assigned")
             }
@@ -16993,15 +18124,18 @@ impl<'a> Writer<'a> {
             UnitRef::MassUnit(i) => self.mass_unit_ids[i.0].expect("dep id assigned"),
             UnitRef::NamedUnit(i) => self.named_unit_ids[i.0].expect("dep id assigned"),
             UnitRef::PlaneAngleUnit(i) => self.plane_angle_unit_ids[i.0].expect("dep id assigned"),
+            UnitRef::RatioUnit(i) => self.ratio_unit_ids[i.0].expect("dep id assigned"),
             UnitRef::SiUnit(i) => self.si_unit_ids[i.0].expect("dep id assigned"),
             UnitRef::SolidAngleUnit(i) => self.solid_angle_unit_ids[i.0].expect("dep id assigned"),
             UnitRef::TimeUnit(i) => self.time_unit_ids[i.0].expect("dep id assigned"),
+            UnitRef::VolumeUnit(i) => self.volume_unit_ids[i.0].expect("dep id assigned"),
             UnitRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
     }
 
     fn deps_ref_unit(r: &UnitRef, out: &mut Vec<AnyId>) {
         match r {
+            UnitRef::AreaUnit(i) => out.push(AnyId::AreaUnit(*i)),
             UnitRef::ContextDependentUnit(i) => out.push(AnyId::ContextDependentUnit(*i)),
             UnitRef::ConversionBasedUnit(i) => out.push(AnyId::ConversionBasedUnit(*i)),
             UnitRef::DerivedUnit(i) => out.push(AnyId::DerivedUnit(*i)),
@@ -17009,9 +18143,11 @@ impl<'a> Writer<'a> {
             UnitRef::MassUnit(i) => out.push(AnyId::MassUnit(*i)),
             UnitRef::NamedUnit(i) => out.push(AnyId::NamedUnit(*i)),
             UnitRef::PlaneAngleUnit(i) => out.push(AnyId::PlaneAngleUnit(*i)),
+            UnitRef::RatioUnit(i) => out.push(AnyId::RatioUnit(*i)),
             UnitRef::SiUnit(i) => out.push(AnyId::SiUnit(*i)),
             UnitRef::SolidAngleUnit(i) => out.push(AnyId::SolidAngleUnit(*i)),
             UnitRef::TimeUnit(i) => out.push(AnyId::TimeUnit(*i)),
+            UnitRef::VolumeUnit(i) => out.push(AnyId::VolumeUnit(*i)),
             UnitRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -17174,6 +18310,11 @@ impl<'a> Writer<'a> {
             AnyId::ActionRequestAssignment(id) => {
                 let it = self.model.action_request_assignments.get(id.0);
                 Self::deps_ref_versioned_action_request(&it.assigned_action_request, out);
+            }
+            AnyId::ActionRequestSolution(id) => {
+                let it = self.model.action_request_solutions.get(id.0);
+                Self::deps_ref_action_method(&it.method, out);
+                Self::deps_ref_versioned_action_request(&it.request, out);
             }
             AnyId::ActionResource(id) => {
                 let it = self.model.action_resources.get(id.0);
@@ -17382,6 +18523,12 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_groupable_item(e, out);
                 }
             }
+            AnyId::AppliedPresentedItem(id) => {
+                let it = self.model.applied_presented_items.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_presented_item_select(e, out);
+                }
+            }
             AnyId::Approval(id) => {
                 let it = self.model.approvals.get(id.0);
                 Self::deps_ref_approval_status(&it.status, out);
@@ -17409,6 +18556,17 @@ impl<'a> Writer<'a> {
             }
             AnyId::ApproximationToleranceDeviation(_) => {}
             AnyId::ApproximationToleranceParameter(_) => {}
+            AnyId::AreaInSet(id) => {
+                let it = self.model.area_in_sets.get(id.0);
+                Self::deps_ref_presentation_area(&it.area, out);
+                Self::deps_ref_presentation_set(&it.in_set, out);
+            }
+            AnyId::AreaUnit(id) => {
+                let it = self.model.area_units.get(id.0);
+                for e in &it.elements {
+                    Self::deps_ref_derived_unit_element(e, out);
+                }
+            }
             AnyId::AscribableState(id) => {
                 let it = self.model.ascribable_states.get(id.0);
                 Self::deps_ref_state_type(&it.pertaining_state_type, out);
@@ -17522,11 +18680,31 @@ impl<'a> Writer<'a> {
                 }
             }
             AnyId::CalendarDate(_) => {}
+            AnyId::CameraImage(id) => {
+                let it = self.model.camera_images.get(id.0);
+                Self::deps_ref_representation_map(&it.mapping_source, out);
+                Self::deps_ref_representation_item(&it.mapping_target, out);
+            }
+            AnyId::CameraImage3dWithScale(id) => {
+                let it = self.model.camera_image3d_with_scales.get(id.0);
+                Self::deps_ref_representation_map(&it.mapping_source, out);
+                Self::deps_ref_representation_item(&it.mapping_target, out);
+            }
             AnyId::CameraModel(_) => {}
             AnyId::CameraModelD3(id) => {
                 let it = self.model.camera_model_d3s.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
                 Self::deps_ref_view_volume(&it.perspective_of_volume, out);
+            }
+            AnyId::CameraModelD3WithHlhsr(id) => {
+                let it = self.model.camera_model_d3_with_hlhsrs.get(id.0);
+                Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
+                Self::deps_ref_view_volume(&it.perspective_of_volume, out);
+            }
+            AnyId::CameraUsage(id) => {
+                let it = self.model.camera_usages.get(id.0);
+                Self::deps_ref_representation_item(&it.mapping_origin, out);
+                Self::deps_ref_representation(&it.mapped_representation, out);
             }
             AnyId::CartesianPoint(_) => {}
             AnyId::CcDesignApproval(id) => {
@@ -17955,10 +19133,20 @@ impl<'a> Writer<'a> {
                 let it = self.model.dimensional_sizes.get(id.0);
                 Self::deps_ref_shape_aspect(&it.applies_to, out);
             }
+            AnyId::DimensionalSizeWithDatumFeature(id) => {
+                let it = self.model.dimensional_size_with_datum_features.get(id.0);
+                Self::deps_ref_product_definition_shape(&it.of_shape, out);
+                Self::deps_ref_shape_aspect(&it.applies_to, out);
+            }
             AnyId::DimensionalSizeWithPath(id) => {
                 let it = self.model.dimensional_size_with_paths.get(id.0);
                 Self::deps_ref_shape_aspect(&it.applies_to, out);
                 Self::deps_ref_shape_aspect(&it.path, out);
+            }
+            AnyId::DirectedDimensionalLocation(id) => {
+                let it = self.model.directed_dimensional_locations.get(id.0);
+                Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
+                Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             AnyId::Direction(_) => {}
             AnyId::Document(id) => {
@@ -17969,9 +19157,23 @@ impl<'a> Writer<'a> {
                 let it = self.model.document_files.get(id.0);
                 Self::deps_ref_document_type(&it.kind, out);
             }
+            AnyId::DocumentProductAssociation(id) => {
+                let it = self.model.document_product_associations.get(id.0);
+                Self::deps_ref_document(&it.relating_document, out);
+                Self::deps_ref_product_or_formation_or_definition(&it.related_product, out);
+            }
+            AnyId::DocumentProductEquivalence(id) => {
+                let it = self.model.document_product_equivalences.get(id.0);
+                Self::deps_ref_document(&it.relating_document, out);
+                Self::deps_ref_product_or_formation_or_definition(&it.related_product, out);
+            }
             AnyId::DocumentReference(id) => {
                 let it = self.model.document_references.get(id.0);
                 Self::deps_ref_document(&it.assigned_document, out);
+            }
+            AnyId::DocumentRepresentationType(id) => {
+                let it = self.model.document_representation_types.get(id.0);
+                Self::deps_ref_document(&it.represented_document, out);
             }
             AnyId::DocumentType(_) => {}
             AnyId::DraughtingAnnotationOccurrence(id) => {
@@ -18207,6 +19409,11 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
+            AnyId::GeometricToleranceRelationship(id) => {
+                let it = self.model.geometric_tolerance_relationships.get(id.0);
+                Self::deps_ref_geometric_tolerance(&it.relating_geometric_tolerance, out);
+                Self::deps_ref_geometric_tolerance(&it.related_geometric_tolerance, out);
+            }
             AnyId::GeometricToleranceWithDatumReference(id) => {
                 let it = self
                     .model
@@ -18259,6 +19466,16 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
+            }
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(id) => {
+                let it = self
+                    .model
+                    .geometrically_bounded_surface_shape_representations
+                    .get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(id) => {
                 let it = self
@@ -18392,6 +19609,13 @@ impl<'a> Writer<'a> {
                 let it = self.model.mass_units.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
+            AnyId::MeasureQualification(id) => {
+                let it = self.model.measure_qualifications.get(id.0);
+                Self::deps_ref_measure_with_unit(&it.qualified_measure, out);
+                for e in &it.qualifiers {
+                    Self::deps_ref_value_qualifier(e, out);
+                }
+            }
             AnyId::MeasureRepresentationItem(id) => {
                 let it = self.model.measure_representation_items.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
@@ -18453,6 +19677,10 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
+            }
+            AnyId::NameAttribute(id) => {
+                let it = self.model.name_attributes.get(id.0);
+                Self::deps_ref_name_attribute_select(&it.named_item, out);
             }
             AnyId::NamedUnit(id) => {
                 let it = self.model.named_units.get(id.0);
@@ -18695,6 +19923,12 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
+            AnyId::PresentedItem(_) => {}
+            AnyId::PresentedItemRepresentation(id) => {
+                let it = self.model.presented_item_representations.get(id.0);
+                Self::deps_ref_presentation_representation_select(&it.presentation, out);
+                Self::deps_ref_presented_item(&it.item, out);
+            }
             AnyId::Product(id) => {
                 let it = self.model.products.get(id.0);
                 for e in &it.frame_of_reference {
@@ -18715,6 +19949,8 @@ impl<'a> Writer<'a> {
                 let it = self.model.product_concept_contexts.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
+            AnyId::ProductConceptFeature(_) => {}
+            AnyId::ProductConceptFeatureCategory(_) => {}
             AnyId::ProductContext(id) => {
                 let it = self.model.product_contexts.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
@@ -18728,6 +19964,13 @@ impl<'a> Writer<'a> {
                 let it = self.model.product_definition_contexts.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
+            AnyId::ProductDefinitionContextAssociation(id) => {
+                let it = self.model.product_definition_context_associations.get(id.0);
+                Self::deps_ref_product_definition(&it.definition, out);
+                Self::deps_ref_product_definition_context(&it.frame_of_reference, out);
+                Self::deps_ref_product_definition_context_role(&it.role, out);
+            }
+            AnyId::ProductDefinitionContextRole(_) => {}
             AnyId::ProductDefinitionEffectivity(id) => {
                 let it = self.model.product_definition_effectivitys.get(id.0);
                 Self::deps_ref_product_definition_relationship(&it.usage, out);
@@ -18772,6 +20015,11 @@ impl<'a> Writer<'a> {
                 let it = self.model.product_definition_shapes.get(id.0);
                 Self::deps_ref_characterized_definition(&it.definition, out);
             }
+            AnyId::ProductDefinitionSubstitute(id) => {
+                let it = self.model.product_definition_substitutes.get(id.0);
+                Self::deps_ref_product_definition_relationship(&it.context_relationship, out);
+                Self::deps_ref_product_definition(&it.substitute_definition, out);
+            }
             AnyId::ProductDefinitionUsage(id) => {
                 let it = self.model.product_definition_usages.get(id.0);
                 Self::deps_ref_product_definition_or_reference(
@@ -18796,6 +20044,15 @@ impl<'a> Writer<'a> {
                 for e in &it.products {
                     Self::deps_ref_product(e, out);
                 }
+            }
+            AnyId::ProjectedZoneDefinition(id) => {
+                let it = self.model.projected_zone_definitions.get(id.0);
+                Self::deps_ref_tolerance_zone(&it.zone, out);
+                for e in &it.boundaries {
+                    Self::deps_ref_shape_aspect(e, out);
+                }
+                Self::deps_ref_shape_aspect(&it.projection_end, out);
+                Self::deps_ref_length_measure_with_unit(&it.projected_length, out);
             }
             AnyId::PropertyDefinition(id) => {
                 let it = self.model.property_definitions.get(id.0);
@@ -18830,6 +20087,10 @@ impl<'a> Writer<'a> {
                         Self::deps_ref_cartesian_point(e, out);
                     }
                 }
+            }
+            AnyId::RatioUnit(id) => {
+                let it = self.model.ratio_units.get(id.0);
+                Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             AnyId::RationalBSplineCurve(id) => {
                 let it = self.model.rational_b_spline_curves.get(id.0);
@@ -18923,6 +20184,11 @@ impl<'a> Writer<'a> {
             }
             AnyId::ShapeAspectAssociativity(id) => {
                 let it = self.model.shape_aspect_associativitys.get(id.0);
+                Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
+                Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
+            }
+            AnyId::ShapeAspectDerivingRelationship(id) => {
+                let it = self.model.shape_aspect_deriving_relationships.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
@@ -19315,6 +20581,12 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_cartesian_point(&it.projection_point, out);
                 Self::deps_ref_planar_box(&it.view_window, out);
             }
+            AnyId::VolumeUnit(id) => {
+                let it = self.model.volume_units.get(id.0);
+                for e in &it.elements {
+                    Self::deps_ref_derived_unit_element(e, out);
+                }
+            }
             AnyId::WireShell(id) => {
                 let it = self.model.wire_shells.get(id.0);
                 for e in &it.wire_shell_extent {
@@ -19411,10 +20683,19 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_groupable_item(e, out);
                             }
                         }
+                        UnitPart::AppliedPresentedItem { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_presented_item_select(e, out);
+                            }
+                        }
                         UnitPart::ApprovalAssignment {
                             assigned_approval, ..
                         } => {
                             Self::deps_ref_approval(assigned_approval, out);
+                        }
+                        UnitPart::AreaInSet { area, in_set, .. } => {
+                            Self::deps_ref_presentation_area(area, out);
+                            Self::deps_ref_presentation_set(in_set, out);
                         }
                         UnitPart::AscribableStateRelationship {
                             relating_ascribable_state,
@@ -19602,6 +20883,14 @@ impl<'a> Writer<'a> {
                         }
                         UnitPart::Document { kind, .. } => {
                             Self::deps_ref_document_type(kind, out);
+                        }
+                        UnitPart::DocumentProductAssociation {
+                            relating_document,
+                            related_product,
+                            ..
+                        } => {
+                            Self::deps_ref_document(relating_document, out);
+                            Self::deps_ref_product_or_formation_or_definition(related_product, out);
                         }
                         UnitPart::DocumentReference {
                             assigned_document, ..
@@ -19967,6 +21256,14 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_product(e, out);
                             }
                         }
+                        UnitPart::ProjectedZoneDefinition {
+                            projection_end,
+                            projected_length,
+                            ..
+                        } => {
+                            Self::deps_ref_shape_aspect(projection_end, out);
+                            Self::deps_ref_length_measure_with_unit(projected_length, out);
+                        }
                         UnitPart::PropertyDefinition { definition, .. } => {
                             Self::deps_ref_characterized_definition(definition, out);
                         }
@@ -20305,6 +21602,15 @@ impl<'a> Writer<'a> {
                     self.id_of_ref_versioned_action_request(&it.assigned_action_request)
                 )];
                 format!("#{n} = ACTION_REQUEST_ASSIGNMENT({});\n", attrs.join(","))
+            }
+            AnyId::ActionRequestSolution(id) => {
+                let it = self.model.action_request_solutions.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_action_method(&it.method)),
+                    format!("#{}", self.id_of_ref_versioned_action_request(&it.request)),
+                ];
+                format!("#{n} = ACTION_REQUEST_SOLUTION({});\n", attrs.join(","))
             }
             AnyId::ActionResource(id) => {
                 let it = self.model.action_resources.get(id.0);
@@ -20994,6 +22300,19 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = APPLIED_GROUP_ASSIGNMENT({});\n", attrs.join(","))
             }
+            AnyId::AppliedPresentedItem(id) => {
+                let it = self.model.applied_presented_items.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "({})",
+                    it.items
+                        .iter()
+                        .map(|e| format!("#{}", self.id_of_ref_presented_item_select(e)))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )];
+                format!("#{n} = APPLIED_PRESENTED_ITEM({});\n", attrs.join(","))
+            }
             AnyId::Approval(id) => {
                 let it = self.model.approvals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -21093,6 +22412,28 @@ impl<'a> Writer<'a> {
                     "#{n} = APPROXIMATION_TOLERANCE_PARAMETER({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::AreaInSet(id) => {
+                let it = self.model.area_in_sets.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_presentation_area(&it.area)),
+                    format!("#{}", self.id_of_ref_presentation_set(&it.in_set)),
+                ];
+                format!("#{n} = AREA_IN_SET({});\n", attrs.join(","))
+            }
+            AnyId::AreaUnit(id) => {
+                let it = self.model.area_units.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "({})",
+                    it.elements
+                        .iter()
+                        .map(|e| format!("#{}", self.id_of_ref_derived_unit_element(e)))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )];
+                format!("#{n} = AREA_UNIT({});\n", attrs.join(","))
             }
             AnyId::AscribableState(id) => {
                 let it = self.model.ascribable_states.get(id.0);
@@ -21490,6 +22831,32 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = CALENDAR_DATE({});\n", attrs.join(","))
             }
+            AnyId::CameraImage(id) => {
+                let it = self.model.camera_images.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_item(&it.mapping_target)
+                    ),
+                ];
+                format!("#{n} = CAMERA_IMAGE({});\n", attrs.join(","))
+            }
+            AnyId::CameraImage3dWithScale(id) => {
+                let it = self.model.camera_image3d_with_scales.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_item(&it.mapping_target)
+                    ),
+                ];
+                format!("#{n} = CAMERA_IMAGE_3D_WITH_SCALE({});\n", attrs.join(","))
+            }
             AnyId::CameraModel(id) => {
                 let it = self.model.camera_models.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -21508,6 +22875,40 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_view_volume(&it.perspective_of_volume)),
                 ];
                 format!("#{n} = CAMERA_MODEL_D3({});\n", attrs.join(","))
+            }
+            AnyId::CameraModelD3WithHlhsr(id) => {
+                let it = self.model.camera_model_d3_with_hlhsrs.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_axis2_placement3d(&it.view_reference_system)
+                    ),
+                    format!("#{}", self.id_of_ref_view_volume(&it.perspective_of_volume)),
+                    (if it.hidden_line_surface_removal {
+                        ".T."
+                    } else {
+                        ".F."
+                    })
+                    .to_string(),
+                ];
+                format!("#{n} = CAMERA_MODEL_D3_WITH_HLHSR({});\n", attrs.join(","))
+            }
+            AnyId::CameraUsage(id) => {
+                let it = self.model.camera_usages.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_item(&it.mapping_origin)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation(&it.mapped_representation)
+                    ),
+                ];
+                format!("#{n} = CAMERA_USAGE({});\n", attrs.join(","))
             }
             AnyId::CartesianPoint(id) => {
                 let it = self.model.cartesian_points.get(id.0);
@@ -22921,6 +24322,25 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = DIMENSIONAL_SIZE({});\n", attrs.join(","))
             }
+            AnyId::DimensionalSizeWithDatumFeature(id) => {
+                let it = self.model.dimensional_size_with_datum_features.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
+                    it.product_definitional.token().to_string(),
+                    format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
+                    step_str(&it.name_1),
+                ];
+                format!(
+                    "#{n} = DIMENSIONAL_SIZE_WITH_DATUM_FEATURE({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::DimensionalSizeWithPath(id) => {
                 let it = self.model.dimensional_size_with_paths.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -22930,6 +24350,26 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_shape_aspect(&it.path)),
                 ];
                 format!("#{n} = DIMENSIONAL_SIZE_WITH_PATH({});\n", attrs.join(","))
+            }
+            AnyId::DirectedDimensionalLocation(id) => {
+                let it = self.model.directed_dimensional_locations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_shape_aspect(&it.relating_shape_aspect)
+                    ),
+                    format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
+                ];
+                format!(
+                    "#{n} = DIRECTED_DIMENSIONAL_LOCATION({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::Direction(id) => {
                 let it = self.model.directions.get(id.0);
@@ -22980,6 +24420,46 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = DOCUMENT_FILE({});\n", attrs.join(","))
             }
+            AnyId::DocumentProductAssociation(id) => {
+                let it = self.model.document_product_associations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_document(&it.relating_document)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_or_formation_or_definition(&it.related_product)
+                    ),
+                ];
+                format!(
+                    "#{n} = DOCUMENT_PRODUCT_ASSOCIATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::DocumentProductEquivalence(id) => {
+                let it = self.model.document_product_equivalences.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_document(&it.relating_document)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_or_formation_or_definition(&it.related_product)
+                    ),
+                ];
+                format!(
+                    "#{n} = DOCUMENT_PRODUCT_EQUIVALENCE({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::DocumentReference(id) => {
                 let it = self.model.document_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -22988,6 +24468,18 @@ impl<'a> Writer<'a> {
                     step_str(&it.source),
                 ];
                 format!("#{n} = DOCUMENT_REFERENCE({});\n", attrs.join(","))
+            }
+            AnyId::DocumentRepresentationType(id) => {
+                let it = self.model.document_representation_types.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!("#{}", self.id_of_ref_document(&it.represented_document)),
+                ];
+                format!(
+                    "#{n} = DOCUMENT_REPRESENTATION_TYPE({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::DocumentType(id) => {
                 let it = self.model.document_types.get(id.0);
@@ -23760,6 +25252,26 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = GEOMETRIC_TOLERANCE({});\n", attrs.join(","))
             }
+            AnyId::GeometricToleranceRelationship(id) => {
+                let it = self.model.geometric_tolerance_relationships.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.description),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_geometric_tolerance(&it.relating_geometric_tolerance)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_geometric_tolerance(&it.related_geometric_tolerance)
+                    ),
+                ];
+                format!(
+                    "#{n} = GEOMETRIC_TOLERANCE_RELATIONSHIP({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::GeometricToleranceWithDatumReference(id) => {
                 let it = self
                     .model
@@ -23929,6 +25441,32 @@ impl<'a> Writer<'a> {
                 ];
                 format!(
                     "#{n} = GEOMETRIC_TOLERANCE_WITH_MODIFIERS({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(id) => {
+                let it = self
+                    .model
+                    .geometrically_bounded_surface_shape_representations
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                ];
+                format!(
+                    "#{n} = GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION({});\n",
                     attrs.join(",")
                 )
             }
@@ -24344,6 +25882,27 @@ impl<'a> Writer<'a> {
                 )];
                 format!("#{n} = MASS_UNIT({});\n", attrs.join(","))
             }
+            AnyId::MeasureQualification(id) => {
+                let it = self.model.measure_qualifications.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    step_str(&it.description),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_measure_with_unit(&it.qualified_measure)
+                    ),
+                    format!(
+                        "({})",
+                        it.qualifiers
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_value_qualifier(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!("#{n} = MEASURE_QUALIFICATION({});\n", attrs.join(","))
+            }
             AnyId::MeasureRepresentationItem(id) => {
                 let it = self.model.measure_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -24521,6 +26080,15 @@ impl<'a> Writer<'a> {
                     "#{n} = MODIFIED_GEOMETRIC_TOLERANCE({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::NameAttribute(id) => {
+                let it = self.model.name_attributes.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.attribute_value),
+                    format!("#{}", self.id_of_ref_name_attribute_select(&it.named_item)),
+                ];
+                format!("#{n} = NAME_ATTRIBUTE({});\n", attrs.join(","))
             }
             AnyId::NamedUnit(id) => {
                 let it = self.model.named_units.get(id.0);
@@ -25532,6 +27100,26 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = PRESENTATION_VIEW({});\n", attrs.join(","))
             }
+            AnyId::PresentedItem(_) => {
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![];
+                format!("#{n} = PRESENTED_ITEM({});\n", attrs.join(","))
+            }
+            AnyId::PresentedItemRepresentation(id) => {
+                let it = self.model.presented_item_representations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!(
+                        "#{}",
+                        self.id_of_ref_presentation_representation_select(&it.presentation)
+                    ),
+                    format!("#{}", self.id_of_ref_presented_item(&it.item)),
+                ];
+                format!(
+                    "#{n} = PRESENTED_ITEM_REPRESENTATION({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::Product(id) => {
                 let it = self.model.products.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -25612,6 +27200,34 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = PRODUCT_CONCEPT_CONTEXT({});\n", attrs.join(","))
             }
+            AnyId::ProductConceptFeature(id) => {
+                let it = self.model.product_concept_features.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.id),
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = PRODUCT_CONCEPT_FEATURE({});\n", attrs.join(","))
+            }
+            AnyId::ProductConceptFeatureCategory(id) => {
+                let it = self.model.product_concept_feature_categorys.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!(
+                    "#{n} = PRODUCT_CONCEPT_FEATURE_CATEGORY({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::ProductContext(id) => {
                 let it = self.model.product_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -25657,6 +27273,40 @@ impl<'a> Writer<'a> {
                     step_str(&it.life_cycle_stage),
                 ];
                 format!("#{n} = PRODUCT_DEFINITION_CONTEXT({});\n", attrs.join(","))
+            }
+            AnyId::ProductDefinitionContextAssociation(id) => {
+                let it = self.model.product_definition_context_associations.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_product_definition(&it.definition)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition_context(&it.frame_of_reference)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition_context_role(&it.role)
+                    ),
+                ];
+                format!(
+                    "#{n} = PRODUCT_DEFINITION_CONTEXT_ASSOCIATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::ProductDefinitionContextRole(id) => {
+                let it = self.model.product_definition_context_roles.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!(
+                    "#{n} = PRODUCT_DEFINITION_CONTEXT_ROLE({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::ProductDefinitionEffectivity(id) => {
                 let it = self.model.product_definition_effectivitys.get(id.0);
@@ -25809,6 +27459,28 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = PRODUCT_DEFINITION_SHAPE({});\n", attrs.join(","))
             }
+            AnyId::ProductDefinitionSubstitute(id) => {
+                let it = self.model.product_definition_substitutes.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition_relationship(&it.context_relationship)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition(&it.substitute_definition)
+                    ),
+                ];
+                format!(
+                    "#{n} = PRODUCT_DEFINITION_SUBSTITUTE({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::ProductDefinitionUsage(id) => {
                 let it = self.model.product_definition_usages.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -25890,6 +27562,27 @@ impl<'a> Writer<'a> {
                     "#{n} = PRODUCT_RELATED_PRODUCT_CATEGORY({});\n",
                     attrs.join(",")
                 )
+            }
+            AnyId::ProjectedZoneDefinition(id) => {
+                let it = self.model.projected_zone_definitions.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_tolerance_zone(&it.zone)),
+                    format!(
+                        "({})",
+                        it.boundaries
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_shape_aspect(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!("#{}", self.id_of_ref_shape_aspect(&it.projection_end)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_length_measure_with_unit(&it.projected_length)
+                    ),
+                ];
+                format!("#{n} = PROJECTED_ZONE_DEFINITION({});\n", attrs.join(","))
             }
             AnyId::PropertyDefinition(id) => {
                 let it = self.model.property_definitions.get(id.0);
@@ -26008,6 +27701,15 @@ impl<'a> Writer<'a> {
                     it.self_intersect.token().to_string(),
                 ];
                 format!("#{n} = QUASI_UNIFORM_SURFACE({});\n", attrs.join(","))
+            }
+            AnyId::RatioUnit(id) => {
+                let it = self.model.ratio_units.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "#{}",
+                    self.id_of_ref_dimensional_exponents(&it.dimensions)
+                )];
+                format!("#{n} = RATIO_UNIT({});\n", attrs.join(","))
             }
             AnyId::RationalBSplineCurve(id) => {
                 let it = self.model.rational_b_spline_curves.get(id.0);
@@ -26368,6 +28070,26 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                 ];
                 format!("#{n} = SHAPE_ASPECT_ASSOCIATIVITY({});\n", attrs.join(","))
+            }
+            AnyId::ShapeAspectDerivingRelationship(id) => {
+                let it = self.model.shape_aspect_deriving_relationships.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_shape_aspect(&it.relating_shape_aspect)
+                    ),
+                    format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
+                ];
+                format!(
+                    "#{n} = SHAPE_ASPECT_DERIVING_RELATIONSHIP({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::ShapeAspectRelationship(id) => {
                 let it = self.model.shape_aspect_relationships.get(id.0);
@@ -27601,6 +29323,19 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = VIEW_VOLUME({});\n", attrs.join(","))
             }
+            AnyId::VolumeUnit(id) => {
+                let it = self.model.volume_units.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![format!(
+                    "({})",
+                    it.elements
+                        .iter()
+                        .map(|e| format!("#{}", self.id_of_ref_derived_unit_element(e)))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )];
+                format!("#{n} = VOLUME_UNIT({});\n", attrs.join(","))
+            }
             AnyId::WireShell(id) => {
                 let it = self.model.wire_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -27649,7 +29384,9 @@ impl<'a> Writer<'a> {
                 UnitPart::AppliedDocumentReference { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_document_reference_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DOCUMENT_REFERENCE({})", a.join(",")) },
                 UnitPart::AppliedExternalIdentificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_external_identification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::AppliedGroupAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_groupable_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_GROUP_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::AppliedPresentedItem { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_presented_item_select(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PRESENTED_ITEM({})", a.join(",")) },
                 UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
+                UnitPart::AreaInSet { area, in_set, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_presentation_area(area)), format!("#{}", self.id_of_ref_presentation_set(in_set))]; format!("AREA_IN_SET({})", a.join(",")) },
                 UnitPart::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
                 UnitPart::AssemblyComponentUsage { reference_designator, .. } => { let a: Vec<String> = vec![match reference_designator { Some(x) => step_str(x), None => "$".to_string() }]; format!("ASSEMBLY_COMPONENT_USAGE({})", a.join(",")) },
                 UnitPart::BSplineCurve { degree, control_points_list, curve_form, closed_curve, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", degree), format!("({})", control_points_list.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(",")), curve_form.token().to_string(), closed_curve.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_CURVE({})", a.join(",")) },
@@ -27663,8 +29400,12 @@ impl<'a> Writer<'a> {
                 UnitPart::BoundedSurface => "BOUNDED_SURFACE()".to_string(),
                 UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE()".to_string(),
                 UnitPart::BrepWithVoids { voids, .. } => { let a: Vec<String> = vec![format!("({})", voids.iter().map(|e| format!("#{}", self.id_of_ref_oriented_closed_shell(e))).collect::<Vec<_>>().join(","))]; format!("BREP_WITH_VOIDS({})", a.join(",")) },
+                UnitPart::CameraImage => "CAMERA_IMAGE()".to_string(),
+                UnitPart::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE()".to_string(),
                 UnitPart::CameraModel => "CAMERA_MODEL()".to_string(),
                 UnitPart::CameraModelD3 { view_reference_system, perspective_of_volume, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(view_reference_system)), format!("#{}", self.id_of_ref_view_volume(perspective_of_volume))]; format!("CAMERA_MODEL_D3({})", a.join(",")) },
+                UnitPart::CameraModelD3WithHlhsr { hidden_line_surface_removal, .. } => { let a: Vec<String> = vec![(if *hidden_line_surface_removal { ".T." } else { ".F." }).to_string()]; format!("CAMERA_MODEL_D3_WITH_HLHSR({})", a.join(",")) },
+                UnitPart::CameraUsage => "CAMERA_USAGE()".to_string(),
                 UnitPart::CcDesignApproval { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approved_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_APPROVAL({})", a.join(",")) },
                 UnitPart::CcDesignDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_time_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_person_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
@@ -27719,6 +29460,8 @@ impl<'a> Writer<'a> {
                 UnitPart::Direction { direction_ratios, .. } => { let a: Vec<String> = vec![format!("({})", direction_ratios.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("DIRECTION({})", a.join(",")) },
                 UnitPart::Document { id, name, description, kind, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_document_type(kind))]; format!("DOCUMENT({})", a.join(",")) },
                 UnitPart::DocumentFile => "DOCUMENT_FILE()".to_string(),
+                UnitPart::DocumentProductAssociation { name, description, relating_document, related_product, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_document(relating_document)), format!("#{}", self.id_of_ref_product_or_formation_or_definition(related_product))]; format!("DOCUMENT_PRODUCT_ASSOCIATION({})", a.join(",")) },
+                UnitPart::DocumentProductEquivalence => "DOCUMENT_PRODUCT_EQUIVALENCE()".to_string(),
                 UnitPart::DocumentReference { assigned_document, source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_document(assigned_document)), step_str(source)]; format!("DOCUMENT_REFERENCE({})", a.join(",")) },
                 UnitPart::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE()".to_string(),
                 UnitPart::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
@@ -27774,6 +29517,7 @@ impl<'a> Writer<'a> {
                 UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_or_plane_angle_measure_with_unit_select(unit_size))]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({})", a.join(",")) },
                 UnitPart::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(maximum_upper_tolerance))]; format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({})", a.join(",")) },
                 UnitPart::GeometricToleranceWithModifiers { modifiers, .. } => { let a: Vec<String> = vec![format!("({})", modifiers.iter().map(|e| e.token().to_string()).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS({})", a.join(",")) },
+                UnitPart::GeometricallyBoundedSurfaceShapeRepresentation => "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION()".to_string(),
                 UnitPart::GeometricallyBoundedWireframeShapeRepresentation => "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION()".to_string(),
                 UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => { let a: Vec<String> = vec![format!("({})", uncertainty.iter().map(|e| format!("#{}", self.id_of_ref_uncertainty_measure_with_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT({})", a.join(",")) },
                 UnitPart::GlobalUnitAssignedContext { units, .. } => { let a: Vec<String> = vec![format!("({})", units.iter().map(|e| format!("#{}", self.id_of_ref_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNIT_ASSIGNED_CONTEXT({})", a.join(",")) },
@@ -27847,9 +29591,12 @@ impl<'a> Writer<'a> {
                 UnitPart::PresentationSet => "PRESENTATION_SET()".to_string(),
                 UnitPart::PresentationStyleAssignment { styles, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| match e { PresentationStyleSelectRef::NullStyle(e) => format!("NULL_STYLE({})", e.token()), other => format!("#{}", self.id_of_ref_presentation_style_select(other)) }).collect::<Vec<_>>().join(","))]; format!("PRESENTATION_STYLE_ASSIGNMENT({})", a.join(",")) },
                 UnitPart::PresentationView => "PRESENTATION_VIEW()".to_string(),
+                UnitPart::PresentedItem => "PRESENTED_ITEM()".to_string(),
                 UnitPart::Product { id, name, description, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("({})", frame_of_reference.iter().map(|e| format!("#{}", self.id_of_ref_product_context(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT({})", a.join(",")) },
                 UnitPart::ProductCategory { name, description, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("PRODUCT_CATEGORY({})", a.join(",")) },
                 UnitPart::ProductConcept { id, name, description, market_context, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept_context(market_context))]; format!("PRODUCT_CONCEPT({})", a.join(",")) },
+                UnitPart::ProductConceptFeature { id, name, description, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }]; format!("PRODUCT_CONCEPT_FEATURE({})", a.join(",")) },
+                UnitPart::ProductConceptFeatureCategory => "PRODUCT_CONCEPT_FEATURE_CATEGORY()".to_string(),
                 UnitPart::ProductContext { discipline_type, .. } => { let a: Vec<String> = vec![step_str(discipline_type)]; format!("PRODUCT_CONTEXT({})", a.join(",")) },
                 UnitPart::ProductDefinition { id, description, formation, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(id), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_formation(formation)), format!("#{}", self.id_of_ref_product_definition_context(frame_of_reference))]; format!("PRODUCT_DEFINITION({})", a.join(",")) },
                 UnitPart::ProductDefinitionContext { life_cycle_stage, .. } => { let a: Vec<String> = vec![step_str(life_cycle_stage)]; format!("PRODUCT_DEFINITION_CONTEXT({})", a.join(",")) },
@@ -27863,11 +29610,13 @@ impl<'a> Writer<'a> {
                 UnitPart::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE()".to_string(),
                 UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids, .. } => { let a: Vec<String> = vec![format!("({})", documentation_ids.iter().map(|e| format!("#{}", self.id_of_ref_document(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS({})", a.join(",")) },
                 UnitPart::ProductRelatedProductCategory { products, .. } => { let a: Vec<String> = vec![format!("({})", products.iter().map(|e| format!("#{}", self.id_of_ref_product(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_RELATED_PRODUCT_CATEGORY({})", a.join(",")) },
+                UnitPart::ProjectedZoneDefinition { projection_end, projected_length, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(projection_end)), format!("#{}", self.id_of_ref_length_measure_with_unit(projected_length))]; format!("PROJECTED_ZONE_DEFINITION({})", a.join(",")) },
                 UnitPart::PropertyDefinition { name, description, definition, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_characterized_definition(definition))]; format!("PROPERTY_DEFINITION({})", a.join(",")) },
                 UnitPart::PropertyDefinitionRepresentation { definition, used_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_represented_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation))]; format!("PROPERTY_DEFINITION_REPRESENTATION({})", a.join(",")) },
                 UnitPart::QualifiedRepresentationItem { qualifiers, .. } => { let a: Vec<String> = vec![format!("({})", qualifiers.iter().map(|e| format!("#{}", self.id_of_ref_value_qualifier(e))).collect::<Vec<_>>().join(","))]; format!("QUALIFIED_REPRESENTATION_ITEM({})", a.join(",")) },
                 UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE()".to_string(),
                 UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE()".to_string(),
+                UnitPart::RatioUnit => "RATIO_UNIT()".to_string(),
                 UnitPart::RationalBSplineCurve { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_CURVE({})", a.join(",")) },
                 UnitPart::RationalBSplineSurface { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| real(*e)).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_SURFACE({})", a.join(",")) },
                 UnitPart::RealLiteral => "REAL_LITERAL()".to_string(),
@@ -27980,6 +29729,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.action_request_assignments.items.len() {
             roots.push(AnyId::ActionRequestAssignment(ActionRequestAssignmentId(i)));
+        }
+        for i in 0..self.model.action_request_solutions.items.len() {
+            roots.push(AnyId::ActionRequestSolution(ActionRequestSolutionId(i)));
         }
         for i in 0..self.model.action_resources.items.len() {
             roots.push(AnyId::ActionResource(ActionResourceId(i)));
@@ -28131,6 +29883,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.applied_group_assignments.items.len() {
             roots.push(AnyId::AppliedGroupAssignment(AppliedGroupAssignmentId(i)));
         }
+        for i in 0..self.model.applied_presented_items.items.len() {
+            roots.push(AnyId::AppliedPresentedItem(AppliedPresentedItemId(i)));
+        }
         for i in 0..self.model.approvals.items.len() {
             roots.push(AnyId::Approval(ApprovalId(i)));
         }
@@ -28163,6 +29918,12 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ApproximationToleranceParameter(
                 ApproximationToleranceParameterId(i),
             ));
+        }
+        for i in 0..self.model.area_in_sets.items.len() {
+            roots.push(AnyId::AreaInSet(AreaInSetId(i)));
+        }
+        for i in 0..self.model.area_units.items.len() {
+            roots.push(AnyId::AreaUnit(AreaUnitId(i)));
         }
         for i in 0..self.model.ascribable_states.items.len() {
             roots.push(AnyId::AscribableState(AscribableStateId(i)));
@@ -28223,11 +29984,23 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.calendar_dates.items.len() {
             roots.push(AnyId::CalendarDate(CalendarDateId(i)));
         }
+        for i in 0..self.model.camera_images.items.len() {
+            roots.push(AnyId::CameraImage(CameraImageId(i)));
+        }
+        for i in 0..self.model.camera_image3d_with_scales.items.len() {
+            roots.push(AnyId::CameraImage3dWithScale(CameraImage3dWithScaleId(i)));
+        }
         for i in 0..self.model.camera_models.items.len() {
             roots.push(AnyId::CameraModel(CameraModelId(i)));
         }
         for i in 0..self.model.camera_model_d3s.items.len() {
             roots.push(AnyId::CameraModelD3(CameraModelD3Id(i)));
+        }
+        for i in 0..self.model.camera_model_d3_with_hlhsrs.items.len() {
+            roots.push(AnyId::CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId(i)));
+        }
+        for i in 0..self.model.camera_usages.items.len() {
+            roots.push(AnyId::CameraUsage(CameraUsageId(i)));
         }
         for i in 0..self.model.cartesian_points.items.len() {
             roots.push(AnyId::CartesianPoint(CartesianPointId(i)));
@@ -28573,8 +30346,18 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.dimensional_sizes.items.len() {
             roots.push(AnyId::DimensionalSize(DimensionalSizeId(i)));
         }
+        for i in 0..self.model.dimensional_size_with_datum_features.items.len() {
+            roots.push(AnyId::DimensionalSizeWithDatumFeature(
+                DimensionalSizeWithDatumFeatureId(i),
+            ));
+        }
         for i in 0..self.model.dimensional_size_with_paths.items.len() {
             roots.push(AnyId::DimensionalSizeWithPath(DimensionalSizeWithPathId(i)));
+        }
+        for i in 0..self.model.directed_dimensional_locations.items.len() {
+            roots.push(AnyId::DirectedDimensionalLocation(
+                DirectedDimensionalLocationId(i),
+            ));
         }
         for i in 0..self.model.directions.items.len() {
             roots.push(AnyId::Direction(DirectionId(i)));
@@ -28585,8 +30368,23 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.document_files.items.len() {
             roots.push(AnyId::DocumentFile(DocumentFileId(i)));
         }
+        for i in 0..self.model.document_product_associations.items.len() {
+            roots.push(AnyId::DocumentProductAssociation(
+                DocumentProductAssociationId(i),
+            ));
+        }
+        for i in 0..self.model.document_product_equivalences.items.len() {
+            roots.push(AnyId::DocumentProductEquivalence(
+                DocumentProductEquivalenceId(i),
+            ));
+        }
         for i in 0..self.model.document_references.items.len() {
             roots.push(AnyId::DocumentReference(DocumentReferenceId(i)));
+        }
+        for i in 0..self.model.document_representation_types.items.len() {
+            roots.push(AnyId::DocumentRepresentationType(
+                DocumentRepresentationTypeId(i),
+            ));
         }
         for i in 0..self.model.document_types.items.len() {
             roots.push(AnyId::DocumentType(DocumentTypeId(i)));
@@ -28809,6 +30607,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.geometric_tolerances.items.len() {
             roots.push(AnyId::GeometricTolerance(GeometricToleranceId(i)));
         }
+        for i in 0..self.model.geometric_tolerance_relationships.items.len() {
+            roots.push(AnyId::GeometricToleranceRelationship(
+                GeometricToleranceRelationshipId(i),
+            ));
+        }
         for i in 0..self
             .model
             .geometric_tolerance_with_datum_references
@@ -28852,6 +30655,16 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.geometric_tolerance_with_modifierss.items.len() {
             roots.push(AnyId::GeometricToleranceWithModifiers(
                 GeometricToleranceWithModifiersId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .geometrically_bounded_surface_shape_representations
+            .items
+            .len()
+        {
+            roots.push(AnyId::GeometricallyBoundedSurfaceShapeRepresentation(
+                GeometricallyBoundedSurfaceShapeRepresentationId(i),
             ));
         }
         for i in 0..self
@@ -28968,6 +30781,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.mass_units.items.len() {
             roots.push(AnyId::MassUnit(MassUnitId(i)));
         }
+        for i in 0..self.model.measure_qualifications.items.len() {
+            roots.push(AnyId::MeasureQualification(MeasureQualificationId(i)));
+        }
         for i in 0..self.model.measure_representation_items.items.len() {
             roots.push(AnyId::MeasureRepresentationItem(
                 MeasureRepresentationItemId(i),
@@ -29028,6 +30844,9 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ModifiedGeometricTolerance(
                 ModifiedGeometricToleranceId(i),
             ));
+        }
+        for i in 0..self.model.name_attributes.items.len() {
+            roots.push(AnyId::NameAttribute(NameAttributeId(i)));
         }
         for i in 0..self.model.named_units.items.len() {
             roots.push(AnyId::NamedUnit(NamedUnitId(i)));
@@ -29255,6 +31074,14 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.presentation_views.items.len() {
             roots.push(AnyId::PresentationView(PresentationViewId(i)));
         }
+        for i in 0..self.model.presented_items.items.len() {
+            roots.push(AnyId::PresentedItem(PresentedItemId(i)));
+        }
+        for i in 0..self.model.presented_item_representations.items.len() {
+            roots.push(AnyId::PresentedItemRepresentation(
+                PresentedItemRepresentationId(i),
+            ));
+        }
         for i in 0..self.model.products.items.len() {
             roots.push(AnyId::Product(ProductId(i)));
         }
@@ -29272,6 +31099,14 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.product_concept_contexts.items.len() {
             roots.push(AnyId::ProductConceptContext(ProductConceptContextId(i)));
         }
+        for i in 0..self.model.product_concept_features.items.len() {
+            roots.push(AnyId::ProductConceptFeature(ProductConceptFeatureId(i)));
+        }
+        for i in 0..self.model.product_concept_feature_categorys.items.len() {
+            roots.push(AnyId::ProductConceptFeatureCategory(
+                ProductConceptFeatureCategoryId(i),
+            ));
+        }
         for i in 0..self.model.product_contexts.items.len() {
             roots.push(AnyId::ProductContext(ProductContextId(i)));
         }
@@ -29282,6 +31117,21 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ProductDefinitionContext(ProductDefinitionContextId(
                 i,
             )));
+        }
+        for i in 0..self
+            .model
+            .product_definition_context_associations
+            .items
+            .len()
+        {
+            roots.push(AnyId::ProductDefinitionContextAssociation(
+                ProductDefinitionContextAssociationId(i),
+            ));
+        }
+        for i in 0..self.model.product_definition_context_roles.items.len() {
+            roots.push(AnyId::ProductDefinitionContextRole(
+                ProductDefinitionContextRoleId(i),
+            ));
         }
         for i in 0..self.model.product_definition_effectivitys.items.len() {
             roots.push(AnyId::ProductDefinitionEffectivity(
@@ -29326,6 +31176,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.product_definition_shapes.items.len() {
             roots.push(AnyId::ProductDefinitionShape(ProductDefinitionShapeId(i)));
         }
+        for i in 0..self.model.product_definition_substitutes.items.len() {
+            roots.push(AnyId::ProductDefinitionSubstitute(
+                ProductDefinitionSubstituteId(i),
+            ));
+        }
         for i in 0..self.model.product_definition_usages.items.len() {
             roots.push(AnyId::ProductDefinitionUsage(ProductDefinitionUsageId(i)));
         }
@@ -29343,6 +31198,9 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ProductRelatedProductCategory(
                 ProductRelatedProductCategoryId(i),
             ));
+        }
+        for i in 0..self.model.projected_zone_definitions.items.len() {
+            roots.push(AnyId::ProjectedZoneDefinition(ProjectedZoneDefinitionId(i)));
         }
         for i in 0..self.model.property_definitions.items.len() {
             roots.push(AnyId::PropertyDefinition(PropertyDefinitionId(i)));
@@ -29367,6 +31225,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.quasi_uniform_surfaces.items.len() {
             roots.push(AnyId::QuasiUniformSurface(QuasiUniformSurfaceId(i)));
+        }
+        for i in 0..self.model.ratio_units.items.len() {
+            roots.push(AnyId::RatioUnit(RatioUnitId(i)));
         }
         for i in 0..self.model.rational_b_spline_curves.items.len() {
             roots.push(AnyId::RationalBSplineCurve(RationalBSplineCurveId(i)));
@@ -29455,6 +31316,11 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::ShapeAspectAssociativity(ShapeAspectAssociativityId(
                 i,
             )));
+        }
+        for i in 0..self.model.shape_aspect_deriving_relationships.items.len() {
+            roots.push(AnyId::ShapeAspectDerivingRelationship(
+                ShapeAspectDerivingRelationshipId(i),
+            ));
         }
         for i in 0..self.model.shape_aspect_relationships.items.len() {
             roots.push(AnyId::ShapeAspectRelationship(ShapeAspectRelationshipId(i)));
@@ -29768,6 +31634,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.view_volumes.items.len() {
             roots.push(AnyId::ViewVolume(ViewVolumeId(i)));
+        }
+        for i in 0..self.model.volume_units.items.len() {
+            roots.push(AnyId::VolumeUnit(VolumeUnitId(i)));
         }
         for i in 0..self.model.wire_shells.items.len() {
             roots.push(AnyId::WireShell(WireShellId(i)));

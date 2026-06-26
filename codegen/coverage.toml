@@ -475,6 +475,29 @@ plm_identification = [
     "applied_document_reference", "applied_external_identification_assignment",
     "role_association",
 ]
+# Long-tail floor cleanup (clean seeds, all deps covered). Units (derived/named-unit
+# subtypes), measure_qualification (qualifiers ride the existing value_qualifier
+# narrow), bounded-surface/tolerance-relationship, camera/presented cluster,
+# PMI/GDT leaves, document + product-definition-context leaves.
+units2 = ["area_unit", "volume_unit", "ratio_unit", "area_in_set"]
+measure_qual = ["measure_qualification"]
+geom_shape2 = ["geometrically_bounded_surface_shape_representation", "geometric_tolerance_relationship"]
+camera_presented = [
+    "camera_image", "camera_image_3d_with_scale", "camera_model_d3_with_hlhsr",
+    "camera_usage", "presented_item_representation", "presented_item",
+]
+pmi_leaf2 = [
+    "projected_zone_definition", "shape_aspect_deriving_relationship",
+    "dimensional_size_with_datum_feature", "directed_dimensional_location",
+]
+document2 = ["document_representation_type", "document_product_equivalence", "document_product_association"]
+pd_context = ["product_definition_context_association", "product_definition_context_role"]
+# small-select: seed the 2 uncovered members of each so the SELECT is fully
+# covered (no narrow needed); recovers those member instances too.
+small_select = [
+    "applied_presented_item", "product_concept_feature", "product_concept_feature_category",
+    "name_attribute", "action_request_solution", "product_definition_substitute",
+]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
