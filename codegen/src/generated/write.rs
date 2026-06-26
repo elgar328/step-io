@@ -32,6 +32,12 @@ fn measure(m: &MeasureValue) -> String {
         None => real(m.value),
     }
 }
+fn int_measure(m: &IntMeasureValue) -> String {
+    match &m.type_name {
+        Some(t) => format!("{t}({})", m.value),
+        None => format!("{}", m.value),
+    }
+}
 fn string_select(m: &StringSelectValue) -> String {
     match &m.type_name {
         Some(t) => format!("{t}({})", step_str(&m.value)),
@@ -165,6 +171,7 @@ pub struct Writer<'a> {
     dimensional_size_ids: Vec<Option<u64>>,
     dimensional_size_with_path_ids: Vec<Option<u64>>,
     direction_ids: Vec<Option<u64>>,
+    draughting_pre_defined_colour_ids: Vec<Option<u64>>,
     draughting_pre_defined_curve_font_ids: Vec<Option<u64>>,
     edge_ids: Vec<Option<u64>>,
     edge_curve_ids: Vec<Option<u64>>,
@@ -267,6 +274,7 @@ pub struct Writer<'a> {
     poly_loop_ids: Vec<Option<u64>>,
     polyline_ids: Vec<Option<u64>>,
     position_tolerance_ids: Vec<Option<u64>>,
+    pre_defined_colour_ids: Vec<Option<u64>>,
     pre_defined_curve_font_ids: Vec<Option<u64>>,
     pre_defined_item_ids: Vec<Option<u64>>,
     pre_defined_marker_ids: Vec<Option<u64>>,
@@ -603,6 +611,10 @@ impl<'a> Writer<'a> {
                 model.dimensional_size_with_paths.items.len()
             ],
             direction_ids: vec![None; model.directions.items.len()],
+            draughting_pre_defined_colour_ids: vec![
+                None;
+                model.draughting_pre_defined_colours.items.len()
+            ],
             draughting_pre_defined_curve_font_ids: vec![
                 None;
                 model
@@ -870,6 +882,7 @@ impl<'a> Writer<'a> {
             poly_loop_ids: vec![None; model.poly_loops.items.len()],
             polyline_ids: vec![None; model.polylines.items.len()],
             position_tolerance_ids: vec![None; model.position_tolerances.items.len()],
+            pre_defined_colour_ids: vec![None; model.pre_defined_colours.items.len()],
             pre_defined_curve_font_ids: vec![None; model.pre_defined_curve_fonts.items.len()],
             pre_defined_item_ids: vec![None; model.pre_defined_items.items.len()],
             pre_defined_marker_ids: vec![None; model.pre_defined_markers.items.len()],
@@ -1300,6 +1313,7 @@ impl<'a> Writer<'a> {
             AnyId::DimensionalSize(i) => self.dimensional_size_ids[i.0],
             AnyId::DimensionalSizeWithPath(i) => self.dimensional_size_with_path_ids[i.0],
             AnyId::Direction(i) => self.direction_ids[i.0],
+            AnyId::DraughtingPreDefinedColour(i) => self.draughting_pre_defined_colour_ids[i.0],
             AnyId::DraughtingPreDefinedCurveFont(i) => {
                 self.draughting_pre_defined_curve_font_ids[i.0]
             }
@@ -1438,6 +1452,7 @@ impl<'a> Writer<'a> {
             AnyId::PolyLoop(i) => self.poly_loop_ids[i.0],
             AnyId::Polyline(i) => self.polyline_ids[i.0],
             AnyId::PositionTolerance(i) => self.position_tolerance_ids[i.0],
+            AnyId::PreDefinedColour(i) => self.pre_defined_colour_ids[i.0],
             AnyId::PreDefinedCurveFont(i) => self.pre_defined_curve_font_ids[i.0],
             AnyId::PreDefinedItem(i) => self.pre_defined_item_ids[i.0],
             AnyId::PreDefinedMarker(i) => self.pre_defined_marker_ids[i.0],
@@ -1742,6 +1757,9 @@ impl<'a> Writer<'a> {
             AnyId::DimensionalSize(i) => self.dimensional_size_ids[i.0] = Some(n),
             AnyId::DimensionalSizeWithPath(i) => self.dimensional_size_with_path_ids[i.0] = Some(n),
             AnyId::Direction(i) => self.direction_ids[i.0] = Some(n),
+            AnyId::DraughtingPreDefinedColour(i) => {
+                self.draughting_pre_defined_colour_ids[i.0] = Some(n)
+            }
             AnyId::DraughtingPreDefinedCurveFont(i) => {
                 self.draughting_pre_defined_curve_font_ids[i.0] = Some(n)
             }
@@ -1912,6 +1930,7 @@ impl<'a> Writer<'a> {
             AnyId::PolyLoop(i) => self.poly_loop_ids[i.0] = Some(n),
             AnyId::Polyline(i) => self.polyline_ids[i.0] = Some(n),
             AnyId::PositionTolerance(i) => self.position_tolerance_ids[i.0] = Some(n),
+            AnyId::PreDefinedColour(i) => self.pre_defined_colour_ids[i.0] = Some(n),
             AnyId::PreDefinedCurveFont(i) => self.pre_defined_curve_font_ids[i.0] = Some(n),
             AnyId::PreDefinedItem(i) => self.pre_defined_item_ids[i.0] = Some(n),
             AnyId::PreDefinedMarker(i) => self.pre_defined_marker_ids[i.0] = Some(n),
@@ -2863,6 +2882,12 @@ impl<'a> Writer<'a> {
             ColourRef::ColourSpecification(i) => {
                 self.colour_specification_ids[i.0].expect("dep id assigned")
             }
+            ColourRef::DraughtingPreDefinedColour(i) => {
+                self.draughting_pre_defined_colour_ids[i.0].expect("dep id assigned")
+            }
+            ColourRef::PreDefinedColour(i) => {
+                self.pre_defined_colour_ids[i.0].expect("dep id assigned")
+            }
             ColourRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
         }
     }
@@ -2872,6 +2897,10 @@ impl<'a> Writer<'a> {
             ColourRef::Colour(i) => out.push(AnyId::Colour(*i)),
             ColourRef::ColourRgb(i) => out.push(AnyId::ColourRgb(*i)),
             ColourRef::ColourSpecification(i) => out.push(AnyId::ColourSpecification(*i)),
+            ColourRef::DraughtingPreDefinedColour(i) => {
+                out.push(AnyId::DraughtingPreDefinedColour(*i))
+            }
+            ColourRef::PreDefinedColour(i) => out.push(AnyId::PreDefinedColour(*i)),
             ColourRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
@@ -8767,6 +8796,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_shape_aspect(&it.path, out);
             }
             AnyId::Direction(_) => {}
+            AnyId::DraughtingPreDefinedColour(_) => {}
             AnyId::DraughtingPreDefinedCurveFont(_) => {}
             AnyId::Edge(id) => {
                 let it = self.model.edges.get(id.0);
@@ -9269,6 +9299,7 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
+            AnyId::PreDefinedColour(_) => {}
             AnyId::PreDefinedCurveFont(_) => {}
             AnyId::PreDefinedItem(_) => {}
             AnyId::PreDefinedMarker(_) => {}
@@ -12283,6 +12314,15 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = DIRECTION({});\n", attrs.join(","))
             }
+            AnyId::DraughtingPreDefinedColour(id) => {
+                let it = self.model.draughting_pre_defined_colours.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!(
+                    "#{n} = DRAUGHTING_PRE_DEFINED_COLOUR({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::DraughtingPreDefinedCurveFont(id) => {
                 let it = self.model.draughting_pre_defined_curve_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -14048,6 +14088,12 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = POSITION_TOLERANCE({});\n", attrs.join(","))
             }
+            AnyId::PreDefinedColour(id) => {
+                let it = self.model.pre_defined_colours.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name)];
+                format!("#{n} = PRE_DEFINED_COLOUR({});\n", attrs.join(","))
+            }
             AnyId::PreDefinedCurveFont(id) => {
                 let it = self.model.pre_defined_curve_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -15214,7 +15260,7 @@ impl<'a> Writer<'a> {
                         "({})",
                         it.direction_counts
                             .iter()
-                            .map(|e| measure(e))
+                            .map(|e| int_measure(e))
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
@@ -15855,6 +15901,7 @@ impl<'a> Writer<'a> {
                 UnitPart::DesignContext => "DESIGN_CONTEXT()".to_string(),
                 UnitPart::DimensionalSize { applies_to, name, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(applies_to)), step_str(name)]; format!("DIMENSIONAL_SIZE({})", a.join(",")) },
                 UnitPart::Direction { direction_ratios, .. } => { let a: Vec<String> = vec![format!("({})", direction_ratios.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("DIRECTION({})", a.join(",")) },
+                UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR()".to_string(),
                 UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT()".to_string(),
                 UnitPart::Edge { edge_start, edge_end, .. } => { let a: Vec<String> = vec![match edge_start { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }, match edge_end { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }]; format!("EDGE({})", a.join(",")) },
                 UnitPart::EdgeCurve { edge_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(edge_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("EDGE_CURVE({})", a.join(",")) },
@@ -15935,6 +15982,7 @@ impl<'a> Writer<'a> {
                 UnitPart::PointStyle { name, marker, marker_size, marker_colour, .. } => { let a: Vec<String> = vec![step_str(name), match marker { Some(r) => match r { MarkerSelectRef::MarkerType(e) => format!("MARKER_TYPE({})", e.token()), other => format!("#{}", self.id_of_ref_marker_select(other)) }, None => "$".to_string() }, match marker_size { Some(r) => match r { SizeSelectRef::DescriptiveMeasure(x) => format!("DESCRIPTIVE_MEASURE({})", step_str(x)), SizeSelectRef::PositiveLengthMeasure(x) => format!("POSITIVE_LENGTH_MEASURE({})", real(*x)), other => format!("#{}", self.id_of_ref_size_select(other)) }, None => "$".to_string() }, match marker_colour { Some(r) => format!("#{}", self.id_of_ref_colour(r)), None => "$".to_string() }]; format!("POINT_STYLE({})", a.join(",")) },
                 UnitPart::PolyLoop { polygon, .. } => { let a: Vec<String> = vec![format!("({})", polygon.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(","))]; format!("POLY_LOOP({})", a.join(",")) },
                 UnitPart::PositionTolerance => "POSITION_TOLERANCE()".to_string(),
+                UnitPart::PreDefinedColour => "PRE_DEFINED_COLOUR()".to_string(),
                 UnitPart::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT()".to_string(),
                 UnitPart::PreDefinedItem { name, .. } => { let a: Vec<String> = vec![step_str(name)]; format!("PRE_DEFINED_ITEM({})", a.join(",")) },
                 UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER()".to_string(),
@@ -15995,7 +16043,7 @@ impl<'a> Writer<'a> {
                 UnitPart::SurfaceStyleBoundary { style_of_boundary, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_boundary))]; format!("SURFACE_STYLE_BOUNDARY({})", a.join(",")) },
                 UnitPart::SurfaceStyleControlGrid { style_of_control_grid, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_control_grid))]; format!("SURFACE_STYLE_CONTROL_GRID({})", a.join(",")) },
                 UnitPart::SurfaceStyleFillArea { fill_area, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_fill_area_style(fill_area))]; format!("SURFACE_STYLE_FILL_AREA({})", a.join(",")) },
-                UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines, direction_counts, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_parameter_lines)), format!("({})", direction_counts.iter().map(|e| measure(e)).collect::<Vec<_>>().join(","))]; format!("SURFACE_STYLE_PARAMETER_LINE({})", a.join(",")) },
+                UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines, direction_counts, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_parameter_lines)), format!("({})", direction_counts.iter().map(|e| int_measure(e)).collect::<Vec<_>>().join(","))]; format!("SURFACE_STYLE_PARAMETER_LINE({})", a.join(",")) },
                 UnitPart::SurfaceStyleReflectanceAmbient { ambient_reflectance, .. } => { let a: Vec<String> = vec![real(*ambient_reflectance)]; format!("SURFACE_STYLE_REFLECTANCE_AMBIENT({})", a.join(",")) },
                 UnitPart::SurfaceStyleRendering { rendering_method, surface_colour, .. } => { let a: Vec<String> = vec![rendering_method.token().to_string(), format!("#{}", self.id_of_ref_colour(surface_colour))]; format!("SURFACE_STYLE_RENDERING({})", a.join(",")) },
                 UnitPart::SurfaceStyleRenderingWithProperties { properties, .. } => { let a: Vec<String> = vec![format!("({})", properties.iter().map(|e| format!("#{}", self.id_of_ref_rendering_properties_select(e))).collect::<Vec<_>>().join(","))]; format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES({})", a.join(",")) },
@@ -16423,6 +16471,11 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.directions.items.len() {
             roots.push(AnyId::Direction(DirectionId(i)));
         }
+        for i in 0..self.model.draughting_pre_defined_colours.items.len() {
+            roots.push(AnyId::DraughtingPreDefinedColour(
+                DraughtingPreDefinedColourId(i),
+            ));
+        }
         for i in 0..self.model.draughting_pre_defined_curve_fonts.items.len() {
             roots.push(AnyId::DraughtingPreDefinedCurveFont(
                 DraughtingPreDefinedCurveFontId(i),
@@ -16838,6 +16891,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.position_tolerances.items.len() {
             roots.push(AnyId::PositionTolerance(PositionToleranceId(i)));
+        }
+        for i in 0..self.model.pre_defined_colours.items.len() {
+            roots.push(AnyId::PreDefinedColour(PreDefinedColourId(i)));
         }
         for i in 0..self.model.pre_defined_curve_fonts.items.len() {
             roots.push(AnyId::PreDefinedCurveFont(PreDefinedCurveFontId(i)));

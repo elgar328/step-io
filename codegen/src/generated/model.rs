@@ -61,6 +61,15 @@ pub struct StringSelectValue {
     pub value: String,
 }
 
+/// select-of-named-integers (e.g. SELECT(u_direction_count, v_direction_count)):
+/// `Some(type_name)` = typed member `TYPE(2)`; `None` = bare integer. Integer-
+/// valued so counts are not widened to reals.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IntMeasureValue {
+    pub type_name: Option<String>,
+    pub value: i64,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AheadOrBehind {
     Ahead,
@@ -1075,6 +1084,8 @@ pub struct DimensionalSizeWithPathId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DirectionId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DraughtingPreDefinedColourId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedCurveFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EdgeId(pub usize);
@@ -1278,6 +1289,8 @@ pub struct PolyLoopId(pub usize);
 pub struct PolylineId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PositionToleranceId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PreDefinedColourId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedCurveFontId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1619,6 +1632,7 @@ pub enum AnyId {
     DimensionalSize(DimensionalSizeId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     Direction(DirectionId),
+    DraughtingPreDefinedColour(DraughtingPreDefinedColourId),
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -1723,6 +1737,7 @@ pub enum AnyId {
     PolyLoop(PolyLoopId),
     Polyline(PolylineId),
     PositionTolerance(PositionToleranceId),
+    PreDefinedColour(PreDefinedColourId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
     PreDefinedItem(PreDefinedItemId),
     PreDefinedMarker(PreDefinedMarkerId),
@@ -2312,6 +2327,8 @@ pub enum ColourRef {
     Colour(ColourId),
     ColourRgb(ColourRgbId),
     ColourSpecification(ColourSpecificationId),
+    DraughtingPreDefinedColour(DraughtingPreDefinedColourId),
+    PreDefinedColour(PreDefinedColourId),
     Complex(ComplexUnitId),
 }
 impl ColourRef {
@@ -2320,6 +2337,8 @@ impl ColourRef {
             AnyId::Colour(i) => Self::Colour(i),
             AnyId::ColourRgb(i) => Self::ColourRgb(i),
             AnyId::ColourSpecification(i) => Self::ColourSpecification(i),
+            AnyId::DraughtingPreDefinedColour(i) => Self::DraughtingPreDefinedColour(i),
+            AnyId::PreDefinedColour(i) => Self::PreDefinedColour(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ColourRef ref -> {other:?}"),
         }
@@ -6434,6 +6453,11 @@ pub struct Direction {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingPreDefinedColour {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedCurveFont {
     pub name: String,
 }
@@ -7173,6 +7197,11 @@ pub struct PositionTolerance {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedColour {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedCurveFont {
     pub name: String,
 }
@@ -7670,7 +7699,7 @@ pub struct SurfaceStyleFillArea {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceStyleParameterLine {
     pub style_of_parameter_lines: CurveOrRenderRef,
-    pub direction_counts: Vec<MeasureValue>,
+    pub direction_counts: Vec<IntMeasureValue>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8152,6 +8181,7 @@ pub enum UnitPart {
     Direction {
         direction_ratios: Vec<f64>,
     },
+    DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont,
     Edge {
         edge_start: Option<VertexRef>,
@@ -8369,6 +8399,7 @@ pub enum UnitPart {
         polygon: Vec<CartesianPointRef>,
     },
     PositionTolerance,
+    PreDefinedColour,
     PreDefinedCurveFont,
     PreDefinedItem {
         name: String,
@@ -8553,7 +8584,7 @@ pub enum UnitPart {
     },
     SurfaceStyleParameterLine {
         style_of_parameter_lines: CurveOrRenderRef,
-        direction_counts: Vec<MeasureValue>,
+        direction_counts: Vec<IntMeasureValue>,
     },
     SurfaceStyleReflectanceAmbient {
         ambient_reflectance: f64,
@@ -8743,6 +8774,7 @@ pub struct Model {
     pub dimensional_sizes: Arena<DimensionalSize>,
     pub dimensional_size_with_paths: Arena<DimensionalSizeWithPath>,
     pub directions: Arena<Direction>,
+    pub draughting_pre_defined_colours: Arena<DraughtingPreDefinedColour>,
     pub draughting_pre_defined_curve_fonts: Arena<DraughtingPreDefinedCurveFont>,
     pub edges: Arena<Edge>,
     pub edge_curves: Arena<EdgeCurve>,
@@ -8846,6 +8878,7 @@ pub struct Model {
     pub poly_loops: Arena<PolyLoop>,
     pub polylines: Arena<Polyline>,
     pub position_tolerances: Arena<PositionTolerance>,
+    pub pre_defined_colours: Arena<PreDefinedColour>,
     pub pre_defined_curve_fonts: Arena<PreDefinedCurveFont>,
     pub pre_defined_items: Arena<PreDefinedItem>,
     pub pre_defined_markers: Arena<PreDefinedMarker>,

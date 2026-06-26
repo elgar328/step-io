@@ -33,6 +33,11 @@ pub enum Kind {
     /// String}`). Carries the alias name. Named members are Typed-wrapped on the
     /// wire (`IDENTIFIER('x')`).
     StringSelect(String),
+    /// A select-of-named-integers (all members integer, e.g. SELECT(u_direction
+    /// _count, v_direction_count)) -> `IntMeasureValue` (`{type_name: Option<
+    /// String>, value: i64}`). Like MeasureSelect but integer-valued, so counts
+    /// round-trip as Part-21 integers rather than being widened to reals.
+    IntSelect(String),
 }
 
 pub const MAX_DEPTH: u32 = 64;
@@ -118,6 +123,19 @@ impl<'a> Resolver<'a> {
         })
     }
 
+    /// True when every member of a SELECT resolves to `Kind::Int` — an
+    /// integer-only select-of-scalars, modeled as `IntMeasureValue` so the
+    /// integers are preserved (vs the real-valued MeasureSelect which widens to
+    /// f64). Must be checked before `is_measure_select`, which also accepts Int.
+    pub fn is_int_select(&self, members: &[&str], depth: u32) -> bool {
+        if depth >= MAX_DEPTH {
+            return false;
+        }
+        members
+            .iter()
+            .all(|m| matches!(self.classify(m, depth + 1), Kind::Int))
+    }
+
     /// Resolve a `ty` token to a [`Kind`]. `OPTIONAL` is stripped by the caller
     /// (tracked as a separate flag); this strips defensively too.
     pub fn classify(&self, ty: &str, depth: u32) -> Kind {
@@ -151,6 +169,12 @@ impl<'a> Resolver<'a> {
                 // numeric measure check below also accepts Str).
                 if self.is_string_select(&members, depth + 1) {
                     return Kind::StringSelect(t.to_string());
+                }
+                // All-integer select -> IntMeasureValue (preserve integers).
+                // Must precede the measure check, which also accepts Int and
+                // would widen to f64.
+                if self.is_int_select(&members, depth + 1) {
+                    return Kind::IntSelect(t.to_string());
                 }
                 // All-scalar (numeric) select -> MeasureValue (select-of-scalars).
                 if self.is_measure_select(&members, depth + 1) {

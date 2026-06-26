@@ -82,6 +82,28 @@ fn read_string_select(a: &Attribute) -> StringSelectValue {
         other => panic!("expected string_select, got {other:?}"),
     }
 }
+fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
+    // Integer-valued select-of-scalars (mirrors read_measure_value but keeps the
+    // value as i64). A non-standard real literal is truncated (NORM).
+    fn int_of(a: &Attribute) -> i64 {
+        match a {
+            Attribute::Integer(i) => *i,
+            Attribute::Real(r) => *r as i64,
+            other => panic!("expected measure int, got {other:?}"),
+        }
+    }
+    match a {
+        Attribute::Typed { type_name, value } => IntMeasureValue {
+            type_name: Some(type_name.clone()),
+            value: int_of(value),
+        },
+        Attribute::Integer(_) | Attribute::Real(_) => IntMeasureValue {
+            type_name: None,
+            value: int_of(a),
+        },
+        other => panic!("expected int_measure_value, got {other:?}"),
+    }
+}
 
 pub const SIMPLE_NAMES: &[&str] = &[
     "ACTION",
@@ -192,6 +214,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DIMENSIONAL_SIZE",
     "DIMENSIONAL_SIZE_WITH_PATH",
     "DIRECTION",
+    "DRAUGHTING_PRE_DEFINED_COLOUR",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
     "EDGE",
     "EDGE_CURVE",
@@ -294,6 +317,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "POLY_LOOP",
     "POLYLINE",
     "POSITION_TOLERANCE",
+    "PRE_DEFINED_COLOUR",
     "PRE_DEFINED_CURVE_FONT",
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
@@ -474,6 +498,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DESIGN_CONTEXT",
     "DIMENSIONAL_SIZE",
     "DIRECTION",
+    "DRAUGHTING_PRE_DEFINED_COLOUR",
     "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
     "EDGE",
     "EDGE_CURVE",
@@ -554,6 +579,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "POINT_STYLE",
     "POLY_LOOP",
     "POSITION_TOLERANCE",
+    "PRE_DEFINED_COLOUR",
     "PRE_DEFINED_CURVE_FONT",
     "PRE_DEFINED_ITEM",
     "PRE_DEFINED_MARKER",
@@ -2265,7 +2291,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "curve_colour",
-                allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+                allowed: &[
+                    "COLOUR",
+                    "COLOUR_RGB",
+                    "COLOUR_SPECIFICATION",
+                    "DRAUGHTING_PRE_DEFINED_COLOUR",
+                    "PRE_DEFINED_COLOUR",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3041,7 +3073,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "FILL_AREA_STYLE_COLOUR" => &[RefSlot {
             idx: 1,
             name: "fill_colour",
-            allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+            allowed: &[
+                "COLOUR",
+                "COLOUR_RGB",
+                "COLOUR_SPECIFICATION",
+                "DRAUGHTING_PRE_DEFINED_COLOUR",
+                "PRE_DEFINED_COLOUR",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -3108,7 +3146,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "region_colour",
-                allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+                allowed: &[
+                    "COLOUR",
+                    "COLOUR_RGB",
+                    "COLOUR_SPECIFICATION",
+                    "DRAUGHTING_PRE_DEFINED_COLOUR",
+                    "PRE_DEFINED_COLOUR",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4981,7 +5025,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "marker_colour",
-                allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+                allowed: &[
+                    "COLOUR",
+                    "COLOUR_RGB",
+                    "COLOUR_SPECIFICATION",
+                    "DRAUGHTING_PRE_DEFINED_COLOUR",
+                    "PRE_DEFINED_COLOUR",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -6931,7 +6981,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "SURFACE_RENDERING_PROPERTIES" => &[RefSlot {
             idx: 0,
             name: "rendered_colour",
-            allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+            allowed: &[
+                "COLOUR",
+                "COLOUR_RGB",
+                "COLOUR_SPECIFICATION",
+                "DRAUGHTING_PRE_DEFINED_COLOUR",
+                "PRE_DEFINED_COLOUR",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -6982,7 +7038,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "SURFACE_STYLE_RENDERING" => &[RefSlot {
             idx: 1,
             name: "surface_colour",
-            allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+            allowed: &[
+                "COLOUR",
+                "COLOUR_RGB",
+                "COLOUR_SPECIFICATION",
+                "DRAUGHTING_PRE_DEFINED_COLOUR",
+                "PRE_DEFINED_COLOUR",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -6990,7 +7052,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "surface_colour",
-                allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+                allowed: &[
+                    "COLOUR",
+                    "COLOUR_RGB",
+                    "COLOUR_SPECIFICATION",
+                    "DRAUGHTING_PRE_DEFINED_COLOUR",
+                    "PRE_DEFINED_COLOUR",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7057,7 +7125,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "SYMBOL_COLOUR" => &[RefSlot {
             idx: 0,
             name: "colour_of_symbol",
-            allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+            allowed: &[
+                "COLOUR",
+                "COLOUR_RGB",
+                "COLOUR_SPECIFICATION",
+                "DRAUGHTING_PRE_DEFINED_COLOUR",
+                "PRE_DEFINED_COLOUR",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -7168,7 +7242,13 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
         "TEXT_STYLE_FOR_DEFINED_FONT" => &[RefSlot {
             idx: 0,
             name: "text_colour",
-            allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+            allowed: &[
+                "COLOUR",
+                "COLOUR_RGB",
+                "COLOUR_SPECIFICATION",
+                "DRAUGHTING_PRE_DEFINED_COLOUR",
+                "PRE_DEFINED_COLOUR",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -7893,7 +7973,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "curve_colour",
-                allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+                allowed: &[
+                    "COLOUR",
+                    "COLOUR_RGB",
+                    "COLOUR_SPECIFICATION",
+                    "DRAUGHTING_PRE_DEFINED_COLOUR",
+                    "PRE_DEFINED_COLOUR",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8183,7 +8269,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "region_colour",
-                allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+                allowed: &[
+                    "COLOUR",
+                    "COLOUR_RGB",
+                    "COLOUR_SPECIFICATION",
+                    "DRAUGHTING_PRE_DEFINED_COLOUR",
+                    "PRE_DEFINED_COLOUR",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8916,7 +9008,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "marker_colour",
-                allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+                allowed: &[
+                    "COLOUR",
+                    "COLOUR_RGB",
+                    "COLOUR_SPECIFICATION",
+                    "DRAUGHTING_PRE_DEFINED_COLOUR",
+                    "PRE_DEFINED_COLOUR",
+                ],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9803,7 +9901,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
         "SURFACE_STYLE_RENDERING" => &[RefSlot {
             idx: 1,
             name: "surface_colour",
-            allowed: &["COLOUR", "COLOUR_RGB", "COLOUR_SPECIFICATION"],
+            allowed: &[
+                "COLOUR",
+                "COLOUR_RGB",
+                "COLOUR_SPECIFICATION",
+                "DRAUGHTING_PRE_DEFINED_COLOUR",
+                "PRE_DEFINED_COLOUR",
+            ],
             complex_ok: true,
             is_vec: false,
         }],
@@ -12034,6 +12138,16 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "DRAUGHTING_PRE_DEFINED_COLOUR" => {
+                let v = DraughtingPreDefinedColour {
+                    name: as_str(&attributes[0]),
+                };
+                let aid =
+                    DraughtingPreDefinedColourId(model.draughting_pre_defined_colours.push(v));
+                idmap.insert(id, AnyId::DraughtingPreDefinedColour(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => {
                 let v = DraughtingPreDefinedCurveFont {
                     name: as_str(&attributes[0]),
@@ -13664,6 +13778,15 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRE_DEFINED_COLOUR" => {
+                let v = PreDefinedColour {
+                    name: as_str(&attributes[0]),
+                };
+                let aid = PreDefinedColourId(model.pre_defined_colours.push(v));
+                idmap.insert(id, AnyId::PreDefinedColour(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRE_DEFINED_CURVE_FONT" => {
                 let v = PreDefinedCurveFont {
                     name: as_str(&attributes[0]),
@@ -14763,7 +14886,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                         usize::MAX,
                     )),
                     direction_counts: match &attributes[1] {
-                        Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(),
+                        Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e)).collect(),
                         other => panic!("vec: {other:?}"),
                     },
                 };
@@ -21208,6 +21331,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                     other => panic!("vec: {other:?}"),
                 },
             },
+            "DRAUGHTING_PRE_DEFINED_COLOUR" => UnitPart::DraughtingPreDefinedColour,
             "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
             "EDGE" => UnitPart::Edge {
                 edge_start: None,
@@ -21496,6 +21620,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
                 polygon: Vec::new(),
             },
             "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
+            "PRE_DEFINED_COLOUR" => UnitPart::PreDefinedColour,
             "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
             "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem {
                 name: as_str(&p.attributes[0]),
@@ -21792,7 +21917,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
             "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine {
                 style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
                 direction_counts: match &p.attributes[1] {
-                    Attribute::List(l) => l.iter().map(|e| read_measure_value(e)).collect(),
+                    Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e)).collect(),
                     other => panic!("vec: {other:?}"),
                 },
             },

@@ -1212,7 +1212,11 @@ application = ["application_protocol_definition"]
 # pre_defined_item (name:label, no refs). is_complex_part (part-bag); model_ir
 # handles the part-bag arm + simple read for any standalone appearance. escape 0.
 # (curve_style's font_select referrer is a separate presentation round.)
-draughting = ["draughting_pre_defined_curve_font"]
+# draughting_pre_defined_colour: sibling of the curve_font (pre_defined_item +
+# colour, no refs). cascade root via ColourRef (60k STYLED_ITEM chain). Also the
+# verification carrier for the IntSelect fix — it revives surface_style_parameter
+# _line so the U/V_DIRECTION_COUNT integer round-trip is actually exercised.
+draughting = ["draughting_pre_defined_curve_font", "draughting_pre_defined_colour"]
 # complex_triangulated_face: tessellated_* chain (scalar aggregates) on the
 # geometric_representation_item/representation_item closure; geometric_link =
 # face_or_surface SELECT(face_surface, surface), both already in the geometry/

@@ -2500,6 +2500,12 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "DRAUGHTING_PRE_DEFINED_COLOUR" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -4687,6 +4693,12 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PRE_DEFINED_COLOUR" => &[Slot {
+            k: Sk::Str,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "PRE_DEFINED_CURVE_FONT" => &[Slot {
             k: Sk::Str,
             req: true,
@@ -7435,6 +7447,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "DRAUGHTING_PRE_DEFINED_COLOUR" => &[],
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => &[],
         "EDGE" => &[
             Slot {
@@ -8039,6 +8052,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
         }],
         "POSITION_TOLERANCE" => &[],
+        "PRE_DEFINED_COLOUR" => &[],
         "PRE_DEFINED_CURVE_FONT" => &[],
         "PRE_DEFINED_ITEM" => &[Slot {
             k: Sk::Str,

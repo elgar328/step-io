@@ -32,6 +32,7 @@ fn kind_type(ir: &ModelIr, k: &Kind) -> String {
         Kind::Enum(a) => ir.enums[a].rust.clone(),
         Kind::MeasureSelect(_) => "MeasureValue".into(),
         Kind::StringSelect(_) => "StringSelectValue".into(),
+        Kind::IntSelect(_) => "IntMeasureValue".into(),
     }
 }
 
@@ -93,6 +94,12 @@ pub struct MeasureValue { pub type_name: Option<String>, pub value: f64 }
 /// = typed member `TYPE('s')`; `None` = bare string.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StringSelectValue { pub type_name: Option<String>, pub value: String }
+
+/// select-of-named-integers (e.g. SELECT(u_direction_count, v_direction_count)):
+/// `Some(type_name)` = typed member `TYPE(2)`; `None` = bare integer. Integer-
+/// valued so counts are not widened to reals.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
 
 "#,
     );
@@ -372,6 +379,18 @@ fn read_string_select(a: &Attribute) -> StringSelectValue {
         other => panic!("expected string_select, got {other:?}"),
     }
 }
+fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
+    // Integer-valued select-of-scalars (mirrors read_measure_value but keeps the
+    // value as i64). A non-standard real literal is truncated (NORM).
+    fn int_of(a: &Attribute) -> i64 {
+        match a { Attribute::Integer(i) => *i, Attribute::Real(r) => *r as i64, other => panic!("expected measure int, got {other:?}") }
+    }
+    match a {
+        Attribute::Typed { type_name, value } => IntMeasureValue { type_name: Some(type_name.clone()), value: int_of(value) },
+        Attribute::Integer(_) | Attribute::Real(_) => IntMeasureValue { type_name: None, value: int_of(a) },
+        other => panic!("expected int_measure_value, got {other:?}"),
+    }
+}
 
 "#,
     );
@@ -623,6 +642,7 @@ fn bind_scalar(ir: &ModelIr, k: &Kind, optional: bool, attr: &str) -> String {
         Kind::Binary => format!("as_str(&{attr})"),
         Kind::MeasureSelect(_) => format!("read_measure_value(&{attr})"),
         Kind::StringSelect(_) => format!("read_string_select(&{attr})"),
+        Kind::IntSelect(_) => format!("read_int_measure_value(&{attr})"),
         Kind::Enum(a) => {
             let ty = &ir.enums[a].rust;
             format!(
@@ -668,6 +688,7 @@ fn scalar_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
         ),
         Kind::MeasureSelect(_) => "read_measure_value(e)".to_string(),
         Kind::StringSelect(_) => "read_string_select(e)".to_string(),
+        Kind::IntSelect(_) => "read_int_measure_value(e)".to_string(),
         Kind::Vec(inner2) => {
             let e2 = scalar_vec_elem(ir, inner2);
             format!(
@@ -922,6 +943,9 @@ pub fn emit_write(ir: &ModelIr) -> String {
 }
 fn measure(m: &MeasureValue) -> String {
     match &m.type_name { Some(t) => format!("{t}({})", real(m.value)), None => real(m.value) }
+}
+fn int_measure(m: &IntMeasureValue) -> String {
+    match &m.type_name { Some(t) => format!("{t}({})", m.value), None => format!("{}", m.value) }
 }
 fn string_select(m: &StringSelectValue) -> String {
     match &m.type_name { Some(t) => format!("{t}({})", step_str(&m.value)), None => step_str(&m.value) }
@@ -1326,6 +1350,7 @@ fn render_scalar(_ir: &ModelIr, k: &Kind, access: &str) -> String {
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
         Kind::MeasureSelect(_) => format!("measure(&{access})"),
         Kind::StringSelect(_) => format!("string_select(&{access})"),
+        Kind::IntSelect(_) => format!("int_measure(&{access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
@@ -1342,6 +1367,7 @@ fn render_scalar_ref(_ir: &ModelIr, k: &Kind, access: &str) -> String {
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
         Kind::MeasureSelect(_) => format!("measure({access})"),
         Kind::StringSelect(_) => format!("string_select({access})"),
+        Kind::IntSelect(_) => format!("int_measure({access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
@@ -1367,6 +1393,7 @@ fn render_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
         Kind::Enum(_) => "e.token().to_string()".to_string(),
         Kind::MeasureSelect(_) => "measure(e)".to_string(),
         Kind::StringSelect(_) => "string_select(e)".to_string(),
+        Kind::IntSelect(_) => "int_measure(e)".to_string(),
         _ => "real(*e)".to_string(),
     }
 }
@@ -1637,6 +1664,9 @@ fn sk_variant(k: &Kind) -> &'static str {
         Kind::MeasureSelect(_) => "Meas",
         // string-select required `$` -> req-str<-$ normalizes to "" (read as bare).
         Kind::StringSelect(_) => "Str",
+        // int-select: same Unchanged normalize as measure; integer is preserved
+        // by read_int_measure_value / int_measure (no int->real coercion).
+        Kind::IntSelect(_) => "Meas",
     }
 }
 
