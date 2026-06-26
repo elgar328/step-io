@@ -172,6 +172,7 @@ pub struct Writer<'a> {
     conical_surface_ids: Vec<Option<u64>>,
     connected_face_set_ids: Vec<Option<u64>>,
     constructive_geometry_representation_ids: Vec<Option<u64>>,
+    constructive_geometry_representation_relationship_ids: Vec<Option<u64>>,
     context_dependent_over_riding_styled_item_ids: Vec<Option<u64>>,
     context_dependent_shape_representation_ids: Vec<Option<u64>>,
     context_dependent_unit_ids: Vec<Option<u64>>,
@@ -204,6 +205,8 @@ pub struct Writer<'a> {
     defined_character_glyph_ids: Vec<Option<u64>>,
     defined_symbol_ids: Vec<Option<u64>>,
     definitional_representation_ids: Vec<Option<u64>>,
+    definitional_representation_relationship_ids: Vec<Option<u64>>,
+    definitional_representation_relationship_with_same_context_ids: Vec<Option<u64>>,
     degenerate_toroidal_surface_ids: Vec<Option<u64>>,
     derived_shape_aspect_ids: Vec<Option<u64>>,
     derived_unit_ids: Vec<Option<u64>>,
@@ -284,6 +287,7 @@ pub struct Writer<'a> {
     group_assignment_ids: Vec<Option<u64>>,
     hyperbola_ids: Vec<Option<u64>>,
     id_attribute_ids: Vec<Option<u64>>,
+    identification_role_ids: Vec<Option<u64>>,
     int_literal_ids: Vec<Option<u64>>,
     integer_representation_item_ids: Vec<Option<u64>>,
     intersection_curve_ids: Vec<Option<u64>>,
@@ -308,7 +312,10 @@ pub struct Writer<'a> {
     measure_representation_item_ids: Vec<Option<u64>>,
     measure_with_unit_ids: Vec<Option<u64>>,
     mechanical_context_ids: Vec<Option<u64>>,
+    mechanical_design_and_draughting_relationship_ids: Vec<Option<u64>>,
     mechanical_design_geometric_presentation_representation_ids: Vec<Option<u64>>,
+    mechanical_design_presentation_representation_with_draughting_ids: Vec<Option<u64>>,
+    mechanical_design_shaded_presentation_representation_ids: Vec<Option<u64>>,
     model_geometric_view_ids: Vec<Option<u64>>,
     modified_geometric_tolerance_ids: Vec<Option<u64>>,
     named_unit_ids: Vec<Option<u64>>,
@@ -388,6 +395,7 @@ pub struct Writer<'a> {
     product_definition_relationship_relationship_ids: Vec<Option<u64>>,
     product_definition_shape_ids: Vec<Option<u64>>,
     product_definition_usage_ids: Vec<Option<u64>>,
+    product_definition_with_associated_document_ids: Vec<Option<u64>>,
     product_related_product_category_ids: Vec<Option<u64>>,
     property_definition_ids: Vec<Option<u64>>,
     property_definition_relationship_ids: Vec<Option<u64>>,
@@ -466,6 +474,7 @@ pub struct Writer<'a> {
     tessellated_geometric_set_ids: Vec<Option<u64>>,
     tessellated_item_ids: Vec<Option<u64>>,
     tessellated_shape_representation_ids: Vec<Option<u64>>,
+    tessellated_shell_ids: Vec<Option<u64>>,
     tessellated_solid_ids: Vec<Option<u64>>,
     tessellated_structured_item_ids: Vec<Option<u64>>,
     tessellated_surface_set_ids: Vec<Option<u64>>,
@@ -761,6 +770,13 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            constructive_geometry_representation_relationship_ids: vec![
+                None;
+                model
+                    .constructive_geometry_representation_relationships
+                    .items
+                    .len()
+            ],
             context_dependent_over_riding_styled_item_ids: vec![
                 None;
                 model
@@ -825,6 +841,20 @@ impl<'a> Writer<'a> {
             definitional_representation_ids: vec![
                 None;
                 model.definitional_representations.items.len()
+            ],
+            definitional_representation_relationship_ids: vec![
+                None;
+                model
+                    .definitional_representation_relationships
+                    .items
+                    .len()
+            ],
+            definitional_representation_relationship_with_same_context_ids: vec![
+                None;
+                model
+                    .definitional_representation_relationship_with_same_contexts
+                    .items
+                    .len()
             ],
             degenerate_toroidal_surface_ids: vec![
                 None;
@@ -1080,6 +1110,7 @@ impl<'a> Writer<'a> {
             group_assignment_ids: vec![None; model.group_assignments.items.len()],
             hyperbola_ids: vec![None; model.hyperbolas.items.len()],
             id_attribute_ids: vec![None; model.id_attributes.items.len()],
+            identification_role_ids: vec![None; model.identification_roles.items.len()],
             int_literal_ids: vec![None; model.int_literals.items.len()],
             integer_representation_item_ids: vec![
                 None;
@@ -1119,10 +1150,31 @@ impl<'a> Writer<'a> {
             ],
             measure_with_unit_ids: vec![None; model.measure_with_units.items.len()],
             mechanical_context_ids: vec![None; model.mechanical_contexts.items.len()],
+            mechanical_design_and_draughting_relationship_ids: vec![
+                None;
+                model
+                    .mechanical_design_and_draughting_relationships
+                    .items
+                    .len()
+            ],
             mechanical_design_geometric_presentation_representation_ids: vec![
                 None;
                 model
                     .mechanical_design_geometric_presentation_representations
+                    .items
+                    .len()
+            ],
+            mechanical_design_presentation_representation_with_draughting_ids: vec![
+                None;
+                model
+                    .mechanical_design_presentation_representation_with_draughtings
+                    .items
+                    .len()
+            ],
+            mechanical_design_shaded_presentation_representation_ids: vec![
+                None;
+                model
+                    .mechanical_design_shaded_presentation_representations
                     .items
                     .len()
             ],
@@ -1319,6 +1371,13 @@ impl<'a> Writer<'a> {
             ],
             product_definition_shape_ids: vec![None; model.product_definition_shapes.items.len()],
             product_definition_usage_ids: vec![None; model.product_definition_usages.items.len()],
+            product_definition_with_associated_document_ids: vec![
+                None;
+                model
+                    .product_definition_with_associated_documentss
+                    .items
+                    .len()
+            ],
             product_related_product_category_ids: vec![
                 None;
                 model
@@ -1508,6 +1567,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            tessellated_shell_ids: vec![None; model.tessellated_shells.items.len()],
             tessellated_solid_ids: vec![None; model.tessellated_solids.items.len()],
             tessellated_structured_item_ids: vec![
                 None;
@@ -1734,6 +1794,9 @@ impl<'a> Writer<'a> {
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0]
             }
+            AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
+                self.constructive_geometry_representation_relationship_ids[i.0]
+            }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 self.context_dependent_over_riding_styled_item_ids[i.0]
             }
@@ -1774,6 +1837,12 @@ impl<'a> Writer<'a> {
             AnyId::DefinedCharacterGlyph(i) => self.defined_character_glyph_ids[i.0],
             AnyId::DefinedSymbol(i) => self.defined_symbol_ids[i.0],
             AnyId::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0],
+            AnyId::DefinitionalRepresentationRelationship(i) => {
+                self.definitional_representation_relationship_ids[i.0]
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                self.definitional_representation_relationship_with_same_context_ids[i.0]
+            }
             AnyId::DegenerateToroidalSurface(i) => self.degenerate_toroidal_surface_ids[i.0],
             AnyId::DerivedShapeAspect(i) => self.derived_shape_aspect_ids[i.0],
             AnyId::DerivedUnit(i) => self.derived_unit_ids[i.0],
@@ -1898,6 +1967,7 @@ impl<'a> Writer<'a> {
             AnyId::GroupAssignment(i) => self.group_assignment_ids[i.0],
             AnyId::Hyperbola(i) => self.hyperbola_ids[i.0],
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0],
+            AnyId::IdentificationRole(i) => self.identification_role_ids[i.0],
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0],
             AnyId::IntegerRepresentationItem(i) => self.integer_representation_item_ids[i.0],
             AnyId::IntersectionCurve(i) => self.intersection_curve_ids[i.0],
@@ -1924,8 +1994,17 @@ impl<'a> Writer<'a> {
             AnyId::MeasureRepresentationItem(i) => self.measure_representation_item_ids[i.0],
             AnyId::MeasureWithUnit(i) => self.measure_with_unit_ids[i.0],
             AnyId::MechanicalContext(i) => self.mechanical_context_ids[i.0],
+            AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
+                self.mechanical_design_and_draughting_relationship_ids[i.0]
+            }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 self.mechanical_design_geometric_presentation_representation_ids[i.0]
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                self.mechanical_design_presentation_representation_with_draughting_ids[i.0]
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                self.mechanical_design_shaded_presentation_representation_ids[i.0]
             }
             AnyId::ModelGeometricView(i) => self.model_geometric_view_ids[i.0],
             AnyId::ModifiedGeometricTolerance(i) => self.modified_geometric_tolerance_ids[i.0],
@@ -2018,6 +2097,9 @@ impl<'a> Writer<'a> {
             }
             AnyId::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0],
             AnyId::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0],
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0]
+            }
             AnyId::ProductRelatedProductCategory(i) => {
                 self.product_related_product_category_ids[i.0]
             }
@@ -2122,6 +2204,7 @@ impl<'a> Writer<'a> {
             AnyId::TessellatedShapeRepresentation(i) => {
                 self.tessellated_shape_representation_ids[i.0]
             }
+            AnyId::TessellatedShell(i) => self.tessellated_shell_ids[i.0],
             AnyId::TessellatedSolid(i) => self.tessellated_solid_ids[i.0],
             AnyId::TessellatedStructuredItem(i) => self.tessellated_structured_item_ids[i.0],
             AnyId::TessellatedSurfaceSet(i) => self.tessellated_surface_set_ids[i.0],
@@ -2338,6 +2421,9 @@ impl<'a> Writer<'a> {
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0] = Some(n)
             }
+            AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
+                self.constructive_geometry_representation_relationship_ids[i.0] = Some(n)
+            }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 self.context_dependent_over_riding_styled_item_ids[i.0] = Some(n)
             }
@@ -2383,6 +2469,12 @@ impl<'a> Writer<'a> {
             AnyId::DefinedSymbol(i) => self.defined_symbol_ids[i.0] = Some(n),
             AnyId::DefinitionalRepresentation(i) => {
                 self.definitional_representation_ids[i.0] = Some(n)
+            }
+            AnyId::DefinitionalRepresentationRelationship(i) => {
+                self.definitional_representation_relationship_ids[i.0] = Some(n)
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                self.definitional_representation_relationship_with_same_context_ids[i.0] = Some(n)
             }
             AnyId::DegenerateToroidalSurface(i) => {
                 self.degenerate_toroidal_surface_ids[i.0] = Some(n)
@@ -2530,6 +2622,7 @@ impl<'a> Writer<'a> {
             AnyId::GroupAssignment(i) => self.group_assignment_ids[i.0] = Some(n),
             AnyId::Hyperbola(i) => self.hyperbola_ids[i.0] = Some(n),
             AnyId::IdAttribute(i) => self.id_attribute_ids[i.0] = Some(n),
+            AnyId::IdentificationRole(i) => self.identification_role_ids[i.0] = Some(n),
             AnyId::IntLiteral(i) => self.int_literal_ids[i.0] = Some(n),
             AnyId::IntegerRepresentationItem(i) => {
                 self.integer_representation_item_ids[i.0] = Some(n)
@@ -2562,8 +2655,18 @@ impl<'a> Writer<'a> {
             }
             AnyId::MeasureWithUnit(i) => self.measure_with_unit_ids[i.0] = Some(n),
             AnyId::MechanicalContext(i) => self.mechanical_context_ids[i.0] = Some(n),
+            AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
+                self.mechanical_design_and_draughting_relationship_ids[i.0] = Some(n)
+            }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 self.mechanical_design_geometric_presentation_representation_ids[i.0] = Some(n)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                self.mechanical_design_presentation_representation_with_draughting_ids[i.0] =
+                    Some(n)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                self.mechanical_design_shaded_presentation_representation_ids[i.0] = Some(n)
             }
             AnyId::ModelGeometricView(i) => self.model_geometric_view_ids[i.0] = Some(n),
             AnyId::ModifiedGeometricTolerance(i) => {
@@ -2698,6 +2801,9 @@ impl<'a> Writer<'a> {
             }
             AnyId::ProductDefinitionShape(i) => self.product_definition_shape_ids[i.0] = Some(n),
             AnyId::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0] = Some(n),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0] = Some(n)
+            }
             AnyId::ProductRelatedProductCategory(i) => {
                 self.product_related_product_category_ids[i.0] = Some(n)
             }
@@ -2820,6 +2926,7 @@ impl<'a> Writer<'a> {
             AnyId::TessellatedShapeRepresentation(i) => {
                 self.tessellated_shape_representation_ids[i.0] = Some(n)
             }
+            AnyId::TessellatedShell(i) => self.tessellated_shell_ids[i.0] = Some(n),
             AnyId::TessellatedSolid(i) => self.tessellated_solid_ids[i.0] = Some(n),
             AnyId::TessellatedStructuredItem(i) => {
                 self.tessellated_structured_item_ids[i.0] = Some(n)
@@ -3655,6 +3762,9 @@ impl<'a> Writer<'a> {
             CcPersonOrganizationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => self
                 .product_definition_formation_with_specified_source_ids[i.0]
                 .expect("dep id assigned"),
+            CcPersonOrganizationItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
             CcPersonOrganizationItemRef::SecurityClassification(i) => {
                 self.security_classification_ids[i.0].expect("dep id assigned")
             }
@@ -3687,6 +3797,9 @@ impl<'a> Writer<'a> {
             }
             CcPersonOrganizationItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 out.push(AnyId::ProductDefinitionFormationWithSpecifiedSource(*i))
+            }
+            CcPersonOrganizationItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
             }
             CcPersonOrganizationItemRef::SecurityClassification(i) => {
                 out.push(AnyId::SecurityClassification(*i))
@@ -3961,6 +4074,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::ProductDefinitionUsage(i) => {
                 self.product_definition_usage_ids[i.0].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::RoundnessTolerance(i) => {
                 self.roundness_tolerance_ids[i.0].expect("dep id assigned")
             }
@@ -4144,6 +4260,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::ProductDefinitionUsage(i) => {
                 out.push(AnyId::ProductDefinitionUsage(*i))
             }
+            CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
             CharacterizedDefinitionRef::RoundnessTolerance(i) => {
                 out.push(AnyId::RoundnessTolerance(*i))
             }
@@ -4295,6 +4414,9 @@ impl<'a> Writer<'a> {
             ConfigurationDesignItemRef::ProductDefinitionOccurrence(i) => {
                 self.product_definition_occurrence_ids[i.0].expect("dep id assigned")
             }
+            ConfigurationDesignItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
             ConfigurationDesignItemRef::Complex(i) => {
                 self.complex_ids[i.0].expect("dep id assigned")
             }
@@ -4314,6 +4436,9 @@ impl<'a> Writer<'a> {
             }
             ConfigurationDesignItemRef::ProductDefinitionOccurrence(i) => {
                 out.push(AnyId::ProductDefinitionOccurrence(*i))
+            }
+            ConfigurationDesignItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
             }
             ConfigurationDesignItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
@@ -4349,6 +4474,64 @@ impl<'a> Writer<'a> {
             ConfigurationItemRef::ConfigurationItem(i) => out.push(AnyId::ConfigurationItem(*i)),
             ConfigurationItemRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
+    }
+
+    fn id_of_ref_connected_face_set(&self, r: &ConnectedFaceSetRef) -> u64 {
+        match r {
+            ConnectedFaceSetRef::ClosedShell(i) => {
+                self.closed_shell_ids[i.0].expect("dep id assigned")
+            }
+            ConnectedFaceSetRef::ConnectedFaceSet(i) => {
+                self.connected_face_set_ids[i.0].expect("dep id assigned")
+            }
+            ConnectedFaceSetRef::OpenShell(i) => self.open_shell_ids[i.0].expect("dep id assigned"),
+            ConnectedFaceSetRef::OrientedClosedShell(i) => {
+                self.oriented_closed_shell_ids[i.0].expect("dep id assigned")
+            }
+            ConnectedFaceSetRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_connected_face_set(r: &ConnectedFaceSetRef, out: &mut Vec<AnyId>) {
+        match r {
+            ConnectedFaceSetRef::ClosedShell(i) => out.push(AnyId::ClosedShell(*i)),
+            ConnectedFaceSetRef::ConnectedFaceSet(i) => out.push(AnyId::ConnectedFaceSet(*i)),
+            ConnectedFaceSetRef::OpenShell(i) => out.push(AnyId::OpenShell(*i)),
+            ConnectedFaceSetRef::OrientedClosedShell(i) => out.push(AnyId::OrientedClosedShell(*i)),
+            ConnectedFaceSetRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_constructive_geometry_representation_or_shape_representation(
+        &self,
+        r: &ConstructiveGeometryRepresentationOrShapeRepresentationRef,
+    ) -> u64 {
+        match r {
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0].expect("dep id assigned"),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+    }
+    }
+
+    fn deps_ref_constructive_geometry_representation_or_shape_representation(
+        r: &ConstructiveGeometryRepresentationOrShapeRepresentationRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => out.push(AnyId::ConstructiveGeometryRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => out.push(AnyId::TessellatedShapeRepresentation(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+    }
     }
 
     fn id_of_ref_contract_type(&self, r: &ContractTypeRef) -> u64 {
@@ -4920,6 +5103,12 @@ impl<'a> Writer<'a> {
             DateAndTimeItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
+            DateAndTimeItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self
+                .mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                .expect("dep id assigned"),
+            DateAndTimeItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
             DateAndTimeItemRef::NextAssemblyUsageOccurrence(i) => {
                 self.next_assembly_usage_occurrence_ids[i.0].expect("dep id assigned")
             }
@@ -4975,6 +5164,9 @@ impl<'a> Writer<'a> {
             }
             DateAndTimeItemRef::ProductDefinitionUsage(i) => {
                 self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            DateAndTimeItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
             }
             DateAndTimeItemRef::PropertyDefinition(i) => {
                 self.property_definition_ids[i.0].expect("dep id assigned")
@@ -5079,6 +5271,12 @@ impl<'a> Writer<'a> {
             DateAndTimeItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
                 AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
             ),
+            DateAndTimeItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            DateAndTimeItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
             DateAndTimeItemRef::NextAssemblyUsageOccurrence(i) => {
                 out.push(AnyId::NextAssemblyUsageOccurrence(*i))
             }
@@ -5126,6 +5324,9 @@ impl<'a> Writer<'a> {
             }
             DateAndTimeItemRef::ProductDefinitionUsage(i) => {
                 out.push(AnyId::ProductDefinitionUsage(*i))
+            }
+            DateAndTimeItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
             }
             DateAndTimeItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
             DateAndTimeItemRef::PropertyDefinitionRepresentation(i) => {
@@ -5207,6 +5408,9 @@ impl<'a> Writer<'a> {
             DateTimeItemRef::ProductDefinition(i) => {
                 self.product_definition_ids[i.0].expect("dep id assigned")
             }
+            DateTimeItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
             DateTimeItemRef::SecurityClassification(i) => {
                 self.security_classification_ids[i.0].expect("dep id assigned")
             }
@@ -5228,6 +5432,9 @@ impl<'a> Writer<'a> {
             DateTimeItemRef::ChangeRequest(i) => out.push(AnyId::ChangeRequest(*i)),
             DateTimeItemRef::Contract(i) => out.push(AnyId::Contract(*i)),
             DateTimeItemRef::ProductDefinition(i) => out.push(AnyId::ProductDefinition(*i)),
+            DateTimeItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
             DateTimeItemRef::SecurityClassification(i) => {
                 out.push(AnyId::SecurityClassification(*i))
             }
@@ -5784,6 +5991,22 @@ impl<'a> Writer<'a> {
         match r {
             DirectionRef::Direction(i) => out.push(AnyId::Direction(*i)),
             DirectionRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+        }
+    }
+
+    fn id_of_ref_document(&self, r: &DocumentRef) -> u64 {
+        match r {
+            DocumentRef::Document(i) => self.document_ids[i.0].expect("dep id assigned"),
+            DocumentRef::DocumentFile(i) => self.document_file_ids[i.0].expect("dep id assigned"),
+            DocumentRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_document(r: &DocumentRef, out: &mut Vec<AnyId>) {
+        match r {
+            DocumentRef::Document(i) => out.push(AnyId::Document(*i)),
+            DocumentRef::DocumentFile(i) => out.push(AnyId::DocumentFile(*i)),
+            DocumentRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
     }
 
@@ -7024,6 +7247,9 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            GeometricModelItemRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
+            }
             GeometricModelItemRef::TessellatedSolid(i) => {
                 self.tessellated_solid_ids[i.0].expect("dep id assigned")
             }
@@ -7222,6 +7448,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             GeometricModelItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            GeometricModelItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
             GeometricModelItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             GeometricModelItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
@@ -7803,6 +8030,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::ConstructiveGeometryRepresentationRelationship(i) => self
+                .constructive_geometry_representation_relationship_ids[i.0]
+                .expect("dep id assigned"),
             GroupableItemRef::ContextDependentOverRidingStyledItem(i) => {
                 self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
@@ -7860,6 +8090,12 @@ impl<'a> Writer<'a> {
             GroupableItemRef::DefinitionalRepresentation(i) => {
                 self.definitional_representation_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::DefinitionalRepresentationRelationship(i) => {
+                self.definitional_representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => self
+                .definitional_representation_relationship_with_same_context_ids[i.0]
+                .expect("dep id assigned"),
             GroupableItemRef::DegenerateToroidalSurface(i) => {
                 self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned")
             }
@@ -8010,8 +8246,17 @@ impl<'a> Writer<'a> {
             GroupableItemRef::MeasureWithUnit(i) => {
                 self.measure_with_unit_ids[i.0].expect("dep id assigned")
             }
+            GroupableItemRef::MechanicalDesignAndDraughtingRelationship(i) => self
+                .mechanical_design_and_draughting_relationship_ids[i.0]
+                .expect("dep id assigned"),
             GroupableItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            GroupableItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self
+                .mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                .expect("dep id assigned"),
+            GroupableItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
             GroupableItemRef::NamedUnit(i) => self.named_unit_ids[i.0].expect("dep id assigned"),
             GroupableItemRef::NextAssemblyUsageOccurrence(i) => {
@@ -8126,6 +8371,9 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::ProductDefinitionUsage(i) => {
                 self.product_definition_usage_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::PropertyDefinition(i) => {
                 self.property_definition_ids[i.0].expect("dep id assigned")
@@ -8249,6 +8497,9 @@ impl<'a> Writer<'a> {
             }
             GroupableItemRef::TessellatedShapeRepresentation(i) => {
                 self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            GroupableItemRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
             }
             GroupableItemRef::TessellatedSolid(i) => {
                 self.tessellated_solid_ids[i.0].expect("dep id assigned")
@@ -8436,6 +8687,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::ConstructiveGeometryRepresentation(i) => {
                 out.push(AnyId::ConstructiveGeometryRepresentation(*i))
             }
+            GroupableItemRef::ConstructiveGeometryRepresentationRelationship(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentationRelationship(*i))
+            }
             GroupableItemRef::ContextDependentOverRidingStyledItem(i) => {
                 out.push(AnyId::ContextDependentOverRidingStyledItem(*i))
             }
@@ -8474,6 +8728,12 @@ impl<'a> Writer<'a> {
             GroupableItemRef::DefinedSymbol(i) => out.push(AnyId::DefinedSymbol(*i)),
             GroupableItemRef::DefinitionalRepresentation(i) => {
                 out.push(AnyId::DefinitionalRepresentation(*i))
+            }
+            GroupableItemRef::DefinitionalRepresentationRelationship(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationship(*i))
+            }
+            GroupableItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationshipWithSameContext(*i))
             }
             GroupableItemRef::DegenerateToroidalSurface(i) => {
                 out.push(AnyId::DegenerateToroidalSurface(*i))
@@ -8581,9 +8841,18 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::MeasureRepresentationItem(*i))
             }
             GroupableItemRef::MeasureWithUnit(i) => out.push(AnyId::MeasureWithUnit(*i)),
+            GroupableItemRef::MechanicalDesignAndDraughtingRelationship(i) => {
+                out.push(AnyId::MechanicalDesignAndDraughtingRelationship(*i))
+            }
             GroupableItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
                 AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
             ),
+            GroupableItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            GroupableItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
             GroupableItemRef::NamedUnit(i) => out.push(AnyId::NamedUnit(*i)),
             GroupableItemRef::NextAssemblyUsageOccurrence(i) => {
                 out.push(AnyId::NextAssemblyUsageOccurrence(*i))
@@ -8670,6 +8939,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::ProductDefinitionUsage(i) => {
                 out.push(AnyId::ProductDefinitionUsage(*i))
             }
+            GroupableItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
+            }
             GroupableItemRef::PropertyDefinition(i) => out.push(AnyId::PropertyDefinition(*i)),
             GroupableItemRef::PropertyDefinitionRepresentation(i) => {
                 out.push(AnyId::PropertyDefinitionRepresentation(*i))
@@ -8753,6 +9025,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::TessellatedShapeRepresentation(i) => {
                 out.push(AnyId::TessellatedShapeRepresentation(*i))
             }
+            GroupableItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
             GroupableItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             GroupableItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
@@ -8947,6 +9220,13 @@ impl<'a> Writer<'a> {
             }
             IdAttributeSelectRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            IdAttributeSelectRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                self.mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                    .expect("dep id assigned")
+            }
+            IdAttributeSelectRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
             IdAttributeSelectRef::ModifiedGeometricTolerance(i) => {
                 self.modified_geometric_tolerance_ids[i.0].expect("dep id assigned")
@@ -9191,6 +9471,12 @@ impl<'a> Writer<'a> {
                 .push(AnyId::MechanicalDesignGeometricPresentationRepresentation(
                     *i,
                 )),
+            IdAttributeSelectRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            IdAttributeSelectRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
             IdAttributeSelectRef::ModifiedGeometricTolerance(i) => {
                 out.push(AnyId::ModifiedGeometricTolerance(*i))
             }
@@ -9352,6 +9638,12 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
+            InvisibleItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self
+                .mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                .expect("dep id assigned"),
+            InvisibleItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
             InvisibleItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
@@ -9449,6 +9741,12 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
                 AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
             ),
+            InvisibleItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            InvisibleItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
             InvisibleItemRef::OverRidingStyledItem(i) => out.push(AnyId::OverRidingStyledItem(*i)),
             InvisibleItemRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             InvisibleItemRef::PresentationLayerAssignment(i) => {
@@ -9819,6 +10117,9 @@ impl<'a> Writer<'a> {
             LayeredItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            LayeredItemRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
+            }
             LayeredItemRef::TessellatedSolid(i) => {
                 self.tessellated_solid_ids[i.0].expect("dep id assigned")
             }
@@ -10060,6 +10361,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             LayeredItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            LayeredItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
             LayeredItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             LayeredItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
@@ -10259,6 +10561,44 @@ impl<'a> Writer<'a> {
             }
             MeasureWithUnitRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
+    }
+
+    fn id_of_ref_mechanical_design_and_draughting_relationship_select(
+        &self,
+        r: &MechanicalDesignAndDraughtingRelationshipSelectRef,
+    ) -> u64 {
+        match r {
+        MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::DraughtingModel(i) => self.draughting_model_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self.mechanical_design_presentation_representation_with_draughting_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignShadedPresentationRepresentation(i) => self.mechanical_design_shaded_presentation_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0].expect("dep id assigned"),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => self.complex_ids[i.0].expect("dep id assigned"),
+    }
+    }
+
+    fn deps_ref_mechanical_design_and_draughting_relationship_select(
+        r: &MechanicalDesignAndDraughtingRelationshipSelectRef,
+        out: &mut Vec<AnyId>,
+    ) {
+        match r {
+        MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(i) => out.push(AnyId::AdvancedBrepShapeRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::DraughtingModel(i) => out.push(AnyId::DraughtingModel(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::MechanicalDesignShadedPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeDimensionRepresentation(i) => out.push(AnyId::ShapeDimensionRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentation(i) => out.push(AnyId::ShapeRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::TessellatedShapeRepresentation(i) => out.push(AnyId::TessellatedShapeRepresentation(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
+    }
     }
 
     fn id_of_ref_named_unit(&self, r: &NamedUnitRef) -> u64 {
@@ -10834,6 +11174,9 @@ impl<'a> Writer<'a> {
             ProductDefinitionOrReferenceRef::ProductDefinitionOccurrence(i) => {
                 self.product_definition_occurrence_ids[i.0].expect("dep id assigned")
             }
+            ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                self.product_definition_with_associated_document_ids[i.0].expect("dep id assigned")
+            }
             ProductDefinitionOrReferenceRef::Complex(i) => {
                 self.complex_ids[i.0].expect("dep id assigned")
             }
@@ -10853,6 +11196,9 @@ impl<'a> Writer<'a> {
             }
             ProductDefinitionOrReferenceRef::ProductDefinitionOccurrence(i) => {
                 out.push(AnyId::ProductDefinitionOccurrence(*i))
+            }
+            ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                out.push(AnyId::ProductDefinitionWithAssociatedDocuments(*i))
             }
             ProductDefinitionOrReferenceRef::Complex(i) => out.push(AnyId::ComplexUnit(*i)),
         }
@@ -11396,6 +11742,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            RepresentationItemRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
+            }
             RepresentationItemRef::TessellatedSolid(i) => {
                 self.tessellated_solid_ids[i.0].expect("dep id assigned")
             }
@@ -11670,6 +12019,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             RepresentationItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            RepresentationItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
             RepresentationItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             RepresentationItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
@@ -11730,6 +12080,8 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self.mechanical_design_presentation_representation_with_draughting_ids[i.0].expect("dep id assigned"),
+        RepresentationOrRepresentationReferenceRef::MechanicalDesignShadedPresentationRepresentation(i) => self.mechanical_design_shaded_presentation_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::PresentationArea(i) => self.presentation_area_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::PresentationRepresentation(i) => self.presentation_representation_ids[i.0].expect("dep id assigned"),
         RepresentationOrRepresentationReferenceRef::PresentationView(i) => self.presentation_view_ids[i.0].expect("dep id assigned"),
@@ -11756,6 +12108,8 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(AnyId::GeometricallyBoundedWireframeShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::ManifoldSurfaceShapeRepresentation(i) => out.push(AnyId::ManifoldSurfaceShapeRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(*i)),
+        RepresentationOrRepresentationReferenceRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+        RepresentationOrRepresentationReferenceRef::MechanicalDesignShadedPresentationRepresentation(i) => out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
         RepresentationOrRepresentationReferenceRef::PresentationRepresentation(i) => out.push(AnyId::PresentationRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::PresentationView(i) => out.push(AnyId::PresentationView(*i)),
@@ -11794,6 +12148,12 @@ impl<'a> Writer<'a> {
             }
             RepresentationRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            RepresentationRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self
+                .mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                .expect("dep id assigned"),
+            RepresentationRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
             RepresentationRef::PresentationArea(i) => {
                 self.presentation_area_ids[i.0].expect("dep id assigned")
@@ -11847,6 +12207,12 @@ impl<'a> Writer<'a> {
             RepresentationRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(
                 AnyId::MechanicalDesignGeometricPresentationRepresentation(*i),
             ),
+            RepresentationRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            RepresentationRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
             RepresentationRef::PresentationArea(i) => out.push(AnyId::PresentationArea(*i)),
             RepresentationRef::PresentationRepresentation(i) => {
                 out.push(AnyId::PresentationRepresentation(*i))
@@ -12510,6 +12876,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::ConstructiveGeometryRepresentation(i) => {
                 self.constructive_geometry_representation_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::ConstructiveGeometryRepresentationRelationship(i) => self
+                .constructive_geometry_representation_relationship_ids[i.0]
+                .expect("dep id assigned"),
             StyleContextSelectRef::ContextDependentOverRidingStyledItem(i) => {
                 self.context_dependent_over_riding_styled_item_ids[i.0].expect("dep id assigned")
             }
@@ -12532,6 +12901,12 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::DefinitionalRepresentation(i) => {
                 self.definitional_representation_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::DefinitionalRepresentationRelationship(i) => {
+                self.definitional_representation_relationship_ids[i.0].expect("dep id assigned")
+            }
+            StyleContextSelectRef::DefinitionalRepresentationRelationshipWithSameContext(i) => self
+                .definitional_representation_relationship_with_same_context_ids[i.0]
+                .expect("dep id assigned"),
             StyleContextSelectRef::DegenerateToroidalSurface(i) => {
                 self.degenerate_toroidal_surface_ids[i.0].expect("dep id assigned")
             }
@@ -12635,8 +13010,18 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::MeasureRepresentationItem(i) => {
                 self.measure_representation_item_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::MechanicalDesignAndDraughtingRelationship(i) => self
+                .mechanical_design_and_draughting_relationship_ids[i.0]
+                .expect("dep id assigned"),
             StyleContextSelectRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
+            StyleContextSelectRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                self.mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                    .expect("dep id assigned")
+            }
+            StyleContextSelectRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
             StyleContextSelectRef::OffsetSurface(i) => {
                 self.offset_surface_ids[i.0].expect("dep id assigned")
@@ -12783,6 +13168,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::TessellatedShapeRepresentation(i) => {
                 self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
             }
+            StyleContextSelectRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
+            }
             StyleContextSelectRef::TessellatedSolid(i) => {
                 self.tessellated_solid_ids[i.0].expect("dep id assigned")
             }
@@ -12925,6 +13313,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::ConstructiveGeometryRepresentation(i) => {
                 out.push(AnyId::ConstructiveGeometryRepresentation(*i))
             }
+            StyleContextSelectRef::ConstructiveGeometryRepresentationRelationship(i) => {
+                out.push(AnyId::ConstructiveGeometryRepresentationRelationship(*i))
+            }
             StyleContextSelectRef::ContextDependentOverRidingStyledItem(i) => {
                 out.push(AnyId::ContextDependentOverRidingStyledItem(*i))
             }
@@ -12940,6 +13331,12 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::DefinedSymbol(i) => out.push(AnyId::DefinedSymbol(*i)),
             StyleContextSelectRef::DefinitionalRepresentation(i) => {
                 out.push(AnyId::DefinitionalRepresentation(*i))
+            }
+            StyleContextSelectRef::DefinitionalRepresentationRelationship(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationship(*i))
+            }
+            StyleContextSelectRef::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                out.push(AnyId::DefinitionalRepresentationRelationshipWithSameContext(*i))
             }
             StyleContextSelectRef::DegenerateToroidalSurface(i) => {
                 out.push(AnyId::DegenerateToroidalSurface(*i))
@@ -13010,10 +13407,19 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::MeasureRepresentationItem(i) => {
                 out.push(AnyId::MeasureRepresentationItem(*i))
             }
+            StyleContextSelectRef::MechanicalDesignAndDraughtingRelationship(i) => {
+                out.push(AnyId::MechanicalDesignAndDraughtingRelationship(*i))
+            }
             StyleContextSelectRef::MechanicalDesignGeometricPresentationRepresentation(i) => out
                 .push(AnyId::MechanicalDesignGeometricPresentationRepresentation(
                     *i,
                 )),
+            StyleContextSelectRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            StyleContextSelectRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
             StyleContextSelectRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
             StyleContextSelectRef::OneDirectionRepeatFactor(i) => {
                 out.push(AnyId::OneDirectionRepeatFactor(*i))
@@ -13115,6 +13521,7 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::TessellatedShapeRepresentation(i) => {
                 out.push(AnyId::TessellatedShapeRepresentation(*i))
             }
+            StyleContextSelectRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
             StyleContextSelectRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             StyleContextSelectRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
@@ -13453,6 +13860,13 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
                 .mechanical_design_geometric_presentation_representation_ids[i.0]
                 .expect("dep id assigned"),
+            StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                self.mechanical_design_presentation_representation_with_draughting_ids[i.0]
+                    .expect("dep id assigned")
+            }
+            StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => self
+                .mechanical_design_shaded_presentation_representation_ids[i.0]
+                .expect("dep id assigned"),
             StyledItemTargetRef::OffsetSurface(i) => {
                 self.offset_surface_ids[i.0].expect("dep id assigned")
             }
@@ -13556,6 +13970,9 @@ impl<'a> Writer<'a> {
             }
             StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
                 self.tessellated_shape_representation_ids[i.0].expect("dep id assigned")
+            }
+            StyledItemTargetRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
             }
             StyledItemTargetRef::TessellatedSolid(i) => {
                 self.tessellated_solid_ids[i.0].expect("dep id assigned")
@@ -13743,6 +14160,12 @@ impl<'a> Writer<'a> {
                 .push(AnyId::MechanicalDesignGeometricPresentationRepresentation(
                     *i,
                 )),
+            StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                out.push(AnyId::MechanicalDesignPresentationRepresentationWithDraughting(*i))
+            }
+            StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                out.push(AnyId::MechanicalDesignShadedPresentationRepresentation(*i))
+            }
             StyledItemTargetRef::OffsetSurface(i) => out.push(AnyId::OffsetSurface(*i)),
             StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
                 out.push(AnyId::OneDirectionRepeatFactor(*i))
@@ -13809,6 +14232,7 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
                 out.push(AnyId::TessellatedShapeRepresentation(*i))
             }
+            StyledItemTargetRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
             StyledItemTargetRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             StyledItemTargetRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
@@ -14105,6 +14529,9 @@ impl<'a> Writer<'a> {
             TessellatedItemRef::TessellatedItem(i) => {
                 self.tessellated_item_ids[i.0].expect("dep id assigned")
             }
+            TessellatedItemRef::TessellatedShell(i) => {
+                self.tessellated_shell_ids[i.0].expect("dep id assigned")
+            }
             TessellatedItemRef::TessellatedSolid(i) => {
                 self.tessellated_solid_ids[i.0].expect("dep id assigned")
             }
@@ -14136,6 +14563,7 @@ impl<'a> Writer<'a> {
                 out.push(AnyId::TessellatedGeometricSet(*i))
             }
             TessellatedItemRef::TessellatedItem(i) => out.push(AnyId::TessellatedItem(*i)),
+            TessellatedItemRef::TessellatedShell(i) => out.push(AnyId::TessellatedShell(*i)),
             TessellatedItemRef::TessellatedSolid(i) => out.push(AnyId::TessellatedSolid(*i)),
             TessellatedItemRef::TessellatedStructuredItem(i) => {
                 out.push(AnyId::TessellatedStructuredItem(*i))
@@ -15276,6 +15704,16 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
+            AnyId::ConstructiveGeometryRepresentationRelationship(id) => {
+                let it = self
+                    .model
+                    .constructive_geometry_representation_relationships
+                    .get(id.0);
+                Self::deps_ref_constructive_geometry_representation_or_shape_representation(
+                    &it.rep_1, out,
+                );
+                Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
+            }
             AnyId::ContextDependentOverRidingStyledItem(id) => {
                 let it = self
                     .model
@@ -15429,6 +15867,22 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
+            AnyId::DefinitionalRepresentationRelationship(id) => {
+                let it = self
+                    .model
+                    .definitional_representation_relationships
+                    .get(id.0);
+                Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
+                Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(id) => {
+                let it = self
+                    .model
+                    .definitional_representation_relationship_with_same_contexts
+                    .get(id.0);
+                Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
+                Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
             }
             AnyId::DegenerateToroidalSurface(id) => {
                 let it = self.model.degenerate_toroidal_surfaces.get(id.0);
@@ -15808,6 +16262,7 @@ impl<'a> Writer<'a> {
                 let it = self.model.id_attributes.get(id.0);
                 Self::deps_ref_id_attribute_select(&it.identified_item, out);
             }
+            AnyId::IdentificationRole(_) => {}
             AnyId::IntLiteral(_) => {}
             AnyId::IntegerRepresentationItem(_) => {}
             AnyId::IntersectionCurve(id) => {
@@ -15912,10 +16367,38 @@ impl<'a> Writer<'a> {
                 let it = self.model.mechanical_contexts.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
+            AnyId::MechanicalDesignAndDraughtingRelationship(id) => {
+                let it = self
+                    .model
+                    .mechanical_design_and_draughting_relationships
+                    .get(id.0);
+                Self::deps_ref_mechanical_design_and_draughting_relationship_select(&it.rep_1, out);
+                Self::deps_ref_mechanical_design_and_draughting_relationship_select(&it.rep_2, out);
+            }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(id) => {
                 let it = self
                     .model
                     .mechanical_design_geometric_presentation_representations
+                    .get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(id) => {
+                let it = self
+                    .model
+                    .mechanical_design_presentation_representation_with_draughtings
+                    .get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_representation_item(e, out);
+                }
+                Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(id) => {
+                let it = self
+                    .model
+                    .mechanical_design_shaded_presentation_representations
                     .get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
@@ -16258,6 +16741,17 @@ impl<'a> Writer<'a> {
                     out,
                 );
                 Self::deps_ref_product_definition_or_reference(&it.related_product_definition, out);
+            }
+            AnyId::ProductDefinitionWithAssociatedDocuments(id) => {
+                let it = self
+                    .model
+                    .product_definition_with_associated_documentss
+                    .get(id.0);
+                Self::deps_ref_product_definition_formation(&it.formation, out);
+                Self::deps_ref_product_definition_context(&it.frame_of_reference, out);
+                for e in &it.documentation_ids {
+                    Self::deps_ref_document(e, out);
+                }
             }
             AnyId::ProductRelatedProductCategory(id) => {
                 let it = self.model.product_related_product_categorys.get(id.0);
@@ -16617,6 +17111,15 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
+            }
+            AnyId::TessellatedShell(id) => {
+                let it = self.model.tessellated_shells.get(id.0);
+                for e in &it.items {
+                    Self::deps_ref_tessellated_structured_item(e, out);
+                }
+                if let Some(r) = &it.topological_link {
+                    Self::deps_ref_connected_face_set(r, out);
+                }
             }
             AnyId::TessellatedSolid(id) => {
                 let it = self.model.tessellated_solids.get(id.0);
@@ -17386,6 +17889,14 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_product_definition_relationship(relating, out);
                             Self::deps_ref_product_definition_relationship(related, out);
+                        }
+                        UnitPart::ProductDefinitionWithAssociatedDocuments {
+                            documentation_ids,
+                            ..
+                        } => {
+                            for e in documentation_ids {
+                                Self::deps_ref_document(e, out);
+                            }
                         }
                         UnitPart::ProductRelatedProductCategory { products, .. } => {
                             for e in products {
@@ -19536,6 +20047,18 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::ConstructiveGeometryRepresentationRelationship(id) => {
+                let it = self
+                    .model
+                    .constructive_geometry_representation_relationships
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![step_str(&it.name), match &it.description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_constructive_geometry_representation_or_shape_representation(&it.rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(&it.rep_2))];
+                format!(
+                    "#{n} = CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::ContextDependentOverRidingStyledItem(id) => {
                 let it = self
                     .model
@@ -20043,6 +20566,58 @@ impl<'a> Writer<'a> {
                     ),
                 ];
                 format!("#{n} = DEFINITIONAL_REPRESENTATION({});\n", attrs.join(","))
+            }
+            AnyId::DefinitionalRepresentationRelationship(id) => {
+                let it = self
+                    .model
+                    .definitional_representation_relationships
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_or_representation_reference(&it.rep_1)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_or_representation_reference(&it.rep_2)
+                    ),
+                ];
+                format!(
+                    "#{n} = DEFINITIONAL_REPRESENTATION_RELATIONSHIP({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(id) => {
+                let it = self
+                    .model
+                    .definitional_representation_relationship_with_same_contexts
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_or_representation_reference(&it.rep_1)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_or_representation_reference(&it.rep_2)
+                    ),
+                ];
+                format!(
+                    "#{n} = DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT({});\n",
+                    attrs.join(",")
+                )
             }
             AnyId::DegenerateToroidalSurface(id) => {
                 let it = self.model.degenerate_toroidal_surfaces.get(id.0);
@@ -21296,6 +21871,18 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = ID_ATTRIBUTE({});\n", attrs.join(","))
             }
+            AnyId::IdentificationRole(id) => {
+                let it = self.model.identification_roles.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = IDENTIFICATION_ROLE({});\n", attrs.join(","))
+            }
             AnyId::IntLiteral(id) => {
                 let it = self.model.int_literals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -21608,6 +22195,36 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = MECHANICAL_CONTEXT({});\n", attrs.join(","))
             }
+            AnyId::MechanicalDesignAndDraughtingRelationship(id) => {
+                let it = self
+                    .model
+                    .mechanical_design_and_draughting_relationships
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_mechanical_design_and_draughting_relationship_select(
+                            &it.rep_1
+                        )
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_mechanical_design_and_draughting_relationship_select(
+                            &it.rep_2
+                        )
+                    ),
+                ];
+                format!(
+                    "#{n} = MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(id) => {
                 let it = self
                     .model
@@ -21631,6 +22248,58 @@ impl<'a> Writer<'a> {
                 ];
                 format!(
                     "#{n} = MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(id) => {
+                let it = self
+                    .model
+                    .mechanical_design_presentation_representation_with_draughtings
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                ];
+                format!(
+                    "#{n} = MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING({});\n",
+                    attrs.join(",")
+                )
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(id) => {
+                let it = self
+                    .model
+                    .mechanical_design_shaded_presentation_representations
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_context(&it.context_of_items)
+                    ),
+                ];
+                format!(
+                    "#{n} = MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION({});\n",
                     attrs.join(",")
                 )
             }
@@ -22975,6 +23644,40 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = PRODUCT_DEFINITION_USAGE({});\n", attrs.join(","))
             }
+            AnyId::ProductDefinitionWithAssociatedDocuments(id) => {
+                let it = self
+                    .model
+                    .product_definition_with_associated_documentss
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.id),
+                    match &it.description {
+                        Some(x) => step_str(x),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition_formation(&it.formation)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_product_definition_context(&it.frame_of_reference)
+                    ),
+                    format!(
+                        "({})",
+                        it.documentation_ids
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_document(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                ];
+                format!(
+                    "#{n} = PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS({});\n",
+                    attrs.join(",")
+                )
+            }
             AnyId::ProductRelatedProductCategory(id) => {
                 let it = self.model.product_related_product_categorys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -24161,6 +24864,26 @@ impl<'a> Writer<'a> {
                     attrs.join(",")
                 )
             }
+            AnyId::TessellatedShell(id) => {
+                let it = self.model.tessellated_shells.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let attrs: Vec<String> = vec![
+                    step_str(&it.name),
+                    format!(
+                        "({})",
+                        it.items
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_tessellated_structured_item(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    match &it.topological_link {
+                        Some(r) => format!("#{}", self.id_of_ref_connected_face_set(r)),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = TESSELLATED_SHELL({});\n", attrs.join(","))
+            }
             AnyId::TessellatedSolid(id) => {
                 let it = self.model.tessellated_solids.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -24755,6 +25478,7 @@ impl<'a> Writer<'a> {
                 UnitPart::ConfigurationEffectivity { configuration, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_configuration_design(configuration))]; format!("CONFIGURATION_EFFECTIVITY({})", a.join(",")) },
                 UnitPart::ConfigurationItem { id, name, description, item_concept, purpose, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept(item_concept)), match purpose { Some(x) => step_str(x), None => "$".to_string() }]; format!("CONFIGURATION_ITEM({})", a.join(",")) },
                 UnitPart::ConnectedFaceSet { cfs_faces, .. } => { let a: Vec<String> = vec![match cfs_faces { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_face(e))).collect::<Vec<_>>().join(",")), None => "*".to_string() }]; format!("CONNECTED_FACE_SET({})", a.join(",")) },
+                UnitPart::ConstructiveGeometryRepresentationRelationship => "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP()".to_string(),
                 UnitPart::ContextDependentOverRidingStyledItem { style_context, .. } => { let a: Vec<String> = vec![format!("({})", style_context.iter().map(|e| format!("#{}", self.id_of_ref_style_context_select(e))).collect::<Vec<_>>().join(","))]; format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
                 UnitPart::ContextDependentUnit { name, .. } => { let a: Vec<String> = vec![step_str(name)]; format!("CONTEXT_DEPENDENT_UNIT({})", a.join(",")) },
                 UnitPart::ConversionBasedUnit { name, conversion_factor, .. } => { let a: Vec<String> = vec![step_str(name), format!("#{}", self.id_of_ref_measure_with_unit(conversion_factor))]; format!("CONVERSION_BASED_UNIT({})", a.join(",")) },
@@ -24775,6 +25499,8 @@ impl<'a> Writer<'a> {
                 UnitPart::DefinedCharacterGlyph { definition, placement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_defined_glyph_select(definition)), format!("#{}", self.id_of_ref_axis2_placement(placement))]; format!("DEFINED_CHARACTER_GLYPH({})", a.join(",")) },
                 UnitPart::DefinedSymbol { definition, target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_defined_symbol_select(definition)), format!("#{}", self.id_of_ref_symbol_target(target))]; format!("DEFINED_SYMBOL({})", a.join(",")) },
                 UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION()".to_string(),
+                UnitPart::DefinitionalRepresentationRelationship => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP()".to_string(),
+                UnitPart::DefinitionalRepresentationRelationshipWithSameContext => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT()".to_string(),
                 UnitPart::DegenerateToroidalSurface { select_outer, .. } => { let a: Vec<String> = vec![(if *select_outer { ".T." } else { ".F." }).to_string()]; format!("DEGENERATE_TOROIDAL_SURFACE({})", a.join(",")) },
                 UnitPart::DerivedUnit { elements, .. } => { let a: Vec<String> = vec![format!("({})", elements.iter().map(|e| format!("#{}", self.id_of_ref_derived_unit_element(e))).collect::<Vec<_>>().join(","))]; format!("DERIVED_UNIT({})", a.join(",")) },
                 UnitPart::DesignContext => "DESIGN_CONTEXT()".to_string(),
@@ -24860,6 +25586,7 @@ impl<'a> Writer<'a> {
                 UnitPart::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM()".to_string(),
                 UnitPart::MeasureWithUnit { value_component, unit_component, .. } => { let a: Vec<String> = vec![measure(value_component), format!("#{}", self.id_of_ref_unit(unit_component))]; format!("MEASURE_WITH_UNIT({})", a.join(",")) },
                 UnitPart::MechanicalContext => "MECHANICAL_CONTEXT()".to_string(),
+                UnitPart::MechanicalDesignAndDraughtingRelationship => "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP()".to_string(),
                 UnitPart::ModelGeometricView => "MODEL_GEOMETRIC_VIEW()".to_string(),
                 UnitPart::ModifiedGeometricTolerance { modifier, .. } => { let a: Vec<String> = vec![modifier.token().to_string()]; format!("MODIFIED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
                 UnitPart::NamedUnit { dimensions, .. } => { let a: Vec<String> = vec![match dimensions { Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)), None => "*".to_string() }]; format!("NAMED_UNIT({})", a.join(",")) },
@@ -24919,6 +25646,7 @@ impl<'a> Writer<'a> {
                 UnitPart::ProductDefinitionRelationshipRelationship { id, name, description, relating, related, .. } => { let a: Vec<String> = vec![step_str(id), step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_relationship(relating)), format!("#{}", self.id_of_ref_product_definition_relationship(related))]; format!("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP({})", a.join(",")) },
                 UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE()".to_string(),
                 UnitPart::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE()".to_string(),
+                UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids, .. } => { let a: Vec<String> = vec![format!("({})", documentation_ids.iter().map(|e| format!("#{}", self.id_of_ref_document(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS({})", a.join(",")) },
                 UnitPart::ProductRelatedProductCategory { products, .. } => { let a: Vec<String> = vec![format!("({})", products.iter().map(|e| format!("#{}", self.id_of_ref_product(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_RELATED_PRODUCT_CATEGORY({})", a.join(",")) },
                 UnitPart::PropertyDefinition { name, description, definition, .. } => { let a: Vec<String> = vec![step_str(name), match description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_characterized_definition(definition))]; format!("PROPERTY_DEFINITION({})", a.join(",")) },
                 UnitPart::PropertyDefinitionRepresentation { definition, used_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_represented_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation))]; format!("PROPERTY_DEFINITION_REPRESENTATION({})", a.join(",")) },
@@ -25406,6 +26134,16 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self
             .model
+            .constructive_geometry_representation_relationships
+            .items
+            .len()
+        {
+            roots.push(AnyId::ConstructiveGeometryRepresentationRelationship(
+                ConstructiveGeometryRepresentationRelationshipId(i),
+            ));
+        }
+        for i in 0..self
+            .model
             .context_dependent_over_riding_styled_items
             .items
             .len()
@@ -25523,6 +26261,28 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::DefinitionalRepresentation(
                 DefinitionalRepresentationId(i),
             ));
+        }
+        for i in 0..self
+            .model
+            .definitional_representation_relationships
+            .items
+            .len()
+        {
+            roots.push(AnyId::DefinitionalRepresentationRelationship(
+                DefinitionalRepresentationRelationshipId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .definitional_representation_relationship_with_same_contexts
+            .items
+            .len()
+        {
+            roots.push(
+                AnyId::DefinitionalRepresentationRelationshipWithSameContext(
+                    DefinitionalRepresentationRelationshipWithSameContextId(i),
+                ),
+            );
         }
         for i in 0..self.model.degenerate_toroidal_surfaces.items.len() {
             roots.push(AnyId::DegenerateToroidalSurface(
@@ -25875,6 +26635,9 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.id_attributes.items.len() {
             roots.push(AnyId::IdAttribute(IdAttributeId(i)));
         }
+        for i in 0..self.model.identification_roles.items.len() {
+            roots.push(AnyId::IdentificationRole(IdentificationRoleId(i)));
+        }
         for i in 0..self.model.int_literals.items.len() {
             roots.push(AnyId::IntLiteral(IntLiteralId(i)));
         }
@@ -25962,12 +26725,44 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self
             .model
+            .mechanical_design_and_draughting_relationships
+            .items
+            .len()
+        {
+            roots.push(AnyId::MechanicalDesignAndDraughtingRelationship(
+                MechanicalDesignAndDraughtingRelationshipId(i),
+            ));
+        }
+        for i in 0..self
+            .model
             .mechanical_design_geometric_presentation_representations
             .items
             .len()
         {
             roots.push(AnyId::MechanicalDesignGeometricPresentationRepresentation(
                 MechanicalDesignGeometricPresentationRepresentationId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .mechanical_design_presentation_representation_with_draughtings
+            .items
+            .len()
+        {
+            roots.push(
+                AnyId::MechanicalDesignPresentationRepresentationWithDraughting(
+                    MechanicalDesignPresentationRepresentationWithDraughtingId(i),
+                ),
+            );
+        }
+        for i in 0..self
+            .model
+            .mechanical_design_shaded_presentation_representations
+            .items
+            .len()
+        {
+            roots.push(AnyId::MechanicalDesignShadedPresentationRepresentation(
+                MechanicalDesignShadedPresentationRepresentationId(i),
             ));
         }
         for i in 0..self.model.model_geometric_views.items.len() {
@@ -26273,6 +27068,16 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.product_definition_usages.items.len() {
             roots.push(AnyId::ProductDefinitionUsage(ProductDefinitionUsageId(i)));
         }
+        for i in 0..self
+            .model
+            .product_definition_with_associated_documentss
+            .items
+            .len()
+        {
+            roots.push(AnyId::ProductDefinitionWithAssociatedDocuments(
+                ProductDefinitionWithAssociatedDocumentsId(i),
+            ));
+        }
         for i in 0..self.model.product_related_product_categorys.items.len() {
             roots.push(AnyId::ProductRelatedProductCategory(
                 ProductRelatedProductCategoryId(i),
@@ -26560,6 +27365,9 @@ impl<'a> Writer<'a> {
             roots.push(AnyId::TessellatedShapeRepresentation(
                 TessellatedShapeRepresentationId(i),
             ));
+        }
+        for i in 0..self.model.tessellated_shells.items.len() {
+            roots.push(AnyId::TessellatedShell(TessellatedShellId(i)));
         }
         for i in 0..self.model.tessellated_solids.items.len() {
             roots.push(AnyId::TessellatedSolid(TessellatedSolidId(i)));

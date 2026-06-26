@@ -1225,6 +1225,8 @@ pub struct ConnectedFaceSetId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConstructiveGeometryRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ConstructiveGeometryRepresentationRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentOverRidingStyledItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentShapeRepresentationId(pub usize);
@@ -1288,6 +1290,10 @@ pub struct DefinedCharacterGlyphId(pub usize);
 pub struct DefinedSymbolId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinitionalRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DefinitionalRepresentationRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DefinitionalRepresentationRelationshipWithSameContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DegenerateToroidalSurfaceId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1449,6 +1455,8 @@ pub struct HyperbolaId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IdAttributeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IdentificationRoleId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntLiteralId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntegerRepresentationItemId(pub usize);
@@ -1497,7 +1505,13 @@ pub struct MeasureWithUnitId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalContextId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MechanicalDesignAndDraughtingRelationshipId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalDesignGeometricPresentationRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MechanicalDesignPresentationRepresentationWithDraughtingId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MechanicalDesignShadedPresentationRepresentationId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ModelGeometricViewId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1657,6 +1671,8 @@ pub struct ProductDefinitionShapeId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionUsageId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ProductDefinitionWithAssociatedDocumentsId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductRelatedProductCategoryId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PropertyDefinitionId(pub usize);
@@ -1812,6 +1828,8 @@ pub struct TessellatedGeometricSetId(pub usize);
 pub struct TessellatedItemId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedShapeRepresentationId(pub usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TessellatedShellId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedSolidId(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -1996,6 +2014,9 @@ pub enum AnyId {
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ConstructiveGeometryRepresentationRelationship(
+        ConstructiveGeometryRepresentationRelationshipId,
+    ),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     ContextDependentUnit(ContextDependentUnitId),
@@ -2028,6 +2049,10 @@ pub enum AnyId {
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DefinitionalRepresentationRelationship(DefinitionalRepresentationRelationshipId),
+    DefinitionalRepresentationRelationshipWithSameContext(
+        DefinitionalRepresentationRelationshipWithSameContextId,
+    ),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DerivedUnit(DerivedUnitId),
@@ -2110,6 +2135,7 @@ pub enum AnyId {
     GroupAssignment(GroupAssignmentId),
     Hyperbola(HyperbolaId),
     IdAttribute(IdAttributeId),
+    IdentificationRole(IdentificationRoleId),
     IntLiteral(IntLiteralId),
     IntegerRepresentationItem(IntegerRepresentationItemId),
     IntersectionCurve(IntersectionCurveId),
@@ -2134,8 +2160,15 @@ pub enum AnyId {
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
     MechanicalContext(MechanicalContextId),
+    MechanicalDesignAndDraughtingRelationship(MechanicalDesignAndDraughtingRelationshipId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
     ),
     ModelGeometricView(ModelGeometricViewId),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
@@ -2216,6 +2249,7 @@ pub enum AnyId {
     ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
     ProductDefinitionShape(ProductDefinitionShapeId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     ProductRelatedProductCategory(ProductRelatedProductCategoryId),
     PropertyDefinition(PropertyDefinitionId),
     PropertyDefinitionRelationship(PropertyDefinitionRelationshipId),
@@ -2294,6 +2328,7 @@ pub enum AnyId {
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -2823,6 +2858,7 @@ pub enum CcPersonOrganizationItemRef {
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
@@ -2840,6 +2876,9 @@ impl CcPersonOrganizationItemRef {
             AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Self::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
             }
             AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
             AnyId::StartRequest(i) => Self::StartRequest(i),
@@ -2976,6 +3015,7 @@ pub enum CharacterizedDefinitionRef {
     ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
     ProductDefinitionShape(ProductDefinitionShapeId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     RoundnessTolerance(RoundnessToleranceId),
     ShapeAspect(ShapeAspectId),
     ShapeAspectAssociativity(ShapeAspectAssociativityId),
@@ -3058,6 +3098,9 @@ impl CharacterizedDefinitionRef {
             }
             AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
             AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
             AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
             AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
             AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
@@ -3157,6 +3200,7 @@ pub enum ConfigurationDesignItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     Complex(ComplexUnitId),
 }
 impl ConfigurationDesignItemRef {
@@ -3168,6 +3212,9 @@ impl ConfigurationDesignItemRef {
                 Self::ProductDefinitionFormationWithSpecifiedSource(i)
             }
             AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ConfigurationDesignItemRef ref -> {other:?}"),
         }
@@ -3198,6 +3245,64 @@ impl ConfigurationItemRef {
             AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ConfigurationItemRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConnectedFaceSetRef {
+    ClosedShell(ClosedShellId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    Complex(ComplexUnitId),
+}
+impl ConnectedFaceSetRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::ClosedShell(i) => Self::ClosedShell(i),
+            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::OpenShell(i) => Self::OpenShell(i),
+            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("ConnectedFaceSetRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    Complex(ComplexUnitId),
+}
+impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Self::ConstructiveGeometryRepresentation(i)
+            }
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!(
+                "ConstructiveGeometryRepresentationOrShapeRepresentationRef ref -> {other:?}"
+            ),
         }
     }
 }
@@ -3546,6 +3651,12 @@ pub enum DateAndTimeItemRef {
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
     ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     OrganizationRelationship(OrganizationRelationshipId),
     OrganizationalAddress(OrganizationalAddressId),
@@ -3566,6 +3677,7 @@ pub enum DateAndTimeItemRef {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionShape(ProductDefinitionShapeId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     PropertyDefinition(PropertyDefinitionId),
     PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
     Representation(RepresentationId),
@@ -3624,6 +3736,12 @@ impl DateAndTimeItemRef {
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
             }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
             AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
             AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
@@ -3646,6 +3764,9 @@ impl DateAndTimeItemRef {
             AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
             AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
             AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
             AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
             AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
             AnyId::Representation(i) => Self::Representation(i),
@@ -3706,6 +3827,7 @@ pub enum DateTimeItemRef {
     ChangeRequest(ChangeRequestId),
     Contract(ContractId),
     ProductDefinition(ProductDefinitionId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
@@ -3720,6 +3842,9 @@ impl DateTimeItemRef {
             AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
             AnyId::Contract(i) => Self::Contract(i),
             AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
             AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
             AnyId::StartRequest(i) => Self::StartRequest(i),
             AnyId::StartWork(i) => Self::StartWork(i),
@@ -4083,6 +4208,23 @@ impl DirectionRef {
             AnyId::Direction(i) => Self::Direction(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("DirectionRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DocumentRef {
+    Document(DocumentId),
+    DocumentFile(DocumentFileId),
+    Complex(ComplexUnitId),
+}
+impl DocumentRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::Document(i) => Self::Document(i),
+            AnyId::DocumentFile(i) => Self::DocumentFile(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("DocumentRef ref -> {other:?}"),
         }
     }
 }
@@ -4725,6 +4867,7 @@ pub enum GeometricModelItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -4838,6 +4981,7 @@ impl GeometricModelItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
             AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
@@ -5114,6 +5258,9 @@ pub enum GroupableItemRef {
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ConstructiveGeometryRepresentationRelationship(
+        ConstructiveGeometryRepresentationRelationshipId,
+    ),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     ContextDependentUnit(ContextDependentUnitId),
@@ -5135,6 +5282,10 @@ pub enum GroupableItemRef {
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DefinitionalRepresentationRelationship(DefinitionalRepresentationRelationshipId),
+    DefinitionalRepresentationRelationshipWithSameContext(
+        DefinitionalRepresentationRelationshipWithSameContextId,
+    ),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DerivedShapeAspect(DerivedShapeAspectId),
     DerivedUnit(DerivedUnitId),
@@ -5197,8 +5348,15 @@ pub enum GroupableItemRef {
     MassUnit(MassUnitId),
     MeasureRepresentationItem(MeasureRepresentationItemId),
     MeasureWithUnit(MeasureWithUnitId),
+    MechanicalDesignAndDraughtingRelationship(MechanicalDesignAndDraughtingRelationshipId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
     ),
     NamedUnit(NamedUnitId),
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
@@ -5246,6 +5404,7 @@ pub enum GroupableItemRef {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionShape(ProductDefinitionShapeId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     PropertyDefinition(PropertyDefinitionId),
     PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
     QualifiedRepresentationItem(QualifiedRepresentationItemId),
@@ -5291,6 +5450,7 @@ pub enum GroupableItemRef {
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -5392,6 +5552,9 @@ impl GroupableItemRef {
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 Self::ConstructiveGeometryRepresentation(i)
             }
+            AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
+                Self::ConstructiveGeometryRepresentationRelationship(i)
+            }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
@@ -5417,6 +5580,12 @@ impl GroupableItemRef {
             AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DefinitionalRepresentationRelationship(i) => {
+                Self::DefinitionalRepresentationRelationship(i)
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                Self::DefinitionalRepresentationRelationshipWithSameContext(i)
+            }
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
             AnyId::DerivedUnit(i) => Self::DerivedUnit(i),
@@ -5481,8 +5650,17 @@ impl GroupableItemRef {
             AnyId::MassUnit(i) => Self::MassUnit(i),
             AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
             AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
+            AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
+                Self::MechanicalDesignAndDraughtingRelationship(i)
+            }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
             }
             AnyId::NamedUnit(i) => Self::NamedUnit(i),
             AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
@@ -5534,6 +5712,9 @@ impl GroupableItemRef {
             AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
             AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
             AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
             AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
             AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
             AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
@@ -5581,6 +5762,7 @@ impl GroupableItemRef {
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
             AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
@@ -5671,6 +5853,12 @@ pub enum IdAttributeSelectRef {
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
     ),
     ModifiedGeometricTolerance(ModifiedGeometricToleranceId),
     OpenShell(OpenShellId),
@@ -5791,6 +5979,12 @@ impl IdAttributeSelectRef {
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
             }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
             AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
             AnyId::OpenShell(i) => Self::OpenShell(i),
             AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
@@ -5870,6 +6064,12 @@ pub enum InvisibleItemRef {
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
     ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
     OverRidingStyledItem(OverRidingStyledItemId),
     PresentationArea(PresentationAreaId),
     PresentationLayerAssignment(PresentationLayerAssignmentId),
@@ -5921,6 +6121,12 @@ impl InvisibleItemRef {
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
             }
             AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
             AnyId::PresentationArea(i) => Self::PresentationArea(i),
@@ -6086,6 +6292,7 @@ pub enum LayeredItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -6240,6 +6447,7 @@ impl LayeredItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
             AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
@@ -6385,6 +6593,57 @@ impl MeasureWithUnitRef {
             AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("MeasureWithUnitRef ref -> {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum MechanicalDesignAndDraughtingRelationshipSelectRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    DraughtingModel(DraughtingModelId),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    Complex(ComplexUnitId),
+}
+impl MechanicalDesignAndDraughtingRelationshipSelectRef {
+    pub fn from_any(a: AnyId) -> Self {
+        match a {
+            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            AnyId::ManifoldSurfaceShapeRepresentation(i) => {
+                Self::ManifoldSurfaceShapeRepresentation(i)
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
+            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
+            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::ComplexUnit(i) => Self::Complex(i),
+            other => panic!("MechanicalDesignAndDraughtingRelationshipSelectRef ref -> {other:?}"),
         }
     }
 }
@@ -6809,6 +7068,7 @@ pub enum ProductDefinitionOrReferenceRef {
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionOrReferenceRef {
@@ -6819,6 +7079,9 @@ impl ProductDefinitionOrReferenceRef {
             }
             AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
             AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
+            AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
+                Self::ProductDefinitionWithAssociatedDocuments(i)
+            }
             AnyId::ComplexUnit(i) => Self::Complex(i),
             other => panic!("ProductDefinitionOrReferenceRef ref -> {other:?}"),
         }
@@ -7073,6 +7336,7 @@ pub enum RepresentationItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -7224,6 +7488,7 @@ impl RepresentationItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
             AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
@@ -7276,6 +7541,12 @@ pub enum RepresentationOrRepresentationReferenceRef {
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
     ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
     PresentationArea(PresentationAreaId),
     PresentationRepresentation(PresentationRepresentationId),
     PresentationView(PresentationViewId),
@@ -7306,6 +7577,12 @@ impl RepresentationOrRepresentationReferenceRef {
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
             }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
             AnyId::PresentationArea(i) => Self::PresentationArea(i),
             AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
             AnyId::PresentationView(i) => Self::PresentationView(i),
@@ -7335,6 +7612,12 @@ pub enum RepresentationRef {
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
     ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
     PresentationArea(PresentationAreaId),
     PresentationRepresentation(PresentationRepresentationId),
     PresentationView(PresentationViewId),
@@ -7363,6 +7646,12 @@ impl RepresentationRef {
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
             }
             AnyId::PresentationArea(i) => Self::PresentationArea(i),
             AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
@@ -7744,6 +8033,9 @@ pub enum StyleContextSelectRef {
     ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ConstructiveGeometryRepresentationRelationship(
+        ConstructiveGeometryRepresentationRelationshipId,
+    ),
     ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
     ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
     CoordinatesList(CoordinatesListId),
@@ -7752,6 +8044,10 @@ pub enum StyleContextSelectRef {
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
     DefinitionalRepresentation(DefinitionalRepresentationId),
+    DefinitionalRepresentationRelationship(DefinitionalRepresentationRelationshipId),
+    DefinitionalRepresentationRelationshipWithSameContext(
+        DefinitionalRepresentationRelationshipWithSameContextId,
+    ),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
     Direction(DirectionId),
@@ -7793,8 +8089,15 @@ pub enum StyleContextSelectRef {
     ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
     MeasureRepresentationItem(MeasureRepresentationItemId),
+    MechanicalDesignAndDraughtingRelationship(MechanicalDesignAndDraughtingRelationshipId),
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
     ),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
@@ -7849,6 +8152,7 @@ pub enum StyleContextSelectRef {
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -7922,6 +8226,9 @@ impl StyleContextSelectRef {
             AnyId::ConstructiveGeometryRepresentation(i) => {
                 Self::ConstructiveGeometryRepresentation(i)
             }
+            AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
+                Self::ConstructiveGeometryRepresentationRelationship(i)
+            }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
                 Self::ContextDependentOverRidingStyledItem(i)
             }
@@ -7934,6 +8241,12 @@ impl StyleContextSelectRef {
             AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
             AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
             AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::DefinitionalRepresentationRelationship(i) => {
+                Self::DefinitionalRepresentationRelationship(i)
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                Self::DefinitionalRepresentationRelationshipWithSameContext(i)
+            }
             AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
             AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
             AnyId::Direction(i) => Self::Direction(i),
@@ -7977,8 +8290,17 @@ impl StyleContextSelectRef {
             }
             AnyId::MappedItem(i) => Self::MappedItem(i),
             AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
+                Self::MechanicalDesignAndDraughtingRelationship(i)
+            }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
             }
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
@@ -8035,6 +8357,7 @@ impl StyleContextSelectRef {
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
             AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
@@ -8194,6 +8517,12 @@ pub enum StyledItemTargetRef {
     MechanicalDesignGeometricPresentationRepresentation(
         MechanicalDesignGeometricPresentationRepresentationId,
     ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
@@ -8236,6 +8565,7 @@ pub enum StyledItemTargetRef {
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -8348,6 +8678,12 @@ impl StyledItemTargetRef {
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
                 Self::MechanicalDesignGeometricPresentationRepresentation(i)
             }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
+                Self::MechanicalDesignShadedPresentationRepresentation(i)
+            }
             AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
             AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
             AnyId::OpenShell(i) => Self::OpenShell(i),
@@ -8390,6 +8726,7 @@ impl StyledItemTargetRef {
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
             AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
             AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
@@ -8581,6 +8918,7 @@ pub enum TessellatedItemRef {
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
+    TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
@@ -8597,6 +8935,7 @@ impl TessellatedItemRef {
             AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
             AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
             AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
+            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
             AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
             AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
             AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
@@ -9768,6 +10107,14 @@ pub struct ConstructiveGeometryRepresentation {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ConstructiveGeometryRepresentationRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef,
+    pub rep_2: RepresentationOrRepresentationReferenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ContextDependentOverRidingStyledItem {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentRef>,
@@ -9990,6 +10337,22 @@ pub struct DefinitionalRepresentation {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefinitionalRepresentationRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub rep_1: RepresentationOrRepresentationReferenceRef,
+    pub rep_2: RepresentationOrRepresentationReferenceRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefinitionalRepresentationRelationshipWithSameContext {
+    pub name: String,
+    pub description: Option<String>,
+    pub rep_1: RepresentationOrRepresentationReferenceRef,
+    pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10542,6 +10905,12 @@ pub struct IdAttribute {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct IdentificationRole {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct IntLiteral {
     pub the_value: i64,
 }
@@ -10698,7 +11067,29 @@ pub struct MechanicalContext {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct MechanicalDesignAndDraughtingRelationship {
+    pub name: String,
+    pub description: Option<String>,
+    pub rep_1: MechanicalDesignAndDraughtingRelationshipSelectRef,
+    pub rep_2: MechanicalDesignAndDraughtingRelationshipSelectRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignGeometricPresentationRepresentation {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MechanicalDesignPresentationRepresentationWithDraughting {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context_of_items: RepresentationContextRef,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MechanicalDesignShadedPresentationRepresentation {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
@@ -11268,6 +11659,15 @@ pub struct ProductDefinitionUsage {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionWithAssociatedDocuments {
+    pub id: String,
+    pub description: Option<String>,
+    pub formation: ProductDefinitionFormationRef,
+    pub frame_of_reference: ProductDefinitionContextRef,
+    pub documentation_ids: Vec<DocumentRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ProductRelatedProductCategory {
     pub name: String,
     pub description: Option<String>,
@@ -11785,6 +12185,13 @@ pub struct TessellatedShapeRepresentation {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedShell {
+    pub name: String,
+    pub items: Vec<TessellatedStructuredItemRef>,
+    pub topological_link: Option<ConnectedFaceSetRef>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedSolid {
     pub name: String,
     pub items: Vec<TessellatedStructuredItemRef>,
@@ -12257,6 +12664,7 @@ pub enum UnitPart {
     ConnectedFaceSet {
         cfs_faces: Option<Vec<FaceRef>>,
     },
+    ConstructiveGeometryRepresentationRelationship,
     ContextDependentOverRidingStyledItem {
         style_context: Vec<StyleContextSelectRef>,
     },
@@ -12322,6 +12730,8 @@ pub enum UnitPart {
         target: SymbolTargetRef,
     },
     DefinitionalRepresentation,
+    DefinitionalRepresentationRelationship,
+    DefinitionalRepresentationRelationshipWithSameContext,
     DegenerateToroidalSurface {
         select_outer: bool,
     },
@@ -12531,6 +12941,7 @@ pub enum UnitPart {
         unit_component: UnitRef,
     },
     MechanicalContext,
+    MechanicalDesignAndDraughtingRelationship,
     ModelGeometricView,
     ModifiedGeometricTolerance {
         modifier: LimitCondition,
@@ -12684,6 +13095,9 @@ pub enum UnitPart {
     },
     ProductDefinitionShape,
     ProductDefinitionUsage,
+    ProductDefinitionWithAssociatedDocuments {
+        documentation_ids: Vec<DocumentRef>,
+    },
     ProductRelatedProductCategory {
         products: Vec<ProductRef>,
     },
@@ -13031,6 +13445,8 @@ pub struct Model {
     pub conical_surfaces: Arena<ConicalSurface>,
     pub connected_face_sets: Arena<ConnectedFaceSet>,
     pub constructive_geometry_representations: Arena<ConstructiveGeometryRepresentation>,
+    pub constructive_geometry_representation_relationships:
+        Arena<ConstructiveGeometryRepresentationRelationship>,
     pub context_dependent_over_riding_styled_items: Arena<ContextDependentOverRidingStyledItem>,
     pub context_dependent_shape_representations: Arena<ContextDependentShapeRepresentation>,
     pub context_dependent_units: Arena<ContextDependentUnit>,
@@ -13063,6 +13479,9 @@ pub struct Model {
     pub defined_character_glyphs: Arena<DefinedCharacterGlyph>,
     pub defined_symbols: Arena<DefinedSymbol>,
     pub definitional_representations: Arena<DefinitionalRepresentation>,
+    pub definitional_representation_relationships: Arena<DefinitionalRepresentationRelationship>,
+    pub definitional_representation_relationship_with_same_contexts:
+        Arena<DefinitionalRepresentationRelationshipWithSameContext>,
     pub degenerate_toroidal_surfaces: Arena<DegenerateToroidalSurface>,
     pub derived_shape_aspects: Arena<DerivedShapeAspect>,
     pub derived_units: Arena<DerivedUnit>,
@@ -13145,6 +13564,7 @@ pub struct Model {
     pub group_assignments: Arena<GroupAssignment>,
     pub hyperbolas: Arena<Hyperbola>,
     pub id_attributes: Arena<IdAttribute>,
+    pub identification_roles: Arena<IdentificationRole>,
     pub int_literals: Arena<IntLiteral>,
     pub integer_representation_items: Arena<IntegerRepresentationItem>,
     pub intersection_curves: Arena<IntersectionCurve>,
@@ -13169,8 +13589,14 @@ pub struct Model {
     pub measure_representation_items: Arena<MeasureRepresentationItem>,
     pub measure_with_units: Arena<MeasureWithUnit>,
     pub mechanical_contexts: Arena<MechanicalContext>,
+    pub mechanical_design_and_draughting_relationships:
+        Arena<MechanicalDesignAndDraughtingRelationship>,
     pub mechanical_design_geometric_presentation_representations:
         Arena<MechanicalDesignGeometricPresentationRepresentation>,
+    pub mechanical_design_presentation_representation_with_draughtings:
+        Arena<MechanicalDesignPresentationRepresentationWithDraughting>,
+    pub mechanical_design_shaded_presentation_representations:
+        Arena<MechanicalDesignShadedPresentationRepresentation>,
     pub model_geometric_views: Arena<ModelGeometricView>,
     pub modified_geometric_tolerances: Arena<ModifiedGeometricTolerance>,
     pub named_units: Arena<NamedUnit>,
@@ -13252,6 +13678,8 @@ pub struct Model {
         Arena<ProductDefinitionRelationshipRelationship>,
     pub product_definition_shapes: Arena<ProductDefinitionShape>,
     pub product_definition_usages: Arena<ProductDefinitionUsage>,
+    pub product_definition_with_associated_documentss:
+        Arena<ProductDefinitionWithAssociatedDocuments>,
     pub product_related_product_categorys: Arena<ProductRelatedProductCategory>,
     pub property_definitions: Arena<PropertyDefinition>,
     pub property_definition_relationships: Arena<PropertyDefinitionRelationship>,
@@ -13331,6 +13759,7 @@ pub struct Model {
     pub tessellated_geometric_sets: Arena<TessellatedGeometricSet>,
     pub tessellated_items: Arena<TessellatedItem>,
     pub tessellated_shape_representations: Arena<TessellatedShapeRepresentation>,
+    pub tessellated_shells: Arena<TessellatedShell>,
     pub tessellated_solids: Arena<TessellatedSolid>,
     pub tessellated_structured_items: Arena<TessellatedStructuredItem>,
     pub tessellated_surface_sets: Arena<TessellatedSurfaceSet>,

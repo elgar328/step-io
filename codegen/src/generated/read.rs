@@ -211,6 +211,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "CONICAL_SURFACE",
     "CONNECTED_FACE_SET",
     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
     "CONTEXT_DEPENDENT_UNIT",
@@ -243,6 +244,8 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "DEFINED_CHARACTER_GLYPH",
     "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
+    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
     "DEGENERATE_TOROIDAL_SURFACE",
     "DERIVED_SHAPE_ASPECT",
     "DERIVED_UNIT",
@@ -323,6 +326,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "GROUP_ASSIGNMENT",
     "HYPERBOLA",
     "ID_ATTRIBUTE",
+    "IDENTIFICATION_ROLE",
     "INT_LITERAL",
     "INTEGER_REPRESENTATION_ITEM",
     "INTERSECTION_CURVE",
@@ -347,7 +351,10 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "MEASURE_REPRESENTATION_ITEM",
     "MEASURE_WITH_UNIT",
     "MECHANICAL_CONTEXT",
+    "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
     "MODEL_GEOMETRIC_VIEW",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
@@ -427,6 +434,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
     "PRODUCT_DEFINITION_SHAPE",
     "PRODUCT_DEFINITION_USAGE",
+    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
     "PROPERTY_DEFINITION_RELATIONSHIP",
@@ -505,6 +513,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "TESSELLATED_GEOMETRIC_SET",
     "TESSELLATED_ITEM",
     "TESSELLATED_SHAPE_REPRESENTATION",
+    "TESSELLATED_SHELL",
     "TESSELLATED_SOLID",
     "TESSELLATED_STRUCTURED_ITEM",
     "TESSELLATED_SURFACE_SET",
@@ -608,6 +617,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "CONFIGURATION_EFFECTIVITY",
     "CONFIGURATION_ITEM",
     "CONNECTED_FACE_SET",
+    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CONTEXT_DEPENDENT_UNIT",
     "CONVERSION_BASED_UNIT",
@@ -628,6 +638,8 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "DEFINED_CHARACTER_GLYPH",
     "DEFINED_SYMBOL",
     "DEFINITIONAL_REPRESENTATION",
+    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
     "DEGENERATE_TOROIDAL_SURFACE",
     "DERIVED_UNIT",
     "DESIGN_CONTEXT",
@@ -713,6 +725,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "MEASURE_REPRESENTATION_ITEM",
     "MEASURE_WITH_UNIT",
     "MECHANICAL_CONTEXT",
+    "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
     "MODEL_GEOMETRIC_VIEW",
     "MODIFIED_GEOMETRIC_TOLERANCE",
     "NAMED_UNIT",
@@ -772,6 +785,7 @@ pub const COMPLEX_PART_NAMES: &[&str] = &[
     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
     "PRODUCT_DEFINITION_SHAPE",
     "PRODUCT_DEFINITION_USAGE",
+    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
     "PRODUCT_RELATED_PRODUCT_CATEGORY",
     "PROPERTY_DEFINITION",
     "PROPERTY_DEFINITION_REPRESENTATION",
@@ -1133,6 +1147,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -1391,6 +1406,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -1433,6 +1450,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -1559,6 +1577,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -1601,6 +1621,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -1810,6 +1831,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -1852,6 +1875,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -1966,6 +1990,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -2008,6 +2034,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -2220,6 +2247,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -2397,6 +2425,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                     "ORGANIZATION_RELATIONSHIP",
                     "ORGANIZATIONAL_ADDRESS",
@@ -2417,6 +2447,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PRODUCT_DEFINITION_RELATIONSHIP",
                     "PRODUCT_DEFINITION_SHAPE",
                     "PRODUCT_DEFINITION_USAGE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                     "PROPERTY_DEFINITION",
                     "PROPERTY_DEFINITION_REPRESENTATION",
                     "REPRESENTATION",
@@ -2516,6 +2547,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
                     "CONTEXT_DEPENDENT_UNIT",
@@ -2537,6 +2569,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+                    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DERIVED_SHAPE_ASPECT",
                     "DERIVED_UNIT",
@@ -2597,7 +2631,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MASS_UNIT",
                     "MEASURE_REPRESENTATION_ITEM",
                     "MEASURE_WITH_UNIT",
+                    "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "NAMED_UNIT",
                     "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                     "OFFSET_SURFACE",
@@ -2644,6 +2681,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PRODUCT_DEFINITION_RELATIONSHIP",
                     "PRODUCT_DEFINITION_SHAPE",
                     "PRODUCT_DEFINITION_USAGE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                     "PROPERTY_DEFINITION",
                     "PROPERTY_DEFINITION_REPRESENTATION",
                     "QUALIFIED_REPRESENTATION_ITEM",
@@ -2689,6 +2727,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -2811,6 +2850,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2822,6 +2862,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3100,6 +3141,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CHANGE_REQUEST",
                     "CONTRACT",
                     "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                     "SECURITY_CLASSIFICATION",
                     "START_REQUEST",
                     "START_WORK",
@@ -3135,6 +3177,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_FORMATION",
                     "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                     "SECURITY_CLASSIFICATION",
                     "START_REQUEST",
                     "START_WORK",
@@ -3360,6 +3403,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -3393,6 +3437,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -3536,6 +3582,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -3858,6 +3905,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "PRODUCT_DEFINITION_FORMATION",
                     "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4042,6 +4090,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -4072,6 +4121,50 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
                     "PARAMETRIC_REPRESENTATION_CONTEXT",
                     "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "rep_1",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "rep_2",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4170,6 +4263,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -4212,6 +4307,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -4307,6 +4403,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
                     "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                     "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
                     "COORDINATES_LIST",
@@ -4315,6 +4412,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "DEFINED_CHARACTER_GLYPH",
                     "DEFINED_SYMBOL",
                     "DEFINITIONAL_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+                    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
                     "DEGENERATE_TOROIDAL_SURFACE",
                     "DESCRIPTIVE_REPRESENTATION_ITEM",
                     "DIRECTION",
@@ -4354,7 +4453,10 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MEASURE_REPRESENTATION_ITEM",
+                    "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -4408,6 +4510,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -4904,6 +5007,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -4934,6 +5038,118 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
                     "PARAMETRIC_REPRESENTATION_CONTEXT",
                     "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "rep_1",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "rep_2",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => &[
+            RefSlot {
+                idx: 2,
+                name: "rep_1",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "rep_2",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "REPRESENTATION",
+                    "REPRESENTATION_REFERENCE",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SYMBOL_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5326,6 +5542,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -5368,6 +5586,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -5553,6 +5772,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -6464,6 +6684,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -6944,6 +7165,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -7077,6 +7299,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "LOOP",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                 "MODIFIED_GEOMETRIC_TOLERANCE",
                 "OPEN_SHELL",
                 "ORGANIZATIONAL_ADDRESS",
@@ -7211,6 +7435,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "LEADER_TERMINATOR",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                 "OVER_RIDING_STYLED_ITEM",
                 "PRESENTATION_AREA",
                 "PRESENTATION_LAYER_ASSIGNMENT",
@@ -7358,6 +7584,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -7508,6 +7735,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -7836,6 +8064,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -8008,6 +8237,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -8098,6 +8328,44 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
             complex_ok: false,
             is_vec: false,
         }],
+        "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => &[
+            RefSlot {
+                idx: 2,
+                name: "rep_1",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "rep_2",
+                allowed: &[
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "DRAUGHTING_MODEL",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
         "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => &[
             RefSlot {
                 idx: 1,
@@ -8228,6 +8496,339 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
+                    "TESSELLATED_SOLID",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TESSELLATED_SURFACE_SET",
+                    "TEXT_LITERAL",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TRIMMED_CURVE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_LOOP",
+                    "VERTEX_POINT",
+                    "VERTEX_SHELL",
+                    "WIRE_SHELL",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_FILL_AREA_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
+                    "AUXILIARY_LEADER_LINE",
+                    "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
+                    "CLOSED_SHELL",
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "COMPLEX_TRIANGULATED_SURFACE_SET",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_TEXT",
+                    "CONIC",
+                    "CONICAL_SURFACE",
+                    "CONNECTED_FACE_SET",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "COORDINATES_LIST",
+                    "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEFINED_CHARACTER_GLYPH",
+                    "DEFINED_SYMBOL",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DESCRIPTIVE_REPRESENTATION_ITEM",
+                    "DIRECTION",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                    "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "FILL_AREA_STYLE_TILES",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "HYPERBOLA",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LINE",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "OFFSET_SURFACE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PATH",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE",
+                    "POINT",
+                    "POLY_LOOP",
+                    "POLYLINE",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION_ITEM",
+                    "SEAM_CURVE",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SOLID_MODEL",
+                    "SPHERICAL_SURFACE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "SYMBOL_TARGET",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    "TESSELLATED_CURVE_SET",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -8393,6 +8994,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -8426,6 +9028,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -8494,6 +9098,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8505,6 +9110,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8729,6 +9335,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -8771,6 +9379,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -9302,6 +9911,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -9469,6 +10079,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_FACE",
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
+                "TESSELLATED_SHELL",
                 "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
@@ -9620,6 +10231,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -9802,6 +10414,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -9941,6 +10554,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9968,6 +10582,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9979,6 +10594,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -10066,6 +10682,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
                 "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
@@ -10089,6 +10706,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -10100,9 +10718,36 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
+            },
+        ],
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => &[
+            RefSlot {
+                idx: 2,
+                name: "formation",
+                allowed: &[
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "frame_of_reference",
+                allowed: &["DESIGN_CONTEXT", "PRODUCT_DEFINITION_CONTEXT"],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "documentation_ids",
+                allowed: &["DOCUMENT", "DOCUMENT_FILE"],
+                complex_ok: true,
+                is_vec: true,
             },
         ],
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[RefSlot {
@@ -10168,6 +10813,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
                 "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
@@ -10246,6 +10892,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -10422,6 +11070,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -10587,6 +11236,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -10620,6 +11270,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -10653,6 +11305,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -10678,6 +11332,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -10705,6 +11361,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -10730,6 +11388,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -11042,6 +11702,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -11185,6 +11847,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -11350,6 +12013,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -11398,6 +12062,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -11423,6 +12089,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -11642,6 +12310,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -11684,6 +12354,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -12173,6 +12844,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -12385,6 +13057,8 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -12427,6 +13101,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -12505,6 +13180,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_FACE",
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
+                "TESSELLATED_SHELL",
                 "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
@@ -12642,6 +13318,7 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -12672,6 +13349,31 @@ pub fn ref_slots(n: &str) -> &'static [RefSlot] {
                     "GLOBAL_UNIT_ASSIGNED_CONTEXT",
                     "PARAMETRIC_REPRESENTATION_CONTEXT",
                     "REPRESENTATION_CONTEXT",
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        "TESSELLATED_SHELL" => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    "COMPLEX_TRIANGULATED_FACE",
+                    "TESSELLATED_FACE",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "topological_link",
+                allowed: &[
+                    "CLOSED_SHELL",
+                    "CONNECTED_FACE_SET",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -13378,6 +14080,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                 "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "ORGANIZATION_RELATIONSHIP",
                 "ORGANIZATIONAL_ADDRESS",
@@ -13398,6 +14102,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
                 "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "PROPERTY_DEFINITION",
                 "PROPERTY_DEFINITION_REPRESENTATION",
                 "REPRESENTATION",
@@ -13488,6 +14193,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONICAL_SURFACE",
                 "CONNECTED_FACE_SET",
                 "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                 "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
                 "CONTEXT_DEPENDENT_UNIT",
@@ -13509,6 +14215,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEFINED_CHARACTER_GLYPH",
                 "DEFINED_SYMBOL",
                 "DEFINITIONAL_REPRESENTATION",
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "DERIVED_SHAPE_ASPECT",
                 "DERIVED_UNIT",
@@ -13569,7 +14277,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "MASS_UNIT",
                 "MEASURE_REPRESENTATION_ITEM",
                 "MEASURE_WITH_UNIT",
+                "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                 "NAMED_UNIT",
                 "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
                 "OFFSET_SURFACE",
@@ -13616,6 +14327,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
                 "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "PROPERTY_DEFINITION",
                 "PROPERTY_DEFINITION_REPRESENTATION",
                 "QUALIFIED_REPRESENTATION_ITEM",
@@ -13661,6 +14373,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
                 "TESSELLATED_SHAPE_REPRESENTATION",
+                "TESSELLATED_SHELL",
                 "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
@@ -13770,6 +14483,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CHANGE_REQUEST",
                 "CONTRACT",
                 "PRODUCT_DEFINITION",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "SECURITY_CLASSIFICATION",
                 "START_REQUEST",
                 "START_WORK",
@@ -13789,6 +14503,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION",
                 "PRODUCT_DEFINITION_FORMATION",
                 "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "SECURITY_CLASSIFICATION",
                 "START_REQUEST",
                 "START_WORK",
@@ -13962,6 +14677,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -13995,6 +14711,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -14130,6 +14848,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "CONICAL_SURFACE",
                 "CONNECTED_FACE_SET",
                 "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
                 "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
                 "COORDINATES_LIST",
@@ -14138,6 +14857,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "DEFINED_CHARACTER_GLYPH",
                 "DEFINED_SYMBOL",
                 "DEFINITIONAL_REPRESENTATION",
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
                 "DEGENERATE_TOROIDAL_SURFACE",
                 "DESCRIPTIVE_REPRESENTATION_ITEM",
                 "DIRECTION",
@@ -14177,7 +14898,10 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MAPPED_ITEM",
                 "MEASURE_REPRESENTATION_ITEM",
+                "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                 "OFFSET_SURFACE",
                 "ONE_DIRECTION_REPEAT_FACTOR",
                 "OPEN_SHELL",
@@ -14231,6 +14955,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
                 "TESSELLATED_SHAPE_REPRESENTATION",
+                "TESSELLATED_SHELL",
                 "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
@@ -14938,6 +15663,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "LEADER_TERMINATOR",
                 "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                 "OVER_RIDING_STYLED_ITEM",
                 "PRESENTATION_AREA",
                 "PRESENTATION_LAYER_ASSIGNMENT",
@@ -15085,6 +15812,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -15235,6 +15963,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -15401,6 +16130,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -15700,6 +16430,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -15727,6 +16458,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -15738,6 +16470,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GENERIC_PRODUCT_DEFINITION_REFERENCE",
                     "PRODUCT_DEFINITION",
                     "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -15769,6 +16502,13 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => &[RefSlot {
+            idx: 0,
+            name: "documentation_ids",
+            allowed: &["DOCUMENT", "DOCUMENT_FILE"],
+            complex_ok: true,
+            is_vec: true,
+        }],
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[RefSlot {
             idx: 0,
             name: "products",
@@ -15832,6 +16572,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
                 "PRODUCT_DEFINITION_SHAPE",
                 "PRODUCT_DEFINITION_USAGE",
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
                 "ROUNDNESS_TOLERANCE",
                 "SHAPE_ASPECT",
                 "SHAPE_ASPECT_ASSOCIATIVITY",
@@ -15894,6 +16635,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -16056,6 +16799,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -16221,6 +16965,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_FACE",
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -16254,6 +16999,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -16287,6 +17034,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -16312,6 +17061,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "PRESENTATION_AREA",
                     "PRESENTATION_REPRESENTATION",
                     "PRESENTATION_VIEW",
@@ -16520,6 +17271,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     "MAPPED_ITEM",
                     "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                    "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                    "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
                     "OFFSET_SURFACE",
                     "ONE_DIRECTION_REPEAT_FACTOR",
                     "OPEN_SHELL",
@@ -16562,6 +17315,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                     "TESSELLATED_GEOMETRIC_SET",
                     "TESSELLATED_ITEM",
                     "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_SHELL",
                     "TESSELLATED_SOLID",
                     "TESSELLATED_STRUCTURED_ITEM",
                     "TESSELLATED_SURFACE_SET",
@@ -16765,6 +17519,7 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
                 "TESSELLATED_FACE",
                 "TESSELLATED_GEOMETRIC_SET",
                 "TESSELLATED_ITEM",
+                "TESSELLATED_SHELL",
                 "TESSELLATED_SOLID",
                 "TESSELLATED_STRUCTURED_ITEM",
                 "TESSELLATED_SURFACE_SET",
@@ -17092,6 +17847,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         ConstructiveGeometryRepresentationId,
         u64,
     )> = Vec::new();
+    let mut pending_constructive_geometry_representation_relationships: Vec<(
+        ConstructiveGeometryRepresentationRelationshipId,
+        u64,
+    )> = Vec::new();
     let mut pending_context_dependent_over_riding_styled_items: Vec<(
         ContextDependentOverRidingStyledItemId,
         u64,
@@ -17129,6 +17888,14 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     let mut pending_defined_symbols: Vec<(DefinedSymbolId, u64)> = Vec::new();
     let mut pending_definitional_representations: Vec<(DefinitionalRepresentationId, u64)> =
         Vec::new();
+    let mut pending_definitional_representation_relationships: Vec<(
+        DefinitionalRepresentationRelationshipId,
+        u64,
+    )> = Vec::new();
+    let mut pending_definitional_representation_relationship_with_same_contexts: Vec<(
+        DefinitionalRepresentationRelationshipWithSameContextId,
+        u64,
+    )> = Vec::new();
     let mut pending_degenerate_toroidal_surfaces: Vec<(DegenerateToroidalSurfaceId, u64)> =
         Vec::new();
     let mut pending_derived_shape_aspects: Vec<(DerivedShapeAspectId, u64)> = Vec::new();
@@ -17273,8 +18040,20 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         Vec::new();
     let mut pending_measure_with_units: Vec<(MeasureWithUnitId, u64)> = Vec::new();
     let mut pending_mechanical_contexts: Vec<(MechanicalContextId, u64)> = Vec::new();
+    let mut pending_mechanical_design_and_draughting_relationships: Vec<(
+        MechanicalDesignAndDraughtingRelationshipId,
+        u64,
+    )> = Vec::new();
     let mut pending_mechanical_design_geometric_presentation_representations: Vec<(
         MechanicalDesignGeometricPresentationRepresentationId,
+        u64,
+    )> = Vec::new();
+    let mut pending_mechanical_design_presentation_representation_with_draughtings: Vec<(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+        u64,
+    )> = Vec::new();
+    let mut pending_mechanical_design_shaded_presentation_representations: Vec<(
+        MechanicalDesignShadedPresentationRepresentationId,
         u64,
     )> = Vec::new();
     let mut pending_model_geometric_views: Vec<(ModelGeometricViewId, u64)> = Vec::new();
@@ -17358,6 +18137,10 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     )> = Vec::new();
     let mut pending_product_definition_shapes: Vec<(ProductDefinitionShapeId, u64)> = Vec::new();
     let mut pending_product_definition_usages: Vec<(ProductDefinitionUsageId, u64)> = Vec::new();
+    let mut pending_product_definition_with_associated_documentss: Vec<(
+        ProductDefinitionWithAssociatedDocumentsId,
+        u64,
+    )> = Vec::new();
     let mut pending_product_related_product_categorys: Vec<(ProductRelatedProductCategoryId, u64)> =
         Vec::new();
     let mut pending_property_definitions: Vec<(PropertyDefinitionId, u64)> = Vec::new();
@@ -17455,6 +18238,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
         TessellatedShapeRepresentationId,
         u64,
     )> = Vec::new();
+    let mut pending_tessellated_shells: Vec<(TessellatedShellId, u64)> = Vec::new();
     let mut pending_tessellated_solids: Vec<(TessellatedSolidId, u64)> = Vec::new();
     let mut pending_tessellated_surface_sets: Vec<(TessellatedSurfaceSetId, u64)> = Vec::new();
     let mut pending_text_literals: Vec<(TextLiteralId, u64)> = Vec::new();
@@ -19205,6 +19989,26 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => {
+                let v = ConstructiveGeometryRepresentationRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] { Attribute::Unset => None, _ => Some(as_str(&attributes[1])) },
+                    rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)),
+                    rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)),
+                };
+                let aid = ConstructiveGeometryRepresentationRelationshipId(
+                    model
+                        .constructive_geometry_representation_relationships
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::ConstructiveGeometryRepresentationRelationship(aid),
+                );
+                pending_constructive_geometry_representation_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => {
                 let v = ContextDependentOverRidingStyledItem {
                     name: as_str(&attributes[0]),
@@ -19681,6 +20485,59 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                 let aid = DefinitionalRepresentationId(model.definitional_representations.push(v));
                 idmap.insert(id, AnyId::DefinitionalRepresentation(aid));
                 pending_definitional_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => {
+                let v = DefinitionalRepresentationRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    rep_1:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                    rep_2:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                };
+                let aid = DefinitionalRepresentationRelationshipId(
+                    model.definitional_representation_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::DefinitionalRepresentationRelationship(aid));
+                pending_definitional_representation_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => {
+                let v = DefinitionalRepresentationRelationshipWithSameContext {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    rep_1:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                    rep_2:
+                        RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
+                            AdvancedBrepShapeRepresentationId(usize::MAX),
+                        ),
+                };
+                let aid = DefinitionalRepresentationRelationshipWithSameContextId(
+                    model
+                        .definitional_representation_relationship_with_same_contexts
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::DefinitionalRepresentationRelationshipWithSameContext(aid),
+                );
+                pending_definitional_representation_relationship_with_same_contexts.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -20853,6 +21710,19 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "IDENTIFICATION_ROLE" => {
+                let v = IdentificationRole {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                };
+                let aid = IdentificationRoleId(model.identification_roles.push(v));
+                idmap.insert(id, AnyId::IdentificationRole(aid));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "INT_LITERAL" => {
                 let v = IntLiteral {
                     the_value: as_int(&attributes[0]),
@@ -21172,6 +22042,21 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => {
+                let v = MechanicalDesignAndDraughtingRelationship {
+                    name: as_str(&attributes[0]),
+                    description: match &attributes[1] { Attribute::Unset => None, _ => Some(as_str(&attributes[1])) },
+                    rep_1: MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)),
+                    rep_2: MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)),
+                };
+                let aid = MechanicalDesignAndDraughtingRelationshipId(
+                    model.mechanical_design_and_draughting_relationships.push(v),
+                );
+                idmap.insert(id, AnyId::MechanicalDesignAndDraughtingRelationship(aid));
+                pending_mechanical_design_and_draughting_relationships.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => {
                 let v = MechanicalDesignGeometricPresentationRepresentation {
                     name: as_str(&attributes[0]),
@@ -21190,6 +22075,49 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
                     AnyId::MechanicalDesignGeometricPresentationRepresentation(aid),
                 );
                 pending_mechanical_design_geometric_presentation_representations.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING" => {
+                let v = MechanicalDesignPresentationRepresentationWithDraughting {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = MechanicalDesignPresentationRepresentationWithDraughtingId(
+                    model
+                        .mechanical_design_presentation_representation_with_draughtings
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::MechanicalDesignPresentationRepresentationWithDraughting(aid),
+                );
+                pending_mechanical_design_presentation_representation_with_draughtings
+                    .push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
+            } if name == "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION" => {
+                let v = MechanicalDesignShadedPresentationRepresentation {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    context_of_items: RepresentationContextRef::GeometricRepresentationContext(
+                        GeometricRepresentationContextId(usize::MAX),
+                    ),
+                };
+                let aid = MechanicalDesignShadedPresentationRepresentationId(
+                    model
+                        .mechanical_design_shaded_presentation_representations
+                        .push(v),
+                );
+                idmap.insert(
+                    id,
+                    AnyId::MechanicalDesignShadedPresentationRepresentation(aid),
+                );
+                pending_mechanical_design_shaded_presentation_representations.push((aid, id));
             }
             RawEntity::Simple {
                 name, attributes, ..
@@ -22463,6 +23391,29 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => {
+                let v = ProductDefinitionWithAssociatedDocuments {
+                    id: as_str(&attributes[0]),
+                    description: match &attributes[1] {
+                        Attribute::Unset => None,
+                        _ => Some(as_str(&attributes[1])),
+                    },
+                    formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
+                        ProductDefinitionFormationId(usize::MAX),
+                    ),
+                    frame_of_reference: ProductDefinitionContextRef::DesignContext(
+                        DesignContextId(usize::MAX),
+                    ),
+                    documentation_ids: Vec::new(),
+                };
+                let aid = ProductDefinitionWithAssociatedDocumentsId(
+                    model.product_definition_with_associated_documentss.push(v),
+                );
+                idmap.insert(id, AnyId::ProductDefinitionWithAssociatedDocuments(aid));
+                pending_product_definition_with_associated_documentss.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "PRODUCT_RELATED_PRODUCT_CATEGORY" => {
                 let v = ProductRelatedProductCategory {
                     name: as_str(&attributes[0]),
@@ -23608,6 +24559,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             }
             RawEntity::Simple {
                 name, attributes, ..
+            } if name == "TESSELLATED_SHELL" => {
+                let v = TessellatedShell {
+                    name: as_str(&attributes[0]),
+                    items: Vec::new(),
+                    topological_link: None,
+                };
+                let aid = TessellatedShellId(model.tessellated_shells.push(v));
+                idmap.insert(id, AnyId::TessellatedShell(aid));
+                pending_tessellated_shells.push((aid, id));
+            }
+            RawEntity::Simple {
+                name, attributes, ..
             } if name == "TESSELLATED_SOLID" => {
                 let v = TessellatedSolid {
                     name: as_str(&attributes[0]),
@@ -24583,6 +25546,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_constructive_geometry_representations(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_constructive_geometry_representation_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_constructive_geometry_representation_relationships(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
     for (aid, raw) in pending_context_dependent_over_riding_styled_items {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_context_dependent_over_riding_styled_items(&mut model, aid, attributes, &idmap);
@@ -24706,6 +25676,18 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_definitional_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_definitional_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_definitional_representation_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_definitional_representation_relationships(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_definitional_representation_relationship_with_same_contexts {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_definitional_representation_relationship_with_same_contexts(
+                &mut model, aid, attributes, &idmap,
+            );
         }
     }
     for (aid, raw) in pending_degenerate_toroidal_surfaces {
@@ -25121,9 +26103,30 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
             resolve_mechanical_contexts(&mut model, aid, attributes, &idmap);
         }
     }
+    for (aid, raw) in pending_mechanical_design_and_draughting_relationships {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_mechanical_design_and_draughting_relationships(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
     for (aid, raw) in pending_mechanical_design_geometric_presentation_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_mechanical_design_geometric_presentation_representations(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
+    for (aid, raw) in pending_mechanical_design_presentation_representation_with_draughtings {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_mechanical_design_presentation_representation_with_draughtings(
+                &mut model, aid, attributes, &idmap,
+            );
+        }
+    }
+    for (aid, raw) in pending_mechanical_design_shaded_presentation_representations {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_mechanical_design_shaded_presentation_representations(
                 &mut model, aid, attributes, &idmap,
             );
         }
@@ -25395,6 +26398,13 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_product_definition_usages {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_product_definition_usages(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_product_definition_with_associated_documentss {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_product_definition_with_associated_documentss(
+                &mut model, aid, attributes, &idmap,
+            );
         }
     }
     for (aid, raw) in pending_product_related_product_categorys {
@@ -25707,6 +26717,11 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
     for (aid, raw) in pending_tessellated_shape_representations {
         if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
             resolve_tessellated_shape_representations(&mut model, aid, attributes, &idmap);
+        }
+    }
+    for (aid, raw) in pending_tessellated_shells {
+        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+            resolve_tessellated_shells(&mut model, aid, attributes, &idmap);
         }
     }
     for (aid, raw) in pending_tessellated_solids {
@@ -27364,6 +28379,25 @@ fn resolve_constructive_geometry_representations(
     it.context_of_items = context_of_items_v;
 }
 
+fn resolve_constructive_geometry_representation_relationships(
+    model: &mut Model,
+    aid: ConstructiveGeometryRepresentationRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rep_1_v = ConstructiveGeometryRepresentationOrShapeRepresentationRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let rep_2_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model
+        .constructive_geometry_representation_relationships
+        .items[aid.0];
+    it.rep_1 = rep_1_v;
+    it.rep_2 = rep_2_v;
+}
+
 fn resolve_context_dependent_over_riding_styled_items(
     model: &mut Model,
     aid: ContextDependentOverRidingStyledItemId,
@@ -27829,6 +28863,42 @@ fn resolve_definitional_representations(
     let it = &mut model.definitional_representations.items[aid.0];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
+}
+
+fn resolve_definitional_representation_relationships(
+    model: &mut Model,
+    aid: DefinitionalRepresentationRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rep_1_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let rep_2_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model.definitional_representation_relationships.items[aid.0];
+    it.rep_1 = rep_1_v;
+    it.rep_2 = rep_2_v;
+}
+
+fn resolve_definitional_representation_relationship_with_same_contexts(
+    model: &mut Model,
+    aid: DefinitionalRepresentationRelationshipWithSameContextId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rep_1_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let rep_2_v = RepresentationOrRepresentationReferenceRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model
+        .definitional_representation_relationship_with_same_contexts
+        .items[aid.0];
+    it.rep_1 = rep_1_v;
+    it.rep_2 = rep_2_v;
 }
 
 fn resolve_degenerate_toroidal_surfaces(
@@ -29119,6 +30189,23 @@ fn resolve_mechanical_contexts(
     it.frame_of_reference = frame_of_reference_v;
 }
 
+fn resolve_mechanical_design_and_draughting_relationships(
+    model: &mut Model,
+    aid: MechanicalDesignAndDraughtingRelationshipId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let rep_1_v = MechanicalDesignAndDraughtingRelationshipSelectRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+    );
+    let rep_2_v = MechanicalDesignAndDraughtingRelationshipSelectRef::from_any(
+        *idmap.get(&as_ref_id(&attrs[3])).expect("ref"),
+    );
+    let it = &mut model.mechanical_design_and_draughting_relationships.items[aid.0];
+    it.rep_1 = rep_1_v;
+    it.rep_2 = rep_2_v;
+}
+
 fn resolve_mechanical_design_geometric_presentation_representations(
     model: &mut Model,
     aid: MechanicalDesignGeometricPresentationRepresentationId,
@@ -29136,6 +30223,50 @@ fn resolve_mechanical_design_geometric_presentation_representations(
         RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
     let it = &mut model
         .mechanical_design_geometric_presentation_representations
+        .items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
+}
+
+fn resolve_mechanical_design_presentation_representation_with_draughtings(
+    model: &mut Model,
+    aid: MechanicalDesignPresentationRepresentationWithDraughtingId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model
+        .mechanical_design_presentation_representation_with_draughtings
+        .items[aid.0];
+    it.items = items_v;
+    it.context_of_items = context_of_items_v;
+}
+
+fn resolve_mechanical_design_shaded_presentation_representations(
+    model: &mut Model,
+    aid: MechanicalDesignShadedPresentationRepresentationId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| RepresentationItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let context_of_items_v =
+        RepresentationContextRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let it = &mut model
+        .mechanical_design_shaded_presentation_representations
         .items[aid.0];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
@@ -29998,6 +31129,29 @@ fn resolve_product_definition_usages(
     let it = &mut model.product_definition_usages.items[aid.0];
     it.relating_product_definition = relating_product_definition_v;
     it.related_product_definition = related_product_definition_v;
+}
+
+fn resolve_product_definition_with_associated_documentss(
+    model: &mut Model,
+    aid: ProductDefinitionWithAssociatedDocumentsId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let formation_v =
+        ProductDefinitionFormationRef::from_any(*idmap.get(&as_ref_id(&attrs[2])).expect("ref"));
+    let frame_of_reference_v =
+        ProductDefinitionContextRef::from_any(*idmap.get(&as_ref_id(&attrs[3])).expect("ref"));
+    let documentation_ids_v = match &attrs[4] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| DocumentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let it = &mut model.product_definition_with_associated_documentss.items[aid.0];
+    it.formation = formation_v;
+    it.frame_of_reference = frame_of_reference_v;
+    it.documentation_ids = documentation_ids_v;
 }
 
 fn resolve_product_related_product_categorys(
@@ -31000,6 +32154,32 @@ fn resolve_tessellated_shape_representations(
     it.context_of_items = context_of_items_v;
 }
 
+fn resolve_tessellated_shells(
+    model: &mut Model,
+    aid: TessellatedShellId,
+    attrs: &[Attribute],
+    idmap: &BTreeMap<u64, AnyId>,
+) {
+    let items_v = match &attrs[1] {
+        Attribute::List(l) => l
+            .iter()
+            .map(|e| {
+                TessellatedStructuredItemRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref"))
+            })
+            .collect(),
+        other => panic!("vec ref: {other:?}"),
+    };
+    let topological_link_v = match &attrs[2] {
+        Attribute::Unset => None,
+        _ => Some(ConnectedFaceSetRef::from_any(
+            *idmap.get(&as_ref_id(&attrs[2])).expect("ref"),
+        )),
+    };
+    let it = &mut model.tessellated_shells.items[aid.0];
+    it.items = items_v;
+    it.topological_link = topological_link_v;
+}
+
 fn resolve_tessellated_solids(
     model: &mut Model,
     aid: TessellatedSolidId,
@@ -31483,6 +32663,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(usize::MAX)), },
         "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(usize::MAX)), purpose: match &p.attributes[4] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[4])) }, },
         "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None, },
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => UnitPart::ConstructiveGeometryRepresentationRelationship,
         "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => UnitPart::ContextDependentOverRidingStyledItem { style_context: Vec::new(), },
         "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit { name: as_str(&p.attributes[0]), },
         "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit { name: as_str(&p.attributes[0]), conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
@@ -31503,6 +32684,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "DEFINED_CHARACTER_GLYPH" => UnitPart::DefinedCharacterGlyph { definition: DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId(usize::MAX)), placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), },
         "DEFINED_SYMBOL" => UnitPart::DefinedSymbol { definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(ExternallyDefinedSymbolId(usize::MAX)), target: SymbolTargetRef::SymbolTarget(SymbolTargetId(usize::MAX)), },
         "DEFINITIONAL_REPRESENTATION" => UnitPart::DefinitionalRepresentation,
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => UnitPart::DefinitionalRepresentationRelationship,
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => UnitPart::DefinitionalRepresentationRelationshipWithSameContext,
         "DEGENERATE_TOROIDAL_SURFACE" => UnitPart::DegenerateToroidalSurface { select_outer: matches!(&p.attributes[0], Attribute::Enum(s) if s == "T"), },
         "DERIVED_UNIT" => UnitPart::DerivedUnit { elements: Vec::new(), },
         "DESIGN_CONTEXT" => UnitPart::DesignContext,
@@ -31588,6 +32771,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
         "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: read_measure_value(&p.attributes[0]), unit_component: UnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)), },
         "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
+        "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => UnitPart::MechanicalDesignAndDraughtingRelationship,
         "MODEL_GEOMETRIC_VIEW" => UnitPart::ModelGeometricView,
         "MODIFIED_GEOMETRIC_TOLERANCE" => UnitPart::ModifiedGeometricTolerance { modifier: match &p.attributes[0] { Attribute::Enum(s) => LimitCondition::parse(s).expect("limit_condition"), other => panic!("enum limit_condition: {other:?}") }, },
         "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None, },
@@ -31647,6 +32831,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
         "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => UnitPart::ProductDefinitionRelationshipRelationship { id: as_str(&p.attributes[0]), name: as_str(&p.attributes[1]), description: match &p.attributes[2] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[2])) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), },
         "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
         "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids: Vec::new(), },
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory { products: Vec::new(), },
         "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: as_str(&p.attributes[0]), description: match &p.attributes[1] { Attribute::Unset => None, _ => Some(as_str(&p.attributes[1])) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
         "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
@@ -32814,6 +33999,17 @@ fn resolve_complex(
                 *related = ProductDefinitionRelationshipRef::from_any(
                     *idmap.get(&as_ref_id(&p.attributes[4])).expect("ref"),
                 );
+            }
+            UnitPart::ProductDefinitionWithAssociatedDocuments {
+                documentation_ids, ..
+            } => {
+                *documentation_ids = match &p.attributes[0] {
+                    Attribute::List(l) => l
+                        .iter()
+                        .map(|e| DocumentRef::from_any(*idmap.get(&as_ref_id(e)).expect("ref")))
+                        .collect(),
+                    other => panic!("vec ref: {other:?}"),
+                };
             }
             UnitPart::ProductRelatedProductCategory { products, .. } => {
                 *products = match &p.attributes[0] {

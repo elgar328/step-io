@@ -2572,6 +2572,32 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[
             Slot {
                 k: Sk::Str,
@@ -3199,6 +3225,58 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             },
             Slot {
                 k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
                 req: true,
                 der: false,
                 swire: None,
@@ -4744,6 +4822,20 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "IDENTIFICATION_ROLE" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+        ],
         "INT_LITERAL" => &[Slot {
             k: Sk::Int,
             req: true,
@@ -5140,7 +5232,73 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION" => &[
             Slot {
                 k: Sk::Str,
                 req: true,
@@ -6792,6 +6950,38 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 swire: None,
             },
         ],
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+        ],
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[
             Slot {
                 k: Sk::Str,
@@ -8154,6 +8344,26 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                der: false,
+                swire: None,
+            },
+        ],
+        "TESSELLATED_SHELL" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                der: false,
+                swire: None,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: false,
                 der: false,
                 swire: None,
             },
@@ -9607,6 +9817,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             der: false,
             swire: None,
         }],
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => &[],
         "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => &[Slot {
             k: Sk::Vec,
             req: true,
@@ -9805,6 +10016,8 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "DEFINITIONAL_REPRESENTATION" => &[],
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => &[],
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => &[],
         "DEGENERATE_TOROIDAL_SURFACE" => &[Slot {
             k: Sk::Bool,
             req: true,
@@ -10361,6 +10574,7 @@ fn part_slots(n: &str) -> &'static [Slot] {
             },
         ],
         "MECHANICAL_CONTEXT" => &[],
+        "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => &[],
         "MODEL_GEOMETRIC_VIEW" => &[],
         "MODIFIED_GEOMETRIC_TOLERANCE" => &[Slot {
             k: Sk::Enum,
@@ -10806,6 +11020,12 @@ fn part_slots(n: &str) -> &'static [Slot] {
         ],
         "PRODUCT_DEFINITION_SHAPE" => &[],
         "PRODUCT_DEFINITION_USAGE" => &[],
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => &[Slot {
+            k: Sk::Vec,
+            req: true,
+            der: false,
+            swire: None,
+        }],
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => &[Slot {
             k: Sk::Vec,
             req: true,

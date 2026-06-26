@@ -447,6 +447,25 @@ pmi_leader_line = [
 # (CHARACTERIZED_OBJECT+CHARACTERIZED_REPRESENTATION+DRAUGHTING_MODEL+REPRESENTATION+
 # SHAPE_REPRESENTATION+TESSELLATED_SHAPE_REPRESENTATION) complex cascade root.
 characterized_rep = ["characterized_representation"]
+# PLM/draughting long-tail (clean seeds, deps covered). PDWAD (product_definition
+# subtype, documentation_ids=SET OF document covered); tessellated_shell (items=
+# tessellated_structured_item + topological_link=connected_face_set covered);
+# constructive_geometry_representation_relationship (redeclare select both covered);
+# identification_role (primitive attrs; also unblocks Group B parent chains).
+plm_doc_shape = [
+    "product_definition_with_associated_documents", "tessellated_shell",
+    "constructive_geometry_representation_relationship", "identification_role",
+]
+# mechanical_design_and_draughting_relationship: complex part-bag whose parent
+# chain (definitional_representation_relationship_with_same_context -> .. ->
+# representation_relationship) is all is_complex_part + thin (own_attrs=[]). Its
+# redeclare select's 2 uncovered members are also simple+thin (parent representation,
+# own_attrs=[]) so seeding them avoids any narrow.
+mech_draughting = [
+    "mechanical_design_and_draughting_relationship",
+    "mechanical_design_presentation_representation_with_draughting",
+    "mechanical_design_shaded_presentation_representation",
+]
 
 [narrow]
 # value_qualifier: keep the four simple qualifier entities; drop
