@@ -1,5 +1,7 @@
 pub(crate) mod early;
 pub mod entities;
+#[cfg(feature = "gen")]
+pub mod generated;
 pub mod ir;
 pub mod parser;
 pub mod reader;

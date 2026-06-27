@@ -335,9 +335,11 @@ fn has_ref(k: &Kind) -> bool {
     }
 }
 
-pub fn emit_read(ir: &ModelIr) -> String {
+pub fn emit_read(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
-    s.push_str("use std::collections::BTreeMap;\nuse step_io::{Attribute, RawEntity, RawEntityPart};\nuse super::model::*;\n\n");
+    s.push_str(&format!(
+        "use std::collections::BTreeMap;\nuse {crate_path}::{{Attribute, RawEntity, RawEntityPart}};\nuse super::model::*;\n\n"
+    ));
 
     // scalar readers
     s.push_str(
@@ -1784,9 +1786,11 @@ fn emit_slot_table<'a>(
     s.push_str("        _ => &[],\n    }\n}\n\n");
 }
 
-pub fn emit_normalize(ir: &ModelIr) -> String {
+pub fn emit_normalize(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
-    s.push_str("use std::collections::BTreeMap;\nuse step_io::{Attribute, RawEntity};\n\n");
+    s.push_str(&format!(
+        "use std::collections::BTreeMap;\nuse {crate_path}::{{Attribute, RawEntity}};\n\n"
+    ));
     s.push_str(
         r#"#[derive(Clone, Copy)]
 enum Sk { Real, Int, Str, Bin, Bool, Log, Enum, Ref, Vec, Meas }
