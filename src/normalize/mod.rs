@@ -156,7 +156,7 @@ fn check_ref_slots(
 fn drop_pass(
     graph: &BTreeMap<u64, RawEntity>,
     known_bad: &BTreeSet<u64>,
-) -> (BTreeMap<u64, RawEntity>, Vec<(u64, DropReason)>) {
+) -> (BTreeSet<u64>, Vec<(u64, DropReason)>) {
     let mut dropped: Vec<(u64, DropReason)> = Vec::new();
     let mut keep: BTreeSet<u64> = BTreeSet::new();
     let mut root_of: BTreeMap<u64, String> = BTreeMap::new();
@@ -225,11 +225,9 @@ fn drop_pass(
             break;
         }
     }
-    let map = keep
-        .into_iter()
-        .map(|id| (id, graph[&id].clone()))
-        .collect();
-    (map, dropped)
+    // Return the kept-id set (not a cloned entity map): the reader borrows the
+    // entities from the full graph, so no RawEntity is cloned here.
+    (keep, dropped)
 }
 
 /// Full pre-read normalization: `entity_normalize` (per-entity, add-only synthetic
@@ -295,7 +293,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), ParseError> {
         // No catch_unwind belt: the generated read is structurally panic-free
         // (codegen emits no panic!/expect/unwrap/raw indexing — gated by grep), so
         // it returns per-entity drops instead of unwinding.
-        let (m, _idmap, read_drops) = gen_read(&kept);
+        let (m, _idmap, read_drops) = gen_read(&normalized, &kept);
         model = m;
         dropped = kept_dropped;
         validated = kept.len();

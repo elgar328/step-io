@@ -3,7 +3,7 @@
 
 use super::model::*;
 use crate::{Attribute, RawEntity, RawEntityPart};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 // Strict scalar readers (fallible): the pre-read `normalize` layer rewrites
 // non-standard values to standard form (or drops the entity); a reader seeing
@@ -31952,7 +31952,8 @@ fn build_wire_shells(attributes: &[Attribute]) -> Result<WireShell, String> {
 }
 
 pub fn read(
-    map: &BTreeMap<u64, RawEntity>,
+    graph: &BTreeMap<u64, RawEntity>,
+    kept: &BTreeSet<u64>,
 ) -> (StepModel, BTreeMap<u64, AnyId>, Vec<(u64, String)>) {
     let mut model = StepModel::default();
     let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();
@@ -32622,7 +32623,10 @@ pub fn read(
     let mut pending_volume_units: Vec<(VolumeUnitId, u64)> = Vec::new();
     let mut pending_wire_shells: Vec<(WireShellId, u64)> = Vec::new();
     let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();
-    for (&id, ent) in map {
+    for (&id, ent) in graph {
+        if !kept.contains(&id) {
+            continue;
+        }
         match ent {
             RawEntity::Simple {
                 name, attributes, ..
@@ -38462,28 +38466,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_actions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_actions(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_action_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_assignments(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_action_directives {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_directives(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_action_method_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_method_relationships(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -38491,21 +38495,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_action_propertys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_propertys(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_action_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_relationships(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_action_request_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_request_assignments(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -38513,21 +38517,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_action_request_solutions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_request_solutions(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_action_resources {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_action_resources(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_action_resource_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_action_resource_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -38536,7 +38540,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_action_resource_requirements {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_action_resource_requirements(&mut model, aid, attributes, &idmap)
             {
@@ -38545,7 +38549,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_advanced_brep_shape_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_advanced_brep_shape_representations(&mut model, aid, attributes, &idmap)
             {
@@ -38554,42 +38558,42 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_advanced_faces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_advanced_faces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_all_around_shape_aspects {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_all_around_shape_aspects(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_angular_locations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_angular_locations(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_angular_sizes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_angular_sizes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_angularity_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_angularity_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_annotation_curve_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_curve_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -38598,7 +38602,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_fill_area_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_fill_area_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -38607,14 +38611,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_annotation_occurrences(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_annotation_occurrence_associativitys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_occurrence_associativitys(&mut model, aid, attributes, &idmap)
             {
@@ -38623,7 +38627,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_occurrence_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_occurrence_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -38632,7 +38636,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_placeholder_leader_lines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_placeholder_leader_lines(&mut model, aid, attributes, &idmap)
             {
@@ -38641,7 +38645,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_placeholder_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_placeholder_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -38650,7 +38654,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_placeholder_occurrence_with_leader_lines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_annotation_placeholder_occurrence_with_leader_lines(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -38659,21 +38663,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_planes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_annotation_planes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_annotation_symbols {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_annotation_symbols(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_annotation_symbol_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_symbol_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -38682,14 +38686,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_texts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_annotation_texts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_annotation_text_characters {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_annotation_text_characters(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -38697,7 +38701,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_text_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_annotation_text_occurrences(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -38705,7 +38709,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_to_annotation_leader_lines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_to_annotation_leader_lines(&mut model, aid, attributes, &idmap)
             {
@@ -38714,7 +38718,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_annotation_to_model_leader_lines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_annotation_to_model_leader_lines(&mut model, aid, attributes, &idmap)
             {
@@ -38723,14 +38727,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_apll_point_with_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_apll_point_with_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_application_context_elements {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_application_context_elements(&mut model, aid, attributes, &idmap)
             {
@@ -38739,7 +38743,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_application_protocol_definitions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_application_protocol_definitions(&mut model, aid, attributes, &idmap)
             {
@@ -38748,7 +38752,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_applied_approval_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_applied_approval_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -38757,7 +38761,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_applied_date_and_time_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_applied_date_and_time_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -38766,7 +38770,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_applied_document_references {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_applied_document_references(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -38774,7 +38778,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_applied_external_identification_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_applied_external_identification_assignments(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -38783,14 +38787,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_applied_group_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_applied_group_assignments(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_applied_person_and_organization_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_applied_person_and_organization_assignments(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -38799,14 +38803,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_applied_presented_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_applied_presented_items(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_applied_security_classification_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_applied_security_classification_assignments(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -38815,28 +38819,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_approvals {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_approvals(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_approval_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_approval_assignments(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_approval_date_times {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_approval_date_times(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_approval_person_organizations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_approval_person_organizations(&mut model, aid, attributes, &idmap)
             {
@@ -38845,35 +38849,35 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_approximation_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_approximation_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_area_in_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_area_in_sets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_area_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_area_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_ascribable_states {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_ascribable_states(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_ascribable_state_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_ascribable_state_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -38882,49 +38886,49 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_assembly_component_usages {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_assembly_component_usages(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_auxiliary_leader_lines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_auxiliary_leader_lines(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_axis1_placements {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_axis1_placements(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_axis2_placement2ds {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_axis2_placement2ds(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_axis2_placement3ds {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_axis2_placement3ds(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_b_spline_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_b_spline_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_b_spline_curve_with_knotss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_b_spline_curve_with_knotss(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -38932,14 +38936,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_b_spline_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_b_spline_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_b_spline_surface_with_knotss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_b_spline_surface_with_knotss(&mut model, aid, attributes, &idmap)
             {
@@ -38948,49 +38952,49 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_bezier_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_bezier_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_bezier_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_bezier_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_bounded_pcurves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_bounded_pcurves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_bounded_surface_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_bounded_surface_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_brep_with_voidss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_brep_with_voidss(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_camera_images {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_camera_images(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_camera_image3d_with_scales {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_camera_image3d_with_scales(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -38998,14 +39002,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_camera_model_d3s {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_camera_model_d3s(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_camera_model_d3_multi_clippings {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_camera_model_d3_multi_clippings(&mut model, aid, attributes, &idmap)
             {
@@ -39014,7 +39018,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_camera_model_d3_with_hlhsrs {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_camera_model_d3_with_hlhsrs(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -39022,21 +39026,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_camera_usages {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_camera_usages(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_cc_design_approvals {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_cc_design_approvals(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_cc_design_date_and_time_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_cc_design_date_and_time_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -39045,7 +39049,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_cc_design_person_and_organization_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_cc_design_person_and_organization_assignments(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39054,7 +39058,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_cc_design_security_classifications {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_cc_design_security_classifications(&mut model, aid, attributes, &idmap)
             {
@@ -39063,35 +39067,35 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_centre_of_symmetrys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_centre_of_symmetrys(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_certifications {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_certifications(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_changes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_changes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_change_requests {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_change_requests(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_character_glyph_style_outlines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_character_glyph_style_outlines(&mut model, aid, attributes, &idmap)
             {
@@ -39100,7 +39104,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_character_glyph_style_strokes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_character_glyph_style_strokes(&mut model, aid, attributes, &idmap)
             {
@@ -39109,7 +39113,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_characterized_item_within_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_characterized_item_within_representations(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39118,7 +39122,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_characterized_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_characterized_representations(&mut model, aid, attributes, &idmap)
             {
@@ -39127,14 +39131,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_circles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_circles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_circular_runout_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_circular_runout_tolerances(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -39142,28 +39146,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_closed_shells {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_closed_shells(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_coaxiality_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_coaxiality_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_common_datums {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_common_datums(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_complex_triangulated_faces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_complex_triangulated_faces(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -39171,7 +39175,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_complex_triangulated_surface_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_complex_triangulated_surface_sets(&mut model, aid, attributes, &idmap)
             {
@@ -39180,21 +39184,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_composite_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_composite_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_composite_curve_segments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_composite_curve_segments(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_composite_group_shape_aspects {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_composite_group_shape_aspects(&mut model, aid, attributes, &idmap)
             {
@@ -39203,21 +39207,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_composite_shape_aspects {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_composite_shape_aspects(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_composite_texts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_composite_texts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_compound_representation_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_compound_representation_items(&mut model, aid, attributes, &idmap)
             {
@@ -39226,21 +39230,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_concentricity_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_concentricity_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_configuration_designs {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_configuration_designs(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_configuration_effectivitys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_configuration_effectivitys(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -39248,35 +39252,35 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_configuration_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_configuration_items(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_conics {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_conics(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_conical_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_conical_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_connected_face_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_connected_face_sets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_constructive_geometry_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_constructive_geometry_representations(&mut model, aid, attributes, &idmap)
             {
@@ -39285,7 +39289,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_constructive_geometry_representation_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_constructive_geometry_representation_relationships(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39294,7 +39298,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_context_dependent_over_riding_styled_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_context_dependent_over_riding_styled_items(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39303,7 +39307,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_context_dependent_shape_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_context_dependent_shape_representations(&mut model, aid, attributes, &idmap)
             {
@@ -39312,49 +39316,49 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_context_dependent_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_context_dependent_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_continuous_shape_aspects {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_continuous_shape_aspects(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_contracts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_contracts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_conversion_based_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_conversion_based_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_curve_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_curve_styles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_curve_style_fonts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_curve_style_fonts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_curve_style_font_and_scalings {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_curve_style_font_and_scalings(&mut model, aid, attributes, &idmap)
             {
@@ -39363,63 +39367,63 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_curve_style_renderings {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_curve_style_renderings(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_cylindrical_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_cylindrical_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_cylindricity_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_cylindricity_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_date_and_times {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_date_and_times(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_date_and_time_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_date_and_time_assignments(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_datums {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_datums(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_datum_features {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_datum_features(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_datum_references {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_datum_references(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_datum_reference_compartments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_datum_reference_compartments(&mut model, aid, attributes, &idmap)
             {
@@ -39428,14 +39432,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_datum_reference_elements {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_datum_reference_elements(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_datum_reference_modifier_with_values {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_datum_reference_modifier_with_values(&mut model, aid, attributes, &idmap)
             {
@@ -39444,21 +39448,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_datum_systems {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_datum_systems(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_datum_targets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_datum_targets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_default_model_geometric_views {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_default_model_geometric_views(&mut model, aid, attributes, &idmap)
             {
@@ -39467,21 +39471,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_defined_character_glyphs {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_defined_character_glyphs(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_defined_symbols {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_defined_symbols(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_definitional_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_definitional_representations(&mut model, aid, attributes, &idmap)
             {
@@ -39490,7 +39494,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_definitional_representation_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_definitional_representation_relationships(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39499,7 +39503,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_definitional_representation_relationship_with_same_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_definitional_representation_relationship_with_same_contexts(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39508,7 +39512,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_degenerate_toroidal_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_degenerate_toroidal_surfaces(&mut model, aid, attributes, &idmap)
             {
@@ -39517,42 +39521,42 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_derived_shape_aspects {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_derived_shape_aspects(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_derived_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_derived_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_derived_unit_elements {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_derived_unit_elements(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_description_attributes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_description_attributes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_design_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_design_contexts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_dimensional_characteristic_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_dimensional_characteristic_representations(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39561,14 +39565,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_dimensional_locations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_dimensional_locations(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_dimensional_location_with_paths {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_dimensional_location_with_paths(&mut model, aid, attributes, &idmap)
             {
@@ -39577,14 +39581,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_dimensional_sizes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_dimensional_sizes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_dimensional_size_with_datum_features {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_dimensional_size_with_datum_features(&mut model, aid, attributes, &idmap)
             {
@@ -39593,7 +39597,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_dimensional_size_with_paths {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_dimensional_size_with_paths(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -39601,7 +39605,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_directed_dimensional_locations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_directed_dimensional_locations(&mut model, aid, attributes, &idmap)
             {
@@ -39610,21 +39614,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_documents {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_documents(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_document_files {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_document_files(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_document_product_associations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_document_product_associations(&mut model, aid, attributes, &idmap)
             {
@@ -39633,7 +39637,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_document_product_equivalences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_document_product_equivalences(&mut model, aid, attributes, &idmap)
             {
@@ -39642,14 +39646,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_document_references {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_document_references(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_document_representation_types {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_document_representation_types(&mut model, aid, attributes, &idmap)
             {
@@ -39658,7 +39662,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_draughting_annotation_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_draughting_annotation_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -39667,14 +39671,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_draughting_callouts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_draughting_callouts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_draughting_callout_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_draughting_callout_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -39683,14 +39687,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_draughting_models {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_draughting_models(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_draughting_model_item_associations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_draughting_model_item_associations(&mut model, aid, attributes, &idmap)
             {
@@ -39699,7 +39703,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_draughting_model_item_association_with_placeholders {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_draughting_model_item_association_with_placeholders(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39708,42 +39712,42 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_edges {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_edges(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_edge_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_edge_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_edge_loops {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_edge_loops(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_elementary_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_elementary_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_ellipses {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_ellipses(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_external_identification_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_external_identification_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -39752,7 +39756,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_externally_defined_character_glyphs {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_externally_defined_character_glyphs(&mut model, aid, attributes, &idmap)
             {
@@ -39761,7 +39765,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_externally_defined_curve_fonts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_externally_defined_curve_fonts(&mut model, aid, attributes, &idmap)
             {
@@ -39770,7 +39774,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_externally_defined_hatch_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_externally_defined_hatch_styles(&mut model, aid, attributes, &idmap)
             {
@@ -39779,21 +39783,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_externally_defined_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_externally_defined_items(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_externally_defined_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_externally_defined_styles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_externally_defined_symbols {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_externally_defined_symbols(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -39801,7 +39805,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_externally_defined_text_fonts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_externally_defined_text_fonts(&mut model, aid, attributes, &idmap)
             {
@@ -39810,14 +39814,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_externally_defined_tiles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_externally_defined_tiles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_externally_defined_tile_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_externally_defined_tile_styles(&mut model, aid, attributes, &idmap)
             {
@@ -39826,35 +39830,35 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_faces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_faces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_face_bounds {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_face_bounds(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_face_outer_bounds {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_face_outer_bounds(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_face_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_face_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_feature_for_datum_target_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_feature_for_datum_target_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -39863,28 +39867,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_fill_area_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_fill_area_styles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_fill_area_style_colours {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_fill_area_style_colours(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_fill_area_style_hatchings {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_fill_area_style_hatchings(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_fill_area_style_tile_coloured_regions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_fill_area_style_tile_coloured_regions(&mut model, aid, attributes, &idmap)
             {
@@ -39893,7 +39897,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_fill_area_style_tile_curve_with_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_fill_area_style_tile_curve_with_styles(&mut model, aid, attributes, &idmap)
             {
@@ -39902,7 +39906,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_fill_area_style_tile_symbol_with_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_fill_area_style_tile_symbol_with_styles(&mut model, aid, attributes, &idmap)
             {
@@ -39911,28 +39915,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_fill_area_style_tiless {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_fill_area_style_tiless(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_flatness_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_flatness_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_general_datum_references {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_general_datum_references(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_general_property_associations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_general_property_associations(&mut model, aid, attributes, &idmap)
             {
@@ -39941,7 +39945,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_generic_product_definition_references {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_generic_product_definition_references(&mut model, aid, attributes, &idmap)
             {
@@ -39950,14 +39954,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometric_curve_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometric_curve_sets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_geometric_item_specific_usages {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_geometric_item_specific_usages(&mut model, aid, attributes, &idmap)
             {
@@ -39966,21 +39970,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometric_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometric_sets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_geometric_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometric_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_geometric_tolerance_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_geometric_tolerance_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -39989,7 +39993,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometric_tolerance_with_datum_references {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometric_tolerance_with_datum_references(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -39998,7 +40002,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometric_tolerance_with_defined_area_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometric_tolerance_with_defined_area_units(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40007,7 +40011,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometric_tolerance_with_defined_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_geometric_tolerance_with_defined_units(&mut model, aid, attributes, &idmap)
             {
@@ -40016,7 +40020,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometric_tolerance_with_maximum_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometric_tolerance_with_maximum_tolerances(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40025,7 +40029,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometric_tolerance_with_modifierss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_geometric_tolerance_with_modifierss(&mut model, aid, attributes, &idmap)
             {
@@ -40034,7 +40038,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometrically_bounded_surface_shape_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometrically_bounded_surface_shape_representations(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40043,7 +40047,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_geometrically_bounded_wireframe_shape_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_geometrically_bounded_wireframe_shape_representations(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40052,7 +40056,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_global_uncertainty_assigned_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_global_uncertainty_assigned_contexts(&mut model, aid, attributes, &idmap)
             {
@@ -40061,7 +40065,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_global_unit_assigned_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_global_unit_assigned_contexts(&mut model, aid, attributes, &idmap)
             {
@@ -40070,28 +40074,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_group_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_group_assignments(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_hyperbolas {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_hyperbolas(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_id_attributes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_id_attributes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_identification_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_identification_assignments(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40099,21 +40103,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_intersection_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_intersection_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_invisibilitys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_invisibilitys(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_item_defined_transformations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_item_defined_transformations(&mut model, aid, attributes, &idmap)
             {
@@ -40122,7 +40126,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_item_identified_representation_usages {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_item_identified_representation_usages(&mut model, aid, attributes, &idmap)
             {
@@ -40131,77 +40135,77 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_leader_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_leader_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_leader_directed_callouts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_leader_directed_callouts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_leader_terminators {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_leader_terminators(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_length_measure_with_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_length_measure_with_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_length_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_length_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_lines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_lines(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_line_profile_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_line_profile_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_local_times {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_local_times(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_make_from_usage_options {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_make_from_usage_options(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_manifold_solid_breps {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_manifold_solid_breps(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_manifold_surface_shape_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_manifold_surface_shape_representations(&mut model, aid, attributes, &idmap)
             {
@@ -40210,35 +40214,35 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_mapped_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mapped_items(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_mass_measure_with_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mass_measure_with_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_mass_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mass_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_measure_qualifications {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_measure_qualifications(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_measure_representation_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_measure_representation_items(&mut model, aid, attributes, &idmap)
             {
@@ -40247,21 +40251,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_measure_with_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_measure_with_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_mechanical_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mechanical_contexts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_mechanical_design_and_draughting_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mechanical_design_and_draughting_relationships(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40270,7 +40274,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_mechanical_design_geometric_presentation_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mechanical_design_geometric_presentation_representations(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40279,7 +40283,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_mechanical_design_presentation_representation_with_draughtings {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mechanical_design_presentation_representation_with_draughtings(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40288,7 +40292,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_mechanical_design_shaded_presentation_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_mechanical_design_shaded_presentation_representations(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40297,14 +40301,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_model_geometric_views {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_model_geometric_views(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_modified_geometric_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_modified_geometric_tolerances(&mut model, aid, attributes, &idmap)
             {
@@ -40313,21 +40317,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_name_attributes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_name_attributes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_named_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_named_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_next_assembly_usage_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_next_assembly_usage_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -40336,14 +40340,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_offset_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_offset_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_one_direction_repeat_factors {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_one_direction_repeat_factors(&mut model, aid, attributes, &idmap)
             {
@@ -40352,14 +40356,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_open_shells {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_open_shells(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_organization_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_organization_relationships(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40367,21 +40371,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_organizational_addresss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_organizational_addresss(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_organizational_projects {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_organizational_projects(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_organizational_project_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_organizational_project_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -40390,49 +40394,49 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_oriented_closed_shells {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_oriented_closed_shells(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_oriented_edges {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_oriented_edges(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_over_riding_styled_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_over_riding_styled_items(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_parallelism_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_parallelism_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_paths {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_paths(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_pcurves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_pcurves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_perpendicularity_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_perpendicularity_tolerances(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40440,14 +40444,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_person_and_organizations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_person_and_organizations(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_person_and_organization_addresss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_person_and_organization_addresss(&mut model, aid, attributes, &idmap)
             {
@@ -40456,7 +40460,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_person_and_organization_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_person_and_organization_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -40465,14 +40469,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_personal_addresss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_personal_addresss(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_placed_datum_target_features {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_placed_datum_target_features(&mut model, aid, attributes, &idmap)
             {
@@ -40481,28 +40485,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_placements {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_placements(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_planar_boxs {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_planar_boxs(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_planes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_planes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_plane_angle_measure_with_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_plane_angle_measure_with_units(&mut model, aid, attributes, &idmap)
             {
@@ -40511,56 +40515,56 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_plane_angle_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_plane_angle_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_plus_minus_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_plus_minus_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_point_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_point_styles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_poly_loops {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_poly_loops(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_polylines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_polylines(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_position_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_position_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_presentation_areas {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_presentation_areas(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_presentation_layer_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_presentation_layer_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -40569,7 +40573,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_presentation_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_presentation_representations(&mut model, aid, attributes, &idmap)
             {
@@ -40578,14 +40582,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_presentation_sizes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_presentation_sizes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_presentation_style_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_presentation_style_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -40594,7 +40598,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_presentation_style_by_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_presentation_style_by_contexts(&mut model, aid, attributes, &idmap)
             {
@@ -40603,14 +40607,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_presentation_views {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_presentation_views(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_presented_item_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_presented_item_representations(&mut model, aid, attributes, &idmap)
             {
@@ -40619,14 +40623,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_products {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_products(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_product_category_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_category_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -40635,35 +40639,35 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_concepts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_concepts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_product_concept_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_concept_contexts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_product_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_contexts(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_product_definitions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_definitions(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_product_definition_contexts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_definition_contexts(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40671,7 +40675,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_context_associations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_definition_context_associations(&mut model, aid, attributes, &idmap)
             {
@@ -40680,7 +40684,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_effectivitys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_definition_effectivitys(&mut model, aid, attributes, &idmap)
             {
@@ -40689,7 +40693,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_formations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_definition_formations(&mut model, aid, attributes, &idmap)
             {
@@ -40698,7 +40702,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_formation_with_specified_sources {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_definition_formation_with_specified_sources(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40707,7 +40711,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_definition_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -40716,7 +40720,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_definition_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -40725,7 +40729,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_relationship_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_definition_relationship_relationships(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40734,14 +40738,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_shapes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_definition_shapes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_product_definition_substitutes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_definition_substitutes(&mut model, aid, attributes, &idmap)
             {
@@ -40750,14 +40754,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_definition_usages {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_definition_usages(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_product_definition_with_associated_documentss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_product_definition_with_associated_documentss(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40766,7 +40770,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_product_related_product_categorys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_product_related_product_categorys(&mut model, aid, attributes, &idmap)
             {
@@ -40775,7 +40779,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_projected_zone_definitions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_projected_zone_definitions(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40783,14 +40787,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_property_definitions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_property_definitions(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_property_definition_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_property_definition_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -40799,7 +40803,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_property_definition_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_property_definition_representations(&mut model, aid, attributes, &idmap)
             {
@@ -40808,7 +40812,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_qualified_representation_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_qualified_representation_items(&mut model, aid, attributes, &idmap)
             {
@@ -40817,42 +40821,42 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_quasi_uniform_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_quasi_uniform_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_quasi_uniform_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_quasi_uniform_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_ratio_measure_with_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_ratio_measure_with_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_ratio_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_ratio_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_rational_b_spline_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_rational_b_spline_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_rational_b_spline_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_rational_b_spline_surfaces(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40860,7 +40864,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_repositioned_tessellated_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_repositioned_tessellated_items(&mut model, aid, attributes, &idmap)
             {
@@ -40869,28 +40873,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_representations(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_representation_maps {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_representation_maps(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_representation_references {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_representation_references(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_representation_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_representation_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -40899,7 +40903,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_representation_relationship_with_transformations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_representation_relationship_with_transformations(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -40908,42 +40912,42 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_resource_propertys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_resource_propertys(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_role_associations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_role_associations(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_roundness_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_roundness_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_seam_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_seam_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_security_classifications {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_security_classifications(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_security_classification_assignments {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_security_classification_assignments(&mut model, aid, attributes, &idmap)
             {
@@ -40952,14 +40956,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shape_aspects {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_shape_aspects(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_shape_aspect_associativitys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_shape_aspect_associativitys(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40967,7 +40971,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shape_aspect_deriving_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_shape_aspect_deriving_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -40976,7 +40980,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shape_aspect_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_shape_aspect_relationships(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -40984,7 +40988,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shape_definition_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_shape_definition_representations(&mut model, aid, attributes, &idmap)
             {
@@ -40993,7 +40997,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shape_dimension_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_shape_dimension_representations(&mut model, aid, attributes, &idmap)
             {
@@ -41002,14 +41006,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shape_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_shape_representations(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_shape_representation_relationships {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_shape_representation_relationships(&mut model, aid, attributes, &idmap)
             {
@@ -41018,7 +41022,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shape_representation_with_parameterss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_shape_representation_with_parameterss(&mut model, aid, attributes, &idmap)
             {
@@ -41027,7 +41031,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_shell_based_surface_models {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_shell_based_surface_models(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -41035,63 +41039,63 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_si_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_si_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_solid_angle_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_solid_angle_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_spherical_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_spherical_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_start_requests {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_start_requests(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_start_works {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_start_works(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_straightness_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_straightness_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_styled_items {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_styled_items(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_of_linear_extrusions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_surface_of_linear_extrusions(&mut model, aid, attributes, &idmap)
             {
@@ -41100,14 +41104,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_surface_of_revolutions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_of_revolutions(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_profile_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_profile_tolerances(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -41115,7 +41119,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_surface_rendering_propertiess {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_surface_rendering_propertiess(&mut model, aid, attributes, &idmap)
             {
@@ -41124,21 +41128,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_surface_side_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_side_styles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_style_boundarys {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_style_boundarys(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_style_control_grids {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_style_control_grids(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -41146,14 +41150,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_surface_style_fill_areas {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_style_fill_areas(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_style_parameter_lines {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_surface_style_parameter_lines(&mut model, aid, attributes, &idmap)
             {
@@ -41162,14 +41166,14 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_surface_style_renderings {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_style_renderings(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_style_rendering_with_propertiess {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_style_rendering_with_propertiess(
                 &mut model, aid, attributes, &idmap,
             ) {
@@ -41178,7 +41182,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_surface_style_segmentation_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_surface_style_segmentation_curves(&mut model, aid, attributes, &idmap)
             {
@@ -41187,70 +41191,70 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_surface_style_silhouettes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_style_silhouettes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_surface_style_usages {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_surface_style_usages(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_swept_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_swept_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_symbol_colours {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_symbol_colours(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_symbol_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_symbol_representations(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_symbol_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_symbol_styles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_symbol_targets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_symbol_targets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_symmetry_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_symmetry_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_terminator_symbols {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_terminator_symbols(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tessellated_annotation_occurrences {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_tessellated_annotation_occurrences(&mut model, aid, attributes, &idmap)
             {
@@ -41259,21 +41263,21 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_tessellated_curve_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tessellated_curve_sets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tessellated_faces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tessellated_faces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tessellated_geometric_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tessellated_geometric_sets(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -41281,7 +41285,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_tessellated_shape_representations {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_tessellated_shape_representations(&mut model, aid, attributes, &idmap)
             {
@@ -41290,42 +41294,42 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_tessellated_shells {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tessellated_shells(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tessellated_solids {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tessellated_solids(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tessellated_surface_sets {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tessellated_surface_sets(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_text_literals {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_text_literals(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_text_styles {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_text_styles(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_text_style_for_defined_fonts {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_text_style_for_defined_fonts(&mut model, aid, attributes, &idmap)
             {
@@ -41334,7 +41338,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_text_style_with_box_characteristicss {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_text_style_with_box_characteristicss(&mut model, aid, attributes, &idmap)
             {
@@ -41343,28 +41347,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_time_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_time_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tolerance_values {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tolerance_values(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tolerance_zones {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tolerance_zones(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_tolerance_zone_definitions {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tolerance_zone_definitions(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -41372,7 +41376,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_tolerance_zone_with_datums {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_tolerance_zone_with_datums(&mut model, aid, attributes, &idmap)
             {
                 read_drops.push((raw, e));
@@ -41380,28 +41384,28 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_toroidal_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_toroidal_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_total_runout_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_total_runout_tolerances(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_trimmed_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_trimmed_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_two_direction_repeat_factors {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_two_direction_repeat_factors(&mut model, aid, attributes, &idmap)
             {
@@ -41410,7 +41414,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_uncertainty_measure_with_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_uncertainty_measure_with_units(&mut model, aid, attributes, &idmap)
             {
@@ -41419,7 +41423,7 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_unequally_disposed_geometric_tolerances {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) =
                 resolve_unequally_disposed_geometric_tolerances(&mut model, aid, attributes, &idmap)
             {
@@ -41428,70 +41432,70 @@ pub fn read(
         }
     }
     for (aid, raw) in pending_uniform_curves {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_uniform_curves(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_uniform_surfaces {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_uniform_surfaces(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_vectors {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_vectors(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_vertex_loops {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_vertex_loops(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_vertex_points {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_vertex_points(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_vertex_shells {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_vertex_shells(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_view_volumes {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_view_volumes(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_volume_units {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_volume_units(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_wire_shells {
-        if let Some(RawEntity::Simple { attributes, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Simple { attributes, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_wire_shells(&mut model, aid, attributes, &idmap) {
                 read_drops.push((raw, e));
             }
         }
     }
     for (aid, raw) in pending_complex {
-        if let Some(RawEntity::Complex { parts, .. }) = map.get(&raw) {
+        if let Some(RawEntity::Complex { parts, .. }) = graph.get(&raw) {
             if let Err(e) = resolve_complex(&mut model, aid, parts, &idmap) {
                 read_drops.push((raw, e));
             }

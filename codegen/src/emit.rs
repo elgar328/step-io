@@ -341,7 +341,7 @@ fn has_ref(k: &Kind) -> bool {
 pub fn emit_read(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
     s.push_str(&format!(
-        "use std::collections::BTreeMap;\nuse {crate_path}::{{Attribute, RawEntity, RawEntityPart}};\nuse super::model::*;\n\n"
+        "use std::collections::{{BTreeMap, BTreeSet}};\nuse {crate_path}::{{Attribute, RawEntity, RawEntityPart}};\nuse super::model::*;\n\n"
     ));
 
     // scalar readers (fallible)
@@ -473,7 +473,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
 
     // ---- read() ----
     s.push_str(
-        "pub fn read(map: &BTreeMap<u64, RawEntity>) -> (StepModel, BTreeMap<u64, AnyId>, Vec<(u64, String)>) {\n",
+        "pub fn read(graph: &BTreeMap<u64, RawEntity>, kept: &BTreeSet<u64>) -> (StepModel, BTreeMap<u64, AnyId>, Vec<(u64, String)>) {\n",
     );
     s.push_str("    let mut model = StepModel::default();\n");
     s.push_str("    let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();\n");
@@ -494,7 +494,9 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         s.push_str("    let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();\n");
     }
 
-    s.push_str("    for (&id, ent) in map {\n        match ent {\n");
+    // Iterate the full graph but build only kept entities (no clone: the kept
+    // set is borrowed from drop_pass, entities are borrowed from `graph`).
+    s.push_str("    for (&id, ent) in graph {\n        if !kept.contains(&id) { continue; }\n        match ent {\n");
     // simple dispatch arms (exact name match) — pass1 build is fallible; an
     // unreadable own-attr drops just this entity (no panic, surfaced as reason).
     for se in &ir.simples {
@@ -552,7 +554,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         writeln!(s, "    for (aid, raw) in pending_{af} {{").unwrap();
         writeln!(
             s,
-            "        if let Some(RawEntity::Simple {{ attributes, .. }}) = map.get(&raw) {{"
+            "        if let Some(RawEntity::Simple {{ attributes, .. }}) = graph.get(&raw) {{"
         )
         .unwrap();
         writeln!(
@@ -564,7 +566,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     }
     if ir.has_part_bag {
         s.push_str("    for (aid, raw) in pending_complex {\n");
-        s.push_str("        if let Some(RawEntity::Complex { parts, .. }) = map.get(&raw) {\n");
+        s.push_str("        if let Some(RawEntity::Complex { parts, .. }) = graph.get(&raw) {\n");
         s.push_str(
             "            if let Err(e) = resolve_complex(&mut model, aid, parts, &idmap) { read_drops.push((raw, e)); }\n        }\n    }\n",
         );
