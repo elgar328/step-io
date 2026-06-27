@@ -30,10 +30,10 @@ pub struct Token {
 
 /// Lexical error categories.
 ///
-/// `UnexpectedCharacter` is currently the only variant actually produced by
-/// the lexer. The remaining variants are declared for forward compatibility
-/// so that a later stage can wire a custom token-level error type through
-/// `logos`'s `error` attribute without breaking public API.
+/// `UnexpectedCharacter` (a token that does not match any rule) and
+/// `InvalidNumber` (a numeric/ref literal that is out of range or non-finite —
+/// classified from the offending snippet) are produced by the lexer. The
+/// remaining variants are declared for forward compatibility.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LexErrorKind {
     UnexpectedCharacter,
@@ -47,7 +47,7 @@ impl LexErrorKind {
         match self {
             Self::UnexpectedCharacter => "unexpected character",
             Self::UnterminatedString => "unterminated string literal",
-            Self::InvalidNumber => "invalid numeric literal",
+            Self::InvalidNumber => "numeric literal out of range",
             Self::InvalidBinary => "invalid binary literal",
         }
     }
@@ -174,8 +174,19 @@ impl<'src> Lexer<'src> {
         let Ok(kind) = kind_result else {
             let raw = span.slice(self.source);
             let snippet = truncate_to_chars(raw, 40);
+            // A rejected token starting with a digit (or sign/`#` then a digit)
+            // came from the Integer/Real/EntityRef callbacks returning None on an
+            // out-of-range / non-finite literal — classify it as InvalidNumber.
+            let mut cs = raw.chars();
+            let kind = match cs.next() {
+                Some(c) if c.is_ascii_digit() => LexErrorKind::InvalidNumber,
+                Some('#' | '+' | '-') if cs.next().is_some_and(|c| c.is_ascii_digit()) => {
+                    LexErrorKind::InvalidNumber
+                }
+                _ => LexErrorKind::UnexpectedCharacter,
+            };
             return Some(Err(LexError {
-                kind: LexErrorKind::UnexpectedCharacter,
+                kind,
                 span,
                 snippet,
             }));
@@ -258,7 +269,10 @@ pub enum TokenKind {
     /// Real number — must contain a `.`; captures optional sign and exponent.
     #[regex(
         r"[+-]?[0-9]+\.[0-9]*([Ee][+-]?[0-9]+)?",
-        |lex| lex.slice().parse::<f64>().ok()
+        // Reject non-finite (e.g. `1.E999` -> inf): the callback returns None, so
+        // the lexer surfaces it as an InvalidNumber error rather than letting inf
+        // into the model.
+        |lex| lex.slice().parse::<f64>().ok().filter(|f| f.is_finite())
     )]
     Real(f64),
 

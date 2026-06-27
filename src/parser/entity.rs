@@ -161,6 +161,11 @@ pub enum ParseError {
     MalformedFileSchema { span: Span },
     /// An attribute appeared in an invalid position (e.g. `$` inside a list).
     InvalidAttributePosition { span: Span, detail: &'static str },
+    /// A parameter is nested deeper than [`MAX_NESTING_DEPTH`] — guards against a
+    /// stack overflow on adversarially deep `(((…)))` / `A(B(C(…)))` input.
+    ///
+    /// [`MAX_NESTING_DEPTH`]: super::p21::MAX_NESTING_DEPTH
+    NestingTooDeep { span: Span },
 }
 
 impl From<LexError> for ParseError {
@@ -204,6 +209,11 @@ impl std::fmt::Display for ParseError {
             Self::InvalidAttributePosition { span, detail } => write!(
                 f,
                 "parse error at line {}, column {}: {detail}",
+                span.line, span.column,
+            ),
+            Self::NestingTooDeep { span } => write!(
+                f,
+                "parse error at line {}, column {}: parameter nesting too deep",
                 span.line, span.column,
             ),
         }

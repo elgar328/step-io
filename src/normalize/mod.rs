@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::generated::model::StepModel;
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
 use crate::generated::write::{Writer, wrap_step};
-use crate::{Attribute, RawEntity, parse_bytes};
+use crate::{Attribute, ParseError, RawEntity, parse_bytes};
 
 mod entity_normalize;
 
@@ -60,24 +60,6 @@ pub struct Report {
     /// Non-standard rewrite notes (kept entities, fixed in place).
     pub norm: Vec<&'static str>,
 }
-
-/// A read failure. The only failure mode is a parse error: once the source
-/// parses, the generated read is per-entity fallible (a malformed entity is
-/// dropped with a reason in [`Report::dropped`], never failing the whole read).
-#[derive(Clone, Debug)]
-pub enum ReadError {
-    Parse(String),
-}
-
-impl std::fmt::Display for ReadError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ReadError::Parse(e) => write!(f, "parse failed: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for ReadError {}
 
 /// Collect every entity id referenced (transitively) by an attribute.
 fn collect_refs(a: &Attribute, out: &mut Vec<u64>) {
@@ -284,15 +266,15 @@ fn normalize_all(
 /// in the first build; the second `drop_pass` cascades them to a clean set).
 ///
 /// # Errors
-/// Returns [`ReadError::Parse`] only if the source does not parse. A parsed
-/// source never fails the read: a malformed entity is dropped with a reason in
+/// Returns a [`ParseError`] only if the source does not parse. A parsed source
+/// never fails the read: a malformed entity is dropped with a reason in
 /// [`Report::dropped`] (the generated read is structurally panic-free).
-pub fn read(src: &[u8]) -> Result<(StepModel, Report), ReadError> {
+pub fn read(src: &[u8]) -> Result<(StepModel, Report), ParseError> {
     /// ≤2 real iterations; one extra for slack (a violation degrades to dropping,
     /// not hanging — `debug_assert` flags non-convergence in dev).
     const MAX_ITERS: usize = 3;
 
-    let g = parse_bytes(src).map_err(|e| ReadError::Parse(e.to_string()))?;
+    let g = parse_bytes(src)?;
     let n_in = g.entities.len();
     let raw: BTreeMap<u64, RawEntity> = g.entities;
     let (normalized, norm, slot_drops, n_synth) = normalize_all(raw);

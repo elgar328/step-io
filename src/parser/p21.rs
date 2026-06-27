@@ -37,9 +37,20 @@ pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, ParseError> {
 ///
 /// Consumes `self` on [`Parser::parse`] because the underlying [`Lexer`] is
 /// a one-pass iterator and cannot be rewound.
+/// Maximum parameter nesting depth. In practice STEP parameters nest only a few
+/// levels (nested LIST OF LIST, typed-wrapped measures); this bound of 64 is a
+/// large margin over any realistic file yet small enough that the
+/// recursive-descent frames stay well within a thread's stack (a debug build
+/// spans several frames per nesting level). It turns adversarially deep
+/// `(((…)))` input into a graceful [`ParseError::NestingTooDeep`] instead of a
+/// stack-overflow abort.
+pub const MAX_NESTING_DEPTH: usize = 64;
+
 pub struct Parser<'src> {
     lexer: Lexer<'src>,
     warnings: Vec<ParseWarning>,
+    /// Current parameter nesting depth (guards against stack overflow).
+    depth: usize,
 }
 
 impl<'src> Parser<'src> {
@@ -48,6 +59,7 @@ impl<'src> Parser<'src> {
         Self {
             lexer: Lexer::new(source),
             warnings: Vec::new(),
+            depth: 0,
         }
     }
 
@@ -481,7 +493,28 @@ impl<'src> Parser<'src> {
     }
 
     /// Parse a single Part 21 parameter value.
+    /// Parse one parameter, guarding nesting depth. The recursive cases (nested
+    /// list, typed value) re-enter through this wrapper, so `depth` tracks the
+    /// current nesting; exceeding [`MAX_NESTING_DEPTH`] is a graceful error rather
+    /// than a stack overflow. Balanced inc/dec → siblings don't accumulate.
     fn parse_parameter(&mut self) -> Result<Attribute, ParseError> {
+        self.depth += 1;
+        if self.depth > MAX_NESTING_DEPTH {
+            self.depth -= 1;
+            let span = self.peek_span().unwrap_or(Span {
+                start: 0,
+                end: 0,
+                line: 0,
+                column: 0,
+            });
+            return Err(ParseError::NestingTooDeep { span });
+        }
+        let r = self.parse_parameter_inner();
+        self.depth -= 1;
+        r
+    }
+
+    fn parse_parameter_inner(&mut self) -> Result<Attribute, ParseError> {
         let kind = self.peek_kind()?.clone();
         match kind {
             TokenKind::Integer(v) => {

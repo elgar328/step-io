@@ -12,7 +12,7 @@
 //! entity map — the strict generated read only ever sees standard data. Each
 //! fixup records a note into `norm`, surfaced like the generic `NormCase` notes.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{Attribute, RawEntity, Span};
 
@@ -23,8 +23,23 @@ use crate::{Attribute, RawEntity, Span};
 pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
     // Synthesized entities (e.g. a placeholder COLOUR()) can't be inserted while
     // iterating the map; collect them here and insert after. Fresh ids start past
-    // the current max to avoid collisions.
-    let mut next_id = map.keys().max().map_or(1, |m| m + 1);
+    // the current max. `saturating_add` + the skip-occupied allocator below keep
+    // this sound even when the input contains `#u64::MAX` (which would otherwise
+    // overflow `max + 1` — debug panic / release wrap-to-0 silently overwriting an
+    // existing entity). `existing` snapshots the ids (the loop holds `map` mutably,
+    // so it can't query `map` directly).
+    let existing: BTreeSet<u64> = map.keys().copied().collect();
+    let mut next_id = map.keys().max().map_or(1, |m| m.saturating_add(1));
+    // Returns a free id not in `existing` (and != 0), advancing `next_id` past it.
+    // Monotonic advance keeps synthesized ids distinct from each other too.
+    let alloc_id = |next: &mut u64| -> u64 {
+        while existing.contains(next) || *next == 0 {
+            *next = next.wrapping_add(1);
+        }
+        let id = *next;
+        *next = next.wrapping_add(1);
+        id
+    };
     let mut synth: Vec<(u64, RawEntity)> = Vec::new();
     for ent in map.values_mut() {
         let RawEntity::Simple {
@@ -67,8 +82,7 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
                 if let Some(a) = attributes.get_mut(1)
                     && matches!(a, Attribute::Unset)
                 {
-                    let cid = next_id;
-                    next_id += 1;
+                    let cid = alloc_id(&mut next_id);
                     synth.push((
                         cid,
                         RawEntity::Simple {
