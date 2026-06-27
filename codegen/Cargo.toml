@@ -5,21 +5,12 @@ edition = "2024"
 publish = false
 
 [dependencies]
-# default-features = false drops step-io's `gen` feature so building the
-# generator never compiles step-io's generated path. Regenerating it
-# (`cargo run -p codegen`) therefore works even when that path is broken — the
-# generator only needs step-io's parser types, which are not gen-gated.
-step-io = { path = "..", default-features = false }
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
 
-# The generator (reads early.toml + mapping.toml, emits codegen/src/generated/).
+# Pure generator: reads schema/universal.toml + coverage.toml, emits step-io's
+# src/generated/. No step-io dependency, so regenerating never requires the
+# (possibly broken) generated code to compile.
 [[bin]]
 name = "codegen"
 path = "src/main.rs"
-
-# Single-file round-trip debug tool (no fixture dependency). The real gate is
-# the reference-check corpus (CODEGEN=1), which calls codegen::check directly.
-[[bin]]
-name = "roundtrip"
-path = "src/roundtrip.rs"

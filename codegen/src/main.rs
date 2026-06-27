@@ -1,7 +1,7 @@
 //! `codegen` generator binary. Reads `schema/universal.toml` + `codegen/coverage.toml`,
 //! computes the units/geometry/topology schema closure, and emits a
-//! schema-faithful model + generic 2-pass read + topo write into
-//! `codegen/src/generated/`. Run: `cargo run -p codegen --bin codegen`.
+//! schema-faithful model + generic 2-pass read + topo write into step-io's
+//! `src/generated/`. Run: `cargo run -p codegen`.
 
 mod classify;
 mod coverage;
@@ -116,15 +116,10 @@ fn main() {
         ir.enums.len(),
     );
 
-    // Target selects output dir + the import prefix baked into the generated
-    // files. Default = the codegen crate's own copy (used by the merkle oracle),
-    // which imports the parser types from the `step_io` crate. `CODEGEN_TARGET=
-    // step-io` emits into step-io's own `src/generated`, where the parser types
-    // are reached as `crate::` (the generated code lives inside step-io).
-    let (dir, crate_path) = match std::env::var("CODEGEN_TARGET").as_deref() {
-        Ok("step-io") => (format!("{root}/src/generated"), "crate"),
-        _ => (format!("{root}/codegen/src/generated"), "step_io"),
-    };
+    // Emit into step-io's own `src/generated`, where the parser types are reached
+    // as `crate::` (the generated code lives inside step-io).
+    let dir = format!("{root}/src/generated");
+    let crate_path = "crate";
     std::fs::create_dir_all(&dir).expect("mkdir generated");
     write_fmt(&format!("{dir}/model.rs"), &emit::emit_model(&ir));
     write_fmt(&format!("{dir}/read.rs"), &emit::emit_read(&ir, crate_path));

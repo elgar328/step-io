@@ -17,17 +17,6 @@ exclude = ["internal/"]
 [dependencies]
 logos = "0.16"
 
-[features]
-# 2-layer cutover (in progress): compile the codegen-generated schema-faithful
-# model + read + write under `src/generated` and the read-side pipeline under
-# `src/normalize` (public `normalize::{read, write}`). On by default; the old
-# reader/writer still compile alongside until the cutover delete. Build with
-# `--no-default-features` to drop the generated path (rollback). The codegen
-# generator depends on step-io with default-features=false, so regenerating the
-# generated code never requires the (possibly broken) generated path to compile.
-default = ["gen"]
-gen = []
-
 [lints.rust]
 # No step-io code uses `unsafe`.
 unsafe_code = "deny"
