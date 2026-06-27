@@ -1,15 +1,14 @@
-//! Attribute-type classification — DERIVED from `gen-early/src/classify.rs`
-//! (frozen), trimmed to the subset the schema-faithful generator needs and
-//! decoupled from the gen-early mapping hint types.
+//! Attribute-type classification: maps an EXPRESS attribute type to the
+//! generator's [`Kind`] taxonomy.
 //!
-//! The crux difference vs gen-early: an all-entity SELECT or a bare entity ref
-//! is NOT collapsed to an opaque `u64` here. Instead it is classified as
-//! `Ref(target)` carrying the EXPRESS target type name, so the generator can
-//! build a discriminated ref enum over the concrete leaf entities.
+//! Key design point: an all-entity SELECT or a bare entity ref is NOT collapsed
+//! to an opaque `u64`. It is classified as `Ref(target)` carrying the EXPRESS
+//! target type name, so the generator can build a discriminated ref enum over
+//! the concrete leaf entities.
 
 use std::collections::BTreeMap;
 
-use crate::schema::{EarlyToml, agg_inner, strip_optional};
+use crate::schema::{Schema, agg_inner, strip_optional};
 
 /// How an attribute's resolved `ty` maps to a generated Rust field.
 #[derive(Debug, Clone, PartialEq)]
@@ -45,7 +44,7 @@ pub enum Kind {
 pub const MAX_DEPTH: u32 = 64;
 
 pub struct Resolver<'a> {
-    pub schema: &'a EarlyToml,
+    pub schema: &'a Schema,
     /// codegen support-boundary `narrow` map (`coverage.toml [narrow]`):
     /// `SELECT alias -> kept members`. Empty map = no-op.
     pub narrow: &'a BTreeMap<String, Vec<String>>,

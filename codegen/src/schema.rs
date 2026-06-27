@@ -1,13 +1,12 @@
-//! `schema/early.toml` model — COPIED from `gen-early/src/schema.rs` (frozen)
-//! and extended with `is_abstract` + `parents` reads (the plan's 0.1 step).
-//! `gen-early` stays untouched; this is the parallel-build copy.
+//! Deserialization model for `schema/universal.toml` — the EXPRESS schema union
+//! (entities, attributes, SELECTs, ENUMs) the generator reads.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct EarlyToml {
+pub struct Schema {
     #[serde(default)]
     pub entity: BTreeMap<String, Entity>,
     #[serde(rename = "type", default)]
@@ -19,7 +18,7 @@ pub struct Entity {
     /// Direct supertype names (EXPRESS declaration order, left-to-right).
     #[serde(default)]
     pub parents: Vec<String>,
-    /// EXPRESS `ABSTRACT` flag. NOTE: known to be unreliable in early.toml
+    /// EXPRESS `ABSTRACT` flag. NOTE: known to be unreliable in the schema data
     /// (curve/surface/representation_item are EXPRESS-abstract but emit
     /// `is_abstract=false`); the generator does NOT use it for arena/ref
     /// classification — it is read only so deserialize does not choke and as a
@@ -45,11 +44,11 @@ pub struct Entity {
     pub derives: Vec<String>,
 }
 
-impl EarlyToml {
+impl Schema {
     /// Full attribute list in Part21 positional order: inherited attrs first
     /// (each parent chain deepest-ancestor-first, parents left-to-right), then
     /// the entity's own attrs. Scalar redeclares applied last as in-place
-    /// type overrides. (Copied verbatim from gen-early.)
+    /// type overrides.
     pub fn flattened_attrs(&self, ent_name: &str) -> Vec<Attr> {
         let mut out: Vec<Attr> = Vec::new();
         let mut redeclared: Vec<&Attr> = Vec::new();

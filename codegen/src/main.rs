@@ -14,11 +14,11 @@ use std::process::Command;
 
 use classify::Resolver;
 use model_ir::{ModelIr, build_closure};
-use schema::EarlyToml;
+use schema::Schema;
 
 fn main() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    let schema: EarlyToml = toml::from_str(
+    let schema: Schema = toml::from_str(
         &std::fs::read_to_string(format!("{root}/schema/universal.toml"))
             .expect("read universal.toml"),
     )

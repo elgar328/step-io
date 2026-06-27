@@ -1,5 +1,4 @@
 //! Emit Rust source (model / read / write) from the resolved [`ModelIr`].
-//! Mirrors the spike's hand-written `generated.rs` + `readwrite.rs` shapes.
 
 use std::fmt::Write as _;
 
@@ -946,7 +945,7 @@ pub fn emit_write(ir: &ModelIr) -> String {
     let mut s = String::from(HEADER);
     s.push_str("use super::model::*;\n\n");
 
-    // real formatter (STEP decimal-point form), copied from the spike.
+    // real formatter (STEP decimal-point form).
     s.push_str(
         r#"fn real(v: f64) -> String {
     // Normalize signed zero to "0." (matches step-io writer/lexical.rs; -0.0 and

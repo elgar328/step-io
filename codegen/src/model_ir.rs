@@ -1,11 +1,12 @@
-//! The generator's intermediate model: the resolved set of arenas, ref-enums,
-//! ENUMs and part-bags computed from the schema closure. `main.rs` builds this
-//! then emits Rust from it.
+//! The generator's own intermediate representation: the resolved set of arenas,
+//! ref-enums, ENUMs and part-bags computed from the schema closure. `main.rs`
+//! builds this, then `emit` writes Rust (incl. the runtime `StepModel`) from it.
+//! (This is the code generator's IR — unrelated to any runtime data model.)
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::classify::{Kind, Resolver, pascal};
-use crate::schema::{EarlyToml, strip_optional};
+use crate::schema::{Schema, strip_optional};
 
 /// A resolved attribute field of a simple entity / complex part.
 #[derive(Debug, Clone)]
@@ -89,7 +90,7 @@ pub struct ModelIr {
 /// so all of them must be generated for the discriminated ref enum + read
 /// dispatch to cover every instance real-world input can write.
 pub fn build_closure(
-    schema: &EarlyToml,
+    schema: &Schema,
     res: &Resolver,
     seeds: &[String],
     exclude: &BTreeSet<String>,
@@ -267,7 +268,7 @@ fn enum_arms(res: &Resolver, target: &str) -> Vec<(String, String, String)> {
 /// each member's entities + their subtypes). Result is intersected with the
 /// closure (so only generated entities become arms).
 fn subtypes_in_closure(
-    schema: &EarlyToml,
+    schema: &Schema,
     res: &Resolver,
     closure: &BTreeSet<String>,
     children: &BTreeMap<String, Vec<String>>,
@@ -296,7 +297,7 @@ fn subtypes_in_closure(
 }
 
 /// Invert `parents` into a child-list map.
-pub fn build_children(schema: &EarlyToml) -> BTreeMap<String, Vec<String>> {
+pub fn build_children(schema: &Schema) -> BTreeMap<String, Vec<String>> {
     let mut m: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for (name, ent) in &schema.entity {
         for p in &ent.parents {
@@ -309,7 +310,7 @@ pub fn build_children(schema: &EarlyToml) -> BTreeMap<String, Vec<String>> {
 impl ModelIr {
     /// Build the full IR from the closure.
     pub fn build(
-        schema: &EarlyToml,
+        schema: &Schema,
         res: &Resolver,
         closure: &BTreeSet<String>,
         complex_parts: &BTreeSet<String>,
@@ -463,7 +464,7 @@ fn collect_field_wants(k: &Kind, refs: &mut BTreeSet<String>, enums: &mut BTreeS
 }
 
 fn build_fields(
-    schema: &EarlyToml,
+    schema: &Schema,
     res: &Resolver,
     name: &str,
     derived: &BTreeMap<String, Vec<String>>,
@@ -478,7 +479,7 @@ fn build_fields(
 }
 
 fn build_own_fields(
-    schema: &EarlyToml,
+    schema: &Schema,
     res: &Resolver,
     name: &str,
     derived: &BTreeMap<String, Vec<String>>,
@@ -495,7 +496,7 @@ fn build_own_fields(
 /// Collect the derived (`*`) attr names that apply to an entity. For flattened
 /// (simple) entities, also pull in ancestors' derived hints.
 fn derived_set(
-    schema: &EarlyToml,
+    schema: &Schema,
     derived: &BTreeMap<String, Vec<String>>,
     name: &str,
     flattened: bool,
