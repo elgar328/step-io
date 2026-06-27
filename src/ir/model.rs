@@ -14,77 +14,9 @@ use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::UnitsPool;
 use super::visualization::VisualizationPool;
 use crate::parser::schema::StepSchema;
-
-/// A Part 21 `LIST[1:?] OF STRING` — guaranteed to hold at least one element.
-///
-/// STEP's `FILE_DESCRIPTION.description`, `FILE_NAME.author`, and
-/// `FILE_NAME.organization` fields are typed `LIST[1:?] OF STRING`; an empty
-/// list is a spec violation. Encoding that constraint at the type level
-/// prevents construction of spec-violating `FileHeader` values: any attempt
-/// to build a `NonEmptyStringList` from an empty `Vec<String>` returns
-/// `None` rather than an invalid value.
-///
-/// STEP convention for "no meaningful content" is a single-element list
-/// holding `""`, which is what [`NonEmptyStringList::default`] produces.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NonEmptyStringList(Vec<String>);
-
-impl NonEmptyStringList {
-    /// A single-element list. Use `single(String::new())` for the
-    /// spec-compliant "no content" form `('')`.
-    #[must_use]
-    pub fn single(s: String) -> Self {
-        Self(vec![s])
-    }
-
-    /// Lift a `Vec<String>` to `NonEmptyStringList`; returns `None` for an
-    /// empty input.
-    #[must_use]
-    pub fn try_from_vec(v: Vec<String>) -> Option<Self> {
-        if v.is_empty() { None } else { Some(Self(v)) }
-    }
-
-    #[must_use]
-    pub fn as_slice(&self) -> &[String] {
-        &self.0
-    }
-
-    pub fn iter(&self) -> std::slice::Iter<'_, String> {
-        self.0.iter()
-    }
-
-    #[must_use]
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        // Invariant: never empty. Provided for `clippy::len_without_is_empty`.
-        false
-    }
-
-    pub fn push(&mut self, s: String) {
-        self.0.push(s);
-    }
-}
-
-impl Default for NonEmptyStringList {
-    /// Single empty-string element (`[""]`) — the STEP convention for
-    /// "no meaningful content" while remaining spec-compliant.
-    fn default() -> Self {
-        Self::single(String::new())
-    }
-}
-
-impl<'a> IntoIterator for &'a NonEmptyStringList {
-    type Item = &'a String;
-    type IntoIter = std::slice::Iter<'a, String>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
-}
+// NonEmptyStringList moved to `crate::parser::schema` (owned by the kept parser
+// layer); re-exported here so existing `ir`/reader/writer references resolve.
+pub use crate::parser::schema::NonEmptyStringList;
 
 /// Part 21 implementation level (e.g. `"2;1"`). Guaranteed non-empty.
 ///
