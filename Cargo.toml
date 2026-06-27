@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "macros", "gen-early", "spike-codegen", "codegen"]
+members = [".", "codegen"]
 
 [package]
 name = "step-io"
@@ -15,9 +15,7 @@ categories = ["parser-implementations", "science", "encoding"]
 exclude = ["internal/"]
 
 [dependencies]
-linkme = "0.3"
 logos = "0.16"
-step-io-macros = { path = "./macros", version = "0.1.0" }
 
 [features]
 # 2-layer cutover (in progress): compile the codegen-generated schema-faithful
@@ -31,9 +29,7 @@ default = ["gen"]
 gen = []
 
 [lints.rust]
-# `deny` (not `forbid`) so linkme's #[distributed_slice] can opt in via
-# #[allow(unsafe_code)] for the link_section attribute it generates. No
-# step-io code itself uses `unsafe`.
+# No step-io code uses `unsafe`.
 unsafe_code = "deny"
 
 [lints.clippy]
