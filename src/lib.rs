@@ -9,10 +9,10 @@ pub mod generated;
 pub mod normalize;
 pub mod parser;
 
-pub use generated::model::Model as StepModel;
+pub use generated::model::StepModel;
 pub use normalize::{DropKind, DropReason, ReadError, Report, read, write};
 pub use parser::{
-    Attribute, EntityGraph, LexError, LexErrorKind, Lexer, NonEmptyStringList, ParseError,
-    ParseWarning, Parser, RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token,
-    TokenKind, parse, parse_bytes, tokenize,
+    Attribute, Graph, LexError, LexErrorKind, Lexer, NonEmptyStringList, ParseError, ParseWarning,
+    Parser, RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse,
+    parse_bytes, tokenize,
 };

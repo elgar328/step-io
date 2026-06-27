@@ -64,7 +64,7 @@ fn step_str(s: &str) -> String {
 }
 
 pub struct Writer<'a> {
-    model: &'a Model,
+    model: &'a StepModel,
     next: u64,
     out: String,
     action_ids: Vec<Option<u64>>,
@@ -571,7 +571,7 @@ pub struct Writer<'a> {
 }
 
 impl<'a> Writer<'a> {
-    pub fn new(model: &'a Model) -> Self {
+    pub fn new(model: &'a StepModel) -> Self {
         Writer {
             model,
             next: 1,

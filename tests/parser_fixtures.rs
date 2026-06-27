@@ -1,7 +1,7 @@
 //! Integration tests that parse every committed STEP fixture through the
-//! full Part 21 pipeline (lexer → parser → `EntityGraph`).
+//! full Part 21 pipeline (lexer → parser → `Graph`).
 
-use step_io::{Attribute, EntityGraph, RawEntity, SchemaClass, parse};
+use step_io::{Attribute, Graph, RawEntity, SchemaClass, parse};
 
 const FIXTURES: &[(&str, &str)] = &[
     // box — AP coverage (5 AP)
@@ -56,7 +56,7 @@ const FIXTURES: &[(&str, &str)] = &[
     ),
 ];
 
-fn load(name: &str) -> EntityGraph {
+fn load(name: &str) -> Graph {
     let (_, source) = FIXTURES
         .iter()
         .find(|(n, _)| *n == name)
@@ -222,7 +222,7 @@ fn walk_refs(attr: &Attribute, out: &mut Vec<u64>) {
     }
 }
 
-fn collect_all_refs(graph: &EntityGraph) -> Vec<u64> {
+fn collect_all_refs(graph: &Graph) -> Vec<u64> {
     let mut refs = Vec::new();
     for entity in graph.entities.values() {
         let attrs = match entity {

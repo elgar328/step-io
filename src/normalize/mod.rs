@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::generated::model::Model;
+use crate::generated::model::StepModel;
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
 use crate::generated::write::{Writer, wrap_step};
 use crate::{Attribute, RawEntity, parse_bytes};
@@ -266,7 +266,7 @@ fn normalize_all(
 /// # Errors
 /// Returns [`ReadError::Parse`] if the source does not parse, or
 /// [`ReadError::Panic`] if the generated read panics on an unhandled shape.
-pub fn read(src: &[u8]) -> Result<(Model, Report), ReadError> {
+pub fn read(src: &[u8]) -> Result<(StepModel, Report), ReadError> {
     let g = parse_bytes(src).map_err(|e| ReadError::Parse(e.to_string()))?;
     let n_in = g.entities.len();
     let raw: BTreeMap<u64, RawEntity> = g.entities;
@@ -298,6 +298,6 @@ pub fn read(src: &[u8]) -> Result<(Model, Report), ReadError> {
 
 /// Emit the model back to STEP text (the Universal target — the full read model).
 #[must_use]
-pub fn write(model: &Model) -> String {
+pub fn write(model: &StepModel) -> String {
     wrap_step(&Writer::new(model).emit_all())
 }

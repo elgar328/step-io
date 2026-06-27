@@ -1,15 +1,15 @@
 use std::collections::BTreeMap;
 
-use super::entity::{Attribute, EntityGraph, ParseError, ParseWarning, RawEntity, RawEntityPart};
+use super::entity::{Attribute, Graph, ParseError, ParseWarning, RawEntity, RawEntityPart};
 use super::lexer::{Lexer, Span, Token, TokenKind};
 use super::schema::StepSchema;
 
-/// Convenience function: parse a complete Part 21 source into an [`EntityGraph`].
+/// Convenience function: parse a complete Part 21 source into an [`Graph`].
 ///
 /// # Errors
 ///
 /// Returns the first [`ParseError`] encountered.
-pub fn parse(source: &str) -> Result<EntityGraph, ParseError> {
+pub fn parse(source: &str) -> Result<Graph, ParseError> {
     Parser::new(source).parse()
 }
 
@@ -24,7 +24,7 @@ pub fn parse(source: &str) -> Result<EntityGraph, ParseError> {
 /// # Errors
 ///
 /// Returns the first [`ParseError`] encountered by the underlying parser.
-pub fn parse_bytes(bytes: &[u8]) -> Result<EntityGraph, ParseError> {
+pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, ParseError> {
     if let Ok(s) = std::str::from_utf8(bytes) {
         parse(s)
     } else {
@@ -51,12 +51,12 @@ impl<'src> Parser<'src> {
         }
     }
 
-    /// Parse the entire Part 21 file and return an [`EntityGraph`].
+    /// Parse the entire Part 21 file and return an [`Graph`].
     ///
     /// # Errors
     ///
     /// Returns a [`ParseError`] on the first structural or lexical problem.
-    pub fn parse(self) -> Result<EntityGraph, ParseError> {
+    pub fn parse(self) -> Result<Graph, ParseError> {
         let mut this = self;
         this.parse_file()
     }
@@ -65,7 +65,7 @@ impl<'src> Parser<'src> {
     // Top-level grammar
     // ------------------------------------------------------------------
 
-    fn parse_file(&mut self) -> Result<EntityGraph, ParseError> {
+    fn parse_file(&mut self) -> Result<Graph, ParseError> {
         // ISO-10303-21;
         self.expect_token_kind(&TokenKind::IsoStart, "ISO-10303-21")?;
         self.expect_semicolon()?;
@@ -108,7 +108,7 @@ impl<'src> Parser<'src> {
             });
         }
 
-        Ok(EntityGraph {
+        Ok(Graph {
             schema,
             header,
             entities,

@@ -79,7 +79,7 @@ impl RawEntity {
 
 /// The complete result of parsing a Part 21 file.
 #[derive(Debug)]
-pub struct EntityGraph {
+pub struct Graph {
     /// Identified application protocol. The raw `FILE_SCHEMA` string list
     /// is preserved inside [`StepSchema`] itself — see its docs.
     pub schema: super::schema::StepSchema,
@@ -108,7 +108,7 @@ pub struct EntityGraph {
 /// real-world STEP files; each tolerance pushes a [`ParseWarning`] so
 /// downstream stages can surface what was repaired or discarded. The
 /// IR itself never carries the non-standard form — input is normalised
-/// to a spec-conformant shape before it reaches [`EntityGraph`].
+/// to a spec-conformant shape before it reaches [`Graph`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseWarning {
     /// A HEADER entity is missing its terminating `;`. The next keyword
@@ -129,7 +129,7 @@ pub enum ParseWarning {
     },
 }
 
-impl EntityGraph {
+impl Graph {
     /// Look up an entity by its `#N` identifier.
     #[must_use]
     pub fn get(&self, id: u64) -> Option<&RawEntity> {
@@ -329,7 +329,7 @@ mod tests {
         };
         let mut entities = BTreeMap::new();
         entities.insert(1, entity.clone());
-        let graph = EntityGraph {
+        let graph = Graph {
             schema: super::super::schema::StepSchema::default(),
             header: vec![],
             entities,

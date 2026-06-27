@@ -222,8 +222,8 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
         .unwrap();
     }
 
-    // Top-level Model.
-    writeln!(s, "#[derive(Debug, Default)]\npub struct Model {{").unwrap();
+    // Top-level StepModel.
+    writeln!(s, "#[derive(Debug, Default)]\npub struct StepModel {{").unwrap();
     for se in &ir.simples {
         writeln!(s, "    pub {}: Arena<{}>,", arena_field(&se.rust), se.rust).unwrap();
     }
@@ -460,8 +460,10 @@ fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
     );
 
     // ---- read() ----
-    s.push_str("pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {\n");
-    s.push_str("    let mut model = Model::default();\n");
+    s.push_str(
+        "pub fn read(map: &BTreeMap<u64, RawEntity>) -> (StepModel, BTreeMap<u64, AnyId>) {\n",
+    );
+    s.push_str("    let mut model = StepModel::default();\n");
     s.push_str("    let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();\n");
     // pending lists for pass 2
     for se in &ir.simples {
@@ -711,7 +713,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     let af = arena_field(&se.rust);
     writeln!(
         s,
-        "fn resolve_{af}(model: &mut Model, aid: {}Id, attrs: &[Attribute], idmap: &BTreeMap<u64, AnyId>) {{",
+        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &BTreeMap<u64, AnyId>) {{",
         se.rust
     )
     .unwrap();
@@ -875,7 +877,7 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     );
 
     // pass2: patch ref part attrs
-    s.push_str("fn resolve_complex(model: &mut Model, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &BTreeMap<u64, AnyId>) {\n");
+    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &BTreeMap<u64, AnyId>) {\n");
     s.push_str("    let bag = &mut model.complex_units.items[aid.0];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
@@ -975,7 +977,7 @@ fn step_str(s: &str) -> String {
 
     // Writer struct.
     s.push_str(
-        "pub struct Writer<'a> {\n    model: &'a Model,\n    next: u64,\n    out: String,\n",
+        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    out: String,\n",
     );
     for se in &ir.simples {
         writeln!(s, "    {}: Vec<Option<u64>>,", ids_field(&se.rust)).unwrap();
@@ -986,7 +988,7 @@ fn step_str(s: &str) -> String {
     s.push_str("}\n\n");
 
     // new()
-    s.push_str("impl<'a> Writer<'a> {\n    pub fn new(model: &'a Model) -> Self {\n        Writer {\n            model, next: 1, out: String::new(),\n");
+    s.push_str("impl<'a> Writer<'a> {\n    pub fn new(model: &'a StepModel) -> Self {\n        Writer {\n            model, next: 1, out: String::new(),\n");
     for se in &ir.simples {
         writeln!(
             s,

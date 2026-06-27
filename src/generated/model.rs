@@ -17737,7 +17737,7 @@ pub struct ComplexUnit {
 }
 
 #[derive(Debug, Default)]
-pub struct Model {
+pub struct StepModel {
     pub actions: Arena<Action>,
     pub action_assignments: Arena<ActionAssignment>,
     pub action_directives: Arena<ActionDirective>,

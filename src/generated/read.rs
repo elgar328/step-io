@@ -23710,8 +23710,8 @@ pub fn complex_ref_slots(n: &str) -> &'static [RefSlot] {
     }
 }
 
-pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
-    let mut model = Model::default();
+pub fn read(map: &BTreeMap<u64, RawEntity>) -> (StepModel, BTreeMap<u64, AnyId>) {
+    let mut model = StepModel::default();
     let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();
     let mut pending_actions: Vec<(ActionId, u64)> = Vec::new();
     let mut pending_action_assignments: Vec<(ActionAssignmentId, u64)> = Vec::new();
@@ -34042,7 +34042,7 @@ pub fn read(map: &BTreeMap<u64, RawEntity>) -> (Model, BTreeMap<u64, AnyId>) {
 }
 
 fn resolve_actions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34054,7 +34054,7 @@ fn resolve_actions(
 }
 
 fn resolve_action_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34065,7 +34065,7 @@ fn resolve_action_assignments(
 }
 
 fn resolve_action_directives(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionDirectiveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34082,7 +34082,7 @@ fn resolve_action_directives(
 }
 
 fn resolve_action_method_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionMethodRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34097,7 +34097,7 @@ fn resolve_action_method_relationships(
 }
 
 fn resolve_action_propertys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionPropertyId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34109,7 +34109,7 @@ fn resolve_action_propertys(
 }
 
 fn resolve_action_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34122,7 +34122,7 @@ fn resolve_action_relationships(
 }
 
 fn resolve_action_request_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionRequestAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34134,7 +34134,7 @@ fn resolve_action_request_assignments(
 }
 
 fn resolve_action_request_solutions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionRequestSolutionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34148,7 +34148,7 @@ fn resolve_action_request_solutions(
 }
 
 fn resolve_action_resources(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionResourceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34167,7 +34167,7 @@ fn resolve_action_resources(
 }
 
 fn resolve_action_resource_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionResourceRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34182,7 +34182,7 @@ fn resolve_action_resource_relationships(
 }
 
 fn resolve_action_resource_requirements(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ActionResourceRequirementId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34204,7 +34204,7 @@ fn resolve_action_resource_requirements(
 }
 
 fn resolve_advanced_brep_shape_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AdvancedBrepShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34224,7 +34224,7 @@ fn resolve_advanced_brep_shape_representations(
 }
 
 fn resolve_advanced_faces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AdvancedFaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34243,7 +34243,7 @@ fn resolve_advanced_faces(
 }
 
 fn resolve_all_around_shape_aspects(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AllAroundShapeAspectId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34255,7 +34255,7 @@ fn resolve_all_around_shape_aspects(
 }
 
 fn resolve_angular_locations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AngularLocationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34270,7 +34270,7 @@ fn resolve_angular_locations(
 }
 
 fn resolve_angular_sizes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AngularSizeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34281,7 +34281,7 @@ fn resolve_angular_sizes(
 }
 
 fn resolve_angularity_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AngularityToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34308,7 +34308,7 @@ fn resolve_angularity_tolerances(
 }
 
 fn resolve_annotation_curve_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationCurveOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34329,7 +34329,7 @@ fn resolve_annotation_curve_occurrences(
 }
 
 fn resolve_annotation_fill_area_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationFillAreaOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34352,7 +34352,7 @@ fn resolve_annotation_fill_area_occurrences(
 }
 
 fn resolve_annotation_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34373,7 +34373,7 @@ fn resolve_annotation_occurrences(
 }
 
 fn resolve_annotation_occurrence_associativitys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationOccurrenceAssociativityId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34388,7 +34388,7 @@ fn resolve_annotation_occurrence_associativitys(
 }
 
 fn resolve_annotation_occurrence_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationOccurrenceRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34403,7 +34403,7 @@ fn resolve_annotation_occurrence_relationships(
 }
 
 fn resolve_annotation_placeholder_leader_lines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationPlaceholderLeaderLineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34420,7 +34420,7 @@ fn resolve_annotation_placeholder_leader_lines(
 }
 
 fn resolve_annotation_placeholder_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationPlaceholderOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34441,7 +34441,7 @@ fn resolve_annotation_placeholder_occurrences(
 }
 
 fn resolve_annotation_placeholder_occurrence_with_leader_lines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationPlaceholderOccurrenceWithLeaderLineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34476,7 +34476,7 @@ fn resolve_annotation_placeholder_occurrence_with_leader_lines(
 }
 
 fn resolve_annotation_planes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationPlaneId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34510,7 +34510,7 @@ fn resolve_annotation_planes(
 }
 
 fn resolve_annotation_symbols(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationSymbolId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34525,7 +34525,7 @@ fn resolve_annotation_symbols(
 }
 
 fn resolve_annotation_symbol_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationSymbolOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34548,7 +34548,7 @@ fn resolve_annotation_symbol_occurrences(
 }
 
 fn resolve_annotation_texts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationTextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34563,7 +34563,7 @@ fn resolve_annotation_texts(
 }
 
 fn resolve_annotation_text_characters(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationTextCharacterId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34578,7 +34578,7 @@ fn resolve_annotation_text_characters(
 }
 
 fn resolve_annotation_text_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationTextOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34600,7 +34600,7 @@ fn resolve_annotation_text_occurrences(
 }
 
 fn resolve_annotation_to_annotation_leader_lines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationToAnnotationLeaderLineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34617,7 +34617,7 @@ fn resolve_annotation_to_annotation_leader_lines(
 }
 
 fn resolve_annotation_to_model_leader_lines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AnnotationToModelLeaderLineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34634,7 +34634,7 @@ fn resolve_annotation_to_model_leader_lines(
 }
 
 fn resolve_apll_point_with_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApllPointWithSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34646,7 +34646,7 @@ fn resolve_apll_point_with_surfaces(
 }
 
 fn resolve_application_context_elements(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApplicationContextElementId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34658,7 +34658,7 @@ fn resolve_application_context_elements(
 }
 
 fn resolve_application_protocol_definitions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApplicationProtocolDefinitionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34670,7 +34670,7 @@ fn resolve_application_protocol_definitions(
 }
 
 fn resolve_applied_approval_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedApprovalAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34690,7 +34690,7 @@ fn resolve_applied_approval_assignments(
 }
 
 fn resolve_applied_date_and_time_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedDateAndTimeAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34712,7 +34712,7 @@ fn resolve_applied_date_and_time_assignments(
 }
 
 fn resolve_applied_document_references(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedDocumentReferenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34732,7 +34732,7 @@ fn resolve_applied_document_references(
 }
 
 fn resolve_applied_external_identification_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedExternalIdentificationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34755,7 +34755,7 @@ fn resolve_applied_external_identification_assignments(
 }
 
 fn resolve_applied_group_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedGroupAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34774,7 +34774,7 @@ fn resolve_applied_group_assignments(
 }
 
 fn resolve_applied_person_and_organization_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedPersonAndOrganizationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34799,7 +34799,7 @@ fn resolve_applied_person_and_organization_assignments(
 }
 
 fn resolve_applied_presented_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedPresentedItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34816,7 +34816,7 @@ fn resolve_applied_presented_items(
 }
 
 fn resolve_applied_security_classification_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AppliedSecurityClassificationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34838,7 +34838,7 @@ fn resolve_applied_security_classification_assignments(
 }
 
 fn resolve_approvals(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApprovalId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34849,7 +34849,7 @@ fn resolve_approvals(
 }
 
 fn resolve_approval_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApprovalAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34861,7 +34861,7 @@ fn resolve_approval_assignments(
 }
 
 fn resolve_approval_date_times(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApprovalDateTimeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34874,7 +34874,7 @@ fn resolve_approval_date_times(
 }
 
 fn resolve_approval_person_organizations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApprovalPersonOrganizationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34891,7 +34891,7 @@ fn resolve_approval_person_organizations(
 }
 
 fn resolve_approximation_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ApproximationToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34902,7 +34902,7 @@ fn resolve_approximation_tolerances(
 }
 
 fn resolve_area_in_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AreaInSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34915,7 +34915,7 @@ fn resolve_area_in_sets(
 }
 
 fn resolve_area_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AreaUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34932,7 +34932,7 @@ fn resolve_area_units(
 }
 
 fn resolve_ascribable_states(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AscribableStateId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34947,7 +34947,7 @@ fn resolve_ascribable_states(
 }
 
 fn resolve_ascribable_state_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AscribableStateRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34962,7 +34962,7 @@ fn resolve_ascribable_state_relationships(
 }
 
 fn resolve_assembly_component_usages(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AssemblyComponentUsageId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34977,7 +34977,7 @@ fn resolve_assembly_component_usages(
 }
 
 fn resolve_auxiliary_leader_lines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: AuxiliaryLeaderLineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -34997,7 +34997,7 @@ fn resolve_auxiliary_leader_lines(
 }
 
 fn resolve_axis1_placements(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: Axis1PlacementId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35015,7 +35015,7 @@ fn resolve_axis1_placements(
 }
 
 fn resolve_axis2_placement2ds(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: Axis2Placement2dId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35033,7 +35033,7 @@ fn resolve_axis2_placement2ds(
 }
 
 fn resolve_axis2_placement3ds(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: Axis2Placement3dId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35058,7 +35058,7 @@ fn resolve_axis2_placement3ds(
 }
 
 fn resolve_b_spline_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BSplineCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35075,7 +35075,7 @@ fn resolve_b_spline_curves(
 }
 
 fn resolve_b_spline_curve_with_knotss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BSplineCurveWithKnotsId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35092,7 +35092,7 @@ fn resolve_b_spline_curve_with_knotss(
 }
 
 fn resolve_b_spline_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BSplineSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35115,7 +35115,7 @@ fn resolve_b_spline_surfaces(
 }
 
 fn resolve_b_spline_surface_with_knotss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BSplineSurfaceWithKnotsId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35138,7 +35138,7 @@ fn resolve_b_spline_surface_with_knotss(
 }
 
 fn resolve_bezier_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BezierCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35155,7 +35155,7 @@ fn resolve_bezier_curves(
 }
 
 fn resolve_bezier_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BezierSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35178,7 +35178,7 @@ fn resolve_bezier_surfaces(
 }
 
 fn resolve_bounded_pcurves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BoundedPcurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35192,7 +35192,7 @@ fn resolve_bounded_pcurves(
 }
 
 fn resolve_bounded_surface_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BoundedSurfaceCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35211,7 +35211,7 @@ fn resolve_bounded_surface_curves(
 }
 
 fn resolve_brep_with_voidss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: BrepWithVoidsId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35230,7 +35230,7 @@ fn resolve_brep_with_voidss(
 }
 
 fn resolve_camera_images(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CameraImageId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35245,7 +35245,7 @@ fn resolve_camera_images(
 }
 
 fn resolve_camera_image3d_with_scales(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CameraImage3dWithScaleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35260,7 +35260,7 @@ fn resolve_camera_image3d_with_scales(
 }
 
 fn resolve_camera_model_d3s(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CameraModelD3Id,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35275,7 +35275,7 @@ fn resolve_camera_model_d3s(
 }
 
 fn resolve_camera_model_d3_multi_clippings(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CameraModelD3MultiClippingId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35302,7 +35302,7 @@ fn resolve_camera_model_d3_multi_clippings(
 }
 
 fn resolve_camera_model_d3_with_hlhsrs(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CameraModelD3WithHlhsrId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35317,7 +35317,7 @@ fn resolve_camera_model_d3_with_hlhsrs(
 }
 
 fn resolve_camera_usages(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CameraUsageId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35332,7 +35332,7 @@ fn resolve_camera_usages(
 }
 
 fn resolve_cc_design_approvals(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CcDesignApprovalId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35352,7 +35352,7 @@ fn resolve_cc_design_approvals(
 }
 
 fn resolve_cc_design_date_and_time_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CcDesignDateAndTimeAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35374,7 +35374,7 @@ fn resolve_cc_design_date_and_time_assignments(
 }
 
 fn resolve_cc_design_person_and_organization_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CcDesignPersonAndOrganizationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35397,7 +35397,7 @@ fn resolve_cc_design_person_and_organization_assignments(
 }
 
 fn resolve_cc_design_security_classifications(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CcDesignSecurityClassificationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35417,7 +35417,7 @@ fn resolve_cc_design_security_classifications(
 }
 
 fn resolve_centre_of_symmetrys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CentreOfSymmetryId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35429,7 +35429,7 @@ fn resolve_centre_of_symmetrys(
 }
 
 fn resolve_certifications(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CertificationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35440,7 +35440,7 @@ fn resolve_certifications(
 }
 
 fn resolve_changes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ChangeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35459,7 +35459,7 @@ fn resolve_changes(
 }
 
 fn resolve_change_requests(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ChangeRequestId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35479,7 +35479,7 @@ fn resolve_change_requests(
 }
 
 fn resolve_character_glyph_style_outlines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CharacterGlyphStyleOutlineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35490,7 +35490,7 @@ fn resolve_character_glyph_style_outlines(
 }
 
 fn resolve_character_glyph_style_strokes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CharacterGlyphStyleStrokeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35501,7 +35501,7 @@ fn resolve_character_glyph_style_strokes(
 }
 
 fn resolve_characterized_item_within_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CharacterizedItemWithinRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35514,7 +35514,7 @@ fn resolve_characterized_item_within_representations(
 }
 
 fn resolve_characterized_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CharacterizedRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35534,7 +35534,7 @@ fn resolve_characterized_representations(
 }
 
 fn resolve_circles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CircleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35545,7 +35545,7 @@ fn resolve_circles(
 }
 
 fn resolve_circular_runout_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CircularRunoutToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35572,7 +35572,7 @@ fn resolve_circular_runout_tolerances(
 }
 
 fn resolve_closed_shells(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ClosedShellId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35589,7 +35589,7 @@ fn resolve_closed_shells(
 }
 
 fn resolve_coaxiality_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CoaxialityToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35616,7 +35616,7 @@ fn resolve_coaxiality_tolerances(
 }
 
 fn resolve_common_datums(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CommonDatumId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35628,7 +35628,7 @@ fn resolve_common_datums(
 }
 
 fn resolve_complex_triangulated_faces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ComplexTriangulatedFaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35647,7 +35647,7 @@ fn resolve_complex_triangulated_faces(
 }
 
 fn resolve_complex_triangulated_surface_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ComplexTriangulatedSurfaceSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35659,7 +35659,7 @@ fn resolve_complex_triangulated_surface_sets(
 }
 
 fn resolve_composite_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CompositeCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35676,7 +35676,7 @@ fn resolve_composite_curves(
 }
 
 fn resolve_composite_curve_segments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CompositeCurveSegmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35687,7 +35687,7 @@ fn resolve_composite_curve_segments(
 }
 
 fn resolve_composite_group_shape_aspects(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CompositeGroupShapeAspectId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35699,7 +35699,7 @@ fn resolve_composite_group_shape_aspects(
 }
 
 fn resolve_composite_shape_aspects(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CompositeShapeAspectId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35711,7 +35711,7 @@ fn resolve_composite_shape_aspects(
 }
 
 fn resolve_composite_texts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CompositeTextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35728,7 +35728,7 @@ fn resolve_composite_texts(
 }
 
 fn resolve_compound_representation_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CompoundRepresentationItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35763,7 +35763,7 @@ fn resolve_compound_representation_items(
 }
 
 fn resolve_concentricity_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConcentricityToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35790,7 +35790,7 @@ fn resolve_concentricity_tolerances(
 }
 
 fn resolve_configuration_designs(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConfigurationDesignId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35805,7 +35805,7 @@ fn resolve_configuration_designs(
 }
 
 fn resolve_configuration_effectivitys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConfigurationEffectivityId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35820,7 +35820,7 @@ fn resolve_configuration_effectivitys(
 }
 
 fn resolve_configuration_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConfigurationItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35832,7 +35832,7 @@ fn resolve_configuration_items(
 }
 
 fn resolve_conics(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConicId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35843,7 +35843,7 @@ fn resolve_conics(
 }
 
 fn resolve_conical_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConicalSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35854,7 +35854,7 @@ fn resolve_conical_surfaces(
 }
 
 fn resolve_connected_face_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConnectedFaceSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35874,7 +35874,7 @@ fn resolve_connected_face_sets(
 }
 
 fn resolve_constructive_geometry_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConstructiveGeometryRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35894,7 +35894,7 @@ fn resolve_constructive_geometry_representations(
 }
 
 fn resolve_constructive_geometry_representation_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConstructiveGeometryRepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35913,7 +35913,7 @@ fn resolve_constructive_geometry_representation_relationships(
 }
 
 fn resolve_context_dependent_over_riding_styled_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ContextDependentOverRidingStyledItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35945,7 +35945,7 @@ fn resolve_context_dependent_over_riding_styled_items(
 }
 
 fn resolve_context_dependent_shape_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ContextDependentShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35961,7 +35961,7 @@ fn resolve_context_dependent_shape_representations(
 }
 
 fn resolve_context_dependent_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ContextDependentUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35973,7 +35973,7 @@ fn resolve_context_dependent_units(
 }
 
 fn resolve_continuous_shape_aspects(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ContinuousShapeAspectId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35985,7 +35985,7 @@ fn resolve_continuous_shape_aspects(
 }
 
 fn resolve_contracts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ContractId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -35996,7 +35996,7 @@ fn resolve_contracts(
 }
 
 fn resolve_conversion_based_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ConversionBasedUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36011,7 +36011,7 @@ fn resolve_conversion_based_units(
 }
 
 fn resolve_curve_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CurveStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36047,7 +36047,7 @@ fn resolve_curve_styles(
 }
 
 fn resolve_curve_style_fonts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CurveStyleFontId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36064,7 +36064,7 @@ fn resolve_curve_style_fonts(
 }
 
 fn resolve_curve_style_font_and_scalings(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CurveStyleFontAndScalingId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36076,7 +36076,7 @@ fn resolve_curve_style_font_and_scalings(
 }
 
 fn resolve_curve_style_renderings(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CurveStyleRenderingId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36088,7 +36088,7 @@ fn resolve_curve_style_renderings(
 }
 
 fn resolve_cylindrical_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CylindricalSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36099,7 +36099,7 @@ fn resolve_cylindrical_surfaces(
 }
 
 fn resolve_cylindricity_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: CylindricityToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36118,7 +36118,7 @@ fn resolve_cylindricity_tolerances(
 }
 
 fn resolve_date_and_times(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DateAndTimeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36131,7 +36131,7 @@ fn resolve_date_and_times(
 }
 
 fn resolve_date_and_time_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DateAndTimeAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36145,7 +36145,7 @@ fn resolve_date_and_time_assignments(
 }
 
 fn resolve_datums(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36157,7 +36157,7 @@ fn resolve_datums(
 }
 
 fn resolve_datum_features(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumFeatureId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36169,7 +36169,7 @@ fn resolve_datum_features(
 }
 
 fn resolve_datum_references(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumReferenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36180,7 +36180,7 @@ fn resolve_datum_references(
 }
 
 fn resolve_datum_reference_compartments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumReferenceCompartmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36233,7 +36233,7 @@ fn resolve_datum_reference_compartments(
 }
 
 fn resolve_datum_reference_elements(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumReferenceElementId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36286,7 +36286,7 @@ fn resolve_datum_reference_elements(
 }
 
 fn resolve_datum_reference_modifier_with_values(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumReferenceModifierWithValueId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36298,7 +36298,7 @@ fn resolve_datum_reference_modifier_with_values(
 }
 
 fn resolve_datum_systems(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumSystemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36320,7 +36320,7 @@ fn resolve_datum_systems(
 }
 
 fn resolve_datum_targets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DatumTargetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36332,7 +36332,7 @@ fn resolve_datum_targets(
 }
 
 fn resolve_default_model_geometric_views(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DefaultModelGeometricViewId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36348,7 +36348,7 @@ fn resolve_default_model_geometric_views(
 }
 
 fn resolve_defined_character_glyphs(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DefinedCharacterGlyphId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36362,7 +36362,7 @@ fn resolve_defined_character_glyphs(
 }
 
 fn resolve_defined_symbols(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DefinedSymbolId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36376,7 +36376,7 @@ fn resolve_defined_symbols(
 }
 
 fn resolve_definitional_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DefinitionalRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36396,7 +36396,7 @@ fn resolve_definitional_representations(
 }
 
 fn resolve_definitional_representation_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DefinitionalRepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36413,7 +36413,7 @@ fn resolve_definitional_representation_relationships(
 }
 
 fn resolve_definitional_representation_relationship_with_same_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DefinitionalRepresentationRelationshipWithSameContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36432,7 +36432,7 @@ fn resolve_definitional_representation_relationship_with_same_contexts(
 }
 
 fn resolve_degenerate_toroidal_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DegenerateToroidalSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36443,7 +36443,7 @@ fn resolve_degenerate_toroidal_surfaces(
 }
 
 fn resolve_derived_shape_aspects(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DerivedShapeAspectId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36455,7 +36455,7 @@ fn resolve_derived_shape_aspects(
 }
 
 fn resolve_derived_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DerivedUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36472,7 +36472,7 @@ fn resolve_derived_units(
 }
 
 fn resolve_derived_unit_elements(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DerivedUnitElementId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36483,7 +36483,7 @@ fn resolve_derived_unit_elements(
 }
 
 fn resolve_description_attributes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DescriptionAttributeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36495,7 +36495,7 @@ fn resolve_description_attributes(
 }
 
 fn resolve_design_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DesignContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36507,7 +36507,7 @@ fn resolve_design_contexts(
 }
 
 fn resolve_dimensional_characteristic_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DimensionalCharacteristicRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36522,7 +36522,7 @@ fn resolve_dimensional_characteristic_representations(
 }
 
 fn resolve_dimensional_locations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DimensionalLocationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36537,7 +36537,7 @@ fn resolve_dimensional_locations(
 }
 
 fn resolve_dimensional_location_with_paths(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DimensionalLocationWithPathId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36554,7 +36554,7 @@ fn resolve_dimensional_location_with_paths(
 }
 
 fn resolve_dimensional_sizes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DimensionalSizeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36565,7 +36565,7 @@ fn resolve_dimensional_sizes(
 }
 
 fn resolve_dimensional_size_with_datum_features(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DimensionalSizeWithDatumFeatureId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36579,7 +36579,7 @@ fn resolve_dimensional_size_with_datum_features(
 }
 
 fn resolve_dimensional_size_with_paths(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DimensionalSizeWithPathId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36592,7 +36592,7 @@ fn resolve_dimensional_size_with_paths(
 }
 
 fn resolve_directed_dimensional_locations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DirectedDimensionalLocationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36607,7 +36607,7 @@ fn resolve_directed_dimensional_locations(
 }
 
 fn resolve_documents(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DocumentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36618,7 +36618,7 @@ fn resolve_documents(
 }
 
 fn resolve_document_files(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DocumentFileId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36629,7 +36629,7 @@ fn resolve_document_files(
 }
 
 fn resolve_document_product_associations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DocumentProductAssociationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36645,7 +36645,7 @@ fn resolve_document_product_associations(
 }
 
 fn resolve_document_product_equivalences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DocumentProductEquivalenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36661,7 +36661,7 @@ fn resolve_document_product_equivalences(
 }
 
 fn resolve_document_references(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DocumentReferenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36673,7 +36673,7 @@ fn resolve_document_references(
 }
 
 fn resolve_document_representation_types(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DocumentRepresentationTypeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36685,7 +36685,7 @@ fn resolve_document_representation_types(
 }
 
 fn resolve_draughting_annotation_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DraughtingAnnotationOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36706,7 +36706,7 @@ fn resolve_draughting_annotation_occurrences(
 }
 
 fn resolve_draughting_callouts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DraughtingCalloutId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36723,7 +36723,7 @@ fn resolve_draughting_callouts(
 }
 
 fn resolve_draughting_callout_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DraughtingCalloutRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36738,7 +36738,7 @@ fn resolve_draughting_callout_relationships(
 }
 
 fn resolve_draughting_models(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DraughtingModelId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36758,7 +36758,7 @@ fn resolve_draughting_models(
 }
 
 fn resolve_draughting_model_item_associations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DraughtingModelItemAssociationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36778,7 +36778,7 @@ fn resolve_draughting_model_item_associations(
 }
 
 fn resolve_draughting_model_item_association_with_placeholders(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: DraughtingModelItemAssociationWithPlaceholderId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36804,7 +36804,7 @@ fn resolve_draughting_model_item_association_with_placeholders(
 }
 
 fn resolve_edges(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: EdgeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36827,7 +36827,7 @@ fn resolve_edges(
 }
 
 fn resolve_edge_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: EdgeCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36842,7 +36842,7 @@ fn resolve_edge_curves(
 }
 
 fn resolve_edge_loops(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: EdgeLoopId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36859,7 +36859,7 @@ fn resolve_edge_loops(
 }
 
 fn resolve_elementary_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ElementarySurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36870,7 +36870,7 @@ fn resolve_elementary_surfaces(
 }
 
 fn resolve_ellipses(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: EllipseId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36881,7 +36881,7 @@ fn resolve_ellipses(
 }
 
 fn resolve_external_identification_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternalIdentificationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36894,7 +36894,7 @@ fn resolve_external_identification_assignments(
 }
 
 fn resolve_externally_defined_character_glyphs(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedCharacterGlyphId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36905,7 +36905,7 @@ fn resolve_externally_defined_character_glyphs(
 }
 
 fn resolve_externally_defined_curve_fonts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedCurveFontId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36916,7 +36916,7 @@ fn resolve_externally_defined_curve_fonts(
 }
 
 fn resolve_externally_defined_hatch_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedHatchStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36927,7 +36927,7 @@ fn resolve_externally_defined_hatch_styles(
 }
 
 fn resolve_externally_defined_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36938,7 +36938,7 @@ fn resolve_externally_defined_items(
 }
 
 fn resolve_externally_defined_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36949,7 +36949,7 @@ fn resolve_externally_defined_styles(
 }
 
 fn resolve_externally_defined_symbols(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedSymbolId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36960,7 +36960,7 @@ fn resolve_externally_defined_symbols(
 }
 
 fn resolve_externally_defined_text_fonts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedTextFontId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36971,7 +36971,7 @@ fn resolve_externally_defined_text_fonts(
 }
 
 fn resolve_externally_defined_tiles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedTileId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36982,7 +36982,7 @@ fn resolve_externally_defined_tiles(
 }
 
 fn resolve_externally_defined_tile_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ExternallyDefinedTileStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -36993,7 +36993,7 @@ fn resolve_externally_defined_tile_styles(
 }
 
 fn resolve_faces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37010,7 +37010,7 @@ fn resolve_faces(
 }
 
 fn resolve_face_bounds(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FaceBoundId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37021,7 +37021,7 @@ fn resolve_face_bounds(
 }
 
 fn resolve_face_outer_bounds(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FaceOuterBoundId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37032,7 +37032,7 @@ fn resolve_face_outer_bounds(
 }
 
 fn resolve_face_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FaceSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37051,7 +37051,7 @@ fn resolve_face_surfaces(
 }
 
 fn resolve_feature_for_datum_target_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FeatureForDatumTargetRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37066,7 +37066,7 @@ fn resolve_feature_for_datum_target_relationships(
 }
 
 fn resolve_fill_area_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FillAreaStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37083,7 +37083,7 @@ fn resolve_fill_area_styles(
 }
 
 fn resolve_fill_area_style_colours(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FillAreaStyleColourId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37094,7 +37094,7 @@ fn resolve_fill_area_style_colours(
 }
 
 fn resolve_fill_area_style_hatchings(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FillAreaStyleHatchingId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37115,7 +37115,7 @@ fn resolve_fill_area_style_hatchings(
 }
 
 fn resolve_fill_area_style_tile_coloured_regions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FillAreaStyleTileColouredRegionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37130,7 +37130,7 @@ fn resolve_fill_area_style_tile_coloured_regions(
 }
 
 fn resolve_fill_area_style_tile_curve_with_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FillAreaStyleTileCurveWithStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37142,7 +37142,7 @@ fn resolve_fill_area_style_tile_curve_with_styles(
 }
 
 fn resolve_fill_area_style_tile_symbol_with_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FillAreaStyleTileSymbolWithStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37154,7 +37154,7 @@ fn resolve_fill_area_style_tile_symbol_with_styles(
 }
 
 fn resolve_fill_area_style_tiless(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FillAreaStyleTilesId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37176,7 +37176,7 @@ fn resolve_fill_area_style_tiless(
 }
 
 fn resolve_flatness_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: FlatnessToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37195,7 +37195,7 @@ fn resolve_flatness_tolerances(
 }
 
 fn resolve_general_datum_references(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeneralDatumReferenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37248,7 +37248,7 @@ fn resolve_general_datum_references(
 }
 
 fn resolve_general_property_associations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeneralPropertyAssociationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37263,7 +37263,7 @@ fn resolve_general_property_associations(
 }
 
 fn resolve_generic_product_definition_references(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GenericProductDefinitionReferenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37274,7 +37274,7 @@ fn resolve_generic_product_definition_references(
 }
 
 fn resolve_geometric_curve_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricCurveSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37291,7 +37291,7 @@ fn resolve_geometric_curve_sets(
 }
 
 fn resolve_geometric_item_specific_usages(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricItemSpecificUsageId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37310,7 +37310,7 @@ fn resolve_geometric_item_specific_usages(
 }
 
 fn resolve_geometric_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37327,7 +37327,7 @@ fn resolve_geometric_sets(
 }
 
 fn resolve_geometric_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37346,7 +37346,7 @@ fn resolve_geometric_tolerances(
 }
 
 fn resolve_geometric_tolerance_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricToleranceRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37361,7 +37361,7 @@ fn resolve_geometric_tolerance_relationships(
 }
 
 fn resolve_geometric_tolerance_with_datum_references(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricToleranceWithDatumReferenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37388,7 +37388,7 @@ fn resolve_geometric_tolerance_with_datum_references(
 }
 
 fn resolve_geometric_tolerance_with_defined_area_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricToleranceWithDefinedAreaUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37418,7 +37418,7 @@ fn resolve_geometric_tolerance_with_defined_area_units(
 }
 
 fn resolve_geometric_tolerance_with_defined_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricToleranceWithDefinedUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37441,7 +37441,7 @@ fn resolve_geometric_tolerance_with_defined_units(
 }
 
 fn resolve_geometric_tolerance_with_maximum_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricToleranceWithMaximumToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37463,7 +37463,7 @@ fn resolve_geometric_tolerance_with_maximum_tolerances(
 }
 
 fn resolve_geometric_tolerance_with_modifierss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricToleranceWithModifiersId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37482,7 +37482,7 @@ fn resolve_geometric_tolerance_with_modifierss(
 }
 
 fn resolve_geometrically_bounded_surface_shape_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricallyBoundedSurfaceShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37504,7 +37504,7 @@ fn resolve_geometrically_bounded_surface_shape_representations(
 }
 
 fn resolve_geometrically_bounded_wireframe_shape_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GeometricallyBoundedWireframeShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37526,7 +37526,7 @@ fn resolve_geometrically_bounded_wireframe_shape_representations(
 }
 
 fn resolve_global_uncertainty_assigned_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GlobalUncertaintyAssignedContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37545,7 +37545,7 @@ fn resolve_global_uncertainty_assigned_contexts(
 }
 
 fn resolve_global_unit_assigned_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GlobalUnitAssignedContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37562,7 +37562,7 @@ fn resolve_global_unit_assigned_contexts(
 }
 
 fn resolve_group_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: GroupAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37573,7 +37573,7 @@ fn resolve_group_assignments(
 }
 
 fn resolve_hyperbolas(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: HyperbolaId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37584,7 +37584,7 @@ fn resolve_hyperbolas(
 }
 
 fn resolve_id_attributes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: IdAttributeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37596,7 +37596,7 @@ fn resolve_id_attributes(
 }
 
 fn resolve_identification_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: IdentificationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37607,7 +37607,7 @@ fn resolve_identification_assignments(
 }
 
 fn resolve_intersection_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: IntersectionCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37626,7 +37626,7 @@ fn resolve_intersection_curves(
 }
 
 fn resolve_invisibilitys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: InvisibilityId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37643,7 +37643,7 @@ fn resolve_invisibilitys(
 }
 
 fn resolve_item_defined_transformations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ItemDefinedTransformationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37658,7 +37658,7 @@ fn resolve_item_defined_transformations(
 }
 
 fn resolve_item_identified_representation_usages(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ItemIdentifiedRepresentationUsageId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37706,7 +37706,7 @@ fn resolve_item_identified_representation_usages(
 }
 
 fn resolve_leader_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LeaderCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37727,7 +37727,7 @@ fn resolve_leader_curves(
 }
 
 fn resolve_leader_directed_callouts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LeaderDirectedCalloutId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37744,7 +37744,7 @@ fn resolve_leader_directed_callouts(
 }
 
 fn resolve_leader_terminators(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LeaderTerminatorId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37770,7 +37770,7 @@ fn resolve_leader_terminators(
 }
 
 fn resolve_length_measure_with_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LengthMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37781,7 +37781,7 @@ fn resolve_length_measure_with_units(
 }
 
 fn resolve_length_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LengthUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37793,7 +37793,7 @@ fn resolve_length_units(
 }
 
 fn resolve_lines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37806,7 +37806,7 @@ fn resolve_lines(
 }
 
 fn resolve_line_profile_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LineProfileToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37825,7 +37825,7 @@ fn resolve_line_profile_tolerances(
 }
 
 fn resolve_local_times(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: LocalTimeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37838,7 +37838,7 @@ fn resolve_local_times(
 }
 
 fn resolve_make_from_usage_options(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MakeFromUsageOptionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37855,7 +37855,7 @@ fn resolve_make_from_usage_options(
 }
 
 fn resolve_manifold_solid_breps(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ManifoldSolidBrepId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37866,7 +37866,7 @@ fn resolve_manifold_solid_breps(
 }
 
 fn resolve_manifold_surface_shape_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ManifoldSurfaceShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37886,7 +37886,7 @@ fn resolve_manifold_surface_shape_representations(
 }
 
 fn resolve_mapped_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MappedItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37901,7 +37901,7 @@ fn resolve_mapped_items(
 }
 
 fn resolve_mass_measure_with_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MassMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37912,7 +37912,7 @@ fn resolve_mass_measure_with_units(
 }
 
 fn resolve_mass_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MassUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37924,7 +37924,7 @@ fn resolve_mass_units(
 }
 
 fn resolve_measure_qualifications(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MeasureQualificationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37944,7 +37944,7 @@ fn resolve_measure_qualifications(
 }
 
 fn resolve_measure_representation_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MeasureRepresentationItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37955,7 +37955,7 @@ fn resolve_measure_representation_items(
 }
 
 fn resolve_measure_with_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37966,7 +37966,7 @@ fn resolve_measure_with_units(
 }
 
 fn resolve_mechanical_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MechanicalContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37978,7 +37978,7 @@ fn resolve_mechanical_contexts(
 }
 
 fn resolve_mechanical_design_and_draughting_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MechanicalDesignAndDraughtingRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -37995,7 +37995,7 @@ fn resolve_mechanical_design_and_draughting_relationships(
 }
 
 fn resolve_mechanical_design_geometric_presentation_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MechanicalDesignGeometricPresentationRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38017,7 +38017,7 @@ fn resolve_mechanical_design_geometric_presentation_representations(
 }
 
 fn resolve_mechanical_design_presentation_representation_with_draughtings(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MechanicalDesignPresentationRepresentationWithDraughtingId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38039,7 +38039,7 @@ fn resolve_mechanical_design_presentation_representation_with_draughtings(
 }
 
 fn resolve_mechanical_design_shaded_presentation_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: MechanicalDesignShadedPresentationRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38061,7 +38061,7 @@ fn resolve_mechanical_design_shaded_presentation_representations(
 }
 
 fn resolve_model_geometric_views(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ModelGeometricViewId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38074,7 +38074,7 @@ fn resolve_model_geometric_views(
 }
 
 fn resolve_modified_geometric_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ModifiedGeometricToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38093,7 +38093,7 @@ fn resolve_modified_geometric_tolerances(
 }
 
 fn resolve_name_attributes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: NameAttributeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38105,7 +38105,7 @@ fn resolve_name_attributes(
 }
 
 fn resolve_named_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: NamedUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38121,7 +38121,7 @@ fn resolve_named_units(
 }
 
 fn resolve_next_assembly_usage_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: NextAssemblyUsageOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38136,7 +38136,7 @@ fn resolve_next_assembly_usage_occurrences(
 }
 
 fn resolve_offset_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OffsetSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38147,7 +38147,7 @@ fn resolve_offset_surfaces(
 }
 
 fn resolve_one_direction_repeat_factors(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OneDirectionRepeatFactorId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38158,7 +38158,7 @@ fn resolve_one_direction_repeat_factors(
 }
 
 fn resolve_open_shells(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OpenShellId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38175,7 +38175,7 @@ fn resolve_open_shells(
 }
 
 fn resolve_organization_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OrganizationRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38190,7 +38190,7 @@ fn resolve_organization_relationships(
 }
 
 fn resolve_organizational_addresss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OrganizationalAddressId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38207,7 +38207,7 @@ fn resolve_organizational_addresss(
 }
 
 fn resolve_organizational_projects(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OrganizationalProjectId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38224,7 +38224,7 @@ fn resolve_organizational_projects(
 }
 
 fn resolve_organizational_project_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OrganizationalProjectRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38239,7 +38239,7 @@ fn resolve_organizational_project_relationships(
 }
 
 fn resolve_oriented_closed_shells(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OrientedClosedShellId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38251,7 +38251,7 @@ fn resolve_oriented_closed_shells(
 }
 
 fn resolve_oriented_edges(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OrientedEdgeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38262,7 +38262,7 @@ fn resolve_oriented_edges(
 }
 
 fn resolve_over_riding_styled_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: OverRidingStyledItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38286,7 +38286,7 @@ fn resolve_over_riding_styled_items(
 }
 
 fn resolve_parallelism_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ParallelismToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38313,7 +38313,7 @@ fn resolve_parallelism_tolerances(
 }
 
 fn resolve_paths(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PathId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38330,7 +38330,7 @@ fn resolve_paths(
 }
 
 fn resolve_pcurves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PcurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38344,7 +38344,7 @@ fn resolve_pcurves(
 }
 
 fn resolve_perpendicularity_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PerpendicularityToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38371,7 +38371,7 @@ fn resolve_perpendicularity_tolerances(
 }
 
 fn resolve_person_and_organizations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PersonAndOrganizationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38385,7 +38385,7 @@ fn resolve_person_and_organizations(
 }
 
 fn resolve_person_and_organization_addresss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PersonAndOrganizationAddressId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38410,7 +38410,7 @@ fn resolve_person_and_organization_addresss(
 }
 
 fn resolve_person_and_organization_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PersonAndOrganizationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38425,7 +38425,7 @@ fn resolve_person_and_organization_assignments(
 }
 
 fn resolve_personal_addresss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PersonalAddressId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38442,7 +38442,7 @@ fn resolve_personal_addresss(
 }
 
 fn resolve_placed_datum_target_features(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PlacedDatumTargetFeatureId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38454,7 +38454,7 @@ fn resolve_placed_datum_target_features(
 }
 
 fn resolve_placements(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PlacementId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38465,7 +38465,7 @@ fn resolve_placements(
 }
 
 fn resolve_planar_boxs(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PlanarBoxId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38476,7 +38476,7 @@ fn resolve_planar_boxs(
 }
 
 fn resolve_planes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PlaneId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38487,7 +38487,7 @@ fn resolve_planes(
 }
 
 fn resolve_plane_angle_measure_with_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PlaneAngleMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38498,7 +38498,7 @@ fn resolve_plane_angle_measure_with_units(
 }
 
 fn resolve_plane_angle_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PlaneAngleUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38510,7 +38510,7 @@ fn resolve_plane_angle_units(
 }
 
 fn resolve_plus_minus_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PlusMinusToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38525,7 +38525,7 @@ fn resolve_plus_minus_tolerances(
 }
 
 fn resolve_point_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PointStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38567,7 +38567,7 @@ fn resolve_point_styles(
 }
 
 fn resolve_poly_loops(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PolyLoopId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38584,7 +38584,7 @@ fn resolve_poly_loops(
 }
 
 fn resolve_polylines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PolylineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38601,7 +38601,7 @@ fn resolve_polylines(
 }
 
 fn resolve_position_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PositionToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38620,7 +38620,7 @@ fn resolve_position_tolerances(
 }
 
 fn resolve_presentation_areas(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentationAreaId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38640,7 +38640,7 @@ fn resolve_presentation_areas(
 }
 
 fn resolve_presentation_layer_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentationLayerAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38657,7 +38657,7 @@ fn resolve_presentation_layer_assignments(
 }
 
 fn resolve_presentation_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentationRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38677,7 +38677,7 @@ fn resolve_presentation_representations(
 }
 
 fn resolve_presentation_sizes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentationSizeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38692,7 +38692,7 @@ fn resolve_presentation_sizes(
 }
 
 fn resolve_presentation_style_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentationStyleAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38717,7 +38717,7 @@ fn resolve_presentation_style_assignments(
 }
 
 fn resolve_presentation_style_by_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentationStyleByContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38745,7 +38745,7 @@ fn resolve_presentation_style_by_contexts(
 }
 
 fn resolve_presentation_views(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentationViewId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38765,7 +38765,7 @@ fn resolve_presentation_views(
 }
 
 fn resolve_presented_item_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PresentedItemRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38780,7 +38780,7 @@ fn resolve_presented_item_representations(
 }
 
 fn resolve_products(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38797,7 +38797,7 @@ fn resolve_products(
 }
 
 fn resolve_product_category_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductCategoryRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38811,7 +38811,7 @@ fn resolve_product_category_relationships(
 }
 
 fn resolve_product_concepts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductConceptId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38823,7 +38823,7 @@ fn resolve_product_concepts(
 }
 
 fn resolve_product_concept_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductConceptContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38835,7 +38835,7 @@ fn resolve_product_concept_contexts(
 }
 
 fn resolve_product_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38847,7 +38847,7 @@ fn resolve_product_contexts(
 }
 
 fn resolve_product_definitions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38862,7 +38862,7 @@ fn resolve_product_definitions(
 }
 
 fn resolve_product_definition_contexts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionContextId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38874,7 +38874,7 @@ fn resolve_product_definition_contexts(
 }
 
 fn resolve_product_definition_context_associations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionContextAssociationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38892,7 +38892,7 @@ fn resolve_product_definition_context_associations(
 }
 
 fn resolve_product_definition_effectivitys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionEffectivityId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38904,7 +38904,7 @@ fn resolve_product_definition_effectivitys(
 }
 
 fn resolve_product_definition_formations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionFormationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38915,7 +38915,7 @@ fn resolve_product_definition_formations(
 }
 
 fn resolve_product_definition_formation_with_specified_sources(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionFormationWithSpecifiedSourceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38928,7 +38928,7 @@ fn resolve_product_definition_formation_with_specified_sources(
 }
 
 fn resolve_product_definition_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38951,7 +38951,7 @@ fn resolve_product_definition_occurrences(
 }
 
 fn resolve_product_definition_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38966,7 +38966,7 @@ fn resolve_product_definition_relationships(
 }
 
 fn resolve_product_definition_relationship_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionRelationshipRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38981,7 +38981,7 @@ fn resolve_product_definition_relationship_relationships(
 }
 
 fn resolve_product_definition_shapes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionShapeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -38993,7 +38993,7 @@ fn resolve_product_definition_shapes(
 }
 
 fn resolve_product_definition_substitutes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionSubstituteId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39008,7 +39008,7 @@ fn resolve_product_definition_substitutes(
 }
 
 fn resolve_product_definition_usages(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionUsageId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39023,7 +39023,7 @@ fn resolve_product_definition_usages(
 }
 
 fn resolve_product_definition_with_associated_documentss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductDefinitionWithAssociatedDocumentsId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39046,7 +39046,7 @@ fn resolve_product_definition_with_associated_documentss(
 }
 
 fn resolve_product_related_product_categorys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProductRelatedProductCategoryId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39063,7 +39063,7 @@ fn resolve_product_related_product_categorys(
 }
 
 fn resolve_projected_zone_definitions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ProjectedZoneDefinitionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39088,7 +39088,7 @@ fn resolve_projected_zone_definitions(
 }
 
 fn resolve_property_definitions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PropertyDefinitionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39100,7 +39100,7 @@ fn resolve_property_definitions(
 }
 
 fn resolve_property_definition_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PropertyDefinitionRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39115,7 +39115,7 @@ fn resolve_property_definition_relationships(
 }
 
 fn resolve_property_definition_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: PropertyDefinitionRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39130,7 +39130,7 @@ fn resolve_property_definition_representations(
 }
 
 fn resolve_qualified_representation_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: QualifiedRepresentationItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39147,7 +39147,7 @@ fn resolve_qualified_representation_items(
 }
 
 fn resolve_quasi_uniform_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: QuasiUniformCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39164,7 +39164,7 @@ fn resolve_quasi_uniform_curves(
 }
 
 fn resolve_quasi_uniform_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: QuasiUniformSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39187,7 +39187,7 @@ fn resolve_quasi_uniform_surfaces(
 }
 
 fn resolve_ratio_measure_with_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RatioMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39198,7 +39198,7 @@ fn resolve_ratio_measure_with_units(
 }
 
 fn resolve_ratio_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RatioUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39210,7 +39210,7 @@ fn resolve_ratio_units(
 }
 
 fn resolve_rational_b_spline_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RationalBSplineCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39227,7 +39227,7 @@ fn resolve_rational_b_spline_curves(
 }
 
 fn resolve_rational_b_spline_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RationalBSplineSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39250,7 +39250,7 @@ fn resolve_rational_b_spline_surfaces(
 }
 
 fn resolve_repositioned_tessellated_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RepositionedTessellatedItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39261,7 +39261,7 @@ fn resolve_repositioned_tessellated_items(
 }
 
 fn resolve_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39281,7 +39281,7 @@ fn resolve_representations(
 }
 
 fn resolve_representation_maps(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RepresentationMapId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39296,7 +39296,7 @@ fn resolve_representation_maps(
 }
 
 fn resolve_representation_references(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RepresentationReferenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39309,7 +39309,7 @@ fn resolve_representation_references(
 }
 
 fn resolve_representation_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39326,7 +39326,7 @@ fn resolve_representation_relationships(
 }
 
 fn resolve_representation_relationship_with_transformations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RepresentationRelationshipWithTransformationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39375,7 +39375,7 @@ fn resolve_representation_relationship_with_transformations(
 }
 
 fn resolve_resource_propertys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ResourcePropertyId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39388,7 +39388,7 @@ fn resolve_resource_propertys(
 }
 
 fn resolve_role_associations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RoleAssociationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39401,7 +39401,7 @@ fn resolve_role_associations(
 }
 
 fn resolve_roundness_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: RoundnessToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39420,7 +39420,7 @@ fn resolve_roundness_tolerances(
 }
 
 fn resolve_seam_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SeamCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39439,7 +39439,7 @@ fn resolve_seam_curves(
 }
 
 fn resolve_security_classifications(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SecurityClassificationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39451,7 +39451,7 @@ fn resolve_security_classifications(
 }
 
 fn resolve_security_classification_assignments(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SecurityClassificationAssignmentId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39463,7 +39463,7 @@ fn resolve_security_classification_assignments(
 }
 
 fn resolve_shape_aspects(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeAspectId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39475,7 +39475,7 @@ fn resolve_shape_aspects(
 }
 
 fn resolve_shape_aspect_associativitys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeAspectAssociativityId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39490,7 +39490,7 @@ fn resolve_shape_aspect_associativitys(
 }
 
 fn resolve_shape_aspect_deriving_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeAspectDerivingRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39505,7 +39505,7 @@ fn resolve_shape_aspect_deriving_relationships(
 }
 
 fn resolve_shape_aspect_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeAspectRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39520,7 +39520,7 @@ fn resolve_shape_aspect_relationships(
 }
 
 fn resolve_shape_definition_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeDefinitionRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39535,7 +39535,7 @@ fn resolve_shape_definition_representations(
 }
 
 fn resolve_shape_dimension_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeDimensionRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39555,7 +39555,7 @@ fn resolve_shape_dimension_representations(
 }
 
 fn resolve_shape_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39575,7 +39575,7 @@ fn resolve_shape_representations(
 }
 
 fn resolve_shape_representation_relationships(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeRepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39592,7 +39592,7 @@ fn resolve_shape_representation_relationships(
 }
 
 fn resolve_shape_representation_with_parameterss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShapeRepresentationWithParametersId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39612,7 +39612,7 @@ fn resolve_shape_representation_with_parameterss(
 }
 
 fn resolve_shell_based_surface_models(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ShellBasedSurfaceModelId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39629,7 +39629,7 @@ fn resolve_shell_based_surface_models(
 }
 
 fn resolve_si_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SiUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39638,7 +39638,7 @@ fn resolve_si_units(
 }
 
 fn resolve_solid_angle_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SolidAngleUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39650,7 +39650,7 @@ fn resolve_solid_angle_units(
 }
 
 fn resolve_spherical_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SphericalSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39661,7 +39661,7 @@ fn resolve_spherical_surfaces(
 }
 
 fn resolve_start_requests(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: StartRequestId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39681,7 +39681,7 @@ fn resolve_start_requests(
 }
 
 fn resolve_start_works(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: StartWorkId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39700,7 +39700,7 @@ fn resolve_start_works(
 }
 
 fn resolve_straightness_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: StraightnessToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39719,7 +39719,7 @@ fn resolve_straightness_tolerances(
 }
 
 fn resolve_styled_items(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: StyledItemId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39740,7 +39740,7 @@ fn resolve_styled_items(
 }
 
 fn resolve_surface_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39759,7 +39759,7 @@ fn resolve_surface_curves(
 }
 
 fn resolve_surface_of_linear_extrusions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceOfLinearExtrusionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39772,7 +39772,7 @@ fn resolve_surface_of_linear_extrusions(
 }
 
 fn resolve_surface_of_revolutions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceOfRevolutionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39786,7 +39786,7 @@ fn resolve_surface_of_revolutions(
 }
 
 fn resolve_surface_profile_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceProfileToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39805,7 +39805,7 @@ fn resolve_surface_profile_tolerances(
 }
 
 fn resolve_surface_rendering_propertiess(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceRenderingPropertiesId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39816,7 +39816,7 @@ fn resolve_surface_rendering_propertiess(
 }
 
 fn resolve_surface_side_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceSideStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39835,7 +39835,7 @@ fn resolve_surface_side_styles(
 }
 
 fn resolve_surface_style_boundarys(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleBoundaryId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39847,7 +39847,7 @@ fn resolve_surface_style_boundarys(
 }
 
 fn resolve_surface_style_control_grids(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleControlGridId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39859,7 +39859,7 @@ fn resolve_surface_style_control_grids(
 }
 
 fn resolve_surface_style_fill_areas(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleFillAreaId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39870,7 +39870,7 @@ fn resolve_surface_style_fill_areas(
 }
 
 fn resolve_surface_style_parameter_lines(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleParameterLineId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39882,7 +39882,7 @@ fn resolve_surface_style_parameter_lines(
 }
 
 fn resolve_surface_style_renderings(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleRenderingId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39893,7 +39893,7 @@ fn resolve_surface_style_renderings(
 }
 
 fn resolve_surface_style_rendering_with_propertiess(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleRenderingWithPropertiesId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39914,7 +39914,7 @@ fn resolve_surface_style_rendering_with_propertiess(
 }
 
 fn resolve_surface_style_segmentation_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleSegmentationCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39926,7 +39926,7 @@ fn resolve_surface_style_segmentation_curves(
 }
 
 fn resolve_surface_style_silhouettes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleSilhouetteId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39938,7 +39938,7 @@ fn resolve_surface_style_silhouettes(
 }
 
 fn resolve_surface_style_usages(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SurfaceStyleUsageId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39950,7 +39950,7 @@ fn resolve_surface_style_usages(
 }
 
 fn resolve_swept_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SweptSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39961,7 +39961,7 @@ fn resolve_swept_surfaces(
 }
 
 fn resolve_symbol_colours(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SymbolColourId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39972,7 +39972,7 @@ fn resolve_symbol_colours(
 }
 
 fn resolve_symbol_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SymbolRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -39992,7 +39992,7 @@ fn resolve_symbol_representations(
 }
 
 fn resolve_symbol_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SymbolStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40004,7 +40004,7 @@ fn resolve_symbol_styles(
 }
 
 fn resolve_symbol_targets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SymbolTargetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40015,7 +40015,7 @@ fn resolve_symbol_targets(
 }
 
 fn resolve_symmetry_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: SymmetryToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40042,7 +40042,7 @@ fn resolve_symmetry_tolerances(
 }
 
 fn resolve_terminator_symbols(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TerminatorSymbolId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40068,7 +40068,7 @@ fn resolve_terminator_symbols(
 }
 
 fn resolve_tessellated_annotation_occurrences(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedAnnotationOccurrenceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40089,7 +40089,7 @@ fn resolve_tessellated_annotation_occurrences(
 }
 
 fn resolve_tessellated_curve_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedCurveSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40101,7 +40101,7 @@ fn resolve_tessellated_curve_sets(
 }
 
 fn resolve_tessellated_faces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedFaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40120,7 +40120,7 @@ fn resolve_tessellated_faces(
 }
 
 fn resolve_tessellated_geometric_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedGeometricSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40137,7 +40137,7 @@ fn resolve_tessellated_geometric_sets(
 }
 
 fn resolve_tessellated_shape_representations(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40157,7 +40157,7 @@ fn resolve_tessellated_shape_representations(
 }
 
 fn resolve_tessellated_shells(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedShellId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40183,7 +40183,7 @@ fn resolve_tessellated_shells(
 }
 
 fn resolve_tessellated_solids(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedSolidId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40209,7 +40209,7 @@ fn resolve_tessellated_solids(
 }
 
 fn resolve_tessellated_surface_sets(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TessellatedSurfaceSetId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40221,7 +40221,7 @@ fn resolve_tessellated_surface_sets(
 }
 
 fn resolve_text_literals(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TextLiteralId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40234,7 +40234,7 @@ fn resolve_text_literals(
 }
 
 fn resolve_text_styles(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TextStyleId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40246,7 +40246,7 @@ fn resolve_text_styles(
 }
 
 fn resolve_text_style_for_defined_fonts(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TextStyleForDefinedFontId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40257,7 +40257,7 @@ fn resolve_text_style_for_defined_fonts(
 }
 
 fn resolve_text_style_with_box_characteristicss(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TextStyleWithBoxCharacteristicsId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40269,7 +40269,7 @@ fn resolve_text_style_with_box_characteristicss(
 }
 
 fn resolve_time_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TimeUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40281,7 +40281,7 @@ fn resolve_time_units(
 }
 
 fn resolve_tolerance_values(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ToleranceValueId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40296,7 +40296,7 @@ fn resolve_tolerance_values(
 }
 
 fn resolve_tolerance_zones(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ToleranceZoneId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40318,7 +40318,7 @@ fn resolve_tolerance_zones(
 }
 
 fn resolve_tolerance_zone_definitions(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ToleranceZoneDefinitionId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40337,7 +40337,7 @@ fn resolve_tolerance_zone_definitions(
 }
 
 fn resolve_tolerance_zone_with_datums(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ToleranceZoneWithDatumId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40362,7 +40362,7 @@ fn resolve_tolerance_zone_with_datums(
 }
 
 fn resolve_toroidal_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ToroidalSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40373,7 +40373,7 @@ fn resolve_toroidal_surfaces(
 }
 
 fn resolve_total_runout_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TotalRunoutToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40400,7 +40400,7 @@ fn resolve_total_runout_tolerances(
 }
 
 fn resolve_trimmed_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TrimmedCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40437,7 +40437,7 @@ fn resolve_trimmed_curves(
 }
 
 fn resolve_two_direction_repeat_factors(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: TwoDirectionRepeatFactorId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40451,7 +40451,7 @@ fn resolve_two_direction_repeat_factors(
 }
 
 fn resolve_uncertainty_measure_with_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: UncertaintyMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40462,7 +40462,7 @@ fn resolve_uncertainty_measure_with_units(
 }
 
 fn resolve_unequally_disposed_geometric_tolerances(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: UnequallyDisposedGeometricToleranceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40484,7 +40484,7 @@ fn resolve_unequally_disposed_geometric_tolerances(
 }
 
 fn resolve_uniform_curves(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: UniformCurveId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40501,7 +40501,7 @@ fn resolve_uniform_curves(
 }
 
 fn resolve_uniform_surfaces(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: UniformSurfaceId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40524,7 +40524,7 @@ fn resolve_uniform_surfaces(
 }
 
 fn resolve_vectors(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: VectorId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40535,7 +40535,7 @@ fn resolve_vectors(
 }
 
 fn resolve_vertex_loops(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: VertexLoopId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40546,7 +40546,7 @@ fn resolve_vertex_loops(
 }
 
 fn resolve_vertex_points(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: VertexPointId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40557,7 +40557,7 @@ fn resolve_vertex_points(
 }
 
 fn resolve_vertex_shells(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: VertexShellId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40569,7 +40569,7 @@ fn resolve_vertex_shells(
 }
 
 fn resolve_view_volumes(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ViewVolumeId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40583,7 +40583,7 @@ fn resolve_view_volumes(
 }
 
 fn resolve_volume_units(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: VolumeUnitId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40600,7 +40600,7 @@ fn resolve_volume_units(
 }
 
 fn resolve_wire_shells(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: WireShellId,
     attrs: &[Attribute],
     idmap: &BTreeMap<u64, AnyId>,
@@ -40966,7 +40966,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {
 }
 
 fn resolve_complex(
-    model: &mut Model,
+    model: &mut StepModel,
     aid: ComplexUnitId,
     parts: &[RawEntityPart],
     idmap: &BTreeMap<u64, AnyId>,
