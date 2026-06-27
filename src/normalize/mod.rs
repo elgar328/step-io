@@ -21,13 +21,17 @@ mod entity_normalize;
 /// `Unimplemented` = the entity type is outside the generated closure (not yet
 /// modeled, or an unknown/non-schema name). `Nonstandard` = a known closure type
 /// sits in a SELECT slot that does not admit it (schema violation). `Cascade` = a
-/// referrer whose target was dropped/dangling.
+/// referrer whose target was dropped/dangling. `Unclassified` = the generated
+/// read could not consume the entity's own attributes (off-kind scalar, bad enum
+/// token, short arity, …) and no policy layer (normalize / `drop_pass`) classified
+/// it — a frontier signal: investigate and absorb via normalize or `nonstd_ref`.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DropKind {
     SlotLocal,
     Unimplemented,
     Nonstandard,
     Cascade,
+    Unclassified,
 }
 
 /// A drop reason: kind + a human label (`<TYPE>` / `<ENT>.<slot>-><TYPE>` /
@@ -57,19 +61,18 @@ pub struct Report {
     pub norm: Vec<&'static str>,
 }
 
-/// A read failure: the source did not parse, or the generated read panicked on a
-/// shape not yet handled (the strict reader expects normalized, in-subset data).
+/// A read failure. The only failure mode is a parse error: once the source
+/// parses, the generated read is per-entity fallible (a malformed entity is
+/// dropped with a reason in [`Report::dropped`], never failing the whole read).
 #[derive(Clone, Debug)]
 pub enum ReadError {
     Parse(String),
-    Panic,
 }
 
 impl std::fmt::Display for ReadError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ReadError::Parse(e) => write!(f, "parse failed: {e}"),
-            ReadError::Panic => write!(f, "panic in generated read"),
         }
     }
 }
@@ -163,14 +166,24 @@ fn check_ref_slots(
 /// Filter a normalized graph to the closure subset, recording WHY each entity is
 /// dropped. An entity survives iff it is a closure type, all its transitive refs
 /// stay kept, and no ref slot holds a type the slot does not admit (fixpoint).
+///
+/// `known_bad` = entities the generated read already failed on (own-attr); they
+/// are pre-dropped roots here so their referrers cascade. Their drop reason is
+/// owned by the caller's read-failure accumulator, so they are NOT re-recorded
+/// in `dropped` (avoids double-counting in the provenance accounting).
 fn drop_pass(
     graph: &BTreeMap<u64, RawEntity>,
+    known_bad: &BTreeSet<u64>,
 ) -> (BTreeMap<u64, RawEntity>, Vec<(u64, DropReason)>) {
     let mut dropped: Vec<(u64, DropReason)> = Vec::new();
     let mut keep: BTreeSet<u64> = BTreeSet::new();
     let mut root_of: BTreeMap<u64, String> = BTreeMap::new();
     for (&id, e) in graph {
-        if in_subset(e) {
+        if known_bad.contains(&id) {
+            // Dropped by read (reason owned by read_fail); seed root_of so its
+            // referrers get a cascade label, but do not re-record the drop.
+            root_of.insert(id, "unclassified".to_string());
+        } else if in_subset(e) {
             keep.insert(id);
         } else {
             let n = ent_name(e);
@@ -263,15 +276,65 @@ fn normalize_all(
 /// Read STEP source into the schema-faithful model, returning a provenance
 /// `Report`.
 ///
+/// The generated read is per-entity fallible: an entity whose own attributes the
+/// strict reader cannot consume is dropped (reason recorded), never panicking.
+/// A read failure pre-drops that entity in the next `drop_pass`, so its referrers
+/// cascade through the same engine. The loop is bounded and converges in ≤2 real
+/// iterations (own-attr readability is graph-independent, so all failures surface
+/// in the first build; the second `drop_pass` cascades them to a clean set).
+///
 /// # Errors
-/// Returns [`ReadError::Parse`] if the source does not parse, or
-/// [`ReadError::Panic`] if the generated read panics on an unhandled shape.
+/// Returns [`ReadError::Parse`] only if the source does not parse. A parsed
+/// source never fails the read: a malformed entity is dropped with a reason in
+/// [`Report::dropped`] (the generated read is structurally panic-free).
 pub fn read(src: &[u8]) -> Result<(StepModel, Report), ReadError> {
+    /// ≤2 real iterations; one extra for slack (a violation degrades to dropping,
+    /// not hanging — `debug_assert` flags non-convergence in dev).
+    const MAX_ITERS: usize = 3;
+
     let g = parse_bytes(src).map_err(|e| ReadError::Parse(e.to_string()))?;
     let n_in = g.entities.len();
     let raw: BTreeMap<u64, RawEntity> = g.entities;
     let (normalized, norm, slot_drops, n_synth) = normalize_all(raw);
-    let (kept, mut dropped) = drop_pass(&normalized);
+
+    // Outer cascade fixpoint: drop_pass (graph/ref validity) -> gen_read (own-attr
+    // validity). read failures feed `known_bad` so the next drop_pass cascades
+    // their referrers. `drop_pass` always seeds from the full `normalized` graph
+    // (never `kept`) so the kept set is monotonically shrinking — this guarantees
+    // termination; seeding from `kept` would break it.
+    let mut known_bad: BTreeSet<u64> = BTreeSet::new();
+    let mut read_fail: BTreeMap<u64, String> = BTreeMap::new();
+    let mut model = StepModel::default();
+    let mut dropped: Vec<(u64, DropReason)> = Vec::new();
+    let mut validated = 0usize;
+    let mut converged = false;
+    for _ in 0..MAX_ITERS {
+        let (kept, kept_dropped) = drop_pass(&normalized, &known_bad);
+        // No catch_unwind belt: the generated read is structurally panic-free
+        // (codegen emits no panic!/expect/unwrap/raw indexing — gated by grep), so
+        // it returns per-entity drops instead of unwinding.
+        let (m, _idmap, read_drops) = gen_read(&kept);
+        model = m;
+        dropped = kept_dropped;
+        validated = kept.len();
+        if read_drops.is_empty() {
+            converged = true;
+            break;
+        }
+        for (id, r) in read_drops {
+            read_fail.entry(id).or_insert(r);
+            known_bad.insert(id);
+        }
+    }
+    debug_assert!(
+        converged,
+        "fallible read did not converge in {MAX_ITERS} iters"
+    );
+
+    // Finalize provenance: cascade drops (this iter) + slot-local (normalize) +
+    // accumulated read failures (Unclassified). Each id appears exactly once —
+    // `drop_pass` excludes `known_bad` from its `dropped`, and `read_fail` keys ==
+    // `known_bad`, so the three sets are disjoint (accounting invariant holds).
     for (id, r) in slot_drops {
         dropped.push((
             id,
@@ -281,9 +344,15 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), ReadError> {
             },
         ));
     }
-    let validated = kept.len();
-    let model = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| gen_read(&kept).0))
-        .map_err(|_| ReadError::Panic)?;
+    for (id, r) in read_fail {
+        dropped.push((
+            id,
+            DropReason {
+                kind: DropKind::Unclassified,
+                key: r,
+            },
+        ));
+    }
     Ok((
         model,
         Report {

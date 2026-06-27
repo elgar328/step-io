@@ -293,16 +293,20 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     writeln!(s, "}}").unwrap();
     // resolve from AnyId
     writeln!(s, "impl {} {{", re.rust).unwrap();
-    writeln!(s, "    pub fn from_any(a: AnyId) -> Self {{ match a {{").unwrap();
+    writeln!(
+        s,
+        "    pub fn from_any(a: AnyId) -> Result<Self, String> {{ match a {{"
+    )
+    .unwrap();
     for (variant, target) in &re.simple_arms {
-        writeln!(s, "        AnyId::{target}(i) => Self::{variant}(i),").unwrap();
+        writeln!(s, "        AnyId::{target}(i) => Ok(Self::{variant}(i)),").unwrap();
     }
     if re.has_complex {
-        writeln!(s, "        AnyId::ComplexUnit(i) => Self::Complex(i),").unwrap();
+        writeln!(s, "        AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),").unwrap();
     }
     writeln!(
         s,
-        "        other => panic!(\"{} ref -> {{other:?}}\"),",
+        "        other => Err(format!(\"expected {} target, got {{other:?}}\")),",
         re.rust
     )
     .unwrap();
@@ -341,61 +345,65 @@ pub fn emit_read(ir: &ModelIr, crate_path: &str) -> String {
         "use std::collections::BTreeMap;\nuse {crate_path}::{{Attribute, RawEntity, RawEntityPart}};\nuse super::model::*;\n\n"
     ));
 
-    // scalar readers
+    // scalar readers (fallible)
     s.push_str(
-        r#"// Strict scalar readers: the pre-read `normalize` layer has already rewritten
-// non-standard values to their standard form (or dropped the entity), so a
-// reader seeing an off-kind value is a normalize-rule gap (panic, not silent).
-fn as_real(a: &Attribute) -> f64 {
-    match a { Attribute::Real(r) => *r, other => panic!("expected real, got {other:?}") }
+        r#"// Strict scalar readers (fallible): the pre-read `normalize` layer rewrites
+// non-standard values to standard form (or drops the entity); a reader seeing
+// an off-kind value returns Err(<ctx>-tagged reason) so the caller drops just
+// that entity (never panic). `ctx` is the "<ENTITY>.<field>" location literal.
+fn req<'a>(attrs: &'a [Attribute], idx: usize, ctx: &str) -> Result<&'a Attribute, String> {
+    attrs.get(idx).ok_or_else(|| format!("{ctx}: arity (missing attr {idx})"))
 }
-fn as_int(a: &Attribute) -> i64 {
-    match a { Attribute::Integer(i) => *i, other => panic!("expected int, got {other:?}") }
+fn as_real(a: &Attribute, ctx: &str) -> Result<f64, String> {
+    match a { Attribute::Real(r) => Ok(*r), other => Err(format!("{ctx}: expected real, got {other:?}")) }
 }
-fn as_str(a: &Attribute) -> String {
-    match a { Attribute::String(s) => s.clone(), other => panic!("expected string, got {other:?}") }
+fn as_int(a: &Attribute, ctx: &str) -> Result<i64, String> {
+    match a { Attribute::Integer(i) => Ok(*i), other => Err(format!("{ctx}: expected int, got {other:?}")) }
 }
-fn as_logical(a: &Attribute) -> Logical {
-    match a { Attribute::Enum(s) => Logical::parse(s).expect("logical"), other => panic!("expected logical, got {other:?}") }
+fn as_str(a: &Attribute, ctx: &str) -> Result<String, String> {
+    match a { Attribute::String(s) => Ok(s.clone()), other => Err(format!("{ctx}: expected string, got {other:?}")) }
 }
-fn as_ref_id(a: &Attribute) -> u64 {
-    match a { Attribute::EntityRef(n) => *n, other => panic!("expected ref, got {other:?}") }
+fn as_logical(a: &Attribute, ctx: &str) -> Result<Logical, String> {
+    match a { Attribute::Enum(s) => Logical::parse(s).ok_or_else(|| format!("{ctx}: bad logical {s:?}")), other => Err(format!("{ctx}: expected logical, got {other:?}")) }
 }
-fn read_measure_value(a: &Attribute) -> MeasureValue {
+fn as_ref_id(a: &Attribute, ctx: &str) -> Result<u64, String> {
+    match a { Attribute::EntityRef(n) => Ok(*n), other => Err(format!("{ctx}: expected ref, got {other:?}")) }
+}
+fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> {
     // A measure's numeric literal sits nested inside a Typed/bare attribute, so
     // it is not a top-level slot the normalize layer rewrites; preserve the
     // original token (integer vs real) — `number` members admit either.
-    fn measure_scalar(a: &Attribute) -> MeasureScalar {
-        match a { Attribute::Real(r) => MeasureScalar::Real(*r), Attribute::Integer(i) => MeasureScalar::Int(*i), other => panic!("expected measure scalar, got {other:?}") }
+    fn measure_scalar(a: &Attribute, ctx: &str) -> Result<MeasureScalar, String> {
+        match a { Attribute::Real(r) => Ok(MeasureScalar::Real(*r)), Attribute::Integer(i) => Ok(MeasureScalar::Int(*i)), other => Err(format!("{ctx}: expected measure scalar, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => MeasureValue { type_name: Some(type_name.clone()), value: measure_scalar(value) },
-        Attribute::Real(_) | Attribute::Integer(_) => MeasureValue { type_name: None, value: measure_scalar(a) },
-        other => panic!("expected measure_value, got {other:?}"),
+        Attribute::Typed { type_name, value } => Ok(MeasureValue { type_name: Some(type_name.clone()), value: measure_scalar(value, ctx)? }),
+        Attribute::Real(_) | Attribute::Integer(_) => Ok(MeasureValue { type_name: None, value: measure_scalar(a, ctx)? }),
+        other => Err(format!("{ctx}: expected measure_value, got {other:?}")),
     }
 }
-fn read_string_select(a: &Attribute) -> StringSelectValue {
+fn read_string_select(a: &Attribute, ctx: &str) -> Result<StringSelectValue, String> {
     // A named string select member is a Typed literal `TYPE('s')`; a bare string
     // is unwrapped. (Mirrors read_measure_value for the string case.)
-    fn str_of(a: &Attribute) -> String {
-        match a { Attribute::String(s) => s.clone(), other => panic!("expected select string, got {other:?}") }
+    fn str_of(a: &Attribute, ctx: &str) -> Result<String, String> {
+        match a { Attribute::String(s) => Ok(s.clone()), other => Err(format!("{ctx}: expected select string, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => StringSelectValue { type_name: Some(type_name.clone()), value: str_of(value) },
-        Attribute::String(s) => StringSelectValue { type_name: None, value: s.clone() },
-        other => panic!("expected string_select, got {other:?}"),
+        Attribute::Typed { type_name, value } => Ok(StringSelectValue { type_name: Some(type_name.clone()), value: str_of(value, ctx)? }),
+        Attribute::String(s) => Ok(StringSelectValue { type_name: None, value: s.clone() }),
+        other => Err(format!("{ctx}: expected string_select, got {other:?}")),
     }
 }
-fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
+fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, String> {
     // Integer-valued select-of-scalars (mirrors read_measure_value but keeps the
     // value as i64). A non-standard real literal is truncated (NORM).
-    fn int_of(a: &Attribute) -> i64 {
-        match a { Attribute::Integer(i) => *i, Attribute::Real(r) => *r as i64, other => panic!("expected measure int, got {other:?}") }
+    fn int_of(a: &Attribute, ctx: &str) -> Result<i64, String> {
+        match a { Attribute::Integer(i) => Ok(*i), Attribute::Real(r) => Ok(*r as i64), other => Err(format!("{ctx}: expected measure int, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => IntMeasureValue { type_name: Some(type_name.clone()), value: int_of(value) },
-        Attribute::Integer(_) | Attribute::Real(_) => IntMeasureValue { type_name: None, value: int_of(a) },
-        other => panic!("expected int_measure_value, got {other:?}"),
+        Attribute::Typed { type_name, value } => Ok(IntMeasureValue { type_name: Some(type_name.clone()), value: int_of(value, ctx)? }),
+        Attribute::Integer(_) | Attribute::Real(_) => Ok(IntMeasureValue { type_name: None, value: int_of(a, ctx)? }),
+        other => Err(format!("{ctx}: expected int_measure_value, got {other:?}")),
     }
 }
 
@@ -459,12 +467,18 @@ fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
         ir.parts.iter().map(|p| (&p.name, &p.fields)),
     );
 
+    // ---- build_* fns (pass1, fallible) ----
+    for se in &ir.simples {
+        emit_build(&mut s, ir, se);
+    }
+
     // ---- read() ----
     s.push_str(
-        "pub fn read(map: &BTreeMap<u64, RawEntity>) -> (StepModel, BTreeMap<u64, AnyId>) {\n",
+        "pub fn read(map: &BTreeMap<u64, RawEntity>) -> (StepModel, BTreeMap<u64, AnyId>, Vec<(u64, String)>) {\n",
     );
     s.push_str("    let mut model = StepModel::default();\n");
     s.push_str("    let mut idmap: BTreeMap<u64, AnyId> = BTreeMap::new();\n");
+    s.push_str("    let mut read_drops: Vec<(u64, String)> = Vec::new();\n");
     // pending lists for pass 2
     for se in &ir.simples {
         if se.fields.iter().any(|f| has_ref(&f.kind)) {
@@ -482,7 +496,8 @@ fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
     }
 
     s.push_str("    for (&id, ent) in map {\n        match ent {\n");
-    // simple dispatch arms (exact name match)
+    // simple dispatch arms (exact name match) — pass1 build is fallible; an
+    // unreadable own-attr drops just this entity (no panic, surfaced as reason).
     for se in &ir.simples {
         let af = arena_field(&se.rust);
         let has_r = se.fields.iter().any(|f| has_ref(&f.kind));
@@ -492,37 +507,44 @@ fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
             se.name
         )
         .unwrap();
-        // pass1 bind
-        emit_pass1_bind(&mut s, ir, se, has_r);
+        writeln!(s, "                match build_{af}(attributes) {{").unwrap();
+        s.push_str("                    Ok(v) => {\n");
         writeln!(
             s,
-            "                let aid = {}Id(model.{af}.push(v));",
+            "                        let aid = {}Id(model.{af}.push(v));",
             se.rust
         )
         .unwrap();
         writeln!(
             s,
-            "                idmap.insert(id, AnyId::{}(aid));",
+            "                        idmap.insert(id, AnyId::{}(aid));",
             se.rust
         )
         .unwrap();
         if has_r {
-            writeln!(s, "                pending_{af}.push((aid, id));").unwrap();
+            writeln!(s, "                        pending_{af}.push((aid, id));").unwrap();
         }
+        s.push_str("                    }\n");
+        s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
+        s.push_str("                }\n");
         s.push_str("            }\n");
     }
     // complex dispatch
     if ir.has_part_bag {
         s.push_str("            RawEntity::Complex { parts, .. } if is_complex_unit(parts) => {\n");
-        s.push_str("                let bag = read_complex_parts_norefs(parts);\n");
-        s.push_str("                let aid = ComplexUnitId(model.complex_units.push(ComplexUnit { parts: bag }));\n");
-        s.push_str("                idmap.insert(id, AnyId::ComplexUnit(aid));\n");
-        s.push_str("                pending_complex.push((aid, id));\n");
+        s.push_str("                match read_complex_parts_norefs(parts) {\n");
+        s.push_str("                    Ok(bag) => {\n");
+        s.push_str("                        let aid = ComplexUnitId(model.complex_units.push(ComplexUnit { parts: bag }));\n");
+        s.push_str("                        idmap.insert(id, AnyId::ComplexUnit(aid));\n");
+        s.push_str("                        pending_complex.push((aid, id));\n");
+        s.push_str("                    }\n");
+        s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
+        s.push_str("                }\n");
         s.push_str("            }\n");
     }
     s.push_str("            _ => {}\n        }\n    }\n");
 
-    // ---- pass 2 ----
+    // ---- pass 2 (fallible ref resolution) ----
     for se in &ir.simples {
         if !se.fields.iter().any(|f| has_ref(&f.kind)) {
             continue;
@@ -536,7 +558,7 @@ fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
         .unwrap();
         writeln!(
             s,
-            "            resolve_{af}(&mut model, aid, attributes, &idmap);"
+            "            if let Err(e) = resolve_{af}(&mut model, aid, attributes, &idmap) {{ read_drops.push((raw, e)); }}"
         )
         .unwrap();
         s.push_str("        }\n    }\n");
@@ -545,10 +567,10 @@ fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
         s.push_str("    for (aid, raw) in pending_complex {\n");
         s.push_str("        if let Some(RawEntity::Complex { parts, .. }) = map.get(&raw) {\n");
         s.push_str(
-            "            resolve_complex(&mut model, aid, parts, &idmap);\n        }\n    }\n",
+            "            if let Err(e) = resolve_complex(&mut model, aid, parts, &idmap) { read_drops.push((raw, e)); }\n        }\n    }\n",
         );
     }
-    s.push_str("    (model, idmap)\n}\n\n");
+    s.push_str("    (model, idmap, read_drops)\n}\n\n");
 
     // ---- resolve fns ----
     for se in &ir.simples {
@@ -563,10 +585,19 @@ fn read_int_measure_value(a: &Attribute) -> IntMeasureValue {
     s
 }
 
-/// pass1: build the struct value, binding non-ref fields; ref fields get a
-/// placeholder. `attributes` is the bound name.
-fn emit_pass1_bind(s: &mut String, ir: &ModelIr, se: &SimpleEnt, _has_r: bool) {
-    writeln!(s, "                let v = {} {{", se.rust).unwrap();
+/// pass1 builder fn (fallible): `fn build_{af}(attributes) -> Result<{Ent}, String>`.
+/// Binds non-ref fields from own attributes (ref fields get a placeholder patched
+/// in pass2). A short/off-kind own attribute returns Err(<ctx> reason) so the
+/// caller drops just this entity (no panic). `ctx` = "<ENTITY>.<field>".
+fn emit_build(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
+    let af = arena_field(&se.rust);
+    writeln!(
+        s,
+        "fn build_{af}(attributes: &[Attribute]) -> Result<{}, String> {{",
+        se.rust
+    )
+    .unwrap();
+    writeln!(s, "    Ok({} {{", se.rust).unwrap();
     let mut idx = 0usize;
     for (id, f) in idents(&se.fields) {
         if f.derived {
@@ -575,22 +606,29 @@ fn emit_pass1_bind(s: &mut String, ir: &ModelIr, se: &SimpleEnt, _has_r: bool) {
         }
         let expr = if has_ref(&f.kind) {
             ref_placeholder(ir, &f.kind, f.optional || f.derivable)
-        } else if f.derivable {
-            // scalar derivable slot: None placeholder (resolved at bind below).
-            bind_derivable_scalar(ir, &f.kind, &format!("attributes[{idx}]"))
         } else {
-            bind_scalar(ir, &f.kind, f.optional, &format!("attributes[{idx}]"))
+            let ctx = format!("{}.{}", se.name, id);
+            // `.get(idx).ok_or(..)?` (no raw indexing) guards arity per slot.
+            let access = format!("req(attributes, {idx}, {ctx:?})?");
+            if f.derivable {
+                bind_derivable_scalar(ir, &f.kind, &access, &ctx)
+            } else {
+                bind_scalar(ir, &f.kind, f.optional, &access, &ctx)
+            }
         };
-        writeln!(s, "                    {id}: {expr},").unwrap();
+        writeln!(s, "        {id}: {expr},").unwrap();
         idx += 1;
     }
-    s.push_str("                };\n");
+    s.push_str("    })\n}\n\n");
 }
 
 /// Bind a derivable (conditionally `*`) scalar: `*` => None, else Some(value).
-fn bind_derivable_scalar(ir: &ModelIr, k: &Kind, attr: &str) -> String {
-    let val = bind_scalar(ir, k, false, attr);
-    format!("match &{attr} {{ Attribute::Derived => None, _ => Some({val}) }}")
+/// `access` evaluates to `&Attribute`.
+fn bind_derivable_scalar(ir: &ModelIr, k: &Kind, access: &str, ctx: &str) -> String {
+    format!(
+        "match {access} {{ Attribute::Derived => None, other => Some(({})?) }}",
+        scalar_fallible(ir, k, "other", ctx)
+    )
 }
 
 /// Placeholder value for a ref field (patched in pass 2).
@@ -640,80 +678,58 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
     }
 }
 
-/// Read a scalar/enum/measure field from a single attribute expression.
-fn bind_scalar(ir: &ModelIr, k: &Kind, optional: bool, attr: &str) -> String {
-    let body = match k {
-        Kind::Real => format!("as_real(&{attr})"),
-        Kind::Int => format!("as_int(&{attr})"),
-        Kind::Str => format!("as_str(&{attr})"),
-        Kind::Bool => format!("matches!(&{attr}, Attribute::Enum(s) if s == \"T\")"),
-        Kind::Logical => format!("as_logical(&{attr})"),
-        Kind::Binary => format!("as_str(&{attr})"),
-        Kind::MeasureSelect(_) => format!("read_measure_value(&{attr})"),
-        Kind::StringSelect(_) => format!("read_string_select(&{attr})"),
-        Kind::IntSelect(_) => format!("read_int_measure_value(&{attr})"),
-        Kind::Enum(a) => {
-            let ty = &ir.enums[a].rust;
+/// Read a scalar/enum/measure/vec field value from a `&Attribute` access expr.
+/// `access` evaluates to `&Attribute`; the result yields the field value,
+/// propagating Err via `?` to the enclosing `Result`-returning build fn.
+fn bind_scalar(ir: &ModelIr, k: &Kind, optional: bool, access: &str, ctx: &str) -> String {
+    if optional {
+        // OPTIONAL: `$` => None; else read the present attribute.
+        format!(
+            "match {access} {{ Attribute::Unset => None, other => Some(({})?) }}",
+            scalar_fallible(ir, k, "other", ctx)
+        )
+    } else {
+        format!("({})?", scalar_fallible(ir, k, access, ctx))
+    }
+}
+
+/// A `Result<T, String>` expression reading scalar kind `k` from `a` (a
+/// `&Attribute` expr). Used both at field level (caller adds `?`) and as a Vec
+/// element (collected into `Result<Vec<_>, String>`). `ctx` = "<ENTITY>.<field>".
+fn scalar_fallible(ir: &ModelIr, k: &Kind, a: &str, ctx: &str) -> String {
+    match k {
+        Kind::Real => format!("as_real({a}, {ctx:?})"),
+        Kind::Int => format!("as_int({a}, {ctx:?})"),
+        Kind::Str | Kind::Binary => format!("as_str({a}, {ctx:?})"),
+        Kind::Bool => {
+            format!("Ok::<bool, String>(matches!({a}, Attribute::Enum(s) if s == \"T\"))")
+        }
+        Kind::Logical => format!("as_logical({a}, {ctx:?})"),
+        Kind::MeasureSelect(_) => format!("read_measure_value({a}, {ctx:?})"),
+        Kind::StringSelect(_) => format!("read_string_select({a}, {ctx:?})"),
+        Kind::IntSelect(_) => format!("read_int_measure_value({a}, {ctx:?})"),
+        Kind::Enum(name) => {
+            let ty = &ir.enums[name].rust;
             format!(
-                "match &{attr} {{ Attribute::Enum(s) => {ty}::parse(s).expect(\"{a}\"), other => panic!(\"enum {a}: {{other:?}}\") }}"
+                "match {a} {{ Attribute::Enum(s) => {ty}::parse(s).ok_or_else(|| format!(\"{ctx}: bad enum {{s:?}}\")), o => Err(format!(\"{ctx}: expected enum, got {{o:?}}\")) }}"
             )
         }
-        Kind::Vec(inner) => return bind_scalar_vec(ir, inner, optional, attr),
+        Kind::Vec(inner) => {
+            let elem = scalar_fallible(ir, inner, "e", ctx);
+            format!(
+                "match {a} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect::<Result<Vec<_>, String>>(), o => Err(format!(\"{ctx}: expected list, got {{o:?}}\")) }}"
+            )
+        }
         Kind::Ref(_) => unreachable!(),
-    };
-    if optional {
-        format!("match &{attr} {{ Attribute::Unset => None, _ => Some({body}) }}")
-    } else {
-        body
     }
 }
 
-fn bind_scalar_vec(ir: &ModelIr, inner: &Kind, optional: bool, attr: &str) -> String {
-    let elem = scalar_vec_elem(ir, inner);
-    // Strict: a required list is always a List (normalize rewrote a non-standard
-    // `$` to `()`); an optional list is None on `$`, Some(list) otherwise.
-    if optional {
-        format!(
-            "match &{attr} {{ Attribute::Unset => None, Attribute::List(l) => Some(l.iter().map(|e| {elem}).collect()), other => panic!(\"opt vec: {{other:?}}\") }}"
-        )
-    } else {
-        format!(
-            "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), other => panic!(\"vec: {{other:?}}\") }}"
-        )
-    }
-}
-
-/// Read-element expr for a `Vec` inner kind, binding over `e` (an `&Attribute`).
-/// Recurses for nested vecs (e.g. `weights_data: LIST OF LIST OF REAL`).
-fn scalar_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
-    match inner {
-        Kind::Real => "as_real(e)".to_string(),
-        Kind::Int => "as_int(e)".to_string(),
-        Kind::Str => "as_str(e)".to_string(),
-        Kind::Logical => "as_logical(e)".to_string(),
-        Kind::Enum(a) => format!(
-            "match e {{ Attribute::Enum(s) => {}::parse(s).expect(\"{a}\"), o => panic!(\"{{o:?}}\") }}",
-            ir.enums[a].rust
-        ),
-        Kind::MeasureSelect(_) => "read_measure_value(e)".to_string(),
-        Kind::StringSelect(_) => "read_string_select(e)".to_string(),
-        Kind::IntSelect(_) => "read_int_measure_value(e)".to_string(),
-        Kind::Vec(inner2) => {
-            let e2 = scalar_vec_elem(ir, inner2);
-            format!(
-                "match e {{ Attribute::List(l) => l.iter().map(|e| {e2}).collect::<Vec<_>>(), o => panic!(\"nested vec: {{o:?}}\") }}"
-            )
-        }
-        _ => "as_real(e)".to_string(),
-    }
-}
-
-/// pass2: resolve the ref fields of a simple entity.
+/// pass2: resolve the ref fields of a simple entity (fallible).
 fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     let af = arena_field(&se.rust);
     writeln!(
         s,
-        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &BTreeMap<u64, AnyId>) {{",
+        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &BTreeMap<u64, AnyId>) -> Result<(), String> {{",
         se.rust
     )
     .unwrap();
@@ -724,13 +740,11 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
             continue;
         }
         if has_ref(&f.kind) {
-            let expr = resolve_ref_expr(
-                ir,
-                &f.kind,
-                f.optional,
-                f.derivable,
-                &format!("attrs[{idx}]"),
-            );
+            let ctx = format!("{}.{}", se.name, id);
+            // `.get(idx).ok_or(..)?` guards arity for ref slots too (a short
+            // entity missing only a ref slot passes pass1, would panic here).
+            let access = format!("req(attrs, {idx}, {ctx:?})?");
+            let expr = resolve_ref_expr(ir, &f.kind, f.optional, f.derivable, &access, &ctx);
             writeln!(s, "    let {id}_v = {expr};").unwrap();
         }
         idx += 1;
@@ -742,110 +756,105 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
         }
         writeln!(s, "    it.{id} = {id}_v;").unwrap();
     }
-    s.push_str("}\n\n");
+    s.push_str("    Ok(())\n}\n\n");
 }
 
-/// Resolve one ref value from an `&Attribute` expression `aref` (already a
-/// reference). Discriminates a named enum/aggregate select member (Typed literal
-/// `WIRE(.TOKEN.)` / `WIRE((#a,#b))`) from a bare entity `#ref`. Shared by
-/// single-ref fields and Vec elements so both handle Typed-wrapped members.
-fn resolve_ref_one(re: &RefEnum, aref: &str) -> String {
+/// A `Result<{RefEnum}, String>` expression resolving one ref from `aref` (a
+/// `&Attribute`). Discriminates a named enum/aggregate/scalar select member
+/// (Typed literal `WIRE(.TOKEN.)` / `WIRE((#a,#b))` / `WIRE(v)`) from a bare
+/// entity `#ref`. Wrapped in an IIFE so its internal `?` are contained, making it
+/// usable both at field level (caller adds `?`) and as a Vec element (collected).
+fn resolve_ref_one(re: &RefEnum, aref: &str, ctx: &str) -> String {
     let single = format!(
-        "{}::from_any(*idmap.get(&as_ref_id({aref})).expect(\"ref\"))",
+        "{}::from_any(*idmap.get(&as_ref_id({aref}, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?).map_err(|e| format!(\"{ctx}: {{e}}\"))?",
         re.rust
     );
     let mut arms: Vec<String> = Vec::new();
     for (ev, enum_rust, wire) in &re.enum_arms {
         arms.push(format!(
-            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::Enum(s) => {}::parse(s).expect(\"{}\"), other => panic!(\"enum {wire}: {{other:?}}\") }}),",
-            re.rust, ev, enum_rust, enum_rust
+            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::Enum(s) => {}::parse(s).ok_or_else(|| format!(\"{ctx}: bad enum {wire} {{s:?}}\"))?, o => return Err(format!(\"{ctx}: enum {wire}: {{o:?}}\")) }}),",
+            re.rust, ev, enum_rust
         ));
     }
     for (agg_variant, elt_ref, wire) in &re.aggregate {
         arms.push(format!(
-            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(*idmap.get(&as_ref_id(e)).expect(\"ref\"))).collect(), other => panic!(\"agg list {wire}: {{other:?}}\") }}),",
+            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(*idmap.get(&as_ref_id(e, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!(\"{ctx}: agg list {wire}: {{o:?}}\")) }}),",
             re.rust, agg_variant, elt_ref
         ));
     }
-    // Scalar arms. The standard wire form is the Typed literal `WIRE(value)`,
-    // matched by type_name exactly like the enum/aggregate arms. The non-standard
-    // bare form (`5.` / `'x'`) is rewritten to this typed form by the normalize
-    // pass before read, so the reader is strict: a bare scalar reaching here would
-    // fall through to `_ => single` and panic (a normalize-gap, surfaced). `.value`
-    // discards the wire name (already captured by the arm).
+    // Scalar arms: the standard wire form is the Typed literal `WIRE(value)`. A
+    // non-standard bare scalar is rewritten to typed by normalize before read, so
+    // a bare scalar reaching here falls through to `_ => single` (Err, surfaced).
     for (sv, sk, wire) in &re.scalar_arms {
-        // Real arms target an f64 ref-enum variant (positive_length_measure /
-        // parameter_value are EXPRESS `real`), so unwrap MeasureScalar via as_f64.
         let (reader, accessor) = match sk {
             Kind::Real => ("read_measure_value", ".as_f64()"),
             Kind::Str => ("read_string_select", ""),
             _ => unreachable!("unsupported scalar arm kind"),
         };
         arms.push(format!(
-            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}).value{accessor}),",
+            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}, {ctx:?})?.value{accessor}),",
             re.rust, sv
         ));
     }
-    if arms.is_empty() {
+    let body = if arms.is_empty() {
         single
     } else {
         format!("match {aref} {{ {} _ => {single} }}", arms.join(" "))
-    }
+    };
+    format!("(|| -> Result<{}, String> {{ Ok({body}) }})()", re.rust)
 }
 
-fn resolve_ref_expr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, attr: &str) -> String {
-    match k {
-        Kind::Ref(t) => {
-            let re = &ir.ref_enums[t];
-            let one = resolve_ref_one(re, &format!("&{attr}"));
-            if derivable {
-                format!("match &{attr} {{ Attribute::Derived => None, _ => Some({one}) }}")
-            } else if optional {
-                format!("match &{attr} {{ Attribute::Unset => None, _ => Some({one}) }}")
-            } else {
-                one
-            }
-        }
-        Kind::Vec(inner) => {
-            let body = resolve_ref_vec(ir, inner, attr);
-            // An OPTIONAL ref-list that is `$`/`*` is None (not Some(empty)) — else
-            // `$` round-trips to `()`. (resolve_ref_vec maps a present list/normalized
-            // `$`→[] for the required case.)
-            if derivable {
-                format!("match &{attr} {{ Attribute::Derived => None, _ => Some({body}) }}")
-            } else if optional {
-                format!("match &{attr} {{ Attribute::Unset => None, _ => Some({body}) }}")
-            } else {
-                body
-            }
-        }
+/// A field-value expression (propagating Err via `?`) resolving a ref / Vec<ref>
+/// field. `access` evaluates to `&Attribute`, bound once to a local `a`.
+fn resolve_ref_expr(
+    ir: &ModelIr,
+    k: &Kind,
+    optional: bool,
+    derivable: bool,
+    access: &str,
+    ctx: &str,
+) -> String {
+    let body = match k {
+        Kind::Ref(t) => resolve_ref_one(&ir.ref_enums[t], "a", ctx),
+        Kind::Vec(inner) => resolve_ref_vec(ir, inner, "a", ctx),
         _ => unreachable!(),
+    };
+    if derivable {
+        format!(
+            "{{ let a = {access}; match a {{ Attribute::Derived => None, _ => Some(({body})?) }} }}"
+        )
+    } else if optional {
+        format!(
+            "{{ let a = {access}; match a {{ Attribute::Unset => None, _ => Some(({body})?) }} }}"
+        )
+    } else {
+        format!("{{ let a = {access}; ({body})? }}")
     }
 }
 
-/// Resolve a (possibly nested) `Vec<...Ref>` from a list attribute expression.
-fn resolve_ref_vec(ir: &ModelIr, inner: &Kind, attr: &str) -> String {
+/// A `Result<Vec<...>, String>` expression resolving a (possibly nested)
+/// `Vec<...Ref>` from `a` (a `&Attribute`).
+fn resolve_ref_vec(ir: &ModelIr, inner: &Kind, a: &str, ctx: &str) -> String {
     let elem = match inner {
-        // `e` is already `&Attribute` (from l.iter()); helper handles Typed-
-        // wrapped enum/aggregate members alongside the bare entity ref.
-        Kind::Ref(t) => resolve_ref_one(&ir.ref_enums[t], "e"),
-        Kind::Vec(i2) => resolve_ref_vec(ir, i2, "e"),
+        // `e` is already `&Attribute` (from l.iter()).
+        Kind::Ref(t) => resolve_ref_one(&ir.ref_enums[t], "e", ctx),
+        Kind::Vec(i2) => resolve_ref_vec(ir, i2, "e", ctx),
         _ => unreachable!("non-ref nested vec in ref resolve"),
     };
-    // No `Unset => Vec::new()`: an optional ref-list is unwrapped to None by the
-    // caller (resolve_ref_expr) and a required one is normalized `$`→`()` before
-    // read, so `$` reaching here is a normalize gap — surface it (panic) rather
-    // than silently producing an empty list.
     format!(
-        "match &{attr} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect(), other => panic!(\"vec ref: {{other:?}}\") }}"
+        "match {a} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect::<Result<Vec<_>, String>>(), o => Err(format!(\"{ctx}: expected ref list, got {{o:?}}\")) }}"
     )
 }
 
-/// Complex part-bag read (norefs pass1 + resolve_complex pass2).
+/// Complex part-bag read (norefs pass1 + resolve_complex pass2), both fallible.
 fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     // pass1: bind non-ref part attrs
-    s.push_str("fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Vec<UnitPart> {\n");
-    s.push_str("    parts.iter().map(|p| match p.name.as_str() {\n");
+    s.push_str(
+        "fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, String> {\n",
+    );
+    s.push_str(
+        "    parts.iter().map(|p| -> Result<UnitPart, String> { Ok(match p.name.as_str() {\n",
+    );
     for p in &ir.parts {
         let kept: Vec<_> = idents(&p.fields).into_iter().collect();
         let nonderived: Vec<_> = kept.iter().filter(|(_, f)| !f.derived).collect();
@@ -862,10 +871,14 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
             }
             let expr = if has_ref(&f.kind) {
                 ref_placeholder(ir, &f.kind, f.optional || f.derivable)
-            } else if f.derivable {
-                bind_derivable_scalar(ir, &f.kind, &format!("p.attributes[{idx}]"))
             } else {
-                bind_scalar(ir, &f.kind, f.optional, &format!("p.attributes[{idx}]"))
+                let ctx = format!("{}.{}", p.name, id);
+                let access = format!("req(&p.attributes, {idx}, {ctx:?})?");
+                if f.derivable {
+                    bind_derivable_scalar(ir, &f.kind, &access, &ctx)
+                } else {
+                    bind_scalar(ir, &f.kind, f.optional, &access, &ctx)
+                }
             };
             write!(s, "{id}: {expr}, ").unwrap();
             idx += 1;
@@ -873,11 +886,11 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
         s.push_str("},\n");
     }
     s.push_str(
-        "        other => panic!(\"unknown complex part: {other}\"),\n    }).collect()\n}\n\n",
+        "        other => return Err(format!(\"unknown complex part: {other}\")),\n    }) }).collect::<Result<Vec<_>, String>>()\n}\n\n",
     );
 
     // pass2: patch ref part attrs
-    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &BTreeMap<u64, AnyId>) {\n");
+    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &BTreeMap<u64, AnyId>) -> Result<(), String> {\n");
     s.push_str("    let bag = &mut model.complex_units.items[aid.0];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
@@ -911,13 +924,9 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
                 continue;
             }
             if has_ref(&f.kind) {
-                let expr = resolve_ref_expr(
-                    ir,
-                    &f.kind,
-                    f.optional,
-                    f.derivable,
-                    &format!("p.attributes[{idx}]"),
-                );
+                let ctx = format!("{}.{}", p.name, id);
+                let access = format!("req(&p.attributes, {idx}, {ctx:?})?");
+                let expr = resolve_ref_expr(ir, &f.kind, f.optional, f.derivable, &access, &ctx);
                 writeln!(s, "                *{id} = {expr};").unwrap();
             }
             idx += 1;
@@ -926,7 +935,7 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     }
     // Catch-all for parts without ref attrs (and the no-arm case): always needed.
     s.push_str("            _ => {}\n");
-    s.push_str("        }\n    }\n}\n");
+    s.push_str("        }\n    }\n    Ok(())\n}\n");
 }
 
 // ===========================================================================

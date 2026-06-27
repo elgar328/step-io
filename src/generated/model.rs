@@ -2608,11 +2608,11 @@ pub enum ActionMethodRef {
     Complex(ComplexUnitId),
 }
 impl ActionMethodRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ActionMethodRef ref -> {other:?}"),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ActionMethodRef target, got {other:?}")),
         }
     }
 }
@@ -2623,11 +2623,11 @@ pub enum ActionRef {
     Complex(ComplexUnitId),
 }
 impl ActionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ActionRef ref -> {other:?}"),
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ActionRef target, got {other:?}")),
         }
     }
 }
@@ -2638,11 +2638,11 @@ pub enum ActionResourceRef {
     Complex(ComplexUnitId),
 }
 impl ActionResourceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionResource(i) => Self::ActionResource(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ActionResourceRef ref -> {other:?}"),
+            AnyId::ActionResource(i) => Ok(Self::ActionResource(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ActionResourceRef target, got {other:?}")),
         }
     }
 }
@@ -2652,10 +2652,12 @@ pub enum ActionResourceTypeRef {
     ActionResourceType(ActionResourceTypeId),
 }
 impl ActionResourceTypeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionResourceType(i) => Self::ActionResourceType(i),
-            other => panic!("ActionResourceTypeRef ref -> {other:?}"),
+            AnyId::ActionResourceType(i) => Ok(Self::ActionResourceType(i)),
+            other => Err(format!(
+                "expected ActionResourceTypeRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2667,12 +2669,14 @@ pub enum AnnotationCurveOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationCurveOccurrenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationCurveOccurrenceRef ref -> {other:?}"),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationCurveOccurrenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2695,25 +2699,31 @@ pub enum AnnotationOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationOccurrenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationOccurrenceRef ref -> {other:?}"),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationOccurrenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2726,13 +2736,19 @@ pub enum AnnotationPlaceholderLeaderLineRef {
     AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
 }
 impl AnnotationPlaceholderLeaderLineRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            other => panic!("AnnotationPlaceholderLeaderLineRef ref -> {other:?}"),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            other => Err(format!(
+                "expected AnnotationPlaceholderLeaderLineRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2744,14 +2760,18 @@ pub enum AnnotationPlaceholderOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationPlaceholderOccurrenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationPlaceholderOccurrenceRef ref -> {other:?}"),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationPlaceholderOccurrenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2779,32 +2799,38 @@ pub enum AnnotationPlaneElementRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationPlaneElementRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationPlaneElementRef ref -> {other:?}"),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationPlaneElementRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2818,14 +2844,16 @@ pub enum AnnotationRepresentationSelectRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationRepresentationSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationRepresentationSelectRef ref -> {other:?}"),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationRepresentationSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2837,12 +2865,14 @@ pub enum AnnotationSymbolOccurrenceItemRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationSymbolOccurrenceItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationSymbolOccurrenceItemRef ref -> {other:?}"),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationSymbolOccurrenceItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2855,13 +2885,15 @@ pub enum AnnotationSymbolOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationSymbolOccurrenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationSymbolOccurrenceRef ref -> {other:?}"),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationSymbolOccurrenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2876,15 +2908,17 @@ pub enum AnnotationTextOccurrenceItemRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationTextOccurrenceItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("AnnotationTextOccurrenceItemRef ref -> {other:?}"),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected AnnotationTextOccurrenceItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2894,10 +2928,12 @@ pub enum AnnotationToModelLeaderLineRef {
     AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
 }
 impl AnnotationToModelLeaderLineRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            other => panic!("AnnotationToModelLeaderLineRef ref -> {other:?}"),
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            other => Err(format!(
+                "expected AnnotationToModelLeaderLineRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -2907,10 +2943,12 @@ pub enum ApplicationContextRef {
     ApplicationContext(ApplicationContextId),
 }
 impl ApplicationContextRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
-            other => panic!("ApplicationContextRef ref -> {other:?}"),
+            AnyId::ApplicationContext(i) => Ok(Self::ApplicationContext(i)),
+            other => Err(format!(
+                "expected ApplicationContextRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3172,288 +3210,310 @@ pub enum ApprovalItemRef {
     Complex(ComplexUnitId),
 }
 impl ApprovalItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ActionDirective(i) => Self::ActionDirective(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
-            AnyId::ActionProperty(i) => Self::ActionProperty(i),
-            AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ActionDirective(i) => Ok(Self::ActionDirective(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionMethodRelationship(i) => Ok(Self::ActionMethodRelationship(i)),
+            AnyId::ActionProperty(i) => Ok(Self::ActionProperty(i)),
+            AnyId::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AppliedApprovalAssignment(i) => Self::AppliedApprovalAssignment(i),
-            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
-            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AppliedApprovalAssignment(i) => Ok(Self::AppliedApprovalAssignment(i)),
+            AnyId::AppliedDateAndTimeAssignment(i) => Ok(Self::AppliedDateAndTimeAssignment(i)),
+            AnyId::AppliedDocumentReference(i) => Ok(Self::AppliedDocumentReference(i)),
             AnyId::AppliedExternalIdentificationAssignment(i) => {
-                Self::AppliedExternalIdentificationAssignment(i)
+                Ok(Self::AppliedExternalIdentificationAssignment(i))
             }
             AnyId::AppliedPersonAndOrganizationAssignment(i) => {
-                Self::AppliedPersonAndOrganizationAssignment(i)
+                Ok(Self::AppliedPersonAndOrganizationAssignment(i))
             }
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CalendarDate(i) => Self::CalendarDate(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
-            AnyId::Certification(i) => Self::Certification(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CalendarDate(i) => Ok(Self::CalendarDate(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Ok(Self::CcDesignDateAndTimeAssignment(i)),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
-                Self::ConstructiveGeometryRepresentationRelationship(i)
+                Ok(Self::ConstructiveGeometryRepresentationRelationship(i))
             }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::Date(i) => Self::Date(i),
-            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::Date(i) => Ok(Self::Date(i)),
+            AnyId::DateAndTimeAssignment(i) => Ok(Self::DateAndTimeAssignment(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
             AnyId::DefinitionalRepresentationRelationship(i) => {
-                Self::DefinitionalRepresentationRelationship(i)
+                Ok(Self::DefinitionalRepresentationRelationship(i))
             }
-            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
-                Self::DefinitionalRepresentationRelationshipWithSameContext(i)
-            }
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::DesignContext(i) => Self::DesignContext(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::Document(i) => Self::Document(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => Ok(
+                Self::DefinitionalRepresentationRelationshipWithSameContext(i),
+            ),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::DesignContext(i) => Ok(Self::DesignContext(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::Document(i) => Ok(Self::Document(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
             AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+                Ok(Self::FeatureForDatumTargetRelationship(i))
             }
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::Group(i) => Self::Group(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::Group(i) => Ok(Self::Group(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
             AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
-                Self::MechanicalDesignAndDraughtingRelationship(i)
+                Ok(Self::MechanicalDesignAndDraughtingRelationship(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::Organization(i) => Self::Organization(i),
-            AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::Organization(i) => Ok(Self::Organization(i)),
+            AnyId::OrganizationRelationship(i) => Ok(Self::OrganizationRelationship(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductConceptFeature(i) => Ok(Self::ProductConceptFeature(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionSubstitute(i) => Self::ProductDefinitionSubstitute(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionSubstitute(i) => Ok(Self::ProductDefinitionSubstitute(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::RepresentationRelationship(i) => Ok(Self::RepresentationRelationship(i)),
             AnyId::RepresentationRelationshipWithTransformation(i) => {
-                Self::RepresentationRelationshipWithTransformation(i)
+                Ok(Self::RepresentationRelationshipWithTransformation(i))
             }
-            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
-            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ResourceProperty(i) => Ok(Self::ResourceProperty(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
+            AnyId::ShapeRepresentationRelationship(i) => {
+                Ok(Self::ShapeRepresentationRelationship(i))
+            }
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ApprovalItemRef ref -> {other:?}"),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ApprovalItemRef target, got {other:?}")),
         }
     }
 }
@@ -3463,10 +3523,10 @@ pub enum ApprovalRef {
     Approval(ApprovalId),
 }
 impl ApprovalRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Approval(i) => Self::Approval(i),
-            other => panic!("ApprovalRef ref -> {other:?}"),
+            AnyId::Approval(i) => Ok(Self::Approval(i)),
+            other => Err(format!("expected ApprovalRef target, got {other:?}")),
         }
     }
 }
@@ -3476,10 +3536,10 @@ pub enum ApprovalRoleRef {
     ApprovalRole(ApprovalRoleId),
 }
 impl ApprovalRoleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApprovalRole(i) => Self::ApprovalRole(i),
-            other => panic!("ApprovalRoleRef ref -> {other:?}"),
+            AnyId::ApprovalRole(i) => Ok(Self::ApprovalRole(i)),
+            other => Err(format!("expected ApprovalRoleRef target, got {other:?}")),
         }
     }
 }
@@ -3489,10 +3549,10 @@ pub enum ApprovalStatusRef {
     ApprovalStatus(ApprovalStatusId),
 }
 impl ApprovalStatusRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApprovalStatus(i) => Self::ApprovalStatus(i),
-            other => panic!("ApprovalStatusRef ref -> {other:?}"),
+            AnyId::ApprovalStatus(i) => Ok(Self::ApprovalStatus(i)),
+            other => Err(format!("expected ApprovalStatusRef target, got {other:?}")),
         }
     }
 }
@@ -3516,28 +3576,28 @@ pub enum ApprovedItemRef {
     Complex(ComplexUnitId),
 }
 impl ApprovedItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Certification(i) => Self::Certification(i),
-            AnyId::Change(i) => Self::Change(i),
-            AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
+            AnyId::Change(i) => Ok(Self::Change(i)),
+            AnyId::ChangeRequest(i) => Ok(Self::ChangeRequest(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::StartRequest(i) => Self::StartRequest(i),
-            AnyId::StartWork(i) => Self::StartWork(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ApprovedItemRef ref -> {other:?}"),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::StartRequest(i) => Ok(Self::StartRequest(i)),
+            AnyId::StartWork(i) => Ok(Self::StartWork(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ApprovedItemRef target, got {other:?}")),
         }
     }
 }
@@ -3547,10 +3607,10 @@ pub enum AscribableStateRef {
     AscribableState(AscribableStateId),
 }
 impl AscribableStateRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AscribableState(i) => Self::AscribableState(i),
-            other => panic!("AscribableStateRef ref -> {other:?}"),
+            AnyId::AscribableState(i) => Ok(Self::AscribableState(i)),
+            other => Err(format!("expected AscribableStateRef target, got {other:?}")),
         }
     }
 }
@@ -3560,10 +3620,10 @@ pub enum Axis1PlacementRef {
     Axis1Placement(Axis1PlacementId),
 }
 impl Axis1PlacementRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            other => panic!("Axis1PlacementRef ref -> {other:?}"),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            other => Err(format!("expected Axis1PlacementRef target, got {other:?}")),
         }
     }
 }
@@ -3573,10 +3633,12 @@ pub enum Axis2Placement3dRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
 impl Axis2Placement3dRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            other => panic!("Axis2Placement3dRef ref -> {other:?}"),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            other => Err(format!(
+                "expected Axis2Placement3dRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3587,11 +3649,11 @@ pub enum Axis2PlacementRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
 impl Axis2PlacementRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            other => panic!("Axis2PlacementRef ref -> {other:?}"),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            other => Err(format!("expected Axis2PlacementRef target, got {other:?}")),
         }
     }
 }
@@ -3601,10 +3663,12 @@ pub enum CameraModelD3MultiClippingIntersectionSelectRef {
     Plane(PlaneId),
 }
 impl CameraModelD3MultiClippingIntersectionSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Plane(i) => Self::Plane(i),
-            other => panic!("CameraModelD3MultiClippingIntersectionSelectRef ref -> {other:?}"),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            other => Err(format!(
+                "expected CameraModelD3MultiClippingIntersectionSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3616,12 +3680,12 @@ pub enum CartesianPointRef {
     CartesianPoint(CartesianPointId),
 }
 impl CartesianPointRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            other => panic!("CartesianPointRef ref -> {other:?}"),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            other => Err(format!("expected CartesianPointRef target, got {other:?}")),
         }
     }
 }
@@ -3635,16 +3699,18 @@ pub enum CcClassifiedItemRef {
     Complex(ComplexUnitId),
 }
 impl CcClassifiedItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CcClassifiedItemRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CcClassifiedItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3666,26 +3732,28 @@ pub enum CcPersonOrganizationItemRef {
     Complex(ComplexUnitId),
 }
 impl CcPersonOrganizationItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Change(i) => Self::Change(i),
-            AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::Change(i) => Ok(Self::Change(i)),
+            AnyId::ChangeRequest(i) => Ok(Self::ChangeRequest(i)),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::StartRequest(i) => Self::StartRequest(i),
-            AnyId::StartWork(i) => Self::StartWork(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CcPersonOrganizationItemRef ref -> {other:?}"),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::StartRequest(i) => Ok(Self::StartRequest(i)),
+            AnyId::StartWork(i) => Ok(Self::StartWork(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CcPersonOrganizationItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3695,10 +3763,12 @@ pub enum CertificationTypeRef {
     CertificationType(CertificationTypeId),
 }
 impl CertificationTypeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CertificationType(i) => Self::CertificationType(i),
-            other => panic!("CertificationTypeRef ref -> {other:?}"),
+            AnyId::CertificationType(i) => Ok(Self::CertificationType(i)),
+            other => Err(format!(
+                "expected CertificationTypeRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3710,14 +3780,16 @@ pub enum ChangeRequestItemRef {
     Complex(ComplexUnitId),
 }
 impl ChangeRequestItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ChangeRequestItemRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ChangeRequestItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3730,13 +3802,15 @@ pub enum CharacterStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl CharacterStyleSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CharacterGlyphStyleOutline(i) => Self::CharacterGlyphStyleOutline(i),
-            AnyId::CharacterGlyphStyleStroke(i) => Self::CharacterGlyphStyleStroke(i),
-            AnyId::TextStyleForDefinedFont(i) => Self::TextStyleForDefinedFont(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CharacterStyleSelectRef ref -> {other:?}"),
+            AnyId::CharacterGlyphStyleOutline(i) => Ok(Self::CharacterGlyphStyleOutline(i)),
+            AnyId::CharacterGlyphStyleStroke(i) => Ok(Self::CharacterGlyphStyleStroke(i)),
+            AnyId::TextStyleForDefinedFont(i) => Ok(Self::TextStyleForDefinedFont(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CharacterStyleSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3750,14 +3824,16 @@ pub enum CharacterizedActionDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CharacterizedActionDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
-            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CharacterizedActionDefinitionRef ref -> {other:?}"),
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionMethodRelationship(i) => Ok(Self::ActionMethodRelationship(i)),
+            AnyId::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CharacterizedActionDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3840,105 +3916,113 @@ pub enum CharacterizedDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CharacterizedDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
             AnyId::CharacterizedItemWithinRepresentation(i) => {
-                Self::CharacterizedItemWithinRepresentation(i)
+                Ok(Self::CharacterizedItemWithinRepresentation(i))
             }
-            AnyId::CharacterizedObject(i) => Self::CharacterizedObject(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
-            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DraughtingModelItemAssociation(i) => Self::DraughtingModelItemAssociation(i),
+            AnyId::CharacterizedObject(i) => Ok(Self::CharacterizedObject(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
+            AnyId::CoaxialityTolerance(i) => Ok(Self::CoaxialityTolerance(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ConcentricityTolerance(i) => Ok(Self::ConcentricityTolerance(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::CylindricityTolerance(i) => Ok(Self::CylindricityTolerance(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DraughtingModelItemAssociation(i) => Ok(Self::DraughtingModelItemAssociation(i)),
             AnyId::DraughtingModelItemAssociationWithPlaceholder(i) => {
-                Self::DraughtingModelItemAssociationWithPlaceholder(i)
+                Ok(Self::DraughtingModelItemAssociationWithPlaceholder(i))
             }
             AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+                Ok(Self::FeatureForDatumTargetRelationship(i))
             }
-            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeometricItemSpecificUsage(i) => Self::GeometricItemSpecificUsage(i),
-            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::FlatnessTolerance(i) => Ok(Self::FlatnessTolerance(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeometricItemSpecificUsage(i) => Ok(Self::GeometricItemSpecificUsage(i)),
+            AnyId::GeometricTolerance(i) => Ok(Self::GeometricTolerance(i)),
             AnyId::GeometricToleranceWithDatumReference(i) => {
-                Self::GeometricToleranceWithDatumReference(i)
+                Ok(Self::GeometricToleranceWithDatumReference(i))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
-                Self::GeometricToleranceWithDefinedAreaUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedAreaUnit(i))
             }
             AnyId::GeometricToleranceWithDefinedUnit(i) => {
-                Self::GeometricToleranceWithDefinedUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedUnit(i))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(i) => {
-                Self::GeometricToleranceWithMaximumTolerance(i)
+                Ok(Self::GeometricToleranceWithMaximumTolerance(i))
             }
-            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
+            AnyId::GeometricToleranceWithModifiers(i) => {
+                Ok(Self::GeometricToleranceWithModifiers(i))
+            }
             AnyId::ItemIdentifiedRepresentationUsage(i) => {
-                Self::ItemIdentifiedRepresentationUsage(i)
+                Ok(Self::ItemIdentifiedRepresentationUsage(i))
             }
-            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::ModelGeometricView(i) => Self::ModelGeometricView(i),
-            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
-            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
+            AnyId::LineProfileTolerance(i) => Ok(Self::LineProfileTolerance(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::ModelGeometricView(i) => Ok(Self::ModelGeometricView(i)),
+            AnyId::ModifiedGeometricTolerance(i) => Ok(Self::ModifiedGeometricTolerance(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::ParallelismTolerance(i) => Ok(Self::ParallelismTolerance(i)),
+            AnyId::PerpendicularityTolerance(i) => Ok(Self::PerpendicularityTolerance(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::PositionTolerance(i) => Ok(Self::PositionTolerance(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionOccurrence(i) => Ok(Self::ProductDefinitionOccurrence(i)),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
             AnyId::ProductDefinitionRelationshipRelationship(i) => {
-                Self::ProductDefinitionRelationshipRelationship(i)
+                Ok(Self::ProductDefinitionRelationshipRelationship(i))
             }
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
-            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
-            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::RoundnessTolerance(i) => Ok(Self::RoundnessTolerance(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::StraightnessTolerance(i) => Ok(Self::StraightnessTolerance(i)),
+            AnyId::SurfaceProfileTolerance(i) => Ok(Self::SurfaceProfileTolerance(i)),
+            AnyId::SymmetryTolerance(i) => Ok(Self::SymmetryTolerance(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::TotalRunoutTolerance(i) => Ok(Self::TotalRunoutTolerance(i)),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
-                Self::UnequallyDisposedGeometricTolerance(i)
+                Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CharacterizedDefinitionRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CharacterizedDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3951,13 +4035,15 @@ pub enum CharacterizedResourceDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CharacterizedResourceDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionResource(i) => Self::ActionResource(i),
-            AnyId::ActionResourceRelationship(i) => Self::ActionResourceRelationship(i),
-            AnyId::ActionResourceRequirement(i) => Self::ActionResourceRequirement(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CharacterizedResourceDefinitionRef ref -> {other:?}"),
+            AnyId::ActionResource(i) => Ok(Self::ActionResource(i)),
+            AnyId::ActionResourceRelationship(i) => Ok(Self::ActionResourceRelationship(i)),
+            AnyId::ActionResourceRequirement(i) => Ok(Self::ActionResourceRequirement(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CharacterizedResourceDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -3969,12 +4055,12 @@ pub enum ClosedShellRef {
     Complex(ComplexUnitId),
 }
 impl ClosedShellRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ClosedShellRef ref -> {other:?}"),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ClosedShellRef target, got {other:?}")),
         }
     }
 }
@@ -3989,15 +4075,15 @@ pub enum ColourRef {
     Complex(ComplexUnitId),
 }
 impl ColourRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Colour(i) => Self::Colour(i),
-            AnyId::ColourRgb(i) => Self::ColourRgb(i),
-            AnyId::ColourSpecification(i) => Self::ColourSpecification(i),
-            AnyId::DraughtingPreDefinedColour(i) => Self::DraughtingPreDefinedColour(i),
-            AnyId::PreDefinedColour(i) => Self::PreDefinedColour(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ColourRef ref -> {other:?}"),
+            AnyId::Colour(i) => Ok(Self::Colour(i)),
+            AnyId::ColourRgb(i) => Ok(Self::ColourRgb(i)),
+            AnyId::ColourSpecification(i) => Ok(Self::ColourSpecification(i)),
+            AnyId::DraughtingPreDefinedColour(i) => Ok(Self::DraughtingPreDefinedColour(i)),
+            AnyId::PreDefinedColour(i) => Ok(Self::PreDefinedColour(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ColourRef target, got {other:?}")),
         }
     }
 }
@@ -4008,11 +4094,13 @@ pub enum CompositeCurveSegmentRef {
     Complex(ComplexUnitId),
 }
 impl CompositeCurveSegmentRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CompositeCurveSegment(i) => Self::CompositeCurveSegment(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CompositeCurveSegmentRef ref -> {other:?}"),
+            AnyId::CompositeCurveSegment(i) => Ok(Self::CompositeCurveSegment(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CompositeCurveSegmentRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4172,162 +4260,178 @@ pub enum CompoundItemDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CompoundItemDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CompoundItemDefinitionRef ref -> {other:?}"),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CompoundItemDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4342,19 +4446,21 @@ pub enum ConfigurationDesignItemRef {
     Complex(ComplexUnitId),
 }
 impl ConfigurationDesignItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
+            AnyId::ProductDefinitionOccurrence(i) => Ok(Self::ProductDefinitionOccurrence(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ConfigurationDesignItemRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ConfigurationDesignItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4364,10 +4470,12 @@ pub enum ConfigurationDesignRef {
     ConfigurationDesign(ConfigurationDesignId),
 }
 impl ConfigurationDesignRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            other => panic!("ConfigurationDesignRef ref -> {other:?}"),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            other => Err(format!(
+                "expected ConfigurationDesignRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4378,11 +4486,13 @@ pub enum ConfigurationItemRef {
     Complex(ComplexUnitId),
 }
 impl ConfigurationItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ConfigurationItemRef ref -> {other:?}"),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ConfigurationItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4396,14 +4506,16 @@ pub enum ConnectedFaceSetRef {
     Complex(ComplexUnitId),
 }
 impl ConnectedFaceSetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ConnectedFaceSetRef ref -> {other:?}"),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ConnectedFaceSetRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4426,31 +4538,33 @@ pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRef {
     Complex(ComplexUnitId),
 }
 impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!(
-                "ConstructiveGeometryRepresentationOrShapeRepresentationRef ref -> {other:?}"
-            ),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ConstructiveGeometryRepresentationOrShapeRepresentationRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4460,10 +4574,10 @@ pub enum ContractTypeRef {
     ContractType(ContractTypeId),
 }
 impl ContractTypeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ContractType(i) => Self::ContractType(i),
-            other => panic!("ContractTypeRef ref -> {other:?}"),
+            AnyId::ContractType(i) => Ok(Self::ContractType(i)),
+            other => Err(format!("expected ContractTypeRef target, got {other:?}")),
         }
     }
 }
@@ -4473,10 +4587,12 @@ pub enum CoordinatedUniversalTimeOffsetRef {
     CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
 }
 impl CoordinatedUniversalTimeOffsetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CoordinatedUniversalTimeOffset(i) => Self::CoordinatedUniversalTimeOffset(i),
-            other => panic!("CoordinatedUniversalTimeOffsetRef ref -> {other:?}"),
+            AnyId::CoordinatedUniversalTimeOffset(i) => Ok(Self::CoordinatedUniversalTimeOffset(i)),
+            other => Err(format!(
+                "expected CoordinatedUniversalTimeOffsetRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4486,10 +4602,10 @@ pub enum CoordinatesListRef {
     CoordinatesList(CoordinatesListId),
 }
 impl CoordinatesListRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            other => panic!("CoordinatesListRef ref -> {other:?}"),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            other => Err(format!("expected CoordinatesListRef target, got {other:?}")),
         }
     }
 }
@@ -4504,15 +4620,17 @@ pub enum CurveFontOrScaledCurveFontSelectRef {
     Complex(ComplexUnitId),
 }
 impl CurveFontOrScaledCurveFontSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CurveStyleFont(i) => Self::CurveStyleFont(i),
-            AnyId::CurveStyleFontAndScaling(i) => Self::CurveStyleFontAndScaling(i),
-            AnyId::DraughtingPreDefinedCurveFont(i) => Self::DraughtingPreDefinedCurveFont(i),
-            AnyId::ExternallyDefinedCurveFont(i) => Self::ExternallyDefinedCurveFont(i),
-            AnyId::PreDefinedCurveFont(i) => Self::PreDefinedCurveFont(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveFontOrScaledCurveFontSelectRef ref -> {other:?}"),
+            AnyId::CurveStyleFont(i) => Ok(Self::CurveStyleFont(i)),
+            AnyId::CurveStyleFontAndScaling(i) => Ok(Self::CurveStyleFontAndScaling(i)),
+            AnyId::DraughtingPreDefinedCurveFont(i) => Ok(Self::DraughtingPreDefinedCurveFont(i)),
+            AnyId::ExternallyDefinedCurveFont(i) => Ok(Self::ExternallyDefinedCurveFont(i)),
+            AnyId::PreDefinedCurveFont(i) => Ok(Self::PreDefinedCurveFont(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CurveFontOrScaledCurveFontSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4546,34 +4664,36 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl CurveOrAnnotationCurveOccurrenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveOrAnnotationCurveOccurrenceRef ref -> {other:?}"),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CurveOrAnnotationCurveOccurrenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4606,33 +4726,33 @@ pub enum CurveOrCurveSetRef {
     Complex(ComplexUnitId),
 }
 impl CurveOrCurveSetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveOrCurveSetRef ref -> {other:?}"),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected CurveOrCurveSetRef target, got {other:?}")),
         }
     }
 }
@@ -4644,12 +4764,12 @@ pub enum CurveOrRenderRef {
     Complex(ComplexUnitId),
 }
 impl CurveOrRenderRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CurveStyle(i) => Self::CurveStyle(i),
-            AnyId::CurveStyleRendering(i) => Self::CurveStyleRendering(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveOrRenderRef ref -> {other:?}"),
+            AnyId::CurveStyle(i) => Ok(Self::CurveStyle(i)),
+            AnyId::CurveStyleRendering(i) => Ok(Self::CurveStyleRendering(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected CurveOrRenderRef target, got {other:?}")),
         }
     }
 }
@@ -4681,32 +4801,32 @@ pub enum CurveRef {
     Complex(ComplexUnitId),
 }
 impl CurveRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveRef ref -> {other:?}"),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected CurveRef target, got {other:?}")),
         }
     }
 }
@@ -4717,11 +4837,13 @@ pub enum CurveStyleFontPatternRef {
     Complex(ComplexUnitId),
 }
 impl CurveStyleFontPatternRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CurveStyleFontPattern(i) => Self::CurveStyleFontPattern(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveStyleFontPatternRef ref -> {other:?}"),
+            AnyId::CurveStyleFontPattern(i) => Ok(Self::CurveStyleFontPattern(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CurveStyleFontPatternRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4735,14 +4857,16 @@ pub enum CurveStyleFontSelectRef {
     Complex(ComplexUnitId),
 }
 impl CurveStyleFontSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CurveStyleFont(i) => Self::CurveStyleFont(i),
-            AnyId::DraughtingPreDefinedCurveFont(i) => Self::DraughtingPreDefinedCurveFont(i),
-            AnyId::ExternallyDefinedCurveFont(i) => Self::ExternallyDefinedCurveFont(i),
-            AnyId::PreDefinedCurveFont(i) => Self::PreDefinedCurveFont(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveStyleFontSelectRef ref -> {other:?}"),
+            AnyId::CurveStyleFont(i) => Ok(Self::CurveStyleFont(i)),
+            AnyId::DraughtingPreDefinedCurveFont(i) => Ok(Self::DraughtingPreDefinedCurveFont(i)),
+            AnyId::ExternallyDefinedCurveFont(i) => Ok(Self::ExternallyDefinedCurveFont(i)),
+            AnyId::PreDefinedCurveFont(i) => Ok(Self::PreDefinedCurveFont(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected CurveStyleFontSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -4753,11 +4877,11 @@ pub enum CurveStyleRef {
     Complex(ComplexUnitId),
 }
 impl CurveStyleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CurveStyle(i) => Self::CurveStyle(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("CurveStyleRef ref -> {other:?}"),
+            AnyId::CurveStyle(i) => Ok(Self::CurveStyle(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected CurveStyleRef target, got {other:?}")),
         }
     }
 }
@@ -4848,101 +4972,105 @@ pub enum DateAndTimeItemRef {
     Complex(ComplexUnitId),
 }
 impl DateAndTimeItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ActionDirective(i) => Self::ActionDirective(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionProperty(i) => Self::ActionProperty(i),
-            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
-            AnyId::Approval(i) => Self::Approval(i),
-            AnyId::ApprovalPersonOrganization(i) => Self::ApprovalPersonOrganization(i),
-            AnyId::ApprovalStatus(i) => Self::ApprovalStatus(i),
-            AnyId::AscribableState(i) => Self::AscribableState(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
-            AnyId::Certification(i) => Self::Certification(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
-            AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ActionDirective(i) => Ok(Self::ActionDirective(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionProperty(i) => Ok(Self::ActionProperty(i)),
+            AnyId::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DesignContext(i) => Self::DesignContext(i),
-            AnyId::Document(i) => Self::Document(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::AppliedDateAndTimeAssignment(i) => Ok(Self::AppliedDateAndTimeAssignment(i)),
+            AnyId::Approval(i) => Ok(Self::Approval(i)),
+            AnyId::ApprovalPersonOrganization(i) => Ok(Self::ApprovalPersonOrganization(i)),
+            AnyId::ApprovalStatus(i) => Ok(Self::ApprovalStatus(i)),
+            AnyId::AscribableState(i) => Ok(Self::AscribableState(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Ok(Self::CcDesignDateAndTimeAssignment(i)),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Ok(Self::ConstructiveGeometryRepresentation(i))
+            }
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::DateAndTimeAssignment(i) => Ok(Self::DateAndTimeAssignment(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DesignContext(i) => Ok(Self::DesignContext(i)),
+            AnyId::Document(i) => Ok(Self::Document(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            AnyId::Person(i) => Self::Person(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::OrganizationRelationship(i) => Ok(Self::OrganizationRelationship(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            AnyId::Person(i) => Ok(Self::Person(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::SecurityClassificationLevel(i) => Self::SecurityClassificationLevel(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::ResourceProperty(i) => Ok(Self::ResourceProperty(i)),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::SecurityClassificationLevel(i) => Ok(Self::SecurityClassificationLevel(i)),
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::StateObserved(i) => Self::StateObserved(i),
-            AnyId::StateType(i) => Self::StateType(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DateAndTimeItemRef ref -> {other:?}"),
+            AnyId::StateObserved(i) => Ok(Self::StateObserved(i)),
+            AnyId::StateType(i) => Ok(Self::StateType(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DateAndTimeItemRef target, got {other:?}")),
         }
     }
 }
@@ -4953,11 +5081,11 @@ pub enum DateAndTimeRef {
     Complex(ComplexUnitId),
 }
 impl DateAndTimeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DateAndTime(i) => Self::DateAndTime(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DateAndTimeRef ref -> {other:?}"),
+            AnyId::DateAndTime(i) => Ok(Self::DateAndTime(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DateAndTimeRef target, got {other:?}")),
         }
     }
 }
@@ -4969,12 +5097,12 @@ pub enum DateRef {
     Complex(ComplexUnitId),
 }
 impl DateRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CalendarDate(i) => Self::CalendarDate(i),
-            AnyId::Date(i) => Self::Date(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DateRef ref -> {other:?}"),
+            AnyId::CalendarDate(i) => Ok(Self::CalendarDate(i)),
+            AnyId::Date(i) => Ok(Self::Date(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DateRef target, got {other:?}")),
         }
     }
 }
@@ -4994,22 +5122,22 @@ pub enum DateTimeItemRef {
     Complex(ComplexUnitId),
 }
 impl DateTimeItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApprovalPersonOrganization(i) => Self::ApprovalPersonOrganization(i),
-            AnyId::Certification(i) => Self::Certification(i),
-            AnyId::Change(i) => Self::Change(i),
-            AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ApprovalPersonOrganization(i) => Ok(Self::ApprovalPersonOrganization(i)),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
+            AnyId::Change(i) => Ok(Self::Change(i)),
+            AnyId::ChangeRequest(i) => Ok(Self::ChangeRequest(i)),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::StartRequest(i) => Self::StartRequest(i),
-            AnyId::StartWork(i) => Self::StartWork(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DateTimeItemRef ref -> {other:?}"),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::StartRequest(i) => Ok(Self::StartRequest(i)),
+            AnyId::StartWork(i) => Ok(Self::StartWork(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DateTimeItemRef target, got {other:?}")),
         }
     }
 }
@@ -5019,10 +5147,10 @@ pub enum DateTimeRoleRef {
     DateTimeRole(DateTimeRoleId),
 }
 impl DateTimeRoleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DateTimeRole(i) => Self::DateTimeRole(i),
-            other => panic!("DateTimeRoleRef ref -> {other:?}"),
+            AnyId::DateTimeRole(i) => Ok(Self::DateTimeRole(i)),
+            other => Err(format!("expected DateTimeRoleRef target, got {other:?}")),
         }
     }
 }
@@ -5036,14 +5164,14 @@ pub enum DateTimeSelectRef {
     Complex(ComplexUnitId),
 }
 impl DateTimeSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CalendarDate(i) => Self::CalendarDate(i),
-            AnyId::Date(i) => Self::Date(i),
-            AnyId::DateAndTime(i) => Self::DateAndTime(i),
-            AnyId::LocalTime(i) => Self::LocalTime(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DateTimeSelectRef ref -> {other:?}"),
+            AnyId::CalendarDate(i) => Ok(Self::CalendarDate(i)),
+            AnyId::Date(i) => Ok(Self::Date(i)),
+            AnyId::DateAndTime(i) => Ok(Self::DateAndTime(i)),
+            AnyId::LocalTime(i) => Ok(Self::LocalTime(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DateTimeSelectRef target, got {other:?}")),
         }
     }
 }
@@ -5057,13 +5185,15 @@ pub enum DatumOrCommonDatumRef {
     Complex(ComplexUnitId),
 }
 impl DatumOrCommonDatumRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DatumOrCommonDatumRef ref -> {other:?}"),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DatumOrCommonDatumRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5075,12 +5205,12 @@ pub enum DatumRef {
     Complex(ComplexUnitId),
 }
 impl DatumRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DatumRef ref -> {other:?}"),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DatumRef target, got {other:?}")),
         }
     }
 }
@@ -5090,10 +5220,12 @@ pub enum DatumReferenceCompartmentRef {
     DatumReferenceCompartment(DatumReferenceCompartmentId),
 }
 impl DatumReferenceCompartmentRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            other => panic!("DatumReferenceCompartmentRef ref -> {other:?}"),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            other => Err(format!(
+                "expected DatumReferenceCompartmentRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5103,10 +5235,12 @@ pub enum DatumReferenceElementRef {
     DatumReferenceElement(DatumReferenceElementId),
 }
 impl DatumReferenceElementRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            other => panic!("DatumReferenceElementRef ref -> {other:?}"),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            other => Err(format!(
+                "expected DatumReferenceElementRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5117,10 +5251,14 @@ pub enum DatumReferenceModifierRef {
     SimpleDatumReferenceModifier(SimpleDatumReferenceModifier),
 }
 impl DatumReferenceModifierRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DatumReferenceModifierWithValue(i) => Self::DatumReferenceModifierWithValue(i),
-            other => panic!("DatumReferenceModifierRef ref -> {other:?}"),
+            AnyId::DatumReferenceModifierWithValue(i) => {
+                Ok(Self::DatumReferenceModifierWithValue(i))
+            }
+            other => Err(format!(
+                "expected DatumReferenceModifierRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5132,12 +5270,14 @@ pub enum DatumSystemOrReferenceRef {
     Complex(ComplexUnitId),
 }
 impl DatumSystemOrReferenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DatumReference(i) => Self::DatumReference(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DatumSystemOrReferenceRef ref -> {other:?}"),
+            AnyId::DatumReference(i) => Ok(Self::DatumReference(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DatumSystemOrReferenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5148,11 +5288,11 @@ pub enum DatumSystemRef {
     Complex(ComplexUnitId),
 }
 impl DatumSystemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DatumSystemRef ref -> {other:?}"),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DatumSystemRef target, got {other:?}")),
         }
     }
 }
@@ -5164,12 +5304,16 @@ pub enum DefinedGlyphSelectRef {
     Complex(ComplexUnitId),
 }
 impl DefinedGlyphSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ExternallyDefinedCharacterGlyph(i) => Self::ExternallyDefinedCharacterGlyph(i),
-            AnyId::PreDefinedCharacterGlyph(i) => Self::PreDefinedCharacterGlyph(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DefinedGlyphSelectRef ref -> {other:?}"),
+            AnyId::ExternallyDefinedCharacterGlyph(i) => {
+                Ok(Self::ExternallyDefinedCharacterGlyph(i))
+            }
+            AnyId::PreDefinedCharacterGlyph(i) => Ok(Self::PreDefinedCharacterGlyph(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DefinedGlyphSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5183,14 +5327,16 @@ pub enum DefinedSymbolSelectRef {
     Complex(ComplexUnitId),
 }
 impl DefinedSymbolSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ExternallyDefinedSymbol(i) => Self::ExternallyDefinedSymbol(i),
-            AnyId::PreDefinedPointMarkerSymbol(i) => Self::PreDefinedPointMarkerSymbol(i),
-            AnyId::PreDefinedSymbol(i) => Self::PreDefinedSymbol(i),
-            AnyId::PreDefinedTerminatorSymbol(i) => Self::PreDefinedTerminatorSymbol(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DefinedSymbolSelectRef ref -> {other:?}"),
+            AnyId::ExternallyDefinedSymbol(i) => Ok(Self::ExternallyDefinedSymbol(i)),
+            AnyId::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
+            AnyId::PreDefinedSymbol(i) => Ok(Self::PreDefinedSymbol(i)),
+            AnyId::PreDefinedTerminatorSymbol(i) => Ok(Self::PreDefinedTerminatorSymbol(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DefinedSymbolSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5201,11 +5347,13 @@ pub enum DefinitionalRepresentationRef {
     Complex(ComplexUnitId),
 }
 impl DefinitionalRepresentationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DefinitionalRepresentationRef ref -> {other:?}"),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DefinitionalRepresentationRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5250,55 +5398,61 @@ pub enum DerivedPropertySelectRef {
     Complex(ComplexUnitId),
 }
 impl DerivedPropertySelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionProperty(i) => Self::ActionProperty(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
-            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
-            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
-            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
-            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
-            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::ActionProperty(i) => Ok(Self::ActionProperty(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
+            AnyId::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
+            AnyId::CoaxialityTolerance(i) => Ok(Self::CoaxialityTolerance(i)),
+            AnyId::ConcentricityTolerance(i) => Ok(Self::ConcentricityTolerance(i)),
+            AnyId::CylindricityTolerance(i) => Ok(Self::CylindricityTolerance(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::FlatnessTolerance(i) => Ok(Self::FlatnessTolerance(i)),
+            AnyId::GeometricTolerance(i) => Ok(Self::GeometricTolerance(i)),
             AnyId::GeometricToleranceWithDatumReference(i) => {
-                Self::GeometricToleranceWithDatumReference(i)
+                Ok(Self::GeometricToleranceWithDatumReference(i))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
-                Self::GeometricToleranceWithDefinedAreaUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedAreaUnit(i))
             }
             AnyId::GeometricToleranceWithDefinedUnit(i) => {
-                Self::GeometricToleranceWithDefinedUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedUnit(i))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(i) => {
-                Self::GeometricToleranceWithMaximumTolerance(i)
+                Ok(Self::GeometricToleranceWithMaximumTolerance(i))
             }
-            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
-            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
-            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
-            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
-            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
-            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
-            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
-            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
-            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
-            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
-            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::GeometricToleranceWithModifiers(i) => {
+                Ok(Self::GeometricToleranceWithModifiers(i))
+            }
+            AnyId::LineProfileTolerance(i) => Ok(Self::LineProfileTolerance(i)),
+            AnyId::ModifiedGeometricTolerance(i) => Ok(Self::ModifiedGeometricTolerance(i)),
+            AnyId::ParallelismTolerance(i) => Ok(Self::ParallelismTolerance(i)),
+            AnyId::PerpendicularityTolerance(i) => Ok(Self::PerpendicularityTolerance(i)),
+            AnyId::PositionTolerance(i) => Ok(Self::PositionTolerance(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::ResourceProperty(i) => Ok(Self::ResourceProperty(i)),
+            AnyId::RoundnessTolerance(i) => Ok(Self::RoundnessTolerance(i)),
+            AnyId::StraightnessTolerance(i) => Ok(Self::StraightnessTolerance(i)),
+            AnyId::SurfaceProfileTolerance(i) => Ok(Self::SurfaceProfileTolerance(i)),
+            AnyId::SymmetryTolerance(i) => Ok(Self::SymmetryTolerance(i)),
+            AnyId::TotalRunoutTolerance(i) => Ok(Self::TotalRunoutTolerance(i)),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
-                Self::UnequallyDisposedGeometricTolerance(i)
+                Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DerivedPropertySelectRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DerivedPropertySelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5308,10 +5462,12 @@ pub enum DerivedUnitElementRef {
     DerivedUnitElement(DerivedUnitElementId),
 }
 impl DerivedUnitElementRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DerivedUnitElement(i) => Self::DerivedUnitElement(i),
-            other => panic!("DerivedUnitElementRef ref -> {other:?}"),
+            AnyId::DerivedUnitElement(i) => Ok(Self::DerivedUnitElement(i)),
+            other => Err(format!(
+                "expected DerivedUnitElementRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5322,11 +5478,13 @@ pub enum DesApllPointSelectRef {
     ApllPointWithSurface(ApllPointWithSurfaceId),
 }
 impl DesApllPointSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            other => panic!("DesApllPointSelectRef ref -> {other:?}"),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            other => Err(format!(
+                "expected DesApllPointSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5383,65 +5541,71 @@ pub enum DescriptionAttributeSelectRef {
     Complex(ComplexUnitId),
 }
 impl DescriptionAttributeSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
-            AnyId::ApprovalRole(i) => Self::ApprovalRole(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::ApplicationContext(i) => Ok(Self::ApplicationContext(i)),
+            AnyId::ApprovalRole(i) => Ok(Self::ApprovalRole(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::ContextDependentShapeRepresentation(i) => {
-                Self::ContextDependentShapeRepresentation(i)
+                Ok(Self::ContextDependentShapeRepresentation(i))
             }
-            AnyId::DateRole(i) => Self::DateRole(i),
-            AnyId::DateTimeRole(i) => Self::DateTimeRole(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::ExternalSource(i) => Self::ExternalSource(i),
+            AnyId::DateRole(i) => Ok(Self::DateRole(i)),
+            AnyId::DateTimeRole(i) => Ok(Self::DateTimeRole(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::ExternalSource(i) => Ok(Self::ExternalSource(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::OrganizationRole(i) => Self::OrganizationRole(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationRole(i) => Self::PersonAndOrganizationRole(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::OrganizationRole(i) => Ok(Self::OrganizationRole(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationRole(i) => Ok(Self::PersonAndOrganizationRole(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DescriptionAttributeSelectRef ref -> {other:?}"),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DescriptionAttributeSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5459,18 +5623,22 @@ pub enum DimensionalCharacteristicRef {
     Complex(ComplexUnitId),
 }
 impl DimensionalCharacteristicRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DimensionalCharacteristicRef ref -> {other:?}"),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DimensionalCharacteristicRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5480,10 +5648,12 @@ pub enum DimensionalExponentsRef {
     DimensionalExponents(DimensionalExponentsId),
 }
 impl DimensionalExponentsRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DimensionalExponents(i) => Self::DimensionalExponents(i),
-            other => panic!("DimensionalExponentsRef ref -> {other:?}"),
+            AnyId::DimensionalExponents(i) => Ok(Self::DimensionalExponents(i)),
+            other => Err(format!(
+                "expected DimensionalExponentsRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -5494,11 +5664,11 @@ pub enum DirectionRef {
     Complex(ComplexUnitId),
 }
 impl DirectionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DirectionRef ref -> {other:?}"),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DirectionRef target, got {other:?}")),
         }
     }
 }
@@ -5510,12 +5680,12 @@ pub enum DocumentRef {
     Complex(ComplexUnitId),
 }
 impl DocumentRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Document(i) => Self::Document(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DocumentRef ref -> {other:?}"),
+            AnyId::Document(i) => Ok(Self::Document(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DocumentRef target, got {other:?}")),
         }
     }
 }
@@ -5810,323 +5980,351 @@ pub enum DocumentReferenceItemRef {
     Complex(ComplexUnitId),
 }
 impl DocumentReferenceItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionDirective(i) => Self::ActionDirective(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
-            AnyId::ActionProperty(i) => Self::ActionProperty(i),
-            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::ActionDirective(i) => Ok(Self::ActionDirective(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionMethodRelationship(i) => Ok(Self::ActionMethodRelationship(i)),
+            AnyId::ActionProperty(i) => Ok(Self::ActionProperty(i)),
+            AnyId::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
-            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AppliedDateAndTimeAssignment(i) => Ok(Self::AppliedDateAndTimeAssignment(i)),
+            AnyId::AppliedDocumentReference(i) => Ok(Self::AppliedDocumentReference(i)),
             AnyId::AppliedExternalIdentificationAssignment(i) => {
-                Self::AppliedExternalIdentificationAssignment(i)
+                Ok(Self::AppliedExternalIdentificationAssignment(i))
             }
-            AnyId::Approval(i) => Self::Approval(i),
-            AnyId::ApprovalPersonOrganization(i) => Self::ApprovalPersonOrganization(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::Certification(i) => Self::Certification(i),
+            AnyId::Approval(i) => Ok(Self::Approval(i)),
+            AnyId::ApprovalPersonOrganization(i) => Ok(Self::ApprovalPersonOrganization(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Ok(Self::CcDesignDateAndTimeAssignment(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
             AnyId::CharacterizedItemWithinRepresentation(i) => {
-                Self::CharacterizedItemWithinRepresentation(i)
+                Ok(Self::CharacterizedItemWithinRepresentation(i))
             }
-            AnyId::CharacterizedObject(i) => Self::CharacterizedObject(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::CharacterizedObject(i) => Ok(Self::CharacterizedObject(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
-                Self::ConstructiveGeometryRepresentationRelationship(i)
+                Ok(Self::ConstructiveGeometryRepresentationRelationship(i))
             }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DateAndTimeAssignment(i) => Ok(Self::DateAndTimeAssignment(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
             AnyId::DefinitionalRepresentationRelationship(i) => {
-                Self::DefinitionalRepresentationRelationship(i)
+                Ok(Self::DefinitionalRepresentationRelationship(i))
             }
-            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
-                Self::DefinitionalRepresentationRelationshipWithSameContext(i)
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => Ok(
+                Self::DefinitionalRepresentationRelationshipWithSameContext(i),
+            ),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::DesignContext(i) => Ok(Self::DesignContext(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
             }
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::DesignContext(i) => Self::DesignContext(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedCharacterGlyph(i) => Self::ExternallyDefinedCharacterGlyph(i),
-            AnyId::ExternallyDefinedCurveFont(i) => Self::ExternallyDefinedCurveFont(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedItem(i) => Self::ExternallyDefinedItem(i),
-            AnyId::ExternallyDefinedStyle(i) => Self::ExternallyDefinedStyle(i),
-            AnyId::ExternallyDefinedSymbol(i) => Self::ExternallyDefinedSymbol(i),
-            AnyId::ExternallyDefinedTextFont(i) => Self::ExternallyDefinedTextFont(i),
-            AnyId::ExternallyDefinedTile(i) => Self::ExternallyDefinedTile(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedCharacterGlyph(i) => {
+                Ok(Self::ExternallyDefinedCharacterGlyph(i))
+            }
+            AnyId::ExternallyDefinedCurveFont(i) => Ok(Self::ExternallyDefinedCurveFont(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedItem(i) => Ok(Self::ExternallyDefinedItem(i)),
+            AnyId::ExternallyDefinedStyle(i) => Ok(Self::ExternallyDefinedStyle(i)),
+            AnyId::ExternallyDefinedSymbol(i) => Ok(Self::ExternallyDefinedSymbol(i)),
+            AnyId::ExternallyDefinedTextFont(i) => Ok(Self::ExternallyDefinedTextFont(i)),
+            AnyId::ExternallyDefinedTile(i) => Ok(Self::ExternallyDefinedTile(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
             AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+                Ok(Self::FeatureForDatumTargetRelationship(i))
             }
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::Group(i) => Self::Group(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::Group(i) => Ok(Self::Group(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
             AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
-                Self::MechanicalDesignAndDraughtingRelationship(i)
+                Ok(Self::MechanicalDesignAndDraughtingRelationship(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::ModelGeometricView(i) => Self::ModelGeometricView(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::Organization(i) => Self::Organization(i),
-            AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            AnyId::ModelGeometricView(i) => Ok(Self::ModelGeometricView(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::Organization(i) => Ok(Self::Organization(i)),
+            AnyId::OrganizationRelationship(i) => Ok(Self::OrganizationRelationship(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
             AnyId::OrganizationalProjectRelationship(i) => {
-                Self::OrganizationalProjectRelationship(i)
+                Ok(Self::OrganizationalProjectRelationship(i))
             }
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Person(i) => Self::Person(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductCategory(i) => Self::ProductCategory(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Person(i) => Ok(Self::Person(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductCategory(i) => Ok(Self::ProductCategory(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::ProductRelatedProductCategory(i) => Self::ProductRelatedProductCategory(i),
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
+            AnyId::ProductRelatedProductCategory(i) => Ok(Self::ProductRelatedProductCategory(i)),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::RepresentationRelationship(i) => Ok(Self::RepresentationRelationship(i)),
             AnyId::RepresentationRelationshipWithTransformation(i) => {
-                Self::RepresentationRelationshipWithTransformation(i)
+                Ok(Self::RepresentationRelationshipWithTransformation(i))
             }
-            AnyId::ResourceRequirementType(i) => Self::ResourceRequirementType(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
-            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::ResourceRequirementType(i) => Ok(Self::ResourceRequirementType(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
+            AnyId::ShapeRepresentationRelationship(i) => {
+                Ok(Self::ShapeRepresentationRelationship(i))
+            }
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StateObserved(i) => Self::StateObserved(i),
-            AnyId::StateType(i) => Self::StateType(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DocumentReferenceItemRef ref -> {other:?}"),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StateObserved(i) => Ok(Self::StateObserved(i)),
+            AnyId::StateType(i) => Ok(Self::StateType(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DocumentReferenceItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -6136,10 +6334,10 @@ pub enum DocumentTypeRef {
     DocumentType(DocumentTypeId),
 }
 impl DocumentTypeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DocumentType(i) => Self::DocumentType(i),
-            other => panic!("DocumentTypeRef ref -> {other:?}"),
+            AnyId::DocumentType(i) => Ok(Self::DocumentType(i)),
+            other => Err(format!("expected DocumentTypeRef target, got {other:?}")),
         }
     }
 }
@@ -6159,22 +6357,28 @@ pub enum DraughtingCalloutElementRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingCalloutElementRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
             }
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DraughtingCalloutElementRef ref -> {other:?}"),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DraughtingCalloutElementRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -6186,12 +6390,14 @@ pub enum DraughtingCalloutRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingCalloutRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DraughtingCalloutRef ref -> {other:?}"),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DraughtingCalloutRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -6216,27 +6422,33 @@ pub enum DraughtingModelItemAssociationSelectRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingModelItemAssociationSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DraughtingModelItemAssociationSelectRef ref -> {other:?}"),
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DraughtingModelItemAssociationSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -6307,83 +6519,91 @@ pub enum DraughtingModelItemDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingModelItemDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
-            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
+            AnyId::CoaxialityTolerance(i) => Ok(Self::CoaxialityTolerance(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ConcentricityTolerance(i) => Ok(Self::ConcentricityTolerance(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::CylindricityTolerance(i) => Ok(Self::CylindricityTolerance(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
             }
-            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Ok(Self::FeatureForDatumTargetRelationship(i))
+            }
+            AnyId::FlatnessTolerance(i) => Ok(Self::FlatnessTolerance(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeometricTolerance(i) => Ok(Self::GeometricTolerance(i)),
             AnyId::GeometricToleranceWithDatumReference(i) => {
-                Self::GeometricToleranceWithDatumReference(i)
+                Ok(Self::GeometricToleranceWithDatumReference(i))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
-                Self::GeometricToleranceWithDefinedAreaUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedAreaUnit(i))
             }
             AnyId::GeometricToleranceWithDefinedUnit(i) => {
-                Self::GeometricToleranceWithDefinedUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedUnit(i))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(i) => {
-                Self::GeometricToleranceWithMaximumTolerance(i)
+                Ok(Self::GeometricToleranceWithMaximumTolerance(i))
             }
-            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
-            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
-            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
-            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
-            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::GeometricToleranceWithModifiers(i) => {
+                Ok(Self::GeometricToleranceWithModifiers(i))
+            }
+            AnyId::LineProfileTolerance(i) => Ok(Self::LineProfileTolerance(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::ModifiedGeometricTolerance(i) => Ok(Self::ModifiedGeometricTolerance(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::ParallelismTolerance(i) => Ok(Self::ParallelismTolerance(i)),
+            AnyId::PerpendicularityTolerance(i) => Ok(Self::PerpendicularityTolerance(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::PositionTolerance(i) => Ok(Self::PositionTolerance(i)),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::RoundnessTolerance(i) => Ok(Self::RoundnessTolerance(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::StraightnessTolerance(i) => Ok(Self::StraightnessTolerance(i)),
+            AnyId::SurfaceProfileTolerance(i) => Ok(Self::SurfaceProfileTolerance(i)),
+            AnyId::SymmetryTolerance(i) => Ok(Self::SymmetryTolerance(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::TotalRunoutTolerance(i) => Ok(Self::TotalRunoutTolerance(i)),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
-                Self::UnequallyDisposedGeometricTolerance(i)
+                Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("DraughtingModelItemDefinitionRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected DraughtingModelItemDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -6396,13 +6616,13 @@ pub enum EdgeRef {
     Complex(ComplexUnitId),
 }
 impl EdgeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("EdgeRef ref -> {other:?}"),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected EdgeRef target, got {other:?}")),
         }
     }
 }
@@ -6654,270 +6874,288 @@ pub enum ExternalIdentificationItemRef {
     Complex(ComplexUnitId),
 }
 impl ExternalIdentificationItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionDirective(i) => Self::ActionDirective(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
-            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
-            AnyId::Address(i) => Self::Address(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::ActionDirective(i) => Ok(Self::ActionDirective(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionMethodRelationship(i) => Ok(Self::ActionMethodRelationship(i)),
+            AnyId::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
+            AnyId::Address(i) => Ok(Self::Address(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AppliedDateAndTimeAssignment(i) => Ok(Self::AppliedDateAndTimeAssignment(i)),
             AnyId::AppliedExternalIdentificationAssignment(i) => {
-                Self::AppliedExternalIdentificationAssignment(i)
+                Ok(Self::AppliedExternalIdentificationAssignment(i))
             }
-            AnyId::Approval(i) => Self::Approval(i),
-            AnyId::ApprovalPersonOrganization(i) => Self::ApprovalPersonOrganization(i),
-            AnyId::ApprovalStatus(i) => Self::ApprovalStatus(i),
-            AnyId::AreaUnit(i) => Self::AreaUnit(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
-            AnyId::Certification(i) => Self::Certification(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::Approval(i) => Ok(Self::Approval(i)),
+            AnyId::ApprovalPersonOrganization(i) => Ok(Self::ApprovalPersonOrganization(i)),
+            AnyId::ApprovalStatus(i) => Ok(Self::ApprovalStatus(i)),
+            AnyId::AreaUnit(i) => Ok(Self::AreaUnit(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Ok(Self::CcDesignDateAndTimeAssignment(i)),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::ContextDependentUnit(i) => Self::ContextDependentUnit(i),
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::ConversionBasedUnit(i) => Self::ConversionBasedUnit(i),
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DerivedUnit(i) => Self::DerivedUnit(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::DesignContext(i) => Self::DesignContext(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternalSource(i) => Self::ExternalSource(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::ConversionBasedUnit(i) => Ok(Self::ConversionBasedUnit(i)),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DateAndTimeAssignment(i) => Ok(Self::DateAndTimeAssignment(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DerivedUnit(i) => Ok(Self::DerivedUnit(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::DesignContext(i) => Ok(Self::DesignContext(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternalSource(i) => Ok(Self::ExternalSource(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
             AnyId::GenericProductDefinitionReference(i) => {
-                Self::GenericProductDefinitionReference(i)
+                Ok(Self::GenericProductDefinitionReference(i))
             }
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::Group(i) => Self::Group(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::LengthUnit(i) => Self::LengthUnit(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::Group(i) => Ok(Self::Group(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::LengthUnit(i) => Ok(Self::LengthUnit(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MassUnit(i) => Self::MassUnit(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MassUnit(i) => Ok(Self::MassUnit(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::NamedUnit(i) => Self::NamedUnit(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::Organization(i) => Self::Organization(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Person(i) => Self::Person(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::PersonalAddress(i) => Self::PersonalAddress(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::PlaneAngleUnit(i) => Self::PlaneAngleUnit(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::PrecisionQualifier(i) => Self::PrecisionQualifier(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductConceptContext(i) => Self::ProductConceptContext(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::NamedUnit(i) => Ok(Self::NamedUnit(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::Organization(i) => Ok(Self::Organization(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Person(i) => Ok(Self::Person(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::PersonalAddress(i) => Ok(Self::PersonalAddress(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::PlaneAngleUnit(i) => Ok(Self::PlaneAngleUnit(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::PrecisionQualifier(i) => Ok(Self::PrecisionQualifier(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductConceptContext(i) => Ok(Self::ProductConceptContext(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
+            AnyId::ProductDefinitionOccurrence(i) => Ok(Self::ProductDefinitionOccurrence(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RatioUnit(i) => Self::RatioUnit(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RatioUnit(i) => Ok(Self::RatioUnit(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SiUnit(i) => Self::SiUnit(i),
-            AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StateObserved(i) => Self::StateObserved(i),
-            AnyId::StateType(i) => Self::StateType(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TimeUnit(i) => Self::TimeUnit(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::TypeQualifier(i) => Self::TypeQualifier(i),
-            AnyId::UncertaintyQualifier(i) => Self::UncertaintyQualifier(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::VolumeUnit(i) => Self::VolumeUnit(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ExternalIdentificationItemRef ref -> {other:?}"),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SiUnit(i) => Ok(Self::SiUnit(i)),
+            AnyId::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StateObserved(i) => Ok(Self::StateObserved(i)),
+            AnyId::StateType(i) => Ok(Self::StateType(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TimeUnit(i) => Ok(Self::TimeUnit(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::TypeQualifier(i) => Ok(Self::TypeQualifier(i)),
+            AnyId::UncertaintyQualifier(i) => Ok(Self::UncertaintyQualifier(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ExternalIdentificationItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -6928,11 +7166,11 @@ pub enum ExternalSourceRef {
     Complex(ComplexUnitId),
 }
 impl ExternalSourceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ExternalSource(i) => Self::ExternalSource(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ExternalSourceRef ref -> {other:?}"),
+            AnyId::ExternalSource(i) => Ok(Self::ExternalSource(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ExternalSourceRef target, got {other:?}")),
         }
     }
 }
@@ -6944,12 +7182,12 @@ pub enum FaceBoundRef {
     Complex(ComplexUnitId),
 }
 impl FaceBoundRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FaceBoundRef ref -> {other:?}"),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected FaceBoundRef target, got {other:?}")),
         }
     }
 }
@@ -6981,32 +7219,32 @@ pub enum FaceOrSurfaceRef {
     Complex(ComplexUnitId),
 }
 impl FaceOrSurfaceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FaceOrSurfaceRef ref -> {other:?}"),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected FaceOrSurfaceRef target, got {other:?}")),
         }
     }
 }
@@ -7019,13 +7257,13 @@ pub enum FaceRef {
     Complex(ComplexUnitId),
 }
 impl FaceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FaceRef ref -> {other:?}"),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected FaceRef target, got {other:?}")),
         }
     }
 }
@@ -7037,12 +7275,12 @@ pub enum FaceSurfaceRef {
     Complex(ComplexUnitId),
 }
 impl FaceSurfaceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FaceSurfaceRef ref -> {other:?}"),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected FaceSurfaceRef target, got {other:?}")),
         }
     }
 }
@@ -7053,11 +7291,11 @@ pub enum FillAreaStyleRef {
     Complex(ComplexUnitId),
 }
 impl FillAreaStyleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::FillAreaStyle(i) => Self::FillAreaStyle(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FillAreaStyleRef ref -> {other:?}"),
+            AnyId::FillAreaStyle(i) => Ok(Self::FillAreaStyle(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected FillAreaStyleRef target, got {other:?}")),
         }
     }
 }
@@ -7072,15 +7310,23 @@ pub enum FillAreaStyleTileShapeSelectRef {
     Complex(ComplexUnitId),
 }
 impl FillAreaStyleTileShapeSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ExternallyDefinedTile(i) => Self::ExternallyDefinedTile(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::PreDefinedTile(i) => Self::PreDefinedTile(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FillAreaStyleTileShapeSelectRef ref -> {other:?}"),
+            AnyId::ExternallyDefinedTile(i) => Ok(Self::ExternallyDefinedTile(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::PreDefinedTile(i) => Ok(Self::PreDefinedTile(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected FillAreaStyleTileShapeSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -7097,19 +7343,19 @@ pub enum FillStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl FillStyleSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::FillAreaStyleColour(i) => Self::FillAreaStyleColour(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::TextureStyleSpecification(i) => Self::TextureStyleSpecification(i),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::FillAreaStyleColour(i) => Ok(Self::FillAreaStyleColour(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::TextureStyleSpecification(i) => Ok(Self::TextureStyleSpecification(i)),
             AnyId::TextureStyleTessellationSpecification(i) => {
-                Self::TextureStyleTessellationSpecification(i)
+                Ok(Self::TextureStyleTessellationSpecification(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FillStyleSelectRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected FillStyleSelectRef target, got {other:?}")),
         }
     }
 }
@@ -7123,14 +7369,14 @@ pub enum FontSelectRef {
     Complex(ComplexUnitId),
 }
 impl FontSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DraughtingPreDefinedTextFont(i) => Self::DraughtingPreDefinedTextFont(i),
-            AnyId::ExternallyDefinedTextFont(i) => Self::ExternallyDefinedTextFont(i),
-            AnyId::PreDefinedTextFont(i) => Self::PreDefinedTextFont(i),
-            AnyId::TextFont(i) => Self::TextFont(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("FontSelectRef ref -> {other:?}"),
+            AnyId::DraughtingPreDefinedTextFont(i) => Ok(Self::DraughtingPreDefinedTextFont(i)),
+            AnyId::ExternallyDefinedTextFont(i) => Ok(Self::ExternallyDefinedTextFont(i)),
+            AnyId::PreDefinedTextFont(i) => Ok(Self::PreDefinedTextFont(i)),
+            AnyId::TextFont(i) => Ok(Self::TextFont(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected FontSelectRef target, got {other:?}")),
         }
     }
 }
@@ -7141,11 +7387,11 @@ pub enum GeneralPropertyRef {
     Complex(ComplexUnitId),
 }
 impl GeneralPropertyRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GeneralPropertyRef ref -> {other:?}"),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected GeneralPropertyRef target, got {other:?}")),
         }
     }
 }
@@ -7183,40 +7429,46 @@ pub enum GeometricItemSpecificUsageSelectRef {
     Complex(ComplexUnitId),
 }
 impl GeometricItemSpecificUsageSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
             }
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GeometricItemSpecificUsageSelectRef ref -> {other:?}"),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Ok(Self::FeatureForDatumTargetRelationship(i))
+            }
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected GeometricItemSpecificUsageSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -7335,121 +7587,135 @@ pub enum GeometricModelItemRef {
     Complex(ComplexUnitId),
 }
 impl GeometricModelItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GeometricModelItemRef ref -> {other:?}"),
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected GeometricModelItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -7510,61 +7776,63 @@ pub enum GeometricSetSelectRef {
     Complex(ComplexUnitId),
 }
 impl GeometricSetSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GeometricSetSelectRef ref -> {other:?}"),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected GeometricSetSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -7597,43 +7865,47 @@ pub enum GeometricToleranceRef {
     Complex(ComplexUnitId),
 }
 impl GeometricToleranceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
-            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
-            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
-            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
-            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
-            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
-            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
+            AnyId::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
+            AnyId::CoaxialityTolerance(i) => Ok(Self::CoaxialityTolerance(i)),
+            AnyId::ConcentricityTolerance(i) => Ok(Self::ConcentricityTolerance(i)),
+            AnyId::CylindricityTolerance(i) => Ok(Self::CylindricityTolerance(i)),
+            AnyId::FlatnessTolerance(i) => Ok(Self::FlatnessTolerance(i)),
+            AnyId::GeometricTolerance(i) => Ok(Self::GeometricTolerance(i)),
             AnyId::GeometricToleranceWithDatumReference(i) => {
-                Self::GeometricToleranceWithDatumReference(i)
+                Ok(Self::GeometricToleranceWithDatumReference(i))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
-                Self::GeometricToleranceWithDefinedAreaUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedAreaUnit(i))
             }
             AnyId::GeometricToleranceWithDefinedUnit(i) => {
-                Self::GeometricToleranceWithDefinedUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedUnit(i))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(i) => {
-                Self::GeometricToleranceWithMaximumTolerance(i)
+                Ok(Self::GeometricToleranceWithMaximumTolerance(i))
             }
-            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
-            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
-            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
-            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
-            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
-            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
-            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
-            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
-            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
-            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
-            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::GeometricToleranceWithModifiers(i) => {
+                Ok(Self::GeometricToleranceWithModifiers(i))
+            }
+            AnyId::LineProfileTolerance(i) => Ok(Self::LineProfileTolerance(i)),
+            AnyId::ModifiedGeometricTolerance(i) => Ok(Self::ModifiedGeometricTolerance(i)),
+            AnyId::ParallelismTolerance(i) => Ok(Self::ParallelismTolerance(i)),
+            AnyId::PerpendicularityTolerance(i) => Ok(Self::PerpendicularityTolerance(i)),
+            AnyId::PositionTolerance(i) => Ok(Self::PositionTolerance(i)),
+            AnyId::RoundnessTolerance(i) => Ok(Self::RoundnessTolerance(i)),
+            AnyId::StraightnessTolerance(i) => Ok(Self::StraightnessTolerance(i)),
+            AnyId::SurfaceProfileTolerance(i) => Ok(Self::SurfaceProfileTolerance(i)),
+            AnyId::SymmetryTolerance(i) => Ok(Self::SymmetryTolerance(i)),
+            AnyId::TotalRunoutTolerance(i) => Ok(Self::TotalRunoutTolerance(i)),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
-                Self::UnequallyDisposedGeometricTolerance(i)
+                Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GeometricToleranceRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected GeometricToleranceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -7671,38 +7943,42 @@ pub enum GeometricToleranceTargetRef {
     Complex(ComplexUnitId),
 }
 impl GeometricToleranceTargetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GeometricToleranceTargetRef ref -> {other:?}"),
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected GeometricToleranceTargetRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -7714,12 +7990,12 @@ pub enum GroupRef {
     Complex(ComplexUnitId),
 }
 impl GroupRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Group(i) => Self::Group(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GroupRef ref -> {other:?}"),
+            AnyId::Group(i) => Ok(Self::Group(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected GroupRef target, got {other:?}")),
         }
     }
 }
@@ -8034,341 +8310,369 @@ pub enum GroupableItemRef {
     Complex(ComplexUnitId),
 }
 impl GroupableItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::Address(i) => Self::Address(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::Address(i) => Ok(Self::Address(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
-            AnyId::AppliedGroupAssignment(i) => Self::AppliedGroupAssignment(i),
-            AnyId::Approval(i) => Self::Approval(i),
-            AnyId::ApprovalPersonOrganization(i) => Self::ApprovalPersonOrganization(i),
-            AnyId::ApprovalStatus(i) => Self::ApprovalStatus(i),
-            AnyId::AreaUnit(i) => Self::AreaUnit(i),
-            AnyId::AscribableState(i) => Self::AscribableState(i),
-            AnyId::AscribableStateRelationship(i) => Self::AscribableStateRelationship(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CalendarDate(i) => Self::CalendarDate(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::Certification(i) => Self::Certification(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AppliedDateAndTimeAssignment(i) => Ok(Self::AppliedDateAndTimeAssignment(i)),
+            AnyId::AppliedGroupAssignment(i) => Ok(Self::AppliedGroupAssignment(i)),
+            AnyId::Approval(i) => Ok(Self::Approval(i)),
+            AnyId::ApprovalPersonOrganization(i) => Ok(Self::ApprovalPersonOrganization(i)),
+            AnyId::ApprovalStatus(i) => Ok(Self::ApprovalStatus(i)),
+            AnyId::AreaUnit(i) => Ok(Self::AreaUnit(i)),
+            AnyId::AscribableState(i) => Ok(Self::AscribableState(i)),
+            AnyId::AscribableStateRelationship(i) => Ok(Self::AscribableStateRelationship(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CalendarDate(i) => Ok(Self::CalendarDate(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Ok(Self::CcDesignDateAndTimeAssignment(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
-                Self::ConstructiveGeometryRepresentationRelationship(i)
+                Ok(Self::ConstructiveGeometryRepresentationRelationship(i))
             }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
             AnyId::ContextDependentShapeRepresentation(i) => {
-                Self::ContextDependentShapeRepresentation(i)
+                Ok(Self::ContextDependentShapeRepresentation(i))
             }
-            AnyId::ContextDependentUnit(i) => Self::ContextDependentUnit(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::ConversionBasedUnit(i) => Self::ConversionBasedUnit(i),
-            AnyId::CoordinatedUniversalTimeOffset(i) => Self::CoordinatedUniversalTimeOffset(i),
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DateAndTime(i) => Self::DateAndTime(i),
-            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::ConversionBasedUnit(i) => Ok(Self::ConversionBasedUnit(i)),
+            AnyId::CoordinatedUniversalTimeOffset(i) => Ok(Self::CoordinatedUniversalTimeOffset(i)),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DateAndTime(i) => Ok(Self::DateAndTime(i)),
+            AnyId::DateAndTimeAssignment(i) => Ok(Self::DateAndTimeAssignment(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
             AnyId::DefinitionalRepresentationRelationship(i) => {
-                Self::DefinitionalRepresentationRelationship(i)
+                Ok(Self::DefinitionalRepresentationRelationship(i))
             }
-            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
-                Self::DefinitionalRepresentationRelationshipWithSameContext(i)
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => Ok(
+                Self::DefinitionalRepresentationRelationshipWithSameContext(i),
+            ),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DerivedUnit(i) => Ok(Self::DerivedUnit(i)),
+            AnyId::DerivedUnitElement(i) => Ok(Self::DerivedUnitElement(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::DesignContext(i) => Ok(Self::DesignContext(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
             }
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DerivedUnit(i) => Self::DerivedUnit(i),
-            AnyId::DerivedUnitElement(i) => Self::DerivedUnitElement(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::DesignContext(i) => Self::DesignContext(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternalSource(i) => Self::ExternalSource(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternalSource(i) => Ok(Self::ExternalSource(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
             AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+                Ok(Self::FeatureForDatumTargetRelationship(i))
             }
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricItemSpecificUsage(i) => Self::GeometricItemSpecificUsage(i),
-            AnyId::GeometricRepresentationContext(i) => Self::GeometricRepresentationContext(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricItemSpecificUsage(i) => Ok(Self::GeometricItemSpecificUsage(i)),
+            AnyId::GeometricRepresentationContext(i) => Ok(Self::GeometricRepresentationContext(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::GlobalUncertaintyAssignedContext(i) => Self::GlobalUncertaintyAssignedContext(i),
-            AnyId::GlobalUnitAssignedContext(i) => Self::GlobalUnitAssignedContext(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::ItemDefinedTransformation(i) => Self::ItemDefinedTransformation(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
-            AnyId::LengthUnit(i) => Self::LengthUnit(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::LocalTime(i) => Self::LocalTime(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::GlobalUncertaintyAssignedContext(i) => {
+                Ok(Self::GlobalUncertaintyAssignedContext(i))
+            }
+            AnyId::GlobalUnitAssignedContext(i) => Ok(Self::GlobalUnitAssignedContext(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
+            AnyId::LengthUnit(i) => Ok(Self::LengthUnit(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::LocalTime(i) => Ok(Self::LocalTime(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MassMeasureWithUnit(i) => Self::MassMeasureWithUnit(i),
-            AnyId::MassUnit(i) => Self::MassUnit(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
-            AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MassMeasureWithUnit(i) => Ok(Self::MassMeasureWithUnit(i)),
+            AnyId::MassUnit(i) => Ok(Self::MassUnit(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
+            AnyId::MeasureWithUnit(i) => Ok(Self::MeasureWithUnit(i)),
             AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
-                Self::MechanicalDesignAndDraughtingRelationship(i)
+                Ok(Self::MechanicalDesignAndDraughtingRelationship(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::NamedUnit(i) => Self::NamedUnit(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::Organization(i) => Self::Organization(i),
-            AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
-            AnyId::OrganizationType(i) => Self::OrganizationType(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
+            AnyId::NamedUnit(i) => Ok(Self::NamedUnit(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::Organization(i) => Ok(Self::Organization(i)),
+            AnyId::OrganizationRelationship(i) => Ok(Self::OrganizationRelationship(i)),
+            AnyId::OrganizationType(i) => Ok(Self::OrganizationType(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
             AnyId::OrganizationalProjectRelationship(i) => {
-                Self::OrganizationalProjectRelationship(i)
+                Ok(Self::OrganizationalProjectRelationship(i))
             }
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::ParametricRepresentationContext(i) => Self::ParametricRepresentationContext(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Person(i) => Self::Person(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::PersonalAddress(i) => Self::PersonalAddress(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
-            AnyId::PlaneAngleUnit(i) => Self::PlaneAngleUnit(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::PrecisionQualifier(i) => Self::PrecisionQualifier(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductConceptContext(i) => Self::ProductConceptContext(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::ParametricRepresentationContext(i) => {
+                Ok(Self::ParametricRepresentationContext(i))
+            }
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Person(i) => Ok(Self::Person(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::PersonalAddress(i) => Ok(Self::PersonalAddress(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
+            AnyId::PlaneAngleUnit(i) => Ok(Self::PlaneAngleUnit(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::PrecisionQualifier(i) => Ok(Self::PrecisionQualifier(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductConceptContext(i) => Ok(Self::ProductConceptContext(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RatioMeasureWithUnit(i) => Self::RatioMeasureWithUnit(i),
-            AnyId::RatioUnit(i) => Self::RatioUnit(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RepresentationContext(i) => Self::RepresentationContext(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RatioMeasureWithUnit(i) => Ok(Self::RatioMeasureWithUnit(i)),
+            AnyId::RatioUnit(i) => Ok(Self::RatioUnit(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RepresentationContext(i) => Ok(Self::RepresentationContext(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::RepresentationRelationship(i) => Ok(Self::RepresentationRelationship(i)),
             AnyId::RepresentationRelationshipWithTransformation(i) => {
-                Self::RepresentationRelationshipWithTransformation(i)
+                Ok(Self::RepresentationRelationshipWithTransformation(i))
             }
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
-            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
+            AnyId::ShapeRepresentationRelationship(i) => {
+                Ok(Self::ShapeRepresentationRelationship(i))
+            }
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SiUnit(i) => Self::SiUnit(i),
-            AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StateObserved(i) => Self::StateObserved(i),
-            AnyId::StateType(i) => Self::StateType(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TimeUnit(i) => Self::TimeUnit(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::TypeQualifier(i) => Self::TypeQualifier(i),
-            AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
-            AnyId::UncertaintyQualifier(i) => Self::UncertaintyQualifier(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::VolumeUnit(i) => Self::VolumeUnit(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("GroupableItemRef ref -> {other:?}"),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SiUnit(i) => Ok(Self::SiUnit(i)),
+            AnyId::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StateObserved(i) => Ok(Self::StateObserved(i)),
+            AnyId::StateType(i) => Ok(Self::StateType(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TimeUnit(i) => Ok(Self::TimeUnit(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::TypeQualifier(i) => Ok(Self::TypeQualifier(i)),
+            AnyId::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
+            AnyId::UncertaintyQualifier(i) => Ok(Self::UncertaintyQualifier(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected GroupableItemRef target, got {other:?}")),
         }
     }
 }
@@ -8498,148 +8802,158 @@ pub enum IdAttributeSelectRef {
     Complex(ComplexUnitId),
 }
 impl IdAttributeSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::Address(i) => Self::Address(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
-            AnyId::ApplicationContext(i) => Self::ApplicationContext(i),
-            AnyId::AscribableStateRelationship(i) => Self::AscribableStateRelationship(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::Address(i) => Ok(Self::Address(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
+            AnyId::ApplicationContext(i) => Ok(Self::ApplicationContext(i)),
+            AnyId::AscribableStateRelationship(i) => Ok(Self::AscribableStateRelationship(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::CoaxialityTolerance(i) => Ok(Self::CoaxialityTolerance(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ConcentricityTolerance(i) => Ok(Self::ConcentricityTolerance(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::CylindricityTolerance(i) => Ok(Self::CylindricityTolerance(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
             AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+                Ok(Self::FeatureForDatumTargetRelationship(i))
             }
-            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::FlatnessTolerance(i) => Ok(Self::FlatnessTolerance(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeometricTolerance(i) => Ok(Self::GeometricTolerance(i)),
             AnyId::GeometricToleranceWithDatumReference(i) => {
-                Self::GeometricToleranceWithDatumReference(i)
+                Ok(Self::GeometricToleranceWithDatumReference(i))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
-                Self::GeometricToleranceWithDefinedAreaUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedAreaUnit(i))
             }
             AnyId::GeometricToleranceWithDefinedUnit(i) => {
-                Self::GeometricToleranceWithDefinedUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedUnit(i))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(i) => {
-                Self::GeometricToleranceWithMaximumTolerance(i)
+                Ok(Self::GeometricToleranceWithMaximumTolerance(i))
             }
-            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
+            AnyId::GeometricToleranceWithModifiers(i) => {
+                Ok(Self::GeometricToleranceWithModifiers(i))
+            }
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::Group(i) => Self::Group(i),
-            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
-            AnyId::Loop(i) => Self::Loop(i),
+            AnyId::Group(i) => Ok(Self::Group(i)),
+            AnyId::LineProfileTolerance(i) => Ok(Self::LineProfileTolerance(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::PersonalAddress(i) => Self::PersonalAddress(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::ProductCategory(i) => Self::ProductCategory(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductRelatedProductCategory(i) => Self::ProductRelatedProductCategory(i),
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ModifiedGeometricTolerance(i) => Ok(Self::ModifiedGeometricTolerance(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::ParallelismTolerance(i) => Ok(Self::ParallelismTolerance(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::PerpendicularityTolerance(i) => Ok(Self::PerpendicularityTolerance(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::PersonalAddress(i) => Ok(Self::PersonalAddress(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::PositionTolerance(i) => Ok(Self::PositionTolerance(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::ProductCategory(i) => Ok(Self::ProductCategory(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductRelatedProductCategory(i) => Ok(Self::ProductRelatedProductCategory(i)),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RoundnessTolerance(i) => Ok(Self::RoundnessTolerance(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
-            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::StraightnessTolerance(i) => Ok(Self::StraightnessTolerance(i)),
+            AnyId::SurfaceProfileTolerance(i) => Ok(Self::SurfaceProfileTolerance(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::SymmetryTolerance(i) => Ok(Self::SymmetryTolerance(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::TotalRunoutTolerance(i) => Ok(Self::TotalRunoutTolerance(i)),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
-                Self::UnequallyDisposedGeometricTolerance(i)
+                Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("IdAttributeSelectRef ref -> {other:?}"),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected IdAttributeSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -8649,10 +8963,12 @@ pub enum IdentificationRoleRef {
     IdentificationRole(IdentificationRoleId),
 }
 impl IdentificationRoleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::IdentificationRole(i) => Self::IdentificationRole(i),
-            other => panic!("IdentificationRoleRef ref -> {other:?}"),
+            AnyId::IdentificationRole(i) => Ok(Self::IdentificationRole(i)),
+            other => Err(format!(
+                "expected IdentificationRoleRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -8711,69 +9027,75 @@ pub enum InvisibleItemRef {
     Complex(ComplexUnitId),
 }
 impl InvisibleItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationLayerAssignment(i) => Self::PresentationLayerAssignment(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationLayerAssignment(i) => Ok(Self::PresentationLayerAssignment(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("InvisibleItemRef ref -> {other:?}"),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected InvisibleItemRef target, got {other:?}")),
         }
     }
 }
@@ -8784,11 +9106,13 @@ pub enum ItemDefinedTransformationRef {
     Complex(ComplexUnitId),
 }
 impl ItemDefinedTransformationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ItemDefinedTransformation(i) => Self::ItemDefinedTransformation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ItemDefinedTransformationRef ref -> {other:?}"),
+            AnyId::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ItemDefinedTransformationRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -8872,102 +9196,110 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl ItemIdentifiedRepresentationUsageDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
-            AnyId::AppliedApprovalAssignment(i) => Self::AppliedApprovalAssignment(i),
-            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
-            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
+            AnyId::AppliedApprovalAssignment(i) => Ok(Self::AppliedApprovalAssignment(i)),
+            AnyId::AppliedDateAndTimeAssignment(i) => Ok(Self::AppliedDateAndTimeAssignment(i)),
+            AnyId::AppliedDocumentReference(i) => Ok(Self::AppliedDocumentReference(i)),
             AnyId::AppliedExternalIdentificationAssignment(i) => {
-                Self::AppliedExternalIdentificationAssignment(i)
+                Ok(Self::AppliedExternalIdentificationAssignment(i))
             }
-            AnyId::AppliedGroupAssignment(i) => Self::AppliedGroupAssignment(i),
+            AnyId::AppliedGroupAssignment(i) => Ok(Self::AppliedGroupAssignment(i)),
             AnyId::AppliedPersonAndOrganizationAssignment(i) => {
-                Self::AppliedPersonAndOrganizationAssignment(i)
+                Ok(Self::AppliedPersonAndOrganizationAssignment(i))
             }
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
             AnyId::CharacterizedItemWithinRepresentation(i) => {
-                Self::CharacterizedItemWithinRepresentation(i)
+                Ok(Self::CharacterizedItemWithinRepresentation(i))
             }
-            AnyId::CharacterizedObject(i) => Self::CharacterizedObject(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
-            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
+            AnyId::CharacterizedObject(i) => Ok(Self::CharacterizedObject(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
+            AnyId::CoaxialityTolerance(i) => Ok(Self::CoaxialityTolerance(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ConcentricityTolerance(i) => Ok(Self::ConcentricityTolerance(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::CylindricityTolerance(i) => Ok(Self::CylindricityTolerance(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
             AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+                Ok(Self::FeatureForDatumTargetRelationship(i))
             }
-            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
-            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::FlatnessTolerance(i) => Ok(Self::FlatnessTolerance(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
+            AnyId::GeometricTolerance(i) => Ok(Self::GeometricTolerance(i)),
             AnyId::GeometricToleranceWithDatumReference(i) => {
-                Self::GeometricToleranceWithDatumReference(i)
+                Ok(Self::GeometricToleranceWithDatumReference(i))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
-                Self::GeometricToleranceWithDefinedAreaUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedAreaUnit(i))
             }
             AnyId::GeometricToleranceWithDefinedUnit(i) => {
-                Self::GeometricToleranceWithDefinedUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedUnit(i))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(i) => {
-                Self::GeometricToleranceWithMaximumTolerance(i)
+                Ok(Self::GeometricToleranceWithMaximumTolerance(i))
             }
-            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
-            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::ModelGeometricView(i) => Self::ModelGeometricView(i),
-            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
-            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRelationship(i) => Self::PropertyDefinitionRelationship(i),
-            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
-            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
-            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::GeometricToleranceWithModifiers(i) => {
+                Ok(Self::GeometricToleranceWithModifiers(i))
+            }
+            AnyId::LineProfileTolerance(i) => Ok(Self::LineProfileTolerance(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::ModelGeometricView(i) => Ok(Self::ModelGeometricView(i)),
+            AnyId::ModifiedGeometricTolerance(i) => Ok(Self::ModifiedGeometricTolerance(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::ParallelismTolerance(i) => Ok(Self::ParallelismTolerance(i)),
+            AnyId::PerpendicularityTolerance(i) => Ok(Self::PerpendicularityTolerance(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::PositionTolerance(i) => Ok(Self::PositionTolerance(i)),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRelationship(i) => Ok(Self::PropertyDefinitionRelationship(i)),
+            AnyId::RoundnessTolerance(i) => Ok(Self::RoundnessTolerance(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::StraightnessTolerance(i) => Ok(Self::StraightnessTolerance(i)),
+            AnyId::SurfaceProfileTolerance(i) => Ok(Self::SurfaceProfileTolerance(i)),
+            AnyId::SymmetryTolerance(i) => Ok(Self::SymmetryTolerance(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::TotalRunoutTolerance(i) => Ok(Self::TotalRunoutTolerance(i)),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
-                Self::UnequallyDisposedGeometricTolerance(i)
+                Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ItemIdentifiedRepresentationUsageDefinitionRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ItemIdentifiedRepresentationUsageDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9127,162 +9459,178 @@ pub enum ItemIdentifiedRepresentationUsageSelectRef {
     Complex(ComplexUnitId),
 }
 impl ItemIdentifiedRepresentationUsageSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ItemIdentifiedRepresentationUsageSelectRef ref -> {other:?}"),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ItemIdentifiedRepresentationUsageSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9443,165 +9791,179 @@ pub enum LayeredItemRef {
     Complex(ComplexUnitId),
 }
 impl LayeredItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("LayeredItemRef ref -> {other:?}"),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected LayeredItemRef target, got {other:?}")),
         }
     }
 }
@@ -9612,11 +9974,13 @@ pub enum LengthMeasureWithUnitRef {
     Complex(ComplexUnitId),
 }
 impl LengthMeasureWithUnitRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("LengthMeasureWithUnitRef ref -> {other:?}"),
+            AnyId::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected LengthMeasureWithUnitRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9628,12 +9992,14 @@ pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
     Complex(ComplexUnitId),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
-            AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("LengthOrPlaneAngleMeasureWithUnitSelectRef ref -> {other:?}"),
+            AnyId::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
+            AnyId::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected LengthOrPlaneAngleMeasureWithUnitSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9643,10 +10009,10 @@ pub enum LocalTimeRef {
     LocalTime(LocalTimeId),
 }
 impl LocalTimeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::LocalTime(i) => Self::LocalTime(i),
-            other => panic!("LocalTimeRef ref -> {other:?}"),
+            AnyId::LocalTime(i) => Ok(Self::LocalTime(i)),
+            other => Err(format!("expected LocalTimeRef target, got {other:?}")),
         }
     }
 }
@@ -9660,14 +10026,14 @@ pub enum LoopRef {
     Complex(ComplexUnitId),
 }
 impl LoopRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("LoopRef ref -> {other:?}"),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected LoopRef target, got {other:?}")),
         }
     }
 }
@@ -9679,12 +10045,14 @@ pub enum ManifoldSolidBrepRef {
     Complex(ComplexUnitId),
 }
 impl ManifoldSolidBrepRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ManifoldSolidBrepRef ref -> {other:?}"),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ManifoldSolidBrepRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9697,12 +10065,12 @@ pub enum MarkerSelectRef {
     Complex(ComplexUnitId),
 }
 impl MarkerSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PreDefinedMarker(i) => Self::PreDefinedMarker(i),
-            AnyId::PreDefinedPointMarkerSymbol(i) => Self::PreDefinedPointMarkerSymbol(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("MarkerSelectRef ref -> {other:?}"),
+            AnyId::PreDefinedMarker(i) => Ok(Self::PreDefinedMarker(i)),
+            AnyId::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected MarkerSelectRef target, got {other:?}")),
         }
     }
 }
@@ -9719,17 +10087,17 @@ pub enum MeasureWithUnitRef {
     Complex(ComplexUnitId),
 }
 impl MeasureWithUnitRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
-            AnyId::MassMeasureWithUnit(i) => Self::MassMeasureWithUnit(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
-            AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
-            AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
-            AnyId::RatioMeasureWithUnit(i) => Self::RatioMeasureWithUnit(i),
-            AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("MeasureWithUnitRef ref -> {other:?}"),
+            AnyId::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
+            AnyId::MassMeasureWithUnit(i) => Ok(Self::MassMeasureWithUnit(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
+            AnyId::MeasureWithUnit(i) => Ok(Self::MeasureWithUnit(i)),
+            AnyId::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
+            AnyId::RatioMeasureWithUnit(i) => Ok(Self::RatioMeasureWithUnit(i)),
+            AnyId::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected MeasureWithUnitRef target, got {other:?}")),
         }
     }
 }
@@ -9761,36 +10129,40 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRef {
     Complex(ComplexUnitId),
 }
 impl MechanicalDesignAndDraughtingRelationshipSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("MechanicalDesignAndDraughtingRelationshipSelectRef ref -> {other:?}"),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected MechanicalDesignAndDraughtingRelationshipSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9819,33 +10191,37 @@ pub enum NameAttributeSelectRef {
     Complex(ComplexUnitId),
 }
 impl NameAttributeSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
-            AnyId::Address(i) => Self::Address(i),
-            AnyId::AreaUnit(i) => Self::AreaUnit(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
+            AnyId::Address(i) => Ok(Self::Address(i)),
+            AnyId::AreaUnit(i) => Ok(Self::AreaUnit(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
             AnyId::ContextDependentShapeRepresentation(i) => {
-                Self::ContextDependentShapeRepresentation(i)
+                Ok(Self::ContextDependentShapeRepresentation(i))
             }
-            AnyId::DerivedUnit(i) => Self::DerivedUnit(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::PersonalAddress(i) => Self::PersonalAddress(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::ProductDefinitionSubstitute(i) => Self::ProductDefinitionSubstitute(i),
+            AnyId::DerivedUnit(i) => Ok(Self::DerivedUnit(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::PersonalAddress(i) => Ok(Self::PersonalAddress(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::ProductDefinitionSubstitute(i) => Ok(Self::ProductDefinitionSubstitute(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::VolumeUnit(i) => Self::VolumeUnit(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("NameAttributeSelectRef ref -> {other:?}"),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected NameAttributeSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9865,20 +10241,20 @@ pub enum NamedUnitRef {
     Complex(ComplexUnitId),
 }
 impl NamedUnitRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ContextDependentUnit(i) => Self::ContextDependentUnit(i),
-            AnyId::ConversionBasedUnit(i) => Self::ConversionBasedUnit(i),
-            AnyId::LengthUnit(i) => Self::LengthUnit(i),
-            AnyId::MassUnit(i) => Self::MassUnit(i),
-            AnyId::NamedUnit(i) => Self::NamedUnit(i),
-            AnyId::PlaneAngleUnit(i) => Self::PlaneAngleUnit(i),
-            AnyId::RatioUnit(i) => Self::RatioUnit(i),
-            AnyId::SiUnit(i) => Self::SiUnit(i),
-            AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
-            AnyId::TimeUnit(i) => Self::TimeUnit(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("NamedUnitRef ref -> {other:?}"),
+            AnyId::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
+            AnyId::ConversionBasedUnit(i) => Ok(Self::ConversionBasedUnit(i)),
+            AnyId::LengthUnit(i) => Ok(Self::LengthUnit(i)),
+            AnyId::MassUnit(i) => Ok(Self::MassUnit(i)),
+            AnyId::NamedUnit(i) => Ok(Self::NamedUnit(i)),
+            AnyId::PlaneAngleUnit(i) => Ok(Self::PlaneAngleUnit(i)),
+            AnyId::RatioUnit(i) => Ok(Self::RatioUnit(i)),
+            AnyId::SiUnit(i) => Ok(Self::SiUnit(i)),
+            AnyId::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
+            AnyId::TimeUnit(i) => Ok(Self::TimeUnit(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected NamedUnitRef target, got {other:?}")),
         }
     }
 }
@@ -9888,10 +10264,10 @@ pub enum ObjectRoleRef {
     ObjectRole(ObjectRoleId),
 }
 impl ObjectRoleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ObjectRole(i) => Self::ObjectRole(i),
-            other => panic!("ObjectRoleRef ref -> {other:?}"),
+            AnyId::ObjectRole(i) => Ok(Self::ObjectRole(i)),
+            other => Err(format!("expected ObjectRoleRef target, got {other:?}")),
         }
     }
 }
@@ -9903,12 +10279,14 @@ pub enum OneDirectionRepeatFactorRef {
     Complex(ComplexUnitId),
 }
 impl OneDirectionRepeatFactorRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("OneDirectionRepeatFactorRef ref -> {other:?}"),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected OneDirectionRepeatFactorRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9918,10 +10296,10 @@ pub enum OrganizationRef {
     Organization(OrganizationId),
 }
 impl OrganizationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Organization(i) => Self::Organization(i),
-            other => panic!("OrganizationRef ref -> {other:?}"),
+            AnyId::Organization(i) => Ok(Self::Organization(i)),
+            other => Err(format!("expected OrganizationRef target, got {other:?}")),
         }
     }
 }
@@ -9931,10 +10309,12 @@ pub enum OrganizationalProjectRef {
     OrganizationalProject(OrganizationalProjectId),
 }
 impl OrganizationalProjectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            other => panic!("OrganizationalProjectRef ref -> {other:?}"),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            other => Err(format!(
+                "expected OrganizationalProjectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9945,11 +10325,13 @@ pub enum OrientedClosedShellRef {
     Complex(ComplexUnitId),
 }
 impl OrientedClosedShellRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("OrientedClosedShellRef ref -> {other:?}"),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected OrientedClosedShellRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -9960,11 +10342,11 @@ pub enum OrientedEdgeRef {
     Complex(ComplexUnitId),
 }
 impl OrientedEdgeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("OrientedEdgeRef ref -> {other:?}"),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected OrientedEdgeRef target, got {other:?}")),
         }
     }
 }
@@ -9995,31 +10377,31 @@ pub enum PcurveOrSurfaceRef {
     Complex(ComplexUnitId),
 }
 impl PcurveOrSurfaceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PcurveOrSurfaceRef ref -> {other:?}"),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected PcurveOrSurfaceRef target, got {other:?}")),
         }
     }
 }
@@ -10115,108 +10497,114 @@ pub enum PersonAndOrganizationItemRef {
     Complex(ComplexUnitId),
 }
 impl PersonAndOrganizationItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ActionDirective(i) => Self::ActionDirective(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionProperty(i) => Self::ActionProperty(i),
-            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
-            AnyId::ActionRequestSolution(i) => Self::ActionRequestSolution(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AppliedDateAndTimeAssignment(i) => Self::AppliedDateAndTimeAssignment(i),
-            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ActionDirective(i) => Ok(Self::ActionDirective(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionProperty(i) => Ok(Self::ActionProperty(i)),
+            AnyId::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
+            AnyId::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::AppliedDateAndTimeAssignment(i) => Ok(Self::AppliedDateAndTimeAssignment(i)),
+            AnyId::AppliedDocumentReference(i) => Ok(Self::AppliedDocumentReference(i)),
             AnyId::AppliedPersonAndOrganizationAssignment(i) => {
-                Self::AppliedPersonAndOrganizationAssignment(i)
+                Ok(Self::AppliedPersonAndOrganizationAssignment(i))
             }
-            AnyId::Approval(i) => Self::Approval(i),
-            AnyId::ApprovalStatus(i) => Self::ApprovalStatus(i),
-            AnyId::AscribableState(i) => Self::AscribableState(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::CcDesignDateAndTimeAssignment(i) => Self::CcDesignDateAndTimeAssignment(i),
-            AnyId::Certification(i) => Self::Certification(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
-            AnyId::ConfigurationItem(i) => Self::ConfigurationItem(i),
+            AnyId::Approval(i) => Ok(Self::Approval(i)),
+            AnyId::ApprovalStatus(i) => Ok(Self::ApprovalStatus(i)),
+            AnyId::AscribableState(i) => Ok(Self::AscribableState(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::CcDesignDateAndTimeAssignment(i) => Ok(Self::CcDesignDateAndTimeAssignment(i)),
+            AnyId::Certification(i) => Ok(Self::Certification(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
+            AnyId::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
-            AnyId::Contract(i) => Self::Contract(i),
-            AnyId::DateAndTimeAssignment(i) => Self::DateAndTimeAssignment(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DesignContext(i) => Self::DesignContext(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DocumentType(i) => Self::DocumentType(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Effectivity(i) => Self::Effectivity(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::Contract(i) => Ok(Self::Contract(i)),
+            AnyId::DateAndTimeAssignment(i) => Ok(Self::DateAndTimeAssignment(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DesignContext(i) => Ok(Self::DesignContext(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DocumentType(i) => Ok(Self::DocumentType(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Effectivity(i) => Ok(Self::Effectivity(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::Organization(i) => Self::Organization(i),
-            AnyId::OrganizationRelationship(i) => Self::OrganizationRelationship(i),
-            AnyId::OrganizationalAddress(i) => Self::OrganizationalAddress(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            AnyId::PersonAndOrganizationAddress(i) => Self::PersonAndOrganizationAddress(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
-            AnyId::ProductDefinitionEffectivity(i) => Self::ProductDefinitionEffectivity(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::Organization(i) => Ok(Self::Organization(i)),
+            AnyId::OrganizationRelationship(i) => Ok(Self::OrganizationRelationship(i)),
+            AnyId::OrganizationalAddress(i) => Ok(Self::OrganizationalAddress(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            AnyId::PersonAndOrganizationAddress(i) => Ok(Self::PersonAndOrganizationAddress(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductConceptFeature(i) => Ok(Self::ProductConceptFeature(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
+            AnyId::ProductDefinitionEffectivity(i) => Ok(Self::ProductDefinitionEffectivity(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionSubstitute(i) => Self::ProductDefinitionSubstitute(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionSubstitute(i) => Ok(Self::ProductDefinitionSubstitute(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            AnyId::SecurityClassificationLevel(i) => Self::SecurityClassificationLevel(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::ResourceProperty(i) => Ok(Self::ResourceProperty(i)),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            AnyId::SecurityClassificationLevel(i) => Ok(Self::SecurityClassificationLevel(i)),
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::StateObserved(i) => Self::StateObserved(i),
-            AnyId::StateType(i) => Self::StateType(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PersonAndOrganizationItemRef ref -> {other:?}"),
+            AnyId::StateObserved(i) => Ok(Self::StateObserved(i)),
+            AnyId::StateType(i) => Ok(Self::StateType(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PersonAndOrganizationItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10226,10 +10614,12 @@ pub enum PersonAndOrganizationRef {
     PersonAndOrganization(PersonAndOrganizationId),
 }
 impl PersonAndOrganizationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            other => panic!("PersonAndOrganizationRef ref -> {other:?}"),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            other => Err(format!(
+                "expected PersonAndOrganizationRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10239,10 +10629,12 @@ pub enum PersonAndOrganizationRoleRef {
     PersonAndOrganizationRole(PersonAndOrganizationRoleId),
 }
 impl PersonAndOrganizationRoleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PersonAndOrganizationRole(i) => Self::PersonAndOrganizationRole(i),
-            other => panic!("PersonAndOrganizationRoleRef ref -> {other:?}"),
+            AnyId::PersonAndOrganizationRole(i) => Ok(Self::PersonAndOrganizationRole(i)),
+            other => Err(format!(
+                "expected PersonAndOrganizationRoleRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10254,12 +10646,14 @@ pub enum PersonOrganizationSelectRef {
     PersonAndOrganization(PersonAndOrganizationId),
 }
 impl PersonOrganizationSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Organization(i) => Self::Organization(i),
-            AnyId::Person(i) => Self::Person(i),
-            AnyId::PersonAndOrganization(i) => Self::PersonAndOrganization(i),
-            other => panic!("PersonOrganizationSelectRef ref -> {other:?}"),
+            AnyId::Organization(i) => Ok(Self::Organization(i)),
+            AnyId::Person(i) => Ok(Self::Person(i)),
+            AnyId::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
+            other => Err(format!(
+                "expected PersonOrganizationSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10269,10 +10663,10 @@ pub enum PersonRef {
     Person(PersonId),
 }
 impl PersonRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Person(i) => Self::Person(i),
-            other => panic!("PersonRef ref -> {other:?}"),
+            AnyId::Person(i) => Ok(Self::Person(i)),
+            other => Err(format!("expected PersonRef target, got {other:?}")),
         }
     }
 }
@@ -10283,11 +10677,11 @@ pub enum PlanarBoxRef {
     Complex(ComplexUnitId),
 }
 impl PlanarBoxRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PlanarBoxRef ref -> {other:?}"),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected PlanarBoxRef target, got {other:?}")),
         }
     }
 }
@@ -10299,12 +10693,14 @@ pub enum PlaneOrPlanarBoxRef {
     Complex(ComplexUnitId),
 }
 impl PlaneOrPlanarBoxRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PlaneOrPlanarBoxRef ref -> {other:?}"),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PlaneOrPlanarBoxRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10318,14 +10714,14 @@ pub enum PointRef {
     Complex(ComplexUnitId),
 }
 impl PointRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PointRef ref -> {other:?}"),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected PointRef target, got {other:?}")),
         }
     }
 }
@@ -10336,11 +10732,13 @@ pub enum PresentationAreaRef {
     Complex(ComplexUnitId),
 }
 impl PresentationAreaRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentationAreaRef ref -> {other:?}"),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PresentationAreaRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10354,14 +10752,16 @@ pub enum PresentationRepresentationSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentationRepresentationSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationSet(i) => Self::PresentationSet(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentationRepresentationSelectRef ref -> {other:?}"),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationSet(i) => Ok(Self::PresentationSet(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PresentationRepresentationSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10372,11 +10772,11 @@ pub enum PresentationSetRef {
     Complex(ComplexUnitId),
 }
 impl PresentationSetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PresentationSet(i) => Self::PresentationSet(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentationSetRef ref -> {other:?}"),
+            AnyId::PresentationSet(i) => Ok(Self::PresentationSet(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected PresentationSetRef target, got {other:?}")),
         }
     }
 }
@@ -10389,13 +10789,15 @@ pub enum PresentationSizeAssignmentSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentationSizeAssignmentSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AreaInSet(i) => Self::AreaInSet(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentationSizeAssignmentSelectRef ref -> {other:?}"),
+            AnyId::AreaInSet(i) => Ok(Self::AreaInSet(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PresentationSizeAssignmentSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10407,12 +10809,14 @@ pub enum PresentationStyleAssignmentRef {
     Complex(ComplexUnitId),
 }
 impl PresentationStyleAssignmentRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PresentationStyleAssignment(i) => Self::PresentationStyleAssignment(i),
-            AnyId::PresentationStyleByContext(i) => Self::PresentationStyleByContext(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentationStyleAssignmentRef ref -> {other:?}"),
+            AnyId::PresentationStyleAssignment(i) => Ok(Self::PresentationStyleAssignment(i)),
+            AnyId::PresentationStyleByContext(i) => Ok(Self::PresentationStyleByContext(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PresentationStyleAssignmentRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10434,23 +10838,27 @@ pub enum PresentationStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentationStyleSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApproximationTolerance(i) => Self::ApproximationTolerance(i),
-            AnyId::CurveStyle(i) => Self::CurveStyle(i),
-            AnyId::ExternallyDefinedStyle(i) => Self::ExternallyDefinedStyle(i),
-            AnyId::FillAreaStyle(i) => Self::FillAreaStyle(i),
-            AnyId::PointStyle(i) => Self::PointStyle(i),
-            AnyId::PreDefinedPresentationStyle(i) => Self::PreDefinedPresentationStyle(i),
-            AnyId::SurfaceStyleUsage(i) => Self::SurfaceStyleUsage(i),
-            AnyId::SymbolStyle(i) => Self::SymbolStyle(i),
-            AnyId::TextStyle(i) => Self::TextStyle(i),
-            AnyId::TextStyleWithBoxCharacteristics(i) => Self::TextStyleWithBoxCharacteristics(i),
-            AnyId::TextureStyleTessellationSpecification(i) => {
-                Self::TextureStyleTessellationSpecification(i)
+            AnyId::ApproximationTolerance(i) => Ok(Self::ApproximationTolerance(i)),
+            AnyId::CurveStyle(i) => Ok(Self::CurveStyle(i)),
+            AnyId::ExternallyDefinedStyle(i) => Ok(Self::ExternallyDefinedStyle(i)),
+            AnyId::FillAreaStyle(i) => Ok(Self::FillAreaStyle(i)),
+            AnyId::PointStyle(i) => Ok(Self::PointStyle(i)),
+            AnyId::PreDefinedPresentationStyle(i) => Ok(Self::PreDefinedPresentationStyle(i)),
+            AnyId::SurfaceStyleUsage(i) => Ok(Self::SurfaceStyleUsage(i)),
+            AnyId::SymbolStyle(i) => Ok(Self::SymbolStyle(i)),
+            AnyId::TextStyle(i) => Ok(Self::TextStyle(i)),
+            AnyId::TextStyleWithBoxCharacteristics(i) => {
+                Ok(Self::TextStyleWithBoxCharacteristics(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentationStyleSelectRef ref -> {other:?}"),
+            AnyId::TextureStyleTessellationSpecification(i) => {
+                Ok(Self::TextureStyleTessellationSpecification(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PresentationStyleSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10462,12 +10870,12 @@ pub enum PresentedItemRef {
     Complex(ComplexUnitId),
 }
 impl PresentedItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AppliedPresentedItem(i) => Self::AppliedPresentedItem(i),
-            AnyId::PresentedItem(i) => Self::PresentedItem(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentedItemRef ref -> {other:?}"),
+            AnyId::AppliedPresentedItem(i) => Ok(Self::AppliedPresentedItem(i)),
+            AnyId::PresentedItem(i) => Ok(Self::PresentedItem(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected PresentedItemRef target, got {other:?}")),
         }
     }
 }
@@ -10492,29 +10900,31 @@ pub enum PresentedItemSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentedItemSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionRelationship(i) => Self::ActionRelationship(i),
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductConceptFeature(i) => Ok(Self::ProductConceptFeature(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PresentedItemSelectRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PresentedItemSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10526,12 +10936,12 @@ pub enum ProductCategoryRef {
     Complex(ComplexUnitId),
 }
 impl ProductCategoryRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductCategory(i) => Self::ProductCategory(i),
-            AnyId::ProductRelatedProductCategory(i) => Self::ProductRelatedProductCategory(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductCategoryRef ref -> {other:?}"),
+            AnyId::ProductCategory(i) => Ok(Self::ProductCategory(i)),
+            AnyId::ProductRelatedProductCategory(i) => Ok(Self::ProductRelatedProductCategory(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ProductCategoryRef target, got {other:?}")),
         }
     }
 }
@@ -10541,10 +10951,12 @@ pub enum ProductConceptContextRef {
     ProductConceptContext(ProductConceptContextId),
 }
 impl ProductConceptContextRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductConceptContext(i) => Self::ProductConceptContext(i),
-            other => panic!("ProductConceptContextRef ref -> {other:?}"),
+            AnyId::ProductConceptContext(i) => Ok(Self::ProductConceptContext(i)),
+            other => Err(format!(
+                "expected ProductConceptContextRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10555,11 +10967,11 @@ pub enum ProductConceptRef {
     Complex(ComplexUnitId),
 }
 impl ProductConceptRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductConceptRef ref -> {other:?}"),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ProductConceptRef target, got {other:?}")),
         }
     }
 }
@@ -10571,12 +10983,12 @@ pub enum ProductContextRef {
     Complex(ComplexUnitId),
 }
 impl ProductContextRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::MechanicalContext(i) => Self::MechanicalContext(i),
-            AnyId::ProductContext(i) => Self::ProductContext(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductContextRef ref -> {other:?}"),
+            AnyId::MechanicalContext(i) => Ok(Self::MechanicalContext(i)),
+            AnyId::ProductContext(i) => Ok(Self::ProductContext(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ProductContextRef target, got {other:?}")),
         }
     }
 }
@@ -10588,12 +11000,14 @@ pub enum ProductDefinitionContextRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionContextRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::DesignContext(i) => Self::DesignContext(i),
-            AnyId::ProductDefinitionContext(i) => Self::ProductDefinitionContext(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductDefinitionContextRef ref -> {other:?}"),
+            AnyId::DesignContext(i) => Ok(Self::DesignContext(i)),
+            AnyId::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ProductDefinitionContextRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10603,10 +11017,12 @@ pub enum ProductDefinitionContextRoleRef {
     ProductDefinitionContextRole(ProductDefinitionContextRoleId),
 }
 impl ProductDefinitionContextRoleRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinitionContextRole(i) => Self::ProductDefinitionContextRole(i),
-            other => panic!("ProductDefinitionContextRoleRef ref -> {other:?}"),
+            AnyId::ProductDefinitionContextRole(i) => Ok(Self::ProductDefinitionContextRole(i)),
+            other => Err(format!(
+                "expected ProductDefinitionContextRoleRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10618,14 +11034,16 @@ pub enum ProductDefinitionFormationRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionFormationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductDefinitionFormationRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ProductDefinitionFormationRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10639,18 +11057,20 @@ pub enum ProductDefinitionOrReferenceRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionOrReferenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
             AnyId::GenericProductDefinitionReference(i) => {
-                Self::GenericProductDefinitionReference(i)
+                Ok(Self::GenericProductDefinitionReference(i))
             }
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionOccurrence(i) => Self::ProductDefinitionOccurrence(i),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionOccurrence(i) => Ok(Self::ProductDefinitionOccurrence(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductDefinitionOrReferenceRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ProductDefinitionOrReferenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10662,14 +11082,16 @@ pub enum ProductDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductDefinitionRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ProductDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10684,15 +11106,17 @@ pub enum ProductDefinitionRelationshipRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionRelationshipRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductDefinitionRelationshipRef ref -> {other:?}"),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ProductDefinitionRelationshipRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10703,11 +11127,13 @@ pub enum ProductDefinitionShapeRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionShapeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductDefinitionShapeRef ref -> {other:?}"),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ProductDefinitionShapeRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10722,19 +11148,21 @@ pub enum ProductOrFormationOrDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl ProductOrFormationOrDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductOrFormationOrDefinitionRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ProductOrFormationOrDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10745,11 +11173,11 @@ pub enum ProductRef {
     Complex(ComplexUnitId),
 }
 impl ProductRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ProductRef ref -> {other:?}"),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ProductRef target, got {other:?}")),
         }
     }
 }
@@ -10761,12 +11189,14 @@ pub enum PropertyDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl PropertyDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("PropertyDefinitionRef ref -> {other:?}"),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected PropertyDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10778,12 +11208,14 @@ pub enum RenderingPropertiesSelectRef {
     Complex(ComplexUnitId),
 }
 impl RenderingPropertiesSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::SurfaceStyleReflectanceAmbient(i) => Self::SurfaceStyleReflectanceAmbient(i),
-            AnyId::SurfaceStyleTransparent(i) => Self::SurfaceStyleTransparent(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RenderingPropertiesSelectRef ref -> {other:?}"),
+            AnyId::SurfaceStyleReflectanceAmbient(i) => Ok(Self::SurfaceStyleReflectanceAmbient(i)),
+            AnyId::SurfaceStyleTransparent(i) => Ok(Self::SurfaceStyleTransparent(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected RenderingPropertiesSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10798,15 +11230,21 @@ pub enum RepresentationContextRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationContextRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::GeometricRepresentationContext(i) => Self::GeometricRepresentationContext(i),
-            AnyId::GlobalUncertaintyAssignedContext(i) => Self::GlobalUncertaintyAssignedContext(i),
-            AnyId::GlobalUnitAssignedContext(i) => Self::GlobalUnitAssignedContext(i),
-            AnyId::ParametricRepresentationContext(i) => Self::ParametricRepresentationContext(i),
-            AnyId::RepresentationContext(i) => Self::RepresentationContext(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RepresentationContextRef ref -> {other:?}"),
+            AnyId::GeometricRepresentationContext(i) => Ok(Self::GeometricRepresentationContext(i)),
+            AnyId::GlobalUncertaintyAssignedContext(i) => {
+                Ok(Self::GlobalUncertaintyAssignedContext(i))
+            }
+            AnyId::GlobalUnitAssignedContext(i) => Ok(Self::GlobalUnitAssignedContext(i)),
+            AnyId::ParametricRepresentationContext(i) => {
+                Ok(Self::ParametricRepresentationContext(i))
+            }
+            AnyId::RepresentationContext(i) => Ok(Self::RepresentationContext(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected RepresentationContextRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10816,10 +11254,12 @@ pub enum RepresentationContextReferenceRef {
     RepresentationContextReference(RepresentationContextReferenceId),
 }
 impl RepresentationContextReferenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::RepresentationContextReference(i) => Self::RepresentationContextReference(i),
-            other => panic!("RepresentationContextReferenceRef ref -> {other:?}"),
+            AnyId::RepresentationContextReference(i) => Ok(Self::RepresentationContextReference(i)),
+            other => Err(format!(
+                "expected RepresentationContextReferenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -10977,162 +11417,178 @@ pub enum RepresentationItemRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RepresentationItemRef ref -> {other:?}"),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected RepresentationItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11144,12 +11600,14 @@ pub enum RepresentationMapRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationMapRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::CameraUsage(i) => Self::CameraUsage(i),
-            AnyId::RepresentationMap(i) => Self::RepresentationMap(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RepresentationMapRef ref -> {other:?}"),
+            AnyId::CameraUsage(i) => Ok(Self::CameraUsage(i)),
+            AnyId::RepresentationMap(i) => Ok(Self::RepresentationMap(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected RepresentationMapRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11190,47 +11648,51 @@ pub enum RepresentationOrRepresentationReferenceRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationOrRepresentationReferenceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Ok(Self::ConstructiveGeometryRepresentation(i))
+            }
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RepresentationReference(i) => Ok(Self::RepresentationReference(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RepresentationOrRepresentationReferenceRef ref -> {other:?}"),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected RepresentationOrRepresentationReferenceRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11270,46 +11732,48 @@ pub enum RepresentationRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::ConstructiveGeometryRepresentation(i) => {
+                Ok(Self::ConstructiveGeometryRepresentation(i))
+            }
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RepresentationRef ref -> {other:?}"),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected RepresentationRef target, got {other:?}")),
         }
     }
 }
@@ -11351,44 +11815,50 @@ pub enum RepresentedDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl RepresentedDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::FeatureForDatumTargetRelationship(i) => {
-                Self::FeatureForDatumTargetRelationship(i)
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
             }
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRelationship(i) => Self::PropertyDefinitionRelationship(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ShapeAspectAssociativity(i) => Self::ShapeAspectAssociativity(i),
-            AnyId::ShapeAspectDerivingRelationship(i) => Self::ShapeAspectDerivingRelationship(i),
-            AnyId::ShapeAspectRelationship(i) => Self::ShapeAspectRelationship(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RepresentedDefinitionRef ref -> {other:?}"),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::FeatureForDatumTargetRelationship(i) => {
+                Ok(Self::FeatureForDatumTargetRelationship(i))
+            }
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRelationship(i) => Ok(Self::PropertyDefinitionRelationship(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ShapeAspectAssociativity(i) => Ok(Self::ShapeAspectAssociativity(i)),
+            AnyId::ShapeAspectDerivingRelationship(i) => {
+                Ok(Self::ShapeAspectDerivingRelationship(i))
+            }
+            AnyId::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected RepresentedDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11398,10 +11868,12 @@ pub enum ResourceRequirementTypeRef {
     ResourceRequirementType(ResourceRequirementTypeId),
 }
 impl ResourceRequirementTypeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ResourceRequirementType(i) => Self::ResourceRequirementType(i),
-            other => panic!("ResourceRequirementTypeRef ref -> {other:?}"),
+            AnyId::ResourceRequirementType(i) => Ok(Self::ResourceRequirementType(i)),
+            other => Err(format!(
+                "expected ResourceRequirementTypeRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11428,29 +11900,31 @@ pub enum RoleSelectRef {
     Complex(ComplexUnitId),
 }
 impl RoleSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ActionAssignment(i) => Self::ActionAssignment(i),
-            AnyId::ActionRequestAssignment(i) => Self::ActionRequestAssignment(i),
-            AnyId::AppliedApprovalAssignment(i) => Self::AppliedApprovalAssignment(i),
-            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
-            AnyId::AppliedGroupAssignment(i) => Self::AppliedGroupAssignment(i),
+            AnyId::ActionAssignment(i) => Ok(Self::ActionAssignment(i)),
+            AnyId::ActionRequestAssignment(i) => Ok(Self::ActionRequestAssignment(i)),
+            AnyId::AppliedApprovalAssignment(i) => Ok(Self::AppliedApprovalAssignment(i)),
+            AnyId::AppliedDocumentReference(i) => Ok(Self::AppliedDocumentReference(i)),
+            AnyId::AppliedGroupAssignment(i) => Ok(Self::AppliedGroupAssignment(i)),
             AnyId::AppliedSecurityClassificationAssignment(i) => {
-                Self::AppliedSecurityClassificationAssignment(i)
+                Ok(Self::AppliedSecurityClassificationAssignment(i))
             }
-            AnyId::ApprovalAssignment(i) => Self::ApprovalAssignment(i),
-            AnyId::ApprovalDateTime(i) => Self::ApprovalDateTime(i),
-            AnyId::CcDesignApproval(i) => Self::CcDesignApproval(i),
-            AnyId::CcDesignSecurityClassification(i) => Self::CcDesignSecurityClassification(i),
-            AnyId::Change(i) => Self::Change(i),
-            AnyId::ChangeRequest(i) => Self::ChangeRequest(i),
-            AnyId::DocumentReference(i) => Self::DocumentReference(i),
-            AnyId::GroupAssignment(i) => Self::GroupAssignment(i),
-            AnyId::SecurityClassificationAssignment(i) => Self::SecurityClassificationAssignment(i),
-            AnyId::StartRequest(i) => Self::StartRequest(i),
-            AnyId::StartWork(i) => Self::StartWork(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("RoleSelectRef ref -> {other:?}"),
+            AnyId::ApprovalAssignment(i) => Ok(Self::ApprovalAssignment(i)),
+            AnyId::ApprovalDateTime(i) => Ok(Self::ApprovalDateTime(i)),
+            AnyId::CcDesignApproval(i) => Ok(Self::CcDesignApproval(i)),
+            AnyId::CcDesignSecurityClassification(i) => Ok(Self::CcDesignSecurityClassification(i)),
+            AnyId::Change(i) => Ok(Self::Change(i)),
+            AnyId::ChangeRequest(i) => Ok(Self::ChangeRequest(i)),
+            AnyId::DocumentReference(i) => Ok(Self::DocumentReference(i)),
+            AnyId::GroupAssignment(i) => Ok(Self::GroupAssignment(i)),
+            AnyId::SecurityClassificationAssignment(i) => {
+                Ok(Self::SecurityClassificationAssignment(i))
+            }
+            AnyId::StartRequest(i) => Ok(Self::StartRequest(i)),
+            AnyId::StartWork(i) => Ok(Self::StartWork(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected RoleSelectRef target, got {other:?}")),
         }
     }
 }
@@ -11523,85 +11997,91 @@ pub enum SecurityClassificationItemRef {
     Complex(ComplexUnitId),
 }
 impl SecurityClassificationItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ActionDirective(i) => Self::ActionDirective(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ActionMethodRelationship(i) => Self::ActionMethodRelationship(i),
-            AnyId::ActionProperty(i) => Self::ActionProperty(i),
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AppliedDocumentReference(i) => Self::AppliedDocumentReference(i),
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ActionDirective(i) => Ok(Self::ActionDirective(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ActionMethodRelationship(i) => Ok(Self::ActionMethodRelationship(i)),
+            AnyId::ActionProperty(i) => Ok(Self::ActionProperty(i)),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::AppliedDocumentReference(i) => Ok(Self::AppliedDocumentReference(i)),
             AnyId::AppliedExternalIdentificationAssignment(i) => {
-                Self::AppliedExternalIdentificationAssignment(i)
+                Ok(Self::AppliedExternalIdentificationAssignment(i))
             }
-            AnyId::AssemblyComponentUsage(i) => Self::AssemblyComponentUsage(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::ConfigurationDesign(i) => Self::ConfigurationDesign(i),
-            AnyId::ConfigurationEffectivity(i) => Self::ConfigurationEffectivity(i),
+            AnyId::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
+            AnyId::ConfigurationEffectivity(i) => Ok(Self::ConfigurationEffectivity(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::Document(i) => Self::Document(i),
-            AnyId::DocumentFile(i) => Self::DocumentFile(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::GeneralProperty(i) => Self::GeneralProperty(i),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::Document(i) => Ok(Self::Document(i)),
+            AnyId::DocumentFile(i) => Ok(Self::DocumentFile(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::Group(i) => Self::Group(i),
-            AnyId::MakeFromUsageOption(i) => Self::MakeFromUsageOption(i),
+            AnyId::Group(i) => Ok(Self::Group(i)),
+            AnyId::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::NextAssemblyUsageOccurrence(i) => Self::NextAssemblyUsageOccurrence(i),
-            AnyId::OrganizationalProject(i) => Self::OrganizationalProject(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::Product(i) => Self::Product(i),
-            AnyId::ProductConcept(i) => Self::ProductConcept(i),
-            AnyId::ProductConceptFeature(i) => Self::ProductConceptFeature(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::ProductDefinition(i) => Self::ProductDefinition(i),
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
+            AnyId::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::Product(i) => Ok(Self::Product(i)),
+            AnyId::ProductConcept(i) => Ok(Self::ProductConcept(i)),
+            AnyId::ProductConceptFeature(i) => Ok(Self::ProductConceptFeature(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ProductDefinitionRelationship(i) => Self::ProductDefinitionRelationship(i),
-            AnyId::ProductDefinitionShape(i) => Self::ProductDefinitionShape(i),
-            AnyId::ProductDefinitionUsage(i) => Self::ProductDefinitionUsage(i),
+            AnyId::ProductDefinitionRelationship(i) => Ok(Self::ProductDefinitionRelationship(i)),
+            AnyId::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
+            AnyId::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
             AnyId::ProductDefinitionWithAssociatedDocuments(i) => {
-                Self::ProductDefinitionWithAssociatedDocuments(i)
+                Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            AnyId::PropertyDefinition(i) => Self::PropertyDefinition(i),
-            AnyId::PropertyDefinitionRepresentation(i) => Self::PropertyDefinitionRepresentation(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::ResourceProperty(i) => Self::ResourceProperty(i),
-            AnyId::ShapeDefinitionRepresentation(i) => Self::ShapeDefinitionRepresentation(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
+            AnyId::PropertyDefinitionRepresentation(i) => {
+                Ok(Self::PropertyDefinitionRepresentation(i))
+            }
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::ResourceProperty(i) => Ok(Self::ResourceProperty(i)),
+            AnyId::ShapeDefinitionRepresentation(i) => Ok(Self::ShapeDefinitionRepresentation(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("SecurityClassificationItemRef ref -> {other:?}"),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected SecurityClassificationItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11611,10 +12091,12 @@ pub enum SecurityClassificationLevelRef {
     SecurityClassificationLevel(SecurityClassificationLevelId),
 }
 impl SecurityClassificationLevelRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::SecurityClassificationLevel(i) => Self::SecurityClassificationLevel(i),
-            other => panic!("SecurityClassificationLevelRef ref -> {other:?}"),
+            AnyId::SecurityClassificationLevel(i) => Ok(Self::SecurityClassificationLevel(i)),
+            other => Err(format!(
+                "expected SecurityClassificationLevelRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11624,10 +12106,12 @@ pub enum SecurityClassificationRef {
     SecurityClassification(SecurityClassificationId),
 }
 impl SecurityClassificationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::SecurityClassification(i) => Self::SecurityClassification(i),
-            other => panic!("SecurityClassificationRef ref -> {other:?}"),
+            AnyId::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
+            other => Err(format!(
+                "expected SecurityClassificationRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11657,30 +12141,32 @@ pub enum ShapeAspectRef {
     Complex(ComplexUnitId),
 }
 impl ShapeAspectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AllAroundShapeAspect(i) => Self::AllAroundShapeAspect(i),
-            AnyId::CentreOfSymmetry(i) => Self::CentreOfSymmetry(i),
-            AnyId::CommonDatum(i) => Self::CommonDatum(i),
-            AnyId::CompositeGroupShapeAspect(i) => Self::CompositeGroupShapeAspect(i),
-            AnyId::CompositeShapeAspect(i) => Self::CompositeShapeAspect(i),
-            AnyId::ContinuousShapeAspect(i) => Self::ContinuousShapeAspect(i),
-            AnyId::Datum(i) => Self::Datum(i),
-            AnyId::DatumFeature(i) => Self::DatumFeature(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DatumSystem(i) => Self::DatumSystem(i),
-            AnyId::DatumTarget(i) => Self::DatumTarget(i),
-            AnyId::DefaultModelGeometricView(i) => Self::DefaultModelGeometricView(i),
-            AnyId::DerivedShapeAspect(i) => Self::DerivedShapeAspect(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::PlacedDatumTargetFeature(i) => Self::PlacedDatumTargetFeature(i),
-            AnyId::ShapeAspect(i) => Self::ShapeAspect(i),
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ShapeAspectRef ref -> {other:?}"),
+            AnyId::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
+            AnyId::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
+            AnyId::CommonDatum(i) => Ok(Self::CommonDatum(i)),
+            AnyId::CompositeGroupShapeAspect(i) => Ok(Self::CompositeGroupShapeAspect(i)),
+            AnyId::CompositeShapeAspect(i) => Ok(Self::CompositeShapeAspect(i)),
+            AnyId::ContinuousShapeAspect(i) => Ok(Self::ContinuousShapeAspect(i)),
+            AnyId::Datum(i) => Ok(Self::Datum(i)),
+            AnyId::DatumFeature(i) => Ok(Self::DatumFeature(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DatumSystem(i) => Ok(Self::DatumSystem(i)),
+            AnyId::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            AnyId::DefaultModelGeometricView(i) => Ok(Self::DefaultModelGeometricView(i)),
+            AnyId::DerivedShapeAspect(i) => Ok(Self::DerivedShapeAspect(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            AnyId::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ShapeAspectRef target, got {other:?}")),
         }
     }
 }
@@ -11691,11 +12177,13 @@ pub enum ShapeDimensionRepresentationRef {
     Complex(ComplexUnitId),
 }
 impl ShapeDimensionRepresentationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ShapeDimensionRepresentationRef ref -> {other:?}"),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ShapeDimensionRepresentationRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11718,29 +12206,31 @@ pub enum ShapeModelRef {
     Complex(ComplexUnitId),
 }
 impl ShapeModelRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ShapeModelRef ref -> {other:?}"),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ShapeModelRef target, got {other:?}")),
         }
     }
 }
@@ -11751,11 +12241,15 @@ pub enum ShapeRepresentationRelationshipRef {
     Complex(ComplexUnitId),
 }
 impl ShapeRepresentationRelationshipRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ShapeRepresentationRelationshipRef ref -> {other:?}"),
+            AnyId::ShapeRepresentationRelationship(i) => {
+                Ok(Self::ShapeRepresentationRelationship(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ShapeRepresentationRelationshipRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11770,15 +12264,15 @@ pub enum ShellRef {
     Complex(ComplexUnitId),
 }
 impl ShellRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ShellRef ref -> {other:?}"),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ShellRef target, got {other:?}")),
         }
     }
 }
@@ -11797,17 +12291,17 @@ pub enum SizeSelectRef {
     Complex(ComplexUnitId),
 }
 impl SizeSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::LengthMeasureWithUnit(i) => Self::LengthMeasureWithUnit(i),
-            AnyId::MassMeasureWithUnit(i) => Self::MassMeasureWithUnit(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
-            AnyId::MeasureWithUnit(i) => Self::MeasureWithUnit(i),
-            AnyId::PlaneAngleMeasureWithUnit(i) => Self::PlaneAngleMeasureWithUnit(i),
-            AnyId::RatioMeasureWithUnit(i) => Self::RatioMeasureWithUnit(i),
-            AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("SizeSelectRef ref -> {other:?}"),
+            AnyId::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
+            AnyId::MassMeasureWithUnit(i) => Ok(Self::MassMeasureWithUnit(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
+            AnyId::MeasureWithUnit(i) => Ok(Self::MeasureWithUnit(i)),
+            AnyId::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
+            AnyId::RatioMeasureWithUnit(i) => Ok(Self::RatioMeasureWithUnit(i)),
+            AnyId::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected SizeSelectRef target, got {other:?}")),
         }
     }
 }
@@ -11819,14 +12313,16 @@ pub enum StartRequestItemRef {
     Complex(ComplexUnitId),
 }
 impl StartRequestItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("StartRequestItemRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected StartRequestItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -11837,11 +12333,11 @@ pub enum StateObservedRef {
     Complex(ComplexUnitId),
 }
 impl StateObservedRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::StateObserved(i) => Self::StateObserved(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("StateObservedRef ref -> {other:?}"),
+            AnyId::StateObserved(i) => Ok(Self::StateObserved(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected StateObservedRef target, got {other:?}")),
         }
     }
 }
@@ -11852,11 +12348,11 @@ pub enum StateTypeRef {
     Complex(ComplexUnitId),
 }
 impl StateTypeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::StateType(i) => Self::StateType(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("StateTypeRef ref -> {other:?}"),
+            AnyId::StateType(i) => Ok(Self::StateType(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected StateTypeRef target, got {other:?}")),
         }
     }
 }
@@ -12060,222 +12556,242 @@ pub enum StyleContextSelectRef {
     Complex(ComplexUnitId),
 }
 impl StyleContextSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::CompoundRepresentationItem(i) => Self::CompoundRepresentationItem(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
+            }
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::CompoundRepresentationItem(i) => Ok(Self::CompoundRepresentationItem(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
             AnyId::ConstructiveGeometryRepresentationRelationship(i) => {
-                Self::ConstructiveGeometryRepresentationRelationship(i)
+                Ok(Self::ConstructiveGeometryRepresentationRelationship(i))
             }
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
             AnyId::ContextDependentShapeRepresentation(i) => {
-                Self::ContextDependentShapeRepresentation(i)
+                Ok(Self::ContextDependentShapeRepresentation(i))
             }
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
             AnyId::DefinitionalRepresentationRelationship(i) => {
-                Self::DefinitionalRepresentationRelationship(i)
+                Ok(Self::DefinitionalRepresentationRelationship(i))
             }
-            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => {
-                Self::DefinitionalRepresentationRelationshipWithSameContext(i)
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(i) => Ok(
+                Self::DefinitionalRepresentationRelationshipWithSameContext(i),
+            ),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::DescriptiveRepresentationItem(i) => Ok(Self::DescriptiveRepresentationItem(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
             }
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::DescriptiveRepresentationItem(i) => Self::DescriptiveRepresentationItem(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::Group(i) => Self::Group(i),
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntegerRepresentationItem(i) => Self::IntegerRepresentationItem(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::Group(i) => Ok(Self::Group(i)),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntegerRepresentationItem(i) => Ok(Self::IntegerRepresentationItem(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::MappedItem(i) => Self::MappedItem(i),
-            AnyId::MeasureRepresentationItem(i) => Self::MeasureRepresentationItem(i),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
+            AnyId::MeasureRepresentationItem(i) => Ok(Self::MeasureRepresentationItem(i)),
             AnyId::MechanicalDesignAndDraughtingRelationship(i) => {
-                Self::MechanicalDesignAndDraughtingRelationship(i)
+                Ok(Self::MechanicalDesignAndDraughtingRelationship(i))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationLayerAssignment(i) => Self::PresentationLayerAssignment(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationSet(i) => Self::PresentationSet(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::ProductConceptFeatureCategory(i) => Self::ProductConceptFeatureCategory(i),
-            AnyId::QualifiedRepresentationItem(i) => Self::QualifiedRepresentationItem(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RealRepresentationItem(i) => Self::RealRepresentationItem(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RepresentationItem(i) => Self::RepresentationItem(i),
-            AnyId::RepresentationRelationship(i) => Self::RepresentationRelationship(i),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationLayerAssignment(i) => Ok(Self::PresentationLayerAssignment(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationSet(i) => Ok(Self::PresentationSet(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::ProductConceptFeatureCategory(i) => Ok(Self::ProductConceptFeatureCategory(i)),
+            AnyId::QualifiedRepresentationItem(i) => Ok(Self::QualifiedRepresentationItem(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RealRepresentationItem(i) => Ok(Self::RealRepresentationItem(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RepresentationItem(i) => Ok(Self::RepresentationItem(i)),
+            AnyId::RepresentationRelationship(i) => Ok(Self::RepresentationRelationship(i)),
             AnyId::RepresentationRelationshipWithTransformation(i) => {
-                Self::RepresentationRelationshipWithTransformation(i)
+                Ok(Self::RepresentationRelationshipWithTransformation(i))
             }
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
-            AnyId::ShapeRepresentationRelationship(i) => Self::ShapeRepresentationRelationship(i),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
+            AnyId::ShapeRepresentationRelationship(i) => {
+                Ok(Self::ShapeRepresentationRelationship(i))
+            }
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ValueRepresentationItem(i) => Self::ValueRepresentationItem(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("StyleContextSelectRef ref -> {other:?}"),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ValueRepresentationItem(i) => Ok(Self::ValueRepresentationItem(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected StyleContextSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12301,30 +12817,34 @@ pub enum StyledItemRef {
     Complex(ComplexUnitId),
 }
 impl StyledItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationCurveOccurrence(i) => Self::AnnotationCurveOccurrence(i),
-            AnyId::AnnotationFillAreaOccurrence(i) => Self::AnnotationFillAreaOccurrence(i),
-            AnyId::AnnotationOccurrence(i) => Self::AnnotationOccurrence(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
+            AnyId::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
+            AnyId::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbolOccurrence(i) => Self::AnnotationSymbolOccurrence(i),
-            AnyId::AnnotationTextOccurrence(i) => Self::AnnotationTextOccurrence(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
+            AnyId::AnnotationTextOccurrence(i) => Ok(Self::AnnotationTextOccurrence(i)),
             AnyId::ContextDependentOverRidingStyledItem(i) => {
-                Self::ContextDependentOverRidingStyledItem(i)
+                Ok(Self::ContextDependentOverRidingStyledItem(i))
             }
-            AnyId::DraughtingAnnotationOccurrence(i) => Self::DraughtingAnnotationOccurrence(i),
-            AnyId::LeaderCurve(i) => Self::LeaderCurve(i),
-            AnyId::LeaderTerminator(i) => Self::LeaderTerminator(i),
-            AnyId::OverRidingStyledItem(i) => Self::OverRidingStyledItem(i),
-            AnyId::StyledItem(i) => Self::StyledItem(i),
-            AnyId::TerminatorSymbol(i) => Self::TerminatorSymbol(i),
-            AnyId::TessellatedAnnotationOccurrence(i) => Self::TessellatedAnnotationOccurrence(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("StyledItemRef ref -> {other:?}"),
+            AnyId::DraughtingAnnotationOccurrence(i) => Ok(Self::DraughtingAnnotationOccurrence(i)),
+            AnyId::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
+            AnyId::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
+            AnyId::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            AnyId::StyledItem(i) => Ok(Self::StyledItem(i)),
+            AnyId::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
+            AnyId::TessellatedAnnotationOccurrence(i) => {
+                Ok(Self::TessellatedAnnotationOccurrence(i))
+            }
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected StyledItemRef target, got {other:?}")),
         }
     }
 }
@@ -12492,176 +13012,192 @@ pub enum StyledItemTargetRef {
     Complex(ComplexUnitId),
 }
 impl StyledItemTargetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AdvancedBrepShapeRepresentation(i) => Self::AdvancedBrepShapeRepresentation(i),
-            AnyId::AdvancedFace(i) => Self::AdvancedFace(i),
-            AnyId::AnnotationPlaceholderLeaderLine(i) => Self::AnnotationPlaceholderLeaderLine(i),
-            AnyId::AnnotationPlaceholderOccurrence(i) => Self::AnnotationPlaceholderOccurrence(i),
+            AnyId::AdvancedBrepShapeRepresentation(i) => {
+                Ok(Self::AdvancedBrepShapeRepresentation(i))
+            }
+            AnyId::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
+            AnyId::AnnotationPlaceholderLeaderLine(i) => {
+                Ok(Self::AnnotationPlaceholderLeaderLine(i))
+            }
+            AnyId::AnnotationPlaceholderOccurrence(i) => {
+                Ok(Self::AnnotationPlaceholderOccurrence(i))
+            }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i)
+                Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            AnyId::AnnotationPlane(i) => Self::AnnotationPlane(i),
-            AnyId::AnnotationSymbol(i) => Self::AnnotationSymbol(i),
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::AnnotationToAnnotationLeaderLine(i) => Self::AnnotationToAnnotationLeaderLine(i),
-            AnyId::AnnotationToModelLeaderLine(i) => Self::AnnotationToModelLeaderLine(i),
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::AuxiliaryLeaderLine(i) => Self::AuxiliaryLeaderLine(i),
-            AnyId::Axis1Placement(i) => Self::Axis1Placement(i),
-            AnyId::Axis2Placement2d(i) => Self::Axis2Placement2d(i),
-            AnyId::Axis2Placement3d(i) => Self::Axis2Placement3d(i),
-            AnyId::BSplineCurve(i) => Self::BSplineCurve(i),
-            AnyId::BSplineCurveWithKnots(i) => Self::BSplineCurveWithKnots(i),
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierCurve(i) => Self::BezierCurve(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedCurve(i) => Self::BoundedCurve(i),
-            AnyId::BoundedPcurve(i) => Self::BoundedPcurve(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::BoundedSurfaceCurve(i) => Self::BoundedSurfaceCurve(i),
-            AnyId::BrepWithVoids(i) => Self::BrepWithVoids(i),
-            AnyId::CameraImage(i) => Self::CameraImage(i),
-            AnyId::CameraImage3dWithScale(i) => Self::CameraImage3dWithScale(i),
-            AnyId::CameraModel(i) => Self::CameraModel(i),
-            AnyId::CameraModelD3(i) => Self::CameraModelD3(i),
-            AnyId::CameraModelD3MultiClipping(i) => Self::CameraModelD3MultiClipping(i),
-            AnyId::CameraModelD3WithHlhsr(i) => Self::CameraModelD3WithHlhsr(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            AnyId::CharacterizedRepresentation(i) => Self::CharacterizedRepresentation(i),
-            AnyId::Circle(i) => Self::Circle(i),
-            AnyId::ClosedShell(i) => Self::ClosedShell(i),
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CompositeCurve(i) => Self::CompositeCurve(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::Conic(i) => Self::Conic(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::ConnectedFaceSet(i) => Self::ConnectedFaceSet(i),
+            AnyId::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
+            AnyId::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::AnnotationToAnnotationLeaderLine(i) => {
+                Ok(Self::AnnotationToAnnotationLeaderLine(i))
+            }
+            AnyId::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::AuxiliaryLeaderLine(i) => Ok(Self::AuxiliaryLeaderLine(i)),
+            AnyId::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
+            AnyId::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
+            AnyId::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
+            AnyId::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
+            AnyId::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierCurve(i) => Ok(Self::BezierCurve(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedCurve(i) => Ok(Self::BoundedCurve(i)),
+            AnyId::BoundedPcurve(i) => Ok(Self::BoundedPcurve(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::BoundedSurfaceCurve(i) => Ok(Self::BoundedSurfaceCurve(i)),
+            AnyId::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
+            AnyId::CameraImage(i) => Ok(Self::CameraImage(i)),
+            AnyId::CameraImage3dWithScale(i) => Ok(Self::CameraImage3dWithScale(i)),
+            AnyId::CameraModel(i) => Ok(Self::CameraModel(i)),
+            AnyId::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            AnyId::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            AnyId::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            AnyId::CharacterizedRepresentation(i) => Ok(Self::CharacterizedRepresentation(i)),
+            AnyId::Circle(i) => Ok(Self::Circle(i)),
+            AnyId::ClosedShell(i) => Ok(Self::ClosedShell(i)),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CompositeCurve(i) => Ok(Self::CompositeCurve(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::Conic(i) => Ok(Self::Conic(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             AnyId::ConstructiveGeometryRepresentation(i) => {
-                Self::ConstructiveGeometryRepresentation(i)
+                Ok(Self::ConstructiveGeometryRepresentation(i))
             }
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::Curve(i) => Self::Curve(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::DefinedSymbol(i) => Self::DefinedSymbol(i),
-            AnyId::DefinitionalRepresentation(i) => Self::DefinitionalRepresentation(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::Direction(i) => Self::Direction(i),
-            AnyId::DraughtingCallout(i) => Self::DraughtingCallout(i),
-            AnyId::DraughtingModel(i) => Self::DraughtingModel(i),
-            AnyId::Edge(i) => Self::Edge(i),
-            AnyId::EdgeCurve(i) => Self::EdgeCurve(i),
-            AnyId::EdgeLoop(i) => Self::EdgeLoop(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::Ellipse(i) => Self::Ellipse(i),
-            AnyId::ExternallyDefinedHatchStyle(i) => Self::ExternallyDefinedHatchStyle(i),
-            AnyId::ExternallyDefinedTileStyle(i) => Self::ExternallyDefinedTileStyle(i),
-            AnyId::Face(i) => Self::Face(i),
-            AnyId::FaceBound(i) => Self::FaceBound(i),
-            AnyId::FaceOuterBound(i) => Self::FaceOuterBound(i),
-            AnyId::FaceSurface(i) => Self::FaceSurface(i),
-            AnyId::FillAreaStyleHatching(i) => Self::FillAreaStyleHatching(i),
-            AnyId::FillAreaStyleTileColouredRegion(i) => Self::FillAreaStyleTileColouredRegion(i),
-            AnyId::FillAreaStyleTileCurveWithStyle(i) => Self::FillAreaStyleTileCurveWithStyle(i),
-            AnyId::FillAreaStyleTileSymbolWithStyle(i) => Self::FillAreaStyleTileSymbolWithStyle(i),
-            AnyId::FillAreaStyleTiles(i) => Self::FillAreaStyleTiles(i),
-            AnyId::GeometricCurveSet(i) => Self::GeometricCurveSet(i),
-            AnyId::GeometricRepresentationItem(i) => Self::GeometricRepresentationItem(i),
-            AnyId::GeometricSet(i) => Self::GeometricSet(i),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::Curve(i) => Ok(Self::Curve(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
+            AnyId::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::Direction(i) => Ok(Self::Direction(i)),
+            AnyId::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
+            AnyId::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            AnyId::Edge(i) => Ok(Self::Edge(i)),
+            AnyId::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
+            AnyId::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::Ellipse(i) => Ok(Self::Ellipse(i)),
+            AnyId::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
+            AnyId::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
+            AnyId::Face(i) => Ok(Self::Face(i)),
+            AnyId::FaceBound(i) => Ok(Self::FaceBound(i)),
+            AnyId::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
+            AnyId::FaceSurface(i) => Ok(Self::FaceSurface(i)),
+            AnyId::FillAreaStyleHatching(i) => Ok(Self::FillAreaStyleHatching(i)),
+            AnyId::FillAreaStyleTileColouredRegion(i) => {
+                Ok(Self::FillAreaStyleTileColouredRegion(i))
+            }
+            AnyId::FillAreaStyleTileCurveWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileCurveWithStyle(i))
+            }
+            AnyId::FillAreaStyleTileSymbolWithStyle(i) => {
+                Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
+            }
+            AnyId::FillAreaStyleTiles(i) => Ok(Self::FillAreaStyleTiles(i)),
+            AnyId::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            AnyId::GeometricRepresentationItem(i) => Ok(Self::GeometricRepresentationItem(i)),
+            AnyId::GeometricSet(i) => Ok(Self::GeometricSet(i)),
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                Self::GeometricallyBoundedSurfaceShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedSurfaceShapeRepresentation(i))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                Self::GeometricallyBoundedWireframeShapeRepresentation(i)
+                Ok(Self::GeometricallyBoundedWireframeShapeRepresentation(i))
             }
-            AnyId::Hyperbola(i) => Self::Hyperbola(i),
-            AnyId::IntersectionCurve(i) => Self::IntersectionCurve(i),
-            AnyId::LeaderDirectedCallout(i) => Self::LeaderDirectedCallout(i),
-            AnyId::Line(i) => Self::Line(i),
-            AnyId::Loop(i) => Self::Loop(i),
-            AnyId::ManifoldSolidBrep(i) => Self::ManifoldSolidBrep(i),
+            AnyId::Hyperbola(i) => Ok(Self::Hyperbola(i)),
+            AnyId::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
+            AnyId::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
+            AnyId::Line(i) => Ok(Self::Line(i)),
+            AnyId::Loop(i) => Ok(Self::Loop(i)),
+            AnyId::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
             AnyId::ManifoldSurfaceShapeRepresentation(i) => {
-                Self::ManifoldSurfaceShapeRepresentation(i)
+                Ok(Self::ManifoldSurfaceShapeRepresentation(i))
             }
-            AnyId::MappedItem(i) => Self::MappedItem(i),
+            AnyId::MappedItem(i) => Ok(Self::MappedItem(i)),
             AnyId::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                Self::MechanicalDesignGeometricPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignGeometricPresentationRepresentation(i))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                Self::MechanicalDesignPresentationRepresentationWithDraughting(i)
+                Ok(Self::MechanicalDesignPresentationRepresentationWithDraughting(i))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(i) => {
-                Self::MechanicalDesignShadedPresentationRepresentation(i)
+                Ok(Self::MechanicalDesignShadedPresentationRepresentation(i))
             }
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::OneDirectionRepeatFactor(i) => Self::OneDirectionRepeatFactor(i),
-            AnyId::OpenShell(i) => Self::OpenShell(i),
-            AnyId::OrientedClosedShell(i) => Self::OrientedClosedShell(i),
-            AnyId::OrientedEdge(i) => Self::OrientedEdge(i),
-            AnyId::Path(i) => Self::Path(i),
-            AnyId::Pcurve(i) => Self::Pcurve(i),
-            AnyId::Placement(i) => Self::Placement(i),
-            AnyId::PlanarBox(i) => Self::PlanarBox(i),
-            AnyId::PlanarExtent(i) => Self::PlanarExtent(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::Point(i) => Self::Point(i),
-            AnyId::PolyLoop(i) => Self::PolyLoop(i),
-            AnyId::Polyline(i) => Self::Polyline(i),
-            AnyId::PresentationArea(i) => Self::PresentationArea(i),
-            AnyId::PresentationRepresentation(i) => Self::PresentationRepresentation(i),
-            AnyId::PresentationView(i) => Self::PresentationView(i),
-            AnyId::QuasiUniformCurve(i) => Self::QuasiUniformCurve(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineCurve(i) => Self::RationalBSplineCurve(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::Representation(i) => Self::Representation(i),
-            AnyId::RepresentationReference(i) => Self::RepresentationReference(i),
-            AnyId::SeamCurve(i) => Self::SeamCurve(i),
-            AnyId::ShapeDimensionRepresentation(i) => Self::ShapeDimensionRepresentation(i),
-            AnyId::ShapeRepresentation(i) => Self::ShapeRepresentation(i),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
+            AnyId::OpenShell(i) => Ok(Self::OpenShell(i)),
+            AnyId::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            AnyId::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            AnyId::Path(i) => Ok(Self::Path(i)),
+            AnyId::Pcurve(i) => Ok(Self::Pcurve(i)),
+            AnyId::Placement(i) => Ok(Self::Placement(i)),
+            AnyId::PlanarBox(i) => Ok(Self::PlanarBox(i)),
+            AnyId::PlanarExtent(i) => Ok(Self::PlanarExtent(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::Point(i) => Ok(Self::Point(i)),
+            AnyId::PolyLoop(i) => Ok(Self::PolyLoop(i)),
+            AnyId::Polyline(i) => Ok(Self::Polyline(i)),
+            AnyId::PresentationArea(i) => Ok(Self::PresentationArea(i)),
+            AnyId::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
+            AnyId::PresentationView(i) => Ok(Self::PresentationView(i)),
+            AnyId::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineCurve(i) => Ok(Self::RationalBSplineCurve(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::Representation(i) => Ok(Self::Representation(i)),
+            AnyId::RepresentationReference(i) => Ok(Self::RepresentationReference(i)),
+            AnyId::SeamCurve(i) => Ok(Self::SeamCurve(i)),
+            AnyId::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
+            AnyId::ShapeRepresentation(i) => Ok(Self::ShapeRepresentation(i)),
             AnyId::ShapeRepresentationWithParameters(i) => {
-                Self::ShapeRepresentationWithParameters(i)
+                Ok(Self::ShapeRepresentationWithParameters(i))
             }
-            AnyId::ShellBasedSurfaceModel(i) => Self::ShellBasedSurfaceModel(i),
-            AnyId::SolidModel(i) => Self::SolidModel(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceCurve(i) => Self::SurfaceCurve(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::SymbolRepresentation(i) => Self::SymbolRepresentation(i),
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShapeRepresentation(i) => Self::TessellatedShapeRepresentation(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::TopologicalRepresentationItem(i) => Self::TopologicalRepresentationItem(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::TrimmedCurve(i) => Self::TrimmedCurve(i),
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::UniformCurve(i) => Self::UniformCurve(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::VertexShell(i) => Self::VertexShell(i),
-            AnyId::WireShell(i) => Self::WireShell(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("StyledItemTargetRef ref -> {other:?}"),
+            AnyId::ShellBasedSurfaceModel(i) => Ok(Self::ShellBasedSurfaceModel(i)),
+            AnyId::SolidModel(i) => Ok(Self::SolidModel(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShapeRepresentation(i) => Ok(Self::TessellatedShapeRepresentation(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::TopologicalRepresentationItem(i) => Ok(Self::TopologicalRepresentationItem(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::UniformCurve(i) => Ok(Self::UniformCurve(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::VertexShell(i) => Ok(Self::VertexShell(i)),
+            AnyId::WireShell(i) => Ok(Self::WireShell(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected StyledItemTargetRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12674,13 +13210,13 @@ pub enum SupportedItemRef {
     Complex(ComplexUnitId),
 }
 impl SupportedItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Action(i) => Self::Action(i),
-            AnyId::ActionDirective(i) => Self::ActionDirective(i),
-            AnyId::ActionMethod(i) => Self::ActionMethod(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("SupportedItemRef ref -> {other:?}"),
+            AnyId::Action(i) => Ok(Self::Action(i)),
+            AnyId::ActionDirective(i) => Ok(Self::ActionDirective(i)),
+            AnyId::ActionMethod(i) => Ok(Self::ActionMethod(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected SupportedItemRef target, got {other:?}")),
         }
     }
 }
@@ -12709,29 +13245,29 @@ pub enum SurfaceRef {
     Complex(ComplexUnitId),
 }
 impl SurfaceRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::BSplineSurface(i) => Self::BSplineSurface(i),
-            AnyId::BSplineSurfaceWithKnots(i) => Self::BSplineSurfaceWithKnots(i),
-            AnyId::BezierSurface(i) => Self::BezierSurface(i),
-            AnyId::BoundedSurface(i) => Self::BoundedSurface(i),
-            AnyId::ConicalSurface(i) => Self::ConicalSurface(i),
-            AnyId::CylindricalSurface(i) => Self::CylindricalSurface(i),
-            AnyId::DegenerateToroidalSurface(i) => Self::DegenerateToroidalSurface(i),
-            AnyId::ElementarySurface(i) => Self::ElementarySurface(i),
-            AnyId::OffsetSurface(i) => Self::OffsetSurface(i),
-            AnyId::Plane(i) => Self::Plane(i),
-            AnyId::QuasiUniformSurface(i) => Self::QuasiUniformSurface(i),
-            AnyId::RationalBSplineSurface(i) => Self::RationalBSplineSurface(i),
-            AnyId::SphericalSurface(i) => Self::SphericalSurface(i),
-            AnyId::Surface(i) => Self::Surface(i),
-            AnyId::SurfaceOfLinearExtrusion(i) => Self::SurfaceOfLinearExtrusion(i),
-            AnyId::SurfaceOfRevolution(i) => Self::SurfaceOfRevolution(i),
-            AnyId::SweptSurface(i) => Self::SweptSurface(i),
-            AnyId::ToroidalSurface(i) => Self::ToroidalSurface(i),
-            AnyId::UniformSurface(i) => Self::UniformSurface(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("SurfaceRef ref -> {other:?}"),
+            AnyId::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
+            AnyId::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
+            AnyId::BezierSurface(i) => Ok(Self::BezierSurface(i)),
+            AnyId::BoundedSurface(i) => Ok(Self::BoundedSurface(i)),
+            AnyId::ConicalSurface(i) => Ok(Self::ConicalSurface(i)),
+            AnyId::CylindricalSurface(i) => Ok(Self::CylindricalSurface(i)),
+            AnyId::DegenerateToroidalSurface(i) => Ok(Self::DegenerateToroidalSurface(i)),
+            AnyId::ElementarySurface(i) => Ok(Self::ElementarySurface(i)),
+            AnyId::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            AnyId::Plane(i) => Ok(Self::Plane(i)),
+            AnyId::QuasiUniformSurface(i) => Ok(Self::QuasiUniformSurface(i)),
+            AnyId::RationalBSplineSurface(i) => Ok(Self::RationalBSplineSurface(i)),
+            AnyId::SphericalSurface(i) => Ok(Self::SphericalSurface(i)),
+            AnyId::Surface(i) => Ok(Self::Surface(i)),
+            AnyId::SurfaceOfLinearExtrusion(i) => Ok(Self::SurfaceOfLinearExtrusion(i)),
+            AnyId::SurfaceOfRevolution(i) => Ok(Self::SurfaceOfRevolution(i)),
+            AnyId::SweptSurface(i) => Ok(Self::SweptSurface(i)),
+            AnyId::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
+            AnyId::UniformSurface(i) => Ok(Self::UniformSurface(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected SurfaceRef target, got {other:?}")),
         }
     }
 }
@@ -12741,10 +13277,12 @@ pub enum SurfaceRenderingPropertiesRef {
     SurfaceRenderingProperties(SurfaceRenderingPropertiesId),
 }
 impl SurfaceRenderingPropertiesRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::SurfaceRenderingProperties(i) => Self::SurfaceRenderingProperties(i),
-            other => panic!("SurfaceRenderingPropertiesRef ref -> {other:?}"),
+            AnyId::SurfaceRenderingProperties(i) => Ok(Self::SurfaceRenderingProperties(i)),
+            other => Err(format!(
+                "expected SurfaceRenderingPropertiesRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12756,12 +13294,14 @@ pub enum SurfaceSideStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl SurfaceSideStyleSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PreDefinedSurfaceSideStyle(i) => Self::PreDefinedSurfaceSideStyle(i),
-            AnyId::SurfaceSideStyle(i) => Self::SurfaceSideStyle(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("SurfaceSideStyleSelectRef ref -> {other:?}"),
+            AnyId::PreDefinedSurfaceSideStyle(i) => Ok(Self::PreDefinedSurfaceSideStyle(i)),
+            AnyId::SurfaceSideStyle(i) => Ok(Self::SurfaceSideStyle(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected SurfaceSideStyleSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12779,20 +13319,22 @@ pub enum SurfaceStyleElementSelectRef {
     Complex(ComplexUnitId),
 }
 impl SurfaceStyleElementSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::SurfaceStyleBoundary(i) => Self::SurfaceStyleBoundary(i),
-            AnyId::SurfaceStyleControlGrid(i) => Self::SurfaceStyleControlGrid(i),
-            AnyId::SurfaceStyleFillArea(i) => Self::SurfaceStyleFillArea(i),
-            AnyId::SurfaceStyleParameterLine(i) => Self::SurfaceStyleParameterLine(i),
-            AnyId::SurfaceStyleRendering(i) => Self::SurfaceStyleRendering(i),
+            AnyId::SurfaceStyleBoundary(i) => Ok(Self::SurfaceStyleBoundary(i)),
+            AnyId::SurfaceStyleControlGrid(i) => Ok(Self::SurfaceStyleControlGrid(i)),
+            AnyId::SurfaceStyleFillArea(i) => Ok(Self::SurfaceStyleFillArea(i)),
+            AnyId::SurfaceStyleParameterLine(i) => Ok(Self::SurfaceStyleParameterLine(i)),
+            AnyId::SurfaceStyleRendering(i) => Ok(Self::SurfaceStyleRendering(i)),
             AnyId::SurfaceStyleRenderingWithProperties(i) => {
-                Self::SurfaceStyleRenderingWithProperties(i)
+                Ok(Self::SurfaceStyleRenderingWithProperties(i))
             }
-            AnyId::SurfaceStyleSegmentationCurve(i) => Self::SurfaceStyleSegmentationCurve(i),
-            AnyId::SurfaceStyleSilhouette(i) => Self::SurfaceStyleSilhouette(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("SurfaceStyleElementSelectRef ref -> {other:?}"),
+            AnyId::SurfaceStyleSegmentationCurve(i) => Ok(Self::SurfaceStyleSegmentationCurve(i)),
+            AnyId::SurfaceStyleSilhouette(i) => Ok(Self::SurfaceStyleSilhouette(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected SurfaceStyleElementSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12802,10 +13344,12 @@ pub enum SymbolStyleSelectRef {
     SymbolColour(SymbolColourId),
 }
 impl SymbolStyleSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::SymbolColour(i) => Self::SymbolColour(i),
-            other => panic!("SymbolStyleSelectRef ref -> {other:?}"),
+            AnyId::SymbolColour(i) => Ok(Self::SymbolColour(i)),
+            other => Err(format!(
+                "expected SymbolStyleSelectRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12816,11 +13360,11 @@ pub enum SymbolTargetRef {
     Complex(ComplexUnitId),
 }
 impl SymbolTargetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::SymbolTarget(i) => Self::SymbolTarget(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("SymbolTargetRef ref -> {other:?}"),
+            AnyId::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected SymbolTargetRef target, got {other:?}")),
         }
     }
 }
@@ -12842,22 +13386,22 @@ pub enum TessellatedItemRef {
     Complex(ComplexUnitId),
 }
 impl TessellatedItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::ComplexTriangulatedSurfaceSet(i) => Self::ComplexTriangulatedSurfaceSet(i),
-            AnyId::CoordinatesList(i) => Self::CoordinatesList(i),
-            AnyId::RepositionedTessellatedItem(i) => Self::RepositionedTessellatedItem(i),
-            AnyId::TessellatedCurveSet(i) => Self::TessellatedCurveSet(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedGeometricSet(i) => Self::TessellatedGeometricSet(i),
-            AnyId::TessellatedItem(i) => Self::TessellatedItem(i),
-            AnyId::TessellatedShell(i) => Self::TessellatedShell(i),
-            AnyId::TessellatedSolid(i) => Self::TessellatedSolid(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::TessellatedSurfaceSet(i) => Self::TessellatedSurfaceSet(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("TessellatedItemRef ref -> {other:?}"),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::ComplexTriangulatedSurfaceSet(i) => Ok(Self::ComplexTriangulatedSurfaceSet(i)),
+            AnyId::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
+            AnyId::RepositionedTessellatedItem(i) => Ok(Self::RepositionedTessellatedItem(i)),
+            AnyId::TessellatedCurveSet(i) => Ok(Self::TessellatedCurveSet(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            AnyId::TessellatedItem(i) => Ok(Self::TessellatedItem(i)),
+            AnyId::TessellatedShell(i) => Ok(Self::TessellatedShell(i)),
+            AnyId::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected TessellatedItemRef target, got {other:?}")),
         }
     }
 }
@@ -12870,13 +13414,15 @@ pub enum TessellatedStructuredItemRef {
     Complex(ComplexUnitId),
 }
 impl TessellatedStructuredItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ComplexTriangulatedFace(i) => Self::ComplexTriangulatedFace(i),
-            AnyId::TessellatedFace(i) => Self::TessellatedFace(i),
-            AnyId::TessellatedStructuredItem(i) => Self::TessellatedStructuredItem(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("TessellatedStructuredItemRef ref -> {other:?}"),
+            AnyId::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
+            AnyId::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
+            AnyId::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected TessellatedStructuredItemRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12891,15 +13437,15 @@ pub enum TextOrCharacterRef {
     Complex(ComplexUnitId),
 }
 impl TextOrCharacterRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AnnotationText(i) => Self::AnnotationText(i),
-            AnyId::AnnotationTextCharacter(i) => Self::AnnotationTextCharacter(i),
-            AnyId::CompositeText(i) => Self::CompositeText(i),
-            AnyId::DefinedCharacterGlyph(i) => Self::DefinedCharacterGlyph(i),
-            AnyId::TextLiteral(i) => Self::TextLiteral(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("TextOrCharacterRef ref -> {other:?}"),
+            AnyId::AnnotationText(i) => Ok(Self::AnnotationText(i)),
+            AnyId::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
+            AnyId::CompositeText(i) => Ok(Self::CompositeText(i)),
+            AnyId::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
+            AnyId::TextLiteral(i) => Ok(Self::TextLiteral(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected TextOrCharacterRef target, got {other:?}")),
         }
     }
 }
@@ -12910,11 +13456,13 @@ pub enum ToleranceMethodDefinitionRef {
     ToleranceValue(ToleranceValueId),
 }
 impl ToleranceMethodDefinitionRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::LimitsAndFits(i) => Self::LimitsAndFits(i),
-            AnyId::ToleranceValue(i) => Self::ToleranceValue(i),
-            other => panic!("ToleranceMethodDefinitionRef ref -> {other:?}"),
+            AnyId::LimitsAndFits(i) => Ok(Self::LimitsAndFits(i)),
+            AnyId::ToleranceValue(i) => Ok(Self::ToleranceValue(i)),
+            other => Err(format!(
+                "expected ToleranceMethodDefinitionRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12925,11 +13473,15 @@ pub enum ToleranceSelectRef {
     ApproximationToleranceParameter(ApproximationToleranceParameterId),
 }
 impl ToleranceSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApproximationToleranceDeviation(i) => Self::ApproximationToleranceDeviation(i),
-            AnyId::ApproximationToleranceParameter(i) => Self::ApproximationToleranceParameter(i),
-            other => panic!("ToleranceSelectRef ref -> {other:?}"),
+            AnyId::ApproximationToleranceDeviation(i) => {
+                Ok(Self::ApproximationToleranceDeviation(i))
+            }
+            AnyId::ApproximationToleranceParameter(i) => {
+                Ok(Self::ApproximationToleranceParameter(i))
+            }
+            other => Err(format!("expected ToleranceSelectRef target, got {other:?}")),
         }
     }
 }
@@ -12939,10 +13491,12 @@ pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
 }
 impl ToleranceZoneFormRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ToleranceZoneForm(i) => Self::ToleranceZoneForm(i),
-            other => panic!("ToleranceZoneFormRef ref -> {other:?}"),
+            AnyId::ToleranceZoneForm(i) => Ok(Self::ToleranceZoneForm(i)),
+            other => Err(format!(
+                "expected ToleranceZoneFormRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -12954,12 +13508,12 @@ pub enum ToleranceZoneRef {
     Complex(ComplexUnitId),
 }
 impl ToleranceZoneRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ToleranceZone(i) => Self::ToleranceZone(i),
-            AnyId::ToleranceZoneWithDatum(i) => Self::ToleranceZoneWithDatum(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ToleranceZoneRef ref -> {other:?}"),
+            AnyId::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
+            AnyId::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ToleranceZoneRef target, got {other:?}")),
         }
     }
 }
@@ -13003,54 +13557,60 @@ pub enum ToleranceZoneTargetRef {
     Complex(ComplexUnitId),
 }
 impl ToleranceZoneTargetRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AngularLocation(i) => Self::AngularLocation(i),
-            AnyId::AngularSize(i) => Self::AngularSize(i),
-            AnyId::AngularityTolerance(i) => Self::AngularityTolerance(i),
-            AnyId::CircularRunoutTolerance(i) => Self::CircularRunoutTolerance(i),
-            AnyId::CoaxialityTolerance(i) => Self::CoaxialityTolerance(i),
-            AnyId::ConcentricityTolerance(i) => Self::ConcentricityTolerance(i),
-            AnyId::CylindricityTolerance(i) => Self::CylindricityTolerance(i),
-            AnyId::DatumReferenceCompartment(i) => Self::DatumReferenceCompartment(i),
-            AnyId::DatumReferenceElement(i) => Self::DatumReferenceElement(i),
-            AnyId::DimensionalLocation(i) => Self::DimensionalLocation(i),
-            AnyId::DimensionalLocationWithPath(i) => Self::DimensionalLocationWithPath(i),
-            AnyId::DimensionalSize(i) => Self::DimensionalSize(i),
-            AnyId::DimensionalSizeWithDatumFeature(i) => Self::DimensionalSizeWithDatumFeature(i),
-            AnyId::DimensionalSizeWithPath(i) => Self::DimensionalSizeWithPath(i),
-            AnyId::DirectedDimensionalLocation(i) => Self::DirectedDimensionalLocation(i),
-            AnyId::FlatnessTolerance(i) => Self::FlatnessTolerance(i),
-            AnyId::GeneralDatumReference(i) => Self::GeneralDatumReference(i),
-            AnyId::GeometricTolerance(i) => Self::GeometricTolerance(i),
+            AnyId::AngularLocation(i) => Ok(Self::AngularLocation(i)),
+            AnyId::AngularSize(i) => Ok(Self::AngularSize(i)),
+            AnyId::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
+            AnyId::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
+            AnyId::CoaxialityTolerance(i) => Ok(Self::CoaxialityTolerance(i)),
+            AnyId::ConcentricityTolerance(i) => Ok(Self::ConcentricityTolerance(i)),
+            AnyId::CylindricityTolerance(i) => Ok(Self::CylindricityTolerance(i)),
+            AnyId::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
+            AnyId::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
+            AnyId::DimensionalLocation(i) => Ok(Self::DimensionalLocation(i)),
+            AnyId::DimensionalLocationWithPath(i) => Ok(Self::DimensionalLocationWithPath(i)),
+            AnyId::DimensionalSize(i) => Ok(Self::DimensionalSize(i)),
+            AnyId::DimensionalSizeWithDatumFeature(i) => {
+                Ok(Self::DimensionalSizeWithDatumFeature(i))
+            }
+            AnyId::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
+            AnyId::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
+            AnyId::FlatnessTolerance(i) => Ok(Self::FlatnessTolerance(i)),
+            AnyId::GeneralDatumReference(i) => Ok(Self::GeneralDatumReference(i)),
+            AnyId::GeometricTolerance(i) => Ok(Self::GeometricTolerance(i)),
             AnyId::GeometricToleranceWithDatumReference(i) => {
-                Self::GeometricToleranceWithDatumReference(i)
+                Ok(Self::GeometricToleranceWithDatumReference(i))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(i) => {
-                Self::GeometricToleranceWithDefinedAreaUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedAreaUnit(i))
             }
             AnyId::GeometricToleranceWithDefinedUnit(i) => {
-                Self::GeometricToleranceWithDefinedUnit(i)
+                Ok(Self::GeometricToleranceWithDefinedUnit(i))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(i) => {
-                Self::GeometricToleranceWithMaximumTolerance(i)
+                Ok(Self::GeometricToleranceWithMaximumTolerance(i))
             }
-            AnyId::GeometricToleranceWithModifiers(i) => Self::GeometricToleranceWithModifiers(i),
-            AnyId::LineProfileTolerance(i) => Self::LineProfileTolerance(i),
-            AnyId::ModifiedGeometricTolerance(i) => Self::ModifiedGeometricTolerance(i),
-            AnyId::ParallelismTolerance(i) => Self::ParallelismTolerance(i),
-            AnyId::PerpendicularityTolerance(i) => Self::PerpendicularityTolerance(i),
-            AnyId::PositionTolerance(i) => Self::PositionTolerance(i),
-            AnyId::RoundnessTolerance(i) => Self::RoundnessTolerance(i),
-            AnyId::StraightnessTolerance(i) => Self::StraightnessTolerance(i),
-            AnyId::SurfaceProfileTolerance(i) => Self::SurfaceProfileTolerance(i),
-            AnyId::SymmetryTolerance(i) => Self::SymmetryTolerance(i),
-            AnyId::TotalRunoutTolerance(i) => Self::TotalRunoutTolerance(i),
+            AnyId::GeometricToleranceWithModifiers(i) => {
+                Ok(Self::GeometricToleranceWithModifiers(i))
+            }
+            AnyId::LineProfileTolerance(i) => Ok(Self::LineProfileTolerance(i)),
+            AnyId::ModifiedGeometricTolerance(i) => Ok(Self::ModifiedGeometricTolerance(i)),
+            AnyId::ParallelismTolerance(i) => Ok(Self::ParallelismTolerance(i)),
+            AnyId::PerpendicularityTolerance(i) => Ok(Self::PerpendicularityTolerance(i)),
+            AnyId::PositionTolerance(i) => Ok(Self::PositionTolerance(i)),
+            AnyId::RoundnessTolerance(i) => Ok(Self::RoundnessTolerance(i)),
+            AnyId::StraightnessTolerance(i) => Ok(Self::StraightnessTolerance(i)),
+            AnyId::SurfaceProfileTolerance(i) => Ok(Self::SurfaceProfileTolerance(i)),
+            AnyId::SymmetryTolerance(i) => Ok(Self::SymmetryTolerance(i)),
+            AnyId::TotalRunoutTolerance(i) => Ok(Self::TotalRunoutTolerance(i)),
             AnyId::UnequallyDisposedGeometricTolerance(i) => {
-                Self::UnequallyDisposedGeometricTolerance(i)
+                Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ToleranceZoneTargetRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected ToleranceZoneTargetRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -13064,14 +13624,14 @@ pub enum TransformationRef {
     Complex(ComplexUnitId),
 }
 impl TransformationRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
             AnyId::FunctionallyDefinedTransformation(i) => {
-                Self::FunctionallyDefinedTransformation(i)
+                Ok(Self::FunctionallyDefinedTransformation(i))
             }
-            AnyId::ItemDefinedTransformation(i) => Self::ItemDefinedTransformation(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("TransformationRef ref -> {other:?}"),
+            AnyId::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected TransformationRef target, got {other:?}")),
         }
     }
 }
@@ -13084,12 +13644,12 @@ pub enum TrimmingSelectRef {
     ParameterValue(f64),
 }
 impl TrimmingSelectRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ApllPoint(i) => Self::ApllPoint(i),
-            AnyId::ApllPointWithSurface(i) => Self::ApllPointWithSurface(i),
-            AnyId::CartesianPoint(i) => Self::CartesianPoint(i),
-            other => panic!("TrimmingSelectRef ref -> {other:?}"),
+            AnyId::ApllPoint(i) => Ok(Self::ApllPoint(i)),
+            AnyId::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
+            AnyId::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
+            other => Err(format!("expected TrimmingSelectRef target, got {other:?}")),
         }
     }
 }
@@ -13100,11 +13660,13 @@ pub enum TwoDirectionRepeatFactorRef {
     Complex(ComplexUnitId),
 }
 impl TwoDirectionRepeatFactorRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::TwoDirectionRepeatFactor(i) => Self::TwoDirectionRepeatFactor(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("TwoDirectionRepeatFactorRef ref -> {other:?}"),
+            AnyId::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected TwoDirectionRepeatFactorRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -13114,10 +13676,12 @@ pub enum UncertaintyMeasureWithUnitRef {
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
 }
 impl UncertaintyMeasureWithUnitRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::UncertaintyMeasureWithUnit(i) => Self::UncertaintyMeasureWithUnit(i),
-            other => panic!("UncertaintyMeasureWithUnitRef ref -> {other:?}"),
+            AnyId::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
+            other => Err(format!(
+                "expected UncertaintyMeasureWithUnitRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -13140,23 +13704,23 @@ pub enum UnitRef {
     Complex(ComplexUnitId),
 }
 impl UnitRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::AreaUnit(i) => Self::AreaUnit(i),
-            AnyId::ContextDependentUnit(i) => Self::ContextDependentUnit(i),
-            AnyId::ConversionBasedUnit(i) => Self::ConversionBasedUnit(i),
-            AnyId::DerivedUnit(i) => Self::DerivedUnit(i),
-            AnyId::LengthUnit(i) => Self::LengthUnit(i),
-            AnyId::MassUnit(i) => Self::MassUnit(i),
-            AnyId::NamedUnit(i) => Self::NamedUnit(i),
-            AnyId::PlaneAngleUnit(i) => Self::PlaneAngleUnit(i),
-            AnyId::RatioUnit(i) => Self::RatioUnit(i),
-            AnyId::SiUnit(i) => Self::SiUnit(i),
-            AnyId::SolidAngleUnit(i) => Self::SolidAngleUnit(i),
-            AnyId::TimeUnit(i) => Self::TimeUnit(i),
-            AnyId::VolumeUnit(i) => Self::VolumeUnit(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("UnitRef ref -> {other:?}"),
+            AnyId::AreaUnit(i) => Ok(Self::AreaUnit(i)),
+            AnyId::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
+            AnyId::ConversionBasedUnit(i) => Ok(Self::ConversionBasedUnit(i)),
+            AnyId::DerivedUnit(i) => Ok(Self::DerivedUnit(i)),
+            AnyId::LengthUnit(i) => Ok(Self::LengthUnit(i)),
+            AnyId::MassUnit(i) => Ok(Self::MassUnit(i)),
+            AnyId::NamedUnit(i) => Ok(Self::NamedUnit(i)),
+            AnyId::PlaneAngleUnit(i) => Ok(Self::PlaneAngleUnit(i)),
+            AnyId::RatioUnit(i) => Ok(Self::RatioUnit(i)),
+            AnyId::SiUnit(i) => Ok(Self::SiUnit(i)),
+            AnyId::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
+            AnyId::TimeUnit(i) => Ok(Self::TimeUnit(i)),
+            AnyId::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected UnitRef target, got {other:?}")),
         }
     }
 }
@@ -13169,13 +13733,13 @@ pub enum ValueQualifierRef {
     ValueFormatTypeQualifier(ValueFormatTypeQualifierId),
 }
 impl ValueQualifierRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::PrecisionQualifier(i) => Self::PrecisionQualifier(i),
-            AnyId::TypeQualifier(i) => Self::TypeQualifier(i),
-            AnyId::UncertaintyQualifier(i) => Self::UncertaintyQualifier(i),
-            AnyId::ValueFormatTypeQualifier(i) => Self::ValueFormatTypeQualifier(i),
-            other => panic!("ValueQualifierRef ref -> {other:?}"),
+            AnyId::PrecisionQualifier(i) => Ok(Self::PrecisionQualifier(i)),
+            AnyId::TypeQualifier(i) => Ok(Self::TypeQualifier(i)),
+            AnyId::UncertaintyQualifier(i) => Ok(Self::UncertaintyQualifier(i)),
+            AnyId::ValueFormatTypeQualifier(i) => Ok(Self::ValueFormatTypeQualifier(i)),
+            other => Err(format!("expected ValueQualifierRef target, got {other:?}")),
         }
     }
 }
@@ -13186,11 +13750,11 @@ pub enum VectorRef {
     Complex(ComplexUnitId),
 }
 impl VectorRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Vector(i) => Self::Vector(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("VectorRef ref -> {other:?}"),
+            AnyId::Vector(i) => Ok(Self::Vector(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected VectorRef target, got {other:?}")),
         }
     }
 }
@@ -13200,10 +13764,12 @@ pub enum VersionedActionRequestRef {
     VersionedActionRequest(VersionedActionRequestId),
 }
 impl VersionedActionRequestRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::VersionedActionRequest(i) => Self::VersionedActionRequest(i),
-            other => panic!("VersionedActionRequestRef ref -> {other:?}"),
+            AnyId::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
+            other => Err(format!(
+                "expected VersionedActionRequestRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -13213,10 +13779,10 @@ pub enum VertexLoopRef {
     VertexLoop(VertexLoopId),
 }
 impl VertexLoopRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::VertexLoop(i) => Self::VertexLoop(i),
-            other => panic!("VertexLoopRef ref -> {other:?}"),
+            AnyId::VertexLoop(i) => Ok(Self::VertexLoop(i)),
+            other => Err(format!("expected VertexLoopRef target, got {other:?}")),
         }
     }
 }
@@ -13228,12 +13794,12 @@ pub enum VertexRef {
     Complex(ComplexUnitId),
 }
 impl VertexRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::Vertex(i) => Self::Vertex(i),
-            AnyId::VertexPoint(i) => Self::VertexPoint(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("VertexRef ref -> {other:?}"),
+            AnyId::Vertex(i) => Ok(Self::Vertex(i)),
+            AnyId::VertexPoint(i) => Ok(Self::VertexPoint(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected VertexRef target, got {other:?}")),
         }
     }
 }
@@ -13244,11 +13810,11 @@ pub enum ViewVolumeRef {
     Complex(ComplexUnitId),
 }
 impl ViewVolumeRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ViewVolume(i) => Self::ViewVolume(i),
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("ViewVolumeRef ref -> {other:?}"),
+            AnyId::ViewVolume(i) => Ok(Self::ViewVolume(i)),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected ViewVolumeRef target, got {other:?}")),
         }
     }
 }
@@ -13260,14 +13826,14 @@ pub enum WorkItemRef {
     Complex(ComplexUnitId),
 }
 impl WorkItemRef {
-    pub fn from_any(a: AnyId) -> Self {
+    pub fn from_any(a: AnyId) -> Result<Self, String> {
         match a {
-            AnyId::ProductDefinitionFormation(i) => Self::ProductDefinitionFormation(i),
+            AnyId::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             AnyId::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Self::ProductDefinitionFormationWithSpecifiedSource(i)
+                Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            AnyId::ComplexUnit(i) => Self::Complex(i),
-            other => panic!("WorkItemRef ref -> {other:?}"),
+            AnyId::ComplexUnit(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected WorkItemRef target, got {other:?}")),
         }
     }
 }
