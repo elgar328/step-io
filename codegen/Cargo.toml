@@ -5,7 +5,11 @@ edition = "2024"
 publish = false
 
 [dependencies]
-step-io = { path = ".." }
+# default-features = false drops step-io's `gen` feature so building the
+# generator never compiles step-io's generated path. Regenerating it
+# (`cargo run -p codegen`) therefore works even when that path is broken — the
+# generator only needs step-io's parser types, which are not gen-gated.
+step-io = { path = "..", default-features = false }
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
 
