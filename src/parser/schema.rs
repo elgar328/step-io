@@ -73,15 +73,15 @@ impl<'a> IntoIterator for &'a NonEmptyStringList {
 ///
 /// Independent of the raw text — two files can share the same
 /// [`SchemaClass`] yet carry different whitespace, edition markers, or MIM
-/// Long Form names. Used by the writer to pick APD metadata and canonical
-/// `FILE_SCHEMA` strings for synthetic IR.
+/// Long Form names. Used by the per-schema writer to pick APD metadata and
+/// canonical `FILE_SCHEMA` strings for a synthetic model.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SchemaClass {
     Ap203,
     Ap214Cd,
     Ap214Dis,
     /// AP214 IS is the most widely produced flavour today and serves as the
-    /// writer default when the IR doesn't carry an explicit schema choice.
+    /// writer default when the model doesn't carry an explicit schema choice.
     #[default]
     Ap214Is,
     Ap242Dis,
@@ -90,7 +90,7 @@ pub enum SchemaClass {
     Ap242Is,
 }
 
-/// A file's `FILE_SCHEMA` as carried by the IR.
+/// A file's `FILE_SCHEMA` as carried by the model.
 ///
 /// Co-locates the semantic classification (`class`) and the raw text
 /// (`raw`) in a single type so that writer round-trip is byte-exact and
@@ -100,7 +100,7 @@ pub enum SchemaClass {
 ///
 /// - `Unknown { raw }` holds a non-`Option` raw list — there is no
 ///   "unknown schema without any raw text" state.
-/// - `Known { raw: None }` means synthetic IR; the writer emits a
+/// - `Known { raw: None }` means a synthetic model; the writer emits a
 ///   canonical string derived from `class`. `raw: Some(_)` means the
 ///   text was preserved from a source file or supplied by the user;
 ///   the writer emits it verbatim.
@@ -110,7 +110,7 @@ pub enum SchemaClass {
 ///   reflects the old class" can't happen.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StepSchema {
-    /// step-io recognised the schema family. `raw: None` = synthetic IR;
+    /// step-io recognised the schema family. `raw: None` = synthetic model;
     /// `raw: Some(_)` = preserved verbatim from a source file or user.
     Known {
         class: SchemaClass,

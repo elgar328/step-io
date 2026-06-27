@@ -1,7 +1,0 @@
-error: missing `pass = ...`
- --> tests/ui/complex_missing_pass.rs:5:1
-  |
-5 | #[step_entity_complex(name = "FOO", required = ["PART"])]
-  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  |
-  = note: this error originates in the attribute macro `step_entity_complex` (in Nightly builds, run with -Z macro-backtrace for more info)

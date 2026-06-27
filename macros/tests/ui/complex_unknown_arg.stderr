@@ -1,5 +1,0 @@
-error: unknown step_entity_complex argument: bogus
- --> tests/ui/complex_unknown_arg.rs:5:72
-  |
-5 | #[step_entity_complex(name = "FOO", pass = Pass1, required = ["PART"], bogus = 1)]
-  |                                                                        ^^^^^

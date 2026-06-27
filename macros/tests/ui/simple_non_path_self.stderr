@@ -1,5 +1,0 @@
-error: step_entity expects a path-typed Self (e.g. `MyHandler`)
- --> tests/ui/simple_non_path_self.rs:8:12
-  |
-8 | impl T for (A, B) {}
-  |            ^^^^^^
