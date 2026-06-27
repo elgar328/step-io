@@ -2,7 +2,8 @@
 # Source schema: ap242ed2_dis2_mim_lf_v1.101 (latest IS edition of the AP).
 # DO NOT hand-edit. Legal entity set + ordered attrs for schema-conditioned output.
 # Presence = legal in this target; absence = illegal (step-io project drops).
-# own_attrs + parents only (step-io flattens inheritance); ty repr = see early.toml.
+# own_attrs + parents only (step-io flattens inheritance).
+# ty repr: primitives lowercase; bare token = entity/TYPE-alias ref; LIST/SET/BAG/ARRAY OF, OPTIONAL, SELECT(...), ENUM(...).
 
 [meta]
 file_schema = ["AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }"]
