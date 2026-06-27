@@ -31,7 +31,7 @@ fn read_write_round_trip_is_accounted_and_clean() {
             read(src.as_bytes()).unwrap_or_else(|e| panic!("{name}: read failed: {e}"));
 
         // Provenance accounting: input + synthetic == kept + reasoned drops.
-        let dropped: usize = rep.drops.values().sum();
+        let dropped: usize = rep.dropped.len();
         assert_eq!(
             rep.validated + dropped,
             rep.n_in + rep.n_synth,
@@ -52,11 +52,7 @@ fn read_write_round_trip_is_accounted_and_clean() {
             r2.validated, rep.validated,
             "{name}: round-trip count drift"
         );
-        assert_eq!(
-            r2.drops.values().sum::<usize>(),
-            0,
-            "{name}: output not clean (drops)"
-        );
+        assert_eq!(r2.dropped.len(), 0, "{name}: output not clean (drops)");
         assert_eq!(r2.n_synth, 0, "{name}: output needed synthesis");
     }
 }

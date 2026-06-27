@@ -50,8 +50,9 @@ pub struct Report {
     pub n_synth: usize,
     /// Kept entity count (entities that entered the model).
     pub validated: usize,
-    /// Dropped entities, keyed by reason (instance count per reason).
-    pub drops: BTreeMap<DropReason, usize>,
+    /// Dropped entities, per-entity: input id + reason (slot-local + unimplemented
+    /// + cascade + nonstandard). `dropped.len()` is the total drop count.
+    pub dropped: Vec<(u64, DropReason)>,
     /// Non-standard rewrite notes (kept entities, fixed in place).
     pub norm: Vec<&'static str>,
 }
@@ -74,15 +75,6 @@ impl std::fmt::Display for ReadError {
 }
 
 impl std::error::Error for ReadError {}
-
-fn bump(drops: &mut BTreeMap<DropReason, usize>, kind: DropKind, key: impl Into<String>) {
-    *drops
-        .entry(DropReason {
-            kind,
-            key: key.into(),
-        })
-        .or_insert(0) += 1;
-}
 
 /// Collect every entity id referenced (transitively) by an attribute.
 fn collect_refs(a: &Attribute, out: &mut Vec<u64>) {
@@ -173,8 +165,8 @@ fn check_ref_slots(
 /// stay kept, and no ref slot holds a type the slot does not admit (fixpoint).
 fn drop_pass(
     graph: &BTreeMap<u64, RawEntity>,
-) -> (BTreeMap<u64, RawEntity>, BTreeMap<DropReason, usize>) {
-    let mut drops: BTreeMap<DropReason, usize> = BTreeMap::new();
+) -> (BTreeMap<u64, RawEntity>, Vec<(u64, DropReason)>) {
+    let mut dropped: Vec<(u64, DropReason)> = Vec::new();
     let mut keep: BTreeSet<u64> = BTreeSet::new();
     let mut root_of: BTreeMap<u64, String> = BTreeMap::new();
     for (&id, e) in graph {
@@ -183,7 +175,13 @@ fn drop_pass(
         } else {
             let n = ent_name(e);
             root_of.insert(id, n.clone());
-            bump(&mut drops, DropKind::Unimplemented, n);
+            dropped.push((
+                id,
+                DropReason {
+                    kind: DropKind::Unimplemented,
+                    key: n,
+                },
+            ));
         }
     }
     loop {
@@ -199,7 +197,13 @@ fn drop_pass(
                         .get(&r)
                         .cloned()
                         .unwrap_or_else(|| "dangling".to_string());
-                    bump(&mut drops, DropKind::Cascade, format!("via-{root}"));
+                    dropped.push((
+                        id,
+                        DropReason {
+                            kind: DropKind::Cascade,
+                            key: format!("via-{root}"),
+                        },
+                    ));
                     root_of.insert(id, root);
                     removed = true;
                     cascaded = true;
@@ -212,7 +216,13 @@ fn drop_pass(
             if let Some(reason) = nonstd_ref(ent, graph) {
                 keep.remove(&id);
                 root_of.insert(id, reason.clone());
-                bump(&mut drops, DropKind::Nonstandard, reason);
+                dropped.push((
+                    id,
+                    DropReason {
+                        kind: DropKind::Nonstandard,
+                        key: reason,
+                    },
+                ));
                 removed = true;
             }
         }
@@ -224,19 +234,20 @@ fn drop_pass(
         .into_iter()
         .map(|id| (id, graph[&id].clone()))
         .collect();
-    (map, drops)
+    (map, dropped)
 }
 
 /// Full pre-read normalization: `entity_normalize` (per-entity, add-only synthetic
 /// fixups) then `generic_normalize` (generic slot-kind rules). Returns the map,
 /// the rewrite notes, the slot-local drop reasons, and the synthetic-add count
 /// (`entity_normalize` never removes, so the count delta is exactly the adds).
+#[allow(clippy::type_complexity)]
 fn normalize_all(
     raw: BTreeMap<u64, RawEntity>,
 ) -> (
     BTreeMap<u64, RawEntity>,
     Vec<&'static str>,
-    Vec<&'static str>,
+    Vec<(u64, &'static str)>,
     usize,
 ) {
     let mut raw = raw;
@@ -260,9 +271,15 @@ pub fn read(src: &[u8]) -> Result<(Model, Report), ReadError> {
     let n_in = g.entities.len();
     let raw: BTreeMap<u64, RawEntity> = g.entities;
     let (normalized, norm, slot_drops, n_synth) = normalize_all(raw);
-    let (kept, mut drops) = drop_pass(&normalized);
-    for r in slot_drops {
-        bump(&mut drops, DropKind::SlotLocal, r);
+    let (kept, mut dropped) = drop_pass(&normalized);
+    for (id, r) in slot_drops {
+        dropped.push((
+            id,
+            DropReason {
+                kind: DropKind::SlotLocal,
+                key: r.to_string(),
+            },
+        ));
     }
     let validated = kept.len();
     let model = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| gen_read(&kept).0))
@@ -273,7 +290,7 @@ pub fn read(src: &[u8]) -> Result<(Model, Report), ReadError> {
             n_in,
             n_synth,
             validated,
-            drops,
+            dropped,
             norm,
         },
     ))

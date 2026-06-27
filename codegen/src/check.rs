@@ -247,7 +247,7 @@ fn normalize_all(
 ) -> (
     BTreeMap<u64, RawEntity>,
     Vec<&'static str>,
-    Vec<&'static str>,
+    Vec<(u64, &'static str)>,
     usize,
 ) {
     let mut raw = graph_of(g);
@@ -353,7 +353,7 @@ pub fn check_roundtrip_bytes(src: &[u8]) -> CheckResult {
     let (normalized, norm, slot_drops, n_synth) = normalize_all(&g);
     let (a, mut drops) = drop_pass(&normalized);
     // Fold the slot-local drops (from generic_normalize) into the same channel.
-    for r in slot_drops {
+    for (_id, r) in slot_drops {
         bump(&mut drops, DropKind::SlotLocal, r);
     }
     let validated = a.len();

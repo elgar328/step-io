@@ -153,17 +153,16 @@ fn norm_attrs(
 /// Normalize the raw graph in place. Returns the surviving map (non-normalizable
 /// entities removed; their referrers cascade-drop later via the drop pass) plus
 /// two separate channels: `warns` = rewrite notes (fix, kept), `slot_drops` =
-/// slot-local drop reasons (one per entity removed here, surfaced as drops).
+/// `(id, reason)` per entity removed here (surfaced as drops).
 pub fn normalize(
     mut map: BTreeMap<u64, RawEntity>,
 ) -> (
     BTreeMap<u64, RawEntity>,
     Vec<&'static str>,
-    Vec<&'static str>,
+    Vec<(u64, &'static str)>,
 ) {
     let mut warns: Vec<&'static str> = Vec::new();
-    let mut slot_drops: Vec<&'static str> = Vec::new();
-    let mut drop_ids: Vec<u64> = Vec::new();
+    let mut slot_drops: Vec<(u64, &'static str)> = Vec::new();
     for (&id, ent) in map.iter_mut() {
         let mut drop_reason: Option<&'static str> = None;
         let keep = match ent {
@@ -187,14 +186,11 @@ pub fn normalize(
             }
         };
         if !keep {
-            drop_ids.push(id);
-            if let Some(r) = drop_reason {
-                slot_drops.push(r);
-            }
+            slot_drops.push((id, drop_reason.unwrap_or("slot-local")));
         }
     }
-    for id in drop_ids {
-        map.remove(&id);
+    for (id, _) in &slot_drops {
+        map.remove(id);
     }
     (map, warns, slot_drops)
 }
