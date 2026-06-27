@@ -3,6 +3,8 @@ pub mod entities;
 #[cfg(feature = "gen")]
 pub mod generated;
 pub mod ir;
+#[cfg(feature = "gen")]
+pub mod normalize;
 pub mod parser;
 pub mod reader;
 pub mod writer;
