@@ -10,11 +10,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::generated::model::StepModel;
+use crate::generated::profile::{SchemaProfile, SchemaTarget};
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
 use crate::generated::write::{Writer, wrap_step};
 use crate::{Attribute, Error, RawEntity, SchemaId, parse_bytes};
 
 mod entity_normalize;
+mod projection;
+pub use projection::LossReport;
 
 /// Why an entity was dropped before it could enter the model. `SlotLocal` = a
 /// slot value could not be normalized to standard (req-ref<-$, int<-fractional).
@@ -350,8 +353,48 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
     ))
 }
 
-/// Emit the model back to STEP text (the Universal target — the full read model).
+/// Emit the model back to STEP text as the **Universal** target — the full read
+/// model, no projection. Faithful round-trip / debug representation. For a
+/// specific AP output use [`write_target`].
 #[must_use]
-pub fn write(model: &StepModel) -> String {
+pub fn write_universal(model: &StepModel) -> String {
     wrap_step(&Writer::new(model).emit_all())
+}
+
+/// Emit the model to a specific output target, projecting it onto that target's
+/// legal entity set: rename-safe subtypes are downgraded, the rest dropped
+/// (referential-closure cascade), stranded orphans pruned — all recorded in the
+/// returned [`LossReport`]. `Universal` is a no-op projection (= [`write_universal`]).
+///
+/// There is no ground-truth to compare a projected output against; correctness
+/// is "valid + fully accounted" — the output re-reads with zero drops, and
+/// `input == kept + report.dropped + report.downgraded`.
+#[must_use]
+pub fn write_target(model: &StepModel, target: SchemaTarget) -> (String, LossReport) {
+    match SchemaProfile::for_target(target) {
+        None => (write_universal(model), LossReport::default()),
+        Some(profile) => {
+            let w = Writer::new(model);
+            let plan = projection::plan(&w, profile);
+            let body = w.emit_all_with_plan(&plan.dropped, plan.rename);
+            (wrap_step_target(&body, profile), plan.loss)
+        }
+    }
+}
+
+/// Wrap a DATA body in the Part 21 envelope with the target's `FILE_SCHEMA`
+/// (the only header field retargeted in the spike; `FILE_DESCRIPTION`/`FILE_NAME`
+/// and the APD entity stay as the generated `wrap_step` emits them).
+fn wrap_step_target(data_body: &str, profile: &SchemaProfile) -> String {
+    let schema = profile
+        .file_schema
+        .iter()
+        .map(|s| format!("'{s}'"))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
+         FILE_NAME('','',(''),(''),'','','');\n\
+         FILE_SCHEMA(({schema}));\nENDSEC;\nDATA;\n{data_body}ENDSEC;\nEND-ISO-10303-21;\n"
+    )
 }

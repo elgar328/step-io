@@ -3,7 +3,7 @@
 //! Universal output byte-identical. The expected string is the pre-refactor
 //! output.
 
-use step_io::{read, write};
+use step_io::{read, write_universal};
 
 const DOC: &str = "ISO-10303-21;\nHEADER;\n\
 FILE_DESCRIPTION((''),'2;1');\n\
@@ -22,7 +22,7 @@ const GOLDEN: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFIL
 #[test]
 fn universal_write_golden() {
     let (model, _report) = read(DOC.as_bytes()).expect("read ok");
-    let out = write(&model);
+    let out = write_universal(&model);
     assert_eq!(
         out, GOLDEN,
         "Universal write output changed (codegen refactor regression?)"

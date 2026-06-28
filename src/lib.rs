@@ -10,7 +10,10 @@ pub mod normalize;
 pub mod parser;
 
 pub use generated::model::StepModel;
-pub use normalize::{DropKind, DropReason, Report, read, write};
+pub use generated::profile::SchemaTarget;
+pub use normalize::{
+    DropKind, DropReason, LossReport, Report, read, write_target, write_universal,
+};
 pub use parser::{
     ApFamily, Attribute, Error, Graph, LexError, LexErrorKind, Lexer, NonEmptyStringList,
     ParseWarning, Parser, RawEntity, RawEntityPart, SchemaId, Span, Stage, Token, TokenKind, parse,
