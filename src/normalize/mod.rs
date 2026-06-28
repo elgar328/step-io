@@ -10,7 +10,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::generated::model::StepModel;
-use crate::generated::profile::{SchemaProfile, SchemaTarget};
+use crate::generated::profile::{ApdInfo, SchemaProfile, SchemaTarget};
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
 use crate::generated::write::Writer;
 use crate::{Attribute, Error, RawEntity, SchemaId, parse_bytes};
@@ -356,11 +356,16 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
 /// Universal output marker — step-io's all-AP union is not a real Application
 /// Protocol, so the `FILE_SCHEMA` header and APD declare a non-standard format. This
 /// keeps the output internally consistent and prevents it masquerading as a real AP.
+/// `UNIVERSAL_APD` mirrors a real target's `SchemaProfile::apd`; `description` is the
+/// `application_context` text (the `legal`/`downgrade` sets have no Universal analog —
+/// Universal skips projection).
 const UNIVERSAL_FILE_SCHEMA: &[&str] = &["STEPIO_UNIVERSAL"];
-const UNIVERSAL_APD_STATUS: &str = "not a standard";
-const UNIVERSAL_APD_NAME: &str = "stepio_universal";
-const UNIVERSAL_APD_YEAR: i64 = 0;
-const UNIVERSAL_AC: &str = "step-io universal union (non-standard, all-AP superset)";
+static UNIVERSAL_APD: ApdInfo = ApdInfo {
+    status: "not a standard",
+    name: "stepio_universal",
+    year: 0,
+    description: "step-io universal union (non-standard, all-AP superset)",
+};
 
 /// Emit the model as the **Universal** target — the full read model, no projection
 /// (the union schema is a superset, so nothing is illegal). The `FILE_SCHEMA` header
@@ -390,31 +395,8 @@ pub fn write_target(model: &mut StepModel, target: SchemaTarget) -> (String, Los
     let profile = SchemaProfile::for_target(target);
 
     // Absolutely set the header schema + APD/AC entities to the target's values.
-    let (file_schema, status, name, year, ac_desc): (&[&str], &str, &str, i64, &str) = match profile
-    {
-        Some(p) => (
-            p.file_schema,
-            p.apd.status,
-            p.apd.name,
-            p.apd.year,
-            p.apd.description,
-        ),
-        None => (
-            UNIVERSAL_FILE_SCHEMA,
-            UNIVERSAL_APD_STATUS,
-            UNIVERSAL_APD_NAME,
-            UNIVERSAL_APD_YEAR,
-            UNIVERSAL_AC,
-        ),
-    };
-    for apd in &mut model.application_protocol_definitions.items {
-        apd.status = status.to_string();
-        apd.application_interpreted_model_schema_name = name.to_string();
-        apd.application_protocol_year = year;
-    }
-    for ac in &mut model.application_contexts.items {
-        ac.application = ac_desc.to_string();
-    }
+    stamp_header(model, profile.map_or(&UNIVERSAL_APD, |p| &p.apd));
+    let file_schema = profile.map_or(UNIVERSAL_FILE_SCHEMA, |p| p.file_schema);
 
     // Project (real AP) or pass through (Universal), then wrap.
     let (body, loss) = match profile {
@@ -426,6 +408,20 @@ pub fn write_target(model: &mut StepModel, target: SchemaTarget) -> (String, Los
         None => (Writer::new(&*model).emit_all(), LossReport::default()),
     };
     (wrap_envelope(&body, file_schema), loss)
+}
+
+/// Absolutely set the model's APD entities (status/name/year) and
+/// `application_context` entities (application = `apd.description`) to `apd`, so the
+/// emitted file's APD agrees with the `FILE_SCHEMA` header.
+fn stamp_header(model: &mut StepModel, apd: &ApdInfo) {
+    for x in &mut model.application_protocol_definitions.items {
+        x.status = apd.status.to_string();
+        x.application_interpreted_model_schema_name = apd.name.to_string();
+        x.application_protocol_year = apd.year;
+    }
+    for ac in &mut model.application_contexts.items {
+        ac.application = apd.description.to_string();
+    }
 }
 
 /// Wrap a DATA body in the Part 21 envelope with the given `FILE_SCHEMA`.
