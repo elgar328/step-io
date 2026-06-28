@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::generated::model::StepModel;
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
 use crate::generated::write::{Writer, wrap_step};
-use crate::{Attribute, Error, RawEntity, parse_bytes};
+use crate::{Attribute, Error, RawEntity, SchemaId, parse_bytes};
 
 mod entity_normalize;
 
@@ -59,6 +59,9 @@ pub struct Report {
     pub dropped: Vec<(u64, DropReason)>,
     /// Non-standard rewrite notes (kept entities, fixed in place).
     pub norm: Vec<&'static str>,
+    /// Identified source schema (AP family, edition, stage + raw `FILE_SCHEMA`).
+    /// How callers (e.g. a CAD kernel) learn the precise version of the file.
+    pub schema: SchemaId,
 }
 
 /// Collect every entity id referenced (transitively) by an attribute.
@@ -274,6 +277,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
 
     let g = parse_bytes(src)?;
     let n_in = g.entities.len();
+    let schema = g.schema;
     let raw: BTreeMap<u64, RawEntity> = g.entities;
     let (normalized, norm, slot_drops, n_synth) = normalize_all(raw);
 
@@ -341,6 +345,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
             validated,
             dropped,
             norm,
+            schema,
         },
     ))
 }

@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
 use super::lexer::{Lexer, Span, Token, TokenKind};
-use super::schema::StepSchema;
+use super::schema::SchemaId;
 
 /// Convenience function: parse a complete Part 21 source into an [`Graph`].
 ///
@@ -204,7 +204,7 @@ impl<'src> Parser<'src> {
     /// HEADER entities are "uninstantiated": they have no `#N =` prefix, just
     /// `KEYWORD(...);`. The section must contain at least `FILE_DESCRIPTION`,
     /// `FILE_NAME`, and `FILE_SCHEMA` in order.
-    fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, StepSchema), Error> {
+    fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, SchemaId), Error> {
         let mut header = Vec::new();
         let mut schema_raw = Vec::new();
 

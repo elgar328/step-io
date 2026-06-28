@@ -12,8 +12,8 @@ pub mod parser;
 pub use generated::model::StepModel;
 pub use normalize::{DropKind, DropReason, Report, read, write};
 pub use parser::{
-    Attribute, Error, Graph, LexError, LexErrorKind, Lexer, NonEmptyStringList, ParseWarning,
-    Parser, RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse,
+    ApFamily, Attribute, Error, Graph, LexError, LexErrorKind, Lexer, NonEmptyStringList,
+    ParseWarning, Parser, RawEntity, RawEntityPart, SchemaId, Span, Stage, Token, TokenKind, parse,
     parse_bytes, tokenize,
 };
 

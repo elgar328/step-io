@@ -80,9 +80,9 @@ impl RawEntity {
 /// The complete result of parsing a Part 21 file.
 #[derive(Debug)]
 pub struct Graph {
-    /// Identified application protocol. The raw `FILE_SCHEMA` string list
-    /// is preserved inside [`StepSchema`] itself — see its docs.
-    pub schema: super::schema::StepSchema,
+    /// Identified application protocol (AP family, edition, stage). The raw
+    /// `FILE_SCHEMA` string list is preserved inside [`SchemaId`] itself.
+    pub schema: super::schema::SchemaId,
     /// Raw HEADER entities (`FILE_DESCRIPTION`, `FILE_NAME`, `FILE_SCHEMA`).
     pub header: Vec<RawEntity>,
     /// DATA section entities keyed by their `#N` identifier.
@@ -340,7 +340,7 @@ mod tests {
         let mut entities = BTreeMap::new();
         entities.insert(1, entity.clone());
         let graph = Graph {
-            schema: super::super::schema::StepSchema::default(),
+            schema: super::super::schema::SchemaId::default(),
             header: vec![],
             entities,
             external_references: BTreeMap::new(),
