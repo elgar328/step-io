@@ -2,5 +2,6 @@
 #![allow(dead_code, unused_variables, clippy::all, clippy::pedantic)]
 pub mod generic_normalize;
 pub mod model;
+pub mod profile;
 pub mod read;
 pub mod write;

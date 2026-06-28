@@ -2016,3 +2016,80 @@ pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>
     );
     s
 }
+
+/// Emit `src/generated/profile.rs`: per-target output `SchemaProfile` const
+/// tables (legal entity set, downgrade map, FILE_SCHEMA, APD) baked from
+/// `schema/ap*.toml`. `targets` = (CONST_PREFIX, SchemaTarget variant, parsed).
+/// Lints inherited from generated/mod.rs (`#![allow(dead_code, …)]`).
+pub fn emit_profile(targets: &[(&str, &str, &crate::schema::ProfileToml)]) -> String {
+    let mut s = String::from(HEADER);
+    s.push_str("//! Per-target output SchemaProfiles (legal set / downgrade / header).\n\n");
+
+    s.push_str("#[derive(Clone, Copy, PartialEq, Eq, Debug)]\npub enum SchemaTarget { Universal");
+    for (_, variant, _) in targets {
+        write!(s, ", {variant}").unwrap();
+    }
+    s.push_str(" }\n\n");
+
+    s.push_str(
+        r#"pub struct ApdInfo { pub status: &'static str, pub name: &'static str, pub year: i64, pub description: &'static str }
+
+pub struct SchemaProfile {
+    pub legal: &'static [&'static str],
+    pub downgrade: &'static [(&'static str, &'static str)],
+    pub file_schema: &'static [&'static str],
+    pub apd: ApdInfo,
+}
+
+impl SchemaProfile {
+    /// Whether `kw` (UPPER STEP keyword) is legal in this target.
+    pub fn is_legal(&self, kw: &str) -> bool { self.legal.binary_search(&kw).is_ok() }
+    /// Rename-safe supertype for an illegal subtype `kw`, if any.
+    pub fn downgrade(&self, kw: &str) -> Option<&'static str> {
+        self.downgrade.binary_search_by(|&(s, _)| s.cmp(kw)).ok().map(|i| self.downgrade[i].1)
+    }
+"#,
+    );
+    s.push_str("    pub fn for_target(t: SchemaTarget) -> Option<&'static SchemaProfile> { match t {\n        SchemaTarget::Universal => None,\n");
+    for (prefix, variant, _) in targets {
+        writeln!(s, "        SchemaTarget::{variant} => Some(&{prefix}),").unwrap();
+    }
+    s.push_str("    } }\n}\n\n");
+
+    for (prefix, _, p) in targets {
+        let mut legal: Vec<String> = p.entity.keys().map(|k| k.to_uppercase()).collect();
+        legal.sort();
+        legal.dedup();
+        write!(s, "static {prefix}_LEGAL: &[&str] = &[").unwrap();
+        for n in &legal {
+            write!(s, "{n:?},").unwrap();
+        }
+        s.push_str("];\n");
+
+        let mut dg: Vec<(String, String)> = p
+            .downgrade
+            .iter()
+            .map(|(k, v)| (k.to_uppercase(), v.to_uppercase()))
+            .collect();
+        dg.sort();
+        write!(s, "static {prefix}_DOWNGRADE: &[(&str, &str)] = &[").unwrap();
+        for (a, b) in &dg {
+            write!(s, "({a:?},{b:?}),").unwrap();
+        }
+        s.push_str("];\n");
+
+        write!(s, "static {prefix}_FILE_SCHEMA: &[&str] = &[").unwrap();
+        for fs in &p.meta.file_schema {
+            write!(s, "{fs:?},").unwrap();
+        }
+        s.push_str("];\n");
+
+        writeln!(
+            s,
+            "static {prefix}: SchemaProfile = SchemaProfile {{ legal: {prefix}_LEGAL, downgrade: {prefix}_DOWNGRADE, file_schema: {prefix}_FILE_SCHEMA, apd: ApdInfo {{ status: {:?}, name: {:?}, year: {}, description: {:?} }} }};",
+            p.meta.apd.status, p.meta.apd.name, p.meta.apd.year, p.meta.apd.description
+        )
+        .unwrap();
+    }
+    s
+}

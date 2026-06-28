@@ -109,6 +109,33 @@ pub struct TypeDef {
     pub aliased: String,
 }
 
+/// Deserialization model for a per-target output profile (`schema/ap*.toml`,
+/// from blueprint `profile_export`). Only the fields the writer bakes are read:
+/// legal entity set (`entity` keys), `downgrade` map, and `meta`
+/// (FILE_SCHEMA + APD). Entity attribute detail and `[type]` are ignored.
+#[derive(Deserialize)]
+pub struct ProfileToml {
+    pub meta: ProfileMeta,
+    #[serde(default)]
+    pub downgrade: BTreeMap<String, String>,
+    #[serde(default)]
+    pub entity: BTreeMap<String, toml::Value>,
+}
+
+#[derive(Deserialize)]
+pub struct ProfileMeta {
+    pub file_schema: Vec<String>,
+    pub apd: ProfileApd,
+}
+
+#[derive(Deserialize)]
+pub struct ProfileApd {
+    pub status: String,
+    pub name: String,
+    pub year: i64,
+    pub description: String,
+}
+
 /// Inner element of a `LIST/SET/BAG/ARRAY OF X` aggregation, or `None`.
 pub fn agg_inner(ty: &str) -> Option<&str> {
     ["LIST OF ", "SET OF ", "BAG OF ", "ARRAY OF "]
