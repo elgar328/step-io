@@ -13,10 +13,9 @@
 pub struct NonEmptyStringList(Vec<String>);
 
 impl NonEmptyStringList {
-    /// A single-element list. Use `single(String::new())` for the
-    /// spec-compliant "no content" form `('')`.
-    #[must_use]
-    pub fn single(s: String) -> Self {
+    /// A single-element list (used for the spec-compliant "no content" form
+    /// `('')` via `Default`).
+    fn single(s: String) -> Self {
         Self(vec![s])
     }
 
@@ -32,6 +31,7 @@ impl NonEmptyStringList {
         &self.0
     }
 
+    /// Inherent iterator (idiomatic companion to `IntoIterator for &Self`).
     pub fn iter(&self) -> std::slice::Iter<'_, String> {
         self.0.iter()
     }
@@ -45,10 +45,6 @@ impl NonEmptyStringList {
     pub fn is_empty(&self) -> bool {
         // Invariant: never empty. Provided for `clippy::len_without_is_empty`.
         false
-    }
-
-    pub fn push(&mut self, s: String) {
-        self.0.push(s);
     }
 }
 
