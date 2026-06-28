@@ -987,7 +987,7 @@ fn step_str(s: &str) -> String {
 
     // Writer struct.
     s.push_str(
-        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    out: String,\n",
+        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    out: String,\n    rename: std::collections::HashMap<AnyId, &'static str>,\n",
     );
     for se in &ir.simples {
         writeln!(s, "    {}: Vec<Option<u64>>,", ids_field(&se.rust)).unwrap();
@@ -998,7 +998,7 @@ fn step_str(s: &str) -> String {
     s.push_str("}\n\n");
 
     // new()
-    s.push_str("impl<'a> Writer<'a> {\n    pub fn new(model: &'a StepModel) -> Self {\n        Writer {\n            model, next: 1, out: String::new(),\n");
+    s.push_str("impl<'a> Writer<'a> {\n    pub fn new(model: &'a StepModel) -> Self {\n        Writer {\n            model, next: 1, out: String::new(), rename: std::collections::HashMap::new(),\n");
     for se in &ir.simples {
         writeln!(
             s,
@@ -1056,6 +1056,10 @@ fn step_str(s: &str) -> String {
     // deps_of / render_one (per simple + complex).
     emit_deps_of(&mut s, ir);
     emit_render_one(&mut s, ir);
+
+    // per-schema writer primitives: name_of/all_ids/part_name/complex_legal +
+    // render_kw (downgrade rename override). Consumed by normalize::projection.
+    emit_writer_primitives(&mut s, ir);
 
     // emit_all: iterative 2-pass (pass1 = post-order id assignment via explicit
     // stack with self-edge skip; pass2 = render in id order). No recursion.
@@ -1124,7 +1128,9 @@ fn collect_deps_elem(ir: &ModelIr, k: &Kind) -> Option<String> {
 /// Emit `deps_of(any, out)`: push the AnyId deps of an entity (simple or complex
 /// part-bag). Self-edges are filtered by the driver, not here.
 fn emit_deps_of(s: &mut String, ir: &ModelIr) {
-    s.push_str("    fn deps_of(&self, any: AnyId, out: &mut Vec<AnyId>) { match any {\n");
+    s.push_str(
+        "    pub(crate) fn deps_of(&self, any: AnyId, out: &mut Vec<AnyId>) { match any {\n",
+    );
     for se in &ir.simples {
         let af = arena_field(&se.rust);
         let kept = idents(&se.fields);
@@ -1220,10 +1226,9 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
         };
         writeln!(
             s,
-            "        AnyId::{}({binder}) => {{ {it_bind}let n = self.get_id(any).expect(\"id assigned\"); let attrs: Vec<String> = vec![{}]; format!(\"#{{n}} = {}({{}});\\n\", attrs.join(\",\")) }},",
+            "        AnyId::{}({binder}) => {{ {it_bind}let n = self.get_id(any).expect(\"id assigned\"); let kw = self.render_kw(any); let attrs: Vec<String> = vec![{}]; format!(\"#{{n}} = {{kw}}({{}});\\n\", attrs.join(\",\")) }},",
             se.rust,
-            parts.join(", "),
-            se.name
+            parts.join(", ")
         )
         .unwrap();
     }
@@ -1558,10 +1563,28 @@ fn emit_ref_deps(s: &mut String, re: &RefEnum) {
 /// explicit-stack post-order DFS (deps before dependents; self-edges skipped;
 /// multi-node cycle back-edges pre-numbered as forward-refs). Pass 2 renders in
 /// id order. No recursion -> stack depth is independent of graph depth.
-fn emit_all_iter(s: &mut String, ir: &ModelIr) {
-    s.push_str("    pub fn emit_all(mut self) -> String {\n");
-    s.push_str("        let mut order: Vec<AnyId> = Vec::new();\n");
-    s.push_str("        let mut roots: Vec<AnyId> = Vec::new();\n");
+/// Per-schema writer primitives consumed by `normalize::projection`:
+/// `name_of` (AnyId → STEP keyword), `all_ids` (every node in arena order),
+/// `part_name`/`complex_legal` (complex part legality), `render_kw` (downgrade
+/// rename override; empty map → byte-identical Universal output).
+fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
+    // name_of: AnyId -> STEP keyword (same source as render_one's literal).
+    s.push_str("    pub(crate) fn name_of(any: AnyId) -> &'static str { match any {\n");
+    for se in &ir.simples {
+        writeln!(s, "        AnyId::{}(_) => \"{}\",", se.rust, se.name).unwrap();
+    }
+    if ir.has_part_bag {
+        // complex = no single keyword; legality handled by complex_legal.
+        s.push_str("        AnyId::ComplexUnit(_) => \"\",\n");
+    }
+    s.push_str("    } }\n\n");
+
+    // render_kw: rename override (downgrade) or the entity's own keyword. Empty
+    // rename map (Universal) -> name_of -> byte-identical output.
+    s.push_str("    fn render_kw(&self, any: AnyId) -> &'static str { self.rename.get(&any).copied().unwrap_or_else(|| Self::name_of(any)) }\n\n");
+
+    // all_ids: every node, arena order (the former emit_all roots block).
+    s.push_str("    pub(crate) fn all_ids(&self) -> Vec<AnyId> {\n        let mut roots: Vec<AnyId> = Vec::new();\n");
     if ir.has_part_bag {
         s.push_str("        for i in 0..self.model.complex_units.items.len() { roots.push(AnyId::ComplexUnit(ComplexUnitId(i))); }\n");
     }
@@ -1575,10 +1598,53 @@ fn emit_all_iter(s: &mut String, ir: &ModelIr) {
         )
         .unwrap();
     }
+    s.push_str("        roots\n    }\n\n");
+
+    if ir.has_part_bag {
+        // part_name + complex_legal: a complex is legal iff every part keyword is.
+        s.push_str("    pub(crate) fn part_name(p: &UnitPart) -> &'static str { match p {\n");
+        for p in &ir.parts {
+            let kept = idents(&p.fields);
+            if kept.is_empty() {
+                writeln!(s, "        UnitPart::{} => \"{}\",", p.rust, p.name).unwrap();
+            } else {
+                writeln!(
+                    s,
+                    "        UnitPart::{} {{ .. }} => \"{}\",",
+                    p.rust, p.name
+                )
+                .unwrap();
+            }
+        }
+        s.push_str("    } }\n\n");
+        s.push_str("    pub(crate) fn complex_legal(&self, id: ComplexUnitId, legal: &[&str]) -> bool {\n        self.model.complex_units.get(id.0).parts.iter().all(|p| legal.binary_search(&Self::part_name(p)).is_ok())\n    }\n\n");
+    }
+}
+
+/// emit_all (Universal) + emit_all_with_plan (per-schema: skip `dropped`, apply
+/// `rename`) sharing `dfs_render`. roots come from `all_ids` (emit_writer_primitives).
+fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
     s.push_str(
-        r#"        let mut stack: Vec<(AnyId, bool)> = Vec::new();
+        r#"    pub fn emit_all(self) -> String {
+        let roots = self.all_ids();
+        self.dfs_render(roots, &std::collections::HashSet::new())
+    }
+
+    /// Per-schema emit: `dropped` AnyIds are skipped (never numbered/rendered),
+    /// `rename` overrides the keyword (downgrade). Caller (projection) guarantees
+    /// the kept set is referentially closed, so no survivor refs a dropped id.
+    pub fn emit_all_with_plan(mut self, dropped: &std::collections::HashSet<AnyId>, rename: std::collections::HashMap<AnyId, &'static str>) -> String {
+        self.rename = rename;
+        let roots = self.all_ids();
+        self.dfs_render(roots, dropped)
+    }
+
+    fn dfs_render(mut self, roots: Vec<AnyId>, dropped: &std::collections::HashSet<AnyId>) -> String {
+        let mut order: Vec<AnyId> = Vec::new();
+        let mut stack: Vec<(AnyId, bool)> = Vec::new();
         let mut on_path: std::collections::HashSet<AnyId> = std::collections::HashSet::new();
         for root in roots {
+            if dropped.contains(&root) { continue; }
             if self.get_id(root).is_some() { continue; }
             stack.push((root, false));
             while let Some((any, post)) = stack.pop() {
@@ -1605,6 +1671,7 @@ fn emit_all_iter(s: &mut String, ir: &ModelIr) {
                 self.deps_of(any, &mut deps);
                 for d in deps.into_iter().rev() {
                     if d == any { continue; }
+                    if dropped.contains(&d) { continue; }
                     if self.get_id(d).is_some() { continue; }
                     stack.push((d, false));
                 }

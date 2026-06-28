@@ -67,6 +67,7 @@ pub struct Writer<'a> {
     model: &'a StepModel,
     next: u64,
     out: String,
+    rename: std::collections::HashMap<AnyId, &'static str>,
     action_ids: Vec<Option<u64>>,
     action_assignment_ids: Vec<Option<u64>>,
     action_directive_ids: Vec<Option<u64>>,
@@ -576,6 +577,7 @@ impl<'a> Writer<'a> {
             model,
             next: 1,
             out: String::new(),
+            rename: std::collections::HashMap::new(),
             action_ids: vec![None; model.actions.items.len()],
             action_assignment_ids: vec![None; model.action_assignments.items.len()],
             action_directive_ids: vec![None; model.action_directives.items.len()],
@@ -21517,7 +21519,7 @@ impl<'a> Writer<'a> {
         }
     }
 
-    fn deps_of(&self, any: AnyId, out: &mut Vec<AnyId>) {
+    pub(crate) fn deps_of(&self, any: AnyId, out: &mut Vec<AnyId>) {
         match any {
             AnyId::Action(id) => {
                 let it = self.model.actions.get(id.0);
@@ -24890,6 +24892,7 @@ impl<'a> Writer<'a> {
             AnyId::Action(id) => {
                 let it = self.model.actions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -24898,18 +24901,20 @@ impl<'a> Writer<'a> {
                     },
                     format!("#{}", self.id_of_ref_action_method(&it.chosen_method)),
                 ];
-                format!("#{n} = ACTION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionAssignment(id) => {
                 let it = self.model.action_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_action(&it.assigned_action))];
-                format!("#{n} = ACTION_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionDirective(id) => {
                 let it = self.model.action_directives.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -24927,11 +24932,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = ACTION_DIRECTIVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionMethod(id) => {
                 let it = self.model.action_methods.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -24941,11 +24947,12 @@ impl<'a> Writer<'a> {
                     step_str(&it.consequence),
                     step_str(&it.purpose),
                 ];
-                format!("#{n} = ACTION_METHOD({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionMethodRelationship(id) => {
                 let it = self.model.action_method_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -24955,11 +24962,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_action_method(&it.relating_method)),
                     format!("#{}", self.id_of_ref_action_method(&it.related_method)),
                 ];
-                format!("#{n} = ACTION_METHOD_RELATIONSHIP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionProperty(id) => {
                 let it = self.model.action_propertys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -24968,11 +24976,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_characterized_action_definition(&it.definition)
                     ),
                 ];
-                format!("#{n} = ACTION_PROPERTY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionRelationship(id) => {
                 let it = self.model.action_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -24982,29 +24991,32 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_action(&it.relating_action)),
                     format!("#{}", self.id_of_ref_action(&it.related_action)),
                 ];
-                format!("#{n} = ACTION_RELATIONSHIP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionRequestAssignment(id) => {
                 let it = self.model.action_request_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_versioned_action_request(&it.assigned_action_request)
                 )];
-                format!("#{n} = ACTION_REQUEST_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionRequestSolution(id) => {
                 let it = self.model.action_request_solutions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_action_method(&it.method)),
                     format!("#{}", self.id_of_ref_versioned_action_request(&it.request)),
                 ];
-                format!("#{n} = ACTION_REQUEST_SOLUTION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionResource(id) => {
                 let it = self.model.action_resources.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25021,11 +25033,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_action_resource_type(&it.kind)),
                 ];
-                format!("#{n} = ACTION_RESOURCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionResourceRelationship(id) => {
                 let it = self.model.action_resource_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25035,14 +25048,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_action_resource(&it.relating_resource)),
                     format!("#{}", self.id_of_ref_action_resource(&it.related_resource)),
                 ];
-                format!(
-                    "#{n} = ACTION_RESOURCE_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionResourceRequirement(id) => {
                 let it = self.model.action_resource_requirements.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -25059,17 +25070,19 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = ACTION_RESOURCE_REQUIREMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ActionResourceType(id) => {
                 let it = self.model.action_resource_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = ACTION_RESOURCE_TYPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Address(id) => {
                 let it = self.model.addresss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -25120,11 +25133,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ADDRESS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AdvancedBrepShapeRepresentation(id) => {
                 let it = self.model.advanced_brep_shape_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25140,14 +25154,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = ADVANCED_BREP_SHAPE_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AdvancedFace(id) => {
                 let it = self.model.advanced_faces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25161,11 +25173,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_surface(&it.face_geometry)),
                     (if it.same_sense { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = ADVANCED_FACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AllAroundShapeAspect(id) => {
                 let it = self.model.all_around_shape_aspects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25175,11 +25188,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     it.product_definitional.token().to_string(),
                 ];
-                format!("#{n} = ALL_AROUND_SHAPE_ASPECT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AngularLocation(id) => {
                 let it = self.model.angular_locations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25193,21 +25207,23 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                     it.angle_selection.token().to_string(),
                 ];
-                format!("#{n} = ANGULAR_LOCATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AngularSize(id) => {
                 let it = self.model.angular_sizes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
                     step_str(&it.name),
                     it.angle_selection.token().to_string(),
                 ];
-                format!("#{n} = ANGULAR_SIZE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AngularityTolerance(id) => {
                 let it = self.model.angularity_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25231,11 +25247,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = ANGULARITY_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationCurveOccurrence(id) => {
                 let it = self.model.annotation_curve_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25251,11 +25268,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_curve_or_curve_set(&it.item)),
                 ];
-                format!("#{n} = ANNOTATION_CURVE_OCCURRENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationFillAreaOccurrence(id) => {
                 let it = self.model.annotation_fill_area_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25272,14 +25290,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
                     format!("#{}", self.id_of_ref_point(&it.fill_style_target)),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_FILL_AREA_OCCURRENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationOccurrence(id) => {
                 let it = self.model.annotation_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25295,11 +25311,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
                 ];
-                format!("#{n} = ANNOTATION_OCCURRENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationOccurrenceAssociativity(id) => {
                 let it = self.model.annotation_occurrence_associativitys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -25312,14 +25329,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_occurrence(&it.related_annotation_occurrence)
                     ),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_OCCURRENCE_ASSOCIATIVITY({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationOccurrenceRelationship(id) => {
                 let it = self.model.annotation_occurrence_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -25332,14 +25347,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_occurrence(&it.related_annotation_occurrence)
                     ),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_OCCURRENCE_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationPlaceholderLeaderLine(id) => {
                 let it = self.model.annotation_placeholder_leader_lines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25351,14 +25364,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_PLACEHOLDER_LEADER_LINE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationPlaceholderOccurrence(id) => {
                 let it = self.model.annotation_placeholder_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25376,10 +25387,7 @@ impl<'a> Writer<'a> {
                     it.role.token().to_string(),
                     real(it.line_spacing),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_PLACEHOLDER_OCCURRENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(id) => {
                 let it = self
@@ -25387,6 +25395,7 @@ impl<'a> Writer<'a> {
                     .annotation_placeholder_occurrence_with_leader_lines
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25415,14 +25424,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationPlane(id) => {
                 let it = self.model.annotation_planes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25448,11 +25455,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ANNOTATION_PLANE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationSymbol(id) => {
                 let it = self.model.annotation_symbols.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -25461,11 +25469,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_item(&it.mapping_target)
                     ),
                 ];
-                format!("#{n} = ANNOTATION_SYMBOL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationSymbolOccurrence(id) => {
                 let it = self.model.annotation_symbol_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25484,35 +25493,35 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_symbol_occurrence_item(&it.item)
                     ),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_SYMBOL_OCCURRENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationText(id) => {
                 let it = self.model.annotation_texts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.mapping_target)),
                 ];
-                format!("#{n} = ANNOTATION_TEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationTextCharacter(id) => {
                 let it = self.model.annotation_text_characters.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.mapping_target)),
                     step_str(&it.alignment),
                 ];
-                format!("#{n} = ANNOTATION_TEXT_CHARACTER({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationTextOccurrence(id) => {
                 let it = self.model.annotation_text_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25531,11 +25540,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_text_occurrence_item(&it.item)
                     ),
                 ];
-                format!("#{n} = ANNOTATION_TEXT_OCCURRENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationToAnnotationLeaderLine(id) => {
                 let it = self.model.annotation_to_annotation_leader_lines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25547,14 +25557,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_TO_ANNOTATION_LEADER_LINE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AnnotationToModelLeaderLine(id) => {
                 let it = self.model.annotation_to_model_leader_lines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25566,14 +25574,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = ANNOTATION_TO_MODEL_LEADER_LINE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApllPoint(id) => {
                 let it = self.model.apll_points.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25586,11 +25592,12 @@ impl<'a> Writer<'a> {
                     ),
                     it.symbol_applied.token().to_string(),
                 ];
-                format!("#{n} = APLL_POINT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApllPointWithSurface(id) => {
                 let it = self.model.apll_point_with_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25604,17 +25611,19 @@ impl<'a> Writer<'a> {
                     it.symbol_applied.token().to_string(),
                     format!("#{}", self.id_of_ref_face_surface(&it.associated_surface)),
                 ];
-                format!("#{n} = APLL_POINT_WITH_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApplicationContext(id) => {
                 let it = self.model.application_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.application)];
-                format!("#{n} = APPLICATION_CONTEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApplicationContextElement(id) => {
                 let it = self.model.application_context_elements.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -25622,25 +25631,24 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_application_context(&it.frame_of_reference)
                     ),
                 ];
-                format!("#{n} = APPLICATION_CONTEXT_ELEMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApplicationProtocolDefinition(id) => {
                 let it = self.model.application_protocol_definitions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.status),
                     step_str(&it.application_interpreted_model_schema_name),
                     format!("{}", it.application_protocol_year),
                     format!("#{}", self.id_of_ref_application_context(&it.application)),
                 ];
-                format!(
-                    "#{n} = APPLICATION_PROTOCOL_DEFINITION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedApprovalAssignment(id) => {
                 let it = self.model.applied_approval_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_approval(&it.assigned_approval)),
                     format!(
@@ -25652,11 +25660,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = APPLIED_APPROVAL_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedDateAndTimeAssignment(id) => {
                 let it = self.model.applied_date_and_time_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -25672,14 +25681,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = APPLIED_DATE_AND_TIME_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedDocumentReference(id) => {
                 let it = self.model.applied_document_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_document(&it.assigned_document)),
                     step_str(&it.source),
@@ -25692,7 +25699,7 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = APPLIED_DOCUMENT_REFERENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedExternalIdentificationAssignment(id) => {
                 let it = self
@@ -25700,6 +25707,7 @@ impl<'a> Writer<'a> {
                     .applied_external_identification_assignments
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.assigned_id),
                     format!("#{}", self.id_of_ref_identification_role(&it.role)),
@@ -25713,14 +25721,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedGroupAssignment(id) => {
                 let it = self.model.applied_group_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_group(&it.assigned_group)),
                     format!(
@@ -25732,7 +25738,7 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = APPLIED_GROUP_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedPersonAndOrganizationAssignment(id) => {
                 let it = self
@@ -25740,6 +25746,7 @@ impl<'a> Writer<'a> {
                     .applied_person_and_organization_assignments
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -25757,14 +25764,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedPresentedItem(id) => {
                 let it = self.model.applied_presented_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.items
@@ -25773,7 +25778,7 @@ impl<'a> Writer<'a> {
                         .collect::<Vec<_>>()
                         .join(",")
                 )];
-                format!("#{n} = APPLIED_PRESENTED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AppliedSecurityClassificationAssignment(id) => {
                 let it = self
@@ -25781,6 +25786,7 @@ impl<'a> Writer<'a> {
                     .applied_security_classification_assignments
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -25797,41 +25803,42 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Approval(id) => {
                 let it = self.model.approvals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_approval_status(&it.status)),
                     step_str(&it.level),
                 ];
-                format!("#{n} = APPROVAL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApprovalAssignment(id) => {
                 let it = self.model.approval_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_approval(&it.assigned_approval)
                 )];
-                format!("#{n} = APPROVAL_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApprovalDateTime(id) => {
                 let it = self.model.approval_date_times.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_date_time_select(&it.date_time)),
                     format!("#{}", self.id_of_ref_approval(&it.dated_approval)),
                 ];
-                format!("#{n} = APPROVAL_DATE_TIME({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApprovalPersonOrganization(id) => {
                 let it = self.model.approval_person_organizations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -25840,35 +25847,36 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_approval(&it.authorized_approval)),
                     format!("#{}", self.id_of_ref_approval_role(&it.role)),
                 ];
-                format!(
-                    "#{n} = APPROVAL_PERSON_ORGANIZATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApprovalRole(id) => {
                 let it = self.model.approval_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.role)];
-                format!("#{n} = APPROVAL_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApprovalStatus(id) => {
                 let it = self.model.approval_statuss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = APPROVAL_STATUS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApproximationTolerance(id) => {
                 let it = self.model.approximation_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_tolerance_select(&it.tolerance)
                 )];
-                format!("#{n} = APPROXIMATION_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApproximationToleranceDeviation(id) => {
                 let it = self.model.approximation_tolerance_deviations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.tessellation_type.token().to_string(),
                     format!(
@@ -25881,14 +25889,12 @@ impl<'a> Writer<'a> {
                     ),
                     it.definition_space.token().to_string(),
                 ];
-                format!(
-                    "#{n} = APPROXIMATION_TOLERANCE_DEVIATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ApproximationToleranceParameter(id) => {
                 let it = self.model.approximation_tolerance_parameters.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.tolerances
@@ -25897,23 +25903,22 @@ impl<'a> Writer<'a> {
                         .collect::<Vec<_>>()
                         .join(",")
                 )];
-                format!(
-                    "#{n} = APPROXIMATION_TOLERANCE_PARAMETER({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AreaInSet(id) => {
                 let it = self.model.area_in_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_presentation_area(&it.area)),
                     format!("#{}", self.id_of_ref_presentation_set(&it.in_set)),
                 ];
-                format!("#{n} = AREA_IN_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AreaUnit(id) => {
                 let it = self.model.area_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.elements
@@ -25922,11 +25927,12 @@ impl<'a> Writer<'a> {
                         .collect::<Vec<_>>()
                         .join(",")
                 )];
-                format!("#{n} = AREA_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AscribableState(id) => {
                 let it = self.model.ascribable_states.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25939,11 +25945,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_state_observed(&it.ascribed_state_observed)
                     ),
                 ];
-                format!("#{n} = ASCRIBABLE_STATE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AscribableStateRelationship(id) => {
                 let it = self.model.ascribable_state_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25959,14 +25966,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_ascribable_state(&it.related_ascribable_state)
                     ),
                 ];
-                format!(
-                    "#{n} = ASCRIBABLE_STATE_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AssemblyComponentUsage(id) => {
                 let it = self.model.assembly_component_usages.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -25991,11 +25996,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ASSEMBLY_COMPONENT_USAGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::AuxiliaryLeaderLine(id) => {
                 let it = self.model.auxiliary_leader_lines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26011,11 +26017,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_to_model_leader_line(&it.controlling_leader_line)
                     ),
                 ];
-                format!("#{n} = AUXILIARY_LEADER_LINE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Axis1Placement(id) => {
                 let it = self.model.axis1_placements.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
@@ -26024,11 +26031,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = AXIS1_PLACEMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Axis2Placement2d(id) => {
                 let it = self.model.axis2_placement2ds.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
@@ -26037,11 +26045,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = AXIS2_PLACEMENT_2D({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Axis2Placement3d(id) => {
                 let it = self.model.axis2_placement3ds.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
@@ -26054,11 +26063,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = AXIS2_PLACEMENT_3D({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BSplineCurve(id) => {
                 let it = self.model.b_spline_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -26074,11 +26084,12 @@ impl<'a> Writer<'a> {
                     it.closed_curve.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = B_SPLINE_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BSplineCurveWithKnots(id) => {
                 let it = self.model.b_spline_curve_with_knotss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -26111,11 +26122,12 @@ impl<'a> Writer<'a> {
                     ),
                     it.knot_spec.token().to_string(),
                 ];
-                format!("#{n} = B_SPLINE_CURVE_WITH_KNOTS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BSplineSurface(id) => {
                 let it = self.model.b_spline_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -26139,11 +26151,12 @@ impl<'a> Writer<'a> {
                     it.v_closed.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = B_SPLINE_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BSplineSurfaceWithKnots(id) => {
                 let it = self.model.b_spline_surface_with_knotss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -26200,11 +26213,12 @@ impl<'a> Writer<'a> {
                     ),
                     it.knot_spec.token().to_string(),
                 ];
-                format!("#{n} = B_SPLINE_SURFACE_WITH_KNOTS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BezierCurve(id) => {
                 let it = self.model.bezier_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -26220,11 +26234,12 @@ impl<'a> Writer<'a> {
                     it.closed_curve.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = BEZIER_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BezierSurface(id) => {
                 let it = self.model.bezier_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -26248,17 +26263,19 @@ impl<'a> Writer<'a> {
                     it.v_closed.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = BEZIER_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BoundedCurve(id) => {
                 let it = self.model.bounded_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = BOUNDED_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BoundedPcurve(id) => {
                 let it = self.model.bounded_pcurves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_surface(&it.basis_surface)),
@@ -26267,17 +26284,19 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_definitional_representation(&it.reference_to_curve)
                     ),
                 ];
-                format!("#{n} = BOUNDED_PCURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BoundedSurface(id) => {
                 let it = self.model.bounded_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = BOUNDED_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BoundedSurfaceCurve(id) => {
                 let it = self.model.bounded_surface_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -26291,11 +26310,12 @@ impl<'a> Writer<'a> {
                     ),
                     it.master_representation.token().to_string(),
                 ];
-                format!("#{n} = BOUNDED_SURFACE_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::BrepWithVoids(id) => {
                 let it = self.model.brep_with_voidss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_closed_shell(&it.outer)),
@@ -26308,21 +26328,23 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = BREP_WITH_VOIDS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CalendarDate(id) => {
                 let it = self.model.calendar_dates.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.year_component),
                     format!("{}", it.day_component),
                     format!("{}", it.month_component),
                 ];
-                format!("#{n} = CALENDAR_DATE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CameraImage(id) => {
                 let it = self.model.camera_images.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -26331,11 +26353,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_item(&it.mapping_target)
                     ),
                 ];
-                format!("#{n} = CAMERA_IMAGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CameraImage3dWithScale(id) => {
                 let it = self.model.camera_image3d_with_scales.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -26344,17 +26367,19 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_item(&it.mapping_target)
                     ),
                 ];
-                format!("#{n} = CAMERA_IMAGE_3D_WITH_SCALE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CameraModel(id) => {
                 let it = self.model.camera_models.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = CAMERA_MODEL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CameraModelD3(id) => {
                 let it = self.model.camera_model_d3s.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26363,11 +26388,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_view_volume(&it.perspective_of_volume)),
                 ];
-                format!("#{n} = CAMERA_MODEL_D3({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CameraModelD3MultiClipping(id) => {
                 let it = self.model.camera_model_d3_multi_clippings.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26389,14 +26415,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = CAMERA_MODEL_D3_MULTI_CLIPPING({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CameraModelD3WithHlhsr(id) => {
                 let it = self.model.camera_model_d3_with_hlhsrs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26411,11 +26435,12 @@ impl<'a> Writer<'a> {
                     })
                     .to_string(),
                 ];
-                format!("#{n} = CAMERA_MODEL_D3_WITH_HLHSR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CameraUsage(id) => {
                 let it = self.model.camera_usages.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26426,11 +26451,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation(&it.mapped_representation)
                     ),
                 ];
-                format!("#{n} = CAMERA_USAGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CartesianPoint(id) => {
                 let it = self.model.cartesian_points.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26442,11 +26468,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CARTESIAN_POINT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CcDesignApproval(id) => {
                 let it = self.model.cc_design_approvals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_approval(&it.assigned_approval)),
                     format!(
@@ -26458,11 +26485,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CC_DESIGN_APPROVAL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CcDesignDateAndTimeAssignment(id) => {
                 let it = self.model.cc_design_date_and_time_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26478,10 +26506,7 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CcDesignPersonAndOrganizationAssignment(id) => {
                 let it = self
@@ -26489,6 +26514,7 @@ impl<'a> Writer<'a> {
                     .cc_design_person_and_organization_assignments
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26506,14 +26532,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CcDesignSecurityClassification(id) => {
                 let it = self.model.cc_design_security_classifications.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26530,14 +26554,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = CC_DESIGN_SECURITY_CLASSIFICATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CentreOfSymmetry(id) => {
                 let it = self.model.centre_of_symmetrys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26547,27 +26569,30 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     it.product_definitional.token().to_string(),
                 ];
-                format!("#{n} = CENTRE_OF_SYMMETRY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Certification(id) => {
                 let it = self.model.certifications.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.purpose),
                     format!("#{}", self.id_of_ref_certification_type(&it.kind)),
                 ];
-                format!("#{n} = CERTIFICATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CertificationType(id) => {
                 let it = self.model.certification_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.description)];
-                format!("#{n} = CERTIFICATION_TYPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Change(id) => {
                 let it = self.model.changes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_action(&it.assigned_action)),
                     format!(
@@ -26579,11 +26604,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CHANGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ChangeRequest(id) => {
                 let it = self.model.change_requests.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26598,29 +26624,25 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CHANGE_REQUEST({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CharacterGlyphStyleOutline(id) => {
                 let it = self.model.character_glyph_style_outlines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_style(&it.outline_style)
                 )];
-                format!(
-                    "#{n} = CHARACTER_GLYPH_STYLE_OUTLINE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CharacterGlyphStyleStroke(id) => {
                 let it = self.model.character_glyph_style_strokes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_curve_style(&it.stroke_style))];
-                format!(
-                    "#{n} = CHARACTER_GLYPH_STYLE_STROKE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CharacterizedItemWithinRepresentation(id) => {
                 let it = self
@@ -26628,6 +26650,7 @@ impl<'a> Writer<'a> {
                     .characterized_item_within_representations
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26637,14 +26660,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_representation_item(&it.item)),
                     format!("#{}", self.id_of_ref_representation(&it.rep)),
                 ];
-                format!(
-                    "#{n} = CHARACTERIZED_ITEM_WITHIN_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CharacterizedObject(id) => {
                 let it = self.model.characterized_objects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     match &it.name {
                         Some(x) => step_str(x),
@@ -26655,11 +26676,12 @@ impl<'a> Writer<'a> {
                         None => "*".to_string(),
                     },
                 ];
-                format!("#{n} = CHARACTERIZED_OBJECT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CharacterizedRepresentation(id) => {
                 let it = self.model.characterized_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     "*".to_string(),
                     format!(
@@ -26677,24 +26699,23 @@ impl<'a> Writer<'a> {
                     "*".to_string(),
                     "*".to_string(),
                 ];
-                format!(
-                    "#{n} = CHARACTERIZED_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Circle(id) => {
                 let it = self.model.circles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
                     real(it.radius),
                 ];
-                format!("#{n} = CIRCLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CircularRunoutTolerance(id) => {
                 let it = self.model.circular_runout_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26718,11 +26739,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CIRCULAR_RUNOUT_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ClosedShell(id) => {
                 let it = self.model.closed_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26734,11 +26756,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CLOSED_SHELL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CoaxialityTolerance(id) => {
                 let it = self.model.coaxiality_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26762,33 +26785,37 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = COAXIALITY_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Colour(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = COLOUR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ColourRgb(id) => {
                 let it = self.model.colour_rgbs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     real(it.red),
                     real(it.green),
                     real(it.blue),
                 ];
-                format!("#{n} = COLOUR_RGB({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ColourSpecification(id) => {
                 let it = self.model.colour_specifications.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = COLOUR_SPECIFICATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CommonDatum(id) => {
                 let it = self.model.common_datums.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26799,11 +26826,12 @@ impl<'a> Writer<'a> {
                     it.product_definitional.token().to_string(),
                     step_str(&it.identification),
                 ];
-                format!("#{n} = COMMON_DATUM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ComplexTriangulatedFace(id) => {
                 let it = self.model.complex_triangulated_faces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -26854,11 +26882,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = COMPLEX_TRIANGULATED_FACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ComplexTriangulatedSurfaceSet(id) => {
                 let it = self.model.complex_triangulated_surface_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -26905,14 +26934,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = COMPLEX_TRIANGULATED_SURFACE_SET({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CompositeCurve(id) => {
                 let it = self.model.composite_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26925,21 +26952,23 @@ impl<'a> Writer<'a> {
                     ),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = COMPOSITE_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CompositeCurveSegment(id) => {
                 let it = self.model.composite_curve_segments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.transition.token().to_string(),
                     (if it.same_sense { ".T." } else { ".F." }).to_string(),
                     format!("#{}", self.id_of_ref_curve(&it.parent_curve)),
                 ];
-                format!("#{n} = COMPOSITE_CURVE_SEGMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CompositeGroupShapeAspect(id) => {
                 let it = self.model.composite_group_shape_aspects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26949,14 +26978,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     it.product_definitional.token().to_string(),
                 ];
-                format!(
-                    "#{n} = COMPOSITE_GROUP_SHAPE_ASPECT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CompositeShapeAspect(id) => {
                 let it = self.model.composite_shape_aspects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26966,11 +26993,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     it.product_definitional.token().to_string(),
                 ];
-                format!("#{n} = COMPOSITE_SHAPE_ASPECT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CompositeText(id) => {
                 let it = self.model.composite_texts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26982,11 +27010,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = COMPOSITE_TEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CompoundRepresentationItem(id) => {
                 let it = self.model.compound_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.item_element {
@@ -27007,14 +27036,12 @@ impl<'a> Writer<'a> {
                         other => format!("#{}", self.id_of_ref_compound_item_definition(other)),
                     },
                 ];
-                format!(
-                    "#{n} = COMPOUND_REPRESENTATION_ITEM({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConcentricityTolerance(id) => {
                 let it = self.model.concentricity_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27038,20 +27065,22 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CONCENTRICITY_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConfigurationDesign(id) => {
                 let it = self.model.configuration_designs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_configuration_item(&it.configuration)),
                     format!("#{}", self.id_of_ref_configuration_design_item(&it.design)),
                 ];
-                format!("#{n} = CONFIGURATION_DESIGN({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConfigurationEffectivity(id) => {
                 let it = self.model.configuration_effectivitys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     format!(
@@ -27063,11 +27092,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_configuration_design(&it.configuration)
                     ),
                 ];
-                format!("#{n} = CONFIGURATION_EFFECTIVITY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConfigurationItem(id) => {
                 let it = self.model.configuration_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -27081,31 +27111,34 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = CONFIGURATION_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Conic(id) => {
                 let it = self.model.conics.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
                 ];
-                format!("#{n} = CONIC({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConicalSurface(id) => {
                 let it = self.model.conical_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
                     real(it.radius),
                     real(it.semi_angle),
                 ];
-                format!("#{n} = CONICAL_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConnectedFaceSet(id) => {
                 let it = self.model.connected_face_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.cfs_faces {
@@ -27119,11 +27152,12 @@ impl<'a> Writer<'a> {
                         None => "*".to_string(),
                     },
                 ];
-                format!("#{n} = CONNECTED_FACE_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConstructiveGeometryRepresentation(id) => {
                 let it = self.model.constructive_geometry_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27139,10 +27173,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = CONSTRUCTIVE_GEOMETRY_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConstructiveGeometryRepresentationRelationship(id) => {
                 let it = self
@@ -27150,11 +27181,9 @@ impl<'a> Writer<'a> {
                     .constructive_geometry_representation_relationships
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), match &it.description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_constructive_geometry_representation_or_shape_representation(&it.rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(&it.rep_2))];
-                format!(
-                    "#{n} = CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ContextDependentOverRidingStyledItem(id) => {
                 let it = self
@@ -27162,6 +27191,7 @@ impl<'a> Writer<'a> {
                     .context_dependent_over_riding_styled_items
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27186,14 +27216,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ContextDependentShapeRepresentation(id) => {
                 let it = self.model.context_dependent_shape_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27206,23 +27234,22 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_definition_shape(&it.represented_product_relation)
                     ),
                 ];
-                format!(
-                    "#{n} = CONTEXT_DEPENDENT_SHAPE_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ContextDependentUnit(id) => {
                 let it = self.model.context_dependent_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_dimensional_exponents(&it.dimensions)),
                     step_str(&it.name),
                 ];
-                format!("#{n} = CONTEXT_DEPENDENT_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ContinuousShapeAspect(id) => {
                 let it = self.model.continuous_shape_aspects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27232,27 +27259,30 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     it.product_definitional.token().to_string(),
                 ];
-                format!("#{n} = CONTINUOUS_SHAPE_ASPECT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Contract(id) => {
                 let it = self.model.contracts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.purpose),
                     format!("#{}", self.id_of_ref_contract_type(&it.kind)),
                 ];
-                format!("#{n} = CONTRACT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ContractType(id) => {
                 let it = self.model.contract_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.description)];
-                format!("#{n} = CONTRACT_TYPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ConversionBasedUnit(id) => {
                 let it = self.model.conversion_based_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_dimensional_exponents(&it.dimensions)),
                     step_str(&it.name),
@@ -27261,11 +27291,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_measure_with_unit(&it.conversion_factor)
                     ),
                 ];
-                format!("#{n} = CONVERSION_BASED_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CoordinatedUniversalTimeOffset(id) => {
                 let it = self.model.coordinated_universal_time_offsets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.hour_offset),
                     match &it.minute_offset {
@@ -27274,14 +27305,12 @@ impl<'a> Writer<'a> {
                     },
                     it.sense.token().to_string(),
                 ];
-                format!(
-                    "#{n} = COORDINATED_UNIVERSAL_TIME_OFFSET({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CoordinatesList(id) => {
                 let it = self.model.coordinates_lists.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.npoints),
@@ -27297,17 +27326,19 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = COORDINATES_LIST({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Curve(id) => {
                 let it = self.model.curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CurveStyle(id) => {
                 let it = self.model.curve_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.curve_font {
@@ -27334,11 +27365,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = CURVE_STYLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CurveStyleFont(id) => {
                 let it = self.model.curve_style_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27350,11 +27382,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = CURVE_STYLE_FONT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CurveStyleFontAndScaling(id) => {
                 let it = self.model.curve_style_font_and_scalings.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27363,23 +27396,22 @@ impl<'a> Writer<'a> {
                     ),
                     real(it.curve_font_scaling),
                 ];
-                format!(
-                    "#{n} = CURVE_STYLE_FONT_AND_SCALING({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CurveStyleFontPattern(id) => {
                 let it = self.model.curve_style_font_patterns.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     real(it.visible_segment_length),
                     real(it.invisible_segment_length),
                 ];
-                format!("#{n} = CURVE_STYLE_FONT_PATTERN({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CurveStyleRendering(id) => {
                 let it = self.model.curve_style_renderings.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.rendering_method.token().to_string(),
                     format!(
@@ -27387,21 +27419,23 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_surface_rendering_properties(&it.rendering_properties)
                     ),
                 ];
-                format!("#{n} = CURVE_STYLE_RENDERING({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CylindricalSurface(id) => {
                 let it = self.model.cylindrical_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
                     real(it.radius),
                 ];
-                format!("#{n} = CYLINDRICAL_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::CylindricityTolerance(id) => {
                 let it = self.model.cylindricity_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27417,26 +27451,29 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = CYLINDRICITY_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Date(id) => {
                 let it = self.model.dates.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!("{}", it.year_component)];
-                format!("#{n} = DATE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DateAndTime(id) => {
                 let it = self.model.date_and_times.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_date(&it.date_component)),
                     format!("#{}", self.id_of_ref_local_time(&it.time_component)),
                 ];
-                format!("#{n} = DATE_AND_TIME({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DateAndTimeAssignment(id) => {
                 let it = self.model.date_and_time_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27444,23 +27481,26 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_date_time_role(&it.role)),
                 ];
-                format!("#{n} = DATE_AND_TIME_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DateRole(id) => {
                 let it = self.model.date_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = DATE_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DateTimeRole(id) => {
                 let it = self.model.date_time_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = DATE_TIME_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Datum(id) => {
                 let it = self.model.datums.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27471,11 +27511,12 @@ impl<'a> Writer<'a> {
                     it.product_definitional.token().to_string(),
                     step_str(&it.identification),
                 ];
-                format!("#{n} = DATUM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DatumFeature(id) => {
                 let it = self.model.datum_features.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27485,20 +27526,22 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     it.product_definitional.token().to_string(),
                 ];
-                format!("#{n} = DATUM_FEATURE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DatumReference(id) => {
                 let it = self.model.datum_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.precedence),
                     format!("#{}", self.id_of_ref_datum(&it.referenced_datum)),
                 ];
-                format!("#{n} = DATUM_REFERENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DatumReferenceCompartment(id) => {
                 let it = self.model.datum_reference_compartments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27535,11 +27578,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = DATUM_REFERENCE_COMPARTMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DatumReferenceElement(id) => {
                 let it = self.model.datum_reference_elements.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27576,11 +27620,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = DATUM_REFERENCE_ELEMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DatumReferenceModifierWithValue(id) => {
                 let it = self.model.datum_reference_modifier_with_values.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.modifier_type.token().to_string(),
                     format!(
@@ -27588,14 +27633,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_length_measure_with_unit(&it.modifier_value)
                     ),
                 ];
-                format!(
-                    "#{n} = DATUM_REFERENCE_MODIFIER_WITH_VALUE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DatumSystem(id) => {
                 let it = self.model.datum_systems.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27613,11 +27656,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = DATUM_SYSTEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DatumTarget(id) => {
                 let it = self.model.datum_targets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27628,11 +27672,12 @@ impl<'a> Writer<'a> {
                     it.product_definitional.token().to_string(),
                     step_str(&it.target_id),
                 ];
-                format!("#{n} = DATUM_TARGET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DefaultModelGeometricView(id) => {
                 let it = self.model.default_model_geometric_views.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27649,34 +27694,34 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     "*".to_string(),
                 ];
-                format!(
-                    "#{n} = DEFAULT_MODEL_GEOMETRIC_VIEW({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DefinedCharacterGlyph(id) => {
                 let it = self.model.defined_character_glyphs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_defined_glyph_select(&it.definition)),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.placement)),
                 ];
-                format!("#{n} = DEFINED_CHARACTER_GLYPH({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DefinedSymbol(id) => {
                 let it = self.model.defined_symbols.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_defined_symbol_select(&it.definition)),
                     format!("#{}", self.id_of_ref_symbol_target(&it.target)),
                 ];
-                format!("#{n} = DEFINED_SYMBOL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DefinitionalRepresentation(id) => {
                 let it = self.model.definitional_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27692,7 +27737,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = DEFINITIONAL_REPRESENTATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DefinitionalRepresentationRelationship(id) => {
                 let it = self
@@ -27700,6 +27745,7 @@ impl<'a> Writer<'a> {
                     .definitional_representation_relationships
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27715,10 +27761,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_or_representation_reference(&it.rep_2)
                     ),
                 ];
-                format!(
-                    "#{n} = DEFINITIONAL_REPRESENTATION_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DefinitionalRepresentationRelationshipWithSameContext(id) => {
                 let it = self
@@ -27726,6 +27769,7 @@ impl<'a> Writer<'a> {
                     .definitional_representation_relationship_with_same_contexts
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27741,14 +27785,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_or_representation_reference(&it.rep_2)
                     ),
                 ];
-                format!(
-                    "#{n} = DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DegenerateToroidalSurface(id) => {
                 let it = self.model.degenerate_toroidal_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -27756,11 +27798,12 @@ impl<'a> Writer<'a> {
                     real(it.minor_radius),
                     (if it.select_outer { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = DEGENERATE_TOROIDAL_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DerivedShapeAspect(id) => {
                 let it = self.model.derived_shape_aspects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27770,11 +27813,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     it.product_definitional.token().to_string(),
                 ];
-                format!("#{n} = DERIVED_SHAPE_ASPECT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DerivedUnit(id) => {
                 let it = self.model.derived_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.elements
@@ -27783,20 +27827,22 @@ impl<'a> Writer<'a> {
                         .collect::<Vec<_>>()
                         .join(",")
                 )];
-                format!("#{n} = DERIVED_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DerivedUnitElement(id) => {
                 let it = self.model.derived_unit_elements.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_named_unit(&it.unit)),
                     real(it.exponent),
                 ];
-                format!("#{n} = DERIVED_UNIT_ELEMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DescriptionAttribute(id) => {
                 let it = self.model.description_attributes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.attribute_value),
                     format!(
@@ -27804,20 +27850,19 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_description_attribute_select(&it.described_item)
                     ),
                 ];
-                format!("#{n} = DESCRIPTION_ATTRIBUTE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DescriptiveRepresentationItem(id) => {
                 let it = self.model.descriptive_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), step_str(&it.description)];
-                format!(
-                    "#{n} = DESCRIPTIVE_REPRESENTATION_ITEM({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DesignContext(id) => {
                 let it = self.model.design_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27826,7 +27871,7 @@ impl<'a> Writer<'a> {
                     ),
                     step_str(&it.life_cycle_stage),
                 ];
-                format!("#{n} = DESIGN_CONTEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DimensionalCharacteristicRepresentation(id) => {
                 let it = self
@@ -27834,6 +27879,7 @@ impl<'a> Writer<'a> {
                     .dimensional_characteristic_representations
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27844,14 +27890,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_shape_dimension_representation(&it.representation)
                     ),
                 ];
-                format!(
-                    "#{n} = DIMENSIONAL_CHARACTERISTIC_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DimensionalExponents(id) => {
                 let it = self.model.dimensional_exponentss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     real(it.length_exponent),
                     real(it.mass_exponent),
@@ -27861,11 +27905,12 @@ impl<'a> Writer<'a> {
                     real(it.amount_of_substance_exponent),
                     real(it.luminous_intensity_exponent),
                 ];
-                format!("#{n} = DIMENSIONAL_EXPONENTS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DimensionalLocation(id) => {
                 let it = self.model.dimensional_locations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27878,11 +27923,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                 ];
-                format!("#{n} = DIMENSIONAL_LOCATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DimensionalLocationWithPath(id) => {
                 let it = self.model.dimensional_location_with_paths.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27896,23 +27942,22 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.path)),
                 ];
-                format!(
-                    "#{n} = DIMENSIONAL_LOCATION_WITH_PATH({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DimensionalSize(id) => {
                 let it = self.model.dimensional_sizes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
                     step_str(&it.name),
                 ];
-                format!("#{n} = DIMENSIONAL_SIZE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DimensionalSizeWithDatumFeature(id) => {
                 let it = self.model.dimensional_size_with_datum_features.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27924,24 +27969,23 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
                     step_str(&it.name_1),
                 ];
-                format!(
-                    "#{n} = DIMENSIONAL_SIZE_WITH_DATUM_FEATURE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DimensionalSizeWithPath(id) => {
                 let it = self.model.dimensional_size_with_paths.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.path)),
                 ];
-                format!("#{n} = DIMENSIONAL_SIZE_WITH_PATH({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DirectedDimensionalLocation(id) => {
                 let it = self.model.directed_dimensional_locations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27954,14 +27998,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                 ];
-                format!(
-                    "#{n} = DIRECTED_DIMENSIONAL_LOCATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Direction(id) => {
                 let it = self.model.directions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27973,11 +28015,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = DIRECTION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Document(id) => {
                 let it = self.model.documents.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -27987,11 +28030,12 @@ impl<'a> Writer<'a> {
                     },
                     format!("#{}", self.id_of_ref_document_type(&it.kind)),
                 ];
-                format!("#{n} = DOCUMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DocumentFile(id) => {
                 let it = self.model.document_files.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -28006,11 +28050,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = DOCUMENT_FILE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DocumentProductAssociation(id) => {
                 let it = self.model.document_product_associations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28023,14 +28068,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_or_formation_or_definition(&it.related_product)
                     ),
                 ];
-                format!(
-                    "#{n} = DOCUMENT_PRODUCT_ASSOCIATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DocumentProductEquivalence(id) => {
                 let it = self.model.document_product_equivalences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28043,41 +28086,39 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_or_formation_or_definition(&it.related_product)
                     ),
                 ];
-                format!(
-                    "#{n} = DOCUMENT_PRODUCT_EQUIVALENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DocumentReference(id) => {
                 let it = self.model.document_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_document(&it.assigned_document)),
                     step_str(&it.source),
                 ];
-                format!("#{n} = DOCUMENT_REFERENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DocumentRepresentationType(id) => {
                 let it = self.model.document_representation_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_document(&it.represented_document)),
                 ];
-                format!(
-                    "#{n} = DOCUMENT_REPRESENTATION_TYPE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DocumentType(id) => {
                 let it = self.model.document_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.product_data_type)];
-                format!("#{n} = DOCUMENT_TYPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingAnnotationOccurrence(id) => {
                 let it = self.model.draughting_annotation_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28093,14 +28134,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
                 ];
-                format!(
-                    "#{n} = DRAUGHTING_ANNOTATION_OCCURRENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingCallout(id) => {
                 let it = self.model.draughting_callouts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28112,11 +28151,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = DRAUGHTING_CALLOUT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingCalloutRelationship(id) => {
                 let it = self.model.draughting_callout_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -28129,14 +28169,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_draughting_callout(&it.related_draughting_callout)
                     ),
                 ];
-                format!(
-                    "#{n} = DRAUGHTING_CALLOUT_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingModel(id) => {
                 let it = self.model.draughting_models.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28152,11 +28190,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = DRAUGHTING_MODEL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingModelItemAssociation(id) => {
                 let it = self.model.draughting_model_item_associations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28178,10 +28217,7 @@ impl<'a> Writer<'a> {
                         )
                     ),
                 ];
-                format!(
-                    "#{n} = DRAUGHTING_MODEL_ITEM_ASSOCIATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingModelItemAssociationWithPlaceholder(id) => {
                 let it = self
@@ -28189,6 +28225,7 @@ impl<'a> Writer<'a> {
                     .draughting_model_item_association_with_placeholders
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28216,41 +28253,33 @@ impl<'a> Writer<'a> {
                         )
                     ),
                 ];
-                format!(
-                    "#{n} = DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingPreDefinedColour(id) => {
                 let it = self.model.draughting_pre_defined_colours.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = DRAUGHTING_PRE_DEFINED_COLOUR({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingPreDefinedCurveFont(id) => {
                 let it = self.model.draughting_pre_defined_curve_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = DRAUGHTING_PRE_DEFINED_CURVE_FONT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::DraughtingPreDefinedTextFont(id) => {
                 let it = self.model.draughting_pre_defined_text_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = DRAUGHTING_PRE_DEFINED_TEXT_FONT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Edge(id) => {
                 let it = self.model.edges.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.edge_start {
@@ -28262,11 +28291,12 @@ impl<'a> Writer<'a> {
                         None => "*".to_string(),
                     },
                 ];
-                format!("#{n} = EDGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::EdgeCurve(id) => {
                 let it = self.model.edge_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vertex(&it.edge_start)),
@@ -28274,11 +28304,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_curve(&it.edge_geometry)),
                     (if it.same_sense { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = EDGE_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::EdgeLoop(id) => {
                 let it = self.model.edge_loops.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28290,159 +28321,157 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = EDGE_LOOP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Effectivity(id) => {
                 let it = self.model.effectivitys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.id)];
-                format!("#{n} = EFFECTIVITY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ElementarySurface(id) => {
                 let it = self.model.elementary_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
                 ];
-                format!("#{n} = ELEMENTARY_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Ellipse(id) => {
                 let it = self.model.ellipses.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
                     real(it.semi_axis_1),
                     real(it.semi_axis_2),
                 ];
-                format!("#{n} = ELLIPSE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Expression(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = EXPRESSION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternalIdentificationAssignment(id) => {
                 let it = self.model.external_identification_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.assigned_id),
                     format!("#{}", self.id_of_ref_identification_role(&it.role)),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!(
-                    "#{n} = EXTERNAL_IDENTIFICATION_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternalSource(id) => {
                 let it = self.model.external_sources.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![string_select(&it.source_id)];
-                format!("#{n} = EXTERNAL_SOURCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedCharacterGlyph(id) => {
                 let it = self.model.externally_defined_character_glyphs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!(
-                    "#{n} = EXTERNALLY_DEFINED_CHARACTER_GLYPH({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedCurveFont(id) => {
                 let it = self.model.externally_defined_curve_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!(
-                    "#{n} = EXTERNALLY_DEFINED_CURVE_FONT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedHatchStyle(id) => {
                 let it = self.model.externally_defined_hatch_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                     step_str(&it.name),
                 ];
-                format!(
-                    "#{n} = EXTERNALLY_DEFINED_HATCH_STYLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedItem(id) => {
                 let it = self.model.externally_defined_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!("#{n} = EXTERNALLY_DEFINED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedStyle(id) => {
                 let it = self.model.externally_defined_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!("#{n} = EXTERNALLY_DEFINED_STYLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedSymbol(id) => {
                 let it = self.model.externally_defined_symbols.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!("#{n} = EXTERNALLY_DEFINED_SYMBOL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedTextFont(id) => {
                 let it = self.model.externally_defined_text_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!(
-                    "#{n} = EXTERNALLY_DEFINED_TEXT_FONT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedTile(id) => {
                 let it = self.model.externally_defined_tiles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                 ];
-                format!("#{n} = EXTERNALLY_DEFINED_TILE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ExternallyDefinedTileStyle(id) => {
                 let it = self.model.externally_defined_tile_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
                     step_str(&it.name),
                 ];
-                format!(
-                    "#{n} = EXTERNALLY_DEFINED_TILE_STYLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Face(id) => {
                 let it = self.model.faces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28454,31 +28483,34 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = FACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FaceBound(id) => {
                 let it = self.model.face_bounds.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_loop(&it.bound)),
                     (if it.orientation { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = FACE_BOUND({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FaceOuterBound(id) => {
                 let it = self.model.face_outer_bounds.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_loop(&it.bound)),
                     (if it.orientation { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = FACE_OUTER_BOUND({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FaceSurface(id) => {
                 let it = self.model.face_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28492,11 +28524,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_surface(&it.face_geometry)),
                     (if it.same_sense { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = FACE_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FeatureForDatumTargetRelationship(id) => {
                 let it = self.model.feature_for_datum_target_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28509,14 +28542,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                 ];
-                format!(
-                    "#{n} = FEATURE_FOR_DATUM_TARGET_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FillAreaStyle(id) => {
                 let it = self.model.fill_area_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28528,20 +28559,22 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = FILL_AREA_STYLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FillAreaStyleColour(id) => {
                 let it = self.model.fill_area_style_colours.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_colour(&it.fill_colour)),
                 ];
-                format!("#{n} = FILL_AREA_STYLE_COLOUR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FillAreaStyleHatching(id) => {
                 let it = self.model.fill_area_style_hatchings.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve_style(&it.hatch_line_appearance)),
@@ -28556,11 +28589,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_cartesian_point(&it.pattern_start)),
                     real(it.hatch_line_angle),
                 ];
-                format!("#{n} = FILL_AREA_STYLE_HATCHING({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FillAreaStyleTileColouredRegion(id) => {
                 let it = self.model.fill_area_style_tile_coloured_regions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28569,14 +28603,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_colour(&it.region_colour)),
                 ];
-                format!(
-                    "#{n} = FILL_AREA_STYLE_TILE_COLOURED_REGION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FillAreaStyleTileCurveWithStyle(id) => {
                 let it = self.model.fill_area_style_tile_curve_with_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28584,14 +28616,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_curve_occurrence(&it.styled_curve)
                     ),
                 ];
-                format!(
-                    "#{n} = FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FillAreaStyleTileSymbolWithStyle(id) => {
                 let it = self.model.fill_area_style_tile_symbol_with_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28599,14 +28629,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_symbol_occurrence(&it.symbol)
                     ),
                 ];
-                format!(
-                    "#{n} = FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FillAreaStyleTiles(id) => {
                 let it = self.model.fill_area_style_tiless.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28626,11 +28654,12 @@ impl<'a> Writer<'a> {
                     ),
                     real(it.tiling_scale),
                 ];
-                format!("#{n} = FILL_AREA_STYLE_TILES({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FlatnessTolerance(id) => {
                 let it = self.model.flatness_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28646,16 +28675,18 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = FLATNESS_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FoundedItem(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = FOUNDED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::FunctionallyDefinedTransformation(id) => {
                 let it = self.model.functionally_defined_transformations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28663,14 +28694,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = FUNCTIONALLY_DEFINED_TRANSFORMATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeneralDatumReference(id) => {
                 let it = self.model.general_datum_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28707,11 +28736,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = GENERAL_DATUM_REFERENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeneralProperty(id) => {
                 let it = self.model.general_propertys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -28720,11 +28750,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = GENERAL_PROPERTY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeneralPropertyAssociation(id) => {
                 let it = self.model.general_property_associations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28737,34 +28768,32 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_derived_property_select(&it.derived_definition)
                     ),
                 ];
-                format!(
-                    "#{n} = GENERAL_PROPERTY_ASSOCIATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GenericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = GENERIC_EXPRESSION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GenericLiteral(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = GENERIC_LITERAL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GenericProductDefinitionReference(id) => {
                 let it = self.model.generic_product_definition_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_external_source(&it.source))];
-                format!(
-                    "#{n} = GENERIC_PRODUCT_DEFINITION_REFERENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricCurveSet(id) => {
                 let it = self.model.geometric_curve_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28776,11 +28805,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = GEOMETRIC_CURVE_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricItemSpecificUsage(id) => {
                 let it = self.model.geometric_item_specific_usages.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28797,36 +28827,30 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_model_item(&it.identified_item)
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_ITEM_SPECIFIC_USAGE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricRepresentationContext(id) => {
                 let it = self.model.geometric_representation_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.context_identifier),
                     step_str(&it.context_type),
                     format!("{}", it.coordinate_space_dimension),
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_REPRESENTATION_CONTEXT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricRepresentationItem(id) => {
                 let it = self.model.geometric_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = GEOMETRIC_REPRESENTATION_ITEM({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricSet(id) => {
                 let it = self.model.geometric_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28838,11 +28862,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = GEOMETRIC_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricTolerance(id) => {
                 let it = self.model.geometric_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28858,11 +28883,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = GEOMETRIC_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricToleranceRelationship(id) => {
                 let it = self.model.geometric_tolerance_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -28875,10 +28901,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance(&it.related_geometric_tolerance)
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_TOLERANCE_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricToleranceWithDatumReference(id) => {
                 let it = self
@@ -28886,6 +28909,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_datum_references
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28909,10 +28933,7 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricToleranceWithDefinedAreaUnit(id) => {
                 let it = self
@@ -28920,6 +28941,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_defined_area_units
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28949,14 +28971,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricToleranceWithDefinedUnit(id) => {
                 let it = self.model.geometric_tolerance_with_defined_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28978,10 +28998,7 @@ impl<'a> Writer<'a> {
                         )
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricToleranceWithMaximumTolerance(id) => {
                 let it = self
@@ -28989,6 +29006,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_maximum_tolerances
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29016,14 +29034,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_length_measure_with_unit(&it.maximum_upper_tolerance)
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricToleranceWithModifiers(id) => {
                 let it = self.model.geometric_tolerance_with_modifierss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29047,10 +29063,7 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRIC_TOLERANCE_WITH_MODIFIERS({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricallyBoundedSurfaceShapeRepresentation(id) => {
                 let it = self
@@ -29058,6 +29071,7 @@ impl<'a> Writer<'a> {
                     .geometrically_bounded_surface_shape_representations
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29073,10 +29087,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GeometricallyBoundedWireframeShapeRepresentation(id) => {
                 let it = self
@@ -29084,6 +29095,7 @@ impl<'a> Writer<'a> {
                     .geometrically_bounded_wireframe_shape_representations
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29099,14 +29111,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GlobalUncertaintyAssignedContext(id) => {
                 let it = self.model.global_uncertainty_assigned_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.context_identifier),
                     step_str(&it.context_type),
@@ -29122,14 +29132,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GlobalUnitAssignedContext(id) => {
                 let it = self.model.global_unit_assigned_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.context_identifier),
                     step_str(&it.context_type),
@@ -29142,14 +29150,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = GLOBAL_UNIT_ASSIGNED_CONTEXT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Group(id) => {
                 let it = self.model.groups.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29157,29 +29163,32 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = GROUP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::GroupAssignment(id) => {
                 let it = self.model.group_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_group(&it.assigned_group))];
-                format!("#{n} = GROUP_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Hyperbola(id) => {
                 let it = self.model.hyperbolas.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
                     real(it.semi_axis),
                     real(it.semi_imag_axis),
                 ];
-                format!("#{n} = HYPERBOLA({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::IdAttribute(id) => {
                 let it = self.model.id_attributes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.attribute_value),
                     format!(
@@ -29187,20 +29196,22 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_id_attribute_select(&it.identified_item)
                     ),
                 ];
-                format!("#{n} = ID_ATTRIBUTE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::IdentificationAssignment(id) => {
                 let it = self.model.identification_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.assigned_id),
                     format!("#{}", self.id_of_ref_identification_role(&it.role)),
                 ];
-                format!("#{n} = IDENTIFICATION_ASSIGNMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::IdentificationRole(id) => {
                 let it = self.model.identification_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29208,23 +29219,26 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = IDENTIFICATION_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::IntLiteral(id) => {
                 let it = self.model.int_literals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!("{}", it.the_value)];
-                format!("#{n} = INT_LITERAL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::IntegerRepresentationItem(id) => {
                 let it = self.model.integer_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), format!("{}", it.the_value)];
-                format!("#{n} = INTEGER_REPRESENTATION_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::IntersectionCurve(id) => {
                 let it = self.model.intersection_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -29238,11 +29252,12 @@ impl<'a> Writer<'a> {
                     ),
                     it.master_representation.token().to_string(),
                 ];
-                format!("#{n} = INTERSECTION_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Invisibility(id) => {
                 let it = self.model.invisibilitys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.invisible_items
@@ -29251,11 +29266,12 @@ impl<'a> Writer<'a> {
                         .collect::<Vec<_>>()
                         .join(",")
                 )];
-                format!("#{n} = INVISIBILITY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ItemDefinedTransformation(id) => {
                 let it = self.model.item_defined_transformations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29271,11 +29287,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_item(&it.transform_item_2)
                     ),
                 ];
-                format!("#{n} = ITEM_DEFINED_TRANSFORMATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ItemIdentifiedRepresentationUsage(id) => {
                 let it = self.model.item_identified_representation_usages.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29317,14 +29334,12 @@ impl<'a> Writer<'a> {
                         ),
                     },
                 ];
-                format!(
-                    "#{n} = ITEM_IDENTIFIED_REPRESENTATION_USAGE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LeaderCurve(id) => {
                 let it = self.model.leader_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29340,11 +29355,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_curve_or_curve_set(&it.item)),
                 ];
-                format!("#{n} = LEADER_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LeaderDirectedCallout(id) => {
                 let it = self.model.leader_directed_callouts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29356,11 +29372,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = LEADER_DIRECTED_CALLOUT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LeaderTerminator(id) => {
                 let it = self.model.leader_terminators.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29383,50 +29400,55 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_curve_occurrence(&it.annotated_curve)
                     ),
                 ];
-                format!("#{n} = LEADER_TERMINATOR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LengthMeasureWithUnit(id) => {
                 let it = self.model.length_measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
                 ];
-                format!("#{n} = LENGTH_MEASURE_WITH_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LengthUnit(id) => {
                 let it = self.model.length_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
-                format!("#{n} = LENGTH_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LimitsAndFits(id) => {
                 let it = self.model.limits_and_fitss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.form_variance),
                     step_str(&it.zone_variance),
                     step_str(&it.grade),
                     step_str(&it.source),
                 ];
-                format!("#{n} = LIMITS_AND_FITS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Line(id) => {
                 let it = self.model.lines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.pnt)),
                     format!("#{}", self.id_of_ref_vector(&it.dir)),
                 ];
-                format!("#{n} = LINE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LineProfileTolerance(id) => {
                 let it = self.model.line_profile_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29442,17 +29464,19 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = LINE_PROFILE_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LiteralNumber(id) => {
                 let it = self.model.literal_numbers.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![real(it.the_value)];
-                format!("#{n} = LITERAL_NUMBER({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::LocalTime(id) => {
                 let it = self.model.local_times.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.hour_component),
                     match &it.minute_component {
@@ -29468,17 +29492,19 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_coordinated_universal_time_offset(&it.zone)
                     ),
                 ];
-                format!("#{n} = LOCAL_TIME({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Loop(id) => {
                 let it = self.model.loops.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = LOOP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MakeFromUsageOption(id) => {
                 let it = self.model.make_from_usage_options.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -29502,20 +29528,22 @@ impl<'a> Writer<'a> {
                     step_str(&it.ranking_rationale),
                     format!("#{}", self.id_of_ref_measure_with_unit(&it.quantity)),
                 ];
-                format!("#{n} = MAKE_FROM_USAGE_OPTION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ManifoldSolidBrep(id) => {
                 let it = self.model.manifold_solid_breps.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_closed_shell(&it.outer)),
                 ];
-                format!("#{n} = MANIFOLD_SOLID_BREP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ManifoldSurfaceShapeRepresentation(id) => {
                 let it = self.model.manifold_surface_shape_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29531,14 +29559,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = MANIFOLD_SURFACE_SHAPE_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MappedItem(id) => {
                 let it = self.model.mapped_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -29547,29 +29573,32 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_item(&it.mapping_target)
                     ),
                 ];
-                format!("#{n} = MAPPED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MassMeasureWithUnit(id) => {
                 let it = self.model.mass_measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
                 ];
-                format!("#{n} = MASS_MEASURE_WITH_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MassUnit(id) => {
                 let it = self.model.mass_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
-                format!("#{n} = MASS_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MeasureQualification(id) => {
                 let it = self.model.measure_qualifications.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -29586,30 +29615,33 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = MEASURE_QUALIFICATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MeasureRepresentationItem(id) => {
                 let it = self.model.measure_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
                 ];
-                format!("#{n} = MEASURE_REPRESENTATION_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MeasureWithUnit(id) => {
                 let it = self.model.measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
                 ];
-                format!("#{n} = MEASURE_WITH_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MechanicalContext(id) => {
                 let it = self.model.mechanical_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29618,7 +29650,7 @@ impl<'a> Writer<'a> {
                     ),
                     step_str(&it.discipline_type),
                 ];
-                format!("#{n} = MECHANICAL_CONTEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MechanicalDesignAndDraughtingRelationship(id) => {
                 let it = self
@@ -29626,6 +29658,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_and_draughting_relationships
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29645,10 +29678,7 @@ impl<'a> Writer<'a> {
                         )
                     ),
                 ];
-                format!(
-                    "#{n} = MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MechanicalDesignGeometricPresentationRepresentation(id) => {
                 let it = self
@@ -29656,6 +29686,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_geometric_presentation_representations
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29671,10 +29702,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MechanicalDesignPresentationRepresentationWithDraughting(id) => {
                 let it = self
@@ -29682,6 +29710,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_presentation_representation_with_draughtings
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29697,10 +29726,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::MechanicalDesignShadedPresentationRepresentation(id) => {
                 let it = self
@@ -29708,6 +29734,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_shaded_presentation_representations
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29723,14 +29750,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ModelGeometricView(id) => {
                 let it = self.model.model_geometric_views.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29740,11 +29765,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_representation_item(&it.item)),
                     format!("#{}", self.id_of_ref_representation(&it.rep)),
                 ];
-                format!("#{n} = MODEL_GEOMETRIC_VIEW({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ModifiedGeometricTolerance(id) => {
                 let it = self.model.modified_geometric_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29761,32 +29787,32 @@ impl<'a> Writer<'a> {
                     ),
                     it.modifier.token().to_string(),
                 ];
-                format!(
-                    "#{n} = MODIFIED_GEOMETRIC_TOLERANCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::NameAttribute(id) => {
                 let it = self.model.name_attributes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.attribute_value),
                     format!("#{}", self.id_of_ref_name_attribute_select(&it.named_item)),
                 ];
-                format!("#{n} = NAME_ATTRIBUTE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::NamedUnit(id) => {
                 let it = self.model.named_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![match &it.dimensions {
                     Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)),
                     None => "*".to_string(),
                 }];
-                format!("#{n} = NAMED_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::NextAssemblyUsageOccurrence(id) => {
                 let it = self.model.next_assembly_usage_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -29811,19 +29837,18 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = NEXT_ASSEMBLY_USAGE_OCCURRENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::NumericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = NUMERIC_EXPRESSION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ObjectRole(id) => {
                 let it = self.model.object_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29831,31 +29856,34 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = OBJECT_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OffsetSurface(id) => {
                 let it = self.model.offset_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_surface(&it.basis_surface)),
                     real(it.distance),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = OFFSET_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OneDirectionRepeatFactor(id) => {
                 let it = self.model.one_direction_repeat_factors.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vector(&it.repeat_factor)),
                 ];
-                format!("#{n} = ONE_DIRECTION_REPEAT_FACTOR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OpenShell(id) => {
                 let it = self.model.open_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29867,11 +29895,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = OPEN_SHELL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Organization(id) => {
                 let it = self.model.organizations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     match &it.id {
                         Some(x) => step_str(x),
@@ -29883,11 +29912,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ORGANIZATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationRelationship(id) => {
                 let it = self.model.organization_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29900,17 +29930,19 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_organization(&it.related_organization)),
                 ];
-                format!("#{n} = ORGANIZATION_RELATIONSHIP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationRole(id) => {
                 let it = self.model.organization_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = ORGANIZATION_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationType(id) => {
                 let it = self.model.organization_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -29919,11 +29951,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ORGANIZATION_TYPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationTypeRole(id) => {
                 let it = self.model.organization_type_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -29932,11 +29965,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ORGANIZATION_TYPE_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationalAddress(id) => {
                 let it = self.model.organizational_addresss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -29999,11 +30033,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ORGANIZATIONAL_ADDRESS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationalProject(id) => {
                 let it = self.model.organizational_projects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30019,11 +30054,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = ORGANIZATIONAL_PROJECT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationalProjectRelationship(id) => {
                 let it = self.model.organizational_project_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30039,14 +30075,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_organizational_project(&it.related_organizational_project)
                     ),
                 ];
-                format!(
-                    "#{n} = ORGANIZATIONAL_PROJECT_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrganizationalProjectRole(id) => {
                 let it = self.model.organizational_project_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30054,22 +30088,24 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = ORGANIZATIONAL_PROJECT_ROLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrientedClosedShell(id) => {
                 let it = self.model.oriented_closed_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     "*".to_string(),
                     format!("#{}", self.id_of_ref_closed_shell(&it.closed_shell_element)),
                     (if it.orientation { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = ORIENTED_CLOSED_SHELL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OrientedEdge(id) => {
                 let it = self.model.oriented_edges.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     "*".to_string(),
@@ -30077,11 +30113,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_edge(&it.edge_element)),
                     (if it.orientation { ".T." } else { ".F." }).to_string(),
                 ];
-                format!("#{n} = ORIENTED_EDGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::OverRidingStyledItem(id) => {
                 let it = self.model.over_riding_styled_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30098,11 +30135,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
                     format!("#{}", self.id_of_ref_styled_item(&it.over_ridden_style)),
                 ];
-                format!("#{n} = OVER_RIDING_STYLED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ParallelismTolerance(id) => {
                 let it = self.model.parallelism_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30126,21 +30164,20 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = PARALLELISM_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ParametricRepresentationContext(id) => {
                 let it = self.model.parametric_representation_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.context_identifier), step_str(&it.context_type)];
-                format!(
-                    "#{n} = PARAMETRIC_REPRESENTATION_CONTEXT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Path(id) => {
                 let it = self.model.paths.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30152,11 +30189,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = PATH({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Pcurve(id) => {
                 let it = self.model.pcurves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_surface(&it.basis_surface)),
@@ -30165,11 +30203,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_definitional_representation(&it.reference_to_curve)
                     ),
                 ];
-                format!("#{n} = PCURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PerpendicularityTolerance(id) => {
                 let it = self.model.perpendicularity_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30193,11 +30232,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = PERPENDICULARITY_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Person(id) => {
                 let it = self.model.persons.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.last_name {
@@ -30230,20 +30270,22 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = PERSON({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PersonAndOrganization(id) => {
                 let it = self.model.person_and_organizations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_person(&it.the_person)),
                     format!("#{}", self.id_of_ref_organization(&it.the_organization)),
                 ];
-                format!("#{n} = PERSON_AND_ORGANIZATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PersonAndOrganizationAddress(id) => {
                 let it = self.model.person_and_organization_addresss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -30318,14 +30360,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = PERSON_AND_ORGANIZATION_ADDRESS({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PersonAndOrganizationAssignment(id) => {
                 let it = self.model.person_and_organization_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -30335,23 +30375,19 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_person_and_organization_role(&it.role)),
                 ];
-                format!(
-                    "#{n} = PERSON_AND_ORGANIZATION_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PersonAndOrganizationRole(id) => {
                 let it = self.model.person_and_organization_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = PERSON_AND_ORGANIZATION_ROLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PersonalAddress(id) => {
                 let it = self.model.personal_addresss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -30414,11 +30450,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = PERSONAL_ADDRESS({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PlacedDatumTargetFeature(id) => {
                 let it = self.model.placed_datum_target_features.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30429,68 +30466,72 @@ impl<'a> Writer<'a> {
                     it.product_definitional.token().to_string(),
                     step_str(&it.target_id),
                 ];
-                format!("#{n} = PLACED_DATUM_TARGET_FEATURE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Placement(id) => {
                 let it = self.model.placements.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
                 ];
-                format!("#{n} = PLACEMENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PlanarBox(id) => {
                 let it = self.model.planar_boxs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     real(it.size_in_x),
                     real(it.size_in_y),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.placement)),
                 ];
-                format!("#{n} = PLANAR_BOX({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PlanarExtent(id) => {
                 let it = self.model.planar_extents.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.name), real(it.size_in_x), real(it.size_in_y)];
-                format!("#{n} = PLANAR_EXTENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Plane(id) => {
                 let it = self.model.planes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
                 ];
-                format!("#{n} = PLANE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PlaneAngleMeasureWithUnit(id) => {
                 let it = self.model.plane_angle_measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
                 ];
-                format!(
-                    "#{n} = PLANE_ANGLE_MEASURE_WITH_UNIT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PlaneAngleUnit(id) => {
                 let it = self.model.plane_angle_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
-                format!("#{n} = PLANE_ANGLE_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PlusMinusTolerance(id) => {
                 let it = self.model.plus_minus_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_tolerance_method_definition(&it.range)),
                     format!(
@@ -30498,17 +30539,19 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_dimensional_characteristic(&it.toleranced_dimension)
                     ),
                 ];
-                format!("#{n} = PLUS_MINUS_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Point(id) => {
                 let it = self.model.points.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = POINT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PointStyle(id) => {
                 let it = self.model.point_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.marker {
@@ -30535,11 +30578,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = POINT_STYLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PolyLoop(id) => {
                 let it = self.model.poly_loops.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30551,11 +30595,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = POLY_LOOP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Polyline(id) => {
                 let it = self.model.polylines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30567,11 +30612,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = POLYLINE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PositionTolerance(id) => {
                 let it = self.model.position_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30587,101 +30633,103 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = POSITION_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedCharacterGlyph(id) => {
                 let it = self.model.pre_defined_character_glyphs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_CHARACTER_GLYPH({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedColour(id) => {
                 let it = self.model.pre_defined_colours.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_COLOUR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedCurveFont(id) => {
                 let it = self.model.pre_defined_curve_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_CURVE_FONT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedItem(id) => {
                 let it = self.model.pre_defined_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedMarker(id) => {
                 let it = self.model.pre_defined_markers.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_MARKER({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedPointMarkerSymbol(id) => {
                 let it = self.model.pre_defined_point_marker_symbols.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = PRE_DEFINED_POINT_MARKER_SYMBOL({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedPresentationStyle(id) => {
                 let it = self.model.pre_defined_presentation_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = PRE_DEFINED_PRESENTATION_STYLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedSurfaceSideStyle(id) => {
                 let it = self.model.pre_defined_surface_side_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = PRE_DEFINED_SURFACE_SIDE_STYLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedSymbol(id) => {
                 let it = self.model.pre_defined_symbols.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_SYMBOL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedTerminatorSymbol(id) => {
                 let it = self.model.pre_defined_terminator_symbols.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = PRE_DEFINED_TERMINATOR_SYMBOL({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedTextFont(id) => {
                 let it = self.model.pre_defined_text_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_TEXT_FONT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PreDefinedTile(id) => {
                 let it = self.model.pre_defined_tiles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = PRE_DEFINED_TILE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PrecisionQualifier(id) => {
                 let it = self.model.precision_qualifiers.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!("{}", it.precision_value)];
-                format!("#{n} = PRECISION_QUALIFIER({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationArea(id) => {
                 let it = self.model.presentation_areas.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30697,11 +30745,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = PRESENTATION_AREA({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationLayerAssignment(id) => {
                 let it = self.model.presentation_layer_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -30714,14 +30763,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = PRESENTATION_LAYER_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationRepresentation(id) => {
                 let it = self.model.presentation_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30737,16 +30784,18 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = PRESENTATION_REPRESENTATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationSet(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = PRESENTATION_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationSize(id) => {
                 let it = self.model.presentation_sizes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -30754,11 +30803,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_planar_box(&it.size)),
                 ];
-                format!("#{n} = PRESENTATION_SIZE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationStyleAssignment(id) => {
                 let it = self.model.presentation_style_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.styles
@@ -30772,14 +30822,12 @@ impl<'a> Writer<'a> {
                         .collect::<Vec<_>>()
                         .join(",")
                 )];
-                format!(
-                    "#{n} = PRESENTATION_STYLE_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationStyleByContext(id) => {
                 let it = self.model.presentation_style_by_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "({})",
@@ -30799,14 +30847,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_style_context_select(&it.style_context)
                     ),
                 ];
-                format!(
-                    "#{n} = PRESENTATION_STYLE_BY_CONTEXT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentationView(id) => {
                 let it = self.model.presentation_views.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30822,16 +30868,18 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = PRESENTATION_VIEW({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentedItem(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = PRESENTED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PresentedItemRepresentation(id) => {
                 let it = self.model.presented_item_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -30839,14 +30887,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_presented_item(&it.item)),
                 ];
-                format!(
-                    "#{n} = PRESENTED_ITEM_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Product(id) => {
                 let it = self.model.products.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -30863,11 +30909,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = PRODUCT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductCategory(id) => {
                 let it = self.model.product_categorys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30875,11 +30922,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = PRODUCT_CATEGORY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductCategoryRelationship(id) => {
                 let it = self.model.product_category_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30889,14 +30937,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_category(&it.category)),
                     format!("#{}", self.id_of_ref_product_category(&it.sub_category)),
                 ];
-                format!(
-                    "#{n} = PRODUCT_CATEGORY_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductConcept(id) => {
                 let it = self.model.product_concepts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -30909,11 +30955,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_concept_context(&it.market_context)
                     ),
                 ];
-                format!("#{n} = PRODUCT_CONCEPT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductConceptContext(id) => {
                 let it = self.model.product_concept_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30922,11 +30969,12 @@ impl<'a> Writer<'a> {
                     ),
                     step_str(&it.market_segment_type),
                 ];
-                format!("#{n} = PRODUCT_CONCEPT_CONTEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductConceptFeature(id) => {
                 let it = self.model.product_concept_features.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -30935,11 +30983,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = PRODUCT_CONCEPT_FEATURE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductConceptFeatureCategory(id) => {
                 let it = self.model.product_concept_feature_categorys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30947,14 +30996,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = PRODUCT_CONCEPT_FEATURE_CATEGORY({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductContext(id) => {
                 let it = self.model.product_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30963,11 +31010,12 @@ impl<'a> Writer<'a> {
                     ),
                     step_str(&it.discipline_type),
                 ];
-                format!("#{n} = PRODUCT_CONTEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinition(id) => {
                 let it = self.model.product_definitions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -30983,11 +31031,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_definition_context(&it.frame_of_reference)
                     ),
                 ];
-                format!("#{n} = PRODUCT_DEFINITION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionContext(id) => {
                 let it = self.model.product_definition_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30996,11 +31045,12 @@ impl<'a> Writer<'a> {
                     ),
                     step_str(&it.life_cycle_stage),
                 ];
-                format!("#{n} = PRODUCT_DEFINITION_CONTEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionContextAssociation(id) => {
                 let it = self.model.product_definition_context_associations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_product_definition(&it.definition)),
                     format!(
@@ -31012,14 +31062,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_definition_context_role(&it.role)
                     ),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_CONTEXT_ASSOCIATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionContextRole(id) => {
                 let it = self.model.product_definition_context_roles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31027,14 +31075,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_CONTEXT_ROLE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionEffectivity(id) => {
                 let it = self.model.product_definition_effectivitys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     format!(
@@ -31042,14 +31088,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_definition_relationship(&it.usage)
                     ),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_EFFECTIVITY({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionFormation(id) => {
                 let it = self.model.product_definition_formations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -31058,10 +31102,7 @@ impl<'a> Writer<'a> {
                     },
                     format!("#{}", self.id_of_ref_product(&it.of_product)),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_FORMATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionFormationWithSpecifiedSource(id) => {
                 let it = self
@@ -31069,6 +31110,7 @@ impl<'a> Writer<'a> {
                     .product_definition_formation_with_specified_sources
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -31078,14 +31120,12 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product(&it.of_product)),
                     it.make_or_buy.token().to_string(),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionOccurrence(id) => {
                 let it = self.model.product_definition_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.name {
@@ -31107,14 +31147,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_OCCURRENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionRelationship(id) => {
                 let it = self.model.product_definition_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -31135,10 +31173,7 @@ impl<'a> Writer<'a> {
                         )
                     ),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionRelationshipRelationship(id) => {
                 let it = self
@@ -31146,6 +31181,7 @@ impl<'a> Writer<'a> {
                     .product_definition_relationship_relationships
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -31162,14 +31198,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_definition_relationship(&it.related)
                     ),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionShape(id) => {
                 let it = self.model.product_definition_shapes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31181,11 +31215,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_characterized_definition(&it.definition)
                     ),
                 ];
-                format!("#{n} = PRODUCT_DEFINITION_SHAPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionSubstitute(id) => {
                 let it = self.model.product_definition_substitutes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     match &it.description {
                         Some(x) => step_str(x),
@@ -31200,14 +31235,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_product_definition(&it.substitute_definition)
                     ),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_SUBSTITUTE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionUsage(id) => {
                 let it = self.model.product_definition_usages.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -31228,7 +31261,7 @@ impl<'a> Writer<'a> {
                         )
                     ),
                 ];
-                format!("#{n} = PRODUCT_DEFINITION_USAGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductDefinitionWithAssociatedDocuments(id) => {
                 let it = self
@@ -31236,6 +31269,7 @@ impl<'a> Writer<'a> {
                     .product_definition_with_associated_documentss
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -31259,14 +31293,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProductRelatedProductCategory(id) => {
                 let it = self.model.product_related_product_categorys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31282,14 +31314,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = PRODUCT_RELATED_PRODUCT_CATEGORY({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ProjectedZoneDefinition(id) => {
                 let it = self.model.projected_zone_definitions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_tolerance_zone(&it.zone)),
                     format!(
@@ -31306,11 +31336,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_length_measure_with_unit(&it.projected_length)
                     ),
                 ];
-                format!("#{n} = PROJECTED_ZONE_DEFINITION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PropertyDefinition(id) => {
                 let it = self.model.property_definitions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31322,11 +31353,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_characterized_definition(&it.definition)
                     ),
                 ];
-                format!("#{n} = PROPERTY_DEFINITION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PropertyDefinitionRelationship(id) => {
                 let it = self.model.property_definition_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -31339,14 +31371,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_property_definition(&it.related_property_definition)
                     ),
                 ];
-                format!(
-                    "#{n} = PROPERTY_DEFINITION_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::PropertyDefinitionRepresentation(id) => {
                 let it = self.model.property_definition_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_represented_definition(&it.definition)),
                     format!(
@@ -31354,14 +31384,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation(&it.used_representation)
                     ),
                 ];
-                format!(
-                    "#{n} = PROPERTY_DEFINITION_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::QualifiedRepresentationItem(id) => {
                 let it = self.model.qualified_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31373,14 +31401,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = QUALIFIED_REPRESENTATION_ITEM({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::QuasiUniformCurve(id) => {
                 let it = self.model.quasi_uniform_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -31396,11 +31422,12 @@ impl<'a> Writer<'a> {
                     it.closed_curve.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = QUASI_UNIFORM_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::QuasiUniformSurface(id) => {
                 let it = self.model.quasi_uniform_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -31424,29 +31451,32 @@ impl<'a> Writer<'a> {
                     it.v_closed.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = QUASI_UNIFORM_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RatioMeasureWithUnit(id) => {
                 let it = self.model.ratio_measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
                 ];
-                format!("#{n} = RATIO_MEASURE_WITH_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RatioUnit(id) => {
                 let it = self.model.ratio_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
-                format!("#{n} = RATIO_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RationalBSplineCurve(id) => {
                 let it = self.model.rational_b_spline_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -31470,11 +31500,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = RATIONAL_B_SPLINE_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RationalBSplineSurface(id) => {
                 let it = self.model.rational_b_spline_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -31509,35 +31540,36 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = RATIONAL_B_SPLINE_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RealLiteral(id) => {
                 let it = self.model.real_literals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![real(it.the_value)];
-                format!("#{n} = REAL_LITERAL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RealRepresentationItem(id) => {
                 let it = self.model.real_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), real(it.the_value)];
-                format!("#{n} = REAL_REPRESENTATION_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepositionedTessellatedItem(id) => {
                 let it = self.model.repositioned_tessellated_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.location)),
                 ];
-                format!(
-                    "#{n} = REPOSITIONED_TESSELLATED_ITEM({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Representation(id) => {
                 let it = self.model.representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31553,33 +31585,34 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = REPRESENTATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepresentationContext(id) => {
                 let it = self.model.representation_contexts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.context_identifier), step_str(&it.context_type)];
-                format!("#{n} = REPRESENTATION_CONTEXT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepresentationContextReference(id) => {
                 let it = self.model.representation_context_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.context_identifier)];
-                format!(
-                    "#{n} = REPRESENTATION_CONTEXT_REFERENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepresentationItem(id) => {
                 let it = self.model.representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = REPRESENTATION_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepresentationMap(id) => {
                 let it = self.model.representation_maps.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -31590,11 +31623,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation(&it.mapped_representation)
                     ),
                 ];
-                format!("#{n} = REPRESENTATION_MAP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepresentationReference(id) => {
                 let it = self.model.representation_references.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     format!(
@@ -31602,11 +31636,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context_reference(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = REPRESENTATION_REFERENCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepresentationRelationship(id) => {
                 let it = self.model.representation_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31622,7 +31657,7 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_or_representation_reference(&it.rep_2)
                     ),
                 ];
-                format!("#{n} = REPRESENTATION_RELATIONSHIP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RepresentationRelationshipWithTransformation(id) => {
                 let it = self
@@ -31630,6 +31665,7 @@ impl<'a> Writer<'a> {
                     .representation_relationship_with_transformations
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31668,14 +31704,12 @@ impl<'a> Writer<'a> {
                         other => format!("#{}", self.id_of_ref_transformation(other)),
                     },
                 ];
-                format!(
-                    "#{n} = REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ResourceProperty(id) => {
                 let it = self.model.resource_propertys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -31684,26 +31718,29 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_characterized_resource_definition(&it.resource)
                     ),
                 ];
-                format!("#{n} = RESOURCE_PROPERTY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ResourceRequirementType(id) => {
                 let it = self.model.resource_requirement_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), step_str(&it.description)];
-                format!("#{n} = RESOURCE_REQUIREMENT_TYPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RoleAssociation(id) => {
                 let it = self.model.role_associations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_object_role(&it.role)),
                     format!("#{}", self.id_of_ref_role_select(&it.item_with_role)),
                 ];
-                format!("#{n} = ROLE_ASSOCIATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::RoundnessTolerance(id) => {
                 let it = self.model.roundness_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31719,11 +31756,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = ROUNDNESS_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SeamCurve(id) => {
                 let it = self.model.seam_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -31737,11 +31775,12 @@ impl<'a> Writer<'a> {
                     ),
                     it.master_representation.token().to_string(),
                 ];
-                format!("#{n} = SEAM_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SecurityClassification(id) => {
                 let it = self.model.security_classifications.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.purpose),
@@ -31750,32 +31789,29 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_security_classification_level(&it.security_level)
                     ),
                 ];
-                format!("#{n} = SECURITY_CLASSIFICATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SecurityClassificationAssignment(id) => {
                 let it = self.model.security_classification_assignments.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_security_classification(&it.assigned_security_classification)
                 )];
-                format!(
-                    "#{n} = SECURITY_CLASSIFICATION_ASSIGNMENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SecurityClassificationLevel(id) => {
                 let it = self.model.security_classification_levels.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = SECURITY_CLASSIFICATION_LEVEL({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeAspect(id) => {
                 let it = self.model.shape_aspects.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31788,11 +31824,12 @@ impl<'a> Writer<'a> {
                         None => "*".to_string(),
                     },
                 ];
-                format!("#{n} = SHAPE_ASPECT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeAspectAssociativity(id) => {
                 let it = self.model.shape_aspect_associativitys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31805,11 +31842,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                 ];
-                format!("#{n} = SHAPE_ASPECT_ASSOCIATIVITY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeAspectDerivingRelationship(id) => {
                 let it = self.model.shape_aspect_deriving_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31822,14 +31860,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                 ];
-                format!(
-                    "#{n} = SHAPE_ASPECT_DERIVING_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeAspectRelationship(id) => {
                 let it = self.model.shape_aspect_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31842,11 +31878,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
                 ];
-                format!("#{n} = SHAPE_ASPECT_RELATIONSHIP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeDefinitionRepresentation(id) => {
                 let it = self.model.shape_definition_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_represented_definition(&it.definition)),
                     format!(
@@ -31854,14 +31891,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation(&it.used_representation)
                     ),
                 ];
-                format!(
-                    "#{n} = SHAPE_DEFINITION_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeDimensionRepresentation(id) => {
                 let it = self.model.shape_dimension_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31877,14 +31912,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = SHAPE_DIMENSION_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeRepresentation(id) => {
                 let it = self.model.shape_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31900,11 +31933,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = SHAPE_REPRESENTATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeRepresentationRelationship(id) => {
                 let it = self.model.shape_representation_relationships.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31920,14 +31954,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_or_representation_reference(&it.rep_2)
                     ),
                 ];
-                format!(
-                    "#{n} = SHAPE_REPRESENTATION_RELATIONSHIP({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShapeRepresentationWithParameters(id) => {
                 let it = self.model.shape_representation_with_parameterss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31943,14 +31975,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = SHAPE_REPRESENTATION_WITH_PARAMETERS({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ShellBasedSurfaceModel(id) => {
                 let it = self.model.shell_based_surface_models.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31962,11 +31992,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = SHELL_BASED_SURFACE_MODEL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SiUnit(id) => {
                 let it = self.model.si_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     "*".to_string(),
                     match &it.prefix {
@@ -31975,46 +32006,52 @@ impl<'a> Writer<'a> {
                     },
                     it.name.token().to_string(),
                 ];
-                format!("#{n} = SI_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SimpleGenericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = SIMPLE_GENERIC_EXPRESSION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SimpleNumericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = SIMPLE_NUMERIC_EXPRESSION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SolidAngleUnit(id) => {
                 let it = self.model.solid_angle_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
-                format!("#{n} = SOLID_ANGLE_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SolidModel(id) => {
                 let it = self.model.solid_models.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = SOLID_MODEL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SphericalSurface(id) => {
                 let it = self.model.spherical_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
                     real(it.radius),
                 ];
-                format!("#{n} = SPHERICAL_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::StartRequest(id) => {
                 let it = self.model.start_requests.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -32029,11 +32066,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = START_REQUEST({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::StartWork(id) => {
                 let it = self.model.start_works.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_action(&it.assigned_action)),
                     format!(
@@ -32045,11 +32083,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = START_WORK({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::StateObserved(id) => {
                 let it = self.model.state_observeds.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32057,11 +32096,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = STATE_OBSERVED({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::StateType(id) => {
                 let it = self.model.state_types.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32069,11 +32109,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = STATE_TYPE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::StraightnessTolerance(id) => {
                 let it = self.model.straightness_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32089,11 +32130,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = STRAIGHTNESS_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::StyledItem(id) => {
                 let it = self.model.styled_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32109,17 +32151,19 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
                 ];
-                format!("#{n} = STYLED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Surface(id) => {
                 let it = self.model.surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceCurve(id) => {
                 let it = self.model.surface_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -32133,31 +32177,34 @@ impl<'a> Writer<'a> {
                     ),
                     it.master_representation.token().to_string(),
                 ];
-                format!("#{n} = SURFACE_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceOfLinearExtrusion(id) => {
                 let it = self.model.surface_of_linear_extrusions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.swept_curve)),
                     format!("#{}", self.id_of_ref_vector(&it.extrusion_axis)),
                 ];
-                format!("#{n} = SURFACE_OF_LINEAR_EXTRUSION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceOfRevolution(id) => {
                 let it = self.model.surface_of_revolutions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.swept_curve)),
                     format!("#{}", self.id_of_ref_axis1_placement(&it.axis_position)),
                 ];
-                format!("#{n} = SURFACE_OF_REVOLUTION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceProfileTolerance(id) => {
                 let it = self.model.surface_profile_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32173,21 +32220,20 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
                 ];
-                format!("#{n} = SURFACE_PROFILE_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceRenderingProperties(id) => {
                 let it = self.model.surface_rendering_propertiess.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_colour(&it.rendered_colour))];
-                format!(
-                    "#{n} = SURFACE_RENDERING_PROPERTIES({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceSideStyle(id) => {
                 let it = self.model.surface_side_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32199,38 +32245,42 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = SURFACE_SIDE_STYLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleBoundary(id) => {
                 let it = self.model.surface_style_boundarys.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_boundary)
                 )];
-                format!("#{n} = SURFACE_STYLE_BOUNDARY({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleControlGrid(id) => {
                 let it = self.model.surface_style_control_grids.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_control_grid)
                 )];
-                format!("#{n} = SURFACE_STYLE_CONTROL_GRID({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleFillArea(id) => {
                 let it = self.model.surface_style_fill_areas.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_fill_area_style(&it.fill_area)
                 )];
-                format!("#{n} = SURFACE_STYLE_FILL_AREA({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleParameterLine(id) => {
                 let it = self.model.surface_style_parameter_lines.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -32245,28 +32295,24 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = SURFACE_STYLE_PARAMETER_LINE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleReflectanceAmbient(id) => {
                 let it = self.model.surface_style_reflectance_ambients.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![real(it.ambient_reflectance)];
-                format!(
-                    "#{n} = SURFACE_STYLE_REFLECTANCE_AMBIENT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleRendering(id) => {
                 let it = self.model.surface_style_renderings.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.rendering_method.token().to_string(),
                     format!("#{}", self.id_of_ref_colour(&it.surface_colour)),
                 ];
-                format!("#{n} = SURFACE_STYLE_RENDERING({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleRenderingWithProperties(id) => {
                 let it = self
@@ -32274,6 +32320,7 @@ impl<'a> Writer<'a> {
                     .surface_style_rendering_with_propertiess
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.rendering_method.token().to_string(),
                     format!("#{}", self.id_of_ref_colour(&it.surface_colour)),
@@ -32286,66 +32333,67 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = SURFACE_STYLE_RENDERING_WITH_PROPERTIES({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleSegmentationCurve(id) => {
                 let it = self.model.surface_style_segmentation_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_segmentation_curve)
                 )];
-                format!(
-                    "#{n} = SURFACE_STYLE_SEGMENTATION_CURVE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleSilhouette(id) => {
                 let it = self.model.surface_style_silhouettes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_silhouette)
                 )];
-                format!("#{n} = SURFACE_STYLE_SILHOUETTE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleTransparent(id) => {
                 let it = self.model.surface_style_transparents.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![real(it.transparency)];
-                format!("#{n} = SURFACE_STYLE_TRANSPARENT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SurfaceStyleUsage(id) => {
                 let it = self.model.surface_style_usages.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.side.token().to_string(),
                     format!("#{}", self.id_of_ref_surface_side_style_select(&it.style)),
                 ];
-                format!("#{n} = SURFACE_STYLE_USAGE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SweptSurface(id) => {
                 let it = self.model.swept_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.swept_curve)),
                 ];
-                format!("#{n} = SWEPT_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SymbolColour(id) => {
                 let it = self.model.symbol_colours.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_colour(&it.colour_of_symbol))];
-                format!("#{n} = SYMBOL_COLOUR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SymbolRepresentation(id) => {
                 let it = self.model.symbol_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32361,11 +32409,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!("#{n} = SYMBOL_REPRESENTATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SymbolStyle(id) => {
                 let it = self.model.symbol_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32373,22 +32422,24 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_symbol_style_select(&it.style_of_symbol)
                     ),
                 ];
-                format!("#{n} = SYMBOL_STYLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SymbolTarget(id) => {
                 let it = self.model.symbol_targets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.placement)),
                     real(it.x_scale),
                     real(it.y_scale),
                 ];
-                format!("#{n} = SYMBOL_TARGET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::SymmetryTolerance(id) => {
                 let it = self.model.symmetry_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32412,11 +32463,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = SYMMETRY_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TerminatorSymbol(id) => {
                 let it = self.model.terminator_symbols.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32439,11 +32491,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_annotation_curve_occurrence(&it.annotated_curve)
                     ),
                 ];
-                format!("#{n} = TERMINATOR_SYMBOL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedAnnotationOccurrence(id) => {
                 let it = self.model.tessellated_annotation_occurrences.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32459,14 +32512,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
                 ];
-                format!(
-                    "#{n} = TESSELLATED_ANNOTATION_OCCURRENCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedCurveSet(id) => {
                 let it = self.model.tessellated_curve_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -32482,11 +32533,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = TESSELLATED_CURVE_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedFace(id) => {
                 let it = self.model.tessellated_faces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -32507,11 +32559,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = TESSELLATED_FACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedGeometricSet(id) => {
                 let it = self.model.tessellated_geometric_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32523,17 +32576,19 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = TESSELLATED_GEOMETRIC_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedItem(id) => {
                 let it = self.model.tessellated_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = TESSELLATED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedShapeRepresentation(id) => {
                 let it = self.model.tessellated_shape_representations.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32549,14 +32604,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_context(&it.context_of_items)
                     ),
                 ];
-                format!(
-                    "#{n} = TESSELLATED_SHAPE_REPRESENTATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedShell(id) => {
                 let it = self.model.tessellated_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32572,11 +32625,12 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = TESSELLATED_SHELL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedSolid(id) => {
                 let it = self.model.tessellated_solids.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32592,17 +32646,19 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = TESSELLATED_SOLID({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedStructuredItem(id) => {
                 let it = self.model.tessellated_structured_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = TESSELLATED_STRUCTURED_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TessellatedSurfaceSet(id) => {
                 let it = self.model.tessellated_surface_sets.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -32619,21 +32675,23 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = TESSELLATED_SURFACE_SET({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TextFont(id) => {
                 let it = self.model.text_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
                     step_str(&it.description),
                 ];
-                format!("#{n} = TEXT_FONT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TextLiteral(id) => {
                 let it = self.model.text_literals.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.literal),
@@ -32642,11 +32700,12 @@ impl<'a> Writer<'a> {
                     it.path.token().to_string(),
                     format!("#{}", self.id_of_ref_font_select(&it.font)),
                 ];
-                format!("#{n} = TEXT_LITERAL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TextStyle(id) => {
                 let it = self.model.text_styles.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32654,18 +32713,20 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_character_style_select(&it.character_appearance)
                     ),
                 ];
-                format!("#{n} = TEXT_STYLE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TextStyleForDefinedFont(id) => {
                 let it = self.model.text_style_for_defined_fonts.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_colour(&it.text_colour))];
-                format!("#{n} = TEXT_STYLE_FOR_DEFINED_FONT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TextStyleWithBoxCharacteristics(id) => {
                 let it = self.model.text_style_with_box_characteristicss.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32681,45 +32742,44 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!(
-                    "#{n} = TEXT_STYLE_WITH_BOX_CHARACTERISTICS({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TextureStyleSpecification(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!("#{n} = TEXTURE_STYLE_SPECIFICATION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TextureStyleTessellationSpecification(_) => {
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![];
-                format!(
-                    "#{n} = TEXTURE_STYLE_TESSELLATION_SPECIFICATION({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TimeUnit(id) => {
                 let it = self.model.time_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
                 )];
-                format!("#{n} = TIME_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ToleranceValue(id) => {
                 let it = self.model.tolerance_values.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_measure_with_unit(&it.lower_bound)),
                     format!("#{}", self.id_of_ref_measure_with_unit(&it.upper_bound)),
                 ];
-                format!("#{n} = TOLERANCE_VALUE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ToleranceZone(id) => {
                 let it = self.model.tolerance_zones.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32738,11 +32798,12 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_tolerance_zone_form(&it.form)),
                 ];
-                format!("#{n} = TOLERANCE_ZONE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ToleranceZoneDefinition(id) => {
                 let it = self.model.tolerance_zone_definitions.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_tolerance_zone(&it.zone)),
                     format!(
@@ -32754,17 +32815,19 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = TOLERANCE_ZONE_DEFINITION({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ToleranceZoneForm(id) => {
                 let it = self.model.tolerance_zone_forms.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = TOLERANCE_ZONE_FORM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ToleranceZoneWithDatum(id) => {
                 let it = self.model.tolerance_zone_with_datums.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32784,31 +32847,31 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_tolerance_zone_form(&it.form)),
                     format!("#{}", self.id_of_ref_datum_system(&it.datum_reference)),
                 ];
-                format!("#{n} = TOLERANCE_ZONE_WITH_DATUM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TopologicalRepresentationItem(id) => {
                 let it = self.model.topological_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!(
-                    "#{n} = TOPOLOGICAL_REPRESENTATION_ITEM({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ToroidalSurface(id) => {
                 let it = self.model.toroidal_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
                     real(it.major_radius),
                     real(it.minor_radius),
                 ];
-                format!("#{n} = TOROIDAL_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TotalRunoutTolerance(id) => {
                 let it = self.model.total_runout_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32832,11 +32895,12 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = TOTAL_RUNOUT_TOLERANCE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TrimmedCurve(id) => {
                 let it = self.model.trimmed_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.basis_curve)),
@@ -32867,27 +32931,30 @@ impl<'a> Writer<'a> {
                     (if it.sense_agreement { ".T." } else { ".F." }).to_string(),
                     it.master_representation.token().to_string(),
                 ];
-                format!("#{n} = TRIMMED_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TwoDirectionRepeatFactor(id) => {
                 let it = self.model.two_direction_repeat_factors.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vector(&it.repeat_factor)),
                     format!("#{}", self.id_of_ref_vector(&it.second_repeat_factor)),
                 ];
-                format!("#{n} = TWO_DIRECTION_REPEAT_FACTOR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::TypeQualifier(id) => {
                 let it = self.model.type_qualifiers.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = TYPE_QUALIFIER({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::UncertaintyMeasureWithUnit(id) => {
                 let it = self.model.uncertainty_measure_with_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
@@ -32897,21 +32964,20 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!(
-                    "#{n} = UNCERTAINTY_MEASURE_WITH_UNIT({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::UncertaintyQualifier(id) => {
                 let it = self.model.uncertainty_qualifiers.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.measure_name), step_str(&it.description)];
-                format!("#{n} = UNCERTAINTY_QUALIFIER({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::UnequallyDisposedGeometricTolerance(id) => {
                 let it = self.model.unequally_disposed_geometric_tolerances.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32931,14 +32997,12 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_length_measure_with_unit(&it.displacement)
                     ),
                 ];
-                format!(
-                    "#{n} = UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({});\n",
-                    attrs.join(",")
-                )
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::UniformCurve(id) => {
                 let it = self.model.uniform_curves.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -32954,11 +33018,12 @@ impl<'a> Writer<'a> {
                     it.closed_curve.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = UNIFORM_CURVE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::UniformSurface(id) => {
                 let it = self.model.uniform_surfaces.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -32982,33 +33047,37 @@ impl<'a> Writer<'a> {
                     it.v_closed.token().to_string(),
                     it.self_intersect.token().to_string(),
                 ];
-                format!("#{n} = UNIFORM_SURFACE({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ValueFormatTypeQualifier(id) => {
                 let it = self.model.value_format_type_qualifiers.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.format_type)];
-                format!("#{n} = VALUE_FORMAT_TYPE_QUALIFIER({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ValueRepresentationItem(id) => {
                 let it = self.model.value_representation_items.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), measure(&it.value_component)];
-                format!("#{n} = VALUE_REPRESENTATION_ITEM({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Vector(id) => {
                 let it = self.model.vectors.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_direction(&it.orientation)),
                     real(it.magnitude),
                 ];
-                format!("#{n} = VECTOR({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::VersionedActionRequest(id) => {
                 let it = self.model.versioned_action_requests.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.version {
@@ -33021,44 +33090,49 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                 ];
-                format!("#{n} = VERSIONED_ACTION_REQUEST({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::Vertex(id) => {
                 let it = self.model.vertexs.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
-                format!("#{n} = VERTEX({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::VertexLoop(id) => {
                 let it = self.model.vertex_loops.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vertex(&it.loop_vertex)),
                 ];
-                format!("#{n} = VERTEX_LOOP({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::VertexPoint(id) => {
                 let it = self.model.vertex_points.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_point(&it.vertex_geometry)),
                 ];
-                format!("#{n} = VERTEX_POINT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::VertexShell(id) => {
                 let it = self.model.vertex_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vertex_loop(&it.vertex_shell_extent)),
                 ];
-                format!("#{n} = VERTEX_SHELL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ViewVolume(id) => {
                 let it = self.model.view_volumes.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     it.projection_type.token().to_string(),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.projection_point)),
@@ -33080,11 +33154,12 @@ impl<'a> Writer<'a> {
                     .to_string(),
                     format!("#{}", self.id_of_ref_planar_box(&it.view_window)),
                 ];
-                format!("#{n} = VIEW_VOLUME({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::VolumeUnit(id) => {
                 let it = self.model.volume_units.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.elements
@@ -33093,11 +33168,12 @@ impl<'a> Writer<'a> {
                         .collect::<Vec<_>>()
                         .join(",")
                 )];
-                format!("#{n} = VOLUME_UNIT({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::WireShell(id) => {
                 let it = self.model.wire_shells.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
+                let kw = self.render_kw(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33109,7 +33185,7 @@ impl<'a> Writer<'a> {
                             .join(",")
                     ),
                 ];
-                format!("#{n} = WIRE_SHELL({});\n", attrs.join(","))
+                format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             AnyId::ComplexUnit(id) => {
                 let cu = self.model.complex_units.get(id.0);
@@ -33467,8 +33543,580 @@ impl<'a> Writer<'a> {
         }
     }
 
-    pub fn emit_all(mut self) -> String {
-        let mut order: Vec<AnyId> = Vec::new();
+    pub(crate) fn name_of(any: AnyId) -> &'static str {
+        match any {
+            AnyId::Action(_) => "ACTION",
+            AnyId::ActionAssignment(_) => "ACTION_ASSIGNMENT",
+            AnyId::ActionDirective(_) => "ACTION_DIRECTIVE",
+            AnyId::ActionMethod(_) => "ACTION_METHOD",
+            AnyId::ActionMethodRelationship(_) => "ACTION_METHOD_RELATIONSHIP",
+            AnyId::ActionProperty(_) => "ACTION_PROPERTY",
+            AnyId::ActionRelationship(_) => "ACTION_RELATIONSHIP",
+            AnyId::ActionRequestAssignment(_) => "ACTION_REQUEST_ASSIGNMENT",
+            AnyId::ActionRequestSolution(_) => "ACTION_REQUEST_SOLUTION",
+            AnyId::ActionResource(_) => "ACTION_RESOURCE",
+            AnyId::ActionResourceRelationship(_) => "ACTION_RESOURCE_RELATIONSHIP",
+            AnyId::ActionResourceRequirement(_) => "ACTION_RESOURCE_REQUIREMENT",
+            AnyId::ActionResourceType(_) => "ACTION_RESOURCE_TYPE",
+            AnyId::Address(_) => "ADDRESS",
+            AnyId::AdvancedBrepShapeRepresentation(_) => "ADVANCED_BREP_SHAPE_REPRESENTATION",
+            AnyId::AdvancedFace(_) => "ADVANCED_FACE",
+            AnyId::AllAroundShapeAspect(_) => "ALL_AROUND_SHAPE_ASPECT",
+            AnyId::AngularLocation(_) => "ANGULAR_LOCATION",
+            AnyId::AngularSize(_) => "ANGULAR_SIZE",
+            AnyId::AngularityTolerance(_) => "ANGULARITY_TOLERANCE",
+            AnyId::AnnotationCurveOccurrence(_) => "ANNOTATION_CURVE_OCCURRENCE",
+            AnyId::AnnotationFillAreaOccurrence(_) => "ANNOTATION_FILL_AREA_OCCURRENCE",
+            AnyId::AnnotationOccurrence(_) => "ANNOTATION_OCCURRENCE",
+            AnyId::AnnotationOccurrenceAssociativity(_) => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+            AnyId::AnnotationOccurrenceRelationship(_) => "ANNOTATION_OCCURRENCE_RELATIONSHIP",
+            AnyId::AnnotationPlaceholderLeaderLine(_) => "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+            AnyId::AnnotationPlaceholderOccurrence(_) => "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+            AnyId::AnnotationPlaceholderOccurrenceWithLeaderLine(_) => {
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE"
+            }
+            AnyId::AnnotationPlane(_) => "ANNOTATION_PLANE",
+            AnyId::AnnotationSymbol(_) => "ANNOTATION_SYMBOL",
+            AnyId::AnnotationSymbolOccurrence(_) => "ANNOTATION_SYMBOL_OCCURRENCE",
+            AnyId::AnnotationText(_) => "ANNOTATION_TEXT",
+            AnyId::AnnotationTextCharacter(_) => "ANNOTATION_TEXT_CHARACTER",
+            AnyId::AnnotationTextOccurrence(_) => "ANNOTATION_TEXT_OCCURRENCE",
+            AnyId::AnnotationToAnnotationLeaderLine(_) => "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
+            AnyId::AnnotationToModelLeaderLine(_) => "ANNOTATION_TO_MODEL_LEADER_LINE",
+            AnyId::ApllPoint(_) => "APLL_POINT",
+            AnyId::ApllPointWithSurface(_) => "APLL_POINT_WITH_SURFACE",
+            AnyId::ApplicationContext(_) => "APPLICATION_CONTEXT",
+            AnyId::ApplicationContextElement(_) => "APPLICATION_CONTEXT_ELEMENT",
+            AnyId::ApplicationProtocolDefinition(_) => "APPLICATION_PROTOCOL_DEFINITION",
+            AnyId::AppliedApprovalAssignment(_) => "APPLIED_APPROVAL_ASSIGNMENT",
+            AnyId::AppliedDateAndTimeAssignment(_) => "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+            AnyId::AppliedDocumentReference(_) => "APPLIED_DOCUMENT_REFERENCE",
+            AnyId::AppliedExternalIdentificationAssignment(_) => {
+                "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT"
+            }
+            AnyId::AppliedGroupAssignment(_) => "APPLIED_GROUP_ASSIGNMENT",
+            AnyId::AppliedPersonAndOrganizationAssignment(_) => {
+                "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT"
+            }
+            AnyId::AppliedPresentedItem(_) => "APPLIED_PRESENTED_ITEM",
+            AnyId::AppliedSecurityClassificationAssignment(_) => {
+                "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT"
+            }
+            AnyId::Approval(_) => "APPROVAL",
+            AnyId::ApprovalAssignment(_) => "APPROVAL_ASSIGNMENT",
+            AnyId::ApprovalDateTime(_) => "APPROVAL_DATE_TIME",
+            AnyId::ApprovalPersonOrganization(_) => "APPROVAL_PERSON_ORGANIZATION",
+            AnyId::ApprovalRole(_) => "APPROVAL_ROLE",
+            AnyId::ApprovalStatus(_) => "APPROVAL_STATUS",
+            AnyId::ApproximationTolerance(_) => "APPROXIMATION_TOLERANCE",
+            AnyId::ApproximationToleranceDeviation(_) => "APPROXIMATION_TOLERANCE_DEVIATION",
+            AnyId::ApproximationToleranceParameter(_) => "APPROXIMATION_TOLERANCE_PARAMETER",
+            AnyId::AreaInSet(_) => "AREA_IN_SET",
+            AnyId::AreaUnit(_) => "AREA_UNIT",
+            AnyId::AscribableState(_) => "ASCRIBABLE_STATE",
+            AnyId::AscribableStateRelationship(_) => "ASCRIBABLE_STATE_RELATIONSHIP",
+            AnyId::AssemblyComponentUsage(_) => "ASSEMBLY_COMPONENT_USAGE",
+            AnyId::AuxiliaryLeaderLine(_) => "AUXILIARY_LEADER_LINE",
+            AnyId::Axis1Placement(_) => "AXIS1_PLACEMENT",
+            AnyId::Axis2Placement2d(_) => "AXIS2_PLACEMENT_2D",
+            AnyId::Axis2Placement3d(_) => "AXIS2_PLACEMENT_3D",
+            AnyId::BSplineCurve(_) => "B_SPLINE_CURVE",
+            AnyId::BSplineCurveWithKnots(_) => "B_SPLINE_CURVE_WITH_KNOTS",
+            AnyId::BSplineSurface(_) => "B_SPLINE_SURFACE",
+            AnyId::BSplineSurfaceWithKnots(_) => "B_SPLINE_SURFACE_WITH_KNOTS",
+            AnyId::BezierCurve(_) => "BEZIER_CURVE",
+            AnyId::BezierSurface(_) => "BEZIER_SURFACE",
+            AnyId::BoundedCurve(_) => "BOUNDED_CURVE",
+            AnyId::BoundedPcurve(_) => "BOUNDED_PCURVE",
+            AnyId::BoundedSurface(_) => "BOUNDED_SURFACE",
+            AnyId::BoundedSurfaceCurve(_) => "BOUNDED_SURFACE_CURVE",
+            AnyId::BrepWithVoids(_) => "BREP_WITH_VOIDS",
+            AnyId::CalendarDate(_) => "CALENDAR_DATE",
+            AnyId::CameraImage(_) => "CAMERA_IMAGE",
+            AnyId::CameraImage3dWithScale(_) => "CAMERA_IMAGE_3D_WITH_SCALE",
+            AnyId::CameraModel(_) => "CAMERA_MODEL",
+            AnyId::CameraModelD3(_) => "CAMERA_MODEL_D3",
+            AnyId::CameraModelD3MultiClipping(_) => "CAMERA_MODEL_D3_MULTI_CLIPPING",
+            AnyId::CameraModelD3WithHlhsr(_) => "CAMERA_MODEL_D3_WITH_HLHSR",
+            AnyId::CameraUsage(_) => "CAMERA_USAGE",
+            AnyId::CartesianPoint(_) => "CARTESIAN_POINT",
+            AnyId::CcDesignApproval(_) => "CC_DESIGN_APPROVAL",
+            AnyId::CcDesignDateAndTimeAssignment(_) => "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+            AnyId::CcDesignPersonAndOrganizationAssignment(_) => {
+                "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT"
+            }
+            AnyId::CcDesignSecurityClassification(_) => "CC_DESIGN_SECURITY_CLASSIFICATION",
+            AnyId::CentreOfSymmetry(_) => "CENTRE_OF_SYMMETRY",
+            AnyId::Certification(_) => "CERTIFICATION",
+            AnyId::CertificationType(_) => "CERTIFICATION_TYPE",
+            AnyId::Change(_) => "CHANGE",
+            AnyId::ChangeRequest(_) => "CHANGE_REQUEST",
+            AnyId::CharacterGlyphStyleOutline(_) => "CHARACTER_GLYPH_STYLE_OUTLINE",
+            AnyId::CharacterGlyphStyleStroke(_) => "CHARACTER_GLYPH_STYLE_STROKE",
+            AnyId::CharacterizedItemWithinRepresentation(_) => {
+                "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION"
+            }
+            AnyId::CharacterizedObject(_) => "CHARACTERIZED_OBJECT",
+            AnyId::CharacterizedRepresentation(_) => "CHARACTERIZED_REPRESENTATION",
+            AnyId::Circle(_) => "CIRCLE",
+            AnyId::CircularRunoutTolerance(_) => "CIRCULAR_RUNOUT_TOLERANCE",
+            AnyId::ClosedShell(_) => "CLOSED_SHELL",
+            AnyId::CoaxialityTolerance(_) => "COAXIALITY_TOLERANCE",
+            AnyId::Colour(_) => "COLOUR",
+            AnyId::ColourRgb(_) => "COLOUR_RGB",
+            AnyId::ColourSpecification(_) => "COLOUR_SPECIFICATION",
+            AnyId::CommonDatum(_) => "COMMON_DATUM",
+            AnyId::ComplexTriangulatedFace(_) => "COMPLEX_TRIANGULATED_FACE",
+            AnyId::ComplexTriangulatedSurfaceSet(_) => "COMPLEX_TRIANGULATED_SURFACE_SET",
+            AnyId::CompositeCurve(_) => "COMPOSITE_CURVE",
+            AnyId::CompositeCurveSegment(_) => "COMPOSITE_CURVE_SEGMENT",
+            AnyId::CompositeGroupShapeAspect(_) => "COMPOSITE_GROUP_SHAPE_ASPECT",
+            AnyId::CompositeShapeAspect(_) => "COMPOSITE_SHAPE_ASPECT",
+            AnyId::CompositeText(_) => "COMPOSITE_TEXT",
+            AnyId::CompoundRepresentationItem(_) => "COMPOUND_REPRESENTATION_ITEM",
+            AnyId::ConcentricityTolerance(_) => "CONCENTRICITY_TOLERANCE",
+            AnyId::ConfigurationDesign(_) => "CONFIGURATION_DESIGN",
+            AnyId::ConfigurationEffectivity(_) => "CONFIGURATION_EFFECTIVITY",
+            AnyId::ConfigurationItem(_) => "CONFIGURATION_ITEM",
+            AnyId::Conic(_) => "CONIC",
+            AnyId::ConicalSurface(_) => "CONICAL_SURFACE",
+            AnyId::ConnectedFaceSet(_) => "CONNECTED_FACE_SET",
+            AnyId::ConstructiveGeometryRepresentation(_) => "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+            AnyId::ConstructiveGeometryRepresentationRelationship(_) => {
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP"
+            }
+            AnyId::ContextDependentOverRidingStyledItem(_) => {
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM"
+            }
+            AnyId::ContextDependentShapeRepresentation(_) => {
+                "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION"
+            }
+            AnyId::ContextDependentUnit(_) => "CONTEXT_DEPENDENT_UNIT",
+            AnyId::ContinuousShapeAspect(_) => "CONTINUOUS_SHAPE_ASPECT",
+            AnyId::Contract(_) => "CONTRACT",
+            AnyId::ContractType(_) => "CONTRACT_TYPE",
+            AnyId::ConversionBasedUnit(_) => "CONVERSION_BASED_UNIT",
+            AnyId::CoordinatedUniversalTimeOffset(_) => "COORDINATED_UNIVERSAL_TIME_OFFSET",
+            AnyId::CoordinatesList(_) => "COORDINATES_LIST",
+            AnyId::Curve(_) => "CURVE",
+            AnyId::CurveStyle(_) => "CURVE_STYLE",
+            AnyId::CurveStyleFont(_) => "CURVE_STYLE_FONT",
+            AnyId::CurveStyleFontAndScaling(_) => "CURVE_STYLE_FONT_AND_SCALING",
+            AnyId::CurveStyleFontPattern(_) => "CURVE_STYLE_FONT_PATTERN",
+            AnyId::CurveStyleRendering(_) => "CURVE_STYLE_RENDERING",
+            AnyId::CylindricalSurface(_) => "CYLINDRICAL_SURFACE",
+            AnyId::CylindricityTolerance(_) => "CYLINDRICITY_TOLERANCE",
+            AnyId::Date(_) => "DATE",
+            AnyId::DateAndTime(_) => "DATE_AND_TIME",
+            AnyId::DateAndTimeAssignment(_) => "DATE_AND_TIME_ASSIGNMENT",
+            AnyId::DateRole(_) => "DATE_ROLE",
+            AnyId::DateTimeRole(_) => "DATE_TIME_ROLE",
+            AnyId::Datum(_) => "DATUM",
+            AnyId::DatumFeature(_) => "DATUM_FEATURE",
+            AnyId::DatumReference(_) => "DATUM_REFERENCE",
+            AnyId::DatumReferenceCompartment(_) => "DATUM_REFERENCE_COMPARTMENT",
+            AnyId::DatumReferenceElement(_) => "DATUM_REFERENCE_ELEMENT",
+            AnyId::DatumReferenceModifierWithValue(_) => "DATUM_REFERENCE_MODIFIER_WITH_VALUE",
+            AnyId::DatumSystem(_) => "DATUM_SYSTEM",
+            AnyId::DatumTarget(_) => "DATUM_TARGET",
+            AnyId::DefaultModelGeometricView(_) => "DEFAULT_MODEL_GEOMETRIC_VIEW",
+            AnyId::DefinedCharacterGlyph(_) => "DEFINED_CHARACTER_GLYPH",
+            AnyId::DefinedSymbol(_) => "DEFINED_SYMBOL",
+            AnyId::DefinitionalRepresentation(_) => "DEFINITIONAL_REPRESENTATION",
+            AnyId::DefinitionalRepresentationRelationship(_) => {
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP"
+            }
+            AnyId::DefinitionalRepresentationRelationshipWithSameContext(_) => {
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT"
+            }
+            AnyId::DegenerateToroidalSurface(_) => "DEGENERATE_TOROIDAL_SURFACE",
+            AnyId::DerivedShapeAspect(_) => "DERIVED_SHAPE_ASPECT",
+            AnyId::DerivedUnit(_) => "DERIVED_UNIT",
+            AnyId::DerivedUnitElement(_) => "DERIVED_UNIT_ELEMENT",
+            AnyId::DescriptionAttribute(_) => "DESCRIPTION_ATTRIBUTE",
+            AnyId::DescriptiveRepresentationItem(_) => "DESCRIPTIVE_REPRESENTATION_ITEM",
+            AnyId::DesignContext(_) => "DESIGN_CONTEXT",
+            AnyId::DimensionalCharacteristicRepresentation(_) => {
+                "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION"
+            }
+            AnyId::DimensionalExponents(_) => "DIMENSIONAL_EXPONENTS",
+            AnyId::DimensionalLocation(_) => "DIMENSIONAL_LOCATION",
+            AnyId::DimensionalLocationWithPath(_) => "DIMENSIONAL_LOCATION_WITH_PATH",
+            AnyId::DimensionalSize(_) => "DIMENSIONAL_SIZE",
+            AnyId::DimensionalSizeWithDatumFeature(_) => "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+            AnyId::DimensionalSizeWithPath(_) => "DIMENSIONAL_SIZE_WITH_PATH",
+            AnyId::DirectedDimensionalLocation(_) => "DIRECTED_DIMENSIONAL_LOCATION",
+            AnyId::Direction(_) => "DIRECTION",
+            AnyId::Document(_) => "DOCUMENT",
+            AnyId::DocumentFile(_) => "DOCUMENT_FILE",
+            AnyId::DocumentProductAssociation(_) => "DOCUMENT_PRODUCT_ASSOCIATION",
+            AnyId::DocumentProductEquivalence(_) => "DOCUMENT_PRODUCT_EQUIVALENCE",
+            AnyId::DocumentReference(_) => "DOCUMENT_REFERENCE",
+            AnyId::DocumentRepresentationType(_) => "DOCUMENT_REPRESENTATION_TYPE",
+            AnyId::DocumentType(_) => "DOCUMENT_TYPE",
+            AnyId::DraughtingAnnotationOccurrence(_) => "DRAUGHTING_ANNOTATION_OCCURRENCE",
+            AnyId::DraughtingCallout(_) => "DRAUGHTING_CALLOUT",
+            AnyId::DraughtingCalloutRelationship(_) => "DRAUGHTING_CALLOUT_RELATIONSHIP",
+            AnyId::DraughtingModel(_) => "DRAUGHTING_MODEL",
+            AnyId::DraughtingModelItemAssociation(_) => "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
+            AnyId::DraughtingModelItemAssociationWithPlaceholder(_) => {
+                "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER"
+            }
+            AnyId::DraughtingPreDefinedColour(_) => "DRAUGHTING_PRE_DEFINED_COLOUR",
+            AnyId::DraughtingPreDefinedCurveFont(_) => "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
+            AnyId::DraughtingPreDefinedTextFont(_) => "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
+            AnyId::Edge(_) => "EDGE",
+            AnyId::EdgeCurve(_) => "EDGE_CURVE",
+            AnyId::EdgeLoop(_) => "EDGE_LOOP",
+            AnyId::Effectivity(_) => "EFFECTIVITY",
+            AnyId::ElementarySurface(_) => "ELEMENTARY_SURFACE",
+            AnyId::Ellipse(_) => "ELLIPSE",
+            AnyId::Expression(_) => "EXPRESSION",
+            AnyId::ExternalIdentificationAssignment(_) => "EXTERNAL_IDENTIFICATION_ASSIGNMENT",
+            AnyId::ExternalSource(_) => "EXTERNAL_SOURCE",
+            AnyId::ExternallyDefinedCharacterGlyph(_) => "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
+            AnyId::ExternallyDefinedCurveFont(_) => "EXTERNALLY_DEFINED_CURVE_FONT",
+            AnyId::ExternallyDefinedHatchStyle(_) => "EXTERNALLY_DEFINED_HATCH_STYLE",
+            AnyId::ExternallyDefinedItem(_) => "EXTERNALLY_DEFINED_ITEM",
+            AnyId::ExternallyDefinedStyle(_) => "EXTERNALLY_DEFINED_STYLE",
+            AnyId::ExternallyDefinedSymbol(_) => "EXTERNALLY_DEFINED_SYMBOL",
+            AnyId::ExternallyDefinedTextFont(_) => "EXTERNALLY_DEFINED_TEXT_FONT",
+            AnyId::ExternallyDefinedTile(_) => "EXTERNALLY_DEFINED_TILE",
+            AnyId::ExternallyDefinedTileStyle(_) => "EXTERNALLY_DEFINED_TILE_STYLE",
+            AnyId::Face(_) => "FACE",
+            AnyId::FaceBound(_) => "FACE_BOUND",
+            AnyId::FaceOuterBound(_) => "FACE_OUTER_BOUND",
+            AnyId::FaceSurface(_) => "FACE_SURFACE",
+            AnyId::FeatureForDatumTargetRelationship(_) => "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP",
+            AnyId::FillAreaStyle(_) => "FILL_AREA_STYLE",
+            AnyId::FillAreaStyleColour(_) => "FILL_AREA_STYLE_COLOUR",
+            AnyId::FillAreaStyleHatching(_) => "FILL_AREA_STYLE_HATCHING",
+            AnyId::FillAreaStyleTileColouredRegion(_) => "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+            AnyId::FillAreaStyleTileCurveWithStyle(_) => "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+            AnyId::FillAreaStyleTileSymbolWithStyle(_) => "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+            AnyId::FillAreaStyleTiles(_) => "FILL_AREA_STYLE_TILES",
+            AnyId::FlatnessTolerance(_) => "FLATNESS_TOLERANCE",
+            AnyId::FoundedItem(_) => "FOUNDED_ITEM",
+            AnyId::FunctionallyDefinedTransformation(_) => "FUNCTIONALLY_DEFINED_TRANSFORMATION",
+            AnyId::GeneralDatumReference(_) => "GENERAL_DATUM_REFERENCE",
+            AnyId::GeneralProperty(_) => "GENERAL_PROPERTY",
+            AnyId::GeneralPropertyAssociation(_) => "GENERAL_PROPERTY_ASSOCIATION",
+            AnyId::GenericExpression(_) => "GENERIC_EXPRESSION",
+            AnyId::GenericLiteral(_) => "GENERIC_LITERAL",
+            AnyId::GenericProductDefinitionReference(_) => "GENERIC_PRODUCT_DEFINITION_REFERENCE",
+            AnyId::GeometricCurveSet(_) => "GEOMETRIC_CURVE_SET",
+            AnyId::GeometricItemSpecificUsage(_) => "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+            AnyId::GeometricRepresentationContext(_) => "GEOMETRIC_REPRESENTATION_CONTEXT",
+            AnyId::GeometricRepresentationItem(_) => "GEOMETRIC_REPRESENTATION_ITEM",
+            AnyId::GeometricSet(_) => "GEOMETRIC_SET",
+            AnyId::GeometricTolerance(_) => "GEOMETRIC_TOLERANCE",
+            AnyId::GeometricToleranceRelationship(_) => "GEOMETRIC_TOLERANCE_RELATIONSHIP",
+            AnyId::GeometricToleranceWithDatumReference(_) => {
+                "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"
+            }
+            AnyId::GeometricToleranceWithDefinedAreaUnit(_) => {
+                "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"
+            }
+            AnyId::GeometricToleranceWithDefinedUnit(_) => "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+            AnyId::GeometricToleranceWithMaximumTolerance(_) => {
+                "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE"
+            }
+            AnyId::GeometricToleranceWithModifiers(_) => "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+            AnyId::GeometricallyBoundedSurfaceShapeRepresentation(_) => {
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"
+            }
+            AnyId::GeometricallyBoundedWireframeShapeRepresentation(_) => {
+                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"
+            }
+            AnyId::GlobalUncertaintyAssignedContext(_) => "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+            AnyId::GlobalUnitAssignedContext(_) => "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+            AnyId::Group(_) => "GROUP",
+            AnyId::GroupAssignment(_) => "GROUP_ASSIGNMENT",
+            AnyId::Hyperbola(_) => "HYPERBOLA",
+            AnyId::IdAttribute(_) => "ID_ATTRIBUTE",
+            AnyId::IdentificationAssignment(_) => "IDENTIFICATION_ASSIGNMENT",
+            AnyId::IdentificationRole(_) => "IDENTIFICATION_ROLE",
+            AnyId::IntLiteral(_) => "INT_LITERAL",
+            AnyId::IntegerRepresentationItem(_) => "INTEGER_REPRESENTATION_ITEM",
+            AnyId::IntersectionCurve(_) => "INTERSECTION_CURVE",
+            AnyId::Invisibility(_) => "INVISIBILITY",
+            AnyId::ItemDefinedTransformation(_) => "ITEM_DEFINED_TRANSFORMATION",
+            AnyId::ItemIdentifiedRepresentationUsage(_) => "ITEM_IDENTIFIED_REPRESENTATION_USAGE",
+            AnyId::LeaderCurve(_) => "LEADER_CURVE",
+            AnyId::LeaderDirectedCallout(_) => "LEADER_DIRECTED_CALLOUT",
+            AnyId::LeaderTerminator(_) => "LEADER_TERMINATOR",
+            AnyId::LengthMeasureWithUnit(_) => "LENGTH_MEASURE_WITH_UNIT",
+            AnyId::LengthUnit(_) => "LENGTH_UNIT",
+            AnyId::LimitsAndFits(_) => "LIMITS_AND_FITS",
+            AnyId::Line(_) => "LINE",
+            AnyId::LineProfileTolerance(_) => "LINE_PROFILE_TOLERANCE",
+            AnyId::LiteralNumber(_) => "LITERAL_NUMBER",
+            AnyId::LocalTime(_) => "LOCAL_TIME",
+            AnyId::Loop(_) => "LOOP",
+            AnyId::MakeFromUsageOption(_) => "MAKE_FROM_USAGE_OPTION",
+            AnyId::ManifoldSolidBrep(_) => "MANIFOLD_SOLID_BREP",
+            AnyId::ManifoldSurfaceShapeRepresentation(_) => "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+            AnyId::MappedItem(_) => "MAPPED_ITEM",
+            AnyId::MassMeasureWithUnit(_) => "MASS_MEASURE_WITH_UNIT",
+            AnyId::MassUnit(_) => "MASS_UNIT",
+            AnyId::MeasureQualification(_) => "MEASURE_QUALIFICATION",
+            AnyId::MeasureRepresentationItem(_) => "MEASURE_REPRESENTATION_ITEM",
+            AnyId::MeasureWithUnit(_) => "MEASURE_WITH_UNIT",
+            AnyId::MechanicalContext(_) => "MECHANICAL_CONTEXT",
+            AnyId::MechanicalDesignAndDraughtingRelationship(_) => {
+                "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP"
+            }
+            AnyId::MechanicalDesignGeometricPresentationRepresentation(_) => {
+                "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION"
+            }
+            AnyId::MechanicalDesignPresentationRepresentationWithDraughting(_) => {
+                "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING"
+            }
+            AnyId::MechanicalDesignShadedPresentationRepresentation(_) => {
+                "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION"
+            }
+            AnyId::ModelGeometricView(_) => "MODEL_GEOMETRIC_VIEW",
+            AnyId::ModifiedGeometricTolerance(_) => "MODIFIED_GEOMETRIC_TOLERANCE",
+            AnyId::NameAttribute(_) => "NAME_ATTRIBUTE",
+            AnyId::NamedUnit(_) => "NAMED_UNIT",
+            AnyId::NextAssemblyUsageOccurrence(_) => "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+            AnyId::NumericExpression(_) => "NUMERIC_EXPRESSION",
+            AnyId::ObjectRole(_) => "OBJECT_ROLE",
+            AnyId::OffsetSurface(_) => "OFFSET_SURFACE",
+            AnyId::OneDirectionRepeatFactor(_) => "ONE_DIRECTION_REPEAT_FACTOR",
+            AnyId::OpenShell(_) => "OPEN_SHELL",
+            AnyId::Organization(_) => "ORGANIZATION",
+            AnyId::OrganizationRelationship(_) => "ORGANIZATION_RELATIONSHIP",
+            AnyId::OrganizationRole(_) => "ORGANIZATION_ROLE",
+            AnyId::OrganizationType(_) => "ORGANIZATION_TYPE",
+            AnyId::OrganizationTypeRole(_) => "ORGANIZATION_TYPE_ROLE",
+            AnyId::OrganizationalAddress(_) => "ORGANIZATIONAL_ADDRESS",
+            AnyId::OrganizationalProject(_) => "ORGANIZATIONAL_PROJECT",
+            AnyId::OrganizationalProjectRelationship(_) => "ORGANIZATIONAL_PROJECT_RELATIONSHIP",
+            AnyId::OrganizationalProjectRole(_) => "ORGANIZATIONAL_PROJECT_ROLE",
+            AnyId::OrientedClosedShell(_) => "ORIENTED_CLOSED_SHELL",
+            AnyId::OrientedEdge(_) => "ORIENTED_EDGE",
+            AnyId::OverRidingStyledItem(_) => "OVER_RIDING_STYLED_ITEM",
+            AnyId::ParallelismTolerance(_) => "PARALLELISM_TOLERANCE",
+            AnyId::ParametricRepresentationContext(_) => "PARAMETRIC_REPRESENTATION_CONTEXT",
+            AnyId::Path(_) => "PATH",
+            AnyId::Pcurve(_) => "PCURVE",
+            AnyId::PerpendicularityTolerance(_) => "PERPENDICULARITY_TOLERANCE",
+            AnyId::Person(_) => "PERSON",
+            AnyId::PersonAndOrganization(_) => "PERSON_AND_ORGANIZATION",
+            AnyId::PersonAndOrganizationAddress(_) => "PERSON_AND_ORGANIZATION_ADDRESS",
+            AnyId::PersonAndOrganizationAssignment(_) => "PERSON_AND_ORGANIZATION_ASSIGNMENT",
+            AnyId::PersonAndOrganizationRole(_) => "PERSON_AND_ORGANIZATION_ROLE",
+            AnyId::PersonalAddress(_) => "PERSONAL_ADDRESS",
+            AnyId::PlacedDatumTargetFeature(_) => "PLACED_DATUM_TARGET_FEATURE",
+            AnyId::Placement(_) => "PLACEMENT",
+            AnyId::PlanarBox(_) => "PLANAR_BOX",
+            AnyId::PlanarExtent(_) => "PLANAR_EXTENT",
+            AnyId::Plane(_) => "PLANE",
+            AnyId::PlaneAngleMeasureWithUnit(_) => "PLANE_ANGLE_MEASURE_WITH_UNIT",
+            AnyId::PlaneAngleUnit(_) => "PLANE_ANGLE_UNIT",
+            AnyId::PlusMinusTolerance(_) => "PLUS_MINUS_TOLERANCE",
+            AnyId::Point(_) => "POINT",
+            AnyId::PointStyle(_) => "POINT_STYLE",
+            AnyId::PolyLoop(_) => "POLY_LOOP",
+            AnyId::Polyline(_) => "POLYLINE",
+            AnyId::PositionTolerance(_) => "POSITION_TOLERANCE",
+            AnyId::PreDefinedCharacterGlyph(_) => "PRE_DEFINED_CHARACTER_GLYPH",
+            AnyId::PreDefinedColour(_) => "PRE_DEFINED_COLOUR",
+            AnyId::PreDefinedCurveFont(_) => "PRE_DEFINED_CURVE_FONT",
+            AnyId::PreDefinedItem(_) => "PRE_DEFINED_ITEM",
+            AnyId::PreDefinedMarker(_) => "PRE_DEFINED_MARKER",
+            AnyId::PreDefinedPointMarkerSymbol(_) => "PRE_DEFINED_POINT_MARKER_SYMBOL",
+            AnyId::PreDefinedPresentationStyle(_) => "PRE_DEFINED_PRESENTATION_STYLE",
+            AnyId::PreDefinedSurfaceSideStyle(_) => "PRE_DEFINED_SURFACE_SIDE_STYLE",
+            AnyId::PreDefinedSymbol(_) => "PRE_DEFINED_SYMBOL",
+            AnyId::PreDefinedTerminatorSymbol(_) => "PRE_DEFINED_TERMINATOR_SYMBOL",
+            AnyId::PreDefinedTextFont(_) => "PRE_DEFINED_TEXT_FONT",
+            AnyId::PreDefinedTile(_) => "PRE_DEFINED_TILE",
+            AnyId::PrecisionQualifier(_) => "PRECISION_QUALIFIER",
+            AnyId::PresentationArea(_) => "PRESENTATION_AREA",
+            AnyId::PresentationLayerAssignment(_) => "PRESENTATION_LAYER_ASSIGNMENT",
+            AnyId::PresentationRepresentation(_) => "PRESENTATION_REPRESENTATION",
+            AnyId::PresentationSet(_) => "PRESENTATION_SET",
+            AnyId::PresentationSize(_) => "PRESENTATION_SIZE",
+            AnyId::PresentationStyleAssignment(_) => "PRESENTATION_STYLE_ASSIGNMENT",
+            AnyId::PresentationStyleByContext(_) => "PRESENTATION_STYLE_BY_CONTEXT",
+            AnyId::PresentationView(_) => "PRESENTATION_VIEW",
+            AnyId::PresentedItem(_) => "PRESENTED_ITEM",
+            AnyId::PresentedItemRepresentation(_) => "PRESENTED_ITEM_REPRESENTATION",
+            AnyId::Product(_) => "PRODUCT",
+            AnyId::ProductCategory(_) => "PRODUCT_CATEGORY",
+            AnyId::ProductCategoryRelationship(_) => "PRODUCT_CATEGORY_RELATIONSHIP",
+            AnyId::ProductConcept(_) => "PRODUCT_CONCEPT",
+            AnyId::ProductConceptContext(_) => "PRODUCT_CONCEPT_CONTEXT",
+            AnyId::ProductConceptFeature(_) => "PRODUCT_CONCEPT_FEATURE",
+            AnyId::ProductConceptFeatureCategory(_) => "PRODUCT_CONCEPT_FEATURE_CATEGORY",
+            AnyId::ProductContext(_) => "PRODUCT_CONTEXT",
+            AnyId::ProductDefinition(_) => "PRODUCT_DEFINITION",
+            AnyId::ProductDefinitionContext(_) => "PRODUCT_DEFINITION_CONTEXT",
+            AnyId::ProductDefinitionContextAssociation(_) => {
+                "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION"
+            }
+            AnyId::ProductDefinitionContextRole(_) => "PRODUCT_DEFINITION_CONTEXT_ROLE",
+            AnyId::ProductDefinitionEffectivity(_) => "PRODUCT_DEFINITION_EFFECTIVITY",
+            AnyId::ProductDefinitionFormation(_) => "PRODUCT_DEFINITION_FORMATION",
+            AnyId::ProductDefinitionFormationWithSpecifiedSource(_) => {
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE"
+            }
+            AnyId::ProductDefinitionOccurrence(_) => "PRODUCT_DEFINITION_OCCURRENCE",
+            AnyId::ProductDefinitionRelationship(_) => "PRODUCT_DEFINITION_RELATIONSHIP",
+            AnyId::ProductDefinitionRelationshipRelationship(_) => {
+                "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP"
+            }
+            AnyId::ProductDefinitionShape(_) => "PRODUCT_DEFINITION_SHAPE",
+            AnyId::ProductDefinitionSubstitute(_) => "PRODUCT_DEFINITION_SUBSTITUTE",
+            AnyId::ProductDefinitionUsage(_) => "PRODUCT_DEFINITION_USAGE",
+            AnyId::ProductDefinitionWithAssociatedDocuments(_) => {
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"
+            }
+            AnyId::ProductRelatedProductCategory(_) => "PRODUCT_RELATED_PRODUCT_CATEGORY",
+            AnyId::ProjectedZoneDefinition(_) => "PROJECTED_ZONE_DEFINITION",
+            AnyId::PropertyDefinition(_) => "PROPERTY_DEFINITION",
+            AnyId::PropertyDefinitionRelationship(_) => "PROPERTY_DEFINITION_RELATIONSHIP",
+            AnyId::PropertyDefinitionRepresentation(_) => "PROPERTY_DEFINITION_REPRESENTATION",
+            AnyId::QualifiedRepresentationItem(_) => "QUALIFIED_REPRESENTATION_ITEM",
+            AnyId::QuasiUniformCurve(_) => "QUASI_UNIFORM_CURVE",
+            AnyId::QuasiUniformSurface(_) => "QUASI_UNIFORM_SURFACE",
+            AnyId::RatioMeasureWithUnit(_) => "RATIO_MEASURE_WITH_UNIT",
+            AnyId::RatioUnit(_) => "RATIO_UNIT",
+            AnyId::RationalBSplineCurve(_) => "RATIONAL_B_SPLINE_CURVE",
+            AnyId::RationalBSplineSurface(_) => "RATIONAL_B_SPLINE_SURFACE",
+            AnyId::RealLiteral(_) => "REAL_LITERAL",
+            AnyId::RealRepresentationItem(_) => "REAL_REPRESENTATION_ITEM",
+            AnyId::RepositionedTessellatedItem(_) => "REPOSITIONED_TESSELLATED_ITEM",
+            AnyId::Representation(_) => "REPRESENTATION",
+            AnyId::RepresentationContext(_) => "REPRESENTATION_CONTEXT",
+            AnyId::RepresentationContextReference(_) => "REPRESENTATION_CONTEXT_REFERENCE",
+            AnyId::RepresentationItem(_) => "REPRESENTATION_ITEM",
+            AnyId::RepresentationMap(_) => "REPRESENTATION_MAP",
+            AnyId::RepresentationReference(_) => "REPRESENTATION_REFERENCE",
+            AnyId::RepresentationRelationship(_) => "REPRESENTATION_RELATIONSHIP",
+            AnyId::RepresentationRelationshipWithTransformation(_) => {
+                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION"
+            }
+            AnyId::ResourceProperty(_) => "RESOURCE_PROPERTY",
+            AnyId::ResourceRequirementType(_) => "RESOURCE_REQUIREMENT_TYPE",
+            AnyId::RoleAssociation(_) => "ROLE_ASSOCIATION",
+            AnyId::RoundnessTolerance(_) => "ROUNDNESS_TOLERANCE",
+            AnyId::SeamCurve(_) => "SEAM_CURVE",
+            AnyId::SecurityClassification(_) => "SECURITY_CLASSIFICATION",
+            AnyId::SecurityClassificationAssignment(_) => "SECURITY_CLASSIFICATION_ASSIGNMENT",
+            AnyId::SecurityClassificationLevel(_) => "SECURITY_CLASSIFICATION_LEVEL",
+            AnyId::ShapeAspect(_) => "SHAPE_ASPECT",
+            AnyId::ShapeAspectAssociativity(_) => "SHAPE_ASPECT_ASSOCIATIVITY",
+            AnyId::ShapeAspectDerivingRelationship(_) => "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
+            AnyId::ShapeAspectRelationship(_) => "SHAPE_ASPECT_RELATIONSHIP",
+            AnyId::ShapeDefinitionRepresentation(_) => "SHAPE_DEFINITION_REPRESENTATION",
+            AnyId::ShapeDimensionRepresentation(_) => "SHAPE_DIMENSION_REPRESENTATION",
+            AnyId::ShapeRepresentation(_) => "SHAPE_REPRESENTATION",
+            AnyId::ShapeRepresentationRelationship(_) => "SHAPE_REPRESENTATION_RELATIONSHIP",
+            AnyId::ShapeRepresentationWithParameters(_) => "SHAPE_REPRESENTATION_WITH_PARAMETERS",
+            AnyId::ShellBasedSurfaceModel(_) => "SHELL_BASED_SURFACE_MODEL",
+            AnyId::SiUnit(_) => "SI_UNIT",
+            AnyId::SimpleGenericExpression(_) => "SIMPLE_GENERIC_EXPRESSION",
+            AnyId::SimpleNumericExpression(_) => "SIMPLE_NUMERIC_EXPRESSION",
+            AnyId::SolidAngleUnit(_) => "SOLID_ANGLE_UNIT",
+            AnyId::SolidModel(_) => "SOLID_MODEL",
+            AnyId::SphericalSurface(_) => "SPHERICAL_SURFACE",
+            AnyId::StartRequest(_) => "START_REQUEST",
+            AnyId::StartWork(_) => "START_WORK",
+            AnyId::StateObserved(_) => "STATE_OBSERVED",
+            AnyId::StateType(_) => "STATE_TYPE",
+            AnyId::StraightnessTolerance(_) => "STRAIGHTNESS_TOLERANCE",
+            AnyId::StyledItem(_) => "STYLED_ITEM",
+            AnyId::Surface(_) => "SURFACE",
+            AnyId::SurfaceCurve(_) => "SURFACE_CURVE",
+            AnyId::SurfaceOfLinearExtrusion(_) => "SURFACE_OF_LINEAR_EXTRUSION",
+            AnyId::SurfaceOfRevolution(_) => "SURFACE_OF_REVOLUTION",
+            AnyId::SurfaceProfileTolerance(_) => "SURFACE_PROFILE_TOLERANCE",
+            AnyId::SurfaceRenderingProperties(_) => "SURFACE_RENDERING_PROPERTIES",
+            AnyId::SurfaceSideStyle(_) => "SURFACE_SIDE_STYLE",
+            AnyId::SurfaceStyleBoundary(_) => "SURFACE_STYLE_BOUNDARY",
+            AnyId::SurfaceStyleControlGrid(_) => "SURFACE_STYLE_CONTROL_GRID",
+            AnyId::SurfaceStyleFillArea(_) => "SURFACE_STYLE_FILL_AREA",
+            AnyId::SurfaceStyleParameterLine(_) => "SURFACE_STYLE_PARAMETER_LINE",
+            AnyId::SurfaceStyleReflectanceAmbient(_) => "SURFACE_STYLE_REFLECTANCE_AMBIENT",
+            AnyId::SurfaceStyleRendering(_) => "SURFACE_STYLE_RENDERING",
+            AnyId::SurfaceStyleRenderingWithProperties(_) => {
+                "SURFACE_STYLE_RENDERING_WITH_PROPERTIES"
+            }
+            AnyId::SurfaceStyleSegmentationCurve(_) => "SURFACE_STYLE_SEGMENTATION_CURVE",
+            AnyId::SurfaceStyleSilhouette(_) => "SURFACE_STYLE_SILHOUETTE",
+            AnyId::SurfaceStyleTransparent(_) => "SURFACE_STYLE_TRANSPARENT",
+            AnyId::SurfaceStyleUsage(_) => "SURFACE_STYLE_USAGE",
+            AnyId::SweptSurface(_) => "SWEPT_SURFACE",
+            AnyId::SymbolColour(_) => "SYMBOL_COLOUR",
+            AnyId::SymbolRepresentation(_) => "SYMBOL_REPRESENTATION",
+            AnyId::SymbolStyle(_) => "SYMBOL_STYLE",
+            AnyId::SymbolTarget(_) => "SYMBOL_TARGET",
+            AnyId::SymmetryTolerance(_) => "SYMMETRY_TOLERANCE",
+            AnyId::TerminatorSymbol(_) => "TERMINATOR_SYMBOL",
+            AnyId::TessellatedAnnotationOccurrence(_) => "TESSELLATED_ANNOTATION_OCCURRENCE",
+            AnyId::TessellatedCurveSet(_) => "TESSELLATED_CURVE_SET",
+            AnyId::TessellatedFace(_) => "TESSELLATED_FACE",
+            AnyId::TessellatedGeometricSet(_) => "TESSELLATED_GEOMETRIC_SET",
+            AnyId::TessellatedItem(_) => "TESSELLATED_ITEM",
+            AnyId::TessellatedShapeRepresentation(_) => "TESSELLATED_SHAPE_REPRESENTATION",
+            AnyId::TessellatedShell(_) => "TESSELLATED_SHELL",
+            AnyId::TessellatedSolid(_) => "TESSELLATED_SOLID",
+            AnyId::TessellatedStructuredItem(_) => "TESSELLATED_STRUCTURED_ITEM",
+            AnyId::TessellatedSurfaceSet(_) => "TESSELLATED_SURFACE_SET",
+            AnyId::TextFont(_) => "TEXT_FONT",
+            AnyId::TextLiteral(_) => "TEXT_LITERAL",
+            AnyId::TextStyle(_) => "TEXT_STYLE",
+            AnyId::TextStyleForDefinedFont(_) => "TEXT_STYLE_FOR_DEFINED_FONT",
+            AnyId::TextStyleWithBoxCharacteristics(_) => "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
+            AnyId::TextureStyleSpecification(_) => "TEXTURE_STYLE_SPECIFICATION",
+            AnyId::TextureStyleTessellationSpecification(_) => {
+                "TEXTURE_STYLE_TESSELLATION_SPECIFICATION"
+            }
+            AnyId::TimeUnit(_) => "TIME_UNIT",
+            AnyId::ToleranceValue(_) => "TOLERANCE_VALUE",
+            AnyId::ToleranceZone(_) => "TOLERANCE_ZONE",
+            AnyId::ToleranceZoneDefinition(_) => "TOLERANCE_ZONE_DEFINITION",
+            AnyId::ToleranceZoneForm(_) => "TOLERANCE_ZONE_FORM",
+            AnyId::ToleranceZoneWithDatum(_) => "TOLERANCE_ZONE_WITH_DATUM",
+            AnyId::TopologicalRepresentationItem(_) => "TOPOLOGICAL_REPRESENTATION_ITEM",
+            AnyId::ToroidalSurface(_) => "TOROIDAL_SURFACE",
+            AnyId::TotalRunoutTolerance(_) => "TOTAL_RUNOUT_TOLERANCE",
+            AnyId::TrimmedCurve(_) => "TRIMMED_CURVE",
+            AnyId::TwoDirectionRepeatFactor(_) => "TWO_DIRECTION_REPEAT_FACTOR",
+            AnyId::TypeQualifier(_) => "TYPE_QUALIFIER",
+            AnyId::UncertaintyMeasureWithUnit(_) => "UNCERTAINTY_MEASURE_WITH_UNIT",
+            AnyId::UncertaintyQualifier(_) => "UNCERTAINTY_QUALIFIER",
+            AnyId::UnequallyDisposedGeometricTolerance(_) => {
+                "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"
+            }
+            AnyId::UniformCurve(_) => "UNIFORM_CURVE",
+            AnyId::UniformSurface(_) => "UNIFORM_SURFACE",
+            AnyId::ValueFormatTypeQualifier(_) => "VALUE_FORMAT_TYPE_QUALIFIER",
+            AnyId::ValueRepresentationItem(_) => "VALUE_REPRESENTATION_ITEM",
+            AnyId::Vector(_) => "VECTOR",
+            AnyId::VersionedActionRequest(_) => "VERSIONED_ACTION_REQUEST",
+            AnyId::Vertex(_) => "VERTEX",
+            AnyId::VertexLoop(_) => "VERTEX_LOOP",
+            AnyId::VertexPoint(_) => "VERTEX_POINT",
+            AnyId::VertexShell(_) => "VERTEX_SHELL",
+            AnyId::ViewVolume(_) => "VIEW_VOLUME",
+            AnyId::VolumeUnit(_) => "VOLUME_UNIT",
+            AnyId::WireShell(_) => "WIRE_SHELL",
+            AnyId::ComplexUnit(_) => "",
+        }
+    }
+
+    fn render_kw(&self, any: AnyId) -> &'static str {
+        self.rename
+            .get(&any)
+            .copied()
+            .unwrap_or_else(|| Self::name_of(any))
+    }
+
+    pub(crate) fn all_ids(&self) -> Vec<AnyId> {
         let mut roots: Vec<AnyId> = Vec::new();
         for i in 0..self.model.complex_units.items.len() {
             roots.push(AnyId::ComplexUnit(ComplexUnitId(i)));
@@ -35496,9 +36144,474 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.wire_shells.items.len() {
             roots.push(AnyId::WireShell(WireShellId(i)));
         }
+        roots
+    }
+
+    pub(crate) fn part_name(p: &UnitPart) -> &'static str {
+        match p {
+            UnitPart::Action { .. } => "ACTION",
+            UnitPart::ActionMethod { .. } => "ACTION_METHOD",
+            UnitPart::ActionMethodRelationship { .. } => "ACTION_METHOD_RELATIONSHIP",
+            UnitPart::ActionRelationship { .. } => "ACTION_RELATIONSHIP",
+            UnitPart::ActionRequestAssignment { .. } => "ACTION_REQUEST_ASSIGNMENT",
+            UnitPart::ActionResource { .. } => "ACTION_RESOURCE",
+            UnitPart::ActionResourceRequirement { .. } => "ACTION_RESOURCE_REQUIREMENT",
+            UnitPart::Address { .. } => "ADDRESS",
+            UnitPart::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION",
+            UnitPart::AdvancedFace => "ADVANCED_FACE",
+            UnitPart::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE",
+            UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE",
+            UnitPart::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+            UnitPart::AnnotationOccurrenceRelationship { .. } => {
+                "ANNOTATION_OCCURRENCE_RELATIONSHIP"
+            }
+            UnitPart::AnnotationPlaceholderOccurrence { .. } => "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+            UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { .. } => {
+                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE"
+            }
+            UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL",
+            UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE",
+            UnitPart::AnnotationText => "ANNOTATION_TEXT",
+            UnitPart::AnnotationTextCharacter { .. } => "ANNOTATION_TEXT_CHARACTER",
+            UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE",
+            UnitPart::ApplicationContextElement { .. } => "APPLICATION_CONTEXT_ELEMENT",
+            UnitPart::AppliedApprovalAssignment { .. } => "APPLIED_APPROVAL_ASSIGNMENT",
+            UnitPart::AppliedDateAndTimeAssignment { .. } => "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+            UnitPart::AppliedDocumentReference { .. } => "APPLIED_DOCUMENT_REFERENCE",
+            UnitPart::AppliedExternalIdentificationAssignment { .. } => {
+                "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT"
+            }
+            UnitPart::AppliedGroupAssignment { .. } => "APPLIED_GROUP_ASSIGNMENT",
+            UnitPart::AppliedPersonAndOrganizationAssignment { .. } => {
+                "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT"
+            }
+            UnitPart::AppliedPresentedItem { .. } => "APPLIED_PRESENTED_ITEM",
+            UnitPart::AppliedSecurityClassificationAssignment { .. } => {
+                "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT"
+            }
+            UnitPart::ApprovalAssignment { .. } => "APPROVAL_ASSIGNMENT",
+            UnitPart::AreaInSet { .. } => "AREA_IN_SET",
+            UnitPart::AscribableStateRelationship { .. } => "ASCRIBABLE_STATE_RELATIONSHIP",
+            UnitPart::AssemblyComponentUsage { .. } => "ASSEMBLY_COMPONENT_USAGE",
+            UnitPart::BSplineCurve { .. } => "B_SPLINE_CURVE",
+            UnitPart::BSplineCurveWithKnots { .. } => "B_SPLINE_CURVE_WITH_KNOTS",
+            UnitPart::BSplineSurface { .. } => "B_SPLINE_SURFACE",
+            UnitPart::BSplineSurfaceWithKnots { .. } => "B_SPLINE_SURFACE_WITH_KNOTS",
+            UnitPart::BezierCurve => "BEZIER_CURVE",
+            UnitPart::BezierSurface => "BEZIER_SURFACE",
+            UnitPart::BoundedCurve => "BOUNDED_CURVE",
+            UnitPart::BoundedPcurve => "BOUNDED_PCURVE",
+            UnitPart::BoundedSurface => "BOUNDED_SURFACE",
+            UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE",
+            UnitPart::BrepWithVoids { .. } => "BREP_WITH_VOIDS",
+            UnitPart::CameraImage => "CAMERA_IMAGE",
+            UnitPart::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE",
+            UnitPart::CameraModel => "CAMERA_MODEL",
+            UnitPart::CameraModelD3 { .. } => "CAMERA_MODEL_D3",
+            UnitPart::CameraModelD3MultiClipping { .. } => "CAMERA_MODEL_D3_MULTI_CLIPPING",
+            UnitPart::CameraModelD3WithHlhsr { .. } => "CAMERA_MODEL_D3_WITH_HLHSR",
+            UnitPart::CameraUsage => "CAMERA_USAGE",
+            UnitPart::CcDesignApproval { .. } => "CC_DESIGN_APPROVAL",
+            UnitPart::CcDesignDateAndTimeAssignment { .. } => "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+            UnitPart::CcDesignPersonAndOrganizationAssignment { .. } => {
+                "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT"
+            }
+            UnitPart::CcDesignSecurityClassification { .. } => "CC_DESIGN_SECURITY_CLASSIFICATION",
+            UnitPart::ChangeRequest { .. } => "CHANGE_REQUEST",
+            UnitPart::CharacterGlyphStyleOutline { .. } => "CHARACTER_GLYPH_STYLE_OUTLINE",
+            UnitPart::CharacterGlyphStyleStroke { .. } => "CHARACTER_GLYPH_STYLE_STROKE",
+            UnitPart::CharacterizedItemWithinRepresentation { .. } => {
+                "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION"
+            }
+            UnitPart::CharacterizedObject { .. } => "CHARACTERIZED_OBJECT",
+            UnitPart::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION",
+            UnitPart::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE",
+            UnitPart::ClosedShell => "CLOSED_SHELL",
+            UnitPart::Colour => "COLOUR",
+            UnitPart::ColourRgb { .. } => "COLOUR_RGB",
+            UnitPart::ColourSpecification { .. } => "COLOUR_SPECIFICATION",
+            UnitPart::CommonDatum => "COMMON_DATUM",
+            UnitPart::CompositeCurve { .. } => "COMPOSITE_CURVE",
+            UnitPart::CompositeCurveSegment { .. } => "COMPOSITE_CURVE_SEGMENT",
+            UnitPart::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT",
+            UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT",
+            UnitPart::CompositeText { .. } => "COMPOSITE_TEXT",
+            UnitPart::CompoundRepresentationItem { .. } => "COMPOUND_REPRESENTATION_ITEM",
+            UnitPart::ConfigurationEffectivity { .. } => "CONFIGURATION_EFFECTIVITY",
+            UnitPart::ConfigurationItem { .. } => "CONFIGURATION_ITEM",
+            UnitPart::ConnectedFaceSet { .. } => "CONNECTED_FACE_SET",
+            UnitPart::ConstructiveGeometryRepresentationRelationship => {
+                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP"
+            }
+            UnitPart::ContextDependentOverRidingStyledItem { .. } => {
+                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM"
+            }
+            UnitPart::ContextDependentUnit { .. } => "CONTEXT_DEPENDENT_UNIT",
+            UnitPart::ConversionBasedUnit { .. } => "CONVERSION_BASED_UNIT",
+            UnitPart::Curve => "CURVE",
+            UnitPart::CurveStyle { .. } => "CURVE_STYLE",
+            UnitPart::CurveStyleFont { .. } => "CURVE_STYLE_FONT",
+            UnitPart::CurveStyleFontAndScaling { .. } => "CURVE_STYLE_FONT_AND_SCALING",
+            UnitPart::CurveStyleFontPattern { .. } => "CURVE_STYLE_FONT_PATTERN",
+            UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE",
+            UnitPart::Date { .. } => "DATE",
+            UnitPart::DateAndTime { .. } => "DATE_AND_TIME",
+            UnitPart::DateAndTimeAssignment { .. } => "DATE_AND_TIME_ASSIGNMENT",
+            UnitPart::Datum { .. } => "DATUM",
+            UnitPart::DatumFeature => "DATUM_FEATURE",
+            UnitPart::DatumReference { .. } => "DATUM_REFERENCE",
+            UnitPart::DatumSystem { .. } => "DATUM_SYSTEM",
+            UnitPart::DatumTarget { .. } => "DATUM_TARGET",
+            UnitPart::DefaultModelGeometricView => "DEFAULT_MODEL_GEOMETRIC_VIEW",
+            UnitPart::DefinedCharacterGlyph { .. } => "DEFINED_CHARACTER_GLYPH",
+            UnitPart::DefinedSymbol { .. } => "DEFINED_SYMBOL",
+            UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION",
+            UnitPart::DefinitionalRepresentationRelationship => {
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP"
+            }
+            UnitPart::DefinitionalRepresentationRelationshipWithSameContext => {
+                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT"
+            }
+            UnitPart::DegenerateToroidalSurface { .. } => "DEGENERATE_TOROIDAL_SURFACE",
+            UnitPart::DerivedUnit { .. } => "DERIVED_UNIT",
+            UnitPart::DesignContext => "DESIGN_CONTEXT",
+            UnitPart::DimensionalSize { .. } => "DIMENSIONAL_SIZE",
+            UnitPart::Direction { .. } => "DIRECTION",
+            UnitPart::Document { .. } => "DOCUMENT",
+            UnitPart::DocumentFile => "DOCUMENT_FILE",
+            UnitPart::DocumentProductAssociation { .. } => "DOCUMENT_PRODUCT_ASSOCIATION",
+            UnitPart::DocumentProductEquivalence => "DOCUMENT_PRODUCT_EQUIVALENCE",
+            UnitPart::DocumentReference { .. } => "DOCUMENT_REFERENCE",
+            UnitPart::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE",
+            UnitPart::DraughtingCallout { .. } => "DRAUGHTING_CALLOUT",
+            UnitPart::DraughtingCalloutRelationship { .. } => "DRAUGHTING_CALLOUT_RELATIONSHIP",
+            UnitPart::DraughtingModel => "DRAUGHTING_MODEL",
+            UnitPart::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
+            UnitPart::DraughtingModelItemAssociationWithPlaceholder { .. } => {
+                "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER"
+            }
+            UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR",
+            UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
+            UnitPart::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
+            UnitPart::Edge { .. } => "EDGE",
+            UnitPart::EdgeCurve { .. } => "EDGE_CURVE",
+            UnitPart::EdgeLoop => "EDGE_LOOP",
+            UnitPart::Effectivity { .. } => "EFFECTIVITY",
+            UnitPart::ElementarySurface { .. } => "ELEMENTARY_SURFACE",
+            UnitPart::Expression => "EXPRESSION",
+            UnitPart::ExternalIdentificationAssignment { .. } => {
+                "EXTERNAL_IDENTIFICATION_ASSIGNMENT"
+            }
+            UnitPart::ExternalSource { .. } => "EXTERNAL_SOURCE",
+            UnitPart::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
+            UnitPart::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT",
+            UnitPart::ExternallyDefinedHatchStyle => "EXTERNALLY_DEFINED_HATCH_STYLE",
+            UnitPart::ExternallyDefinedItem { .. } => "EXTERNALLY_DEFINED_ITEM",
+            UnitPart::ExternallyDefinedStyle => "EXTERNALLY_DEFINED_STYLE",
+            UnitPart::ExternallyDefinedSymbol => "EXTERNALLY_DEFINED_SYMBOL",
+            UnitPart::ExternallyDefinedTextFont => "EXTERNALLY_DEFINED_TEXT_FONT",
+            UnitPart::ExternallyDefinedTile => "EXTERNALLY_DEFINED_TILE",
+            UnitPart::ExternallyDefinedTileStyle => "EXTERNALLY_DEFINED_TILE_STYLE",
+            UnitPart::Face { .. } => "FACE",
+            UnitPart::FaceBound { .. } => "FACE_BOUND",
+            UnitPart::FaceOuterBound => "FACE_OUTER_BOUND",
+            UnitPart::FaceSurface { .. } => "FACE_SURFACE",
+            UnitPart::FillAreaStyle { .. } => "FILL_AREA_STYLE",
+            UnitPart::FillAreaStyleHatching { .. } => "FILL_AREA_STYLE_HATCHING",
+            UnitPart::FillAreaStyleTileColouredRegion { .. } => {
+                "FILL_AREA_STYLE_TILE_COLOURED_REGION"
+            }
+            UnitPart::FillAreaStyleTileCurveWithStyle { .. } => {
+                "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE"
+            }
+            UnitPart::FillAreaStyleTileSymbolWithStyle { .. } => {
+                "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE"
+            }
+            UnitPart::FillAreaStyleTiles { .. } => "FILL_AREA_STYLE_TILES",
+            UnitPart::FlatnessTolerance => "FLATNESS_TOLERANCE",
+            UnitPart::FoundedItem => "FOUNDED_ITEM",
+            UnitPart::FunctionallyDefinedTransformation { .. } => {
+                "FUNCTIONALLY_DEFINED_TRANSFORMATION"
+            }
+            UnitPart::GeneralDatumReference { .. } => "GENERAL_DATUM_REFERENCE",
+            UnitPart::GeneralProperty { .. } => "GENERAL_PROPERTY",
+            UnitPart::GenericExpression => "GENERIC_EXPRESSION",
+            UnitPart::GenericLiteral => "GENERIC_LITERAL",
+            UnitPart::GenericProductDefinitionReference { .. } => {
+                "GENERIC_PRODUCT_DEFINITION_REFERENCE"
+            }
+            UnitPart::GeometricItemSpecificUsage => "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+            UnitPart::GeometricRepresentationContext { .. } => "GEOMETRIC_REPRESENTATION_CONTEXT",
+            UnitPart::GeometricRepresentationItem => "GEOMETRIC_REPRESENTATION_ITEM",
+            UnitPart::GeometricSet { .. } => "GEOMETRIC_SET",
+            UnitPart::GeometricTolerance { .. } => "GEOMETRIC_TOLERANCE",
+            UnitPart::GeometricToleranceWithDatumReference { .. } => {
+                "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"
+            }
+            UnitPart::GeometricToleranceWithDefinedAreaUnit { .. } => {
+                "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"
+            }
+            UnitPart::GeometricToleranceWithDefinedUnit { .. } => {
+                "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"
+            }
+            UnitPart::GeometricToleranceWithMaximumTolerance { .. } => {
+                "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE"
+            }
+            UnitPart::GeometricToleranceWithModifiers { .. } => {
+                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS"
+            }
+            UnitPart::GeometricallyBoundedSurfaceShapeRepresentation => {
+                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"
+            }
+            UnitPart::GeometricallyBoundedWireframeShapeRepresentation => {
+                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"
+            }
+            UnitPart::GlobalUncertaintyAssignedContext { .. } => {
+                "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT"
+            }
+            UnitPart::GlobalUnitAssignedContext { .. } => "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+            UnitPart::Group { .. } => "GROUP",
+            UnitPart::GroupAssignment { .. } => "GROUP_ASSIGNMENT",
+            UnitPart::IdentificationAssignment { .. } => "IDENTIFICATION_ASSIGNMENT",
+            UnitPart::IntLiteral => "INT_LITERAL",
+            UnitPart::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM",
+            UnitPart::IntersectionCurve => "INTERSECTION_CURVE",
+            UnitPart::Invisibility { .. } => "INVISIBILITY",
+            UnitPart::ItemDefinedTransformation { .. } => "ITEM_DEFINED_TRANSFORMATION",
+            UnitPart::ItemIdentifiedRepresentationUsage { .. } => {
+                "ITEM_IDENTIFIED_REPRESENTATION_USAGE"
+            }
+            UnitPart::LeaderCurve => "LEADER_CURVE",
+            UnitPart::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT",
+            UnitPart::LeaderTerminator => "LEADER_TERMINATOR",
+            UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT",
+            UnitPart::LengthUnit => "LENGTH_UNIT",
+            UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE",
+            UnitPart::LiteralNumber { .. } => "LITERAL_NUMBER",
+            UnitPart::Loop => "LOOP",
+            UnitPart::ManifoldSolidBrep { .. } => "MANIFOLD_SOLID_BREP",
+            UnitPart::ManifoldSurfaceShapeRepresentation => "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+            UnitPart::MappedItem { .. } => "MAPPED_ITEM",
+            UnitPart::MassUnit => "MASS_UNIT",
+            UnitPart::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM",
+            UnitPart::MeasureWithUnit { .. } => "MEASURE_WITH_UNIT",
+            UnitPart::MechanicalContext => "MECHANICAL_CONTEXT",
+            UnitPart::MechanicalDesignAndDraughtingRelationship => {
+                "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP"
+            }
+            UnitPart::ModelGeometricView => "MODEL_GEOMETRIC_VIEW",
+            UnitPart::ModifiedGeometricTolerance { .. } => "MODIFIED_GEOMETRIC_TOLERANCE",
+            UnitPart::NamedUnit { .. } => "NAMED_UNIT",
+            UnitPart::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+            UnitPart::NumericExpression => "NUMERIC_EXPRESSION",
+            UnitPart::OneDirectionRepeatFactor { .. } => "ONE_DIRECTION_REPEAT_FACTOR",
+            UnitPart::OpenShell => "OPEN_SHELL",
+            UnitPart::OrganizationalAddress { .. } => "ORGANIZATIONAL_ADDRESS",
+            UnitPart::OrientedClosedShell { .. } => "ORIENTED_CLOSED_SHELL",
+            UnitPart::OrientedEdge { .. } => "ORIENTED_EDGE",
+            UnitPart::OverRidingStyledItem { .. } => "OVER_RIDING_STYLED_ITEM",
+            UnitPart::ParallelismTolerance => "PARALLELISM_TOLERANCE",
+            UnitPart::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT",
+            UnitPart::Path { .. } => "PATH",
+            UnitPart::Pcurve { .. } => "PCURVE",
+            UnitPart::PerpendicularityTolerance => "PERPENDICULARITY_TOLERANCE",
+            UnitPart::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS",
+            UnitPart::PersonAndOrganizationAssignment { .. } => {
+                "PERSON_AND_ORGANIZATION_ASSIGNMENT"
+            }
+            UnitPart::PersonalAddress { .. } => "PERSONAL_ADDRESS",
+            UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE",
+            UnitPart::Placement { .. } => "PLACEMENT",
+            UnitPart::PlanarBox { .. } => "PLANAR_BOX",
+            UnitPart::PlanarExtent { .. } => "PLANAR_EXTENT",
+            UnitPart::PlaneAngleMeasureWithUnit => "PLANE_ANGLE_MEASURE_WITH_UNIT",
+            UnitPart::PlaneAngleUnit => "PLANE_ANGLE_UNIT",
+            UnitPart::Point => "POINT",
+            UnitPart::PointStyle { .. } => "POINT_STYLE",
+            UnitPart::PolyLoop { .. } => "POLY_LOOP",
+            UnitPart::PositionTolerance => "POSITION_TOLERANCE",
+            UnitPart::PreDefinedCharacterGlyph => "PRE_DEFINED_CHARACTER_GLYPH",
+            UnitPart::PreDefinedColour => "PRE_DEFINED_COLOUR",
+            UnitPart::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT",
+            UnitPart::PreDefinedItem { .. } => "PRE_DEFINED_ITEM",
+            UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER",
+            UnitPart::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL",
+            UnitPart::PreDefinedPresentationStyle => "PRE_DEFINED_PRESENTATION_STYLE",
+            UnitPart::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE",
+            UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL",
+            UnitPart::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL",
+            UnitPart::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT",
+            UnitPart::PreDefinedTile => "PRE_DEFINED_TILE",
+            UnitPart::PresentationArea => "PRESENTATION_AREA",
+            UnitPart::PresentationRepresentation => "PRESENTATION_REPRESENTATION",
+            UnitPart::PresentationSet => "PRESENTATION_SET",
+            UnitPart::PresentationStyleAssignment { .. } => "PRESENTATION_STYLE_ASSIGNMENT",
+            UnitPart::PresentationStyleByContext { .. } => "PRESENTATION_STYLE_BY_CONTEXT",
+            UnitPart::PresentationView => "PRESENTATION_VIEW",
+            UnitPart::PresentedItem => "PRESENTED_ITEM",
+            UnitPart::Product { .. } => "PRODUCT",
+            UnitPart::ProductCategory { .. } => "PRODUCT_CATEGORY",
+            UnitPart::ProductConcept { .. } => "PRODUCT_CONCEPT",
+            UnitPart::ProductConceptFeature { .. } => "PRODUCT_CONCEPT_FEATURE",
+            UnitPart::ProductConceptFeatureCategory => "PRODUCT_CONCEPT_FEATURE_CATEGORY",
+            UnitPart::ProductContext { .. } => "PRODUCT_CONTEXT",
+            UnitPart::ProductDefinition { .. } => "PRODUCT_DEFINITION",
+            UnitPart::ProductDefinitionContext { .. } => "PRODUCT_DEFINITION_CONTEXT",
+            UnitPart::ProductDefinitionEffectivity { .. } => "PRODUCT_DEFINITION_EFFECTIVITY",
+            UnitPart::ProductDefinitionFormation { .. } => "PRODUCT_DEFINITION_FORMATION",
+            UnitPart::ProductDefinitionFormationWithSpecifiedSource { .. } => {
+                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE"
+            }
+            UnitPart::ProductDefinitionOccurrence { .. } => "PRODUCT_DEFINITION_OCCURRENCE",
+            UnitPart::ProductDefinitionRelationship { .. } => "PRODUCT_DEFINITION_RELATIONSHIP",
+            UnitPart::ProductDefinitionRelationshipRelationship { .. } => {
+                "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP"
+            }
+            UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE",
+            UnitPart::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE",
+            UnitPart::ProductDefinitionWithAssociatedDocuments { .. } => {
+                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"
+            }
+            UnitPart::ProductRelatedProductCategory { .. } => "PRODUCT_RELATED_PRODUCT_CATEGORY",
+            UnitPart::ProjectedZoneDefinition { .. } => "PROJECTED_ZONE_DEFINITION",
+            UnitPart::PropertyDefinition { .. } => "PROPERTY_DEFINITION",
+            UnitPart::PropertyDefinitionRepresentation { .. } => {
+                "PROPERTY_DEFINITION_REPRESENTATION"
+            }
+            UnitPart::QualifiedRepresentationItem { .. } => "QUALIFIED_REPRESENTATION_ITEM",
+            UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE",
+            UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE",
+            UnitPart::RatioMeasureWithUnit => "RATIO_MEASURE_WITH_UNIT",
+            UnitPart::RatioUnit => "RATIO_UNIT",
+            UnitPart::RationalBSplineCurve { .. } => "RATIONAL_B_SPLINE_CURVE",
+            UnitPart::RationalBSplineSurface { .. } => "RATIONAL_B_SPLINE_SURFACE",
+            UnitPart::RealLiteral => "REAL_LITERAL",
+            UnitPart::RealRepresentationItem => "REAL_REPRESENTATION_ITEM",
+            UnitPart::RepositionedTessellatedItem { .. } => "REPOSITIONED_TESSELLATED_ITEM",
+            UnitPart::Representation { .. } => "REPRESENTATION",
+            UnitPart::RepresentationContext { .. } => "REPRESENTATION_CONTEXT",
+            UnitPart::RepresentationItem { .. } => "REPRESENTATION_ITEM",
+            UnitPart::RepresentationMap { .. } => "REPRESENTATION_MAP",
+            UnitPart::RepresentationReference { .. } => "REPRESENTATION_REFERENCE",
+            UnitPart::RepresentationRelationship { .. } => "REPRESENTATION_RELATIONSHIP",
+            UnitPart::RepresentationRelationshipWithTransformation { .. } => {
+                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION"
+            }
+            UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE",
+            UnitPart::SeamCurve => "SEAM_CURVE",
+            UnitPart::SecurityClassificationAssignment { .. } => {
+                "SECURITY_CLASSIFICATION_ASSIGNMENT"
+            }
+            UnitPart::ShapeAspect { .. } => "SHAPE_ASPECT",
+            UnitPart::ShapeAspectRelationship { .. } => "SHAPE_ASPECT_RELATIONSHIP",
+            UnitPart::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION",
+            UnitPart::ShapeDimensionRepresentation => "SHAPE_DIMENSION_REPRESENTATION",
+            UnitPart::ShapeRepresentation => "SHAPE_REPRESENTATION",
+            UnitPart::ShapeRepresentationRelationship => "SHAPE_REPRESENTATION_RELATIONSHIP",
+            UnitPart::ShapeRepresentationWithParameters => "SHAPE_REPRESENTATION_WITH_PARAMETERS",
+            UnitPart::ShellBasedSurfaceModel { .. } => "SHELL_BASED_SURFACE_MODEL",
+            UnitPart::SiUnit { .. } => "SI_UNIT",
+            UnitPart::SimpleGenericExpression => "SIMPLE_GENERIC_EXPRESSION",
+            UnitPart::SimpleNumericExpression => "SIMPLE_NUMERIC_EXPRESSION",
+            UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT",
+            UnitPart::SolidModel => "SOLID_MODEL",
+            UnitPart::StartRequest { .. } => "START_REQUEST",
+            UnitPart::StateObserved { .. } => "STATE_OBSERVED",
+            UnitPart::StateType { .. } => "STATE_TYPE",
+            UnitPart::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE",
+            UnitPart::StyledItem { .. } => "STYLED_ITEM",
+            UnitPart::Surface => "SURFACE",
+            UnitPart::SurfaceCurve { .. } => "SURFACE_CURVE",
+            UnitPart::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE",
+            UnitPart::SurfaceSideStyle { .. } => "SURFACE_SIDE_STYLE",
+            UnitPart::SurfaceStyleBoundary { .. } => "SURFACE_STYLE_BOUNDARY",
+            UnitPart::SurfaceStyleControlGrid { .. } => "SURFACE_STYLE_CONTROL_GRID",
+            UnitPart::SurfaceStyleFillArea { .. } => "SURFACE_STYLE_FILL_AREA",
+            UnitPart::SurfaceStyleParameterLine { .. } => "SURFACE_STYLE_PARAMETER_LINE",
+            UnitPart::SurfaceStyleReflectanceAmbient { .. } => "SURFACE_STYLE_REFLECTANCE_AMBIENT",
+            UnitPart::SurfaceStyleRendering { .. } => "SURFACE_STYLE_RENDERING",
+            UnitPart::SurfaceStyleRenderingWithProperties { .. } => {
+                "SURFACE_STYLE_RENDERING_WITH_PROPERTIES"
+            }
+            UnitPart::SurfaceStyleSegmentationCurve { .. } => "SURFACE_STYLE_SEGMENTATION_CURVE",
+            UnitPart::SurfaceStyleSilhouette { .. } => "SURFACE_STYLE_SILHOUETTE",
+            UnitPart::SurfaceStyleUsage { .. } => "SURFACE_STYLE_USAGE",
+            UnitPart::SymbolRepresentation => "SYMBOL_REPRESENTATION",
+            UnitPart::SymbolStyle { .. } => "SYMBOL_STYLE",
+            UnitPart::SymbolTarget { .. } => "SYMBOL_TARGET",
+            UnitPart::TerminatorSymbol { .. } => "TERMINATOR_SYMBOL",
+            UnitPart::TessellatedGeometricSet { .. } => "TESSELLATED_GEOMETRIC_SET",
+            UnitPart::TessellatedItem => "TESSELLATED_ITEM",
+            UnitPart::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION",
+            UnitPart::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM",
+            UnitPart::TextLiteral { .. } => "TEXT_LITERAL",
+            UnitPart::TextStyle { .. } => "TEXT_STYLE",
+            UnitPart::TextStyleWithBoxCharacteristics { .. } => {
+                "TEXT_STYLE_WITH_BOX_CHARACTERISTICS"
+            }
+            UnitPart::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION",
+            UnitPart::TextureStyleTessellationSpecification => {
+                "TEXTURE_STYLE_TESSELLATION_SPECIFICATION"
+            }
+            UnitPart::TimeUnit => "TIME_UNIT",
+            UnitPart::ToleranceZone { .. } => "TOLERANCE_ZONE",
+            UnitPart::ToleranceZoneDefinition { .. } => "TOLERANCE_ZONE_DEFINITION",
+            UnitPart::ToleranceZoneWithDatum { .. } => "TOLERANCE_ZONE_WITH_DATUM",
+            UnitPart::TopologicalRepresentationItem => "TOPOLOGICAL_REPRESENTATION_ITEM",
+            UnitPart::ToroidalSurface { .. } => "TOROIDAL_SURFACE",
+            UnitPart::TwoDirectionRepeatFactor { .. } => "TWO_DIRECTION_REPEAT_FACTOR",
+            UnitPart::UnequallyDisposedGeometricTolerance { .. } => {
+                "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"
+            }
+            UnitPart::UniformCurve => "UNIFORM_CURVE",
+            UnitPart::UniformSurface => "UNIFORM_SURFACE",
+            UnitPart::ValueRepresentationItem { .. } => "VALUE_REPRESENTATION_ITEM",
+            UnitPart::Vector { .. } => "VECTOR",
+            UnitPart::Vertex => "VERTEX",
+            UnitPart::VertexPoint { .. } => "VERTEX_POINT",
+            UnitPart::ViewVolume { .. } => "VIEW_VOLUME",
+        }
+    }
+
+    pub(crate) fn complex_legal(&self, id: ComplexUnitId, legal: &[&str]) -> bool {
+        self.model
+            .complex_units
+            .get(id.0)
+            .parts
+            .iter()
+            .all(|p| legal.binary_search(&Self::part_name(p)).is_ok())
+    }
+
+    pub fn emit_all(self) -> String {
+        let roots = self.all_ids();
+        self.dfs_render(roots, &std::collections::HashSet::new())
+    }
+
+    /// Per-schema emit: `dropped` AnyIds are skipped (never numbered/rendered),
+    /// `rename` overrides the keyword (downgrade). Caller (projection) guarantees
+    /// the kept set is referentially closed, so no survivor refs a dropped id.
+    pub fn emit_all_with_plan(
+        mut self,
+        dropped: &std::collections::HashSet<AnyId>,
+        rename: std::collections::HashMap<AnyId, &'static str>,
+    ) -> String {
+        self.rename = rename;
+        let roots = self.all_ids();
+        self.dfs_render(roots, dropped)
+    }
+
+    fn dfs_render(
+        mut self,
+        roots: Vec<AnyId>,
+        dropped: &std::collections::HashSet<AnyId>,
+    ) -> String {
+        let mut order: Vec<AnyId> = Vec::new();
         let mut stack: Vec<(AnyId, bool)> = Vec::new();
         let mut on_path: std::collections::HashSet<AnyId> = std::collections::HashSet::new();
         for root in roots {
+            if dropped.contains(&root) {
+                continue;
+            }
             if self.get_id(root).is_some() {
                 continue;
             }
@@ -35529,6 +36642,9 @@ impl<'a> Writer<'a> {
                 self.deps_of(any, &mut deps);
                 for d in deps.into_iter().rev() {
                     if d == any {
+                        continue;
+                    }
+                    if dropped.contains(&d) {
                         continue;
                     }
                     if self.get_id(d).is_some() {
