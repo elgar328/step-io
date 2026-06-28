@@ -12,7 +12,11 @@ pub mod parser;
 pub use generated::model::StepModel;
 pub use normalize::{DropKind, DropReason, Report, read, write};
 pub use parser::{
-    Attribute, Graph, LexError, LexErrorKind, Lexer, NonEmptyStringList, ParseError, ParseWarning,
+    Attribute, Error, Graph, LexError, LexErrorKind, Lexer, NonEmptyStringList, ParseWarning,
     Parser, RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse,
     parse_bytes, tokenize,
 };
+
+/// Crate-wide result alias: the only fallible public entry point ([`read`])
+/// fails with [`Error`].
+pub type Result<T> = std::result::Result<T, Error>;

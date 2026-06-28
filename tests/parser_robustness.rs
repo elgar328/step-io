@@ -1,10 +1,10 @@
 //! Parser/lexer robustness: adversarial input is a structured, graceful
-//! `ParseError` (never a panic, abort, or silent corruption). Covers the
+//! `Error` (never a panic, abort, or silent corruption). Covers the
 //! nesting-depth guard, structured error preservation, out-of-range / non-finite
 //! numbers, and synthetic-id overflow. Inline adversarial byte probes, not
 //! valid-CAD fixtures.
 
-use step_io::{LexError, LexErrorKind, ParseError, read};
+use step_io::{Error, LexError, LexErrorKind, read};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\n\
 FILE_DESCRIPTION(('probe'),'2;1');\n\
@@ -25,7 +25,7 @@ fn deep_nesting_is_graceful_not_stack_overflow() {
     let body = format!("#1=A({}{});\n", "(".repeat(100_000), ")".repeat(100_000));
     let err = read(doc(&body).as_bytes()).unwrap_err();
     assert!(
-        matches!(err, ParseError::NestingTooDeep { .. }),
+        matches!(err, Error::NestingTooDeep { .. }),
         "expected NestingTooDeep, got {err:?}"
     );
 }
@@ -40,13 +40,13 @@ fn normal_nesting_still_parses() {
 }
 
 /// Errors are structured (not flattened to a String): a caller can match the
-/// concrete `ParseError` variant.
+/// concrete `Error` variant.
 #[test]
 fn duplicate_id_is_structured() {
     let body = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n#1=DIRECTION('',(1.,0.,0.));\n";
     let err = read(doc(body).as_bytes()).unwrap_err();
     assert!(
-        matches!(err, ParseError::DuplicateEntityId { id: 1, .. }),
+        matches!(err, Error::DuplicateEntityId { id: 1, .. }),
         "expected DuplicateEntityId #1, got {err:?}"
     );
 }
@@ -60,7 +60,7 @@ fn out_of_range_integer_is_invalid_number() {
     assert!(
         matches!(
             err,
-            ParseError::Lex(LexError {
+            Error::Lex(LexError {
                 kind: LexErrorKind::InvalidNumber,
                 ..
             })
@@ -78,7 +78,7 @@ fn non_finite_real_is_invalid_number() {
     assert!(
         matches!(
             err,
-            ParseError::Lex(LexError {
+            Error::Lex(LexError {
                 kind: LexErrorKind::InvalidNumber,
                 ..
             })

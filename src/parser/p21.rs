@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::entity::{Attribute, Graph, ParseError, ParseWarning, RawEntity, RawEntityPart};
+use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
 use super::lexer::{Lexer, Span, Token, TokenKind};
 use super::schema::StepSchema;
 
@@ -8,8 +8,8 @@ use super::schema::StepSchema;
 ///
 /// # Errors
 ///
-/// Returns the first [`ParseError`] encountered.
-pub fn parse(source: &str) -> Result<Graph, ParseError> {
+/// Returns the first [`Error`] encountered.
+pub fn parse(source: &str) -> Result<Graph, Error> {
     Parser::new(source).parse()
 }
 
@@ -23,8 +23,8 @@ pub fn parse(source: &str) -> Result<Graph, ParseError> {
 ///
 /// # Errors
 ///
-/// Returns the first [`ParseError`] encountered by the underlying parser.
-pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, ParseError> {
+/// Returns the first [`Error`] encountered by the underlying parser.
+pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, Error> {
     if let Ok(s) = std::str::from_utf8(bytes) {
         parse(s)
     } else {
@@ -42,7 +42,7 @@ pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, ParseError> {
 /// large margin over any realistic file yet small enough that the
 /// recursive-descent frames stay well within a thread's stack (a debug build
 /// spans several frames per nesting level). It turns adversarially deep
-/// `(((…)))` input into a graceful [`ParseError::NestingTooDeep`] instead of a
+/// `(((…)))` input into a graceful [`Error::NestingTooDeep`] instead of a
 /// stack-overflow abort.
 pub const MAX_NESTING_DEPTH: usize = 64;
 
@@ -67,8 +67,8 @@ impl<'src> Parser<'src> {
     ///
     /// # Errors
     ///
-    /// Returns a [`ParseError`] on the first structural or lexical problem.
-    pub fn parse(self) -> Result<Graph, ParseError> {
+    /// Returns a [`Error`] on the first structural or lexical problem.
+    pub fn parse(self) -> Result<Graph, Error> {
         let mut this = self;
         this.parse_file()
     }
@@ -77,7 +77,7 @@ impl<'src> Parser<'src> {
     // Top-level grammar
     // ------------------------------------------------------------------
 
-    fn parse_file(&mut self) -> Result<Graph, ParseError> {
+    fn parse_file(&mut self) -> Result<Graph, Error> {
         // ISO-10303-21;
         self.expect_token_kind(&TokenKind::IsoStart, "ISO-10303-21")?;
         self.expect_semicolon()?;
@@ -113,7 +113,7 @@ impl<'src> Parser<'src> {
         // EOF verification — nothing should follow.
         if let Some(result) = self.lexer.next() {
             let tok = result?;
-            return Err(ParseError::UnexpectedToken {
+            return Err(Error::UnexpectedToken {
                 expected: "end of file",
                 found: tok.kind,
                 span: tok.span,
@@ -134,7 +134,7 @@ impl<'src> Parser<'src> {
     // P21 edition 3 sections (ANCHOR / REFERENCE / SIGNATURE)
     // ------------------------------------------------------------------
 
-    fn peek_is_ed3_section(&mut self) -> Result<bool, ParseError> {
+    fn peek_is_ed3_section(&mut self) -> Result<bool, Error> {
         Ok(matches!(
             self.peek_kind()?,
             TokenKind::Keyword(k)
@@ -150,7 +150,7 @@ impl<'src> Parser<'src> {
         &mut self,
         external_references: &mut BTreeMap<u64, String>,
         anchors: &mut Vec<(String, u64)>,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), Error> {
         let tok = self.next_token()?;
         let section = match &tok.kind {
             TokenKind::Keyword(k) => k.to_uppercase(),
@@ -204,7 +204,7 @@ impl<'src> Parser<'src> {
     /// HEADER entities are "uninstantiated": they have no `#N =` prefix, just
     /// `KEYWORD(...);`. The section must contain at least `FILE_DESCRIPTION`,
     /// `FILE_NAME`, and `FILE_SCHEMA` in order.
-    fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, StepSchema), ParseError> {
+    fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, StepSchema), Error> {
         let mut header = Vec::new();
         let mut schema_raw = Vec::new();
 
@@ -216,7 +216,7 @@ impl<'src> Parser<'src> {
             let name = match tok.kind {
                 TokenKind::Keyword(name) => name.to_uppercase(),
                 other => {
-                    return Err(ParseError::UnexpectedToken {
+                    return Err(Error::UnexpectedToken {
                         expected: "HEADER entity name",
                         found: other,
                         span: tok.span,
@@ -269,15 +269,15 @@ impl<'src> Parser<'src> {
             .collect();
 
         if !names.contains(&"FILE_DESCRIPTION") {
-            return Err(ParseError::MissingHeaderEntity {
+            return Err(Error::MissingHeaderEntity {
                 name: "FILE_DESCRIPTION",
             });
         }
         if !names.contains(&"FILE_NAME") {
-            return Err(ParseError::MissingHeaderEntity { name: "FILE_NAME" });
+            return Err(Error::MissingHeaderEntity { name: "FILE_NAME" });
         }
         if !names.contains(&"FILE_SCHEMA") {
-            return Err(ParseError::MissingHeaderEntity {
+            return Err(Error::MissingHeaderEntity {
                 name: "FILE_SCHEMA",
             });
         }
@@ -292,23 +292,23 @@ impl<'src> Parser<'src> {
     fn extract_file_schema_strings(
         attributes: &[Attribute],
         span: Span,
-    ) -> Result<Vec<String>, ParseError> {
+    ) -> Result<Vec<String>, Error> {
         // FILE_SCHEMA has exactly one attribute: a list of strings.
         let list = attributes
             .first()
-            .ok_or(ParseError::MalformedFileSchema { span })?;
+            .ok_or(Error::MalformedFileSchema { span })?;
         match list {
             Attribute::List(items) => {
                 let mut result = Vec::with_capacity(items.len());
                 for item in items {
                     match item {
                         Attribute::String(s) => result.push(s.clone()),
-                        _ => return Err(ParseError::MalformedFileSchema { span }),
+                        _ => return Err(Error::MalformedFileSchema { span }),
                     }
                 }
                 Ok(result)
             }
-            _ => Err(ParseError::MalformedFileSchema { span }),
+            _ => Err(Error::MalformedFileSchema { span }),
         }
     }
 
@@ -317,7 +317,7 @@ impl<'src> Parser<'src> {
     // ------------------------------------------------------------------
 
     /// Parse the DATA section content (between `DATA;` and `ENDSEC;`).
-    fn parse_data_section(&mut self) -> Result<BTreeMap<u64, RawEntity>, ParseError> {
+    fn parse_data_section(&mut self) -> Result<BTreeMap<u64, RawEntity>, Error> {
         let mut entities = BTreeMap::new();
 
         while !matches!(self.peek_kind()?, TokenKind::EndSec) {
@@ -325,7 +325,7 @@ impl<'src> Parser<'src> {
             let id = entity.id();
             let span = entity.span();
             if entities.insert(id, entity).is_some() {
-                return Err(ParseError::DuplicateEntityId { id, span });
+                return Err(Error::DuplicateEntityId { id, span });
             }
         }
 
@@ -337,7 +337,7 @@ impl<'src> Parser<'src> {
     // ------------------------------------------------------------------
 
     /// Parse one entity instance: `#N = NAME(...);` or `#N = ( NAME(...) ... );`
-    fn parse_entity_instance(&mut self) -> Result<RawEntity, ParseError> {
+    fn parse_entity_instance(&mut self) -> Result<RawEntity, Error> {
         // #N
         let id_tok = self.expect(
             |k| matches!(k, TokenKind::EntityRef(_)),
@@ -364,7 +364,7 @@ impl<'src> Parser<'src> {
             }
             _ => {
                 let tok = self.next_token()?;
-                Err(ParseError::UnexpectedToken {
+                Err(Error::UnexpectedToken {
                     expected: "entity type name or '('",
                     found: tok.kind,
                     span: tok.span,
@@ -373,12 +373,7 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn parse_simple_body(
-        &mut self,
-        id: u64,
-        name: &str,
-        span: Span,
-    ) -> Result<RawEntity, ParseError> {
+    fn parse_simple_body(&mut self, id: u64, name: &str, span: Span) -> Result<RawEntity, Error> {
         let attributes = self.parse_parameter_list()?;
         self.expect_semicolon()?;
         Ok(RawEntity::Simple {
@@ -389,13 +384,13 @@ impl<'src> Parser<'src> {
         })
     }
 
-    fn parse_complex_body(&mut self, id: u64, span: Span) -> Result<RawEntity, ParseError> {
+    fn parse_complex_body(&mut self, id: u64, span: Span) -> Result<RawEntity, Error> {
         let mut parts = Vec::new();
 
         // At least one part is required — `( )` is an error.
         if matches!(self.peek_kind()?, TokenKind::RParen) {
             let tok = self.next_token()?;
-            return Err(ParseError::UnexpectedToken {
+            return Err(Error::UnexpectedToken {
                 expected: "entity type name",
                 found: tok.kind,
                 span: tok.span,
@@ -419,7 +414,7 @@ impl<'src> Parser<'src> {
                 }
                 _ => {
                     let tok = self.next_token()?;
-                    return Err(ParseError::UnexpectedToken {
+                    return Err(Error::UnexpectedToken {
                         expected: "entity type name or ')'",
                         found: tok.kind,
                         span: tok.span,
@@ -439,7 +434,7 @@ impl<'src> Parser<'src> {
     /// Parse a comma-separated parameter list between parentheses.
     /// Expects the opening `(` to have been consumed already? No — this
     /// method consumes `(`, reads parameters, and consumes `)`.
-    fn parse_parameter_list(&mut self) -> Result<Vec<Attribute>, ParseError> {
+    fn parse_parameter_list(&mut self) -> Result<Vec<Attribute>, Error> {
         self.expect_lparen()?;
         let attrs = self.parse_list_value()?;
         self.expect_rparen()?;
@@ -448,7 +443,7 @@ impl<'src> Parser<'src> {
 
     /// Parse comma-separated parameters until a `)` is encountered.
     /// The `)` is **not** consumed — the caller is responsible.
-    fn parse_list_value(&mut self) -> Result<Vec<Attribute>, ParseError> {
+    fn parse_list_value(&mut self) -> Result<Vec<Attribute>, Error> {
         let mut items = Vec::new();
         // Empty list `()`.
         if matches!(self.peek_kind()?, TokenKind::RParen) {
@@ -468,7 +463,7 @@ impl<'src> Parser<'src> {
     /// omitted slots, but some writers leave them empty. The slot is
     /// normalised to [`Attribute::Unset`] and a [`ParseWarning`] is
     /// recorded so the lenient repair surfaces to the caller.
-    fn parse_parameter_or_unset_if_empty(&mut self) -> Result<Attribute, ParseError> {
+    fn parse_parameter_or_unset_if_empty(&mut self) -> Result<Attribute, Error> {
         if matches!(self.peek_kind()?, TokenKind::Comma | TokenKind::RParen) {
             let span = self.peek_span().unwrap_or(Span {
                 start: 0,
@@ -497,7 +492,7 @@ impl<'src> Parser<'src> {
     /// list, typed value) re-enter through this wrapper, so `depth` tracks the
     /// current nesting; exceeding [`MAX_NESTING_DEPTH`] is a graceful error rather
     /// than a stack overflow. Balanced inc/dec → siblings don't accumulate.
-    fn parse_parameter(&mut self) -> Result<Attribute, ParseError> {
+    fn parse_parameter(&mut self) -> Result<Attribute, Error> {
         self.depth += 1;
         if self.depth > MAX_NESTING_DEPTH {
             self.depth -= 1;
@@ -507,14 +502,14 @@ impl<'src> Parser<'src> {
                 line: 0,
                 column: 0,
             });
-            return Err(ParseError::NestingTooDeep { span });
+            return Err(Error::NestingTooDeep { span });
         }
         let r = self.parse_parameter_inner();
         self.depth -= 1;
         r
     }
 
-    fn parse_parameter_inner(&mut self) -> Result<Attribute, ParseError> {
+    fn parse_parameter_inner(&mut self) -> Result<Attribute, Error> {
         let kind = self.peek_kind()?.clone();
         match kind {
             TokenKind::Integer(v) => {
@@ -573,7 +568,7 @@ impl<'src> Parser<'src> {
             }
             _ => {
                 let tok = self.next_token()?;
-                Err(ParseError::InvalidAttributePosition {
+                Err(Error::InvalidAttributePosition {
                     span: tok.span,
                     detail: "unexpected token in attribute position",
                 })
@@ -585,30 +580,30 @@ impl<'src> Parser<'src> {
     // Token-level helpers
     // ------------------------------------------------------------------
 
-    /// Consume the next token, returning [`ParseError::UnexpectedEof`] if the
+    /// Consume the next token, returning [`Error::UnexpectedEof`] if the
     /// stream is exhausted.
-    fn next_token(&mut self) -> Result<Token, ParseError> {
+    fn next_token(&mut self) -> Result<Token, Error> {
         match self.lexer.next() {
             Some(result) => Ok(result?),
-            None => Err(ParseError::UnexpectedEof {
+            None => Err(Error::UnexpectedEof {
                 expected: "any token",
             }),
         }
     }
 
     /// Peek at the next token's kind without consuming it.
-    fn peek_kind(&mut self) -> Result<&TokenKind, ParseError> {
+    fn peek_kind(&mut self) -> Result<&TokenKind, Error> {
         match self.lexer.peek() {
             Some(Ok(tok)) => Ok(&tok.kind),
-            Some(Err(err)) => Err(ParseError::Lex(err.clone())),
-            None => Err(ParseError::UnexpectedEof {
+            Some(Err(err)) => Err(Error::Lex(err.clone())),
+            None => Err(Error::UnexpectedEof {
                 expected: "any token",
             }),
         }
     }
 
     /// Consume the next token if it matches `pred`; otherwise return an error.
-    fn expect<F>(&mut self, pred: F, expected: &'static str) -> Result<Token, ParseError>
+    fn expect<F>(&mut self, pred: F, expected: &'static str) -> Result<Token, Error>
     where
         F: Fn(&TokenKind) -> bool,
     {
@@ -616,7 +611,7 @@ impl<'src> Parser<'src> {
         if pred(&tok.kind) {
             Ok(tok)
         } else {
-            Err(ParseError::UnexpectedToken {
+            Err(Error::UnexpectedToken {
                 expected,
                 found: tok.kind,
                 span: tok.span,
@@ -630,7 +625,7 @@ impl<'src> Parser<'src> {
         &mut self,
         kind: &TokenKind,
         expected: &'static str,
-    ) -> Result<Token, ParseError> {
+    ) -> Result<Token, Error> {
         self.expect(
             |k| std::mem::discriminant(k) == std::mem::discriminant(kind),
             expected,
@@ -638,24 +633,24 @@ impl<'src> Parser<'src> {
     }
 
     /// Expect and consume a semicolon.
-    fn expect_semicolon(&mut self) -> Result<Span, ParseError> {
+    fn expect_semicolon(&mut self) -> Result<Span, Error> {
         Ok(self
             .expect(|k| matches!(k, TokenKind::Semicolon), ";")?
             .span)
     }
 
     /// Expect and consume a left parenthesis.
-    fn expect_lparen(&mut self) -> Result<Span, ParseError> {
+    fn expect_lparen(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::LParen), "(")?.span)
     }
 
     /// Expect and consume a right parenthesis.
-    fn expect_rparen(&mut self) -> Result<Span, ParseError> {
+    fn expect_rparen(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::RParen), ")")?.span)
     }
 
     /// Expect and consume an equals sign.
-    fn expect_equals(&mut self) -> Result<Span, ParseError> {
+    fn expect_equals(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::Equals), "=")?.span)
     }
 }
@@ -667,7 +662,7 @@ mod tests {
     #[test]
     fn parse_empty_input_errors() {
         let err = parse("").unwrap_err();
-        assert!(matches!(err, ParseError::UnexpectedEof { .. }));
+        assert!(matches!(err, Error::UnexpectedEof { .. }));
     }
 
     #[test]
@@ -675,7 +670,7 @@ mod tests {
         let mut parser = Parser::new("");
         assert!(matches!(
             parser.next_token(),
-            Err(ParseError::UnexpectedEof { .. })
+            Err(Error::UnexpectedEof { .. })
         ));
     }
 
@@ -684,7 +679,7 @@ mod tests {
         let mut parser = Parser::new("");
         assert!(matches!(
             parser.peek_kind(),
-            Err(ParseError::UnexpectedEof { .. })
+            Err(Error::UnexpectedEof { .. })
         ));
     }
 
@@ -698,10 +693,7 @@ mod tests {
     fn parser_expect_semicolon_wrong_token() {
         let mut parser = Parser::new("(");
         let err = parser.expect_semicolon().unwrap_err();
-        assert!(matches!(
-            err,
-            ParseError::UnexpectedToken { expected: ";", .. }
-        ));
+        assert!(matches!(err, Error::UnexpectedToken { expected: ";", .. }));
     }
 
     // --- parse_parameter helpers ---
@@ -981,7 +973,7 @@ mod tests {
         let err = parser.parse_entity_instance().unwrap_err();
         assert!(matches!(
             err,
-            ParseError::UnexpectedToken {
+            Error::UnexpectedToken {
                 expected: "entity type name",
                 ..
             }
@@ -992,7 +984,7 @@ mod tests {
     fn parse_entity_missing_semicolon_errors() {
         let mut parser = Parser::new("#1 = LINE('', #2)");
         let err = parser.parse_entity_instance().unwrap_err();
-        assert!(matches!(err, ParseError::UnexpectedEof { .. }));
+        assert!(matches!(err, Error::UnexpectedEof { .. }));
     }
 
     // --- parse_bytes: non-UTF-8 input ---
