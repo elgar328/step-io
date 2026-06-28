@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::generated::model::StepModel;
 use crate::generated::profile::{SchemaProfile, SchemaTarget};
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
-use crate::generated::write::{Writer, wrap_step};
+use crate::generated::write::Writer;
 use crate::{Attribute, Error, RawEntity, SchemaId, parse_bytes};
 
 mod entity_normalize;
@@ -353,41 +353,84 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
     ))
 }
 
-/// Emit the model back to STEP text as the **Universal** target — the full read
-/// model, no projection. Faithful round-trip / debug representation. For a
-/// specific AP output use [`write_target`].
+/// Universal output marker — step-io's all-AP union is not a real Application
+/// Protocol, so the `FILE_SCHEMA` header and APD declare a non-standard format. This
+/// keeps the output internally consistent and prevents it masquerading as a real AP.
+const UNIVERSAL_FILE_SCHEMA: &[&str] = &["STEPIO_UNIVERSAL"];
+const UNIVERSAL_APD_STATUS: &str = "not a standard";
+const UNIVERSAL_APD_NAME: &str = "stepio_universal";
+const UNIVERSAL_APD_YEAR: i64 = 0;
+const UNIVERSAL_AC: &str = "step-io universal union (non-standard, all-AP superset)";
+
+/// Emit the model as the **Universal** target — the full read model, no projection
+/// (the union schema is a superset, so nothing is illegal). The `FILE_SCHEMA` header
+/// and APD/`application_context` entities are set to the non-standard universal
+/// marker so the output is internally consistent (header ↔ APD agree).
 #[must_use]
-pub fn write_universal(model: &StepModel) -> String {
-    wrap_step(&Writer::new(model).emit_all())
+pub fn write_universal(model: &mut StepModel) -> String {
+    write_target(model, SchemaTarget::Universal).0
 }
 
-/// Emit the model to a specific output target, projecting it onto that target's
+/// Emit the model to a specific output target. The output is always internally
+/// consistent: the `FILE_SCHEMA` header AND the APD/`application_context` entities are
+/// absolutely set to the target's values (no restore needed — a later write simply
+/// overwrites again). For real AP targets the model is projected onto the target's
 /// legal entity set: rename-safe subtypes are downgraded, the rest dropped
 /// (referential-closure cascade), stranded orphans pruned — all recorded in the
-/// returned [`LossReport`]. `Universal` is a no-op projection (= [`write_universal`]).
+/// returned [`LossReport`]. `Universal` skips projection (union superset).
+///
+/// The original input schema is preserved in `Report.schema` (read time) and is not
+/// affected by writes.
 ///
 /// There is no ground-truth to compare a projected output against; correctness
 /// is "valid + fully accounted" — the output re-reads with zero drops, and
 /// `input == kept + report.dropped + report.downgraded`.
 #[must_use]
-pub fn write_target(model: &StepModel, target: SchemaTarget) -> (String, LossReport) {
-    match SchemaProfile::for_target(target) {
-        None => (write_universal(model), LossReport::default()),
-        Some(profile) => {
-            let w = Writer::new(model);
-            let plan = projection::plan(&w, profile);
-            let body = w.emit_all_with_plan(&plan.dropped, plan.rename);
-            (wrap_step_target(&body, profile), plan.loss)
-        }
+pub fn write_target(model: &mut StepModel, target: SchemaTarget) -> (String, LossReport) {
+    let profile = SchemaProfile::for_target(target);
+
+    // Absolutely set the header schema + APD/AC entities to the target's values.
+    let (file_schema, status, name, year, ac_desc): (&[&str], &str, &str, i64, &str) = match profile
+    {
+        Some(p) => (
+            p.file_schema,
+            p.apd.status,
+            p.apd.name,
+            p.apd.year,
+            p.apd.description,
+        ),
+        None => (
+            UNIVERSAL_FILE_SCHEMA,
+            UNIVERSAL_APD_STATUS,
+            UNIVERSAL_APD_NAME,
+            UNIVERSAL_APD_YEAR,
+            UNIVERSAL_AC,
+        ),
+    };
+    for apd in &mut model.application_protocol_definitions.items {
+        apd.status = status.to_string();
+        apd.application_interpreted_model_schema_name = name.to_string();
+        apd.application_protocol_year = year;
     }
+    for ac in &mut model.application_contexts.items {
+        ac.application = ac_desc.to_string();
+    }
+
+    // Project (real AP) or pass through (Universal), then wrap.
+    let (body, loss) = match profile {
+        Some(profile) => {
+            let w = Writer::new(&*model);
+            let plan = projection::plan(&w, profile);
+            (w.emit_all_with_plan(&plan.dropped, plan.rename), plan.loss)
+        }
+        None => (Writer::new(&*model).emit_all(), LossReport::default()),
+    };
+    (wrap_envelope(&body, file_schema), loss)
 }
 
-/// Wrap a DATA body in the Part 21 envelope with the target's `FILE_SCHEMA`
-/// (the only header field retargeted in the spike; `FILE_DESCRIPTION`/`FILE_NAME`
-/// and the APD entity stay as the generated `wrap_step` emits them).
-fn wrap_step_target(data_body: &str, profile: &SchemaProfile) -> String {
-    let schema = profile
-        .file_schema
+/// Wrap a DATA body in the Part 21 envelope with the given `FILE_SCHEMA`.
+fn wrap_envelope(data_body: &str, file_schema: &[&str]) -> String {
+    let schema = file_schema
         .iter()
         .map(|s| format!("'{s}'"))
         .collect::<Vec<_>>()
