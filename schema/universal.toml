@@ -333,7 +333,7 @@ own_attrs = []
 [entity.action]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 derives = ["id"]
 
 [[entity.action.own_attrs]]
@@ -364,7 +364,7 @@ ty = "action"
 
 [entity.action_directive]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.action_directive.own_attrs]]
 name = "name"
@@ -418,7 +418,7 @@ own_attrs = []
 [entity.action_method]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.action_method.own_attrs]]
 name = "name"
@@ -801,7 +801,7 @@ own_attrs = []
 
 [entity.alternate_product_relationship]
 is_abstract = false
-attr_conflicts = ['definition: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['definition: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.alternate_product_relationship.own_attrs]]
 name = "name"
@@ -1144,7 +1144,7 @@ ty = "face_surface"
 
 [entity.application_context]
 is_abstract = false
-attr_conflicts = ['application: ap203: Entity("text") | ap203e2: Entity("label") | ap214e3: Entity("label") | ap242: Entity("label") | ap242ed2_dis2_mim_lf_v1.101: Entity("label") | ap242ed3_mim_lf_v1.152: Entity("label")']
+attr_conflicts = ['application: ap203e1: Entity("text") | ap203e2: Entity("label") | ap214e3: Entity("label") | ap242e1: Entity("label") | ap242e2: Entity("label") | ap242e3: Entity("label")']
 derives = [
     "description",
     "id",
@@ -1590,7 +1590,7 @@ ty = "approval_role"
 
 [entity.approval_relationship]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.approval_relationship.own_attrs]]
 name = "name"
@@ -1760,7 +1760,7 @@ ty = "OPTIONAL identifier"
 
 [entity.assembly_component_usage_substitute]
 is_abstract = false
-attr_conflicts = ['definition: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['definition: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.assembly_component_usage_substitute.own_attrs]]
 name = "name"
@@ -2888,7 +2888,7 @@ ty = "view_volume"
 parents = ["camera_model_d3"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['shape_clipping: ap203e2: Set(Entity("camera_model_d3_multi_clipping_interection_select")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("camera_model_d3_multi_clipping_intersection_select")) | ap242ed3_mim_lf_v1.152: Set(Entity("camera_model_d3_multi_clipping_intersection_select"))']
+attr_conflicts = ['shape_clipping: ap203e2: Set(Entity("camera_model_d3_multi_clipping_interection_select")) | ap242e2: Set(Entity("camera_model_d3_multi_clipping_intersection_select")) | ap242e3: Set(Entity("camera_model_d3_multi_clipping_intersection_select"))']
 
 [[entity.camera_model_d3_multi_clipping.own_attrs]]
 name = "shape_clipping"
@@ -2898,7 +2898,7 @@ ty = "SET OF camera_model_d3_multi_clipping_intersection_select"
 parents = ["geometric_representation_item"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['shape_clipping: ap203e2: Set(Entity("camera_model_d3_multi_clipping_interection_select")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("camera_model_d3_multi_clipping_intersection_select")) | ap242ed3_mim_lf_v1.152: Set(Entity("camera_model_d3_multi_clipping_intersection_select"))']
+attr_conflicts = ['shape_clipping: ap203e2: Set(Entity("camera_model_d3_multi_clipping_interection_select")) | ap242e2: Set(Entity("camera_model_d3_multi_clipping_intersection_select")) | ap242e3: Set(Entity("camera_model_d3_multi_clipping_intersection_select"))']
 
 [[entity.camera_model_d3_multi_clipping_intersection.own_attrs]]
 name = "shape_clipping"
@@ -3057,7 +3057,7 @@ ty = "SET OF date_time_item"
 parents = ["person_and_organization_assignment"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['items: ap203: Set(Entity("person_organization_item")) | ap203e2: Set(Entity("cc_person_organization_item")) | ap242: Set(Entity("cc_person_organization_item")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("cc_person_organization_item")) | ap242ed3_mim_lf_v1.152: Set(Entity("cc_person_organization_item"))']
+attr_conflicts = ['items: ap203e1: Set(Entity("person_organization_item")) | ap203e2: Set(Entity("cc_person_organization_item")) | ap242e1: Set(Entity("cc_person_organization_item")) | ap242e2: Set(Entity("cc_person_organization_item")) | ap242e3: Set(Entity("cc_person_organization_item"))']
 
 [[entity.cc_design_person_and_organization_assignment.own_attrs]]
 name = "items"
@@ -3067,7 +3067,7 @@ ty = "SET OF cc_person_organization_item"
 parents = ["security_classification_assignment"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['items: ap203: Set(Entity("classified_item")) | ap203e2: Set(Entity("cc_classified_item")) | ap242: Set(Entity("cc_classified_item")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("cc_classified_item")) | ap242ed3_mim_lf_v1.152: Set(Entity("cc_classified_item"))']
+attr_conflicts = ['items: ap203e1: Set(Entity("classified_item")) | ap203e2: Set(Entity("cc_classified_item")) | ap242e1: Set(Entity("cc_classified_item")) | ap242e2: Set(Entity("cc_classified_item")) | ap242e3: Set(Entity("cc_classified_item"))']
 
 [[entity.cc_design_security_classification.own_attrs]]
 name = "items"
@@ -3077,7 +3077,7 @@ ty = "SET OF cc_classified_item"
 parents = ["document_reference"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['items: ap203: Set(Entity("specified_item")) | ap203e2: Set(Entity("cc_specified_item")) | ap242: Set(Entity("cc_specified_item")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("cc_specified_item")) | ap242ed3_mim_lf_v1.152: Set(Entity("cc_specified_item"))']
+attr_conflicts = ['items: ap203e1: Set(Entity("specified_item")) | ap203e2: Set(Entity("cc_specified_item")) | ap242e1: Set(Entity("cc_specified_item")) | ap242e2: Set(Entity("cc_specified_item")) | ap242e3: Set(Entity("cc_specified_item"))']
 
 [[entity.cc_design_specification_reference.own_attrs]]
 name = "items"
@@ -4200,7 +4200,7 @@ ty = "motion_parameter_measure"
 
 [entity.configuration_design]
 is_abstract = false
-attr_conflicts = ['design: ap203: Entity("product_definition_formation") | ap203e2: Entity("configuration_design_item") | ap214e3: Entity("configuration_design_item") | ap242: Entity("configuration_design_item") | ap242ed2_dis2_mim_lf_v1.101: Entity("configuration_design_item") | ap242ed3_mim_lf_v1.152: Entity("configuration_design_item")']
+attr_conflicts = ['design: ap203e1: Entity("product_definition_formation") | ap203e2: Entity("configuration_design_item") | ap214e3: Entity("configuration_design_item") | ap242e1: Entity("configuration_design_item") | ap242e2: Entity("configuration_design_item") | ap242e3: Entity("configuration_design_item")']
 derives = [
     "name",
     "description",
@@ -4654,8 +4654,8 @@ own_attrs = []
 [entity.coordinated_universal_time_offset]
 is_abstract = false
 attr_conflicts = [
-    'hour_offset: ap203: Entity("hour_in_day") | ap203e2: Primitive("INTEGER") | ap214e3: Primitive("INTEGER") | ap242: Primitive("INTEGER") | ap242ed2_dis2_mim_lf_v1.101: Primitive("INTEGER") | ap242ed3_mim_lf_v1.152: Primitive("INTEGER")',
-    'minute_offset: ap203: Optional(Entity("minute_in_hour")) | ap203e2: Optional(Primitive("INTEGER")) | ap214e3: Optional(Primitive("INTEGER")) | ap242: Optional(Primitive("INTEGER")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Primitive("INTEGER")) | ap242ed3_mim_lf_v1.152: Optional(Primitive("INTEGER"))',
+    'hour_offset: ap203e1: Entity("hour_in_day") | ap203e2: Primitive("INTEGER") | ap214e3: Primitive("INTEGER") | ap242e1: Primitive("INTEGER") | ap242e2: Primitive("INTEGER") | ap242e3: Primitive("INTEGER")',
+    'minute_offset: ap203e1: Optional(Entity("minute_in_hour")) | ap203e2: Optional(Primitive("INTEGER")) | ap214e3: Optional(Primitive("INTEGER")) | ap242e1: Optional(Primitive("INTEGER")) | ap242e2: Optional(Primitive("INTEGER")) | ap242e3: Optional(Primitive("INTEGER"))',
 ]
 derives = ["actual_minute_offset"]
 
@@ -4736,7 +4736,7 @@ ty = "LIST OF multi_level_reference_designator"
 parents = ["explicit_composite_hole"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['counterdrill_angle_tolerance: ap242ed2_dis2_mim_lf_v1.101: Entity("tolerance_value") | ap242ed3_mim_lf_v1.152: Optional(Entity("tolerance_value"))']
+attr_conflicts = ['counterdrill_angle_tolerance: ap242e2: Entity("tolerance_value") | ap242e3: Optional(Entity("tolerance_value"))']
 
 [[entity.counterdrill_hole_definition.own_attrs]]
 name = "counterbore"
@@ -4789,7 +4789,7 @@ ty = "LIST OF multi_level_reference_designator"
 parents = ["explicit_composite_hole"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['countersink_angle_tolerance: ap242ed2_dis2_mim_lf_v1.101: Entity("tolerance_value") | ap242ed3_mim_lf_v1.152: Optional(Entity("tolerance_value"))']
+attr_conflicts = ['countersink_angle_tolerance: ap242e2: Entity("tolerance_value") | ap242e3: Optional(Entity("tolerance_value"))']
 
 [[entity.countersink_hole_definition.own_attrs]]
 name = "countersink_angle"
@@ -5104,9 +5104,9 @@ parents = ["founded_item"]
 is_abstract = false
 is_complex_part = true
 attr_conflicts = [
-    'curve_colour: ap203e2: Entity("colour") | ap242: Optional(Entity("colour")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("colour")) | ap242ed3_mim_lf_v1.152: Optional(Entity("colour"))',
-    'curve_font: ap203e2: Entity("curve_font_or_scaled_curve_font_select") | ap242: Optional(Entity("curve_font_or_scaled_curve_font_select")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("curve_font_or_scaled_curve_font_select")) | ap242ed3_mim_lf_v1.152: Optional(Entity("curve_font_or_scaled_curve_font_select"))',
-    'curve_width: ap203e2: Entity("size_select") | ap242: Optional(Entity("size_select")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("size_select")) | ap242ed3_mim_lf_v1.152: Optional(Entity("size_select"))',
+    'curve_colour: ap203e2: Entity("colour") | ap242e1: Optional(Entity("colour")) | ap242e2: Optional(Entity("colour")) | ap242e3: Optional(Entity("colour"))',
+    'curve_font: ap203e2: Entity("curve_font_or_scaled_curve_font_select") | ap242e1: Optional(Entity("curve_font_or_scaled_curve_font_select")) | ap242e2: Optional(Entity("curve_font_or_scaled_curve_font_select")) | ap242e3: Optional(Entity("curve_font_or_scaled_curve_font_select"))',
+    'curve_width: ap203e2: Entity("size_select") | ap242e1: Optional(Entity("size_select")) | ap242e2: Optional(Entity("size_select")) | ap242e3: Optional(Entity("size_select"))',
 ]
 
 [[entity.curve_style.own_attrs]]
@@ -5358,7 +5358,7 @@ own_attrs = []
 
 [entity.data_environment]
 is_abstract = false
-attr_conflicts = ['elements: ap203e2: Set(Entity("property_definition_representation")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("characterized_property_representation")) | ap242ed3_mim_lf_v1.152: Set(Entity("characterized_property_representation"))']
+attr_conflicts = ['elements: ap203e2: Set(Entity("property_definition_representation")) | ap242e2: Set(Entity("characterized_property_representation")) | ap242e3: Set(Entity("characterized_property_representation"))']
 
 [[entity.data_environment.own_attrs]]
 name = "name"
@@ -5848,8 +5848,8 @@ ty = "label"
 parents = ["effectivity"]
 is_abstract = false
 attr_conflicts = [
-    'effectivity_end_date: ap203: Optional(Entity("date_and_time")) | ap203e2: Optional(Entity("date_time_or_event_occurrence")) | ap214e3: Optional(Entity("date_time_or_event_occurrence")) | ap242: Optional(Entity("date_time_or_event_occurrence")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("date_time_or_event_occurrence")) | ap242ed3_mim_lf_v1.152: Optional(Entity("date_time_or_event_occurrence"))',
-    'effectivity_start_date: ap203: Entity("date_and_time") | ap203e2: Entity("date_time_or_event_occurrence") | ap214e3: Entity("date_time_or_event_occurrence") | ap242: Optional(Entity("date_time_or_event_occurrence")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("date_time_or_event_occurrence")) | ap242ed3_mim_lf_v1.152: Optional(Entity("date_time_or_event_occurrence"))',
+    'effectivity_end_date: ap203e1: Optional(Entity("date_and_time")) | ap203e2: Optional(Entity("date_time_or_event_occurrence")) | ap214e3: Optional(Entity("date_time_or_event_occurrence")) | ap242e1: Optional(Entity("date_time_or_event_occurrence")) | ap242e2: Optional(Entity("date_time_or_event_occurrence")) | ap242e3: Optional(Entity("date_time_or_event_occurrence"))',
+    'effectivity_start_date: ap203e1: Entity("date_and_time") | ap203e2: Entity("date_time_or_event_occurrence") | ap214e3: Entity("date_time_or_event_occurrence") | ap242e1: Optional(Entity("date_time_or_event_occurrence")) | ap242e2: Optional(Entity("date_time_or_event_occurrence")) | ap242e3: Optional(Entity("date_time_or_event_occurrence"))',
 ]
 
 [[entity.dated_effectivity.own_attrs]]
@@ -6743,7 +6743,7 @@ own_attrs = []
 [entity.document]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.document.own_attrs]]
 name = "id"
@@ -6824,7 +6824,7 @@ ty = "label"
 
 [entity.document_relationship]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.document_relationship.own_attrs]]
 name = "name"
@@ -8972,7 +8972,7 @@ own_attrs = []
 [entity.functionally_defined_transformation]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.functionally_defined_transformation.own_attrs]]
 name = "name"
@@ -9382,9 +9382,9 @@ ty = "SET OF geometric_set_select"
 is_abstract = true
 is_complex_part = true
 attr_conflicts = [
-    'description: ap203e2: Entity("text") | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))',
-    'magnitude: ap203e2: Entity("measure_with_unit") | ap242: Optional(Entity("length_measure_with_unit")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("length_measure_with_unit")) | ap242ed3_mim_lf_v1.152: Optional(Entity("length_measure_with_unit"))',
-    'toleranced_shape_aspect: ap203e2: Entity("shape_aspect") | ap242: Entity("geometric_tolerance_target") | ap242ed2_dis2_mim_lf_v1.101: Entity("geometric_tolerance_target") | ap242ed3_mim_lf_v1.152: Entity("geometric_tolerance_target")',
+    'description: ap203e2: Entity("text") | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))',
+    'magnitude: ap203e2: Entity("measure_with_unit") | ap242e1: Optional(Entity("length_measure_with_unit")) | ap242e2: Optional(Entity("length_measure_with_unit")) | ap242e3: Optional(Entity("length_measure_with_unit"))',
+    'toleranced_shape_aspect: ap203e2: Entity("shape_aspect") | ap242e1: Entity("geometric_tolerance_target") | ap242e2: Entity("geometric_tolerance_target") | ap242e3: Entity("geometric_tolerance_target")',
 ]
 derives = [
     "controlling_shape",
@@ -9441,7 +9441,7 @@ ty = "geometric_tolerance"
 parents = ["geometric_tolerance"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['datum_system: ap203e2: Set(Entity("datum_reference")) | ap242: Set(Entity("datum_system_or_reference")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("datum_system_or_reference")) | ap242ed3_mim_lf_v1.152: Set(Entity("datum_system_or_reference"))']
+attr_conflicts = ['datum_system: ap203e2: Set(Entity("datum_reference")) | ap242e1: Set(Entity("datum_system_or_reference")) | ap242e2: Set(Entity("datum_system_or_reference")) | ap242e3: Set(Entity("datum_system_or_reference"))']
 
 [[entity.geometric_tolerance_with_datum_reference.own_attrs]]
 name = "datum_system"
@@ -9451,7 +9451,7 @@ ty = "SET OF datum_system_or_reference"
 parents = ["geometric_tolerance_with_defined_unit"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['second_unit_size: ap242: Optional(Entity("length_measure_with_unit")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("length_or_plane_angle_measure_with_unit_select")) | ap242ed3_mim_lf_v1.152: Optional(Entity("length_or_plane_angle_measure_with_unit_select"))']
+attr_conflicts = ['second_unit_size: ap242e1: Optional(Entity("length_measure_with_unit")) | ap242e2: Optional(Entity("length_or_plane_angle_measure_with_unit_select")) | ap242e3: Optional(Entity("length_or_plane_angle_measure_with_unit_select"))']
 
 [[entity.geometric_tolerance_with_defined_area_unit.own_attrs]]
 name = "area_type"
@@ -9465,7 +9465,7 @@ ty = "OPTIONAL length_or_plane_angle_measure_with_unit_select"
 parents = ["geometric_tolerance"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['unit_size: ap203e2: Entity("measure_with_unit") | ap242: Entity("length_measure_with_unit") | ap242ed2_dis2_mim_lf_v1.101: Entity("length_or_plane_angle_measure_with_unit_select") | ap242ed3_mim_lf_v1.152: Entity("length_or_plane_angle_measure_with_unit_select")']
+attr_conflicts = ['unit_size: ap203e2: Entity("measure_with_unit") | ap242e1: Entity("length_measure_with_unit") | ap242e2: Entity("length_or_plane_angle_measure_with_unit_select") | ap242e3: Entity("length_or_plane_angle_measure_with_unit_select")']
 
 [[entity.geometric_tolerance_with_defined_unit.own_attrs]]
 name = "unit_size"
@@ -10527,7 +10527,7 @@ own_attrs = []
 [entity.item_defined_transformation]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.item_defined_transformation.own_attrs]]
 name = "name"
@@ -10549,8 +10549,8 @@ ty = "representation_item"
 is_abstract = false
 is_complex_part = true
 attr_conflicts = [
-    'definition: ap203e2: Entity("represented_definition") | ap242: Entity("item_identified_representation_usage_definition") | ap242ed2_dis2_mim_lf_v1.101: Entity("item_identified_representation_usage_definition") | ap242ed3_mim_lf_v1.152: Entity("item_identified_representation_usage_definition")',
-    'identified_item: ap203e2: Entity("representation_item") | ap242: Entity("item_identified_representation_usage_select") | ap242ed2_dis2_mim_lf_v1.101: Entity("item_identified_representation_usage_select") | ap242ed3_mim_lf_v1.152: Entity("item_identified_representation_usage_select")',
+    'definition: ap203e2: Entity("represented_definition") | ap242e1: Entity("item_identified_representation_usage_definition") | ap242e2: Entity("item_identified_representation_usage_definition") | ap242e3: Entity("item_identified_representation_usage_definition")',
+    'identified_item: ap203e2: Entity("representation_item") | ap242e1: Entity("item_identified_representation_usage_select") | ap242e2: Entity("item_identified_representation_usage_select") | ap242e3: Entity("item_identified_representation_usage_select")',
 ]
 
 [[entity.item_identified_representation_usage.own_attrs]]
@@ -10605,7 +10605,7 @@ ty = "kinematic_analysis_result"
 
 [entity.kinematic_analysis_result]
 is_abstract = false
-attr_conflicts = ['analysed_mechanism: ap214e3: Entity("mechanism") | ap242: Entity("mechanism_representation") | ap242ed2_dis2_mim_lf_v1.101: Entity("mechanism_representation") | ap242ed3_mim_lf_v1.152: Entity("mechanism_representation")']
+attr_conflicts = ['analysed_mechanism: ap214e3: Entity("mechanism") | ap242e1: Entity("mechanism_representation") | ap242e2: Entity("mechanism_representation") | ap242e3: Entity("mechanism_representation")']
 
 [[entity.kinematic_analysis_result.own_attrs]]
 name = "analysed_mechanism"
@@ -10618,8 +10618,8 @@ ty = "kinematic_result"
 [entity.kinematic_control]
 is_abstract = false
 attr_conflicts = [
-    'contained_kinematic_programs: ap214e3: Set(Entity("kinematic_analysis_definition")) | ap242: Entity("kinematic_analysis_definition") | ap242ed2_dis2_mim_lf_v1.101: Entity("kinematic_analysis_definition") | ap242ed3_mim_lf_v1.152: Entity("kinematic_analysis_definition")',
-    'controlled_mechanism: ap214e3: Entity("mechanism") | ap242: Entity("mechanism_representation") | ap242ed2_dis2_mim_lf_v1.101: Entity("mechanism_representation") | ap242ed3_mim_lf_v1.152: Entity("mechanism_representation")',
+    'contained_kinematic_programs: ap214e3: Set(Entity("kinematic_analysis_definition")) | ap242e1: Entity("kinematic_analysis_definition") | ap242e2: Entity("kinematic_analysis_definition") | ap242e3: Entity("kinematic_analysis_definition")',
+    'controlled_mechanism: ap214e3: Entity("mechanism") | ap242e1: Entity("mechanism_representation") | ap242e2: Entity("mechanism_representation") | ap242e3: Entity("mechanism_representation")',
 ]
 
 [[entity.kinematic_control.own_attrs]]
@@ -12044,7 +12044,7 @@ own_attrs = []
 [entity.mating_material_items]
 parents = ["group_assignment"]
 is_abstract = false
-attr_conflicts = ['items: ap242ed2_dis2_mim_lf_v1.101: Set(Entity("product_definition")) | ap242ed3_mim_lf_v1.152: Set(Entity("product_definition_or_assembly_component_usage"))']
+attr_conflicts = ['items: ap242e2: Set(Entity("product_definition")) | ap242e3: Set(Entity("product_definition_or_assembly_component_usage"))']
 
 [[entity.mating_material_items.own_attrs]]
 name = "items"
@@ -12899,7 +12899,7 @@ own_attrs = []
 
 [entity.organization]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.organization.own_attrs]]
 name = "id"
@@ -12927,7 +12927,7 @@ ty = "organization_role"
 
 [entity.organization_relationship]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.organization_relationship.own_attrs]]
 name = "name"
@@ -13011,7 +13011,7 @@ ty = "OPTIONAL text"
 parents = ["address"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.organizational_address.own_attrs]]
 name = "organizations"
@@ -13023,7 +13023,7 @@ ty = "OPTIONAL text"
 
 [entity.organizational_project]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 derives = ["id"]
 
 [[entity.organizational_project.own_attrs]]
@@ -13628,7 +13628,7 @@ ty = "label"
 parents = ["address"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.personal_address.own_attrs]]
 name = "people"
@@ -14351,9 +14351,9 @@ parents = ["founded_item"]
 is_abstract = false
 is_complex_part = true
 attr_conflicts = [
-    'marker: ap203e2: Entity("marker_select") | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("marker_select")) | ap242ed3_mim_lf_v1.152: Optional(Entity("marker_select"))',
-    'marker_colour: ap203e2: Entity("colour") | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("colour")) | ap242ed3_mim_lf_v1.152: Optional(Entity("colour"))',
-    'marker_size: ap203e2: Entity("size_select") | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("size_select")) | ap242ed3_mim_lf_v1.152: Optional(Entity("size_select"))',
+    'marker: ap203e2: Entity("marker_select") | ap242e2: Optional(Entity("marker_select")) | ap242e3: Optional(Entity("marker_select"))',
+    'marker_colour: ap203e2: Entity("colour") | ap242e2: Optional(Entity("colour")) | ap242e3: Optional(Entity("colour"))',
+    'marker_size: ap203e2: Entity("size_select") | ap242e2: Optional(Entity("size_select")) | ap242e3: Optional(Entity("size_select"))',
 ]
 
 [[entity.point_style.own_attrs]]
@@ -14898,7 +14898,7 @@ ty = "property_or_shape_select"
 [entity.product]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.product.own_attrs]]
 name = "id"
@@ -14937,7 +14937,7 @@ ty = "OPTIONAL text"
 
 [entity.product_category_relationship]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.product_category_relationship.own_attrs]]
 name = "name"
@@ -14967,7 +14967,7 @@ own_attrs = []
 [entity.product_concept]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.product_concept.own_attrs]]
 name = "id"
@@ -15111,7 +15111,7 @@ ty = "data_quality_definition"
 [entity.product_definition]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 derives = ["name"]
 
 [[entity.product_definition.own_attrs]]
@@ -15183,7 +15183,7 @@ own_attrs = []
 [entity.product_definition_formation]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.product_definition_formation.own_attrs]]
 name = "id"
@@ -15356,9 +15356,9 @@ own_attrs = []
 is_abstract = false
 is_complex_part = true
 attr_conflicts = [
-    'description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))',
-    'related_product_definition: ap203: Entity("product_definition") | ap242: Entity("product_definition_or_reference") | ap242ed2_dis2_mim_lf_v1.101: Entity("product_definition_or_reference") | ap242ed3_mim_lf_v1.152: Entity("product_definition_or_reference")',
-    'relating_product_definition: ap203: Entity("product_definition") | ap242: Entity("product_definition_or_reference") | ap242ed2_dis2_mim_lf_v1.101: Entity("product_definition_or_reference") | ap242ed3_mim_lf_v1.152: Entity("product_definition_or_reference")',
+    'description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))',
+    'related_product_definition: ap203e1: Entity("product_definition") | ap242e1: Entity("product_definition_or_reference") | ap242e2: Entity("product_definition_or_reference") | ap242e3: Entity("product_definition_or_reference")',
+    'relating_product_definition: ap203e1: Entity("product_definition") | ap242e1: Entity("product_definition_or_reference") | ap242e2: Entity("product_definition_or_reference") | ap242e3: Entity("product_definition_or_reference")',
 ]
 
 [[entity.product_definition_relationship.own_attrs]]
@@ -15687,7 +15687,7 @@ own_attrs = []
 parents = ["tolerance_zone_definition"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['projected_length: ap203e2: Entity("measure_with_unit") | ap242: Entity("length_measure_with_unit") | ap242ed2_dis2_mim_lf_v1.101: Entity("length_measure_with_unit") | ap242ed3_mim_lf_v1.152: Entity("length_measure_with_unit")']
+attr_conflicts = ['projected_length: ap203e2: Entity("measure_with_unit") | ap242e1: Entity("length_measure_with_unit") | ap242e2: Entity("length_measure_with_unit") | ap242e3: Entity("length_measure_with_unit")']
 
 [[entity.projected_zone_definition.own_attrs]]
 name = "projection_end"
@@ -15726,7 +15726,7 @@ own_attrs = []
 [entity.property_definition]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 derives = ["id"]
 
 [[entity.property_definition.own_attrs]]
@@ -15763,7 +15763,7 @@ ty = "property_definition"
 [entity.property_definition_representation]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['definition: ap203: Entity("property_definition") | ap203e2: Entity("represented_definition") | ap214e3: Entity("represented_definition") | ap242: Entity("represented_definition") | ap242ed2_dis2_mim_lf_v1.101: Entity("represented_definition") | ap242ed3_mim_lf_v1.152: Entity("represented_definition")']
+attr_conflicts = ['definition: ap203e1: Entity("property_definition") | ap203e2: Entity("represented_definition") | ap214e3: Entity("represented_definition") | ap242e1: Entity("represented_definition") | ap242e2: Entity("represented_definition") | ap242e3: Entity("represented_definition")']
 derives = [
     "description",
     "name",
@@ -16432,9 +16432,9 @@ ty = "representation_context_reference"
 is_abstract = false
 is_complex_part = true
 attr_conflicts = [
-    'description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))',
-    'rep_1: ap203: Entity("representation") | ap242ed2_dis2_mim_lf_v1.101: Entity("representation_or_representation_reference") | ap242ed3_mim_lf_v1.152: Entity("representation_or_representation_reference")',
-    'rep_2: ap203: Entity("representation") | ap242ed2_dis2_mim_lf_v1.101: Entity("representation_or_representation_reference") | ap242ed3_mim_lf_v1.152: Entity("representation_or_representation_reference")',
+    'description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))',
+    'rep_1: ap203e1: Entity("representation") | ap242e2: Entity("representation_or_representation_reference") | ap242e3: Entity("representation_or_representation_reference")',
+    'rep_2: ap203e1: Entity("representation") | ap242e2: Entity("representation_or_representation_reference") | ap242e3: Entity("representation_or_representation_reference")',
 ]
 
 [[entity.representation_relationship.own_attrs]]
@@ -16947,7 +16947,7 @@ ty = "runout_zone_orientation"
 [entity.runout_zone_orientation]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['angle: ap203e2: Entity("measure_with_unit") | ap242: Entity("plane_angle_measure_with_unit") | ap242ed2_dis2_mim_lf_v1.101: Entity("plane_angle_measure_with_unit") | ap242ed3_mim_lf_v1.152: Entity("plane_angle_measure_with_unit")']
+attr_conflicts = ['angle: ap203e2: Entity("measure_with_unit") | ap242e1: Entity("plane_angle_measure_with_unit") | ap242e2: Entity("plane_angle_measure_with_unit") | ap242e3: Entity("plane_angle_measure_with_unit")']
 
 [[entity.runout_zone_orientation.own_attrs]]
 name = "angle"
@@ -17255,7 +17255,7 @@ own_attrs = []
 [entity.shape_aspect]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 derives = ["id"]
 
 [[entity.shape_aspect.own_attrs]]
@@ -17296,7 +17296,7 @@ ty = "shape_aspect_or_characterized_object"
 [entity.shape_aspect_relationship]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 derives = ["id"]
 
 [[entity.shape_aspect_relationship.own_attrs]]
@@ -19039,7 +19039,7 @@ own_attrs = []
 parents = ["representation_item"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['item: ap203e2: Entity("representation_item") | ap242: Entity("styled_item_target") | ap242ed2_dis2_mim_lf_v1.101: Entity("styled_item_target") | ap242ed3_mim_lf_v1.152: Entity("styled_item_target")']
+attr_conflicts = ['item: ap203e2: Entity("representation_item") | ap242e1: Entity("styled_item_target") | ap242e2: Entity("styled_item_target") | ap242e3: Entity("styled_item_target")']
 
 [[entity.styled_item.own_attrs]]
 name = "styles"
@@ -20390,7 +20390,7 @@ ty = "measure_with_unit"
 parents = ["shape_aspect"]
 is_abstract = false
 is_complex_part = true
-attr_conflicts = ['defining_tolerance: ap203e2: Set(Entity("geometric_tolerance")) | ap242: Set(Entity("tolerance_zone_target")) | ap242ed2_dis2_mim_lf_v1.101: Set(Entity("tolerance_zone_target")) | ap242ed3_mim_lf_v1.152: Set(Entity("tolerance_zone_target"))']
+attr_conflicts = ['defining_tolerance: ap203e2: Set(Entity("geometric_tolerance")) | ap242e1: Set(Entity("tolerance_zone_target")) | ap242e2: Set(Entity("tolerance_zone_target")) | ap242e3: Set(Entity("tolerance_zone_target"))']
 
 [[entity.tolerance_zone.own_attrs]]
 name = "defining_tolerance"
@@ -20731,7 +20731,7 @@ ty = "SET OF uncertainty_measure_with_unit"
 [entity.uncertainty_measure_with_unit]
 parents = ["measure_with_unit"]
 is_abstract = false
-attr_conflicts = ['description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))']
+attr_conflicts = ['description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))']
 
 [[entity.uncertainty_measure_with_unit.own_attrs]]
 name = "name"
@@ -21130,8 +21130,8 @@ own_attrs = []
 [entity.versioned_action_request]
 is_abstract = false
 attr_conflicts = [
-    'description: ap203: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242: Optional(Entity("text")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("text")) | ap242ed3_mim_lf_v1.152: Optional(Entity("text"))',
-    'version: ap203: Entity("label") | ap242: Optional(Entity("label")) | ap242ed2_dis2_mim_lf_v1.101: Optional(Entity("label")) | ap242ed3_mim_lf_v1.152: Optional(Entity("label"))',
+    'description: ap203e1: Entity("text") | ap203e2: Optional(Entity("text")) | ap214e3: Optional(Entity("text")) | ap242e1: Optional(Entity("text")) | ap242e2: Optional(Entity("text")) | ap242e3: Optional(Entity("text"))',
+    'version: ap203e1: Entity("label") | ap242e1: Optional(Entity("label")) | ap242e2: Optional(Entity("label")) | ap242e3: Optional(Entity("label"))',
 ]
 
 [[entity.versioned_action_request.own_attrs]]
