@@ -79,10 +79,10 @@ impl RawEntity {
 
 /// The complete result of parsing a Part 21 file.
 #[derive(Debug)]
-pub struct EntityGraph {
-    /// Identified application protocol. The raw `FILE_SCHEMA` string list
-    /// is preserved inside [`StepSchema`] itself — see its docs.
-    pub schema: super::schema::StepSchema,
+pub struct Graph {
+    /// Identified application protocol (AP family, edition, stage). The raw
+    /// `FILE_SCHEMA` string list is preserved inside [`SchemaId`] itself.
+    pub schema: super::schema::SchemaId,
     /// Raw HEADER entities (`FILE_DESCRIPTION`, `FILE_NAME`, `FILE_SCHEMA`).
     pub header: Vec<RawEntity>,
     /// DATA section entities keyed by their `#N` identifier.
@@ -108,7 +108,7 @@ pub struct EntityGraph {
 /// real-world STEP files; each tolerance pushes a [`ParseWarning`] so
 /// downstream stages can surface what was repaired or discarded. The
 /// IR itself never carries the non-standard form — input is normalised
-/// to a spec-conformant shape before it reaches [`EntityGraph`].
+/// to a spec-conformant shape before it reaches [`Graph`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseWarning {
     /// A HEADER entity is missing its terminating `;`. The next keyword
@@ -129,7 +129,7 @@ pub enum ParseWarning {
     },
 }
 
-impl EntityGraph {
+impl Graph {
     /// Look up an entity by its `#N` identifier.
     #[must_use]
     pub fn get(&self, id: u64) -> Option<&RawEntity> {
@@ -139,10 +139,10 @@ impl EntityGraph {
 
 /// Parse error kinds specific to the Part 21 parser.
 ///
-/// Lexer errors are wrapped in [`ParseError::Lex`]; the remaining variants
+/// Lexer errors are wrapped in [`Error::Lex`]; the remaining variants
 /// describe structural problems detected during parsing.
 #[derive(Debug, Clone, PartialEq)]
-pub enum ParseError {
+pub enum Error {
     /// A lexical error bubbled up from the tokenizer.
     Lex(LexError),
     /// The token stream ended before the parser expected.
@@ -161,15 +161,20 @@ pub enum ParseError {
     MalformedFileSchema { span: Span },
     /// An attribute appeared in an invalid position (e.g. `$` inside a list).
     InvalidAttributePosition { span: Span, detail: &'static str },
+    /// A parameter is nested deeper than [`MAX_NESTING_DEPTH`] — guards against a
+    /// stack overflow on adversarially deep `(((…)))` / `A(B(C(…)))` input.
+    ///
+    /// [`MAX_NESTING_DEPTH`]: super::p21::MAX_NESTING_DEPTH
+    NestingTooDeep { span: Span },
 }
 
-impl From<LexError> for ParseError {
+impl From<LexError> for Error {
     fn from(err: LexError) -> Self {
         Self::Lex(err)
     }
 }
 
-impl std::fmt::Display for ParseError {
+impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Lex(inner) => inner.fmt(f),
@@ -206,11 +211,16 @@ impl std::fmt::Display for ParseError {
                 "parse error at line {}, column {}: {detail}",
                 span.line, span.column,
             ),
+            Self::NestingTooDeep { span } => write!(
+                f,
+                "parse error at line {}, column {}: parameter nesting too deep",
+                span.line, span.column,
+            ),
         }
     }
 }
 
-impl std::error::Error for ParseError {
+impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Lex(inner) => Some(inner),
@@ -283,8 +293,8 @@ mod tests {
             },
             snippet: "@".into(),
         };
-        let parse_err = ParseError::from(lex_err.clone());
-        assert_eq!(parse_err, ParseError::Lex(lex_err));
+        let parse_err = Error::from(lex_err.clone());
+        assert_eq!(parse_err, Error::Lex(lex_err));
     }
 
     #[test]
@@ -299,7 +309,7 @@ mod tests {
             },
             snippet: "@".into(),
         };
-        let parse_err = ParseError::Lex(lex_err.clone());
+        let parse_err = Error::Lex(lex_err.clone());
         // Lex variant delegates to LexError's Display — no "parse error:" prefix.
         assert_eq!(parse_err.to_string(), lex_err.to_string());
     }
@@ -307,7 +317,7 @@ mod tests {
     #[test]
     fn parse_error_implements_std_error() {
         fn assert_error<E: std::error::Error>(_: &E) {}
-        let err = ParseError::UnexpectedEof {
+        let err = Error::UnexpectedEof {
             expected: "semicolon",
         };
         assert_error(&err);
@@ -329,8 +339,8 @@ mod tests {
         };
         let mut entities = BTreeMap::new();
         entities.insert(1, entity.clone());
-        let graph = EntityGraph {
-            schema: super::super::schema::StepSchema::default(),
+        let graph = Graph {
+            schema: super::super::schema::SchemaId::default(),
             header: vec![],
             entities,
             external_references: BTreeMap::new(),

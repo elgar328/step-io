@@ -1,0 +1,16 @@
+[package]
+name = "codegen"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+
+# Pure generator: reads schema/universal.toml + coverage.toml, emits step-io's
+# src/generated/. No step-io dependency, so regenerating never requires the
+# (possibly broken) generated code to compile.
+[[bin]]
+name = "codegen"
+path = "src/main.rs"

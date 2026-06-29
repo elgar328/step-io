@@ -1,7 +1,0 @@
-gen-early coverage (generate_all)
-supported: 2195 / 2195
-skipped:   0
-
--- skipped by reason --
-
--- skipped entities --
