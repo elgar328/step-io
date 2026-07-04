@@ -1,603 +1,352 @@
-//! Converts a raw [`EntityGraph`] into a typed [`StepModel`].
+//! [`read`] — STEP source to [`StepModel`] plus a provenance [`Report`].
 //!
-//! This module is the boundary between the parser layer and the IR layer.
-//! It uses multi-pass eager conversion: entities are processed in dependency
-//! order so that referenced objects are always available when needed.
+//! Reading runs in three steps. [`read`] first calls into
+//! [`parser`](crate::parser) to parse the source, and finally into the
+//! generated readers ([`generated::read`](crate::generated::read)) to turn
+//! the entities into the typed model. The step in between lives here:
+//! non-standard input is healed in place where a safe rewrite exists, and
+//! dropped with a [`DropReason`] where none does. The [`Report`] accounts
+//! for everything that came in — kept, normalized, or dropped and why —
+//! and identifies the source schema.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
-use crate::ir::arena::Arena;
-use crate::ir::assembly::{AssemblyTree, Product, Transform3d};
-use crate::ir::error::ConvertError;
-use crate::ir::geometry::Pcurve;
-use crate::ir::id::{
-    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, VertexId, WireId,
-};
-use crate::ir::model::{
-    AngleUnit, GeometryPool, LengthUnit, SolidAngleUnit, StepModel, TopologyPool, UnitContext,
-};
-use crate::ir::topology::{Orientation, OrientedEdge};
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
+use crate::generated::model::StepModel;
+use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
+use crate::parser::{Attribute, Error, RawEntity, SchemaId, parse_bytes};
 
-mod assembly;
-mod geometry;
-mod header;
-mod passes;
-mod topology;
-mod units;
+mod entity_normalize;
 
-#[cfg(test)]
-mod tests;
-
-/// The result of converting an [`EntityGraph`] into a [`StepModel`].
-///
-/// Conversion always succeeds structurally — individual entity failures are
-/// recorded as [`warnings`](ConvertResult::warnings) and the corresponding
-/// entities are skipped.
-#[derive(Debug)]
-pub struct ConvertResult {
-    pub model: StepModel,
-    /// Each warning describes a single entity that could not be converted;
-    /// that entity is silently **omitted from the IR** and conversion
-    /// continues for the rest. Messages intentionally omit the
-    /// "skipped" verb — the type itself already implies skipping.
-    pub warnings: Vec<ConvertError>,
+/// Why an entity was dropped before it could enter the model. `SlotLocal` = a
+/// slot value could not be normalized to standard (req-ref<-$, int<-fractional).
+/// `Unimplemented` = the entity type is outside the generated closure (not yet
+/// modeled, or an unknown/non-schema name). `Nonstandard` = a known closure type
+/// sits in a SELECT slot that does not admit it (schema violation). `Cascade` = a
+/// referrer whose target was dropped/dangling. `Unclassified` = the generated
+/// read could not consume the entity's own attributes (off-kind scalar, bad enum
+/// token, short arity, …) and no policy layer (normalize / `drop_pass`) classified
+/// it — a frontier signal: investigate and absorb via normalize or `nonstd_ref`.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum DropKind {
+    SlotLocal,
+    Unimplemented,
+    Nonstandard,
+    Cascade,
+    Unclassified,
 }
 
-/// Accumulates converted IR objects and tracks the mapping from STEP entity
-/// ids (`#N`) to typed arena Ids.
-#[derive(Default)]
-// `solid_angle_unit_map` below has a zero-sized value type; keep it as a
-// map for symmetry with the other unit maps and to leave room for future
-// `SolidAngleUnit` variants.
-#[allow(clippy::zero_sized_map_values)]
-pub struct ReaderContext {
-    pub(super) geometry: GeometryPool,
-    pub(super) topology: TopologyPool,
-    pub(super) units: Option<UnitContext>,
-
-    /// Entity ids inside any `DEFINITIONAL_REPRESENTATION` subtree (PCURVE
-    /// parametric-space geometry). 3D passes skip them so their 2D
-    /// `CARTESIAN_POINT` / `DIRECTION` / `LINE` / … don't collide with 3D
-    /// conversion. Pass 4a then walks the same set to populate the 2D
-    /// arenas (`points_2d`, `directions_2d`, `curves_2d`).
-    pub(super) pcurve_subtree_ids: HashSet<u64>,
-
-    // Unit entity maps: STEP #N → resolved unit variant.
-    pub(super) length_unit_map: HashMap<u64, LengthUnit>,
-    pub(super) angle_unit_map: HashMap<u64, AngleUnit>,
-    pub(super) solid_angle_unit_map: HashMap<u64, SolidAngleUnit>,
-    /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value` for uncertainty entities
-    /// whose `unit_component` resolved to a length unit. Populated between
-    /// Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).
-    pub(super) length_uncertainty_map: HashMap<u64, f64>,
-
-    // Geometry maps: STEP #N → typed Id.
-    pub(super) point_map: HashMap<u64, PointId>,
-    pub(super) direction_map: HashMap<u64, DirectionId>,
-    pub(super) surface_map: HashMap<u64, SurfaceId>,
-    pub(super) curve_map: HashMap<u64, CurveId>,
-
-    // Geometry intermediate maps.
-    pub(super) placement_map: HashMap<u64, Placement3dId>,
-    pub(super) vector_map: HashMap<u64, (DirectionId, f64)>,
-    pub(super) axis1_map: HashMap<u64, Placement1dId>,
-
-    // 2D geometry (PCURVE parametric space) maps.
-    pub(super) point_2d_map: HashMap<u64, Point2dId>,
-    pub(super) direction_2d_map: HashMap<u64, Direction2dId>,
-    pub(super) curve_2d_map: HashMap<u64, Curve2dId>,
-    pub(super) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
-    pub(super) placement_2d_map: HashMap<u64, Placement2dId>,
-    /// `SURFACE_CURVE / SEAM_CURVE #N → Vec<Pcurve>`. Populated during
-    /// Pass 4-3 and consumed by `convert_edge_curve` to attach pcurves to
-    /// each edge.
-    pub(super) surface_curve_pcurves_map: HashMap<u64, Vec<Pcurve>>,
-
-    // Topology maps: STEP #N → typed Id.
-    pub(super) vertex_map: HashMap<u64, VertexId>,
-    pub(super) edge_map: HashMap<u64, EdgeId>,
-    pub(super) face_bound_map: HashMap<u64, WireId>,
-    pub(super) face_map: HashMap<u64, FaceId>,
-    pub(super) shell_map: HashMap<u64, ShellId>,
-    pub(super) solid_map: HashMap<u64, SolidId>,
-
-    // Topology intermediate maps.
-    pub(super) oriented_edge_map: HashMap<u64, OrientedEdge>,
-    pub(super) edge_loop_map: HashMap<u64, Vec<OrientedEdge>>,
-    /// `VERTEX_LOOP #N → VertexId`. `FACE_BOUND` consults this when the
-    /// loop ref is not in `edge_loop_map`.
-    pub(super) vertex_loop_map: HashMap<u64, VertexId>,
-    /// `ORIENTED_CLOSED_SHELL #N → (underlying CLOSED_SHELL's ShellId,
-    /// wrapper orientation)`. Populated by Pass 5-7b, consumed by
-    /// `convert_brep_with_voids` in Pass 5-8.
-    pub(super) oriented_closed_shell_map: HashMap<u64, (ShellId, Orientation)>,
-
-    // Assembly (Phase A): product arena + lookup maps populated by Pass 6.
-    // `assembly` is filled in `convert()` after Pass 6 if any PRODUCT was seen.
-    pub(super) assembly: Option<AssemblyTree>,
-    pub(super) assembly_products: Arena<Product>,
-    pub(super) product_arena_map: HashMap<u64, ProductId>,
-    pub(super) formation_to_product: HashMap<u64, u64>,
-    pub(super) pdef_to_product: HashMap<u64, u64>,
-    pub(super) absr_solid_map: HashMap<u64, SolidId>,
-    /// `ADVANCED_BREP_SHAPE_REPRESENTATION #N → Placement3dId` for the first
-    /// `AXIS2_PLACEMENT_3D` item in the ABSR's `items` list (its coordinate
-    /// reference frame). Consumed by SDR conversion to populate
-    /// `Product.shape_ref_frame`.
-    pub(super) absr_ref_frame_map: HashMap<u64, Placement3dId>,
-    /// `SHELL_BASED_SURFACE_MODEL #N → resolved shell ids`. Populated in
-    /// Pass 5-8b and consumed by MSSR conversion to flatten shells.
-    pub(super) sbsm_shells_map: HashMap<u64, Vec<ShellId>>,
-    /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION #N → flattened shell ids`
-    /// pulled from the MSSR's referenced SBSM. Consumed by SDR conversion
-    /// to populate `Product.content = SurfaceBody(..)`.
-    pub(super) mssr_shells_map: HashMap<u64, Vec<ShellId>>,
-    /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION #N → Placement3dId` — same
-    /// role as `absr_ref_frame_map` but for the MSSR path. Optional because
-    /// some writers omit the AXIS2 item.
-    pub(super) mssr_ref_frame_map: HashMap<u64, Placement3dId>,
-    /// `plain SHAPE_REPRESENTATION #N → target ABSR/MSSR #N` — built from
-    /// simple `SHAPE_REPRESENTATION_RELATIONSHIP` entities where exactly one
-    /// side resolves to a known ABSR/MSSR. Consumed by SDR conversion to
-    /// follow the Fusion 360 / CATIA indirection chain
-    /// `SDR → plain SR → SRR → ABSR/MSSR`.
-    pub(super) srr_equiv_map: HashMap<u64, u64>,
-    /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
-    /// `pdef_shape` points at a product definition (not a `NAUO`).
-    /// Populated before Pass 6-5.
-    pub(super) pdef_shape_to_pdef: HashMap<u64, u64>,
-    /// `PRODUCT_DEFINITION_SHAPE #N → NEXT_ASSEMBLY_USAGE_OCCURRENCE #N` when
-    /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated
-    /// alongside `pdef_shape_to_pdef` and consumed by Pass 6-7.
-    pub(super) pdef_shape_to_nauo: HashMap<u64, u64>,
-    pub(super) transform_map: HashMap<u64, Transform3d>,
-    pub(super) nauo_transform_map: HashMap<u64, Transform3d>,
-
-    pub(super) warnings: Vec<ConvertError>,
+/// A drop reason: kind + a human label (`<TYPE>` / `<ENT>.<slot>-><TYPE>` /
+/// a slot-rule name / `via-<root>`). Aggregated as instance counts per reason.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct DropReason {
+    pub kind: DropKind,
+    pub key: String,
 }
 
-impl ReaderContext {
-    /// Convert an entire [`EntityGraph`] into a [`StepModel`].
-    ///
-    /// Entities are processed in dependency order across multiple passes.
-    /// Unrecognised entities are silently skipped — only entities that the
-    /// reader *attempts* to convert but fails produce warnings.
-    #[must_use]
-    pub fn convert(graph: &EntityGraph) -> ConvertResult {
-        let mut ctx = Self {
-            pcurve_subtree_ids: collect_pcurve_subtree_ids(graph),
-            ..Self::default()
-        };
-        ctx.run_unit_pass(graph);
-        ctx.run_geometry_passes(graph);
-        ctx.run_topology_passes(graph);
-        ctx.run_assembly_passes(graph);
-        ctx.finalize_assembly();
-        let header = header::extract_file_header(&graph.header, &mut ctx.warnings);
-        ConvertResult {
-            model: StepModel {
-                geometry: ctx.geometry,
-                topology: ctx.topology,
-                units: ctx.units,
-                assembly: ctx.assembly,
-                schema: graph.schema.clone(),
-                header,
-            },
-            warnings: ctx.warnings,
-        }
-    }
+/// Input-to-model provenance. Every input entity plus every synthetic entity
+/// added by normalization is either kept (`validated`) or dropped with a reason
+/// (`drops`): `validated + sum(drops) == n_in + n_synth`. `norm` = rewrite (fix)
+/// notes from the pre-read normalize pass.
+#[derive(Clone, Debug, Default)]
+pub struct Report {
+    /// Input entity count (data section, before normalization).
+    pub n_in: usize,
+    /// Synthetic entities added by per-entity normalization (add-only).
+    pub n_synth: usize,
+    /// Kept entity count (entities that entered the model).
+    pub validated: usize,
+    /// Dropped entities, per-entity: input id + reason (slot-local + unimplemented
+    /// + cascade + nonstandard). `dropped.len()` is the total drop count.
+    pub dropped: Vec<(u64, DropReason)>,
+    /// Non-standard rewrite notes (kept entities, fixed in place).
+    pub norm: Vec<&'static str>,
+    /// Identified source schema (AP family, edition, stage + raw `FILE_SCHEMA`).
+    /// How callers (e.g. a CAD kernel) learn the precise version of the file.
+    pub schema: SchemaId,
+}
 
-    /// Wrap the collected products into an `AssemblyTree` if any PRODUCT
-    /// entities were seen. `root` stays `None` in Phase A; Phase B fills it.
-    fn finalize_assembly(&mut self) {
-        if self.product_arena_map.is_empty() {
-            return;
-        }
-        // Collect every ProductId that appears as an Instance.child. The
-        // remaining products are root candidates.
-        let mut is_child: HashSet<ProductId> = HashSet::new();
-        for product in self.assembly_products.iter() {
-            if let crate::ir::assembly::ProductContent::Group(instances) = &product.content {
-                for inst in instances {
-                    is_child.insert(inst.child);
-                }
-            }
-        }
-        // Arena<T>::iter() only hands out `&T`, so reconstruct ProductId
-        // from the enumeration index. `push` assigns sequential ids from 0.
-        // Product counts are dominated by STEP entity ids (u64) which fit
-        // comfortably in u32 for any realistic file.
-        #[allow(clippy::cast_possible_truncation)]
-        let roots: Vec<ProductId> = self
-            .assembly_products
-            .iter()
-            .enumerate()
-            .map(|(i, _)| ProductId(i as u32))
-            .filter(|pid| !is_child.contains(pid))
-            .collect();
-        let root = match roots.as_slice() {
-            [single] => Some(*single),
-            [] => {
-                self.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id: 0,
-                    detail: String::from(
-                        "assembly has no root candidate (every product appears as an instance child)",
-                    ),
-                });
-                // Fallback: first product.
-                Some(ProductId(0))
-            }
-            [first, ..] => {
-                self.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id: 0,
-                    detail: format!(
-                        "assembly has {} root candidates, using the first",
-                        roots.len()
-                    ),
-                });
-                Some(*first)
-            }
-        };
-        let products = std::mem::take(&mut self.assembly_products);
-        self.assembly = Some(AssemblyTree { products, root });
-    }
-
-    // ---------------------------------------------------------------------
-    // Resolver helpers: look up a STEP entity id in one of the internal
-    // maps and return the stored IR id (or a `MissingReference` error).
-    // Each converter can collapse four lines of boilerplate into one call.
-    // ---------------------------------------------------------------------
-
-    pub(super) fn resolve_point(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<PointId, ConvertError> {
-        self.point_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_direction(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<DirectionId, ConvertError> {
-        self.direction_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_curve(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<CurveId, ConvertError> {
-        self.curve_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_surface(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<SurfaceId, ConvertError> {
-        self.surface_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_vertex(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<VertexId, ConvertError> {
-        self.vertex_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_edge(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<EdgeId, ConvertError> {
-        self.edge_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_face_bound(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<WireId, ConvertError> {
-        self.face_bound_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_face(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<FaceId, ConvertError> {
-        self.face_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_shell(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<ShellId, ConvertError> {
-        self.shell_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    /// Two-step lookup `PRODUCT_DEFINITION #N → PRODUCT #N → ProductId`
-    /// shared by Pass 6-8 (NAUO tree wiring).
-    pub(super) fn resolve_product_by_pdef(
-        &self,
-        from: u64,
-        pdef_ref: u64,
-        field_name: &'static str,
-    ) -> Result<ProductId, ConvertError> {
-        let product_step_id =
-            self.pdef_to_product
-                .get(&pdef_ref)
-                .copied()
-                .ok_or(ConvertError::MissingReference {
-                    from,
-                    to: pdef_ref,
-                    field_name,
-                })?;
-        self.product_arena_map.get(&product_step_id).copied().ok_or(
-            ConvertError::MissingReference {
-                from,
-                to: product_step_id,
-                field_name,
-            },
-        )
-    }
-
-    pub(super) fn resolve_placement(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<Placement3dId, ConvertError> {
-        self.placement_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_vector(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<(DirectionId, f64), ConvertError> {
-        self.vector_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_axis1(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<Placement1dId, ConvertError> {
-        self.axis1_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_oriented_edge(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<OrientedEdge, ConvertError> {
-        self.oriented_edge_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
-    }
-
-    pub(super) fn resolve_edge_loop(
-        &self,
-        from: u64,
-        to: u64,
-        field_name: &'static str,
-    ) -> Result<Vec<OrientedEdge>, ConvertError> {
-        self.edge_loop_map
-            .get(&to)
-            .cloned()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+/// Collect every entity id referenced (transitively) by an attribute.
+fn collect_refs(a: &Attribute, out: &mut Vec<u64>) {
+    match a {
+        Attribute::EntityRef(n) => out.push(*n),
+        Attribute::List(l) => l.iter().for_each(|e| collect_refs(e, out)),
+        Attribute::Typed { value, .. } => collect_refs(value, out),
+        _ => {}
     }
 }
 
-// ---------------------------------------------------------------------------
-// Free helpers (used by multiple submodules)
-// ---------------------------------------------------------------------------
-
-pub(super) fn bool_to_orientation(same_sense: bool) -> Orientation {
-    if same_sense {
-        Orientation::Forward
-    } else {
-        Orientation::Reversed
-    }
-}
-
-/// Find a part by name in a complex entity's part list.
-pub(super) fn find_part_attrs<'a>(
-    parts: &'a [RawEntityPart],
-    name: &str,
-) -> Option<&'a [Attribute]> {
-    parts
-        .iter()
-        .find(|p| p.name == name)
-        .map(|p| p.attributes.as_slice())
-}
-
-/// Find a required part by name. Returns an error if missing.
-pub(super) fn require_part_attrs<'a>(
-    parts: &'a [RawEntityPart],
-    name: &'static str,
-    entity_id: u64,
-) -> Result<&'a [Attribute], ConvertError> {
-    find_part_attrs(parts, name).ok_or(ConvertError::UnexpectedEntityForm {
-        entity_id,
-        detail: format!("missing required part '{name}'"),
-    })
-}
-
-/// Check whether a complex entity contains all required parts.
-pub(super) fn has_all_parts(parts: &[RawEntityPart], required: &[&str]) -> bool {
-    required
-        .iter()
-        .all(|name| parts.iter().any(|p| p.name == *name))
-}
-
-/// Collect entity ids that belong to any `DEFINITIONAL_REPRESENTATION`
-/// subtree. These represent PCURVE parametric-space geometry (2D points,
-/// 2D curves, `AXIS2_PLACEMENT_2D`, `PARAMETRIC_REPRESENTATION_CONTEXT`).
-/// 3D passes skip them so their 2D `CARTESIAN_POINT` / `DIRECTION` / etc.
-/// don't collide with the 3D converters; Pass 4a then walks the same set
-/// to populate the 2D arenas.
-///
-/// Only the exact entity type name `DEFINITIONAL_REPRESENTATION` is treated
-/// as a root — other `REPRESENTATION` subtypes (e.g. `SHAPE_REPRESENTATION`,
-/// `ADVANCED_BREP_SHAPE_REPRESENTATION`) reference 3D top-level entities
-/// and must remain visible.
-pub(super) fn collect_pcurve_subtree_ids(graph: &EntityGraph) -> HashSet<u64> {
-    let mut ids = HashSet::new();
-    for (&id, entity) in &graph.entities {
-        if let RawEntity::Simple { name, .. } = entity
-            && name == "DEFINITIONAL_REPRESENTATION"
-        {
-            collect_refs_transitive(id, graph, &mut ids);
-        }
-    }
-    ids
-}
-
-fn collect_refs_transitive(id: u64, graph: &EntityGraph, skip: &mut HashSet<u64>) {
-    if !skip.insert(id) {
-        return;
-    }
-    let Some(entity) = graph.get(id) else {
-        return;
-    };
-    match entity {
+fn entity_refs(ent: &RawEntity) -> Vec<u64> {
+    let mut out = Vec::new();
+    match ent {
         RawEntity::Simple { attributes, .. } => {
-            for attr in attributes {
-                walk_refs_in_attr(attr, graph, skip);
+            for a in attributes {
+                collect_refs(a, &mut out);
             }
         }
         RawEntity::Complex { parts, .. } => {
-            for part in parts {
-                for attr in &part.attributes {
-                    walk_refs_in_attr(attr, graph, skip);
+            for p in parts {
+                for a in &p.attributes {
+                    collect_refs(a, &mut out);
                 }
             }
         }
     }
+    out
 }
 
-fn walk_refs_in_attr(attr: &Attribute, graph: &EntityGraph, skip: &mut HashSet<u64>) {
-    match attr {
-        Attribute::EntityRef(n) => collect_refs_transitive(*n, graph, skip),
-        Attribute::List(items) => {
-            for item in items {
-                walk_refs_in_attr(item, graph, skip);
+fn ent_name(e: &RawEntity) -> String {
+    match e {
+        RawEntity::Simple { name, .. } => name.clone(),
+        RawEntity::Complex { parts, .. } => {
+            let mut n: Vec<&str> = parts.iter().map(|p| p.name.as_str()).collect();
+            n.sort_unstable();
+            format!("({})", n.join("+"))
+        }
+    }
+}
+
+/// Slot-aware nonstandard-ref check: does any ref slot of `ent` point at a kept,
+/// in-closure target whose type the slot's SELECT does not admit? Returns the
+/// first `<ENT>.<slot>-><TYPE>` label. Out-of-closure / dangling targets are NOT
+/// flagged here — those are cascade/unimplemented.
+fn nonstd_ref(ent: &RawEntity, graph: &BTreeMap<u64, RawEntity>) -> Option<String> {
+    match ent {
+        RawEntity::Simple {
+            name, attributes, ..
+        } => check_ref_slots(name, attributes, ref_slots(name), graph),
+        RawEntity::Complex { parts, .. } => parts.iter().find_map(|p| {
+            check_ref_slots(&p.name, &p.attributes, complex_ref_slots(&p.name), graph)
+        }),
+    }
+}
+
+fn check_ref_slots(
+    ename: &str,
+    attrs: &[Attribute],
+    slots: &[RefSlot],
+    graph: &BTreeMap<u64, RawEntity>,
+) -> Option<String> {
+    for rs in slots {
+        let Some(a) = attrs.get(rs.idx) else { continue };
+        let mut targets: Vec<u64> = Vec::new();
+        collect_refs(a, &mut targets);
+        for r in targets {
+            let Some(target) = graph.get(&r) else {
+                continue;
+            };
+            if !in_subset(target) {
+                continue; // out-of-closure: cascade / unimplemented handles it
+            }
+            let admitted = match target {
+                RawEntity::Complex { .. } => rs.complex_ok,
+                RawEntity::Simple { name, .. } => rs.allowed.contains(&name.as_str()),
+            };
+            if !admitted {
+                return Some(format!("{ename}.{}->{}", rs.name, ent_name(target)));
             }
         }
-        Attribute::Typed { value, .. } => walk_refs_in_attr(value, graph, skip),
-        _ => {}
     }
+    None
+}
+
+/// Filter a normalized graph to the closure subset, recording WHY each entity is
+/// dropped. An entity survives iff it is a closure type, all its transitive refs
+/// stay kept, and no ref slot holds a type the slot does not admit (fixpoint).
+///
+/// `known_bad` = entities the generated read already failed on (own-attr); they
+/// are pre-dropped roots here so their referrers cascade. Their drop reason is
+/// owned by the caller's read-failure accumulator, so they are NOT re-recorded
+/// in `dropped` (avoids double-counting in the provenance accounting).
+fn drop_pass(
+    graph: &BTreeMap<u64, RawEntity>,
+    known_bad: &BTreeSet<u64>,
+) -> (BTreeSet<u64>, Vec<(u64, DropReason)>) {
+    let mut dropped: Vec<(u64, DropReason)> = Vec::new();
+    let mut keep: BTreeSet<u64> = BTreeSet::new();
+    let mut root_of: BTreeMap<u64, String> = BTreeMap::new();
+    for (&id, e) in graph {
+        if known_bad.contains(&id) {
+            // Dropped by read (reason owned by read_fail); seed root_of so its
+            // referrers get a cascade label, but do not re-record the drop.
+            root_of.insert(id, "unclassified".to_string());
+        } else if in_subset(e) {
+            keep.insert(id);
+        } else {
+            let n = ent_name(e);
+            root_of.insert(id, n.clone());
+            dropped.push((
+                id,
+                DropReason {
+                    kind: DropKind::Unimplemented,
+                    key: n,
+                },
+            ));
+        }
+    }
+    loop {
+        let mut removed = false;
+        let snapshot: Vec<u64> = keep.iter().copied().collect();
+        for id in snapshot {
+            let ent = &graph[&id];
+            let mut cascaded = false;
+            for r in entity_refs(ent) {
+                if !keep.contains(&r) {
+                    keep.remove(&id);
+                    let root = root_of
+                        .get(&r)
+                        .cloned()
+                        .unwrap_or_else(|| "dangling".to_string());
+                    dropped.push((
+                        id,
+                        DropReason {
+                            kind: DropKind::Cascade,
+                            key: format!("via-{root}"),
+                        },
+                    ));
+                    root_of.insert(id, root);
+                    removed = true;
+                    cascaded = true;
+                    break;
+                }
+            }
+            if cascaded {
+                continue;
+            }
+            if let Some(reason) = nonstd_ref(ent, graph) {
+                keep.remove(&id);
+                root_of.insert(id, reason.clone());
+                dropped.push((
+                    id,
+                    DropReason {
+                        kind: DropKind::Nonstandard,
+                        key: reason,
+                    },
+                ));
+                removed = true;
+            }
+        }
+        if !removed {
+            break;
+        }
+    }
+    // Return the kept-id set (not a cloned entity map): the reader borrows the
+    // entities from the full graph, so no RawEntity is cloned here.
+    (keep, dropped)
+}
+
+/// Full pre-read normalization: `entity_normalize` (per-entity, add-only synthetic
+/// fixups) then `generic_normalize` (generic slot-kind rules). Returns the map,
+/// the rewrite notes, the slot-local drop reasons, and the synthetic-add count
+/// (`entity_normalize` never removes, so the count delta is exactly the adds).
+#[allow(clippy::type_complexity)]
+fn normalize_all(
+    raw: BTreeMap<u64, RawEntity>,
+) -> (
+    BTreeMap<u64, RawEntity>,
+    Vec<&'static str>,
+    Vec<(u64, &'static str)>,
+    usize,
+) {
+    let mut raw = raw;
+    let mut norm: Vec<&'static str> = Vec::new();
+    let before = raw.len();
+    entity_normalize::apply(&mut raw, &mut norm);
+    let n_synth = raw.len() - before;
+    let (normalized, gnorm, slot_drops) = crate::generated::generic_normalize::normalize(raw);
+    norm.extend(gnorm);
+    (normalized, norm, slot_drops, n_synth)
+}
+
+/// Read STEP source into the schema-faithful model, returning a provenance
+/// `Report`.
+///
+/// The generated read is per-entity fallible: an entity whose own attributes the
+/// strict reader cannot consume is dropped (reason recorded), never panicking.
+/// A read failure pre-drops that entity in the next `drop_pass`, so its referrers
+/// cascade through the same engine. The loop is bounded and converges in ≤2 real
+/// iterations (own-attr readability is graph-independent, so all failures surface
+/// in the first build; the second `drop_pass` cascades them to a clean set).
+///
+/// # Errors
+/// Returns a [`Error`] only if the source does not parse. A parsed source
+/// never fails the read: a malformed entity is dropped with a reason in
+/// [`Report::dropped`] (the generated read is structurally panic-free).
+pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
+    /// ≤2 real iterations; one extra for slack (a violation degrades to dropping,
+    /// not hanging — `debug_assert` flags non-convergence in dev).
+    const MAX_ITERS: usize = 3;
+
+    let g = parse_bytes(src)?;
+    let n_in = g.entities.len();
+    let schema = g.schema;
+    let raw: BTreeMap<u64, RawEntity> = g.entities;
+    let (normalized, norm, slot_drops, n_synth) = normalize_all(raw);
+
+    // Outer cascade fixpoint: drop_pass (graph/ref validity) -> gen_read (own-attr
+    // validity). read failures feed `known_bad` so the next drop_pass cascades
+    // their referrers. `drop_pass` always seeds from the full `normalized` graph
+    // (never `kept`) so the kept set is monotonically shrinking — this guarantees
+    // termination; seeding from `kept` would break it.
+    let mut known_bad: BTreeSet<u64> = BTreeSet::new();
+    let mut read_fail: BTreeMap<u64, String> = BTreeMap::new();
+    let mut model = StepModel::default();
+    let mut dropped: Vec<(u64, DropReason)> = Vec::new();
+    let mut validated = 0usize;
+    let mut converged = false;
+    for _ in 0..MAX_ITERS {
+        let (kept, kept_dropped) = drop_pass(&normalized, &known_bad);
+        // No catch_unwind belt: the generated read is structurally panic-free
+        // (codegen emits no panic!/expect/unwrap/raw indexing — gated by grep), so
+        // it returns per-entity drops instead of unwinding.
+        let (m, _idmap, read_drops) = gen_read(&normalized, &kept);
+        model = m;
+        dropped = kept_dropped;
+        validated = kept.len();
+        if read_drops.is_empty() {
+            converged = true;
+            break;
+        }
+        for (id, r) in read_drops {
+            read_fail.entry(id).or_insert(r);
+            known_bad.insert(id);
+        }
+    }
+    debug_assert!(
+        converged,
+        "fallible read did not converge in {MAX_ITERS} iters"
+    );
+
+    // Finalize provenance: cascade drops (this iter) + slot-local (normalize) +
+    // accumulated read failures (Unclassified). Each id appears exactly once —
+    // `drop_pass` excludes `known_bad` from its `dropped`, and `read_fail` keys ==
+    // `known_bad`, so the three sets are disjoint (accounting invariant holds).
+    for (id, r) in slot_drops {
+        dropped.push((
+            id,
+            DropReason {
+                kind: DropKind::SlotLocal,
+                key: r.to_string(),
+            },
+        ));
+    }
+    for (id, r) in read_fail {
+        dropped.push((
+            id,
+            DropReason {
+                kind: DropKind::Unclassified,
+                key: r,
+            },
+        ));
+    }
+    Ok((
+        model,
+        Report {
+            n_in,
+            n_synth,
+            validated,
+            dropped,
+            norm,
+            schema,
+        },
+    ))
 }

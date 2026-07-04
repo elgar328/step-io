@@ -1,6 +1,9 @@
+[workspace]
+members = [".", "codegen"]
+
 [package]
 name = "step-io"
-version = "0.1.0-alpha.1"
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 description = "STEP (ISO 10303) file I/O for Rust."
@@ -9,13 +12,15 @@ repository = "https://github.com/elgar328/step-io"
 readme = "README.md"
 keywords = ["step", "iso10303", "cad", "geometry", "parser"]
 categories = ["parser-implementations", "science", "encoding"]
-exclude = ["internal/"]
+# schema/ is codegen input (not read at build time); .github/ is dev CI.
+exclude = ["schema/", ".github/"]
 
 [dependencies]
 logos = "0.16"
 
 [lints.rust]
-unsafe_code = "forbid"
+# No step-io code uses `unsafe`.
+unsafe_code = "deny"
 
 [lints.clippy]
 all = { level = "warn", priority = -1 }

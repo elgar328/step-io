@@ -1,24 +1,56 @@
 use std::collections::BTreeMap;
 
-use super::entity::{Attribute, EntityGraph, ParseError, RawEntity, RawEntityPart};
+use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
 use super::lexer::{Lexer, Span, Token, TokenKind};
-use super::schema::StepSchema;
+use super::schema::SchemaId;
 
-/// Convenience function: parse a complete Part 21 source into an [`EntityGraph`].
+/// Convenience function: parse a complete Part 21 source into an [`Graph`].
 ///
 /// # Errors
 ///
-/// Returns the first [`ParseError`] encountered.
-pub fn parse(source: &str) -> Result<EntityGraph, ParseError> {
+/// Returns the first [`Error`] encountered.
+pub fn parse(source: &str) -> Result<Graph, Error> {
     Parser::new(source).parse()
+}
+
+/// Parse a Part 21 source given as raw bytes. Tries UTF-8 first; on
+/// failure falls back to ISO 8859-1 (Latin-1), which ISO 10303-21 §3.2
+/// defines as the file format's default encoding. Real-world STEP files
+/// frequently embed raw non-ASCII bytes (Cyrillic, Latin-1) directly
+/// instead of using the spec's `\X\` / `\X2\` / `\X4\` escapes — those
+/// bytes decode losslessly under the fallback (every byte 0x00..0xFF
+/// maps 1:1 to U+0000..U+00FF).
+///
+/// # Errors
+///
+/// Returns the first [`Error`] encountered by the underlying parser.
+pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, Error> {
+    if let Ok(s) = std::str::from_utf8(bytes) {
+        parse(s)
+    } else {
+        let s: String = bytes.iter().map(|&b| b as char).collect();
+        parse(&s)
+    }
 }
 
 /// Recursive-descent parser for ISO 10303-21 (Part 21) files.
 ///
 /// Consumes `self` on [`Parser::parse`] because the underlying [`Lexer`] is
 /// a one-pass iterator and cannot be rewound.
+/// Maximum parameter nesting depth. In practice STEP parameters nest only a few
+/// levels (nested LIST OF LIST, typed-wrapped measures); this bound of 64 is a
+/// large margin over any realistic file yet small enough that the
+/// recursive-descent frames stay well within a thread's stack (a debug build
+/// spans several frames per nesting level). It turns adversarially deep
+/// `(((…)))` input into a graceful [`Error::NestingTooDeep`] instead of a
+/// stack-overflow abort.
+pub const MAX_NESTING_DEPTH: usize = 64;
+
 pub struct Parser<'src> {
     lexer: Lexer<'src>,
+    warnings: Vec<ParseWarning>,
+    /// Current parameter nesting depth (guards against stack overflow).
+    depth: usize,
 }
 
 impl<'src> Parser<'src> {
@@ -26,15 +58,17 @@ impl<'src> Parser<'src> {
     pub fn new(source: &'src str) -> Self {
         Self {
             lexer: Lexer::new(source),
+            warnings: Vec::new(),
+            depth: 0,
         }
     }
 
-    /// Parse the entire Part 21 file and return an [`EntityGraph`].
+    /// Parse the entire Part 21 file and return an [`Graph`].
     ///
     /// # Errors
     ///
-    /// Returns a [`ParseError`] on the first structural or lexical problem.
-    pub fn parse(self) -> Result<EntityGraph, ParseError> {
+    /// Returns a [`Error`] on the first structural or lexical problem.
+    pub fn parse(self) -> Result<Graph, Error> {
         let mut this = self;
         this.parse_file()
     }
@@ -43,7 +77,7 @@ impl<'src> Parser<'src> {
     // Top-level grammar
     // ------------------------------------------------------------------
 
-    fn parse_file(&mut self) -> Result<EntityGraph, ParseError> {
+    fn parse_file(&mut self) -> Result<Graph, Error> {
         // ISO-10303-21;
         self.expect_token_kind(&TokenKind::IsoStart, "ISO-10303-21")?;
         self.expect_semicolon()?;
@@ -54,6 +88,16 @@ impl<'src> Parser<'src> {
         let (header, schema) = self.parse_header_section()?;
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
+
+        // Optional P21 edition 3 sections (ANCHOR / REFERENCE / SIGNATURE).
+        // ANCHOR / REFERENCE are parsed (so external references survive);
+        // SIGNATURE and any unrecognised line shape fall back to a discard +
+        // ParseWarning.
+        let mut external_references: BTreeMap<u64, String> = BTreeMap::new();
+        let mut anchors: Vec<(String, u64)> = Vec::new();
+        while self.peek_is_ed3_section()? {
+            self.parse_or_skip_ed3_section(&mut external_references, &mut anchors)?;
+        }
 
         // DATA; ... ENDSEC;
         self.expect_token_kind(&TokenKind::Data, "DATA")?;
@@ -69,18 +113,86 @@ impl<'src> Parser<'src> {
         // EOF verification — nothing should follow.
         if let Some(result) = self.lexer.next() {
             let tok = result?;
-            return Err(ParseError::UnexpectedToken {
+            return Err(Error::UnexpectedToken {
                 expected: "end of file",
                 found: tok.kind,
                 span: tok.span,
             });
         }
 
-        Ok(EntityGraph {
+        Ok(Graph {
             schema,
             header,
             entities,
+            external_references,
+            anchors,
+            warnings: std::mem::take(&mut self.warnings),
         })
+    }
+
+    // ------------------------------------------------------------------
+    // P21 edition 3 sections (ANCHOR / REFERENCE / SIGNATURE)
+    // ------------------------------------------------------------------
+
+    fn peek_is_ed3_section(&mut self) -> Result<bool, Error> {
+        Ok(matches!(
+            self.peek_kind()?,
+            TokenKind::Keyword(k)
+                if matches!(k.to_uppercase().as_str(),
+                            "ANCHOR" | "REFERENCE" | "SIGNATURE")
+        ))
+    }
+
+    /// Parse an ANCHOR or REFERENCE section into `external_references` /
+    /// `anchors`; SIGNATURE (and any line shape we don't recognise) falls back
+    /// to a discard + `Ed3SectionDiscarded` warning so the parse never fails.
+    fn parse_or_skip_ed3_section(
+        &mut self,
+        external_references: &mut BTreeMap<u64, String>,
+        anchors: &mut Vec<(String, u64)>,
+    ) -> Result<(), Error> {
+        let tok = self.next_token()?;
+        let section = match &tok.kind {
+            TokenKind::Keyword(k) => k.to_uppercase(),
+            _ => unreachable!("peek_is_ed3_section guarantees a Keyword"),
+        };
+        let span = tok.span;
+        self.expect_semicolon()?;
+
+        let mut discarded = false;
+        while !matches!(self.peek_kind()?, TokenKind::EndSec) {
+            // Each entry is one `lhs = rhs ;` line. REFERENCE lines are
+            // `#N = <anchor>`; ANCHOR lines are `<name> = #N`. Anything else
+            // (SIGNATURE bodies, unexpected shapes) is consumed and the whole
+            // section is flagged as discarded.
+            let lhs = self.next_token()?;
+            if !matches!(self.peek_kind()?, TokenKind::Equals) {
+                discarded = true;
+                continue;
+            }
+            self.next_token()?; // consume `=`
+            let rhs = self.next_token()?;
+            match (section.as_str(), lhs.kind, rhs.kind) {
+                ("REFERENCE", TokenKind::EntityRef(id), TokenKind::AnchorRef(s)) => {
+                    external_references.insert(id, s);
+                }
+                ("ANCHOR", TokenKind::AnchorRef(name), TokenKind::EntityRef(id)) => {
+                    anchors.push((name, id));
+                }
+                _ => discarded = true,
+            }
+            // Consume the line's terminating `;` (tolerate its absence).
+            if matches!(self.peek_kind()?, TokenKind::Semicolon) {
+                self.next_token()?;
+            }
+        }
+        self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
+        self.expect_semicolon()?;
+        if discarded || section == "SIGNATURE" {
+            self.warnings
+                .push(ParseWarning::Ed3SectionDiscarded { section, span });
+        }
+        Ok(())
     }
 
     // ------------------------------------------------------------------
@@ -92,7 +204,7 @@ impl<'src> Parser<'src> {
     /// HEADER entities are "uninstantiated": they have no `#N =` prefix, just
     /// `KEYWORD(...);`. The section must contain at least `FILE_DESCRIPTION`,
     /// `FILE_NAME`, and `FILE_SCHEMA` in order.
-    fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, StepSchema), ParseError> {
+    fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, SchemaId), Error> {
         let mut header = Vec::new();
         let mut schema_raw = Vec::new();
 
@@ -104,7 +216,7 @@ impl<'src> Parser<'src> {
             let name = match tok.kind {
                 TokenKind::Keyword(name) => name.to_uppercase(),
                 other => {
-                    return Err(ParseError::UnexpectedToken {
+                    return Err(Error::UnexpectedToken {
                         expected: "HEADER entity name",
                         found: other,
                         span: tok.span,
@@ -119,7 +231,24 @@ impl<'src> Parser<'src> {
                 schema_raw = Self::extract_file_schema_strings(&attributes, tok.span)?;
             }
 
-            self.expect_semicolon()?;
+            // Some non-spec writers omit the trailing `;` after a HEADER
+            // entity. If the next token already starts the following
+            // entity (keyword) or closes the section (ENDSEC), accept
+            // the missing semicolon with a ParseWarning.
+            match self.peek_kind()? {
+                TokenKind::Semicolon => {
+                    self.next_token()?;
+                }
+                TokenKind::Keyword(_) | TokenKind::EndSec => {
+                    self.warnings.push(ParseWarning::MissingHeaderSemicolon {
+                        entity_name: name.clone(),
+                        span: tok.span,
+                    });
+                }
+                _ => {
+                    self.expect_semicolon()?;
+                }
+            }
 
             pseudo_id += 1;
             header.push(RawEntity::Simple {
@@ -140,15 +269,15 @@ impl<'src> Parser<'src> {
             .collect();
 
         if !names.contains(&"FILE_DESCRIPTION") {
-            return Err(ParseError::MissingHeaderEntity {
+            return Err(Error::MissingHeaderEntity {
                 name: "FILE_DESCRIPTION",
             });
         }
         if !names.contains(&"FILE_NAME") {
-            return Err(ParseError::MissingHeaderEntity { name: "FILE_NAME" });
+            return Err(Error::MissingHeaderEntity { name: "FILE_NAME" });
         }
         if !names.contains(&"FILE_SCHEMA") {
-            return Err(ParseError::MissingHeaderEntity {
+            return Err(Error::MissingHeaderEntity {
                 name: "FILE_SCHEMA",
             });
         }
@@ -163,23 +292,23 @@ impl<'src> Parser<'src> {
     fn extract_file_schema_strings(
         attributes: &[Attribute],
         span: Span,
-    ) -> Result<Vec<String>, ParseError> {
+    ) -> Result<Vec<String>, Error> {
         // FILE_SCHEMA has exactly one attribute: a list of strings.
         let list = attributes
             .first()
-            .ok_or(ParseError::MalformedFileSchema { span })?;
+            .ok_or(Error::MalformedFileSchema { span })?;
         match list {
             Attribute::List(items) => {
                 let mut result = Vec::with_capacity(items.len());
                 for item in items {
                     match item {
                         Attribute::String(s) => result.push(s.clone()),
-                        _ => return Err(ParseError::MalformedFileSchema { span }),
+                        _ => return Err(Error::MalformedFileSchema { span }),
                     }
                 }
                 Ok(result)
             }
-            _ => Err(ParseError::MalformedFileSchema { span }),
+            _ => Err(Error::MalformedFileSchema { span }),
         }
     }
 
@@ -188,7 +317,7 @@ impl<'src> Parser<'src> {
     // ------------------------------------------------------------------
 
     /// Parse the DATA section content (between `DATA;` and `ENDSEC;`).
-    fn parse_data_section(&mut self) -> Result<BTreeMap<u64, RawEntity>, ParseError> {
+    fn parse_data_section(&mut self) -> Result<BTreeMap<u64, RawEntity>, Error> {
         let mut entities = BTreeMap::new();
 
         while !matches!(self.peek_kind()?, TokenKind::EndSec) {
@@ -196,7 +325,7 @@ impl<'src> Parser<'src> {
             let id = entity.id();
             let span = entity.span();
             if entities.insert(id, entity).is_some() {
-                return Err(ParseError::DuplicateEntityId { id, span });
+                return Err(Error::DuplicateEntityId { id, span });
             }
         }
 
@@ -208,7 +337,7 @@ impl<'src> Parser<'src> {
     // ------------------------------------------------------------------
 
     /// Parse one entity instance: `#N = NAME(...);` or `#N = ( NAME(...) ... );`
-    fn parse_entity_instance(&mut self) -> Result<RawEntity, ParseError> {
+    fn parse_entity_instance(&mut self) -> Result<RawEntity, Error> {
         // #N
         let id_tok = self.expect(
             |k| matches!(k, TokenKind::EntityRef(_)),
@@ -235,7 +364,7 @@ impl<'src> Parser<'src> {
             }
             _ => {
                 let tok = self.next_token()?;
-                Err(ParseError::UnexpectedToken {
+                Err(Error::UnexpectedToken {
                     expected: "entity type name or '('",
                     found: tok.kind,
                     span: tok.span,
@@ -244,12 +373,7 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn parse_simple_body(
-        &mut self,
-        id: u64,
-        name: &str,
-        span: Span,
-    ) -> Result<RawEntity, ParseError> {
+    fn parse_simple_body(&mut self, id: u64, name: &str, span: Span) -> Result<RawEntity, Error> {
         let attributes = self.parse_parameter_list()?;
         self.expect_semicolon()?;
         Ok(RawEntity::Simple {
@@ -260,13 +384,13 @@ impl<'src> Parser<'src> {
         })
     }
 
-    fn parse_complex_body(&mut self, id: u64, span: Span) -> Result<RawEntity, ParseError> {
+    fn parse_complex_body(&mut self, id: u64, span: Span) -> Result<RawEntity, Error> {
         let mut parts = Vec::new();
 
         // At least one part is required — `( )` is an error.
         if matches!(self.peek_kind()?, TokenKind::RParen) {
             let tok = self.next_token()?;
-            return Err(ParseError::UnexpectedToken {
+            return Err(Error::UnexpectedToken {
                 expected: "entity type name",
                 found: tok.kind,
                 span: tok.span,
@@ -290,7 +414,7 @@ impl<'src> Parser<'src> {
                 }
                 _ => {
                     let tok = self.next_token()?;
-                    return Err(ParseError::UnexpectedToken {
+                    return Err(Error::UnexpectedToken {
                         expected: "entity type name or ')'",
                         found: tok.kind,
                         span: tok.span,
@@ -310,7 +434,7 @@ impl<'src> Parser<'src> {
     /// Parse a comma-separated parameter list between parentheses.
     /// Expects the opening `(` to have been consumed already? No — this
     /// method consumes `(`, reads parameters, and consumes `)`.
-    fn parse_parameter_list(&mut self) -> Result<Vec<Attribute>, ParseError> {
+    fn parse_parameter_list(&mut self) -> Result<Vec<Attribute>, Error> {
         self.expect_lparen()?;
         let attrs = self.parse_list_value()?;
         self.expect_rparen()?;
@@ -319,23 +443,73 @@ impl<'src> Parser<'src> {
 
     /// Parse comma-separated parameters until a `)` is encountered.
     /// The `)` is **not** consumed — the caller is responsible.
-    fn parse_list_value(&mut self) -> Result<Vec<Attribute>, ParseError> {
+    fn parse_list_value(&mut self) -> Result<Vec<Attribute>, Error> {
         let mut items = Vec::new();
         // Empty list `()`.
         if matches!(self.peek_kind()?, TokenKind::RParen) {
             return Ok(items);
         }
-        items.push(self.parse_parameter()?);
+        items.push(self.parse_parameter_or_unset_if_empty()?);
         while matches!(self.peek_kind()?, TokenKind::Comma) {
             // Consume the comma.
             self.next_token()?;
-            items.push(self.parse_parameter()?);
+            items.push(self.parse_parameter_or_unset_if_empty()?);
         }
         Ok(items)
     }
 
+    /// Like [`Self::parse_parameter`] but tolerates a blank attribute
+    /// position — `(a, , b)` or trailing `(a, )`. Spec requires `$` for
+    /// omitted slots, but some writers leave them empty. The slot is
+    /// normalised to [`Attribute::Unset`] and a [`ParseWarning`] is
+    /// recorded so the lenient repair surfaces to the caller.
+    fn parse_parameter_or_unset_if_empty(&mut self) -> Result<Attribute, Error> {
+        if matches!(self.peek_kind()?, TokenKind::Comma | TokenKind::RParen) {
+            let span = self.peek_span().unwrap_or(Span {
+                start: 0,
+                end: 0,
+                line: 0,
+                column: 0,
+            });
+            self.warnings.push(ParseWarning::EmptyAttribute { span });
+            return Ok(Attribute::Unset);
+        }
+        self.parse_parameter()
+    }
+
+    /// Peek at the next token's span without consuming it. Returns
+    /// `None` on EOF or a lex error (the warning path then falls back
+    /// to a zero span — positional precision is non-critical).
+    fn peek_span(&mut self) -> Option<Span> {
+        match self.lexer.peek() {
+            Some(Ok(tok)) => Some(tok.span),
+            _ => None,
+        }
+    }
+
     /// Parse a single Part 21 parameter value.
-    fn parse_parameter(&mut self) -> Result<Attribute, ParseError> {
+    /// Parse one parameter, guarding nesting depth. The recursive cases (nested
+    /// list, typed value) re-enter through this wrapper, so `depth` tracks the
+    /// current nesting; exceeding [`MAX_NESTING_DEPTH`] is a graceful error rather
+    /// than a stack overflow. Balanced inc/dec → siblings don't accumulate.
+    fn parse_parameter(&mut self) -> Result<Attribute, Error> {
+        self.depth += 1;
+        if self.depth > MAX_NESTING_DEPTH {
+            self.depth -= 1;
+            let span = self.peek_span().unwrap_or(Span {
+                start: 0,
+                end: 0,
+                line: 0,
+                column: 0,
+            });
+            return Err(Error::NestingTooDeep { span });
+        }
+        let r = self.parse_parameter_inner();
+        self.depth -= 1;
+        r
+    }
+
+    fn parse_parameter_inner(&mut self) -> Result<Attribute, Error> {
         let kind = self.peek_kind()?.clone();
         match kind {
             TokenKind::Integer(v) => {
@@ -394,7 +568,7 @@ impl<'src> Parser<'src> {
             }
             _ => {
                 let tok = self.next_token()?;
-                Err(ParseError::InvalidAttributePosition {
+                Err(Error::InvalidAttributePosition {
                     span: tok.span,
                     detail: "unexpected token in attribute position",
                 })
@@ -406,30 +580,30 @@ impl<'src> Parser<'src> {
     // Token-level helpers
     // ------------------------------------------------------------------
 
-    /// Consume the next token, returning [`ParseError::UnexpectedEof`] if the
+    /// Consume the next token, returning [`Error::UnexpectedEof`] if the
     /// stream is exhausted.
-    fn next_token(&mut self) -> Result<Token, ParseError> {
+    fn next_token(&mut self) -> Result<Token, Error> {
         match self.lexer.next() {
             Some(result) => Ok(result?),
-            None => Err(ParseError::UnexpectedEof {
+            None => Err(Error::UnexpectedEof {
                 expected: "any token",
             }),
         }
     }
 
     /// Peek at the next token's kind without consuming it.
-    fn peek_kind(&mut self) -> Result<&TokenKind, ParseError> {
+    fn peek_kind(&mut self) -> Result<&TokenKind, Error> {
         match self.lexer.peek() {
             Some(Ok(tok)) => Ok(&tok.kind),
-            Some(Err(err)) => Err(ParseError::Lex(err.clone())),
-            None => Err(ParseError::UnexpectedEof {
+            Some(Err(err)) => Err(Error::Lex(err.clone())),
+            None => Err(Error::UnexpectedEof {
                 expected: "any token",
             }),
         }
     }
 
     /// Consume the next token if it matches `pred`; otherwise return an error.
-    fn expect<F>(&mut self, pred: F, expected: &'static str) -> Result<Token, ParseError>
+    fn expect<F>(&mut self, pred: F, expected: &'static str) -> Result<Token, Error>
     where
         F: Fn(&TokenKind) -> bool,
     {
@@ -437,7 +611,7 @@ impl<'src> Parser<'src> {
         if pred(&tok.kind) {
             Ok(tok)
         } else {
-            Err(ParseError::UnexpectedToken {
+            Err(Error::UnexpectedToken {
                 expected,
                 found: tok.kind,
                 span: tok.span,
@@ -451,7 +625,7 @@ impl<'src> Parser<'src> {
         &mut self,
         kind: &TokenKind,
         expected: &'static str,
-    ) -> Result<Token, ParseError> {
+    ) -> Result<Token, Error> {
         self.expect(
             |k| std::mem::discriminant(k) == std::mem::discriminant(kind),
             expected,
@@ -459,24 +633,24 @@ impl<'src> Parser<'src> {
     }
 
     /// Expect and consume a semicolon.
-    fn expect_semicolon(&mut self) -> Result<Span, ParseError> {
+    fn expect_semicolon(&mut self) -> Result<Span, Error> {
         Ok(self
             .expect(|k| matches!(k, TokenKind::Semicolon), ";")?
             .span)
     }
 
     /// Expect and consume a left parenthesis.
-    fn expect_lparen(&mut self) -> Result<Span, ParseError> {
+    fn expect_lparen(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::LParen), "(")?.span)
     }
 
     /// Expect and consume a right parenthesis.
-    fn expect_rparen(&mut self) -> Result<Span, ParseError> {
+    fn expect_rparen(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::RParen), ")")?.span)
     }
 
     /// Expect and consume an equals sign.
-    fn expect_equals(&mut self) -> Result<Span, ParseError> {
+    fn expect_equals(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::Equals), "=")?.span)
     }
 }
@@ -488,7 +662,7 @@ mod tests {
     #[test]
     fn parse_empty_input_errors() {
         let err = parse("").unwrap_err();
-        assert!(matches!(err, ParseError::UnexpectedEof { .. }));
+        assert!(matches!(err, Error::UnexpectedEof { .. }));
     }
 
     #[test]
@@ -496,7 +670,7 @@ mod tests {
         let mut parser = Parser::new("");
         assert!(matches!(
             parser.next_token(),
-            Err(ParseError::UnexpectedEof { .. })
+            Err(Error::UnexpectedEof { .. })
         ));
     }
 
@@ -505,7 +679,7 @@ mod tests {
         let mut parser = Parser::new("");
         assert!(matches!(
             parser.peek_kind(),
-            Err(ParseError::UnexpectedEof { .. })
+            Err(Error::UnexpectedEof { .. })
         ));
     }
 
@@ -519,10 +693,7 @@ mod tests {
     fn parser_expect_semicolon_wrong_token() {
         let mut parser = Parser::new("(");
         let err = parser.expect_semicolon().unwrap_err();
-        assert!(matches!(
-            err,
-            ParseError::UnexpectedToken { expected: ";", .. }
-        ));
+        assert!(matches!(err, Error::UnexpectedToken { expected: ";", .. }));
     }
 
     // --- parse_parameter helpers ---
@@ -802,7 +973,7 @@ mod tests {
         let err = parser.parse_entity_instance().unwrap_err();
         assert!(matches!(
             err,
-            ParseError::UnexpectedToken {
+            Error::UnexpectedToken {
                 expected: "entity type name",
                 ..
             }
@@ -813,6 +984,191 @@ mod tests {
     fn parse_entity_missing_semicolon_errors() {
         let mut parser = Parser::new("#1 = LINE('', #2)");
         let err = parser.parse_entity_instance().unwrap_err();
-        assert!(matches!(err, ParseError::UnexpectedEof { .. }));
+        assert!(matches!(err, Error::UnexpectedEof { .. }));
+    }
+
+    // --- parse_bytes: non-UTF-8 input ---
+
+    fn minimal_step_with_string_attr(s_bytes: &[u8]) -> Vec<u8> {
+        let prefix = b"ISO-10303-21;\n\
+                      HEADER;\n\
+                      FILE_DESCRIPTION((' ',";
+        let mid = b"),'2;1');\n\
+                    FILE_NAME('n','t',(' '),(' '),'p','o','a');\n\
+                    FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                    ENDSEC;\n\
+                    DATA;\n\
+                    ENDSEC;\n\
+                    END-ISO-10303-21;\n";
+        let mut buf = Vec::with_capacity(prefix.len() + s_bytes.len() + mid.len() + 2);
+        buf.extend_from_slice(prefix);
+        buf.push(b'\'');
+        buf.extend_from_slice(s_bytes);
+        buf.push(b'\'');
+        buf.extend_from_slice(mid);
+        buf
+    }
+
+    #[test]
+    fn parse_bytes_accepts_latin1_byte_via_fallback() {
+        // 0xC0 alone is not valid UTF-8 (it is a leading byte for a 2-byte
+        // sequence). Latin-1 maps it to U+00C0 ('À').
+        let buf = minimal_step_with_string_attr(&[0xC0]);
+        assert!(
+            std::str::from_utf8(&buf).is_err(),
+            "fixture must be invalid UTF-8 to exercise the fallback"
+        );
+        let graph = parse_bytes(&buf).expect("parse_bytes must accept Latin-1 fallback");
+        // FILE_DESCRIPTION is the first header entity; its first attribute
+        // is a list of strings. The second string of that list carries our
+        // injected byte.
+        let RawEntity::Simple {
+            name, attributes, ..
+        } = &graph.header[0]
+        else {
+            panic!("expected Simple HEADER entity");
+        };
+        assert_eq!(name, "FILE_DESCRIPTION");
+        let Attribute::List(items) = &attributes[0] else {
+            panic!("FILE_DESCRIPTION attr[0] must be a list");
+        };
+        let Attribute::String(s) = &items[1] else {
+            panic!("expected String attribute");
+        };
+        assert_eq!(s.chars().count(), 1);
+        assert_eq!(s.chars().next().unwrap(), '\u{00C0}');
+    }
+
+    #[test]
+    fn parse_bytes_passes_through_valid_utf8() {
+        // Valid UTF-8 'À' (0xC3 0x80) — the UTF-8 path is taken and the
+        // character decodes identically.
+        let buf = minimal_step_with_string_attr("À".as_bytes());
+        assert!(std::str::from_utf8(&buf).is_ok());
+        let graph = parse_bytes(&buf).expect("valid UTF-8 must parse");
+        let RawEntity::Simple { attributes, .. } = &graph.header[0] else {
+            panic!();
+        };
+        let Attribute::List(items) = &attributes[0] else {
+            panic!();
+        };
+        let Attribute::String(s) = &items[1] else {
+            panic!();
+        };
+        assert_eq!(s, "\u{00C0}");
+    }
+
+    // --- ParseWarning: lenient acceptance of non-spec / ed.3 inputs ---
+
+    #[test]
+    fn parse_records_ed3_anchor_and_reference_sections() {
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1');\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   ANCHOR;\n\
+                   <ParentAnchor>=#123;\n\
+                   ENDSEC;\n\
+                   REFERENCE;\n\
+                   #123=<testAnchorAndData.stp#TestAnchor>;\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   #1=CIRCULAR_AREA('testarea',#123,2.);\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("ed.3 ANCHOR/REFERENCE must be tolerated");
+        assert_eq!(graph.entities.len(), 1);
+        // REFERENCE recorded: #123 -> external anchor string.
+        assert_eq!(
+            graph.external_references.get(&123).map(String::as_str),
+            Some("<testAnchorAndData.stp#TestAnchor>")
+        );
+        // ANCHOR recorded: <ParentAnchor> -> #123.
+        assert_eq!(graph.anchors, vec![("<ParentAnchor>".to_string(), 123)]);
+        // Both sections parsed cleanly — no discard warning.
+        assert!(
+            !graph
+                .warnings
+                .iter()
+                .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { .. }))
+        );
+    }
+
+    #[test]
+    fn parse_discards_unrecognised_ed3_signature_section() {
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1');\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   SIGNATURE;\n\
+                   some opaque signature payload;\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   #1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("ed.3 SIGNATURE must be tolerated");
+        assert_eq!(graph.entities.len(), 1);
+        assert!(
+            graph
+                .warnings
+                .iter()
+                .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { section, .. } if section == "SIGNATURE"))
+        );
+    }
+
+    #[test]
+    fn parse_warns_on_missing_header_semicolon() {
+        // FILE_DESCRIPTION lacks its trailing `;` — non-spec but common.
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1')\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("missing `;` must be tolerated");
+        assert!(graph.warnings.iter().any(|w| matches!(
+            w,
+            ParseWarning::MissingHeaderSemicolon { entity_name, .. }
+                if entity_name == "FILE_DESCRIPTION"
+        )));
+    }
+
+    #[test]
+    fn parse_normalises_empty_attribute_to_unset_with_warning() {
+        // Trailing blank attribute: `#0,   )` — spec wants `$`.
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1');\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   #1 = EDGE_CURVE('', #2, #3, #0,   );\n\
+                   #2 = VERTEX_POINT('', #4);\n\
+                   #3 = VERTEX_POINT('', #4);\n\
+                   #4 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("empty attribute slot must be tolerated");
+        // The fifth attribute of #1 is the omitted slot, normalised to Unset.
+        let RawEntity::Simple { attributes, .. } = &graph.entities[&1] else {
+            panic!("expected Simple entity");
+        };
+        assert_eq!(attributes.len(), 5);
+        assert!(matches!(attributes[4], Attribute::Unset));
+        assert!(
+            graph
+                .warnings
+                .iter()
+                .any(|w| matches!(w, ParseWarning::EmptyAttribute { .. }))
+        );
     }
 }

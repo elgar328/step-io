@@ -30,10 +30,10 @@ pub struct Token {
 
 /// Lexical error categories.
 ///
-/// `UnexpectedCharacter` is currently the only variant actually produced by
-/// the lexer. The remaining variants are declared for forward compatibility
-/// so that a later stage can wire a custom token-level error type through
-/// `logos`'s `error` attribute without breaking public API.
+/// `UnexpectedCharacter` (a token that does not match any rule) and
+/// `InvalidNumber` (a numeric/ref literal that is out of range or non-finite —
+/// classified from the offending snippet) are produced by the lexer. The
+/// remaining variants are declared for forward compatibility.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LexErrorKind {
     UnexpectedCharacter,
@@ -47,7 +47,7 @@ impl LexErrorKind {
         match self {
             Self::UnexpectedCharacter => "unexpected character",
             Self::UnterminatedString => "unterminated string literal",
-            Self::InvalidNumber => "invalid numeric literal",
+            Self::InvalidNumber => "numeric literal out of range",
             Self::InvalidBinary => "invalid binary literal",
         }
     }
@@ -174,8 +174,19 @@ impl<'src> Lexer<'src> {
         let Ok(kind) = kind_result else {
             let raw = span.slice(self.source);
             let snippet = truncate_to_chars(raw, 40);
+            // A rejected token starting with a digit (or sign/`#` then a digit)
+            // came from the Integer/Real/EntityRef callbacks returning None on an
+            // out-of-range / non-finite literal — classify it as InvalidNumber.
+            let mut cs = raw.chars();
+            let kind = match cs.next() {
+                Some(c) if c.is_ascii_digit() => LexErrorKind::InvalidNumber,
+                Some('#' | '+' | '-') if cs.next().is_some_and(|c| c.is_ascii_digit()) => {
+                    LexErrorKind::InvalidNumber
+                }
+                _ => LexErrorKind::UnexpectedCharacter,
+            };
             return Some(Err(LexError {
-                kind: LexErrorKind::UnexpectedCharacter,
+                kind,
                 span,
                 snippet,
             }));
@@ -258,7 +269,10 @@ pub enum TokenKind {
     /// Real number — must contain a `.`; captures optional sign and exponent.
     #[regex(
         r"[+-]?[0-9]+\.[0-9]*([Ee][+-]?[0-9]+)?",
-        |lex| lex.slice().parse::<f64>().ok()
+        // Reject non-finite (e.g. `1.E999` -> inf): the callback returns None, so
+        // the lexer surfaces it as an InvalidNumber error rather than letting inf
+        // into the model.
+        |lex| lex.slice().parse::<f64>().ok().filter(|f| f.is_finite())
     )]
     Real(f64),
 
@@ -269,14 +283,15 @@ pub enum TokenKind {
     )]
     Integer(i64),
 
-    /// String literal enclosed in single quotes. The inner text is stored raw
-    /// (quotes stripped, but `''` escapes and Part 21 special sequences like
-    /// `\X\HH` remain unchanged). Decoding is deferred to a later stage.
+    /// String literal enclosed in single quotes. Outer quotes are stripped
+    /// and the `''` escape is decoded to a single `'`. Part 21 wide-char
+    /// escapes (`\X\HH`, `\X2\…\X0\`, `\X4\…\X0\`) remain raw — decoding
+    /// those is deferred to a later stage.
     #[regex(
         r"'([^']|'')*'",
         |lex| {
             let s = lex.slice();
-            s[1..s.len() - 1].to_string()
+            s[1..s.len() - 1].replace("''", "'")
         }
     )]
     String(String),
@@ -317,6 +332,13 @@ pub enum TokenKind {
         |lex| lex.slice().to_string()
     )]
     Keyword(String),
+
+    /// P21 edition 3 anchor reference (`<name>` or `<url#name>`). The
+    /// whole bracketed form is captured as a single token; the parser
+    /// currently discards these (ed.3 sections are skip-only — see
+    /// [`crate::parser::ParseWarning::Ed3SectionDiscarded`]).
+    #[regex(r"<[^>]+>", |lex| lex.slice().to_string())]
+    AnchorRef(String),
 }
 
 #[cfg(test)]
@@ -410,8 +432,14 @@ mod tests {
 
     #[test]
     fn lex_string_escaped_quote() {
-        // Part 21 uses `''` to embed a single quote; the raw form is preserved here.
-        assert_eq!(first_token("'a''b'"), TokenKind::String("a''b".into()));
+        // Part 21 uses `''` to embed a single quote; the lexer decodes it.
+        assert_eq!(first_token("'a''b'"), TokenKind::String("a'b".into()));
+    }
+
+    #[test]
+    fn lex_string_only_escaped_quote() {
+        // `''''` is a string containing a single `'` (one escape sequence).
+        assert_eq!(first_token("''''"), TokenKind::String("'".into()));
     }
 
     #[test]
@@ -433,6 +461,22 @@ mod tests {
     #[test]
     fn lex_string_multibyte_japanese() {
         assert_eq!(first_token("'日本語'"), TokenKind::String("日本語".into()));
+    }
+
+    #[test]
+    fn lex_anchor_ref_simple() {
+        assert_eq!(
+            first_token("<TestAnchor>"),
+            TokenKind::AnchorRef("<TestAnchor>".into())
+        );
+    }
+
+    #[test]
+    fn lex_anchor_ref_with_url() {
+        assert_eq!(
+            first_token("<testAnchorAndData.stp#TestAnchor>"),
+            TokenKind::AnchorRef("<testAnchorAndData.stp#TestAnchor>".into())
+        );
     }
 
     #[test]
