@@ -63,16 +63,7 @@
    cargo publish -p step-io
    ```
 
-10. **Create the GitHub Release**
-    ```sh
-    gh release create vX.Y.Z --title "vX.Y.Z" --notes-file <(
-      sed -n '/^## \[X\.Y\.Z\]/,/^## \[/{ /^## \[X\.Y\.Z\]/d; /^## \[/d; p; }' CHANGELOG.md
-      echo "**Full Changelog**: https://github.com/elgar328/step-io/compare/vA.B.C...vX.Y.Z"
-    )
-    ```
-    > Replace `vA.B.C` with the previous release tag.
-
-11. **Return to `dev` and start the next cycle**
+10. **Return to `dev` and start the next cycle**
     ```sh
     git checkout dev
     git merge main
