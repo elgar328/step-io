@@ -147,24 +147,23 @@ mod author_tests;
 pub mod build;
 pub mod emit;
 pub mod generated;
+pub mod header;
 pub mod parser;
 pub mod reader;
 pub mod refgraph;
 pub mod scene;
 
 pub use build::StepBuilder;
-pub use emit::FileHeader;
+pub use emit::write;
 pub use generated::author::{Ap242Author, AuthorError};
 pub use generated::model::{EntityKey, StepModel};
+pub use header::FileHeader;
 pub use reader::{DropKind, DropReason, Report, read};
 
 // Internal round-trip oracle — kept callable for the external verification
-// harness, but not part of the supported API surface (the supported write
-// path is the authoring API).
+// harness, but not part of the supported API surface.
 #[doc(hidden)]
-pub use emit::{LossReport, write_target, write_target_with_header, write_universal};
-#[doc(hidden)]
-pub use generated::profile::SchemaTarget;
+pub use emit::dump_universal;
 pub use parser::{ApFamily, Error, LexError, LexErrorKind, SchemaId, Stage};
 pub use refgraph::RefGraph;
 

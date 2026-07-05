@@ -18517,6 +18517,7 @@ pub struct ComplexUnit {
 
 #[derive(Debug, Default)]
 pub struct StepModel {
+    pub(crate) header: crate::header::FileHeader,
     pub action_arena: Arena<Action>,
     pub action_assignment_arena: Arena<ActionAssignment>,
     pub action_directive_arena: Arena<ActionDirective>,

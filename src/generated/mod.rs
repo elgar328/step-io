@@ -16,8 +16,8 @@
 pub mod author;
 pub mod generic_normalize;
 pub mod model;
-pub mod profile;
 pub mod read;
 pub mod resolve;
+pub mod schema;
 pub mod walk;
 pub mod write;

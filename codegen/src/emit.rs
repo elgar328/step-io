@@ -224,6 +224,8 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
 
     // Top-level StepModel.
     writeln!(s, "#[derive(Debug, Default)]\npub struct StepModel {{").unwrap();
+    // The file's HEADER section (hand-written module; accessor lives there).
+    writeln!(s, "    pub(crate) header: crate::header::FileHeader,").unwrap();
     for se in &ir.simples {
         writeln!(s, "    pub {}: Arena<{}>,", arena_field(&se.rust), se.rust).unwrap();
     }
@@ -1105,7 +1107,7 @@ fn step_str(s: &str) -> String {
 
     // Writer struct.
     s.push_str(
-        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    out: String,\n    rename: std::collections::HashMap<EntityKey, &'static str>,\n",
+        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    out: String,\n",
     );
     for se in &ir.simples {
         writeln!(s, "    {}: Vec<Option<u64>>,", ids_field(&se.rust)).unwrap();
@@ -1116,7 +1118,7 @@ fn step_str(s: &str) -> String {
     s.push_str("}\n\n");
 
     // new()
-    s.push_str("impl<'a> Writer<'a> {\n    pub fn new(model: &'a StepModel) -> Self {\n        Writer {\n            model, next: 1, out: String::new(), rename: std::collections::HashMap::new(),\n");
+    s.push_str("impl<'a> Writer<'a> {\n    pub fn new(model: &'a StepModel) -> Self {\n        Writer {\n            model, next: 1, out: String::new(),\n");
     for se in &ir.simples {
         writeln!(
             s,
@@ -1175,8 +1177,7 @@ fn step_str(s: &str) -> String {
     emit_deps_of(&mut s, ir);
     emit_render_one(&mut s, ir);
 
-    // per-schema writer primitives: name_of/all_ids/part_name/complex_legal +
-    // render_kw (downgrade rename override). Consumed by emit::projection.
+    // writer primitives: name_of (EntityKey -> keyword) + all_ids (arena order).
     emit_writer_primitives(&mut s, ir);
 
     // emit_all: iterative 2-pass (pass1 = post-order id assignment via explicit
@@ -1344,7 +1345,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
         };
         writeln!(
             s,
-            "        EntityKey::{}({binder}) => {{ {it_bind}let n = self.get_id(any).expect(\"id assigned\"); let kw = self.render_kw(any); let attrs: Vec<String> = vec![{}]; format!(\"#{{n}} = {{kw}}({{}});\\n\", attrs.join(\",\")) }},",
+            "        EntityKey::{}({binder}) => {{ {it_bind}let n = self.get_id(any).expect(\"id assigned\"); let kw = Self::name_of(any); let attrs: Vec<String> = vec![{}]; format!(\"#{{n}} = {{kw}}({{}});\\n\", attrs.join(\",\")) }},",
             se.rust,
             parts.join(", ")
         )
@@ -1681,10 +1682,8 @@ fn emit_ref_deps(s: &mut String, re: &RefEnum) {
 /// explicit-stack post-order DFS (deps before dependents; self-edges skipped;
 /// multi-node cycle back-edges pre-numbered as forward-refs). Pass 2 renders in
 /// id order. No recursion -> stack depth is independent of graph depth.
-/// Per-schema writer primitives consumed by `emit::projection`:
-/// `name_of` (EntityKey → STEP keyword), `all_ids` (every node in arena order),
-/// `part_name`/`complex_legal` (complex part legality), `render_kw` (downgrade
-/// rename override; empty map → byte-identical Universal output).
+/// Writer primitives: `name_of` (EntityKey → STEP keyword), `all_ids` (every
+/// node in arena order).
 fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
     // name_of: EntityKey -> STEP keyword (same source as render_one's literal).
     s.push_str("    pub(crate) fn name_of(any: EntityKey) -> &'static str { match any {\n");
@@ -1692,14 +1691,10 @@ fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
         writeln!(s, "        EntityKey::{}(_) => \"{}\",", se.rust, se.name).unwrap();
     }
     if ir.has_part_bag {
-        // complex = no single keyword; legality handled by complex_legal.
+        // complex = no single keyword; rendered from its parts.
         s.push_str("        EntityKey::ComplexUnit(_) => \"\",\n");
     }
     s.push_str("    } }\n\n");
-
-    // render_kw: rename override (downgrade) or the entity's own keyword. Empty
-    // rename map (Universal) -> name_of -> byte-identical output.
-    s.push_str("    fn render_kw(&self, any: EntityKey) -> &'static str { self.rename.get(&any).copied().unwrap_or_else(|| Self::name_of(any)) }\n\n");
 
     // all_ids: every node, arena order (the former emit_all roots block).
     s.push_str("    pub(crate) fn all_ids(&self) -> Vec<EntityKey> {\n        let mut roots: Vec<EntityKey> = Vec::new();\n");
@@ -1717,52 +1712,22 @@ fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
         .unwrap();
     }
     s.push_str("        roots\n    }\n\n");
-
-    if ir.has_part_bag {
-        // part_name + complex_legal: a complex is legal iff every part keyword is.
-        s.push_str("    pub(crate) fn part_name(p: &UnitPart) -> &'static str { match p {\n");
-        for p in &ir.parts {
-            let kept = idents(&p.fields);
-            if kept.is_empty() {
-                writeln!(s, "        UnitPart::{} => \"{}\",", p.rust, p.name).unwrap();
-            } else {
-                writeln!(
-                    s,
-                    "        UnitPart::{} {{ .. }} => \"{}\",",
-                    p.rust, p.name
-                )
-                .unwrap();
-            }
-        }
-        s.push_str("    } }\n\n");
-        s.push_str("    pub(crate) fn complex_legal(&self, id: ComplexUnitId, legal: &[&str]) -> bool {\n        self.model.complex_unit_arena.get(id.0).parts.iter().all(|p| legal.binary_search(&Self::part_name(p)).is_ok())\n    }\n\n");
-    }
 }
 
-/// emit_all (Universal) + emit_all_with_plan (per-schema: skip `dropped`, apply
-/// `rename`) sharing `dfs_render`. roots come from `all_ids` (emit_writer_primitives).
+/// emit_all: every entity, `dfs_render` order. roots come from `all_ids`
+/// (emit_writer_primitives).
 fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
     s.push_str(
         r#"    pub fn emit_all(self) -> String {
         let roots = self.all_ids();
-        self.dfs_render(roots, &std::collections::HashSet::new())
+        self.dfs_render(roots)
     }
 
-    /// Per-schema emit: `dropped` EntityKeys are skipped (never numbered/rendered),
-    /// `rename` overrides the keyword (downgrade). Caller (projection) guarantees
-    /// the kept set is referentially closed, so no survivor refs a dropped id.
-    pub fn emit_all_with_plan(mut self, dropped: &std::collections::HashSet<EntityKey>, rename: std::collections::HashMap<EntityKey, &'static str>) -> String {
-        self.rename = rename;
-        let roots = self.all_ids();
-        self.dfs_render(roots, dropped)
-    }
-
-    fn dfs_render(mut self, roots: Vec<EntityKey>, dropped: &std::collections::HashSet<EntityKey>) -> String {
+    fn dfs_render(mut self, roots: Vec<EntityKey>) -> String {
         let mut order: Vec<EntityKey> = Vec::new();
         let mut stack: Vec<(EntityKey, bool)> = Vec::new();
         let mut on_path: std::collections::HashSet<EntityKey> = std::collections::HashSet::new();
         for root in roots {
-            if dropped.contains(&root) { continue; }
             if self.get_id(root).is_some() { continue; }
             stack.push((root, false));
             while let Some((any, post)) = stack.pop() {
@@ -1789,7 +1754,6 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
                 self.deps_of(any, &mut deps);
                 for d in deps.into_iter().rev() {
                     if d == any { continue; }
-                    if dropped.contains(&d) { continue; }
                     if self.get_id(d).is_some() { continue; }
                     stack.push((d, false));
                 }
@@ -2135,76 +2099,30 @@ pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>
     s
 }
 
-/// Emit `src/generated/profile.rs`: per-target output `SchemaProfile` const
-/// tables (legal entity set, downgrade map, FILE_SCHEMA, APD) baked from
-/// `schema/ap*.toml`. `targets` = (CONST_PREFIX, SchemaTarget variant, parsed).
-/// Lints inherited from generated/mod.rs (`#![allow(dead_code, …)]`).
-pub fn emit_profile(targets: &[(&str, &str, &crate::schema::ProfileToml)]) -> String {
+/// Emit `src/generated/schema.rs`: per-target output `FILE_SCHEMA` string
+/// constants plus a schema-id helper, baked from `schema/ap*.toml`.
+/// `targets` = (CONST_PREFIX, variant name, parsed). The identity is parsed
+/// through `parser::schema::identify_schema` so family/edition/stage stay in
+/// sync with the read side.
+pub fn emit_schema(targets: &[(&str, &str, &crate::schema::ProfileToml)]) -> String {
     let mut s = String::from(HEADER);
-
-    s.push_str("/// Internal round-trip oracle input — not a supported entry point; the\n/// supported write path is the authoring API.\n#[doc(hidden)]\n#[derive(Clone, Copy, PartialEq, Eq, Debug)]\npub enum SchemaTarget { Universal");
-    for (_, variant, _) in targets {
-        write!(s, ", {variant}").unwrap();
-    }
-    s.push_str(" }\n\n");
-
-    s.push_str(
-        r#"pub struct ApdInfo { pub status: &'static str, pub name: &'static str, pub year: i64, pub description: &'static str }
-
-pub struct SchemaProfile {
-    pub legal: &'static [&'static str],
-    pub downgrade: &'static [(&'static str, &'static str)],
-    pub file_schema: &'static [&'static str],
-    pub apd: ApdInfo,
-}
-
-impl SchemaProfile {
-    /// Whether `kw` (UPPER STEP keyword) is legal in this target.
-    pub fn is_legal(&self, kw: &str) -> bool { self.legal.binary_search(&kw).is_ok() }
-    /// Rename-safe supertype for an illegal subtype `kw`, if any.
-    pub fn downgrade(&self, kw: &str) -> Option<&'static str> {
-        self.downgrade.binary_search_by(|&(s, _)| s.cmp(kw)).ok().map(|i| self.downgrade[i].1)
-    }
-"#,
-    );
-    s.push_str("    pub fn for_target(t: SchemaTarget) -> Option<&'static SchemaProfile> { match t {\n        SchemaTarget::Universal => None,\n");
-    for (prefix, variant, _) in targets {
-        writeln!(s, "        SchemaTarget::{variant} => Some(&{prefix}),").unwrap();
-    }
-    s.push_str("    } }\n}\n\n");
+    s.push_str("//! Output `FILE_SCHEMA` identities for the write side.\n\n");
 
     for (prefix, _, p) in targets {
-        let mut legal: Vec<String> = p.entity.keys().map(|k| k.to_uppercase()).collect();
-        legal.sort();
-        legal.dedup();
-        write!(s, "static {prefix}_LEGAL: &[&str] = &[").unwrap();
-        for n in &legal {
-            write!(s, "{n:?},").unwrap();
-        }
-        s.push_str("];\n");
-
-        let mut dg: Vec<(String, String)> = p
-            .downgrade
-            .iter()
-            .map(|(k, v)| (k.to_uppercase(), v.to_uppercase()))
-            .collect();
-        dg.sort();
-        write!(s, "static {prefix}_DOWNGRADE: &[(&str, &str)] = &[").unwrap();
-        for (a, b) in &dg {
-            write!(s, "({a:?},{b:?}),").unwrap();
-        }
-        s.push_str("];\n");
-
-        write!(s, "static {prefix}_FILE_SCHEMA: &[&str] = &[").unwrap();
+        write!(s, "pub static {prefix}_FILE_SCHEMA: &[&str] = &[").unwrap();
         for fs in &p.meta.file_schema {
             write!(s, "{fs:?},").unwrap();
         }
-        s.push_str("];\n");
+        s.push_str("];\n\n");
 
         writeln!(
             s,
-            "static {prefix}: SchemaProfile = SchemaProfile {{ legal: {prefix}_LEGAL, downgrade: {prefix}_DOWNGRADE, file_schema: {prefix}_FILE_SCHEMA, apd: ApdInfo {{ status: {:?}, name: {:?}, year: {}, description: {:?} }} }};",
-            p.meta.apd.status, p.meta.apd.name, p.meta.apd.year, p.meta.apd.description
+            "/// The schema identity the authoring layer stamps on its output header.\n\
+             pub fn {}_schema_id() -> crate::parser::SchemaId {{\n    \
+             crate::parser::schema::identify_schema(\n        \
+             &{prefix}_FILE_SCHEMA.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),\n    \
+             )\n}}",
+            prefix.to_lowercase()
         )
         .unwrap();
     }
@@ -2392,19 +2310,18 @@ impl Ap242Author {
         Self::default()
     }
 
-    /// Emit the model as AP242 (edition 2 IS) Part 21 text.
+    /// Emit the model as AP242 (edition 2 IS) Part 21 text. The header's
+    /// `FILE_SCHEMA` is stamped AP242 — the authoring layer's schema.
     pub fn finish(mut self) -> String {
-        crate::emit::write_target(&mut self.model, super::profile::SchemaTarget::Ap242).0
+        self.model.header.schema = super::schema::ap242e2_schema_id();
+        crate::emit::write(&self.model)
     }
 
-    /// [`Ap242Author::finish`] with explicit Part 21 HEADER fields.
-    pub fn finish_with_header(mut self, header: &crate::emit::FileHeader) -> String {
-        crate::emit::write_target_with_header(
-            &mut self.model,
-            super::profile::SchemaTarget::Ap242,
-            header,
-        )
-        .0
+    /// [`Ap242Author::finish`] with explicit Part 21 HEADER fields. The
+    /// header's `schema` is overwritten with AP242 regardless of input.
+    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> String {
+        self.model.header = header.clone();
+        self.finish()
     }
 "#,
     );

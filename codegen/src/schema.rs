@@ -115,15 +115,13 @@ pub struct TypeDef {
 }
 
 /// Deserialization model for a per-target output profile (`schema/ap*.toml`,
-/// from blueprint `profile_export`). Only the fields the writer bakes are read:
-/// legal entity set (`entity` keys), `downgrade` map, `oneof` groups, and
-/// `meta` (FILE_SCHEMA + APD). Entity attribute detail and `[type]` are
-/// ignored.
+/// from blueprint `profile_export`). Only the fields the generators consume
+/// are read: legal entity set (`entity` keys, author constructors), `oneof`
+/// groups, and `meta.file_schema`. The rest of the export (`downgrade`,
+/// `meta.apd`, entity attribute detail, `[type]`) is ignored.
 #[derive(Deserialize)]
 pub struct ProfileToml {
     pub meta: ProfileMeta,
-    #[serde(default)]
-    pub downgrade: BTreeMap<String, String>,
     #[serde(default)]
     pub oneof: Vec<ProfileOneof>,
     #[serde(default)]
@@ -146,15 +144,6 @@ pub struct ProfileOneof {
 #[derive(Deserialize)]
 pub struct ProfileMeta {
     pub file_schema: Vec<String>,
-    pub apd: ProfileApd,
-}
-
-#[derive(Deserialize)]
-pub struct ProfileApd {
-    pub status: String,
-    pub name: String,
-    pub year: i64,
-    pub description: String,
 }
 
 /// Inner element of a `LIST/SET/BAG/ARRAY [n:m] OF X` aggregation (bounds

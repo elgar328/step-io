@@ -1,27 +1,31 @@
 //! The Part 21 envelope — the last step of writing.
 //!
-//! The `DATA` section — the entities themselves — comes from the generated
-//! writer ([`generated::write`](crate::generated::write)); this module wraps
-//! it in the Part 21 envelope, the fixed `ISO-10303-21;` …
-//! `END-ISO-10303-21;` frame around a `HEADER` section. [`FileHeader`]
-//! models the header's `FILE_DESCRIPTION` and `FILE_NAME` records (file
-//! name, authors, timestamp, …); the third record, `FILE_SCHEMA`, comes
-//! from the output target.
-
-mod projection;
-pub use projection::LossReport;
+//! [`write()`] is a pure serializer: the `DATA` section — the entities
+//! themselves — comes from the generated writer
+//! ([`generated::write`](crate::generated::write)), and the `HEADER` section
+//! comes from the model's own [`FileHeader`] ([`StepModel::header`]) —
+//! including `FILE_SCHEMA`. Nothing is stamped or projected here; the
+//! authoring layer ([`crate::Ap242Author`]) is what guarantees an AP242
+//! model and stamps the AP242 schema identity on the header.
 
 use crate::generated::model::StepModel;
-use crate::generated::profile::{ApdInfo, SchemaProfile, SchemaTarget};
 use crate::generated::write::Writer;
+use crate::header::FileHeader;
 
-/// Universal output marker — step-io's all-AP union is not a real Application
-/// Protocol, so the `FILE_SCHEMA` header and APD declare a non-standard format. This
-/// keeps the output internally consistent and prevents it masquerading as a real AP.
-/// `UNIVERSAL_APD` mirrors a real target's `SchemaProfile::apd`; `description` is the
-/// `application_context` text (the `legal`/`downgrade` sets have no Universal analog —
-/// Universal skips projection).
-const UNIVERSAL_FILE_SCHEMA: &[&str] = &["STEPIO_UNIVERSAL"];
+/// APD/`application_context` field values stamped by [`dump_universal`] so
+/// the dumped file's APD entities agree with its `FILE_SCHEMA` marker.
+struct ApdInfo {
+    status: &'static str,
+    name: &'static str,
+    year: i64,
+    description: &'static str,
+}
+
+/// Universal dump marker — step-io's all-AP union is not a real Application
+/// Protocol, so the `FILE_SCHEMA` header and APD declare a non-standard
+/// format. This keeps the dump internally consistent and prevents it
+/// masquerading as a real AP.
+const UNIVERSAL_FILE_SCHEMA: &str = "STEPIO_UNIVERSAL";
 static UNIVERSAL_APD: ApdInfo = ApdInfo {
     status: "not a standard",
     name: "stepio_universal",
@@ -29,69 +33,38 @@ static UNIVERSAL_APD: ApdInfo = ApdInfo {
     description: "step-io universal union (non-standard, all-AP superset)",
 };
 
-/// Emit the model as the **Universal** target — the full read model, no projection
-/// (the union schema is a superset, so nothing is illegal). The `FILE_SCHEMA` header
-/// and APD/`application_context` entities are set to the non-standard universal
-/// marker so the output is internally consistent (header ↔ APD agree).
-#[doc(hidden)]
+/// Serialize the model to Part 21 text — the model's own header
+/// ([`StepModel::header`], `FILE_SCHEMA` included) plus every entity,
+/// verbatim. Lossless: nothing is projected, stamped, or dropped.
+///
+/// An authored model ([`crate::StepBuilder`] / [`crate::Ap242Author`]) is
+/// AP242 by construction and carries the AP242 schema identity, so the
+/// output is a conforming AP242 file. A model that came from
+/// [`read`](crate::read) re-serializes faithfully under its *source* schema
+/// — step-io does not convert between APs.
 #[must_use]
-pub fn write_universal(model: &mut StepModel) -> String {
-    write_target(model, SchemaTarget::Universal).0
+pub fn write(model: &StepModel) -> String {
+    wrap_envelope(&Writer::new(model).emit_all(), &model.header)
 }
 
-/// Emit the model to a specific output target. The output is always internally
-/// consistent: the `FILE_SCHEMA` header AND the APD/`application_context` entities are
-/// absolutely set to the target's values (no restore needed — a later write simply
-/// overwrites again). For real AP targets the model is projected onto the target's
-/// legal entity set: rename-safe subtypes are downgraded, the rest dropped
-/// (referential-closure cascade), stranded orphans pruned — all recorded in the
-/// returned [`LossReport`]. `Universal` skips projection (union superset).
-///
-/// The original input schema is preserved in `Report.schema` (read time) and is not
-/// affected by writes.
-///
-/// There is no ground-truth to compare a projected output against; correctness
-/// is "valid + fully accounted" — the output re-reads with zero drops, and
-/// `input == kept + report.dropped + report.downgraded`.
-/// Internal round-trip oracle — not a supported entry point; the supported
-/// write path is the authoring API ([`crate::StepBuilder`] / [`crate::Ap242Author`]).
+/// Dump the model as step-io's **Universal** union — every entity, verbatim,
+/// under the non-standard `STEPIO_UNIVERSAL` marker (`FILE_SCHEMA` and
+/// APD/`application_context` are set to it, keeping the dump internally
+/// consistent). Not a STEP output — the round-trip oracle for the external
+/// verification harness; the write path is [`write()`].
 #[doc(hidden)]
 #[must_use]
-pub fn write_target(model: &mut StepModel, target: SchemaTarget) -> (String, LossReport) {
-    write_target_with_header(model, target, &FileHeader::default())
-}
-
-/// [`write_target`] with explicit Part 21 HEADER fields (the plain form
-/// emits the all-empty default header).
-#[doc(hidden)]
-#[must_use]
-pub fn write_target_with_header(
-    model: &mut StepModel,
-    target: SchemaTarget,
-    header: &FileHeader,
-) -> (String, LossReport) {
-    let profile = SchemaProfile::for_target(target);
-
-    // Absolutely set the header schema + APD/AC entities to the target's values.
-    stamp_header(model, profile.map_or(&UNIVERSAL_APD, |p| &p.apd));
-    let file_schema = profile.map_or(UNIVERSAL_FILE_SCHEMA, |p| p.file_schema);
-
-    // Project (real AP) or pass through (Universal), then wrap.
-    let (body, loss) = match profile {
-        Some(profile) => {
-            let w = Writer::new(&*model);
-            let plan = projection::plan(&w, profile);
-            (w.emit_all_with_plan(&plan.dropped, plan.rename), plan.loss)
-        }
-        None => (Writer::new(&*model).emit_all(), LossReport::default()),
-    };
-    (wrap_envelope(&body, file_schema, header), loss)
+pub fn dump_universal(model: &mut StepModel) -> String {
+    stamp_apd(model, &UNIVERSAL_APD);
+    model.header.schema =
+        crate::parser::schema::identify_schema(&[UNIVERSAL_FILE_SCHEMA.to_string()]);
+    write(model)
 }
 
 /// Absolutely set the model's APD entities (status/name/year) and
-/// `application_context` entities (application = `apd.description`) to `apd`, so the
-/// emitted file's APD agrees with the `FILE_SCHEMA` header.
-fn stamp_header(model: &mut StepModel, apd: &ApdInfo) {
+/// `application_context` entities (application = `apd.description`) to `apd`,
+/// so the dumped file's APD agrees with the `FILE_SCHEMA` header.
+fn stamp_apd(model: &mut StepModel, apd: &ApdInfo) {
     for x in &mut model.application_protocol_definition_arena.items {
         x.status = apd.status.to_string();
         x.application_interpreted_model_schema_name = apd.name.to_string();
@@ -100,30 +73,6 @@ fn stamp_header(model: &mut StepModel, apd: &ApdInfo) {
     for ac in &mut model.application_context_arena.items {
         ac.application = apd.description.to_string();
     }
-}
-
-/// The Part 21 HEADER section fields (`FILE_DESCRIPTION` + `FILE_NAME`).
-/// The default (all empty) matches what step-io has always emitted; the
-/// builder fills it from user input plus its automatic timestamp and
-/// preprocessor stamp.
-#[derive(Debug, Clone, Default)]
-pub struct FileHeader {
-    /// `FILE_DESCRIPTION.description` (single entry).
-    pub description: String,
-    /// `FILE_NAME.name`.
-    pub file_name: String,
-    /// `FILE_NAME.time_stamp`.
-    pub time_stamp: String,
-    /// `FILE_NAME.author`; empty renders as the customary `('')`.
-    pub authors: Vec<String>,
-    /// `FILE_NAME.organization`; empty renders as the customary `('')`.
-    pub organizations: Vec<String>,
-    /// `FILE_NAME.preprocessor_version`.
-    pub preprocessor_version: String,
-    /// `FILE_NAME.originating_system`.
-    pub originating_system: String,
-    /// `FILE_NAME.authorisation`.
-    pub authorisation: String,
 }
 
 /// Part 21 string literal for the HEADER section — same convention as the
@@ -155,14 +104,19 @@ fn header_list(items: &[String]) -> String {
     format!("({inner})")
 }
 
-/// Wrap a DATA body in the Part 21 envelope with the given `FILE_SCHEMA`
-/// and HEADER fields.
-fn wrap_envelope(data_body: &str, file_schema: &[&str], header: &FileHeader) -> String {
-    let schema = file_schema
-        .iter()
-        .map(|s| format!("'{s}'"))
-        .collect::<Vec<_>>()
-        .join(",");
+/// Wrap a DATA body in the Part 21 envelope built from `header` —
+/// `FILE_SCHEMA` from [`FileHeader::schema`]'s raw strings (an absent raw
+/// renders as the customary empty `('')`).
+fn wrap_envelope(data_body: &str, header: &FileHeader) -> String {
+    let schema = header.schema.raw().map_or_else(
+        || "''".to_owned(),
+        |r| {
+            r.iter()
+                .map(|s| header_str(s))
+                .collect::<Vec<_>>()
+                .join(",")
+        },
+    );
     format!(
         "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(({desc}),'2;1');\n\
          FILE_NAME({name},{stamp},{authors},{orgs},{pre},{orig},{auth});\n\
