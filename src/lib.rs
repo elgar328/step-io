@@ -39,9 +39,9 @@
 //!
 //! Reading gives the result and the report together: [`read`] returns the
 //! [`StepModel`] plus a [`Report`] of what was kept, normalized, or dropped
-//! and why. Real-world files are rarely clean — messy content is healed or
-//! dropped rather than failing the import, and the report is the record of
-//! what happened on the way in.
+//! and why. Messy files are common in the wild — non-standard content is
+//! healed or dropped rather than failing the import, and the report is the
+//! record of what happened on the way in.
 //!
 //! The model is raw and complete: one public arena per entity type,
 //! schema-faithful. Everything the reader kept is directly accessible.
