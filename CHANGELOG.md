@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-06
+
+### Fixed
+
+- `ProductDef::solids()` now follows `SHAPE_REPRESENTATION_RELATIONSHIP`
+  bridges, so a part reports its solids even when the geometry lives in a
+  separate `ADVANCED_BREP_SHAPE_REPRESENTATION` — the common AP242 assembly
+  layout, where those solids were previously left unattached.
+
 ## [0.2.0] - 2026-07-06
 
 ### Added
@@ -49,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   coverage matrix ([`docs/entities.md`](docs/entities.md)) lists exactly what is
   read and written.
 
-[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/elgar328/step-io/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/elgar328/step-io/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/elgar328/step-io/compare/v0.1.0-alpha.1...v0.1.0

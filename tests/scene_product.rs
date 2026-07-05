@@ -97,6 +97,53 @@ fn navigates_assembly_tree_and_bridges_to_geometry() {
     assert_eq!(part.solids().count(), 0, "part def has no shape here");
 }
 
+/// A part definition whose shape is a placement `SHAPE_REPRESENTATION` (no
+/// solid), with the geometry in a separate `ADVANCED_BREP_SHAPE_REPRESENTATION`
+/// bridged by a plain `SHAPE_REPRESENTATION_RELATIONSHIP`. `rel` is the
+/// relationship line, so callers can flip `rep_1/rep_2` order.
+fn bridged_part(rel: &str) -> String {
+    format!(
+        "{HEADER}\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#4=REPRESENTATION_CONTEXT('','3D');\n\
+#20=PRODUCT('part','Part','',(#2));\n\
+#21=PRODUCT_DEFINITION_FORMATION('1','',#20);\n\
+#22=PRODUCT_DEFINITION('design','',#21,#3);\n\
+#40=PRODUCT_DEFINITION_SHAPE('','',#22);\n\
+#41=SHAPE_REPRESENTATION('',(#45),#4);\n\
+#42=SHAPE_DEFINITION_REPRESENTATION(#40,#41);\n\
+#45=AXIS2_PLACEMENT_3D('',#46,$,$);\n\
+#46=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#50=ADVANCED_BREP_SHAPE_REPRESENTATION('',(#51),#4);\n\
+#51=MANIFOLD_SOLID_BREP('',#52);\n\
+#52=CLOSED_SHELL('',());\n\
+{rel}{FOOTER}"
+    )
+}
+
+#[test]
+fn solids_follow_shape_representation_relationship() {
+    // The common assembly export: a component's own shape rep holds only a
+    // placement, and its solid lives in a bridged ADVANCED_BREP rep. solids()
+    // must cross the plain SHAPE_REPRESENTATION_RELATIONSHIP to find it.
+    for rel in [
+        "#60=SHAPE_REPRESENTATION_RELATIONSHIP('','',#41,#50);\n",
+        "#60=SHAPE_REPRESENTATION_RELATIONSHIP('','',#50,#41);\n", // reversed order
+    ] {
+        let src = bridged_part(rel);
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let part = def_for_product(&scene, "Part");
+        assert_eq!(
+            part.solids().count(),
+            1,
+            "solid reached across the relationship (rel: {rel})"
+        );
+    }
+}
+
 #[test]
 fn reads_occurrence_placement_transform() {
     let src = format!("{HEADER}{ASSEMBLY}{FOOTER}");
