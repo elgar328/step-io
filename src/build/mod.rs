@@ -129,9 +129,9 @@
 
 // Shared with the read side (`scene`): the NURBS forms `to_nurbs()` returns are
 // exactly what the builder accepts, and colours round-trip as the same type.
-use crate::emit::FileHeader;
 use crate::generated::author::{Ap242Author, AuthorError};
 use crate::generated::model as m;
+use crate::header::FileHeader;
 pub use crate::scene::{NurbsCurve, NurbsSurface, Rgb};
 
 /// Part 21 HEADER fields for [`StepBuilder::header`]. Everything defaults
@@ -476,9 +476,9 @@ impl StepBuilder {
     }
 
     /// Set up the shared skeleton: application context + protocol definition
-    /// (values are stamped with the AP242 profile on `finish`), product
-    /// contexts, and the geometric context complex carrying the chosen SI
-    /// length unit, radian, steradian, and the given length uncertainty.
+    /// (the AP242 identity values), product contexts, and the geometric
+    /// context complex carrying the chosen SI length unit, radian,
+    /// steradian, and the given length uncertainty.
     ///
     /// # Errors
     /// Propagates [`AuthorError`] from the strict constructors; the wiring
@@ -1552,6 +1552,9 @@ impl StepBuilder {
             preprocessor_version: concat!("step-io ", env!("CARGO_PKG_VERSION")).to_owned(),
             originating_system: h.originating_system.clone().unwrap_or_default(),
             authorisation: h.authorisation.clone().unwrap_or_default(),
+            // The authoring layer stamps the AP242 schema identity in
+            // `finish_with_header`; whatever is set here is overwritten.
+            schema: crate::parser::SchemaId::default(),
         };
         Ok(self.author.finish_with_header(&file_header))
     }

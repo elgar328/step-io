@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-06
+
+### Added
+
+- The full Part 21 HEADER is read into the model: `model.header()` carries
+  the file name, timestamp, authors, the originating CAD system, and the
+  identified schema — one `FileHeader` type, shared with the write side.
+- `write(&model)` — serialize a model to Part 21 text under its own header,
+  losslessly.
+
+### Changed
+
+- The identified source schema moved from `Report.schema` to
+  `model.header().schema`.
+
+### Removed
+
+- The write-side projection surface — `write_target`, `SchemaTarget`, and
+  `LossReport`. The authoring API is AP242 by construction, so its output
+  never needed projecting.
+- The generated read/write plumbing (`generated::{read, write, walk,
+  generic_normalize, schema}`) is crate-internal now; `generated::{model,
+  resolve, author}` remain the public raw layer.
+
 ## [0.1.0] - 2026-07-04
 
 ### Added
@@ -25,5 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   coverage matrix ([`docs/entities.md`](docs/entities.md)) lists exactly what is
   read and written.
 
-[Unreleased]: https://github.com/elgar328/step-io/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/elgar328/step-io/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/elgar328/step-io/compare/v0.1.0-alpha.1...v0.1.0

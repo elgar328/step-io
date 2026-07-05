@@ -72,19 +72,18 @@ impl Ap242Author {
         Self::default()
     }
 
-    /// Emit the model as AP242 (edition 2 IS) Part 21 text.
+    /// Emit the model as AP242 (edition 2 IS) Part 21 text. The header's
+    /// `FILE_SCHEMA` is stamped AP242 — the authoring layer's schema.
     pub fn finish(mut self) -> String {
-        crate::emit::write_target(&mut self.model, super::profile::SchemaTarget::Ap242).0
+        self.model.header.schema = super::schema::ap242e2_schema_id();
+        crate::emit::write(&self.model)
     }
 
-    /// [`Ap242Author::finish`] with explicit Part 21 HEADER fields.
-    pub fn finish_with_header(mut self, header: &crate::emit::FileHeader) -> String {
-        crate::emit::write_target_with_header(
-            &mut self.model,
-            super::profile::SchemaTarget::Ap242,
-            header,
-        )
-        .0
+    /// [`Ap242Author::finish`] with explicit Part 21 HEADER fields. The
+    /// header's `schema` is overwritten with AP242 regardless of input.
+    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> String {
+        self.model.header = header.clone();
+        self.finish()
     }
 
     /// `ACTION` — strict AP242 constructor.

@@ -1,9 +1,9 @@
-//! Golden snapshot of Universal write output. Guards that the `FILE_SCHEMA` header
+//! Golden snapshot of the Universal dump. Guards that the `FILE_SCHEMA` header
 //! and the APD/`application_context` entities are retargeted to the non-standard
 //! `STEPIO_UNIVERSAL` marker (header ↔ APD internally consistent), and that the
-//! codegen `render_kw` / `dfs_render` body emission stays stable.
+//! codegen `dfs_render` body emission stays stable.
 
-use step_io::{read, write_universal};
+use step_io::{dump_universal, read};
 
 const DOC: &str = "ISO-10303-21;\nHEADER;\n\
 FILE_DESCRIPTION((''),'2;1');\n\
@@ -14,17 +14,17 @@ ENDSEC;\nDATA;\n\
 #2=APPLICATION_PROTOCOL_DEFINITION('international standard','automotive_design',2010,#1);\n\
 ENDSEC;\nEND-ISO-10303-21;\n";
 
-/// Universal output (captured 2026-06). The header `FILE_SCHEMA` and the APD/AC
-/// entities are rewritten to the `STEPIO_UNIVERSAL` marker so the output is
+/// Universal dump (captured 2026-06). The header `FILE_SCHEMA` and the APD/AC
+/// entities are rewritten to the `STEPIO_UNIVERSAL` marker so the dump is
 /// internally consistent; the entity body is emitted by the generated writer.
 const GOLDEN: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('STEPIO_UNIVERSAL'));\nENDSEC;\nDATA;\n#1 = APPLICATION_CONTEXT('step-io universal union (non-standard, all-AP superset)');\n#2 = APPLICATION_PROTOCOL_DEFINITION('not a standard','stepio_universal',0,#1);\nENDSEC;\nEND-ISO-10303-21;\n";
 
 #[test]
-fn universal_write_golden() {
+fn universal_dump_golden() {
     let (mut model, _report) = read(DOC.as_bytes()).expect("read ok");
-    let out = write_universal(&mut model);
+    let out = dump_universal(&mut model);
     assert_eq!(
         out, GOLDEN,
-        "Universal write output changed (codegen refactor regression?)"
+        "Universal dump output changed (codegen refactor regression?)"
     );
 }

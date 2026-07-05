@@ -2,18 +2,17 @@
 //!
 //! Reading runs in three steps. [`read`] first calls into
 //! [`parser`](crate::parser) to parse the source, and finally into the
-//! generated readers ([`generated::read`](crate::generated::read)) to turn
-//! the entities into the typed model. The step in between lives here:
+//! generated readers to turn the entities into the typed model. The step
+//! in between lives here:
 //! non-standard input is healed in place where a safe rewrite exists, and
 //! dropped with a [`DropReason`] where none does. The [`Report`] accounts
-//! for everything that came in — kept, normalized, or dropped and why —
-//! and identifies the source schema.
+//! for everything that came in — kept, normalized, or dropped and why.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::generated::model::StepModel;
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
-use crate::parser::{Attribute, Error, RawEntity, SchemaId, parse_bytes};
+use crate::parser::{Attribute, Error, RawEntity, parse_bytes};
 
 mod entity_normalize;
 
@@ -46,7 +45,8 @@ pub struct DropReason {
 /// Input-to-model provenance. Every input entity plus every synthetic entity
 /// added by normalization is either kept (`validated`) or dropped with a reason
 /// (`drops`): `validated + sum(drops) == n_in + n_synth`. `norm` = rewrite (fix)
-/// notes from the pre-read normalize pass.
+/// notes from the pre-read normalize pass. The source header (including the
+/// identified schema) lives on the model: [`StepModel::header`].
 #[derive(Clone, Debug, Default)]
 pub struct Report {
     /// Input entity count (data section, before normalization).
@@ -60,9 +60,6 @@ pub struct Report {
     pub dropped: Vec<(u64, DropReason)>,
     /// Non-standard rewrite notes (kept entities, fixed in place).
     pub norm: Vec<&'static str>,
-    /// Identified source schema (AP family, edition, stage + raw `FILE_SCHEMA`).
-    /// How callers (e.g. a CAD kernel) learn the precise version of the file.
-    pub schema: SchemaId,
 }
 
 /// Collect every entity id referenced (transitively) by an attribute.
@@ -278,7 +275,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
 
     let g = parse_bytes(src)?;
     let n_in = g.entities.len();
-    let schema = g.schema;
+    let header = crate::header::from_raw(&g.header, g.schema);
     let raw: BTreeMap<u64, RawEntity> = g.entities;
     let (normalized, norm, slot_drops, n_synth) = normalize_all(raw);
 
@@ -338,6 +335,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
             },
         ));
     }
+    model.header = header;
     Ok((
         model,
         Report {
@@ -346,7 +344,6 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
             validated,
             dropped,
             norm,
-            schema,
         },
     ))
 }

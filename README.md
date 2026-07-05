@@ -29,6 +29,7 @@ Reading STEP into a kernel or viewer:
 ```rust,no_run
 let source = std::fs::read("model.step").unwrap();
 let (model, report) = step_io::read(&source).unwrap();
+let header = model.header(); // file name, authors, originating CAD system, schema, …
 
 for solid in model.scene().all_solids() {
     for face in solid.faces() {
@@ -78,7 +79,7 @@ matrix](docs/entities.md) lists exactly what is read and written.
 
 Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
 it in 2014, and every modern tool reads it. When edition 3 reaches IS
-and takes over, the output target moves up with it: one output schema,
+and takes over, the output moves up with it: one output schema,
 always the current one.
 
 Most of the pipeline is generated from the schemas rather than written

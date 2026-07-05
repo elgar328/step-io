@@ -29,7 +29,7 @@
 //!
 //! Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
 //! it in 2014, and every modern tool reads it. When edition 3 reaches IS
-//! and takes over, the output target moves up with it: one output schema,
+//! and takes over, the output moves up with it: one output schema,
 //! always the current one.
 //!
 //! Most of the pipeline is generated from the schemas rather than written
@@ -39,12 +39,15 @@
 //!
 //! Reading gives the result and the report together: [`read`] returns the
 //! [`StepModel`] plus a [`Report`] of what was kept, normalized, or dropped
-//! and why. Real-world files are rarely clean — messy content is healed or
-//! dropped rather than failing the import, and the report is the record of
-//! what happened on the way in.
+//! and why. Messy files are common in the wild — non-standard content is
+//! healed or dropped rather than failing the import, and the report is the
+//! record of what happened on the way in.
 //!
 //! The model is raw and complete: one public arena per entity type,
 //! schema-faithful. Everything the reader kept is directly accessible.
+//! The Part 21 header is read too, as [`StepModel::header`] — file name,
+//! timestamp, authors, the originating CAD system, and the identified
+//! schema.
 //!
 //! [`Scene`](scene::Scene) — `model.scene()` — is the navigation layer on
 //! top: lightweight `Copy` handles covering what imports touch most, not
@@ -147,24 +150,23 @@ mod author_tests;
 pub mod build;
 pub mod emit;
 pub mod generated;
+pub mod header;
 pub mod parser;
 pub mod reader;
 pub mod refgraph;
 pub mod scene;
 
 pub use build::StepBuilder;
-pub use emit::FileHeader;
+pub use emit::write;
 pub use generated::author::{Ap242Author, AuthorError};
 pub use generated::model::{EntityKey, StepModel};
+pub use header::FileHeader;
 pub use reader::{DropKind, DropReason, Report, read};
 
 // Internal round-trip oracle — kept callable for the external verification
-// harness, but not part of the supported API surface (the supported write
-// path is the authoring API).
+// harness, but not part of the supported API surface.
 #[doc(hidden)]
-pub use emit::{LossReport, write_target, write_target_with_header, write_universal};
-#[doc(hidden)]
-pub use generated::profile::SchemaTarget;
+pub use emit::dump_universal;
 pub use parser::{ApFamily, Error, LexError, LexErrorKind, SchemaId, Stage};
 pub use refgraph::RefGraph;
 

@@ -67,7 +67,6 @@ pub struct Writer<'a> {
     model: &'a StepModel,
     next: u64,
     out: String,
-    rename: std::collections::HashMap<EntityKey, &'static str>,
     action_ids: Vec<Option<u64>>,
     action_assignment_ids: Vec<Option<u64>>,
     action_directive_ids: Vec<Option<u64>>,
@@ -577,7 +576,6 @@ impl<'a> Writer<'a> {
             model,
             next: 1,
             out: String::new(),
-            rename: std::collections::HashMap::new(),
             action_ids: vec![None; model.action_arena.items.len()],
             action_assignment_ids: vec![None; model.action_assignment_arena.items.len()],
             action_directive_ids: vec![None; model.action_directive_arena.items.len()],
@@ -25937,7 +25935,7 @@ impl<'a> Writer<'a> {
             EntityKey::Action(id) => {
                 let it = self.model.action_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25951,7 +25949,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionAssignment(id) => {
                 let it = self.model.action_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_action(&it.assigned_action))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -25959,7 +25957,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionDirective(id) => {
                 let it = self.model.action_directive_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25982,7 +25980,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionMethod(id) => {
                 let it = self.model.action_method_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -25997,7 +25995,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionMethodRelationship(id) => {
                 let it = self.model.action_method_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26012,7 +26010,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionProperty(id) => {
                 let it = self.model.action_property_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -26026,7 +26024,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionRelationship(id) => {
                 let it = self.model.action_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26041,7 +26039,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionRequestAssignment(id) => {
                 let it = self.model.action_request_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_versioned_action_request(&it.assigned_action_request)
@@ -26051,7 +26049,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionRequestSolution(id) => {
                 let it = self.model.action_request_solution_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_action_method(&it.method)),
                     format!("#{}", self.id_of_ref_versioned_action_request(&it.request)),
@@ -26061,7 +26059,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResource(id) => {
                 let it = self.model.action_resource_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26083,7 +26081,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResourceRelationship(id) => {
                 let it = self.model.action_resource_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26098,7 +26096,7 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResourceRequirement(id) => {
                 let it = self.model.action_resource_requirement_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -26120,14 +26118,14 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResourceType(id) => {
                 let it = self.model.action_resource_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::Address(id) => {
                 let it = self.model.address_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -26186,7 +26184,7 @@ impl<'a> Writer<'a> {
                     .advanced_brep_shape_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26207,7 +26205,7 @@ impl<'a> Writer<'a> {
             EntityKey::AdvancedFace(id) => {
                 let it = self.model.advanced_face_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26226,7 +26224,7 @@ impl<'a> Writer<'a> {
             EntityKey::AllAroundShapeAspect(id) => {
                 let it = self.model.all_around_shape_aspect_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26241,7 +26239,7 @@ impl<'a> Writer<'a> {
             EntityKey::AngularLocation(id) => {
                 let it = self.model.angular_location_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26260,7 +26258,7 @@ impl<'a> Writer<'a> {
             EntityKey::AngularSize(id) => {
                 let it = self.model.angular_size_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
                     step_str(&it.name),
@@ -26271,7 +26269,7 @@ impl<'a> Writer<'a> {
             EntityKey::AngularityTolerance(id) => {
                 let it = self.model.angularity_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -26300,7 +26298,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationCurveOccurrence(id) => {
                 let it = self.model.annotation_curve_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26321,7 +26319,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationFillAreaOccurrence(id) => {
                 let it = self.model.annotation_fill_area_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26343,7 +26341,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationOccurrence(id) => {
                 let it = self.model.annotation_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26367,7 +26365,7 @@ impl<'a> Writer<'a> {
                     .annotation_occurrence_associativity_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -26388,7 +26386,7 @@ impl<'a> Writer<'a> {
                     .annotation_occurrence_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -26409,7 +26407,7 @@ impl<'a> Writer<'a> {
                     .annotation_placeholder_leader_line_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26426,7 +26424,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationPlaceholderOccurrence(id) => {
                 let it = self.model.annotation_placeholder_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26452,7 +26450,7 @@ impl<'a> Writer<'a> {
                     .annotation_placeholder_occurrence_with_leader_line_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26486,7 +26484,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationPlane(id) => {
                 let it = self.model.annotation_plane_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26517,7 +26515,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationSymbol(id) => {
                 let it = self.model.annotation_symbol_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -26531,7 +26529,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationSymbolOccurrence(id) => {
                 let it = self.model.annotation_symbol_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26555,7 +26553,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationText(id) => {
                 let it = self.model.annotation_text_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -26566,7 +26564,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationTextCharacter(id) => {
                 let it = self.model.annotation_text_character_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -26578,7 +26576,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationTextOccurrence(id) => {
                 let it = self.model.annotation_text_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26605,7 +26603,7 @@ impl<'a> Writer<'a> {
                     .annotation_to_annotation_leader_line_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26622,7 +26620,7 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationToModelLeaderLine(id) => {
                 let it = self.model.annotation_to_model_leader_line_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26639,7 +26637,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApllPoint(id) => {
                 let it = self.model.apll_point_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26657,7 +26655,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApllPointWithSurface(id) => {
                 let it = self.model.apll_point_with_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26676,14 +26674,14 @@ impl<'a> Writer<'a> {
             EntityKey::ApplicationContext(id) => {
                 let it = self.model.application_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.application)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ApplicationContextElement(id) => {
                 let it = self.model.application_context_element_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -26696,7 +26694,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApplicationProtocolDefinition(id) => {
                 let it = self.model.application_protocol_definition_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.status),
                     step_str(&it.application_interpreted_model_schema_name),
@@ -26708,7 +26706,7 @@ impl<'a> Writer<'a> {
             EntityKey::AppliedApprovalAssignment(id) => {
                 let it = self.model.applied_approval_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_approval(&it.assigned_approval)),
                     format!(
@@ -26725,7 +26723,7 @@ impl<'a> Writer<'a> {
             EntityKey::AppliedDateAndTimeAssignment(id) => {
                 let it = self.model.applied_date_and_time_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26746,7 +26744,7 @@ impl<'a> Writer<'a> {
             EntityKey::AppliedDocumentReference(id) => {
                 let it = self.model.applied_document_reference_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_document(&it.assigned_document)),
                     step_str(&it.source),
@@ -26767,7 +26765,7 @@ impl<'a> Writer<'a> {
                     .applied_external_identification_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.assigned_id),
                     format!("#{}", self.id_of_ref_identification_role(&it.role)),
@@ -26786,7 +26784,7 @@ impl<'a> Writer<'a> {
             EntityKey::AppliedGroupAssignment(id) => {
                 let it = self.model.applied_group_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_group(&it.assigned_group)),
                     format!(
@@ -26806,7 +26804,7 @@ impl<'a> Writer<'a> {
                     .applied_person_and_organization_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26829,7 +26827,7 @@ impl<'a> Writer<'a> {
             EntityKey::AppliedPresentedItem(id) => {
                 let it = self.model.applied_presented_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.items
@@ -26846,7 +26844,7 @@ impl<'a> Writer<'a> {
                     .applied_security_classification_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26868,7 +26866,7 @@ impl<'a> Writer<'a> {
             EntityKey::Approval(id) => {
                 let it = self.model.approval_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_approval_status(&it.status)),
                     step_str(&it.level),
@@ -26878,7 +26876,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApprovalAssignment(id) => {
                 let it = self.model.approval_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_approval(&it.assigned_approval)
@@ -26888,7 +26886,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApprovalDateTime(id) => {
                 let it = self.model.approval_date_time_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_date_time_select(&it.date_time)),
                     format!("#{}", self.id_of_ref_approval(&it.dated_approval)),
@@ -26898,7 +26896,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApprovalPersonOrganization(id) => {
                 let it = self.model.approval_person_organization_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -26912,21 +26910,21 @@ impl<'a> Writer<'a> {
             EntityKey::ApprovalRole(id) => {
                 let it = self.model.approval_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.role)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ApprovalStatus(id) => {
                 let it = self.model.approval_status_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ApproximationTolerance(id) => {
                 let it = self.model.approximation_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_tolerance_select(&it.tolerance)
@@ -26936,7 +26934,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApproximationToleranceDeviation(id) => {
                 let it = self.model.approximation_tolerance_deviation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.tessellation_type.token().to_string(),
                     format!(
@@ -26954,7 +26952,7 @@ impl<'a> Writer<'a> {
             EntityKey::ApproximationToleranceParameter(id) => {
                 let it = self.model.approximation_tolerance_parameter_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.tolerances
@@ -26968,7 +26966,7 @@ impl<'a> Writer<'a> {
             EntityKey::AreaInSet(id) => {
                 let it = self.model.area_in_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_presentation_area(&it.area)),
                     format!("#{}", self.id_of_ref_presentation_set(&it.in_set)),
@@ -26978,7 +26976,7 @@ impl<'a> Writer<'a> {
             EntityKey::AreaUnit(id) => {
                 let it = self.model.area_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.elements
@@ -26992,7 +26990,7 @@ impl<'a> Writer<'a> {
             EntityKey::AscribableState(id) => {
                 let it = self.model.ascribable_state_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27010,7 +27008,7 @@ impl<'a> Writer<'a> {
             EntityKey::AscribableStateRelationship(id) => {
                 let it = self.model.ascribable_state_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27031,7 +27029,7 @@ impl<'a> Writer<'a> {
             EntityKey::AssemblyComponentUsage(id) => {
                 let it = self.model.assembly_component_usage_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -27061,7 +27059,7 @@ impl<'a> Writer<'a> {
             EntityKey::AuxiliaryLeaderLine(id) => {
                 let it = self.model.auxiliary_leader_line_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27082,7 +27080,7 @@ impl<'a> Writer<'a> {
             EntityKey::Axis1Placement(id) => {
                 let it = self.model.axis1_placement_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
@@ -27096,7 +27094,7 @@ impl<'a> Writer<'a> {
             EntityKey::Axis2Placement2d(id) => {
                 let it = self.model.axis2_placement2d_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
@@ -27110,7 +27108,7 @@ impl<'a> Writer<'a> {
             EntityKey::Axis2Placement3d(id) => {
                 let it = self.model.axis2_placement3d_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
@@ -27128,7 +27126,7 @@ impl<'a> Writer<'a> {
             EntityKey::BSplineCurve(id) => {
                 let it = self.model.b_spline_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -27149,7 +27147,7 @@ impl<'a> Writer<'a> {
             EntityKey::BSplineCurveWithKnots(id) => {
                 let it = self.model.b_spline_curve_with_knots_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -27187,7 +27185,7 @@ impl<'a> Writer<'a> {
             EntityKey::BSplineSurface(id) => {
                 let it = self.model.b_spline_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -27216,7 +27214,7 @@ impl<'a> Writer<'a> {
             EntityKey::BSplineSurfaceWithKnots(id) => {
                 let it = self.model.b_spline_surface_with_knots_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -27278,7 +27276,7 @@ impl<'a> Writer<'a> {
             EntityKey::BezierCurve(id) => {
                 let it = self.model.bezier_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -27299,7 +27297,7 @@ impl<'a> Writer<'a> {
             EntityKey::BezierSurface(id) => {
                 let it = self.model.bezier_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -27328,14 +27326,14 @@ impl<'a> Writer<'a> {
             EntityKey::BoundedCurve(id) => {
                 let it = self.model.bounded_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::BoundedPcurve(id) => {
                 let it = self.model.bounded_pcurve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_surface(&it.basis_surface)),
@@ -27349,14 +27347,14 @@ impl<'a> Writer<'a> {
             EntityKey::BoundedSurface(id) => {
                 let it = self.model.bounded_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::BoundedSurfaceCurve(id) => {
                 let it = self.model.bounded_surface_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -27375,7 +27373,7 @@ impl<'a> Writer<'a> {
             EntityKey::BrepWithVoids(id) => {
                 let it = self.model.brep_with_voids_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_closed_shell(&it.outer)),
@@ -27393,7 +27391,7 @@ impl<'a> Writer<'a> {
             EntityKey::CalendarDate(id) => {
                 let it = self.model.calendar_date_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.year_component),
                     format!("{}", it.day_component),
@@ -27404,7 +27402,7 @@ impl<'a> Writer<'a> {
             EntityKey::CameraImage(id) => {
                 let it = self.model.camera_image_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -27418,7 +27416,7 @@ impl<'a> Writer<'a> {
             EntityKey::CameraImage3dWithScale(id) => {
                 let it = self.model.camera_image3d_with_scale_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -27432,14 +27430,14 @@ impl<'a> Writer<'a> {
             EntityKey::CameraModel(id) => {
                 let it = self.model.camera_model_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::CameraModelD3(id) => {
                 let it = self.model.camera_model_d3_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27453,7 +27451,7 @@ impl<'a> Writer<'a> {
             EntityKey::CameraModelD3MultiClipping(id) => {
                 let it = self.model.camera_model_d3_multi_clipping_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27480,7 +27478,7 @@ impl<'a> Writer<'a> {
             EntityKey::CameraModelD3WithHlhsr(id) => {
                 let it = self.model.camera_model_d3_with_hlhsr_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27500,7 +27498,7 @@ impl<'a> Writer<'a> {
             EntityKey::CameraUsage(id) => {
                 let it = self.model.camera_usage_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27516,7 +27514,7 @@ impl<'a> Writer<'a> {
             EntityKey::CartesianPoint(id) => {
                 let it = self.model.cartesian_point_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27533,7 +27531,7 @@ impl<'a> Writer<'a> {
             EntityKey::CcDesignApproval(id) => {
                 let it = self.model.cc_design_approval_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_approval(&it.assigned_approval)),
                     format!(
@@ -27553,7 +27551,7 @@ impl<'a> Writer<'a> {
                     .cc_design_date_and_time_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27577,7 +27575,7 @@ impl<'a> Writer<'a> {
                     .cc_design_person_and_organization_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27600,7 +27598,7 @@ impl<'a> Writer<'a> {
             EntityKey::CcDesignSecurityClassification(id) => {
                 let it = self.model.cc_design_security_classification_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27622,7 +27620,7 @@ impl<'a> Writer<'a> {
             EntityKey::CentreOfSymmetry(id) => {
                 let it = self.model.centre_of_symmetry_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27637,7 +27635,7 @@ impl<'a> Writer<'a> {
             EntityKey::Certification(id) => {
                 let it = self.model.certification_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.purpose),
@@ -27648,14 +27646,14 @@ impl<'a> Writer<'a> {
             EntityKey::CertificationType(id) => {
                 let it = self.model.certification_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.description)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::Change(id) => {
                 let it = self.model.change_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_action(&it.assigned_action)),
                     format!(
@@ -27672,7 +27670,7 @@ impl<'a> Writer<'a> {
             EntityKey::ChangeRequest(id) => {
                 let it = self.model.change_request_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -27692,7 +27690,7 @@ impl<'a> Writer<'a> {
             EntityKey::CharacterGlyphStyleOutline(id) => {
                 let it = self.model.character_glyph_style_outline_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_style(&it.outline_style)
@@ -27702,7 +27700,7 @@ impl<'a> Writer<'a> {
             EntityKey::CharacterGlyphStyleStroke(id) => {
                 let it = self.model.character_glyph_style_stroke_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_curve_style(&it.stroke_style))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -27713,7 +27711,7 @@ impl<'a> Writer<'a> {
                     .characterized_item_within_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27728,7 +27726,7 @@ impl<'a> Writer<'a> {
             EntityKey::CharacterizedObject(id) => {
                 let it = self.model.characterized_object_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     match &it.name {
                         Some(x) => step_str(x),
@@ -27744,7 +27742,7 @@ impl<'a> Writer<'a> {
             EntityKey::CharacterizedRepresentation(id) => {
                 let it = self.model.characterized_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     "*".to_string(),
                     format!(
@@ -27767,7 +27765,7 @@ impl<'a> Writer<'a> {
             EntityKey::Circle(id) => {
                 let it = self.model.circle_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
@@ -27778,7 +27776,7 @@ impl<'a> Writer<'a> {
             EntityKey::CircularRunoutTolerance(id) => {
                 let it = self.model.circular_runout_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27807,7 +27805,7 @@ impl<'a> Writer<'a> {
             EntityKey::ClosedShell(id) => {
                 let it = self.model.closed_shell_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -27824,7 +27822,7 @@ impl<'a> Writer<'a> {
             EntityKey::CoaxialityTolerance(id) => {
                 let it = self.model.coaxiality_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27852,14 +27850,14 @@ impl<'a> Writer<'a> {
             }
             EntityKey::Colour(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ColourRgb(id) => {
                 let it = self.model.colour_rgb_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     real(it.red),
@@ -27871,14 +27869,14 @@ impl<'a> Writer<'a> {
             EntityKey::ColourSpecification(id) => {
                 let it = self.model.colour_specification_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::CommonDatum(id) => {
                 let it = self.model.common_datum_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -27894,7 +27892,7 @@ impl<'a> Writer<'a> {
             EntityKey::ComplexTriangulatedFace(id) => {
                 let it = self.model.complex_triangulated_face_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -27950,7 +27948,7 @@ impl<'a> Writer<'a> {
             EntityKey::ComplexTriangulatedSurfaceSet(id) => {
                 let it = self.model.complex_triangulated_surface_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -28002,7 +28000,7 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeCurve(id) => {
                 let it = self.model.composite_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28020,7 +28018,7 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeCurveSegment(id) => {
                 let it = self.model.composite_curve_segment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.transition.token().to_string(),
                     (if it.same_sense { ".T." } else { ".F." }).to_string(),
@@ -28031,7 +28029,7 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeGroupShapeAspect(id) => {
                 let it = self.model.composite_group_shape_aspect_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28046,7 +28044,7 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeShapeAspect(id) => {
                 let it = self.model.composite_shape_aspect_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28061,7 +28059,7 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeText(id) => {
                 let it = self.model.composite_text_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28078,7 +28076,7 @@ impl<'a> Writer<'a> {
             EntityKey::CompoundRepresentationItem(id) => {
                 let it = self.model.compound_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.item_element {
@@ -28104,7 +28102,7 @@ impl<'a> Writer<'a> {
             EntityKey::ConcentricityTolerance(id) => {
                 let it = self.model.concentricity_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28133,7 +28131,7 @@ impl<'a> Writer<'a> {
             EntityKey::ConfigurationDesign(id) => {
                 let it = self.model.configuration_design_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_configuration_item(&it.configuration)),
                     format!("#{}", self.id_of_ref_configuration_design_item(&it.design)),
@@ -28143,7 +28141,7 @@ impl<'a> Writer<'a> {
             EntityKey::ConfigurationEffectivity(id) => {
                 let it = self.model.configuration_effectivity_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     format!(
@@ -28160,7 +28158,7 @@ impl<'a> Writer<'a> {
             EntityKey::ConfigurationItem(id) => {
                 let it = self.model.configuration_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -28179,7 +28177,7 @@ impl<'a> Writer<'a> {
             EntityKey::Conic(id) => {
                 let it = self.model.conic_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
@@ -28189,7 +28187,7 @@ impl<'a> Writer<'a> {
             EntityKey::ConicalSurface(id) => {
                 let it = self.model.conical_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -28201,7 +28199,7 @@ impl<'a> Writer<'a> {
             EntityKey::ConnectedFaceSet(id) => {
                 let it = self.model.connected_face_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.cfs_faces {
@@ -28223,7 +28221,7 @@ impl<'a> Writer<'a> {
                     .constructive_geometry_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28247,7 +28245,7 @@ impl<'a> Writer<'a> {
                     .constructive_geometry_representation_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), match &it.description { Some(x) => step_str(x), None => "$".to_string() }, format!("#{}", self.id_of_ref_constructive_geometry_representation_or_shape_representation(&it.rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(&it.rep_2))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -28257,7 +28255,7 @@ impl<'a> Writer<'a> {
                     .context_dependent_over_riding_styled_item_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28290,7 +28288,7 @@ impl<'a> Writer<'a> {
                     .context_dependent_shape_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -28308,7 +28306,7 @@ impl<'a> Writer<'a> {
             EntityKey::ContextDependentUnit(id) => {
                 let it = self.model.context_dependent_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_dimensional_exponents(&it.dimensions)),
                     step_str(&it.name),
@@ -28318,7 +28316,7 @@ impl<'a> Writer<'a> {
             EntityKey::ContinuousShapeAspect(id) => {
                 let it = self.model.continuous_shape_aspect_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28333,7 +28331,7 @@ impl<'a> Writer<'a> {
             EntityKey::Contract(id) => {
                 let it = self.model.contract_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.purpose),
@@ -28344,14 +28342,14 @@ impl<'a> Writer<'a> {
             EntityKey::ContractType(id) => {
                 let it = self.model.contract_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.description)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ConversionBasedUnit(id) => {
                 let it = self.model.conversion_based_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_dimensional_exponents(&it.dimensions)),
                     step_str(&it.name),
@@ -28365,7 +28363,7 @@ impl<'a> Writer<'a> {
             EntityKey::CoordinatedUniversalTimeOffset(id) => {
                 let it = self.model.coordinated_universal_time_offset_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.hour_offset),
                     match &it.minute_offset {
@@ -28379,7 +28377,7 @@ impl<'a> Writer<'a> {
             EntityKey::CoordinatesList(id) => {
                 let it = self.model.coordinates_list_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.npoints),
@@ -28400,14 +28398,14 @@ impl<'a> Writer<'a> {
             EntityKey::Curve(id) => {
                 let it = self.model.curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::CurveStyle(id) => {
                 let it = self.model.curve_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.curve_font {
@@ -28439,7 +28437,7 @@ impl<'a> Writer<'a> {
             EntityKey::CurveStyleFont(id) => {
                 let it = self.model.curve_style_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28456,7 +28454,7 @@ impl<'a> Writer<'a> {
             EntityKey::CurveStyleFontAndScaling(id) => {
                 let it = self.model.curve_style_font_and_scaling_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28470,7 +28468,7 @@ impl<'a> Writer<'a> {
             EntityKey::CurveStyleFontPattern(id) => {
                 let it = self.model.curve_style_font_pattern_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     real(it.visible_segment_length),
                     real(it.invisible_segment_length),
@@ -28480,7 +28478,7 @@ impl<'a> Writer<'a> {
             EntityKey::CurveStyleRendering(id) => {
                 let it = self.model.curve_style_rendering_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.rendering_method.token().to_string(),
                     format!(
@@ -28493,7 +28491,7 @@ impl<'a> Writer<'a> {
             EntityKey::CylindricalSurface(id) => {
                 let it = self.model.cylindrical_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -28504,7 +28502,7 @@ impl<'a> Writer<'a> {
             EntityKey::CylindricityTolerance(id) => {
                 let it = self.model.cylindricity_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28525,14 +28523,14 @@ impl<'a> Writer<'a> {
             EntityKey::Date(id) => {
                 let it = self.model.date_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!("{}", it.year_component)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::DateAndTime(id) => {
                 let it = self.model.date_and_time_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_date(&it.date_component)),
                     format!("#{}", self.id_of_ref_local_time(&it.time_component)),
@@ -28542,7 +28540,7 @@ impl<'a> Writer<'a> {
             EntityKey::DateAndTimeAssignment(id) => {
                 let it = self.model.date_and_time_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -28555,21 +28553,21 @@ impl<'a> Writer<'a> {
             EntityKey::DateRole(id) => {
                 let it = self.model.date_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::DateTimeRole(id) => {
                 let it = self.model.date_time_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::Datum(id) => {
                 let it = self.model.datum_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28585,7 +28583,7 @@ impl<'a> Writer<'a> {
             EntityKey::DatumFeature(id) => {
                 let it = self.model.datum_feature_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28600,7 +28598,7 @@ impl<'a> Writer<'a> {
             EntityKey::DatumReference(id) => {
                 let it = self.model.datum_reference_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.precedence),
                     format!("#{}", self.id_of_ref_datum(&it.referenced_datum)),
@@ -28610,7 +28608,7 @@ impl<'a> Writer<'a> {
             EntityKey::DatumReferenceCompartment(id) => {
                 let it = self.model.datum_reference_compartment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28652,7 +28650,7 @@ impl<'a> Writer<'a> {
             EntityKey::DatumReferenceElement(id) => {
                 let it = self.model.datum_reference_element_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28697,7 +28695,7 @@ impl<'a> Writer<'a> {
                     .datum_reference_modifier_with_value_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.modifier_type.token().to_string(),
                     format!(
@@ -28710,7 +28708,7 @@ impl<'a> Writer<'a> {
             EntityKey::DatumSystem(id) => {
                 let it = self.model.datum_system_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28733,7 +28731,7 @@ impl<'a> Writer<'a> {
             EntityKey::DatumTarget(id) => {
                 let it = self.model.datum_target_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28749,7 +28747,7 @@ impl<'a> Writer<'a> {
             EntityKey::DefaultModelGeometricView(id) => {
                 let it = self.model.default_model_geometric_view_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28771,7 +28769,7 @@ impl<'a> Writer<'a> {
             EntityKey::DefinedCharacterGlyph(id) => {
                 let it = self.model.defined_character_glyph_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_defined_glyph_select(&it.definition)),
@@ -28782,7 +28780,7 @@ impl<'a> Writer<'a> {
             EntityKey::DefinedSymbol(id) => {
                 let it = self.model.defined_symbol_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_defined_symbol_select(&it.definition)),
@@ -28793,7 +28791,7 @@ impl<'a> Writer<'a> {
             EntityKey::DefinitionalRepresentation(id) => {
                 let it = self.model.definitional_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28817,7 +28815,7 @@ impl<'a> Writer<'a> {
                     .definitional_representation_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28841,7 +28839,7 @@ impl<'a> Writer<'a> {
                     .definitional_representation_relationship_with_same_context_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28862,7 +28860,7 @@ impl<'a> Writer<'a> {
             EntityKey::DegenerateToroidalSurface(id) => {
                 let it = self.model.degenerate_toroidal_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -28875,7 +28873,7 @@ impl<'a> Writer<'a> {
             EntityKey::DerivedShapeAspect(id) => {
                 let it = self.model.derived_shape_aspect_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -28890,7 +28888,7 @@ impl<'a> Writer<'a> {
             EntityKey::DerivedUnit(id) => {
                 let it = self.model.derived_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.elements
@@ -28904,7 +28902,7 @@ impl<'a> Writer<'a> {
             EntityKey::DerivedUnitElement(id) => {
                 let it = self.model.derived_unit_element_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_named_unit(&it.unit)),
                     real(it.exponent),
@@ -28914,7 +28912,7 @@ impl<'a> Writer<'a> {
             EntityKey::DescriptionAttribute(id) => {
                 let it = self.model.description_attribute_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.attribute_value),
                     format!(
@@ -28927,14 +28925,14 @@ impl<'a> Writer<'a> {
             EntityKey::DescriptiveRepresentationItem(id) => {
                 let it = self.model.descriptive_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), step_str(&it.description)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::DesignContext(id) => {
                 let it = self.model.design_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -28951,7 +28949,7 @@ impl<'a> Writer<'a> {
                     .dimensional_characteristic_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -28967,7 +28965,7 @@ impl<'a> Writer<'a> {
             EntityKey::DimensionalExponents(id) => {
                 let it = self.model.dimensional_exponents_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     real(it.length_exponent),
                     real(it.mass_exponent),
@@ -28982,7 +28980,7 @@ impl<'a> Writer<'a> {
             EntityKey::DimensionalLocation(id) => {
                 let it = self.model.dimensional_location_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29000,7 +28998,7 @@ impl<'a> Writer<'a> {
             EntityKey::DimensionalLocationWithPath(id) => {
                 let it = self.model.dimensional_location_with_path_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29019,7 +29017,7 @@ impl<'a> Writer<'a> {
             EntityKey::DimensionalSize(id) => {
                 let it = self.model.dimensional_size_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
                     step_str(&it.name),
@@ -29032,7 +29030,7 @@ impl<'a> Writer<'a> {
                     .dimensional_size_with_datum_feature_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29049,7 +29047,7 @@ impl<'a> Writer<'a> {
             EntityKey::DimensionalSizeWithPath(id) => {
                 let it = self.model.dimensional_size_with_path_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_shape_aspect(&it.applies_to)),
                     step_str(&it.name),
@@ -29060,7 +29058,7 @@ impl<'a> Writer<'a> {
             EntityKey::DirectedDimensionalLocation(id) => {
                 let it = self.model.directed_dimensional_location_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29078,7 +29076,7 @@ impl<'a> Writer<'a> {
             EntityKey::Direction(id) => {
                 let it = self.model.direction_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29095,7 +29093,7 @@ impl<'a> Writer<'a> {
             EntityKey::Document(id) => {
                 let it = self.model.document_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -29110,7 +29108,7 @@ impl<'a> Writer<'a> {
             EntityKey::DocumentFile(id) => {
                 let it = self.model.document_file_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -29130,7 +29128,7 @@ impl<'a> Writer<'a> {
             EntityKey::DocumentProductAssociation(id) => {
                 let it = self.model.document_product_association_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29148,7 +29146,7 @@ impl<'a> Writer<'a> {
             EntityKey::DocumentProductEquivalence(id) => {
                 let it = self.model.document_product_equivalence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29166,7 +29164,7 @@ impl<'a> Writer<'a> {
             EntityKey::DocumentReference(id) => {
                 let it = self.model.document_reference_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_document(&it.assigned_document)),
                     step_str(&it.source),
@@ -29176,7 +29174,7 @@ impl<'a> Writer<'a> {
             EntityKey::DocumentRepresentationType(id) => {
                 let it = self.model.document_representation_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_document(&it.represented_document)),
@@ -29186,14 +29184,14 @@ impl<'a> Writer<'a> {
             EntityKey::DocumentType(id) => {
                 let it = self.model.document_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.product_data_type)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::DraughtingAnnotationOccurrence(id) => {
                 let it = self.model.draughting_annotation_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29214,7 +29212,7 @@ impl<'a> Writer<'a> {
             EntityKey::DraughtingCallout(id) => {
                 let it = self.model.draughting_callout_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29231,7 +29229,7 @@ impl<'a> Writer<'a> {
             EntityKey::DraughtingCalloutRelationship(id) => {
                 let it = self.model.draughting_callout_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -29249,7 +29247,7 @@ impl<'a> Writer<'a> {
             EntityKey::DraughtingModel(id) => {
                 let it = self.model.draughting_model_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29270,7 +29268,7 @@ impl<'a> Writer<'a> {
             EntityKey::DraughtingModelItemAssociation(id) => {
                 let it = self.model.draughting_model_item_association_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29300,7 +29298,7 @@ impl<'a> Writer<'a> {
                     .draughting_model_item_association_with_placeholder_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29333,28 +29331,28 @@ impl<'a> Writer<'a> {
             EntityKey::DraughtingPreDefinedColour(id) => {
                 let it = self.model.draughting_pre_defined_colour_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::DraughtingPreDefinedCurveFont(id) => {
                 let it = self.model.draughting_pre_defined_curve_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::DraughtingPreDefinedTextFont(id) => {
                 let it = self.model.draughting_pre_defined_text_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::Edge(id) => {
                 let it = self.model.edge_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.edge_start {
@@ -29371,7 +29369,7 @@ impl<'a> Writer<'a> {
             EntityKey::EdgeCurve(id) => {
                 let it = self.model.edge_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vertex(&it.edge_start)),
@@ -29384,7 +29382,7 @@ impl<'a> Writer<'a> {
             EntityKey::EdgeLoop(id) => {
                 let it = self.model.edge_loop_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29401,14 +29399,14 @@ impl<'a> Writer<'a> {
             EntityKey::Effectivity(id) => {
                 let it = self.model.effectivity_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.id)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ElementarySurface(id) => {
                 let it = self.model.elementary_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -29418,7 +29416,7 @@ impl<'a> Writer<'a> {
             EntityKey::Ellipse(id) => {
                 let it = self.model.ellipse_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
@@ -29429,7 +29427,7 @@ impl<'a> Writer<'a> {
             }
             EntityKey::Expression(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -29439,7 +29437,7 @@ impl<'a> Writer<'a> {
                     .external_identification_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.assigned_id),
                     format!("#{}", self.id_of_ref_identification_role(&it.role)),
@@ -29450,7 +29448,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternalSource(id) => {
                 let it = self.model.external_source_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![string_select(&it.source_id)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -29460,7 +29458,7 @@ impl<'a> Writer<'a> {
                     .externally_defined_character_glyph_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29470,7 +29468,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedCurveFont(id) => {
                 let it = self.model.externally_defined_curve_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29480,7 +29478,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedHatchStyle(id) => {
                 let it = self.model.externally_defined_hatch_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29491,7 +29489,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedItem(id) => {
                 let it = self.model.externally_defined_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29501,7 +29499,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedStyle(id) => {
                 let it = self.model.externally_defined_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29511,7 +29509,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedSymbol(id) => {
                 let it = self.model.externally_defined_symbol_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29521,7 +29519,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedTextFont(id) => {
                 let it = self.model.externally_defined_text_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29531,7 +29529,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedTile(id) => {
                 let it = self.model.externally_defined_tile_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29541,7 +29539,7 @@ impl<'a> Writer<'a> {
             EntityKey::ExternallyDefinedTileStyle(id) => {
                 let it = self.model.externally_defined_tile_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     string_select(&it.item_id),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
@@ -29552,7 +29550,7 @@ impl<'a> Writer<'a> {
             EntityKey::Face(id) => {
                 let it = self.model.face_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29569,7 +29567,7 @@ impl<'a> Writer<'a> {
             EntityKey::FaceBound(id) => {
                 let it = self.model.face_bound_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_loop(&it.bound)),
@@ -29580,7 +29578,7 @@ impl<'a> Writer<'a> {
             EntityKey::FaceOuterBound(id) => {
                 let it = self.model.face_outer_bound_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_loop(&it.bound)),
@@ -29591,7 +29589,7 @@ impl<'a> Writer<'a> {
             EntityKey::FaceSurface(id) => {
                 let it = self.model.face_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29613,7 +29611,7 @@ impl<'a> Writer<'a> {
                     .feature_for_datum_target_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29631,7 +29629,7 @@ impl<'a> Writer<'a> {
             EntityKey::FillAreaStyle(id) => {
                 let it = self.model.fill_area_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29648,7 +29646,7 @@ impl<'a> Writer<'a> {
             EntityKey::FillAreaStyleColour(id) => {
                 let it = self.model.fill_area_style_colour_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_colour(&it.fill_colour)),
@@ -29658,7 +29656,7 @@ impl<'a> Writer<'a> {
             EntityKey::FillAreaStyleHatching(id) => {
                 let it = self.model.fill_area_style_hatching_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve_style(&it.hatch_line_appearance)),
@@ -29681,7 +29679,7 @@ impl<'a> Writer<'a> {
                     .fill_area_style_tile_coloured_region_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29698,7 +29696,7 @@ impl<'a> Writer<'a> {
                     .fill_area_style_tile_curve_with_style_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29714,7 +29712,7 @@ impl<'a> Writer<'a> {
                     .fill_area_style_tile_symbol_with_style_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29727,7 +29725,7 @@ impl<'a> Writer<'a> {
             EntityKey::FillAreaStyleTiles(id) => {
                 let it = self.model.fill_area_style_tiles_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29752,7 +29750,7 @@ impl<'a> Writer<'a> {
             EntityKey::FlatnessTolerance(id) => {
                 let it = self.model.flatness_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29772,7 +29770,7 @@ impl<'a> Writer<'a> {
             }
             EntityKey::FoundedItem(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -29782,7 +29780,7 @@ impl<'a> Writer<'a> {
                     .functionally_defined_transformation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29795,7 +29793,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeneralDatumReference(id) => {
                 let it = self.model.general_datum_reference_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29837,7 +29835,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeneralProperty(id) => {
                 let it = self.model.general_property_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -29851,7 +29849,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeneralPropertyAssociation(id) => {
                 let it = self.model.general_property_association_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29868,13 +29866,13 @@ impl<'a> Writer<'a> {
             }
             EntityKey::GenericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::GenericLiteral(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -29884,7 +29882,7 @@ impl<'a> Writer<'a> {
                     .generic_product_definition_reference_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_external_source(&it.source))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -29892,7 +29890,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricCurveSet(id) => {
                 let it = self.model.geometric_curve_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29909,7 +29907,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricItemSpecificUsage(id) => {
                 let it = self.model.geometric_item_specific_usage_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29931,7 +29929,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricRepresentationContext(id) => {
                 let it = self.model.geometric_representation_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.context_identifier),
                     step_str(&it.context_type),
@@ -29942,14 +29940,14 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricRepresentationItem(id) => {
                 let it = self.model.geometric_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::GeometricSet(id) => {
                 let it = self.model.geometric_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -29966,7 +29964,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricTolerance(id) => {
                 let it = self.model.geometric_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -29987,7 +29985,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricToleranceRelationship(id) => {
                 let it = self.model.geometric_tolerance_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -30008,7 +30006,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_datum_reference_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30040,7 +30038,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_defined_area_unit_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30078,7 +30076,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_defined_unit_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30108,7 +30106,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_maximum_tolerance_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30144,7 +30142,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_modifiers_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30176,7 +30174,7 @@ impl<'a> Writer<'a> {
                     .geometrically_bounded_surface_shape_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30200,7 +30198,7 @@ impl<'a> Writer<'a> {
                     .geometrically_bounded_wireframe_shape_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30224,7 +30222,7 @@ impl<'a> Writer<'a> {
                     .global_uncertainty_assigned_context_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.context_identifier),
                     step_str(&it.context_type),
@@ -30245,7 +30243,7 @@ impl<'a> Writer<'a> {
             EntityKey::GlobalUnitAssignedContext(id) => {
                 let it = self.model.global_unit_assigned_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.context_identifier),
                     step_str(&it.context_type),
@@ -30263,7 +30261,7 @@ impl<'a> Writer<'a> {
             EntityKey::Group(id) => {
                 let it = self.model.group_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30276,7 +30274,7 @@ impl<'a> Writer<'a> {
             EntityKey::GroupAssignment(id) => {
                 let it = self.model.group_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_group(&it.assigned_group))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -30284,7 +30282,7 @@ impl<'a> Writer<'a> {
             EntityKey::Hyperbola(id) => {
                 let it = self.model.hyperbola_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
@@ -30296,7 +30294,7 @@ impl<'a> Writer<'a> {
             EntityKey::IdAttribute(id) => {
                 let it = self.model.id_attribute_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.attribute_value),
                     format!(
@@ -30309,7 +30307,7 @@ impl<'a> Writer<'a> {
             EntityKey::IdentificationAssignment(id) => {
                 let it = self.model.identification_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.assigned_id),
                     format!("#{}", self.id_of_ref_identification_role(&it.role)),
@@ -30319,7 +30317,7 @@ impl<'a> Writer<'a> {
             EntityKey::IdentificationRole(id) => {
                 let it = self.model.identification_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30332,21 +30330,21 @@ impl<'a> Writer<'a> {
             EntityKey::IntLiteral(id) => {
                 let it = self.model.int_literal_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!("{}", it.the_value)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::IntegerRepresentationItem(id) => {
                 let it = self.model.integer_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), format!("{}", it.the_value)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::IntersectionCurve(id) => {
                 let it = self.model.intersection_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -30365,7 +30363,7 @@ impl<'a> Writer<'a> {
             EntityKey::Invisibility(id) => {
                 let it = self.model.invisibility_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.invisible_items
@@ -30379,7 +30377,7 @@ impl<'a> Writer<'a> {
             EntityKey::ItemDefinedTransformation(id) => {
                 let it = self.model.item_defined_transformation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30403,7 +30401,7 @@ impl<'a> Writer<'a> {
                     .item_identified_representation_usage_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30450,7 +30448,7 @@ impl<'a> Writer<'a> {
             EntityKey::LeaderCurve(id) => {
                 let it = self.model.leader_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30471,7 +30469,7 @@ impl<'a> Writer<'a> {
             EntityKey::LeaderDirectedCallout(id) => {
                 let it = self.model.leader_directed_callout_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30488,7 +30486,7 @@ impl<'a> Writer<'a> {
             EntityKey::LeaderTerminator(id) => {
                 let it = self.model.leader_terminator_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30516,7 +30514,7 @@ impl<'a> Writer<'a> {
             EntityKey::LengthMeasureWithUnit(id) => {
                 let it = self.model.length_measure_with_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
@@ -30526,7 +30524,7 @@ impl<'a> Writer<'a> {
             EntityKey::LengthUnit(id) => {
                 let it = self.model.length_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
@@ -30536,7 +30534,7 @@ impl<'a> Writer<'a> {
             EntityKey::LimitsAndFits(id) => {
                 let it = self.model.limits_and_fits_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.form_variance),
                     step_str(&it.zone_variance),
@@ -30548,7 +30546,7 @@ impl<'a> Writer<'a> {
             EntityKey::Line(id) => {
                 let it = self.model.line_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.pnt)),
@@ -30559,7 +30557,7 @@ impl<'a> Writer<'a> {
             EntityKey::LineProfileTolerance(id) => {
                 let it = self.model.line_profile_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30580,14 +30578,14 @@ impl<'a> Writer<'a> {
             EntityKey::LiteralNumber(id) => {
                 let it = self.model.literal_number_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![real(it.the_value)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::LocalTime(id) => {
                 let it = self.model.local_time_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("{}", it.hour_component),
                     match &it.minute_component {
@@ -30608,14 +30606,14 @@ impl<'a> Writer<'a> {
             EntityKey::Loop(id) => {
                 let it = self.model.loop_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::MakeFromUsageOption(id) => {
                 let it = self.model.make_from_usage_option_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -30644,7 +30642,7 @@ impl<'a> Writer<'a> {
             EntityKey::ManifoldSolidBrep(id) => {
                 let it = self.model.manifold_solid_brep_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_closed_shell(&it.outer)),
@@ -30657,7 +30655,7 @@ impl<'a> Writer<'a> {
                     .manifold_surface_shape_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30678,7 +30676,7 @@ impl<'a> Writer<'a> {
             EntityKey::MappedItem(id) => {
                 let it = self.model.mapped_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
@@ -30692,7 +30690,7 @@ impl<'a> Writer<'a> {
             EntityKey::MassMeasureWithUnit(id) => {
                 let it = self.model.mass_measure_with_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
@@ -30702,7 +30700,7 @@ impl<'a> Writer<'a> {
             EntityKey::MassUnit(id) => {
                 let it = self.model.mass_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
@@ -30712,7 +30710,7 @@ impl<'a> Writer<'a> {
             EntityKey::MeasureQualification(id) => {
                 let it = self.model.measure_qualification_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -30734,7 +30732,7 @@ impl<'a> Writer<'a> {
             EntityKey::MeasureRepresentationItem(id) => {
                 let it = self.model.measure_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     measure(&it.value_component),
@@ -30745,7 +30743,7 @@ impl<'a> Writer<'a> {
             EntityKey::MeasureWithUnit(id) => {
                 let it = self.model.measure_with_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
@@ -30755,7 +30753,7 @@ impl<'a> Writer<'a> {
             EntityKey::MechanicalContext(id) => {
                 let it = self.model.mechanical_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30772,7 +30770,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_and_draughting_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30800,7 +30798,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_geometric_presentation_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30824,7 +30822,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_presentation_representation_with_draughting_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30848,7 +30846,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_shaded_presentation_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -30869,7 +30867,7 @@ impl<'a> Writer<'a> {
             EntityKey::ModelGeometricView(id) => {
                 let it = self.model.model_geometric_view_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30884,7 +30882,7 @@ impl<'a> Writer<'a> {
             EntityKey::ModifiedGeometricTolerance(id) => {
                 let it = self.model.modified_geometric_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30906,7 +30904,7 @@ impl<'a> Writer<'a> {
             EntityKey::NameAttribute(id) => {
                 let it = self.model.name_attribute_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.attribute_value),
                     format!("#{}", self.id_of_ref_name_attribute_select(&it.named_item)),
@@ -30916,7 +30914,7 @@ impl<'a> Writer<'a> {
             EntityKey::NamedUnit(id) => {
                 let it = self.model.named_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![match &it.dimensions {
                     Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)),
                     None => "*".to_string(),
@@ -30926,7 +30924,7 @@ impl<'a> Writer<'a> {
             EntityKey::NextAssemblyUsageOccurrence(id) => {
                 let it = self.model.next_assembly_usage_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -30955,14 +30953,14 @@ impl<'a> Writer<'a> {
             }
             EntityKey::NumericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ObjectRole(id) => {
                 let it = self.model.object_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -30975,7 +30973,7 @@ impl<'a> Writer<'a> {
             EntityKey::OffsetSurface(id) => {
                 let it = self.model.offset_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_surface(&it.basis_surface)),
@@ -30987,7 +30985,7 @@ impl<'a> Writer<'a> {
             EntityKey::OneDirectionRepeatFactor(id) => {
                 let it = self.model.one_direction_repeat_factor_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vector(&it.repeat_factor)),
@@ -30997,7 +30995,7 @@ impl<'a> Writer<'a> {
             EntityKey::OpenShell(id) => {
                 let it = self.model.open_shell_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31014,7 +31012,7 @@ impl<'a> Writer<'a> {
             EntityKey::Organization(id) => {
                 let it = self.model.organization_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     match &it.id {
                         Some(x) => step_str(x),
@@ -31031,7 +31029,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrganizationRelationship(id) => {
                 let it = self.model.organization_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31049,14 +31047,14 @@ impl<'a> Writer<'a> {
             EntityKey::OrganizationRole(id) => {
                 let it = self.model.organization_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::OrganizationType(id) => {
                 let it = self.model.organization_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -31070,7 +31068,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrganizationTypeRole(id) => {
                 let it = self.model.organization_type_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -31084,7 +31082,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrganizationalAddress(id) => {
                 let it = self.model.organizational_address_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -31152,7 +31150,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrganizationalProject(id) => {
                 let it = self.model.organizational_project_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31176,7 +31174,7 @@ impl<'a> Writer<'a> {
                     .organizational_project_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31197,7 +31195,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrganizationalProjectRole(id) => {
                 let it = self.model.organizational_project_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31210,7 +31208,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrientedClosedShell(id) => {
                 let it = self.model.oriented_closed_shell_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     "*".to_string(),
@@ -31222,7 +31220,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrientedEdge(id) => {
                 let it = self.model.oriented_edge_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     "*".to_string(),
@@ -31235,7 +31233,7 @@ impl<'a> Writer<'a> {
             EntityKey::OverRidingStyledItem(id) => {
                 let it = self.model.over_riding_styled_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31257,7 +31255,7 @@ impl<'a> Writer<'a> {
             EntityKey::ParallelismTolerance(id) => {
                 let it = self.model.parallelism_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31286,7 +31284,7 @@ impl<'a> Writer<'a> {
             EntityKey::ParametricRepresentationContext(id) => {
                 let it = self.model.parametric_representation_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.context_identifier), step_str(&it.context_type)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -31294,7 +31292,7 @@ impl<'a> Writer<'a> {
             EntityKey::Path(id) => {
                 let it = self.model.path_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31311,7 +31309,7 @@ impl<'a> Writer<'a> {
             EntityKey::Pcurve(id) => {
                 let it = self.model.pcurve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_surface(&it.basis_surface)),
@@ -31325,7 +31323,7 @@ impl<'a> Writer<'a> {
             EntityKey::PerpendicularityTolerance(id) => {
                 let it = self.model.perpendicularity_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31354,7 +31352,7 @@ impl<'a> Writer<'a> {
             EntityKey::Person(id) => {
                 let it = self.model.person_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.last_name {
@@ -31392,7 +31390,7 @@ impl<'a> Writer<'a> {
             EntityKey::PersonAndOrganization(id) => {
                 let it = self.model.person_and_organization_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_person(&it.the_person)),
                     format!("#{}", self.id_of_ref_organization(&it.the_organization)),
@@ -31402,7 +31400,7 @@ impl<'a> Writer<'a> {
             EntityKey::PersonAndOrganizationAddress(id) => {
                 let it = self.model.person_and_organization_address_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -31485,7 +31483,7 @@ impl<'a> Writer<'a> {
                     .person_and_organization_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -31500,14 +31498,14 @@ impl<'a> Writer<'a> {
             EntityKey::PersonAndOrganizationRole(id) => {
                 let it = self.model.person_and_organization_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PersonalAddress(id) => {
                 let it = self.model.personal_address_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     match &it.internal_location {
                         Some(x) => step_str(x),
@@ -31575,7 +31573,7 @@ impl<'a> Writer<'a> {
             EntityKey::PlacedDatumTargetFeature(id) => {
                 let it = self.model.placed_datum_target_feature_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31591,7 +31589,7 @@ impl<'a> Writer<'a> {
             EntityKey::Placement(id) => {
                 let it = self.model.placement_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.location)),
@@ -31601,7 +31599,7 @@ impl<'a> Writer<'a> {
             EntityKey::PlanarBox(id) => {
                 let it = self.model.planar_box_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     real(it.size_in_x),
@@ -31613,7 +31611,7 @@ impl<'a> Writer<'a> {
             EntityKey::PlanarExtent(id) => {
                 let it = self.model.planar_extent_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.name), real(it.size_in_x), real(it.size_in_y)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -31621,7 +31619,7 @@ impl<'a> Writer<'a> {
             EntityKey::Plane(id) => {
                 let it = self.model.plane_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -31631,7 +31629,7 @@ impl<'a> Writer<'a> {
             EntityKey::PlaneAngleMeasureWithUnit(id) => {
                 let it = self.model.plane_angle_measure_with_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
@@ -31641,7 +31639,7 @@ impl<'a> Writer<'a> {
             EntityKey::PlaneAngleUnit(id) => {
                 let it = self.model.plane_angle_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
@@ -31651,7 +31649,7 @@ impl<'a> Writer<'a> {
             EntityKey::PlusMinusTolerance(id) => {
                 let it = self.model.plus_minus_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_tolerance_method_definition(&it.range)),
                     format!(
@@ -31664,14 +31662,14 @@ impl<'a> Writer<'a> {
             EntityKey::Point(id) => {
                 let it = self.model.point_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PointStyle(id) => {
                 let it = self.model.point_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.marker {
@@ -31703,7 +31701,7 @@ impl<'a> Writer<'a> {
             EntityKey::PolyLoop(id) => {
                 let it = self.model.poly_loop_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31720,7 +31718,7 @@ impl<'a> Writer<'a> {
             EntityKey::Polyline(id) => {
                 let it = self.model.polyline_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31737,7 +31735,7 @@ impl<'a> Writer<'a> {
             EntityKey::PositionTolerance(id) => {
                 let it = self.model.position_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -31758,98 +31756,98 @@ impl<'a> Writer<'a> {
             EntityKey::PreDefinedCharacterGlyph(id) => {
                 let it = self.model.pre_defined_character_glyph_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedColour(id) => {
                 let it = self.model.pre_defined_colour_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedCurveFont(id) => {
                 let it = self.model.pre_defined_curve_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedItem(id) => {
                 let it = self.model.pre_defined_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedMarker(id) => {
                 let it = self.model.pre_defined_marker_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedPointMarkerSymbol(id) => {
                 let it = self.model.pre_defined_point_marker_symbol_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedPresentationStyle(id) => {
                 let it = self.model.pre_defined_presentation_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedSurfaceSideStyle(id) => {
                 let it = self.model.pre_defined_surface_side_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedSymbol(id) => {
                 let it = self.model.pre_defined_symbol_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedTerminatorSymbol(id) => {
                 let it = self.model.pre_defined_terminator_symbol_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedTextFont(id) => {
                 let it = self.model.pre_defined_text_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PreDefinedTile(id) => {
                 let it = self.model.pre_defined_tile_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PrecisionQualifier(id) => {
                 let it = self.model.precision_qualifier_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!("{}", it.precision_value)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PresentationArea(id) => {
                 let it = self.model.presentation_area_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31870,7 +31868,7 @@ impl<'a> Writer<'a> {
             EntityKey::PresentationLayerAssignment(id) => {
                 let it = self.model.presentation_layer_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -31888,7 +31886,7 @@ impl<'a> Writer<'a> {
             EntityKey::PresentationRepresentation(id) => {
                 let it = self.model.presentation_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31908,14 +31906,14 @@ impl<'a> Writer<'a> {
             }
             EntityKey::PresentationSet(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PresentationSize(id) => {
                 let it = self.model.presentation_size_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -31928,7 +31926,7 @@ impl<'a> Writer<'a> {
             EntityKey::PresentationStyleAssignment(id) => {
                 let it = self.model.presentation_style_assignment_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.styles
@@ -31947,7 +31945,7 @@ impl<'a> Writer<'a> {
             EntityKey::PresentationStyleByContext(id) => {
                 let it = self.model.presentation_style_by_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "({})",
@@ -31972,7 +31970,7 @@ impl<'a> Writer<'a> {
             EntityKey::PresentationView(id) => {
                 let it = self.model.presentation_view_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -31992,14 +31990,14 @@ impl<'a> Writer<'a> {
             }
             EntityKey::PresentedItem(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::PresentedItemRepresentation(id) => {
                 let it = self.model.presented_item_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -32012,7 +32010,7 @@ impl<'a> Writer<'a> {
             EntityKey::Product(id) => {
                 let it = self.model.product_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -32034,7 +32032,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductCategory(id) => {
                 let it = self.model.product_category_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32047,7 +32045,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductCategoryRelationship(id) => {
                 let it = self.model.product_category_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32062,7 +32060,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductConcept(id) => {
                 let it = self.model.product_concept_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -32080,7 +32078,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductConceptContext(id) => {
                 let it = self.model.product_concept_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32094,7 +32092,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductConceptFeature(id) => {
                 let it = self.model.product_concept_feature_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -32108,7 +32106,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductConceptFeatureCategory(id) => {
                 let it = self.model.product_concept_feature_category_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32121,7 +32119,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductContext(id) => {
                 let it = self.model.product_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32135,7 +32133,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinition(id) => {
                 let it = self.model.product_definition_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -32156,7 +32154,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionContext(id) => {
                 let it = self.model.product_definition_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32173,7 +32171,7 @@ impl<'a> Writer<'a> {
                     .product_definition_context_association_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_product_definition(&it.definition)),
                     format!(
@@ -32190,7 +32188,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionContextRole(id) => {
                 let it = self.model.product_definition_context_role_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32203,7 +32201,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionEffectivity(id) => {
                 let it = self.model.product_definition_effectivity_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     format!(
@@ -32216,7 +32214,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionFormation(id) => {
                 let it = self.model.product_definition_formation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -32233,7 +32231,7 @@ impl<'a> Writer<'a> {
                     .product_definition_formation_with_specified_source_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -32248,7 +32246,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionOccurrence(id) => {
                 let it = self.model.product_definition_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.name {
@@ -32275,7 +32273,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionRelationship(id) => {
                 let it = self.model.product_definition_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -32304,7 +32302,7 @@ impl<'a> Writer<'a> {
                     .product_definition_relationship_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -32326,7 +32324,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionShape(id) => {
                 let it = self.model.product_definition_shape_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32343,7 +32341,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionSubstitute(id) => {
                 let it = self.model.product_definition_substitute_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     match &it.description {
                         Some(x) => step_str(x),
@@ -32363,7 +32361,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductDefinitionUsage(id) => {
                 let it = self.model.product_definition_usage_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -32392,7 +32390,7 @@ impl<'a> Writer<'a> {
                     .product_definition_with_associated_documents_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.description {
@@ -32421,7 +32419,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProductRelatedProductCategory(id) => {
                 let it = self.model.product_related_product_category_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32442,7 +32440,7 @@ impl<'a> Writer<'a> {
             EntityKey::ProjectedZoneDefinition(id) => {
                 let it = self.model.projected_zone_definition_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_tolerance_zone(&it.zone)),
                     format!(
@@ -32464,7 +32462,7 @@ impl<'a> Writer<'a> {
             EntityKey::PropertyDefinition(id) => {
                 let it = self.model.property_definition_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32481,7 +32479,7 @@ impl<'a> Writer<'a> {
             EntityKey::PropertyDefinitionRelationship(id) => {
                 let it = self.model.property_definition_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -32502,7 +32500,7 @@ impl<'a> Writer<'a> {
                     .property_definition_representation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_represented_definition(&it.definition)),
                     format!(
@@ -32515,7 +32513,7 @@ impl<'a> Writer<'a> {
             EntityKey::QualifiedRepresentationItem(id) => {
                 let it = self.model.qualified_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32532,7 +32530,7 @@ impl<'a> Writer<'a> {
             EntityKey::QuasiUniformCurve(id) => {
                 let it = self.model.quasi_uniform_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -32553,7 +32551,7 @@ impl<'a> Writer<'a> {
             EntityKey::QuasiUniformSurface(id) => {
                 let it = self.model.quasi_uniform_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -32582,7 +32580,7 @@ impl<'a> Writer<'a> {
             EntityKey::RatioMeasureWithUnit(id) => {
                 let it = self.model.ratio_measure_with_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
@@ -32592,7 +32590,7 @@ impl<'a> Writer<'a> {
             EntityKey::RatioUnit(id) => {
                 let it = self.model.ratio_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
@@ -32602,7 +32600,7 @@ impl<'a> Writer<'a> {
             EntityKey::RationalBSplineCurve(id) => {
                 let it = self.model.rational_b_spline_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -32631,7 +32629,7 @@ impl<'a> Writer<'a> {
             EntityKey::RationalBSplineSurface(id) => {
                 let it = self.model.rational_b_spline_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -32671,21 +32669,21 @@ impl<'a> Writer<'a> {
             EntityKey::RealLiteral(id) => {
                 let it = self.model.real_literal_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![real(it.the_value)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::RealRepresentationItem(id) => {
                 let it = self.model.real_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), real(it.the_value)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::RepositionedTessellatedItem(id) => {
                 let it = self.model.repositioned_tessellated_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.location)),
@@ -32695,7 +32693,7 @@ impl<'a> Writer<'a> {
             EntityKey::Representation(id) => {
                 let it = self.model.representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -32716,7 +32714,7 @@ impl<'a> Writer<'a> {
             EntityKey::RepresentationContext(id) => {
                 let it = self.model.representation_context_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.context_identifier), step_str(&it.context_type)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -32724,21 +32722,21 @@ impl<'a> Writer<'a> {
             EntityKey::RepresentationContextReference(id) => {
                 let it = self.model.representation_context_reference_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.context_identifier)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::RepresentationItem(id) => {
                 let it = self.model.representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::RepresentationMap(id) => {
                 let it = self.model.representation_map_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -32754,7 +32752,7 @@ impl<'a> Writer<'a> {
             EntityKey::RepresentationReference(id) => {
                 let it = self.model.representation_reference_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     format!(
@@ -32767,7 +32765,7 @@ impl<'a> Writer<'a> {
             EntityKey::RepresentationRelationship(id) => {
                 let it = self.model.representation_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32791,7 +32789,7 @@ impl<'a> Writer<'a> {
                     .representation_relationship_with_transformation_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32835,7 +32833,7 @@ impl<'a> Writer<'a> {
             EntityKey::ResourceProperty(id) => {
                 let it = self.model.resource_property_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.description),
@@ -32849,14 +32847,14 @@ impl<'a> Writer<'a> {
             EntityKey::ResourceRequirementType(id) => {
                 let it = self.model.resource_requirement_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), step_str(&it.description)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::RoleAssociation(id) => {
                 let it = self.model.role_association_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_object_role(&it.role)),
                     format!("#{}", self.id_of_ref_role_select(&it.item_with_role)),
@@ -32866,7 +32864,7 @@ impl<'a> Writer<'a> {
             EntityKey::RoundnessTolerance(id) => {
                 let it = self.model.roundness_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32887,7 +32885,7 @@ impl<'a> Writer<'a> {
             EntityKey::SeamCurve(id) => {
                 let it = self.model.seam_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -32906,7 +32904,7 @@ impl<'a> Writer<'a> {
             EntityKey::SecurityClassification(id) => {
                 let it = self.model.security_classification_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.purpose),
@@ -32923,7 +32921,7 @@ impl<'a> Writer<'a> {
                     .security_classification_assignment_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_security_classification(&it.assigned_security_classification)
@@ -32933,14 +32931,14 @@ impl<'a> Writer<'a> {
             EntityKey::SecurityClassificationLevel(id) => {
                 let it = self.model.security_classification_level_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ShapeAspect(id) => {
                 let it = self.model.shape_aspect_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32958,7 +32956,7 @@ impl<'a> Writer<'a> {
             EntityKey::ShapeAspectAssociativity(id) => {
                 let it = self.model.shape_aspect_associativity_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32979,7 +32977,7 @@ impl<'a> Writer<'a> {
                     .shape_aspect_deriving_relationship_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -32997,7 +32995,7 @@ impl<'a> Writer<'a> {
             EntityKey::ShapeAspectRelationship(id) => {
                 let it = self.model.shape_aspect_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33015,7 +33013,7 @@ impl<'a> Writer<'a> {
             EntityKey::ShapeDefinitionRepresentation(id) => {
                 let it = self.model.shape_definition_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_represented_definition(&it.definition)),
                     format!(
@@ -33028,7 +33026,7 @@ impl<'a> Writer<'a> {
             EntityKey::ShapeDimensionRepresentation(id) => {
                 let it = self.model.shape_dimension_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33049,7 +33047,7 @@ impl<'a> Writer<'a> {
             EntityKey::ShapeRepresentation(id) => {
                 let it = self.model.shape_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33070,7 +33068,7 @@ impl<'a> Writer<'a> {
             EntityKey::ShapeRepresentationRelationship(id) => {
                 let it = self.model.shape_representation_relationship_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33094,7 +33092,7 @@ impl<'a> Writer<'a> {
                     .shape_representation_with_parameters_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33115,7 +33113,7 @@ impl<'a> Writer<'a> {
             EntityKey::ShellBasedSurfaceModel(id) => {
                 let it = self.model.shell_based_surface_model_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33132,7 +33130,7 @@ impl<'a> Writer<'a> {
             EntityKey::SiUnit(id) => {
                 let it = self.model.si_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     "*".to_string(),
                     match &it.prefix {
@@ -33145,20 +33143,20 @@ impl<'a> Writer<'a> {
             }
             EntityKey::SimpleGenericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::SimpleNumericExpression(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::SolidAngleUnit(id) => {
                 let it = self.model.solid_angle_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
@@ -33168,14 +33166,14 @@ impl<'a> Writer<'a> {
             EntityKey::SolidModel(id) => {
                 let it = self.model.solid_model_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::SphericalSurface(id) => {
                 let it = self.model.spherical_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -33186,7 +33184,7 @@ impl<'a> Writer<'a> {
             EntityKey::StartRequest(id) => {
                 let it = self.model.start_request_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -33206,7 +33204,7 @@ impl<'a> Writer<'a> {
             EntityKey::StartWork(id) => {
                 let it = self.model.start_work_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_action(&it.assigned_action)),
                     format!(
@@ -33223,7 +33221,7 @@ impl<'a> Writer<'a> {
             EntityKey::StateObserved(id) => {
                 let it = self.model.state_observed_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33236,7 +33234,7 @@ impl<'a> Writer<'a> {
             EntityKey::StateType(id) => {
                 let it = self.model.state_type_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33249,7 +33247,7 @@ impl<'a> Writer<'a> {
             EntityKey::StraightnessTolerance(id) => {
                 let it = self.model.straightness_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33270,7 +33268,7 @@ impl<'a> Writer<'a> {
             EntityKey::StyledItem(id) => {
                 let it = self.model.styled_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33291,14 +33289,14 @@ impl<'a> Writer<'a> {
             EntityKey::Surface(id) => {
                 let it = self.model.surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::SurfaceCurve(id) => {
                 let it = self.model.surface_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.curve_3d)),
@@ -33317,7 +33315,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceOfLinearExtrusion(id) => {
                 let it = self.model.surface_of_linear_extrusion_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.swept_curve)),
@@ -33328,7 +33326,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceOfRevolution(id) => {
                 let it = self.model.surface_of_revolution_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.swept_curve)),
@@ -33339,7 +33337,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceProfileTolerance(id) => {
                 let it = self.model.surface_profile_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33360,7 +33358,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceRenderingProperties(id) => {
                 let it = self.model.surface_rendering_properties_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_colour(&it.rendered_colour))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -33368,7 +33366,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceSideStyle(id) => {
                 let it = self.model.surface_side_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33385,7 +33383,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleBoundary(id) => {
                 let it = self.model.surface_style_boundary_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_boundary)
@@ -33395,7 +33393,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleControlGrid(id) => {
                 let it = self.model.surface_style_control_grid_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_control_grid)
@@ -33405,7 +33403,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleFillArea(id) => {
                 let it = self.model.surface_style_fill_area_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_fill_area_style(&it.fill_area)
@@ -33415,7 +33413,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleParameterLine(id) => {
                 let it = self.model.surface_style_parameter_line_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!(
                         "#{}",
@@ -33435,14 +33433,14 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleReflectanceAmbient(id) => {
                 let it = self.model.surface_style_reflectance_ambient_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![real(it.ambient_reflectance)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::SurfaceStyleRendering(id) => {
                 let it = self.model.surface_style_rendering_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.rendering_method.token().to_string(),
                     format!("#{}", self.id_of_ref_colour(&it.surface_colour)),
@@ -33455,7 +33453,7 @@ impl<'a> Writer<'a> {
                     .surface_style_rendering_with_properties_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.rendering_method.token().to_string(),
                     format!("#{}", self.id_of_ref_colour(&it.surface_colour)),
@@ -33473,7 +33471,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleSegmentationCurve(id) => {
                 let it = self.model.surface_style_segmentation_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_segmentation_curve)
@@ -33483,7 +33481,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleSilhouette(id) => {
                 let it = self.model.surface_style_silhouette_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_curve_or_render(&it.style_of_silhouette)
@@ -33493,14 +33491,14 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceStyleTransparent(id) => {
                 let it = self.model.surface_style_transparent_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![real(it.transparency)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::SurfaceStyleUsage(id) => {
                 let it = self.model.surface_style_usage_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.side.token().to_string(),
                     format!("#{}", self.id_of_ref_surface_side_style_select(&it.style)),
@@ -33510,7 +33508,7 @@ impl<'a> Writer<'a> {
             EntityKey::SweptSurface(id) => {
                 let it = self.model.swept_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.swept_curve)),
@@ -33520,7 +33518,7 @@ impl<'a> Writer<'a> {
             EntityKey::SymbolColour(id) => {
                 let it = self.model.symbol_colour_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_colour(&it.colour_of_symbol))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -33528,7 +33526,7 @@ impl<'a> Writer<'a> {
             EntityKey::SymbolRepresentation(id) => {
                 let it = self.model.symbol_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33549,7 +33547,7 @@ impl<'a> Writer<'a> {
             EntityKey::SymbolStyle(id) => {
                 let it = self.model.symbol_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33562,7 +33560,7 @@ impl<'a> Writer<'a> {
             EntityKey::SymbolTarget(id) => {
                 let it = self.model.symbol_target_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement(&it.placement)),
@@ -33574,7 +33572,7 @@ impl<'a> Writer<'a> {
             EntityKey::SymmetryTolerance(id) => {
                 let it = self.model.symmetry_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33603,7 +33601,7 @@ impl<'a> Writer<'a> {
             EntityKey::TerminatorSymbol(id) => {
                 let it = self.model.terminator_symbol_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33631,7 +33629,7 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedAnnotationOccurrence(id) => {
                 let it = self.model.tessellated_annotation_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33652,7 +33650,7 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedCurveSet(id) => {
                 let it = self.model.tessellated_curve_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -33673,7 +33671,7 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedFace(id) => {
                 let it = self.model.tessellated_face_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -33699,7 +33697,7 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedGeometricSet(id) => {
                 let it = self.model.tessellated_geometric_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33716,14 +33714,14 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedItem(id) => {
                 let it = self.model.tessellated_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::TessellatedShapeRepresentation(id) => {
                 let it = self.model.tessellated_shape_representation_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33744,7 +33742,7 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedShell(id) => {
                 let it = self.model.tessellated_shell_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33765,7 +33763,7 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedSolid(id) => {
                 let it = self.model.tessellated_solid_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33786,14 +33784,14 @@ impl<'a> Writer<'a> {
             EntityKey::TessellatedStructuredItem(id) => {
                 let it = self.model.tessellated_structured_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::TessellatedSurfaceSet(id) => {
                 let it = self.model.tessellated_surface_set_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_coordinates_list(&it.coordinates)),
@@ -33815,7 +33813,7 @@ impl<'a> Writer<'a> {
             EntityKey::TextFont(id) => {
                 let it = self.model.text_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     step_str(&it.name),
@@ -33826,7 +33824,7 @@ impl<'a> Writer<'a> {
             EntityKey::TextLiteral(id) => {
                 let it = self.model.text_literal_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     step_str(&it.literal),
@@ -33840,7 +33838,7 @@ impl<'a> Writer<'a> {
             EntityKey::TextStyle(id) => {
                 let it = self.model.text_style_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33853,7 +33851,7 @@ impl<'a> Writer<'a> {
             EntityKey::TextStyleForDefinedFont(id) => {
                 let it = self.model.text_style_for_defined_font_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![format!("#{}", self.id_of_ref_colour(&it.text_colour))];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -33864,7 +33862,7 @@ impl<'a> Writer<'a> {
                     .text_style_with_box_characteristics_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -33884,20 +33882,20 @@ impl<'a> Writer<'a> {
             }
             EntityKey::TextureStyleSpecification(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::TextureStyleTessellationSpecification(_) => {
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::TimeUnit(id) => {
                 let it = self.model.time_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "#{}",
                     self.id_of_ref_dimensional_exponents(&it.dimensions)
@@ -33907,7 +33905,7 @@ impl<'a> Writer<'a> {
             EntityKey::ToleranceValue(id) => {
                 let it = self.model.tolerance_value_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_measure_with_unit(&it.lower_bound)),
                     format!("#{}", self.id_of_ref_measure_with_unit(&it.upper_bound)),
@@ -33917,7 +33915,7 @@ impl<'a> Writer<'a> {
             EntityKey::ToleranceZone(id) => {
                 let it = self.model.tolerance_zone_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33941,7 +33939,7 @@ impl<'a> Writer<'a> {
             EntityKey::ToleranceZoneDefinition(id) => {
                 let it = self.model.tolerance_zone_definition_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_tolerance_zone(&it.zone)),
                     format!(
@@ -33958,14 +33956,14 @@ impl<'a> Writer<'a> {
             EntityKey::ToleranceZoneForm(id) => {
                 let it = self.model.tolerance_zone_form_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ToleranceZoneWithDatum(id) => {
                 let it = self.model.tolerance_zone_with_datum_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -33990,14 +33988,14 @@ impl<'a> Writer<'a> {
             EntityKey::TopologicalRepresentationItem(id) => {
                 let it = self.model.topological_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ToroidalSurface(id) => {
                 let it = self.model.toroidal_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_axis2_placement3d(&it.position)),
@@ -34009,7 +34007,7 @@ impl<'a> Writer<'a> {
             EntityKey::TotalRunoutTolerance(id) => {
                 let it = self.model.total_runout_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -34038,7 +34036,7 @@ impl<'a> Writer<'a> {
             EntityKey::TrimmedCurve(id) => {
                 let it = self.model.trimmed_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_curve(&it.basis_curve)),
@@ -34074,7 +34072,7 @@ impl<'a> Writer<'a> {
             EntityKey::TwoDirectionRepeatFactor(id) => {
                 let it = self.model.two_direction_repeat_factor_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vector(&it.repeat_factor)),
@@ -34085,14 +34083,14 @@ impl<'a> Writer<'a> {
             EntityKey::TypeQualifier(id) => {
                 let it = self.model.type_qualifier_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::UncertaintyMeasureWithUnit(id) => {
                 let it = self.model.uncertainty_measure_with_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     measure(&it.value_component),
                     format!("#{}", self.id_of_ref_unit(&it.unit_component)),
@@ -34107,7 +34105,7 @@ impl<'a> Writer<'a> {
             EntityKey::UncertaintyQualifier(id) => {
                 let it = self.model.uncertainty_qualifier_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> =
                     vec![step_str(&it.measure_name), step_str(&it.description)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -34118,7 +34116,7 @@ impl<'a> Writer<'a> {
                     .unequally_disposed_geometric_tolerance_arena
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     match &it.description {
@@ -34143,7 +34141,7 @@ impl<'a> Writer<'a> {
             EntityKey::UniformCurve(id) => {
                 let it = self.model.uniform_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.degree),
@@ -34164,7 +34162,7 @@ impl<'a> Writer<'a> {
             EntityKey::UniformSurface(id) => {
                 let it = self.model.uniform_surface_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("{}", it.u_degree),
@@ -34193,21 +34191,21 @@ impl<'a> Writer<'a> {
             EntityKey::ValueFormatTypeQualifier(id) => {
                 let it = self.model.value_format_type_qualifier_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.format_type)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ValueRepresentationItem(id) => {
                 let it = self.model.value_representation_item_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name), measure(&it.value_component)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::Vector(id) => {
                 let it = self.model.vector_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_direction(&it.orientation)),
@@ -34218,7 +34216,7 @@ impl<'a> Writer<'a> {
             EntityKey::VersionedActionRequest(id) => {
                 let it = self.model.versioned_action_request_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.id),
                     match &it.version {
@@ -34236,14 +34234,14 @@ impl<'a> Writer<'a> {
             EntityKey::Vertex(id) => {
                 let it = self.model.vertex_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![step_str(&it.name)];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::VertexLoop(id) => {
                 let it = self.model.vertex_loop_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vertex(&it.loop_vertex)),
@@ -34253,7 +34251,7 @@ impl<'a> Writer<'a> {
             EntityKey::VertexPoint(id) => {
                 let it = self.model.vertex_point_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_point(&it.vertex_geometry)),
@@ -34263,7 +34261,7 @@ impl<'a> Writer<'a> {
             EntityKey::VertexShell(id) => {
                 let it = self.model.vertex_shell_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!("#{}", self.id_of_ref_vertex_loop(&it.vertex_shell_extent)),
@@ -34273,7 +34271,7 @@ impl<'a> Writer<'a> {
             EntityKey::ViewVolume(id) => {
                 let it = self.model.view_volume_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     it.projection_type.token().to_string(),
                     format!("#{}", self.id_of_ref_cartesian_point(&it.projection_point)),
@@ -34300,7 +34298,7 @@ impl<'a> Writer<'a> {
             EntityKey::VolumeUnit(id) => {
                 let it = self.model.volume_unit_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![format!(
                     "({})",
                     it.elements
@@ -34314,7 +34312,7 @@ impl<'a> Writer<'a> {
             EntityKey::WireShell(id) => {
                 let it = self.model.wire_shell_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
-                let kw = self.render_kw(any);
+                let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(&it.name),
                     format!(
@@ -35272,13 +35270,6 @@ impl<'a> Writer<'a> {
             EntityKey::WireShell(_) => "WIRE_SHELL",
             EntityKey::ComplexUnit(_) => "",
         }
-    }
-
-    fn render_kw(&self, any: EntityKey) -> &'static str {
-        self.rename
-            .get(&any)
-            .copied()
-            .unwrap_or_else(|| Self::name_of(any))
     }
 
     pub(crate) fn all_ids(&self) -> Vec<EntityKey> {
@@ -37621,465 +37612,16 @@ impl<'a> Writer<'a> {
         roots
     }
 
-    pub(crate) fn part_name(p: &UnitPart) -> &'static str {
-        match p {
-            UnitPart::Action { .. } => "ACTION",
-            UnitPart::ActionMethod { .. } => "ACTION_METHOD",
-            UnitPart::ActionMethodRelationship { .. } => "ACTION_METHOD_RELATIONSHIP",
-            UnitPart::ActionRelationship { .. } => "ACTION_RELATIONSHIP",
-            UnitPart::ActionRequestAssignment { .. } => "ACTION_REQUEST_ASSIGNMENT",
-            UnitPart::ActionResource { .. } => "ACTION_RESOURCE",
-            UnitPart::ActionResourceRequirement { .. } => "ACTION_RESOURCE_REQUIREMENT",
-            UnitPart::Address { .. } => "ADDRESS",
-            UnitPart::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION",
-            UnitPart::AdvancedFace => "ADVANCED_FACE",
-            UnitPart::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE",
-            UnitPart::AnnotationFillAreaOccurrence { .. } => "ANNOTATION_FILL_AREA_OCCURRENCE",
-            UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE",
-            UnitPart::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
-            UnitPart::AnnotationOccurrenceRelationship { .. } => {
-                "ANNOTATION_OCCURRENCE_RELATIONSHIP"
-            }
-            UnitPart::AnnotationPlaceholderOccurrence { .. } => "ANNOTATION_PLACEHOLDER_OCCURRENCE",
-            UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { .. } => {
-                "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE"
-            }
-            UnitPart::AnnotationPlane { .. } => "ANNOTATION_PLANE",
-            UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL",
-            UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE",
-            UnitPart::AnnotationText => "ANNOTATION_TEXT",
-            UnitPart::AnnotationTextCharacter { .. } => "ANNOTATION_TEXT_CHARACTER",
-            UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE",
-            UnitPart::ApplicationContextElement { .. } => "APPLICATION_CONTEXT_ELEMENT",
-            UnitPart::AppliedApprovalAssignment { .. } => "APPLIED_APPROVAL_ASSIGNMENT",
-            UnitPart::AppliedDateAndTimeAssignment { .. } => "APPLIED_DATE_AND_TIME_ASSIGNMENT",
-            UnitPart::AppliedDocumentReference { .. } => "APPLIED_DOCUMENT_REFERENCE",
-            UnitPart::AppliedExternalIdentificationAssignment { .. } => {
-                "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT"
-            }
-            UnitPart::AppliedGroupAssignment { .. } => "APPLIED_GROUP_ASSIGNMENT",
-            UnitPart::AppliedPersonAndOrganizationAssignment { .. } => {
-                "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT"
-            }
-            UnitPart::AppliedPresentedItem { .. } => "APPLIED_PRESENTED_ITEM",
-            UnitPart::AppliedSecurityClassificationAssignment { .. } => {
-                "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT"
-            }
-            UnitPart::ApprovalAssignment { .. } => "APPROVAL_ASSIGNMENT",
-            UnitPart::AreaInSet { .. } => "AREA_IN_SET",
-            UnitPart::AscribableStateRelationship { .. } => "ASCRIBABLE_STATE_RELATIONSHIP",
-            UnitPart::AssemblyComponentUsage { .. } => "ASSEMBLY_COMPONENT_USAGE",
-            UnitPart::BSplineCurve { .. } => "B_SPLINE_CURVE",
-            UnitPart::BSplineCurveWithKnots { .. } => "B_SPLINE_CURVE_WITH_KNOTS",
-            UnitPart::BSplineSurface { .. } => "B_SPLINE_SURFACE",
-            UnitPart::BSplineSurfaceWithKnots { .. } => "B_SPLINE_SURFACE_WITH_KNOTS",
-            UnitPart::BezierCurve => "BEZIER_CURVE",
-            UnitPart::BezierSurface => "BEZIER_SURFACE",
-            UnitPart::BoundedCurve => "BOUNDED_CURVE",
-            UnitPart::BoundedPcurve => "BOUNDED_PCURVE",
-            UnitPart::BoundedSurface => "BOUNDED_SURFACE",
-            UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE",
-            UnitPart::BrepWithVoids { .. } => "BREP_WITH_VOIDS",
-            UnitPart::CameraImage => "CAMERA_IMAGE",
-            UnitPart::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE",
-            UnitPart::CameraModel => "CAMERA_MODEL",
-            UnitPart::CameraModelD3 { .. } => "CAMERA_MODEL_D3",
-            UnitPart::CameraModelD3MultiClipping { .. } => "CAMERA_MODEL_D3_MULTI_CLIPPING",
-            UnitPart::CameraModelD3WithHlhsr { .. } => "CAMERA_MODEL_D3_WITH_HLHSR",
-            UnitPart::CameraUsage => "CAMERA_USAGE",
-            UnitPart::CcDesignApproval { .. } => "CC_DESIGN_APPROVAL",
-            UnitPart::CcDesignDateAndTimeAssignment { .. } => "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
-            UnitPart::CcDesignPersonAndOrganizationAssignment { .. } => {
-                "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT"
-            }
-            UnitPart::CcDesignSecurityClassification { .. } => "CC_DESIGN_SECURITY_CLASSIFICATION",
-            UnitPart::ChangeRequest { .. } => "CHANGE_REQUEST",
-            UnitPart::CharacterGlyphStyleOutline { .. } => "CHARACTER_GLYPH_STYLE_OUTLINE",
-            UnitPart::CharacterGlyphStyleStroke { .. } => "CHARACTER_GLYPH_STYLE_STROKE",
-            UnitPart::CharacterizedItemWithinRepresentation { .. } => {
-                "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION"
-            }
-            UnitPart::CharacterizedObject { .. } => "CHARACTERIZED_OBJECT",
-            UnitPart::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION",
-            UnitPart::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE",
-            UnitPart::ClosedShell => "CLOSED_SHELL",
-            UnitPart::Colour => "COLOUR",
-            UnitPart::ColourRgb { .. } => "COLOUR_RGB",
-            UnitPart::ColourSpecification { .. } => "COLOUR_SPECIFICATION",
-            UnitPart::CommonDatum => "COMMON_DATUM",
-            UnitPart::CompositeCurve { .. } => "COMPOSITE_CURVE",
-            UnitPart::CompositeCurveSegment { .. } => "COMPOSITE_CURVE_SEGMENT",
-            UnitPart::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT",
-            UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT",
-            UnitPart::CompositeText { .. } => "COMPOSITE_TEXT",
-            UnitPart::CompoundRepresentationItem { .. } => "COMPOUND_REPRESENTATION_ITEM",
-            UnitPart::ConfigurationEffectivity { .. } => "CONFIGURATION_EFFECTIVITY",
-            UnitPart::ConfigurationItem { .. } => "CONFIGURATION_ITEM",
-            UnitPart::ConnectedFaceSet { .. } => "CONNECTED_FACE_SET",
-            UnitPart::ConstructiveGeometryRepresentationRelationship => {
-                "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP"
-            }
-            UnitPart::ContextDependentOverRidingStyledItem { .. } => {
-                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM"
-            }
-            UnitPart::ContextDependentUnit { .. } => "CONTEXT_DEPENDENT_UNIT",
-            UnitPart::ConversionBasedUnit { .. } => "CONVERSION_BASED_UNIT",
-            UnitPart::Curve => "CURVE",
-            UnitPart::CurveStyle { .. } => "CURVE_STYLE",
-            UnitPart::CurveStyleFont { .. } => "CURVE_STYLE_FONT",
-            UnitPart::CurveStyleFontAndScaling { .. } => "CURVE_STYLE_FONT_AND_SCALING",
-            UnitPart::CurveStyleFontPattern { .. } => "CURVE_STYLE_FONT_PATTERN",
-            UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE",
-            UnitPart::Date { .. } => "DATE",
-            UnitPart::DateAndTime { .. } => "DATE_AND_TIME",
-            UnitPart::DateAndTimeAssignment { .. } => "DATE_AND_TIME_ASSIGNMENT",
-            UnitPart::Datum { .. } => "DATUM",
-            UnitPart::DatumFeature => "DATUM_FEATURE",
-            UnitPart::DatumReference { .. } => "DATUM_REFERENCE",
-            UnitPart::DatumSystem { .. } => "DATUM_SYSTEM",
-            UnitPart::DatumTarget { .. } => "DATUM_TARGET",
-            UnitPart::DefaultModelGeometricView => "DEFAULT_MODEL_GEOMETRIC_VIEW",
-            UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION",
-            UnitPart::DefinitionalRepresentationRelationship => {
-                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP"
-            }
-            UnitPart::DefinitionalRepresentationRelationshipWithSameContext => {
-                "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT"
-            }
-            UnitPart::DegenerateToroidalSurface { .. } => "DEGENERATE_TOROIDAL_SURFACE",
-            UnitPart::DerivedUnit { .. } => "DERIVED_UNIT",
-            UnitPart::DesignContext => "DESIGN_CONTEXT",
-            UnitPart::DimensionalSize { .. } => "DIMENSIONAL_SIZE",
-            UnitPart::Direction { .. } => "DIRECTION",
-            UnitPart::Document { .. } => "DOCUMENT",
-            UnitPart::DocumentFile => "DOCUMENT_FILE",
-            UnitPart::DocumentProductAssociation { .. } => "DOCUMENT_PRODUCT_ASSOCIATION",
-            UnitPart::DocumentProductEquivalence => "DOCUMENT_PRODUCT_EQUIVALENCE",
-            UnitPart::DocumentReference { .. } => "DOCUMENT_REFERENCE",
-            UnitPart::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE",
-            UnitPart::DraughtingCallout { .. } => "DRAUGHTING_CALLOUT",
-            UnitPart::DraughtingCalloutRelationship { .. } => "DRAUGHTING_CALLOUT_RELATIONSHIP",
-            UnitPart::DraughtingModel => "DRAUGHTING_MODEL",
-            UnitPart::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
-            UnitPart::DraughtingModelItemAssociationWithPlaceholder { .. } => {
-                "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER"
-            }
-            UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR",
-            UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
-            UnitPart::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
-            UnitPart::Edge { .. } => "EDGE",
-            UnitPart::EdgeCurve { .. } => "EDGE_CURVE",
-            UnitPart::EdgeLoop => "EDGE_LOOP",
-            UnitPart::Effectivity { .. } => "EFFECTIVITY",
-            UnitPart::ElementarySurface { .. } => "ELEMENTARY_SURFACE",
-            UnitPart::Expression => "EXPRESSION",
-            UnitPart::ExternalIdentificationAssignment { .. } => {
-                "EXTERNAL_IDENTIFICATION_ASSIGNMENT"
-            }
-            UnitPart::ExternalSource { .. } => "EXTERNAL_SOURCE",
-            UnitPart::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
-            UnitPart::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT",
-            UnitPart::ExternallyDefinedHatchStyle => "EXTERNALLY_DEFINED_HATCH_STYLE",
-            UnitPart::ExternallyDefinedItem { .. } => "EXTERNALLY_DEFINED_ITEM",
-            UnitPart::ExternallyDefinedStyle => "EXTERNALLY_DEFINED_STYLE",
-            UnitPart::ExternallyDefinedSymbol => "EXTERNALLY_DEFINED_SYMBOL",
-            UnitPart::ExternallyDefinedTextFont => "EXTERNALLY_DEFINED_TEXT_FONT",
-            UnitPart::ExternallyDefinedTile => "EXTERNALLY_DEFINED_TILE",
-            UnitPart::ExternallyDefinedTileStyle => "EXTERNALLY_DEFINED_TILE_STYLE",
-            UnitPart::Face { .. } => "FACE",
-            UnitPart::FaceBound { .. } => "FACE_BOUND",
-            UnitPart::FaceOuterBound => "FACE_OUTER_BOUND",
-            UnitPart::FaceSurface { .. } => "FACE_SURFACE",
-            UnitPart::FillAreaStyle { .. } => "FILL_AREA_STYLE",
-            UnitPart::FillAreaStyleHatching { .. } => "FILL_AREA_STYLE_HATCHING",
-            UnitPart::FillAreaStyleTileSymbolWithStyle { .. } => {
-                "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE"
-            }
-            UnitPart::FillAreaStyleTiles { .. } => "FILL_AREA_STYLE_TILES",
-            UnitPart::FlatnessTolerance => "FLATNESS_TOLERANCE",
-            UnitPart::FoundedItem => "FOUNDED_ITEM",
-            UnitPart::FunctionallyDefinedTransformation { .. } => {
-                "FUNCTIONALLY_DEFINED_TRANSFORMATION"
-            }
-            UnitPart::GeneralDatumReference { .. } => "GENERAL_DATUM_REFERENCE",
-            UnitPart::GeneralProperty { .. } => "GENERAL_PROPERTY",
-            UnitPart::GenericExpression => "GENERIC_EXPRESSION",
-            UnitPart::GenericLiteral => "GENERIC_LITERAL",
-            UnitPart::GenericProductDefinitionReference { .. } => {
-                "GENERIC_PRODUCT_DEFINITION_REFERENCE"
-            }
-            UnitPart::GeometricCurveSet => "GEOMETRIC_CURVE_SET",
-            UnitPart::GeometricItemSpecificUsage => "GEOMETRIC_ITEM_SPECIFIC_USAGE",
-            UnitPart::GeometricRepresentationContext { .. } => "GEOMETRIC_REPRESENTATION_CONTEXT",
-            UnitPart::GeometricRepresentationItem => "GEOMETRIC_REPRESENTATION_ITEM",
-            UnitPart::GeometricSet { .. } => "GEOMETRIC_SET",
-            UnitPart::GeometricTolerance { .. } => "GEOMETRIC_TOLERANCE",
-            UnitPart::GeometricToleranceWithDatumReference { .. } => {
-                "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"
-            }
-            UnitPart::GeometricToleranceWithDefinedAreaUnit { .. } => {
-                "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"
-            }
-            UnitPart::GeometricToleranceWithDefinedUnit { .. } => {
-                "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"
-            }
-            UnitPart::GeometricToleranceWithMaximumTolerance { .. } => {
-                "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE"
-            }
-            UnitPart::GeometricToleranceWithModifiers { .. } => {
-                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS"
-            }
-            UnitPart::GeometricallyBoundedSurfaceShapeRepresentation => {
-                "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"
-            }
-            UnitPart::GeometricallyBoundedWireframeShapeRepresentation => {
-                "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"
-            }
-            UnitPart::GlobalUncertaintyAssignedContext { .. } => {
-                "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT"
-            }
-            UnitPart::GlobalUnitAssignedContext { .. } => "GLOBAL_UNIT_ASSIGNED_CONTEXT",
-            UnitPart::Group { .. } => "GROUP",
-            UnitPart::GroupAssignment { .. } => "GROUP_ASSIGNMENT",
-            UnitPart::IdentificationAssignment { .. } => "IDENTIFICATION_ASSIGNMENT",
-            UnitPart::IntLiteral => "INT_LITERAL",
-            UnitPart::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM",
-            UnitPart::IntersectionCurve => "INTERSECTION_CURVE",
-            UnitPart::Invisibility { .. } => "INVISIBILITY",
-            UnitPart::ItemDefinedTransformation { .. } => "ITEM_DEFINED_TRANSFORMATION",
-            UnitPart::ItemIdentifiedRepresentationUsage { .. } => {
-                "ITEM_IDENTIFIED_REPRESENTATION_USAGE"
-            }
-            UnitPart::LeaderCurve => "LEADER_CURVE",
-            UnitPart::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT",
-            UnitPart::LeaderTerminator => "LEADER_TERMINATOR",
-            UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT",
-            UnitPart::LengthUnit => "LENGTH_UNIT",
-            UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE",
-            UnitPart::LiteralNumber { .. } => "LITERAL_NUMBER",
-            UnitPart::Loop => "LOOP",
-            UnitPart::ManifoldSolidBrep { .. } => "MANIFOLD_SOLID_BREP",
-            UnitPart::ManifoldSurfaceShapeRepresentation => "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
-            UnitPart::MappedItem { .. } => "MAPPED_ITEM",
-            UnitPart::MassUnit => "MASS_UNIT",
-            UnitPart::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM",
-            UnitPart::MeasureWithUnit { .. } => "MEASURE_WITH_UNIT",
-            UnitPart::MechanicalContext => "MECHANICAL_CONTEXT",
-            UnitPart::MechanicalDesignAndDraughtingRelationship => {
-                "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP"
-            }
-            UnitPart::ModelGeometricView => "MODEL_GEOMETRIC_VIEW",
-            UnitPart::ModifiedGeometricTolerance { .. } => "MODIFIED_GEOMETRIC_TOLERANCE",
-            UnitPart::NamedUnit { .. } => "NAMED_UNIT",
-            UnitPart::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
-            UnitPart::NumericExpression => "NUMERIC_EXPRESSION",
-            UnitPart::OneDirectionRepeatFactor { .. } => "ONE_DIRECTION_REPEAT_FACTOR",
-            UnitPart::OpenShell => "OPEN_SHELL",
-            UnitPart::OrganizationalAddress { .. } => "ORGANIZATIONAL_ADDRESS",
-            UnitPart::OrientedClosedShell { .. } => "ORIENTED_CLOSED_SHELL",
-            UnitPart::OrientedEdge { .. } => "ORIENTED_EDGE",
-            UnitPart::OverRidingStyledItem { .. } => "OVER_RIDING_STYLED_ITEM",
-            UnitPart::ParallelismTolerance => "PARALLELISM_TOLERANCE",
-            UnitPart::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT",
-            UnitPart::Path { .. } => "PATH",
-            UnitPart::Pcurve { .. } => "PCURVE",
-            UnitPart::PerpendicularityTolerance => "PERPENDICULARITY_TOLERANCE",
-            UnitPart::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS",
-            UnitPart::PersonAndOrganizationAssignment { .. } => {
-                "PERSON_AND_ORGANIZATION_ASSIGNMENT"
-            }
-            UnitPart::PersonalAddress { .. } => "PERSONAL_ADDRESS",
-            UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE",
-            UnitPart::Placement { .. } => "PLACEMENT",
-            UnitPart::PlanarBox { .. } => "PLANAR_BOX",
-            UnitPart::PlanarExtent { .. } => "PLANAR_EXTENT",
-            UnitPart::PlaneAngleMeasureWithUnit => "PLANE_ANGLE_MEASURE_WITH_UNIT",
-            UnitPart::PlaneAngleUnit => "PLANE_ANGLE_UNIT",
-            UnitPart::Point => "POINT",
-            UnitPart::PointStyle { .. } => "POINT_STYLE",
-            UnitPart::PolyLoop { .. } => "POLY_LOOP",
-            UnitPart::PositionTolerance => "POSITION_TOLERANCE",
-            UnitPart::PreDefinedCharacterGlyph => "PRE_DEFINED_CHARACTER_GLYPH",
-            UnitPart::PreDefinedColour => "PRE_DEFINED_COLOUR",
-            UnitPart::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT",
-            UnitPart::PreDefinedItem { .. } => "PRE_DEFINED_ITEM",
-            UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER",
-            UnitPart::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL",
-            UnitPart::PreDefinedPresentationStyle => "PRE_DEFINED_PRESENTATION_STYLE",
-            UnitPart::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE",
-            UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL",
-            UnitPart::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL",
-            UnitPart::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT",
-            UnitPart::PreDefinedTile => "PRE_DEFINED_TILE",
-            UnitPart::PresentationArea => "PRESENTATION_AREA",
-            UnitPart::PresentationRepresentation => "PRESENTATION_REPRESENTATION",
-            UnitPart::PresentationSet => "PRESENTATION_SET",
-            UnitPart::PresentationStyleAssignment { .. } => "PRESENTATION_STYLE_ASSIGNMENT",
-            UnitPart::PresentationStyleByContext { .. } => "PRESENTATION_STYLE_BY_CONTEXT",
-            UnitPart::PresentationView => "PRESENTATION_VIEW",
-            UnitPart::PresentedItem => "PRESENTED_ITEM",
-            UnitPart::Product { .. } => "PRODUCT",
-            UnitPart::ProductCategory { .. } => "PRODUCT_CATEGORY",
-            UnitPart::ProductConcept { .. } => "PRODUCT_CONCEPT",
-            UnitPart::ProductConceptFeature { .. } => "PRODUCT_CONCEPT_FEATURE",
-            UnitPart::ProductConceptFeatureCategory => "PRODUCT_CONCEPT_FEATURE_CATEGORY",
-            UnitPart::ProductContext { .. } => "PRODUCT_CONTEXT",
-            UnitPart::ProductDefinition { .. } => "PRODUCT_DEFINITION",
-            UnitPart::ProductDefinitionContext { .. } => "PRODUCT_DEFINITION_CONTEXT",
-            UnitPart::ProductDefinitionEffectivity { .. } => "PRODUCT_DEFINITION_EFFECTIVITY",
-            UnitPart::ProductDefinitionFormation { .. } => "PRODUCT_DEFINITION_FORMATION",
-            UnitPart::ProductDefinitionFormationWithSpecifiedSource { .. } => {
-                "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE"
-            }
-            UnitPart::ProductDefinitionOccurrence { .. } => "PRODUCT_DEFINITION_OCCURRENCE",
-            UnitPart::ProductDefinitionRelationship { .. } => "PRODUCT_DEFINITION_RELATIONSHIP",
-            UnitPart::ProductDefinitionRelationshipRelationship { .. } => {
-                "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP"
-            }
-            UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE",
-            UnitPart::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE",
-            UnitPart::ProductDefinitionWithAssociatedDocuments { .. } => {
-                "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"
-            }
-            UnitPart::ProductRelatedProductCategory { .. } => "PRODUCT_RELATED_PRODUCT_CATEGORY",
-            UnitPart::ProjectedZoneDefinition { .. } => "PROJECTED_ZONE_DEFINITION",
-            UnitPart::PropertyDefinition { .. } => "PROPERTY_DEFINITION",
-            UnitPart::PropertyDefinitionRepresentation { .. } => {
-                "PROPERTY_DEFINITION_REPRESENTATION"
-            }
-            UnitPart::QualifiedRepresentationItem { .. } => "QUALIFIED_REPRESENTATION_ITEM",
-            UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE",
-            UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE",
-            UnitPart::RatioMeasureWithUnit => "RATIO_MEASURE_WITH_UNIT",
-            UnitPart::RatioUnit => "RATIO_UNIT",
-            UnitPart::RationalBSplineCurve { .. } => "RATIONAL_B_SPLINE_CURVE",
-            UnitPart::RationalBSplineSurface { .. } => "RATIONAL_B_SPLINE_SURFACE",
-            UnitPart::RealLiteral => "REAL_LITERAL",
-            UnitPart::RealRepresentationItem => "REAL_REPRESENTATION_ITEM",
-            UnitPart::RepositionedTessellatedItem { .. } => "REPOSITIONED_TESSELLATED_ITEM",
-            UnitPart::Representation { .. } => "REPRESENTATION",
-            UnitPart::RepresentationContext { .. } => "REPRESENTATION_CONTEXT",
-            UnitPart::RepresentationItem { .. } => "REPRESENTATION_ITEM",
-            UnitPart::RepresentationMap { .. } => "REPRESENTATION_MAP",
-            UnitPart::RepresentationReference { .. } => "REPRESENTATION_REFERENCE",
-            UnitPart::RepresentationRelationship { .. } => "REPRESENTATION_RELATIONSHIP",
-            UnitPart::RepresentationRelationshipWithTransformation { .. } => {
-                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION"
-            }
-            UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE",
-            UnitPart::SeamCurve => "SEAM_CURVE",
-            UnitPart::SecurityClassificationAssignment { .. } => {
-                "SECURITY_CLASSIFICATION_ASSIGNMENT"
-            }
-            UnitPart::ShapeAspect { .. } => "SHAPE_ASPECT",
-            UnitPart::ShapeAspectRelationship { .. } => "SHAPE_ASPECT_RELATIONSHIP",
-            UnitPart::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION",
-            UnitPart::ShapeDimensionRepresentation => "SHAPE_DIMENSION_REPRESENTATION",
-            UnitPart::ShapeRepresentation => "SHAPE_REPRESENTATION",
-            UnitPart::ShapeRepresentationRelationship => "SHAPE_REPRESENTATION_RELATIONSHIP",
-            UnitPart::ShapeRepresentationWithParameters => "SHAPE_REPRESENTATION_WITH_PARAMETERS",
-            UnitPart::ShellBasedSurfaceModel { .. } => "SHELL_BASED_SURFACE_MODEL",
-            UnitPart::SiUnit { .. } => "SI_UNIT",
-            UnitPart::SimpleGenericExpression => "SIMPLE_GENERIC_EXPRESSION",
-            UnitPart::SimpleNumericExpression => "SIMPLE_NUMERIC_EXPRESSION",
-            UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT",
-            UnitPart::SolidModel => "SOLID_MODEL",
-            UnitPart::StartRequest { .. } => "START_REQUEST",
-            UnitPart::StateObserved { .. } => "STATE_OBSERVED",
-            UnitPart::StateType { .. } => "STATE_TYPE",
-            UnitPart::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE",
-            UnitPart::StyledItem { .. } => "STYLED_ITEM",
-            UnitPart::Surface => "SURFACE",
-            UnitPart::SurfaceCurve { .. } => "SURFACE_CURVE",
-            UnitPart::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE",
-            UnitPart::SurfaceSideStyle { .. } => "SURFACE_SIDE_STYLE",
-            UnitPart::SurfaceStyleBoundary { .. } => "SURFACE_STYLE_BOUNDARY",
-            UnitPart::SurfaceStyleControlGrid { .. } => "SURFACE_STYLE_CONTROL_GRID",
-            UnitPart::SurfaceStyleFillArea { .. } => "SURFACE_STYLE_FILL_AREA",
-            UnitPart::SurfaceStyleParameterLine { .. } => "SURFACE_STYLE_PARAMETER_LINE",
-            UnitPart::SurfaceStyleReflectanceAmbient { .. } => "SURFACE_STYLE_REFLECTANCE_AMBIENT",
-            UnitPart::SurfaceStyleRendering { .. } => "SURFACE_STYLE_RENDERING",
-            UnitPart::SurfaceStyleRenderingWithProperties { .. } => {
-                "SURFACE_STYLE_RENDERING_WITH_PROPERTIES"
-            }
-            UnitPart::SurfaceStyleSegmentationCurve { .. } => "SURFACE_STYLE_SEGMENTATION_CURVE",
-            UnitPart::SurfaceStyleSilhouette { .. } => "SURFACE_STYLE_SILHOUETTE",
-            UnitPart::SurfaceStyleUsage { .. } => "SURFACE_STYLE_USAGE",
-            UnitPart::SymbolRepresentation => "SYMBOL_REPRESENTATION",
-            UnitPart::SymbolStyle { .. } => "SYMBOL_STYLE",
-            UnitPart::TerminatorSymbol { .. } => "TERMINATOR_SYMBOL",
-            UnitPart::TessellatedGeometricSet { .. } => "TESSELLATED_GEOMETRIC_SET",
-            UnitPart::TessellatedItem => "TESSELLATED_ITEM",
-            UnitPart::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION",
-            UnitPart::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM",
-            UnitPart::TextLiteral { .. } => "TEXT_LITERAL",
-            UnitPart::TextStyle { .. } => "TEXT_STYLE",
-            UnitPart::TextStyleWithBoxCharacteristics { .. } => {
-                "TEXT_STYLE_WITH_BOX_CHARACTERISTICS"
-            }
-            UnitPart::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION",
-            UnitPart::TextureStyleTessellationSpecification => {
-                "TEXTURE_STYLE_TESSELLATION_SPECIFICATION"
-            }
-            UnitPart::TimeUnit => "TIME_UNIT",
-            UnitPart::ToleranceZone { .. } => "TOLERANCE_ZONE",
-            UnitPart::ToleranceZoneDefinition { .. } => "TOLERANCE_ZONE_DEFINITION",
-            UnitPart::ToleranceZoneWithDatum { .. } => "TOLERANCE_ZONE_WITH_DATUM",
-            UnitPart::TopologicalRepresentationItem => "TOPOLOGICAL_REPRESENTATION_ITEM",
-            UnitPart::ToroidalSurface { .. } => "TOROIDAL_SURFACE",
-            UnitPart::TwoDirectionRepeatFactor { .. } => "TWO_DIRECTION_REPEAT_FACTOR",
-            UnitPart::UnequallyDisposedGeometricTolerance { .. } => {
-                "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"
-            }
-            UnitPart::UniformCurve => "UNIFORM_CURVE",
-            UnitPart::UniformSurface => "UNIFORM_SURFACE",
-            UnitPart::ValueRepresentationItem { .. } => "VALUE_REPRESENTATION_ITEM",
-            UnitPart::Vector { .. } => "VECTOR",
-            UnitPart::Vertex => "VERTEX",
-            UnitPart::VertexPoint { .. } => "VERTEX_POINT",
-            UnitPart::ViewVolume { .. } => "VIEW_VOLUME",
-        }
-    }
-
-    pub(crate) fn complex_legal(&self, id: ComplexUnitId, legal: &[&str]) -> bool {
-        self.model
-            .complex_unit_arena
-            .get(id.0)
-            .parts
-            .iter()
-            .all(|p| legal.binary_search(&Self::part_name(p)).is_ok())
-    }
-
     pub fn emit_all(self) -> String {
         let roots = self.all_ids();
-        self.dfs_render(roots, &std::collections::HashSet::new())
+        self.dfs_render(roots)
     }
 
-    /// Per-schema emit: `dropped` EntityKeys are skipped (never numbered/rendered),
-    /// `rename` overrides the keyword (downgrade). Caller (projection) guarantees
-    /// the kept set is referentially closed, so no survivor refs a dropped id.
-    pub fn emit_all_with_plan(
-        mut self,
-        dropped: &std::collections::HashSet<EntityKey>,
-        rename: std::collections::HashMap<EntityKey, &'static str>,
-    ) -> String {
-        self.rename = rename;
-        let roots = self.all_ids();
-        self.dfs_render(roots, dropped)
-    }
-
-    fn dfs_render(
-        mut self,
-        roots: Vec<EntityKey>,
-        dropped: &std::collections::HashSet<EntityKey>,
-    ) -> String {
+    fn dfs_render(mut self, roots: Vec<EntityKey>) -> String {
         let mut order: Vec<EntityKey> = Vec::new();
         let mut stack: Vec<(EntityKey, bool)> = Vec::new();
         let mut on_path: std::collections::HashSet<EntityKey> = std::collections::HashSet::new();
         for root in roots {
-            if dropped.contains(&root) {
-                continue;
-            }
             if self.get_id(root).is_some() {
                 continue;
             }
@@ -38112,9 +37654,6 @@ impl<'a> Writer<'a> {
                     if d == any {
                         continue;
                     }
-                    if dropped.contains(&d) {
-                        continue;
-                    }
                     if self.get_id(d).is_some() {
                         continue;
                     }
@@ -38128,13 +37667,4 @@ impl<'a> Writer<'a> {
         }
         self.out
     }
-}
-
-pub fn wrap_step(data_body: &str) -> String {
-    format!(
-        "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
-         FILE_NAME('','',(''),(''),'','','');\n\
-         FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n{data_body}ENDSEC;\n\
-         END-ISO-10303-21;\n"
-    )
 }
