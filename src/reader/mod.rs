@@ -6,9 +6,7 @@
 //! the entities into the typed model. The step in between lives here:
 //! non-standard input is healed in place where a safe rewrite exists, and
 //! dropped with a [`DropReason`] where none does. The [`Report`] accounts
-//! for everything that came in — kept, normalized, or dropped and why. The
-//! source header (including the identified schema) lands on the model:
-//! [`StepModel::header`].
+//! for everything that came in — kept, normalized, or dropped and why.
 
 use std::collections::{BTreeMap, BTreeSet};
 

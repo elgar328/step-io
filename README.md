@@ -29,7 +29,7 @@ Reading STEP into a kernel or viewer:
 ```rust,no_run
 let source = std::fs::read("model.step").unwrap();
 let (model, report) = step_io::read(&source).unwrap();
-let header = model.header(); // file name, timestamp, identified schema
+let header = model.header(); // file name, authors, originating CAD system, schema, …
 
 for solid in model.scene().all_solids() {
     for face in solid.faces() {

@@ -45,8 +45,9 @@
 //!
 //! The model is raw and complete: one public arena per entity type,
 //! schema-faithful. Everything the reader kept is directly accessible.
-//! The Part 21 header — file name, timestamp, identified schema — is read
-//! too, as [`StepModel::header`].
+//! The Part 21 header is read too, as [`StepModel::header`] — file name,
+//! timestamp, authors, the originating CAD system, and the identified
+//! schema.
 //!
 //! [`Scene`](scene::Scene) — `model.scene()` — is the navigation layer on
 //! top: lightweight `Copy` handles covering what imports touch most, not

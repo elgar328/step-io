@@ -1,20 +1,25 @@
-//! The Part 21 HEADER section — [`FileHeader`], shared by reading and writing.
+//! [`FileHeader`] — the Part 21 HEADER section, shared by reading and writing.
 //!
-//! A STEP file's HEADER holds three records: `FILE_DESCRIPTION`, `FILE_NAME`,
-//! and `FILE_SCHEMA`. [`FileHeader`] models all three; it lives on the
-//! [`StepModel`] so a read surfaces the source header via
-//! [`StepModel::header`] and a write emits the model's own header back out.
+//! Every STEP file opens with three HEADER records. `FILE_DESCRIPTION` says
+//! what the file contains; `FILE_NAME` records where it came from — file
+//! name, timestamp, authors, organizations, the STEP processor, and the
+//! originating CAD system; `FILE_SCHEMA` names the schema. [`FileHeader`]
+//! models all three and lives on the [`StepModel`]: reading surfaces the
+//! source file's header as [`StepModel::header`], and authoring fills it
+//! through [`StepBuilder::header`](crate::StepBuilder::header) for the
+//! written file.
 
 use crate::generated::model::StepModel;
 use crate::parser::{Attribute, RawEntity, SchemaId};
 
 /// The Part 21 HEADER section (`FILE_DESCRIPTION` + `FILE_NAME` +
-/// `FILE_SCHEMA`). Reading fills it from the source file; the builder fills
-/// it from user input plus its automatic timestamp and preprocessor stamp.
-/// The default (all empty) matches what step-io has always emitted.
+/// `FILE_SCHEMA`). Reading decodes it from the source file; the builder
+/// fills it from user input plus its automatic timestamp and preprocessor
+/// stamp. The default is the customary all-empty header.
 #[derive(Debug, Clone, Default)]
 pub struct FileHeader {
-    /// `FILE_DESCRIPTION.description` (single entry).
+    /// `FILE_DESCRIPTION.description`; multiple entries read as one joined
+    /// string.
     pub description: String,
     /// `FILE_NAME.name`.
     pub file_name: String,
@@ -24,22 +29,24 @@ pub struct FileHeader {
     pub authors: Vec<String>,
     /// `FILE_NAME.organization`; empty renders as the customary `('')`.
     pub organizations: Vec<String>,
-    /// `FILE_NAME.preprocessor_version`.
+    /// `FILE_NAME.preprocessor_version` — the STEP processor or library
+    /// that produced the file.
     pub preprocessor_version: String,
-    /// `FILE_NAME.originating_system`.
+    /// `FILE_NAME.originating_system` — the CAD application the file came
+    /// from.
     pub originating_system: String,
     /// `FILE_NAME.authorisation`.
     pub authorisation: String,
-    /// `FILE_SCHEMA` — the identified schema (AP family, edition, stage) plus
-    /// the raw `FILE_SCHEMA` strings. On a read model this records the
-    /// *source* schema.
+    /// `FILE_SCHEMA` — the identified schema (AP family, edition, stage)
+    /// plus the raw strings. The source schema on a read model; the AP242
+    /// identity on an authored one.
     pub schema: SchemaId,
 }
 
 impl StepModel {
     /// The file's HEADER section. On a model returned by
-    /// [`read`](crate::read) this is the source file's header (including the
-    /// identified [`schema`](FileHeader::schema)).
+    /// [`read`](crate::read) this is the source file's header, the
+    /// identified [`schema`](FileHeader::schema) included.
     #[must_use]
     pub fn header(&self) -> &FileHeader {
         &self.header

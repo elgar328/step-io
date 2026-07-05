@@ -1,12 +1,13 @@
-//! The Part 21 envelope — the last step of writing.
+//! [`write()`] — the Part 21 envelope, the last step of writing.
 //!
-//! [`write()`] is a pure serializer: the `DATA` section — the entities
-//! themselves — comes from the generated writer
-//! ([`generated::write`](crate::generated::write)), and the `HEADER` section
-//! comes from the model's own [`FileHeader`] ([`StepModel::header`]) —
-//! including `FILE_SCHEMA`. Nothing is stamped or projected here; the
-//! authoring layer ([`crate::Ap242Author`]) is what guarantees an AP242
-//! model and stamps the AP242 schema identity on the header.
+//! [`write()`] serializes a [`StepModel`] to Part 21 text. The `DATA`
+//! section comes from the generated writer
+//! ([`generated::write`](crate::generated::write)); the `HEADER` section,
+//! `FILE_SCHEMA` included, comes from the model's own [`FileHeader`]
+//! ([`StepModel::header`]). Conformance is the authoring layer's job:
+//! [`crate::Ap242Author`] admits only AP242 entities and stamps the AP242
+//! schema identity on the header, so an authored model writes out as a
+//! valid AP242 file.
 
 use crate::generated::model::StepModel;
 use crate::generated::write::Writer;
@@ -35,7 +36,7 @@ static UNIVERSAL_APD: ApdInfo = ApdInfo {
 
 /// Serialize the model to Part 21 text — the model's own header
 /// ([`StepModel::header`], `FILE_SCHEMA` included) plus every entity,
-/// verbatim. Lossless: nothing is projected, stamped, or dropped.
+/// verbatim.
 ///
 /// An authored model ([`crate::StepBuilder`] / [`crate::Ap242Author`]) is
 /// AP242 by construction and carries the AP242 schema identity, so the
