@@ -11,6 +11,8 @@
 // Every public method here is a pure read accessor (see geometry.rs).
 #![allow(clippy::must_use_candidate)]
 
+use std::collections::HashSet;
+
 use crate::generated::model as m;
 use crate::scene::geometry::Solid;
 use crate::scene::pmi;
@@ -361,12 +363,18 @@ impl<'m> ProductDef<'m> {
     /// The b-rep solids of this definition's shape — the bridge into the geometry
     /// handles. Reverse: a `PRODUCT_DEFINITION_SHAPE` referencing this definition →
     /// a `SHAPE_DEFINITION_REPRESENTATION` referencing that shape → forward through
-    /// its representation's items to each `MANIFOLD_SOLID_BREP`.
+    /// its representation's items to each `MANIFOLD_SOLID_BREP`. When the geometry
+    /// lives in a separate representation bridged by a plain
+    /// `SHAPE_REPRESENTATION_RELATIONSHIP` (the common AP242 assembly layout), the
+    /// equivalence bridge is followed to collect those solids too.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
         let rg = cx.ref_graph();
         let me = self.id;
         let mut out: Vec<Solid<'m>> = Vec::new();
+        // Shared across every representation reached: guards relationship cycles
+        // and keeps a shape-equivalence bridge from re-collecting a rep.
+        let mut visited: HashSet<m::EntityKey> = HashSet::new();
         for r in rg.referrers(m::EntityKey::ProductDefinition(me)) {
             let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
                 continue;
@@ -383,10 +391,13 @@ impl<'m> ProductDef<'m> {
                 let sdr = cx.model.shape_definition_representation_arena.get(sdr_id.0);
                 if matches!(&sdr.definition, m::RepresentedDefinitionRef::ProductDefinitionShape(p) if *p == *pds_id)
                 {
-                    collect_solids_from_repr(cx, &sdr.used_representation, &mut out);
+                    collect_solids_from_repr(cx, &sdr.used_representation, &mut out, &mut visited);
                 }
             }
         }
+        // A brep shared by two representations could be collected twice.
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        out.retain(|s| seen.insert(s.key()));
         out.into_iter()
     }
 
@@ -1247,23 +1258,61 @@ fn pdor_to_def<'m>(cx: Ctx<'m>, r: &m::ProductDefinitionOrReferenceRef) -> Optio
     }
 }
 
-/// Push every `MANIFOLD_SOLID_BREP` reachable from a representation's `items`.
-fn collect_solids_from_repr<'m>(cx: Ctx<'m>, r: &m::RepresentationRef, out: &mut Vec<Solid<'m>>) {
-    let items: &[m::RepresentationItemRef] = match r {
-        m::RepresentationRef::ShapeRepresentation(i) => {
-            &cx.model.shape_representation_arena.get(i.0).items
-        }
-        m::RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+/// Push every `MANIFOLD_SOLID_BREP` reachable from a representation's `items`,
+/// following plain `SHAPE_REPRESENTATION_RELATIONSHIP` (shape equivalence) to
+/// bridged representations. The common assembly export puts a component's
+/// placement in one `SHAPE_REPRESENTATION` and its geometry in a separate
+/// `ADVANCED_BREP_SHAPE_REPRESENTATION`, linked by such a relationship. The
+/// `WITH_TRANSFORMATION` variant is a complex instance (not in this arena), so
+/// occurrence placement is never followed here. `visited` guards cycles.
+fn collect_solids_from_repr<'m>(
+    cx: Ctx<'m>,
+    r: &m::RepresentationRef,
+    out: &mut Vec<Solid<'m>>,
+    visited: &mut HashSet<m::EntityKey>,
+) {
+    let (key, items): (m::EntityKey, &[m::RepresentationItemRef]) = match r {
+        m::RepresentationRef::ShapeRepresentation(i) => (
+            m::EntityKey::ShapeRepresentation(*i),
+            &cx.model.shape_representation_arena.get(i.0).items,
+        ),
+        m::RepresentationRef::AdvancedBrepShapeRepresentation(i) => (
+            m::EntityKey::AdvancedBrepShapeRepresentation(*i),
             &cx.model
                 .advanced_brep_shape_representation_arena
                 .get(i.0)
-                .items
-        }
+                .items,
+        ),
         _ => return,
     };
+    if !visited.insert(key) {
+        return;
+    }
     for it in items {
         if let m::RepresentationItemRef::ManifoldSolidBrep(sid) = it {
             out.push(Solid::from_id(cx, *sid));
+        }
+    }
+    // Hop across plain shape-equivalence relationships to the other endpoint.
+    let rg = cx.ref_graph();
+    for referrer in rg.referrers(key) {
+        let m::EntityKey::ShapeRepresentationRelationship(srr_id) = referrer else {
+            continue;
+        };
+        let srr = cx
+            .model
+            .shape_representation_relationship_arena
+            .get(srr_id.0);
+        let (k1, k2) = (srr.rep_1.entity_key(), srr.rep_2.entity_key());
+        let other = if k1 == key {
+            k2
+        } else if k2 == key {
+            k1
+        } else {
+            continue;
+        };
+        if let Ok(other_ref) = m::RepresentationRef::from_any(other) {
+            collect_solids_from_repr(cx, &other_ref, out, visited);
         }
     }
 }

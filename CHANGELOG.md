@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `ProductDef::solids()` now follows `SHAPE_REPRESENTATION_RELATIONSHIP`
+  bridges, so a part reports its solids even when the geometry lives in a
+  separate `ADVANCED_BREP_SHAPE_REPRESENTATION` — the common AP242 assembly
+  layout, where those solids were previously left unattached.
+
 ## [0.2.0] - 2026-07-06
 
 ### Added
