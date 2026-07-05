@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Read the full Part 21 HEADER through `model.header()` — `FILE_DESCRIPTION`,
-  `FILE_NAME`, and `FILE_SCHEMA` (the identified schema), shared with the
-  write side as one `FileHeader` type.
-- `write(&model)` — serialize a model back to Part 21 text losslessly, with
-  its own header; reading a file and writing it again preserves the header.
+- The full Part 21 HEADER is read into the model: `model.header()` carries
+  the file name, timestamp, authors, the originating CAD system, and the
+  identified schema — one `FileHeader` type, shared with the write side.
+- `write(&model)` — serialize a model to Part 21 text under its own header,
+  losslessly.
 
 ### Changed
 
@@ -22,10 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- The `write_target` / `SchemaTarget` / `LossReport` surface. Writing no
-  longer projects a model onto a target schema — the authoring API is AP242
-  by construction, so its output needs no projection; `write` serializes any
-  model faithfully under its own schema.
+- The write-side projection surface — `write_target`, `SchemaTarget`, and
+  `LossReport`. The authoring API is AP242 by construction, so its output
+  never needed projecting.
 - The generated read/write plumbing (`generated::{read, write, walk,
   generic_normalize, schema}`) is crate-internal now; `generated::{model,
   resolve, author}` remain the public raw layer.
