@@ -1,8 +1,7 @@
 //! [`write()`] — the Part 21 envelope, the last step of writing.
 //!
 //! [`write()`] serializes a [`StepModel`] to Part 21 text. The `DATA`
-//! section comes from the generated writer
-//! ([`generated::write`](crate::generated::write)); the `HEADER` section,
+//! section comes from the generated writer; the `HEADER` section,
 //! `FILE_SCHEMA` included, comes from the model's own [`FileHeader`]
 //! ([`StepModel::header`]). Conformance is the authoring layer's job:
 //! [`crate::Ap242Author`] admits only AP242 entities and stamps the AP242

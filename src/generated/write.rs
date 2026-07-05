@@ -37668,12 +37668,3 @@ impl<'a> Writer<'a> {
         self.out
     }
 }
-
-pub fn wrap_step(data_body: &str) -> String {
-    format!(
-        "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
-         FILE_NAME('','',(''),(''),'','','');\n\
-         FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n{data_body}ENDSEC;\n\
-         END-ISO-10303-21;\n"
-    )
-}

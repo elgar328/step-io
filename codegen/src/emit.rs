@@ -1184,11 +1184,6 @@ fn step_str(s: &str) -> String {
     // stack with self-edge skip; pass2 = render in id order). No recursion.
     emit_all_iter(&mut s, ir);
 
-    // wrap_step
-    s.push_str(
-        "pub fn wrap_step(data_body: &str) -> String {\n    format!(\n        \"ISO-10303-21;\\nHEADER;\\nFILE_DESCRIPTION((''),'2;1');\\n\\\n         FILE_NAME('','',(''),(''),'','','');\\n\\\n         FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\\nENDSEC;\\nDATA;\\n{data_body}ENDSEC;\\n\\\n         END-ISO-10303-21;\\n\"\n    )\n}\n",
-    );
-
     s
 }
 

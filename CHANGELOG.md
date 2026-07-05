@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer projects a model onto a target schema — the authoring API is AP242
   by construction, so its output needs no projection; `write` serializes any
   model faithfully under its own schema.
+- The generated read/write plumbing (`generated::{read, write, walk,
+  generic_normalize, schema}`) is crate-internal now; `generated::{model,
+  resolve, author}` remain the public raw layer.
 
 ## [0.1.0] - 2026-07-04
 
