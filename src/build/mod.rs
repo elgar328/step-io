@@ -476,9 +476,9 @@ impl StepBuilder {
     }
 
     /// Set up the shared skeleton: application context + protocol definition
-    /// (values are stamped with the AP242 profile on `finish`), product
-    /// contexts, and the geometric context complex carrying the chosen SI
-    /// length unit, radian, steradian, and the given length uncertainty.
+    /// (the AP242 identity values), product contexts, and the geometric
+    /// context complex carrying the chosen SI length unit, radian,
+    /// steradian, and the given length uncertainty.
     ///
     /// # Errors
     /// Propagates [`AuthorError`] from the strict constructors; the wiring

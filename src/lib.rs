@@ -29,7 +29,7 @@
 //!
 //! Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
 //! it in 2014, and every modern tool reads it. When edition 3 reaches IS
-//! and takes over, the output target moves up with it: one output schema,
+//! and takes over, the output moves up with it: one output schema,
 //! always the current one.
 //!
 //! Most of the pipeline is generated from the schemas rather than written
@@ -45,6 +45,8 @@
 //!
 //! The model is raw and complete: one public arena per entity type,
 //! schema-faithful. Everything the reader kept is directly accessible.
+//! The Part 21 header — file name, timestamp, identified schema — is read
+//! too, as [`StepModel::header`].
 //!
 //! [`Scene`](scene::Scene) — `model.scene()` — is the navigation layer on
 //! top: lightweight `Copy` handles covering what imports touch most, not
