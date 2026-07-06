@@ -31,10 +31,20 @@ impl Scene<'_> {
     /// Every product definition (`PRODUCT_DEFINITION`) in the model.
     pub fn all_product_definitions(&self) -> impl Iterator<Item = ProductDef<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.product_definition_arena.items.len()).map(move |i| ProductDef {
+        let plain = (0..cx.model.product_definition_arena.items.len()).map(move |i| ProductDef {
             cx,
-            id: m::ProductDefinitionId(i),
-        })
+            which: PdImpl::Plain(m::ProductDefinitionId(i)),
+        });
+        let with_docs = (0..cx
+            .model
+            .product_definition_with_associated_documents_arena
+            .items
+            .len())
+            .map(move |i| ProductDef {
+                cx,
+                which: PdImpl::WithDocs(m::ProductDefinitionWithAssociatedDocumentsId(i)),
+            });
+        plain.chain(with_docs)
     }
 
     /// The assembly roots: definitions no `NEXT_ASSEMBLY_USAGE_OCCURRENCE`
@@ -112,8 +122,8 @@ impl<'m> Product<'m> {
                 continue;
             }
             for &pr in rg.referrers(fr) {
-                if let m::EntityKey::ProductDefinition(pdid) = pr {
-                    out.push(ProductDef { cx, id: pdid });
+                if let Some(d) = ProductDef::from_key(cx, pr) {
+                    out.push(d);
                 }
             }
         }
@@ -252,8 +262,8 @@ impl<'m> Version<'m> {
         let rg = cx.ref_graph();
         let mut out: Vec<ProductDef<'m>> = Vec::new();
         for &r in rg.referrers(self.key()) {
-            if let m::EntityKey::ProductDefinition(pdid) = r {
-                out.push(ProductDef { cx, id: pdid });
+            if let Some(d) = ProductDef::from_key(cx, r) {
+                out.push(d);
             }
         }
         out.into_iter()
@@ -269,32 +279,98 @@ impl<'m> Version<'m> {
 #[derive(Clone, Copy)]
 pub struct ProductDef<'m> {
     cx: Ctx<'m>,
-    id: m::ProductDefinitionId,
+    which: PdImpl,
+}
+
+/// A `PRODUCT_DEFINITION` or its `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS`
+/// subtype — both carry the same core fields (a documented part uses the
+/// subtype) and are surfaced identically as assembly-tree nodes.
+#[derive(Clone, Copy)]
+enum PdImpl {
+    Plain(m::ProductDefinitionId),
+    WithDocs(m::ProductDefinitionWithAssociatedDocumentsId),
+}
+
+/// The `product_definition` core fields shared by both variants.
+struct PdCore<'m> {
+    id: &'m str,
+    description: Option<&'m str>,
+    formation: &'m m::ProductDefinitionFormationRef,
 }
 
 impl<'m> ProductDef<'m> {
-    fn raw(&self) -> &'m m::ProductDefinition {
-        self.cx.model.product_definition_arena.get(self.id.0)
+    /// Wrap a `PRODUCT_DEFINITION`/`..._WITH_ASSOCIATED_DOCUMENTS` key as a
+    /// definition handle; `None` for any other entity.
+    fn from_key(cx: Ctx<'m>, key: m::EntityKey) -> Option<Self> {
+        match key {
+            m::EntityKey::ProductDefinition(i) => Some(Self {
+                cx,
+                which: PdImpl::Plain(i),
+            }),
+            m::EntityKey::ProductDefinitionWithAssociatedDocuments(i) => Some(Self {
+                cx,
+                which: PdImpl::WithDocs(i),
+            }),
+            _ => None,
+        }
+    }
+
+    /// The shared core fields, read from whichever arena backs this definition.
+    fn core(&self) -> PdCore<'m> {
+        match self.which {
+            PdImpl::Plain(i) => {
+                let r = self.cx.model.product_definition_arena.get(i.0);
+                PdCore {
+                    id: &r.id,
+                    description: r.description.as_deref(),
+                    formation: &r.formation,
+                }
+            }
+            PdImpl::WithDocs(i) => {
+                let r = self
+                    .cx
+                    .model
+                    .product_definition_with_associated_documents_arena
+                    .get(i.0);
+                PdCore {
+                    id: &r.id,
+                    description: r.description.as_deref(),
+                    formation: &r.formation,
+                }
+            }
+        }
+    }
+
+    /// The plain `ProductDefinitionId` when this is a plain definition — for
+    /// part-scoped PMI queries that key on that id (see `features`/`dimensions`).
+    fn plain_id(&self) -> Option<m::ProductDefinitionId> {
+        match self.which {
+            PdImpl::Plain(i) => Some(i),
+            PdImpl::WithDocs(_) => None,
+        }
     }
 
     /// This definition's global identity (a `Copy` key for maps / deduplication;
     /// distinct from [`ProductDef::id`], the STEP `id` string attribute).
     pub fn key(&self) -> m::EntityKey {
-        m::EntityKey::ProductDefinition(self.id)
+        match self.which {
+            PdImpl::Plain(i) => m::EntityKey::ProductDefinition(i),
+            PdImpl::WithDocs(i) => m::EntityKey::ProductDefinitionWithAssociatedDocuments(i),
+        }
     }
 
     pub fn id(&self) -> &'m str {
-        &self.raw().id
+        self.core().id
     }
 
     pub fn description(&self) -> Option<&'m str> {
-        self.raw().description.as_deref()
+        self.core().description
     }
 
     /// The product this definition belongs to (forward: `formation → of_product`).
     pub fn product(&self) -> Option<Product<'m>> {
         let model = self.cx.model;
-        let of_product: &m::ProductRef = match &self.raw().formation {
+        let of_product: &m::ProductRef = match self.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
                 &model.product_definition_formation_arena.get(i.0).of_product
             }
@@ -321,9 +397,9 @@ impl<'m> ProductDef<'m> {
     pub fn occurrences(&self) -> impl Iterator<Item = Occurrence<'m>> + 'm {
         let cx = self.cx;
         let rg = cx.ref_graph();
-        let me = self.id;
+        let me = self.key();
         let mut out: Vec<Occurrence<'m>> = Vec::new();
-        for r in rg.referrers(m::EntityKey::ProductDefinition(me)) {
+        for r in rg.referrers(me) {
             if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r {
                 let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
                 if pdor_is(&nauo.relating_product_definition, me) {
@@ -345,9 +421,9 @@ impl<'m> ProductDef<'m> {
     pub fn parents(&self) -> impl Iterator<Item = ProductDef<'m>> + 'm {
         let cx = self.cx;
         let rg = cx.ref_graph();
-        let me = self.id;
+        let me = self.key();
         let mut out: Vec<ProductDef<'m>> = Vec::new();
-        for r in rg.referrers(m::EntityKey::ProductDefinition(me)) {
+        for r in rg.referrers(me) {
             if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r {
                 let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
                 if pdor_is(&nauo.related_product_definition, me) {
@@ -370,18 +446,17 @@ impl<'m> ProductDef<'m> {
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
         let rg = cx.ref_graph();
-        let me = self.id;
+        let me = self.key();
         let mut out: Vec<Solid<'m>> = Vec::new();
         // Shared across every representation reached: guards relationship cycles
         // and keeps a shape-equivalence bridge from re-collecting a rep.
         let mut visited: HashSet<m::EntityKey> = HashSet::new();
-        for r in rg.referrers(m::EntityKey::ProductDefinition(me)) {
+        for r in rg.referrers(me) {
             let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
                 continue;
             };
             let pds = cx.model.product_definition_shape_arena.get(pds_id.0);
-            if !matches!(&pds.definition, m::CharacterizedDefinitionRef::ProductDefinition(pd) if *pd == me)
-            {
+            if !cdef_is(&pds.definition, me) {
                 continue;
             }
             for s in rg.referrers(m::EntityKey::ProductDefinitionShape(*pds_id)) {
@@ -405,29 +480,41 @@ impl<'m> ProductDef<'m> {
     /// resolves to this definition). The model-wide [`Scene::features`] filtered
     /// to this part.
     pub fn features(&self) -> impl Iterator<Item = pmi::Feature<'m>> + 'm {
-        pmi::features_of(self.cx, self.id).into_iter()
+        self.plain_id()
+            .map(|id| pmi::features_of(self.cx, id))
+            .unwrap_or_default()
+            .into_iter()
     }
 
     /// The dimensions of this part (those whose targeted feature is on it).
     pub fn dimensions(&self) -> impl Iterator<Item = pmi::Dimension<'m>> + 'm {
-        pmi::dimensions_of(self.cx, self.id).into_iter()
+        self.plain_id()
+            .map(|id| pmi::dimensions_of(self.cx, id))
+            .unwrap_or_default()
+            .into_iter()
     }
 
     /// The geometric tolerances of this part (those whose target — a feature or
     /// the whole part — is on it).
     pub fn tolerances(&self) -> impl Iterator<Item = pmi::Tolerance<'m>> + 'm {
-        pmi::tolerances_of(self.cx, self.id).into_iter()
+        self.plain_id()
+            .map(|id| pmi::tolerances_of(self.cx, id))
+            .unwrap_or_default()
+            .into_iter()
     }
 
     /// The datums of this part (`DATUM` / `COMMON_DATUM` whose `of_shape` is on it).
     pub fn datums(&self) -> impl Iterator<Item = pmi::Datum<'m>> + 'm {
-        pmi::datums_of(self.cx, self.id).into_iter()
+        self.plain_id()
+            .map(|id| pmi::datums_of(self.cx, id))
+            .unwrap_or_default()
+            .into_iter()
     }
 
     /// The version identifier of this part — its `PRODUCT_DEFINITION_FORMATION.id`.
     pub fn version(&self) -> Option<&'m str> {
         let model = self.cx.model;
-        match &self.raw().formation {
+        match self.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
                 Some(&model.product_definition_formation_arena.get(i.0).id)
             }
@@ -455,7 +542,7 @@ impl<'m> ProductDef<'m> {
         if let Some(p) = self.product() {
             targets.push(p.key());
         }
-        match &self.raw().formation {
+        match self.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
                 targets.push(m::EntityKey::ProductDefinitionFormation(*i));
             }
@@ -466,7 +553,7 @@ impl<'m> ProductDef<'m> {
             }
             m::ProductDefinitionFormationRef::Complex(_) => {}
         }
-        targets.push(m::EntityKey::ProductDefinition(self.id));
+        targets.push(self.key());
         targets
     }
 
@@ -484,9 +571,35 @@ impl<'m> ProductDef<'m> {
 
     /// The documents referenced by this part — drawings, specs, standards
     /// (reverse: an `APPLIED_DOCUMENT_REFERENCE` whose `items` include this
-    /// definition, its product, or its formation).
+    /// definition, its product, or its formation), plus, for a
+    /// `..._WITH_ASSOCIATED_DOCUMENTS` definition, the documents it carries
+    /// directly in `documentation_ids`.
     pub fn documents(&self) -> Vec<Document<'m>> {
-        documents_of(self.cx, &self.metadata_targets())
+        let mut out = documents_of(self.cx, &self.metadata_targets());
+        if let PdImpl::WithDocs(i) = self.which {
+            let raw = self
+                .cx
+                .model
+                .product_definition_with_associated_documents_arena
+                .get(i.0);
+            let scope = scope_of(self.key());
+            for dref in &raw.documentation_ids {
+                let which = match dref {
+                    m::DocumentRef::Document(i) => DocImpl::Document(*i),
+                    m::DocumentRef::DocumentFile(i) => DocImpl::DocumentFile(*i),
+                    m::DocumentRef::Complex(_) => continue,
+                };
+                let doc = Document {
+                    cx: self.cx,
+                    which,
+                    scope,
+                };
+                if !out.iter().any(|d| d.key() == doc.key()) {
+                    out.push(doc);
+                }
+            }
+        }
+        out
     }
 
     /// The security classifications assigned to this part — its confidentiality
@@ -572,8 +685,7 @@ fn target_of(cx: Ctx<'_>, k: m::EntityKey) -> Option<Target<'_>> {
                 which: FormImpl::WithSource(id),
             })
         }
-        m::EntityKey::ProductDefinition(id) => Target::Definition(ProductDef { cx, id }),
-        _ => return None,
+        other => return ProductDef::from_key(cx, other).map(Target::Definition),
     })
 }
 
@@ -1244,17 +1356,49 @@ fn dir3(cx: Ctx<'_>, r: &m::DirectionRef) -> [f64; 3] {
     }
 }
 
-/// Whether a `ProductDefinitionOrReferenceRef` is exactly this plain definition.
-fn pdor_is(r: &m::ProductDefinitionOrReferenceRef, id: m::ProductDefinitionId) -> bool {
-    matches!(r, m::ProductDefinitionOrReferenceRef::ProductDefinition(i) if *i == id)
+/// Whether a `ProductDefinitionOrReferenceRef` points at exactly this definition
+/// (plain or `..._WITH_ASSOCIATED_DOCUMENTS`).
+fn pdor_is(r: &m::ProductDefinitionOrReferenceRef, key: m::EntityKey) -> bool {
+    match r {
+        m::ProductDefinitionOrReferenceRef::ProductDefinition(i) => {
+            m::EntityKey::ProductDefinition(*i) == key
+        }
+        m::ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
+            m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i) == key
+        }
+        _ => false,
+    }
 }
 
-/// Resolve a `ProductDefinitionOrReferenceRef` to a plain definition handle
-/// (occurrence / generic-reference / complex variants are out of scope).
+/// Resolve a `ProductDefinitionOrReferenceRef` to a definition handle (plain or
+/// `..._WITH_ASSOCIATED_DOCUMENTS`; occurrence / generic-reference / complex out
+/// of scope).
 fn pdor_to_def<'m>(cx: Ctx<'m>, r: &m::ProductDefinitionOrReferenceRef) -> Option<ProductDef<'m>> {
     match r {
-        m::ProductDefinitionOrReferenceRef::ProductDefinition(i) => Some(ProductDef { cx, id: *i }),
+        m::ProductDefinitionOrReferenceRef::ProductDefinition(i) => {
+            ProductDef::from_key(cx, m::EntityKey::ProductDefinition(*i))
+        }
+        m::ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
+            ProductDef::from_key(
+                cx,
+                m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i),
+            )
+        }
         _ => None,
+    }
+}
+
+/// Whether a `CharacterizedDefinitionRef` (a `PRODUCT_DEFINITION_SHAPE.definition`)
+/// points at exactly this definition (plain or `..._WITH_ASSOCIATED_DOCUMENTS`).
+fn cdef_is(cd: &m::CharacterizedDefinitionRef, key: m::EntityKey) -> bool {
+    match cd {
+        m::CharacterizedDefinitionRef::ProductDefinition(i) => {
+            m::EntityKey::ProductDefinition(*i) == key
+        }
+        m::CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+            m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i) == key
+        }
+        _ => false,
     }
 }
 

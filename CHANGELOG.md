@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The scene now surfaces `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` (the
+  `PRODUCT_DEFINITION` subtype used for a part that carries documents) as a
+  `ProductDef`, so such a part appears in the assembly tree with its geometry
+  placed — instead of the part vanishing and its solids orphaning — and its
+  documents/approvals/security are reachable.
+
 ## [0.2.1] - 2026-07-06
 
 ### Fixed
