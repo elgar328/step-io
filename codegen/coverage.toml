@@ -29,7 +29,7 @@ exclude = [
     # (standard via property_definition_representation.definition) and enters the
     # closure that way. The non-standard property_definition.definition=#general_property
     # input (general_property is not a characterized_definition member) is no longer
-    # a panic — the slot-aware drop pass classifies it as a Nonstandard drop.
+    # a panic — the slot-aware drop pass classifies it as a nonstandard-reference drop.
 ]
 
 [cover]

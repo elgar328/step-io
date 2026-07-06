@@ -1828,7 +1828,7 @@ fn sk_variant(k: &Kind) -> &'static str {
         Kind::Ref(_) => "Ref",
         Kind::Vec(_) => "Vec",
         Kind::MeasureSelect(_) => "Meas",
-        // string-select required `$` -> req-str<-$ normalizes to "" (read as bare).
+        // string-select required `$` normalizes to "" (read as bare).
         Kind::StringSelect(_) => "Str",
         // int-select: same Unchanged normalize as measure; integer is preserved
         // by read_int_measure_value / int_measure (no int->real coercion).
@@ -1920,7 +1920,7 @@ fn emit_slot_table<'a>(
                 // where a deriving sibling is present; in the STANDALONE (simple)
                 // form it is an explicit, required value. So in simple_slots a
                 // derivable field is required (a non-standard `$` normalizes like
-                // any required field, e.g. req-str<-$); in part_slots it stays
+                // any required field, e.g. a required string `$`); in part_slots it stays
                 // non-required (the `*` case).
                 let req = if simple {
                     !f.optional
@@ -1990,26 +1990,26 @@ fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
         // a derived slot is always `*` on the wire; force it (drops a redundant
         // explicit value or a non-standard `()`/`$`).
         return if matches!(a, Attribute::Derived) { NormAction::Unchanged }
-               else { NormAction::Rewrite(Attribute::Derived, "derived->*") };
+               else { NormAction::Rewrite(Attribute::Derived, "derived attribute reset to *") };
     }
     match (s.k, a) {
-        (Sk::Real, Attribute::Integer(i)) => NormAction::Rewrite(Attribute::Real(*i as f64), "int->real"),
+        (Sk::Real, Attribute::Integer(i)) => NormAction::Rewrite(Attribute::Real(*i as f64), "integer converted to real number"),
         (Sk::Int, Attribute::Real(r)) if r.fract() == 0.0 => {
-            NormAction::Rewrite(Attribute::Integer(*r as i64), "real->int")
+            NormAction::Rewrite(Attribute::Integer(*r as i64), "real converted to integer")
         }
-        (Sk::Int, Attribute::Real(_)) => NormAction::Drop("int<-fractional-real"),
+        (Sk::Int, Attribute::Real(_)) => NormAction::Drop("integer field has a fractional value"),
         (Sk::Str | Sk::Bin, Attribute::Unset) if s.req => {
-            NormAction::Rewrite(Attribute::String(String::new()), "req-str<-$")
+            NormAction::Rewrite(Attribute::String(String::new()), "missing required text set to empty")
         }
-        (Sk::Vec, Attribute::Unset) if s.req => NormAction::Rewrite(Attribute::List(Vec::new()), "req-vec<-$"),
-        (Sk::Ref, Attribute::Unset) if s.req => NormAction::Drop("req-ref<-$"),
+        (Sk::Vec, Attribute::Unset) if s.req => NormAction::Rewrite(Attribute::List(Vec::new()), "missing required list set to empty"),
+        (Sk::Ref, Attribute::Unset) if s.req => NormAction::Drop("required reference is missing"),
         _ => NormAction::Unchanged,
     }
 }
 
 /// Normalize one entity's attrs. Rewrites push to `warns` (norm channel); a
 /// non-normalizable slot sets `drop_out` to its reason and returns false (the
-/// entity is removed — slot-local drop, surfaced on the drops channel).
+/// entity is removed — nonstandard-value drop, surfaced on the drops channel).
 fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'static str>, drop_out: &mut Option<&'static str>) -> bool {
     for (i, a) in attrs.iter_mut().enumerate() {
         canon(a);
@@ -2021,12 +2021,12 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
                     Sk::Vec => {
                         if let Attribute::List(v) = a {
                             for e in v.iter_mut() {
-                                if wrap_bare_scalar(e, wire) { warns.push("select-scalar bare->typed"); }
+                                if wrap_bare_scalar(e, wire) { warns.push("untyped value tagged with its type"); }
                             }
                         }
                     }
                     Sk::Ref => {
-                        if wrap_bare_scalar(a, wire) { warns.push("select-scalar bare->typed"); }
+                        if wrap_bare_scalar(a, wire) { warns.push("untyped value tagged with its type"); }
                     }
                     _ => {}
                 }
@@ -2066,7 +2066,7 @@ pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>
             }
         };
         if !keep {
-            slot_drops.push((id, drop_reason.unwrap_or("slot-local")));
+            slot_drops.push((id, drop_reason.unwrap_or("unspecified")));
         }
     }
     for (id, _) in &slot_drops {

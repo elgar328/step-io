@@ -89,3 +89,7 @@ by hand — no drift, little to maintain.
 
 Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE)
 at your option.
+
+step-io's entity model derives from the ISO 10303 (STEP) EXPRESS schemas —
+third-party ISO artifacts that are free for implementers and carry their own
+terms, separate from the license above.

@@ -144,6 +144,44 @@ fn solids_follow_shape_representation_relationship() {
     }
 }
 
+/// A part whose definition is the `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS`
+/// subtype (how a documented part is modeled), with one solid on its shape.
+const WITH_DOCS_PART: &str = "\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#4=REPRESENTATION_CONTEXT('','3D');\n\
+#20=PRODUCT('part','Part','',(#2));\n\
+#21=PRODUCT_DEFINITION_FORMATION('1','',#20);\n\
+#22=PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS('design','',#21,#3,());\n\
+#40=PRODUCT_DEFINITION_SHAPE('','',#22);\n\
+#41=SHAPE_REPRESENTATION('',(#43),#4);\n\
+#42=SHAPE_DEFINITION_REPRESENTATION(#40,#41);\n\
+#43=MANIFOLD_SOLID_BREP('',#44);\n\
+#44=CLOSED_SHELL('',());\n";
+
+#[test]
+fn surfaces_product_definition_with_associated_documents_subtype() {
+    // A documented part is a PRODUCT_DEFINITION *subtype*. It must surface as a
+    // ProductDef (same as a plain one) so its geometry places under the tree
+    // instead of orphaning.
+    let src = format!("{HEADER}{WITH_DOCS_PART}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    assert_eq!(scene.all_product_definitions().count(), 1);
+    assert_eq!(scene.root_definitions().count(), 1);
+
+    let part = def_for_product(&scene, "Part");
+    assert_eq!(
+        part.id(),
+        "design",
+        "core fields read via the subtype arena"
+    );
+    assert_eq!(part.product().unwrap().name(), "Part");
+    assert_eq!(part.solids().count(), 1, "subtype def's solid is reached");
+}
+
 #[test]
 fn reads_occurrence_placement_transform() {
     let src = format!("{HEADER}{ASSEMBLY}{FOOTER}");

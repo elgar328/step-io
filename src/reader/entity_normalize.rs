@@ -2,13 +2,14 @@
 //!
 //! Companion to the GENERATED `generated/generic_normalize.rs`. Two stages:
 //! `generic_normalize` applies GENERIC slot-kind rules uniform across every
-//! entity (req-str<-$, int->real, tagless scalar, derived->*); `entity_normalize`
+//! entity (missing-required fixups, int->real coercion, bare-scalar tagging,
+//! derived-slot reset); `entity_normalize`
 //! (this file) applies PER-ENTITY fixups that cannot be a generic rule — a
 //! specific entity's required field is `$`/mis-encoded and must become a specific
 //! standard value, a synthetic default ref, a factor-based identification, etc.
 //!
 //! Runs BEFORE `generic_normalize` (so a per-entity fixup of a required ref
-//! pre-empts the generic req-ref<-$ drop) and BEFORE subset/read, on the raw
+//! pre-empts the generic required-reference-missing drop) and BEFORE subset/read, on the raw
 //! entity map — the strict generated read only ever sees standard data. Each
 //! fixup records a note into `norm`, surfaced like the generic `NormCase` notes.
 
@@ -56,7 +57,7 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
             // surface_colour (attr 1, required ref) is `$` in some files;
             // synthesize a bare COLOUR() (the schema's unspecified-colour
             // placeholder) so the rendering survives instead of being dropped by
-            // the generic req-ref<-$ rule (which runs AFTER this and would delete
+            // the generic required-reference-missing rule (which runs AFTER this and would delete
             // the whole surface_style_rendering).
             "SURFACE_STYLE_RENDERING" | "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => {
                 if let Some(a) = attributes.get_mut(0) {
