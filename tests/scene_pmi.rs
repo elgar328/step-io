@@ -174,6 +174,62 @@ fn scene_enumerates_features_excluding_datums() {
     );
 }
 
+// A DATUM ('A') established from a DATUM_FEATURE via a SHAPE_ASPECT_RELATIONSHIP;
+// the datum feature is linked to a real face by GISU. datum.datum_feature() must
+// cross the relationship and reach that face.
+const DATUM_FEATURE: &str = "\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#10=PRODUCT('p','Part','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#13=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+#20=CARTESIAN_POINT('',(0.0,0.0,0.0));\n\
+#21=CARTESIAN_POINT('',(1.0,0.0,0.0));\n\
+#22=DIRECTION('',(0.0,0.0,1.0));\n\
+#23=DIRECTION('',(1.0,0.0,0.0));\n\
+#24=DIRECTION('',(1.0,0.0,0.0));\n\
+#25=AXIS2_PLACEMENT_3D('',#20,#22,#23);\n\
+#26=PLANE('',#25);\n\
+#27=VECTOR('',#24,1.0);\n\
+#28=LINE('',#20,#27);\n\
+#29=VERTEX_POINT('',#20);\n\
+#30=VERTEX_POINT('',#21);\n\
+#31=EDGE_CURVE('',#29,#30,#28,.T.);\n\
+#32=ORIENTED_EDGE('',*,*,#31,.T.);\n\
+#33=EDGE_LOOP('',(#32));\n\
+#34=FACE_OUTER_BOUND('',#33,.T.);\n\
+#35=ADVANCED_FACE('',(#34),#26,.T.);\n\
+#37=SHAPE_REPRESENTATION('',(#35),#36);\n\
+#36=REPRESENTATION_CONTEXT('','3D');\n\
+#50=DATUM_FEATURE('df','',#13,.T.);\n\
+#51=DATUM('datum a','',#13,.T.,'A');\n\
+#52=SHAPE_ASPECT_RELATIONSHIP('','',#50,#51);\n\
+#53=GEOMETRIC_ITEM_SPECIFIC_USAGE('','datum feature',#50,#37,#35);\n";
+
+#[test]
+fn datum_reaches_its_datum_feature_geometry() {
+    let src = format!("{HEADER}{DATUM_FEATURE}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let datum = scene.datums().next().expect("a datum");
+    assert_eq!(datum.letter(), "A");
+
+    // Cross DATUM -> SHAPE_ASPECT_RELATIONSHIP -> DATUM_FEATURE.
+    let df = datum.datum_feature().expect("datum feature");
+    assert_eq!(df.kind(), FeatureKind::DatumFeature);
+
+    // ...and on to the face the datum feature is established on.
+    match &df.geometry()[0] {
+        FeatureGeometry::Face(f) => {
+            assert!(matches!(f.surface().kind(), SurfaceKind::Plane(_)));
+        }
+        other => panic!("expected a face, got {}", discriminant(other)),
+    }
+}
+
 // Two parts (A, B), each with its own shape aspect + dimension; part A also has
 // a feature tolerance, a whole-part (PDS-targeted) tolerance, and a datum.
 // Per-part queries must return only that part's PMI.

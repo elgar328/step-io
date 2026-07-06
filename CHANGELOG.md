@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Datum::datum_feature()` — the physical `DATUM_FEATURE` a datum is established
+  from, as a `Feature` (so its faces/edges are reachable via `Feature::geometry`).
+
 ### Fixed
 
 - The scene now surfaces `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` (the

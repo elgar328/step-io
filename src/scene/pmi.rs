@@ -473,6 +473,32 @@ impl<'m> Datum<'m> {
             DatumImpl::CommonDatum(i) => m::EntityKey::CommonDatum(i),
         }
     }
+
+    /// The physical feature this datum is established from — the `DATUM_FEATURE`
+    /// linked to it by a `SHAPE_ASPECT_RELATIONSHIP`. Returned as a [`Feature`],
+    /// whose faces/edges are reachable via [`Feature::geometry`]. `None` when the
+    /// datum is defined only by datum targets, or carries no such link.
+    pub fn datum_feature(&self) -> Option<Feature<'m>> {
+        let cx = self.cx;
+        let rg = cx.ref_graph();
+        for r in rg.referrers(self.key()) {
+            let m::EntityKey::ShapeAspectRelationship(sid) = r else {
+                continue;
+            };
+            let sar = cx.model.shape_aspect_relationship_arena.get(sid.0);
+            // The datum is one end of the relationship; the datum feature is the
+            // other (checking both ends naturally selects it).
+            for aspect in [&sar.relating_shape_aspect, &sar.related_shape_aspect] {
+                if let m::ShapeAspectRef::DatumFeature(fid) = aspect {
+                    return Some(Feature {
+                        cx,
+                        which: FeatureImpl::DatumFeature(*fid),
+                    });
+                }
+            }
+        }
+        None
+    }
 }
 
 impl<'m> Tolerance<'m> {
