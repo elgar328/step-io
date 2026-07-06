@@ -101,3 +101,6 @@ Follow the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 - Each entry is a concise, complete sentence.
 - Most recent release goes first.
 - Always keep an `[Unreleased]` section at the top for ongoing work.
+- Within a release, order the category sections as listed under
+  [Categories](#categories) above (Added, Changed, Deprecated, Removed, Fixed,
+  Security); omit any category that has no entries.

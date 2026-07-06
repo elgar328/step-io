@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Datum::datum_feature()` — the physical `DATUM_FEATURE` a datum is established
+  from, as a `Feature` (so its faces/edges are reachable via `Feature::geometry`).
+
 ### Changed
 
 - `Report` drop reasons are now plain-language. `DropKind::SlotLocal`/`Nonstandard`
@@ -14,11 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   *value* vs. a nonstandard *reference*), and the per-reason labels read as
   sentences (e.g. `required reference is missing`) instead of terse codes
   (`req-ref<-$`).
-
-### Added
-
-- `Datum::datum_feature()` — the physical `DATUM_FEATURE` a datum is established
-  from, as a `Feature` (so its faces/edges are reachable via `Feature::geometry`).
 
 ### Fixed
 
