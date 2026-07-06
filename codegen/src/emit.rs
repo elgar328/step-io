@@ -1990,19 +1990,19 @@ fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
         // a derived slot is always `*` on the wire; force it (drops a redundant
         // explicit value or a non-standard `()`/`$`).
         return if matches!(a, Attribute::Derived) { NormAction::Unchanged }
-               else { NormAction::Rewrite(Attribute::Derived, "derived->*") };
+               else { NormAction::Rewrite(Attribute::Derived, "derived attribute reset to *") };
     }
     match (s.k, a) {
-        (Sk::Real, Attribute::Integer(i)) => NormAction::Rewrite(Attribute::Real(*i as f64), "int->real"),
+        (Sk::Real, Attribute::Integer(i)) => NormAction::Rewrite(Attribute::Real(*i as f64), "integer converted to real number"),
         (Sk::Int, Attribute::Real(r)) if r.fract() == 0.0 => {
-            NormAction::Rewrite(Attribute::Integer(*r as i64), "real->int")
+            NormAction::Rewrite(Attribute::Integer(*r as i64), "real converted to integer")
         }
-        (Sk::Int, Attribute::Real(_)) => NormAction::Drop("int<-fractional-real"),
+        (Sk::Int, Attribute::Real(_)) => NormAction::Drop("integer field has a fractional value"),
         (Sk::Str | Sk::Bin, Attribute::Unset) if s.req => {
-            NormAction::Rewrite(Attribute::String(String::new()), "req-str<-$")
+            NormAction::Rewrite(Attribute::String(String::new()), "missing required text set to empty")
         }
-        (Sk::Vec, Attribute::Unset) if s.req => NormAction::Rewrite(Attribute::List(Vec::new()), "req-vec<-$"),
-        (Sk::Ref, Attribute::Unset) if s.req => NormAction::Drop("req-ref<-$"),
+        (Sk::Vec, Attribute::Unset) if s.req => NormAction::Rewrite(Attribute::List(Vec::new()), "missing required list set to empty"),
+        (Sk::Ref, Attribute::Unset) if s.req => NormAction::Drop("required reference is missing"),
         _ => NormAction::Unchanged,
     }
 }
@@ -2021,12 +2021,12 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
                     Sk::Vec => {
                         if let Attribute::List(v) = a {
                             for e in v.iter_mut() {
-                                if wrap_bare_scalar(e, wire) { warns.push("select-scalar bare->typed"); }
+                                if wrap_bare_scalar(e, wire) { warns.push("untyped value tagged with its type"); }
                             }
                         }
                     }
                     Sk::Ref => {
-                        if wrap_bare_scalar(a, wire) { warns.push("select-scalar bare->typed"); }
+                        if wrap_bare_scalar(a, wire) { warns.push("untyped value tagged with its type"); }
                     }
                     _ => {}
                 }
@@ -2066,7 +2066,7 @@ pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>
             }
         };
         if !keep {
-            slot_drops.push((id, drop_reason.unwrap_or("slot-local")));
+            slot_drops.push((id, drop_reason.unwrap_or("unspecified")));
         }
     }
     for (id, _) in &slot_drops {

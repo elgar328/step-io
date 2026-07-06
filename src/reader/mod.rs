@@ -16,26 +16,29 @@ use crate::parser::{Attribute, Error, RawEntity, parse_bytes};
 
 mod entity_normalize;
 
-/// Why an entity was dropped before it could enter the model. `SlotLocal` = a
-/// slot value could not be normalized to standard (req-ref<-$, int<-fractional).
-/// `Unimplemented` = the entity type is outside the generated closure (not yet
-/// modeled, or an unknown/non-schema name). `Nonstandard` = a known closure type
-/// sits in a SELECT slot that does not admit it (schema violation). `Cascade` = a
-/// referrer whose target was dropped/dangling. `Unclassified` = the generated
-/// read could not consume the entity's own attributes (off-kind scalar, bad enum
-/// token, short arity, …) and no policy layer (normalize / `drop_pass`) classified
-/// it — a frontier signal: investigate and absorb via normalize or `nonstd_ref`.
+/// Why an entity was dropped before it could enter the model.
+/// `NonstandardValue` = one of the entity's own attribute *values* is nonstandard
+/// and could not be normalized (a required reference is missing, an integer field
+/// holds a fractional value). `NonstandardReference` = one of its *reference*
+/// slots points at a target the schema does not admit. `Unimplemented` = the
+/// entity type is outside the generated closure (not yet modeled, or an
+/// unknown/non-schema name). `Cascade` = a referrer whose target was
+/// dropped/dangling. `Unclassified` = the generated read could not consume the
+/// entity's own attributes (off-kind scalar, bad enum token, short arity, …) and
+/// no policy layer (normalize / `drop_pass`) classified it — a frontier signal:
+/// investigate and absorb via normalize or `nonstd_ref`.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DropKind {
-    SlotLocal,
+    NonstandardValue,
     Unimplemented,
-    Nonstandard,
+    NonstandardReference,
     Cascade,
     Unclassified,
 }
 
-/// A drop reason: kind + a human label (`<TYPE>` / `<ENT>.<slot>-><TYPE>` /
-/// a slot-rule name / `via-<root>`). Aggregated as instance counts per reason.
+/// A drop reason: kind + a human label (`<TYPE>` / `<ENT>: '<slot>' references
+/// <TYPE>` / a slot-rule name / `via-<root>`). Aggregated as instance counts per
+/// reason.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DropReason {
     pub kind: DropKind,
@@ -55,8 +58,9 @@ pub struct Report {
     pub n_synth: usize,
     /// Kept entity count (entities that entered the model).
     pub validated: usize,
-    /// Dropped entities, per-entity: input id + reason (slot-local + unimplemented
-    /// + cascade + nonstandard). `dropped.len()` is the total drop count.
+    /// Dropped entities, per-entity: input id + reason (nonstandard-value +
+    /// unimplemented + cascade + nonstandard-reference). `dropped.len()` is the
+    /// total drop count.
     pub dropped: Vec<(u64, DropReason)>,
     /// Non-standard rewrite notes (kept entities, fixed in place).
     pub norm: Vec<&'static str>,
@@ -104,8 +108,8 @@ fn ent_name(e: &RawEntity) -> String {
 
 /// Slot-aware nonstandard-ref check: does any ref slot of `ent` point at a kept,
 /// in-closure target whose type the slot's SELECT does not admit? Returns the
-/// first `<ENT>.<slot>-><TYPE>` label. Out-of-closure / dangling targets are NOT
-/// flagged here — those are cascade/unimplemented.
+/// first `<ENT>: '<slot>' references <TYPE>` label. Out-of-closure / dangling
+/// targets are NOT flagged here — those are cascade/unimplemented.
 fn nonstd_ref(ent: &RawEntity, graph: &BTreeMap<u64, RawEntity>) -> Option<String> {
     match ent {
         RawEntity::Simple {
@@ -139,7 +143,11 @@ fn check_ref_slots(
                 RawEntity::Simple { name, .. } => rs.allowed.contains(&name.as_str()),
             };
             if !admitted {
-                return Some(format!("{ename}.{}->{}", rs.name, ent_name(target)));
+                return Some(format!(
+                    "{ename}: '{}' references {}",
+                    rs.name,
+                    ent_name(target)
+                ));
             }
         }
     }
@@ -215,7 +223,7 @@ fn drop_pass(
                 dropped.push((
                     id,
                     DropReason {
-                        kind: DropKind::Nonstandard,
+                        kind: DropKind::NonstandardReference,
                         key: reason,
                     },
                 ));
@@ -321,7 +329,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
         dropped.push((
             id,
             DropReason {
-                kind: DropKind::SlotLocal,
+                kind: DropKind::NonstandardValue,
                 key: r.to_string(),
             },
         ));

@@ -79,24 +79,27 @@ fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
         return if matches!(a, Attribute::Derived) {
             NormAction::Unchanged
         } else {
-            NormAction::Rewrite(Attribute::Derived, "derived->*")
+            NormAction::Rewrite(Attribute::Derived, "derived attribute reset to *")
         };
     }
     match (s.k, a) {
-        (Sk::Real, Attribute::Integer(i)) => {
-            NormAction::Rewrite(Attribute::Real(*i as f64), "int->real")
-        }
+        (Sk::Real, Attribute::Integer(i)) => NormAction::Rewrite(
+            Attribute::Real(*i as f64),
+            "integer converted to real number",
+        ),
         (Sk::Int, Attribute::Real(r)) if r.fract() == 0.0 => {
-            NormAction::Rewrite(Attribute::Integer(*r as i64), "real->int")
+            NormAction::Rewrite(Attribute::Integer(*r as i64), "real converted to integer")
         }
-        (Sk::Int, Attribute::Real(_)) => NormAction::Drop("int<-fractional-real"),
-        (Sk::Str | Sk::Bin, Attribute::Unset) if s.req => {
-            NormAction::Rewrite(Attribute::String(String::new()), "req-str<-$")
-        }
-        (Sk::Vec, Attribute::Unset) if s.req => {
-            NormAction::Rewrite(Attribute::List(Vec::new()), "req-vec<-$")
-        }
-        (Sk::Ref, Attribute::Unset) if s.req => NormAction::Drop("req-ref<-$"),
+        (Sk::Int, Attribute::Real(_)) => NormAction::Drop("integer field has a fractional value"),
+        (Sk::Str | Sk::Bin, Attribute::Unset) if s.req => NormAction::Rewrite(
+            Attribute::String(String::new()),
+            "missing required text set to empty",
+        ),
+        (Sk::Vec, Attribute::Unset) if s.req => NormAction::Rewrite(
+            Attribute::List(Vec::new()),
+            "missing required list set to empty",
+        ),
+        (Sk::Ref, Attribute::Unset) if s.req => NormAction::Drop("required reference is missing"),
         _ => NormAction::Unchanged,
     }
 }
@@ -121,14 +124,14 @@ fn norm_attrs(
                         if let Attribute::List(v) = a {
                             for e in v.iter_mut() {
                                 if wrap_bare_scalar(e, wire) {
-                                    warns.push("select-scalar bare->typed");
+                                    warns.push("untyped value tagged with its type");
                                 }
                             }
                         }
                     }
                     Sk::Ref => {
                         if wrap_bare_scalar(a, wire) {
-                            warns.push("select-scalar bare->typed");
+                            warns.push("untyped value tagged with its type");
                         }
                     }
                     _ => {}
@@ -186,7 +189,7 @@ pub fn normalize(
             }
         };
         if !keep {
-            slot_drops.push((id, drop_reason.unwrap_or("slot-local")));
+            slot_drops.push((id, drop_reason.unwrap_or("unspecified")));
         }
     }
     for (id, _) in &slot_drops {

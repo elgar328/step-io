@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `Report` drop reasons are now plain-language. `DropKind::SlotLocal`/`Nonstandard`
+  are renamed to `NonstandardValue`/`NonstandardReference` (a nonstandard attribute
+  *value* vs. a nonstandard *reference*), and the per-reason labels read as
+  sentences (e.g. `required reference is missing`) instead of terse codes
+  (`req-ref<-$`).
+
 ### Added
 
 - `Datum::datum_feature()` — the physical `DATUM_FEATURE` a datum is established

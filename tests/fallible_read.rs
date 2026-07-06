@@ -73,14 +73,17 @@ fn dangling_ref_cascades() {
 }
 
 /// Wrong-type ref: `VERTEX_POINT.vertex_geometry` must be a point, but `#1` is a
-/// DIRECTION. `#2` is dropped (Nonstandard via graph, or Unclassified via read —
-/// either is a graceful drop); the valid `#1` survives. No panic.
+/// DIRECTION. `#2` is dropped (`NonstandardReference` via graph, or `Unclassified`
+/// via read — either is a graceful drop); the valid `#1` survives. No panic.
 #[test]
 fn wrong_type_ref_drops_only_offender() {
     let r = read_body("#1=DIRECTION('',(1.,0.,0.));\n#2=VERTEX_POINT('',#1);\n");
     let k = dropped_kind(&r, 2);
     assert!(
-        matches!(k, Some(DropKind::Nonstandard | DropKind::Unclassified)),
+        matches!(
+            k,
+            Some(DropKind::NonstandardReference | DropKind::Unclassified)
+        ),
         "wrong-type ref dropped, got {k:?}"
     );
     assert!(
