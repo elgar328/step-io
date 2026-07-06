@@ -241,7 +241,7 @@ fn drop_pass(
 
 /// Full pre-read normalization: `entity_normalize` (per-entity, add-only synthetic
 /// fixups) then `generic_normalize` (generic slot-kind rules). Returns the map,
-/// the rewrite notes, the slot-local drop reasons, and the synthetic-add count
+/// the rewrite notes, the nonstandard-value drop reasons, and the synthetic-add count
 /// (`entity_normalize` never removes, so the count delta is exactly the adds).
 #[allow(clippy::type_complexity)]
 fn normalize_all(
@@ -321,7 +321,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
         "fallible read did not converge in {MAX_ITERS} iters"
     );
 
-    // Finalize provenance: cascade drops (this iter) + slot-local (normalize) +
+    // Finalize provenance: cascade drops (this iter) + nonstandard-value (normalize) +
     // accumulated read failures (Unclassified). Each id appears exactly once —
     // `drop_pass` excludes `known_bad` from its `dropped`, and `read_fail` keys ==
     // `known_bad`, so the three sets are disjoint (accounting invariant holds).

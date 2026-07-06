@@ -1828,7 +1828,7 @@ fn sk_variant(k: &Kind) -> &'static str {
         Kind::Ref(_) => "Ref",
         Kind::Vec(_) => "Vec",
         Kind::MeasureSelect(_) => "Meas",
-        // string-select required `$` -> req-str<-$ normalizes to "" (read as bare).
+        // string-select required `$` normalizes to "" (read as bare).
         Kind::StringSelect(_) => "Str",
         // int-select: same Unchanged normalize as measure; integer is preserved
         // by read_int_measure_value / int_measure (no int->real coercion).
@@ -1920,7 +1920,7 @@ fn emit_slot_table<'a>(
                 // where a deriving sibling is present; in the STANDALONE (simple)
                 // form it is an explicit, required value. So in simple_slots a
                 // derivable field is required (a non-standard `$` normalizes like
-                // any required field, e.g. req-str<-$); in part_slots it stays
+                // any required field, e.g. a required string `$`); in part_slots it stays
                 // non-required (the `*` case).
                 let req = if simple {
                     !f.optional
@@ -2009,7 +2009,7 @@ fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
 
 /// Normalize one entity's attrs. Rewrites push to `warns` (norm channel); a
 /// non-normalizable slot sets `drop_out` to its reason and returns false (the
-/// entity is removed — slot-local drop, surfaced on the drops channel).
+/// entity is removed — nonstandard-value drop, surfaced on the drops channel).
 fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'static str>, drop_out: &mut Option<&'static str>) -> bool {
     for (i, a) in attrs.iter_mut().enumerate() {
         canon(a);

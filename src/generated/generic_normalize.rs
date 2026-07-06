@@ -106,7 +106,7 @@ fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
 
 /// Normalize one entity's attrs. Rewrites push to `warns` (norm channel); a
 /// non-normalizable slot sets `drop_out` to its reason and returns false (the
-/// entity is removed — slot-local drop, surfaced on the drops channel).
+/// entity is removed — nonstandard-value drop, surfaced on the drops channel).
 fn norm_attrs(
     slots: &[Slot],
     attrs: &mut Vec<Attribute>,
