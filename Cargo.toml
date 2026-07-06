@@ -3,7 +3,7 @@ members = [".", "codegen"]
 
 [package]
 name = "step-io"
-version = "0.2.2-dev"
+version = "0.2.2"
 edition = "2024"
 rust-version = "1.85"
 description = "STEP (ISO 10303) file I/O for Rust."
