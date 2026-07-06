@@ -967,24 +967,25 @@ impl<'m> Feature<'m> {
 // to, and the filtered per-part queries backing `ProductDef`.
 // ---------------------------------------------------------------------------
 
-/// The product definition a `PRODUCT_DEFINITION_SHAPE` defines, if its
-/// `definition` is a plain `PRODUCT_DEFINITION`.
-fn product_def_of_pds(
-    cx: Ctx<'_>,
-    id: m::ProductDefinitionShapeId,
-) -> Option<m::ProductDefinitionId> {
+/// The product definition a `PRODUCT_DEFINITION_SHAPE` defines, as an
+/// [`EntityKey`](m::EntityKey), if its `definition` is a `PRODUCT_DEFINITION` or
+/// its `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` subtype (both are surfaced
+/// as a [`ProductDef`](crate::scene::product::ProductDef)); `None` otherwise.
+fn product_def_of_pds(cx: Ctx<'_>, id: m::ProductDefinitionShapeId) -> Option<m::EntityKey> {
     match cx.model.product_definition_shape_arena.get(id.0).definition {
-        m::CharacterizedDefinitionRef::ProductDefinition(pd) => Some(pd),
+        m::CharacterizedDefinitionRef::ProductDefinition(pd) => {
+            Some(m::EntityKey::ProductDefinition(pd))
+        }
+        m::CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(w) => {
+            Some(m::EntityKey::ProductDefinitionWithAssociatedDocuments(w))
+        }
         _ => None,
     }
 }
 
 /// The product definition an `of_shape` reference resolves to (its PDS's
 /// `definition`); `None` for a complex PDS or a non-`PRODUCT_DEFINITION` owner.
-fn product_def_of_shape(
-    cx: Ctx<'_>,
-    r: &m::ProductDefinitionShapeRef,
-) -> Option<m::ProductDefinitionId> {
+fn product_def_of_shape(cx: Ctx<'_>, r: &m::ProductDefinitionShapeRef) -> Option<m::EntityKey> {
     match r {
         m::ProductDefinitionShapeRef::ProductDefinitionShape(id) => product_def_of_pds(cx, *id),
         m::ProductDefinitionShapeRef::Complex(_) => None,
@@ -993,15 +994,16 @@ fn product_def_of_shape(
 
 impl Feature<'_> {
     /// The product definition this feature belongs to (`of_shape` → PDS →
-    /// definition), if it resolves to a plain `PRODUCT_DEFINITION`.
-    fn part_def_id(&self) -> Option<m::ProductDefinitionId> {
+    /// definition), as an [`EntityKey`](m::EntityKey) — a `PRODUCT_DEFINITION` or
+    /// its `..._WITH_ASSOCIATED_DOCUMENTS` subtype.
+    fn part_def_id(&self) -> Option<m::EntityKey> {
         product_def_of_shape(self.cx, self.of_shape())
     }
 }
 
 impl Datum<'_> {
     /// The product definition this datum belongs to (`of_shape` → PDS → part).
-    fn part_def_id(&self) -> Option<m::ProductDefinitionId> {
+    fn part_def_id(&self) -> Option<m::EntityKey> {
         let of_shape = match self.which {
             DatumImpl::Datum(i) => &self.cx.model.datum_arena.get(i.0).of_shape,
             DatumImpl::CommonDatum(i) => &self.cx.model.common_datum_arena.get(i.0).of_shape,
@@ -1014,7 +1016,7 @@ impl Tolerance<'_> {
     /// The product definition this tolerance belongs to: its target may be a
     /// shape-aspect feature (→ that feature's part) or the whole part's
     /// `PRODUCT_DEFINITION_SHAPE` directly (an all-over tolerance).
-    fn part_def_id(&self) -> Option<m::ProductDefinitionId> {
+    fn part_def_id(&self) -> Option<m::EntityKey> {
         let target = self.tolerance_target()?;
         if let m::GeometricToleranceTargetRef::ProductDefinitionShape(id) = target {
             return product_def_of_pds(self.cx, *id);
@@ -1025,7 +1027,7 @@ impl Tolerance<'_> {
 }
 
 /// The shape-region features (narrow set) belonging to `part`.
-pub(crate) fn features_of(cx: Ctx<'_>, part: m::ProductDefinitionId) -> Vec<Feature<'_>> {
+pub(crate) fn features_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Feature<'_>> {
     let mut all = Vec::new();
     push_all_features(cx, &mut all);
     all.retain(|f| f.part_def_id() == Some(part));
@@ -1033,14 +1035,14 @@ pub(crate) fn features_of(cx: Ctx<'_>, part: m::ProductDefinitionId) -> Vec<Feat
 }
 
 /// The datums belonging to `part`.
-pub(crate) fn datums_of(cx: Ctx<'_>, part: m::ProductDefinitionId) -> Vec<Datum<'_>> {
+pub(crate) fn datums_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Datum<'_>> {
     let mut all = all_datums(cx);
     all.retain(|d| d.part_def_id() == Some(part));
     all
 }
 
 /// The dimensions belonging to `part` — those whose targeted feature is on it.
-pub(crate) fn dimensions_of(cx: Ctx<'_>, part: m::ProductDefinitionId) -> Vec<Dimension<'_>> {
+pub(crate) fn dimensions_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Dimension<'_>> {
     let mut all = all_dimensions(cx);
     all.retain(|d| d.features().iter().any(|f| f.part_def_id() == Some(part)));
     all
@@ -1048,7 +1050,7 @@ pub(crate) fn dimensions_of(cx: Ctx<'_>, part: m::ProductDefinitionId) -> Vec<Di
 
 /// The tolerances belonging to `part` — those whose target (feature or whole
 /// part) is on it.
-pub(crate) fn tolerances_of(cx: Ctx<'_>, part: m::ProductDefinitionId) -> Vec<Tolerance<'_>> {
+pub(crate) fn tolerances_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Tolerance<'_>> {
     let mut all = all_tolerances(cx);
     all.retain(|t| t.part_def_id() == Some(part));
     all

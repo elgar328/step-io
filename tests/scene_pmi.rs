@@ -562,3 +562,79 @@ fn reads_geometric_tolerances() {
         scene.warnings()
     );
 }
+
+// A documented-part subtype (PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS) that
+// owns PMI: two shape aspects (hole/slot), a DATUM, and a DIMENSIONAL_SIZE on the
+// hole. Its PRODUCT_DEFINITION_SHAPE.definition points at the subtype, so this
+// exercises that ProductDef::{features,datums,dimensions} resolve for the subtype
+// exactly as for a plain PRODUCT_DEFINITION. The documentation ref must resolve
+// (DOCUMENT + DOCUMENT_TYPE) or the part would cascade-drop.
+const WITHDOCS_PMI: &str = "\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#10=PRODUCT('p','Part','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS('design','',#11,#3,(#50));\n\
+#13=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+#50=DOCUMENT('d','doc','',#51);\n\
+#51=DOCUMENT_TYPE('');\n\
+#20=CARTESIAN_POINT('',(0.0,0.0,0.0));\n\
+#21=CARTESIAN_POINT('',(1.0,0.0,0.0));\n\
+#22=DIRECTION('',(0.0,0.0,1.0));\n\
+#23=DIRECTION('',(1.0,0.0,0.0));\n\
+#24=DIRECTION('',(1.0,0.0,0.0));\n\
+#25=AXIS2_PLACEMENT_3D('',#20,#22,#23);\n\
+#26=PLANE('',#25);\n\
+#27=VECTOR('',#24,1.0);\n\
+#28=LINE('',#20,#27);\n\
+#29=VERTEX_POINT('',#20);\n\
+#30=VERTEX_POINT('',#21);\n\
+#31=EDGE_CURVE('',#29,#30,#28,.T.);\n\
+#32=ORIENTED_EDGE('',*,*,#31,.T.);\n\
+#33=EDGE_LOOP('',(#32));\n\
+#34=FACE_OUTER_BOUND('',#33,.T.);\n\
+#35=ADVANCED_FACE('',(#34),#26,.T.);\n\
+#36=REPRESENTATION_CONTEXT('','3D');\n\
+#37=SHAPE_REPRESENTATION('',(#35),#36);\n\
+#40=SHAPE_ASPECT('hole','',#13,.T.);\n\
+#41=DIMENSIONAL_SIZE(#40,'D1');\n\
+#43=SHAPE_ASPECT('slot','',#13,.T.);\n\
+#44=DATUM('datum a','',#13,.T.,'A');\n\
+#42=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#40,#37,#35);\n";
+
+#[test]
+fn withdocs_part_reports_its_pmi() {
+    let src = format!("{HEADER}{WITHDOCS_PMI}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    // The sole product definition is the documented-part subtype.
+    let part = scene
+        .all_product_definitions()
+        .next()
+        .expect("a product definition");
+    assert_eq!(part.documents().len(), 1, "part is the documented subtype");
+
+    // Before the fix these were all empty for the subtype (PMI keyed on the plain
+    // ProductDefinitionId only); they now resolve like a plain PRODUCT_DEFINITION.
+    let mut feats: Vec<_> = part.features().map(|f| f.name().to_owned()).collect();
+    feats.sort();
+    assert_eq!(feats, vec!["hole".to_owned(), "slot".to_owned()]);
+    assert_eq!(
+        part.datums().count(),
+        1,
+        "documented part surfaces its datum"
+    );
+    assert_eq!(
+        part.dimensions().count(),
+        1,
+        "documented part surfaces its dimension"
+    );
+
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
+}

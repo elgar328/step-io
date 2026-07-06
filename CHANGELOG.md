@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ProductDef`, so such a part appears in the assembly tree with its geometry
   placed — instead of the part vanishing and its solids orphaning — and its
   documents/approvals/security are reachable.
+- A `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` part now reports its PMI —
+  `ProductDef::{features, dimensions, tolerances, datums}` resolve for the
+  documented-part subtype as they do for a plain `PRODUCT_DEFINITION`, instead of
+  always returning empty.
 
 ## [0.2.1] - 2026-07-06
 

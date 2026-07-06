@@ -341,15 +341,6 @@ impl<'m> ProductDef<'m> {
         }
     }
 
-    /// The plain `ProductDefinitionId` when this is a plain definition — for
-    /// part-scoped PMI queries that key on that id (see `features`/`dimensions`).
-    fn plain_id(&self) -> Option<m::ProductDefinitionId> {
-        match self.which {
-            PdImpl::Plain(i) => Some(i),
-            PdImpl::WithDocs(_) => None,
-        }
-    }
-
     /// This definition's global identity (a `Copy` key for maps / deduplication;
     /// distinct from [`ProductDef::id`], the STEP `id` string attribute).
     pub fn key(&self) -> m::EntityKey {
@@ -480,35 +471,23 @@ impl<'m> ProductDef<'m> {
     /// resolves to this definition). The model-wide [`Scene::features`] filtered
     /// to this part.
     pub fn features(&self) -> impl Iterator<Item = pmi::Feature<'m>> + 'm {
-        self.plain_id()
-            .map(|id| pmi::features_of(self.cx, id))
-            .unwrap_or_default()
-            .into_iter()
+        pmi::features_of(self.cx, self.key()).into_iter()
     }
 
     /// The dimensions of this part (those whose targeted feature is on it).
     pub fn dimensions(&self) -> impl Iterator<Item = pmi::Dimension<'m>> + 'm {
-        self.plain_id()
-            .map(|id| pmi::dimensions_of(self.cx, id))
-            .unwrap_or_default()
-            .into_iter()
+        pmi::dimensions_of(self.cx, self.key()).into_iter()
     }
 
     /// The geometric tolerances of this part (those whose target — a feature or
     /// the whole part — is on it).
     pub fn tolerances(&self) -> impl Iterator<Item = pmi::Tolerance<'m>> + 'm {
-        self.plain_id()
-            .map(|id| pmi::tolerances_of(self.cx, id))
-            .unwrap_or_default()
-            .into_iter()
+        pmi::tolerances_of(self.cx, self.key()).into_iter()
     }
 
     /// The datums of this part (`DATUM` / `COMMON_DATUM` whose `of_shape` is on it).
     pub fn datums(&self) -> impl Iterator<Item = pmi::Datum<'m>> + 'm {
-        self.plain_id()
-            .map(|id| pmi::datums_of(self.cx, id))
-            .unwrap_or_default()
-            .into_iter()
+        pmi::datums_of(self.cx, self.key()).into_iter()
     }
 
     /// The version identifier of this part — its `PRODUCT_DEFINITION_FORMATION.id`.
