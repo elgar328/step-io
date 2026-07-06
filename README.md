@@ -65,6 +65,17 @@ b.solid(part, "wheel body", fs).unwrap();
 std::fs::write("wheel.step", b.finish().unwrap()).unwrap();
 ```
 
+## Example app
+
+[**step-loupe**](https://github.com/elgar328/step-loupe) is a single-file,
+in-browser STEP viewer built on step-io (compiled to WebAssembly): a worked
+example of the reading API, rendering b-rep geometry, the assembly tree, PMI,
+units, and the provenance report.
+
+**Live demo:** <https://elgar328.github.io/step-loupe/?file=nist-ctc05.step>
+
+[![step-loupe viewing a NIST CTC 05 part with PMI](https://github.com/elgar328/step-loupe/releases/download/assets/screenshot.webp)](https://github.com/elgar328/step-loupe)
+
 ## Design
 
 step-io exists to sit between a 3D CAD kernel and the STEP files it
