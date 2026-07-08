@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-07-09
+
+### Added
+
+- `StepBuilder::solid_with_voids()` authors a solid with internal cavities
+  (`BREP_WITH_VOIDS`), such as a hollow casting. Void solids read back like any
+  other solid: `Scene::all_solids()`, `Face::solid()`, and `ProductDef::solids()`
+  include them, `Solid::voids()` returns the faces of each cavity shell, and
+  `StyleTarget::VoidSolid` colours, layers, and hides them.
+
+### Changed
+
+- `StepBuilder::mesh()` now takes `Option<SolidRef>` for the solid a display mesh
+  tessellates (was `Option<ManifoldSolidBrepId>`), so a mesh can link to a plain
+  solid or a `BREP_WITH_VOIDS`. Existing calls migrate with `Some(id.into())`.
+
 ## [0.2.2] - 2026-07-06
 
 ### Added
@@ -85,7 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   coverage matrix ([`docs/entities.md`](docs/entities.md)) lists exactly what is
   read and written.
 
-[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/elgar328/step-io/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/elgar328/step-io/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/elgar328/step-io/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/elgar328/step-io/compare/v0.1.0...v0.2.0

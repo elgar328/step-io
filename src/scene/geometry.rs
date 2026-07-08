@@ -23,13 +23,15 @@ use crate::generated::model as m;
 /// model-level query is always "find all of this type"); navigating *from* a
 /// handle (e.g. `solid.faces()`) is unprefixed and scoped to that element.
 impl Scene<'_> {
-    /// Every b-rep solid (`MANIFOLD_SOLID_BREP`) in the model.
+    /// Every b-rep solid in the model — `MANIFOLD_SOLID_BREP` and
+    /// `BREP_WITH_VOIDS` (solids with internal cavities).
     pub fn all_solids(&self) -> impl Iterator<Item = Solid<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.manifold_solid_brep_arena.items.len()).map(move |i| Solid {
-            cx,
-            id: m::ManifoldSolidBrepId(i),
-        })
+        let manifold = (0..cx.model.manifold_solid_brep_arena.items.len())
+            .map(move |i| Solid::from_id(cx, m::ManifoldSolidBrepId(i)));
+        let with_voids = (0..cx.model.brep_with_voids_arena.items.len())
+            .map(move |i| Solid::from_void_id(cx, m::BrepWithVoidsId(i)));
+        manifold.chain(with_voids)
     }
 
     /// Every face in the model (`ADVANCED_FACE` and `FACE_SURFACE`).
@@ -78,32 +80,65 @@ impl Scene<'_> {
 // Solid
 // ---------------------------------------------------------------------------
 
-/// A b-rep solid (`MANIFOLD_SOLID_BREP`).
+/// A b-rep solid — a `MANIFOLD_SOLID_BREP`, or a `BREP_WITH_VOIDS` (a body with
+/// internal cavities). Use [`voids`](Solid::voids) to reach the cavity shells.
 #[derive(Clone, Copy)]
 pub struct Solid<'m> {
     cx: Ctx<'m>,
-    id: m::ManifoldSolidBrepId,
+    which: SolidImpl,
+}
+
+#[derive(Clone, Copy)]
+enum SolidImpl {
+    Manifold(m::ManifoldSolidBrepId),
+    WithVoids(m::BrepWithVoidsId),
 }
 
 impl<'m> Solid<'m> {
-    /// Construct a solid handle from its id — used by other scene modules (e.g.
-    /// `product`) to bridge into geometry; the fields are otherwise private.
+    /// Construct a solid handle from a `MANIFOLD_SOLID_BREP` id — used by other
+    /// scene modules (e.g. `product`) to bridge into geometry; the fields are
+    /// otherwise private.
     pub(crate) fn from_id(cx: Ctx<'m>, id: m::ManifoldSolidBrepId) -> Self {
-        Solid { cx, id }
+        Solid {
+            cx,
+            which: SolidImpl::Manifold(id),
+        }
     }
 
-    fn raw(&self) -> &'m m::ManifoldSolidBrep {
-        self.cx.model.manifold_solid_brep_arena.get(self.id.0)
+    /// Construct a solid handle from a `BREP_WITH_VOIDS` id.
+    pub(crate) fn from_void_id(cx: Ctx<'m>, id: m::BrepWithVoidsId) -> Self {
+        Solid {
+            cx,
+            which: SolidImpl::WithVoids(id),
+        }
+    }
+
+    /// (`name`, `outer` shell) — `MANIFOLD_SOLID_BREP` and `BREP_WITH_VOIDS`
+    /// share this layout.
+    fn name_and_outer(&self) -> (&'m str, &'m m::ClosedShellRef) {
+        match self.which {
+            SolidImpl::Manifold(i) => {
+                let s = self.cx.model.manifold_solid_brep_arena.get(i.0);
+                (&s.name, &s.outer)
+            }
+            SolidImpl::WithVoids(i) => {
+                let s = self.cx.model.brep_with_voids_arena.get(i.0);
+                (&s.name, &s.outer)
+            }
+        }
     }
 
     pub fn name(&self) -> &'m str {
-        &self.raw().name
+        self.name_and_outer().0
     }
 
     /// This solid's global identity (a `Copy` key for maps / deduplication; two
     /// handles to the same entity share one `key()`).
     pub fn key(&self) -> m::EntityKey {
-        m::EntityKey::ManifoldSolidBrep(self.id)
+        match self.which {
+            SolidImpl::Manifold(i) => m::EntityKey::ManifoldSolidBrep(i),
+            SolidImpl::WithVoids(i) => m::EntityKey::BrepWithVoids(i),
+        }
     }
 
     /// The colour styled onto this solid, if any.
@@ -131,10 +166,42 @@ impl<'m> Solid<'m> {
     /// Faces of the solid's outer shell.
     pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + 'm {
         let cx = self.cx;
-        resolve_closed_shell(cx.model, &self.raw().outer)
+        resolve_closed_shell(cx.model, self.name_and_outer().1)
             .into_iter()
             .flat_map(|shell| shell.cfs_faces.iter())
             .filter_map(move |fr| Face::from_ref(cx, fr))
+    }
+
+    /// Faces of each internal void shell — one inner `Vec` per cavity of a
+    /// `BREP_WITH_VOIDS`. Empty for a plain `MANIFOLD_SOLID_BREP`.
+    pub fn voids(&self) -> Vec<Vec<Face<'m>>> {
+        let cx = self.cx;
+        let SolidImpl::WithVoids(id) = self.which else {
+            return Vec::new();
+        };
+        cx.model
+            .brep_with_voids_arena
+            .get(id.0)
+            .voids
+            .iter()
+            .map(|ocs| {
+                let shell = match ocs {
+                    m::OrientedClosedShellRef::OrientedClosedShell(o) => resolve_closed_shell(
+                        cx.model,
+                        &cx.model
+                            .oriented_closed_shell_arena
+                            .get(o.0)
+                            .closed_shell_element,
+                    ),
+                    m::OrientedClosedShellRef::Complex(_) => None,
+                };
+                shell
+                    .into_iter()
+                    .flat_map(|s| s.cfs_faces.iter())
+                    .filter_map(|fr| Face::from_ref(cx, fr))
+                    .collect()
+            })
+            .collect()
     }
 }
 
@@ -322,14 +389,14 @@ impl<'m> Face<'m> {
     }
 
     /// The b-rep solid this face belongs to, if any (reverse: a `CLOSED_SHELL`
-    /// listing this face → a `MANIFOLD_SOLID_BREP` whose outer shell is that
-    /// shell, directly or through an `ORIENTED_CLOSED_SHELL`).
+    /// listing this face → a `MANIFOLD_SOLID_BREP` or `BREP_WITH_VOIDS` whose
+    /// shell is that shell, directly or through an `ORIENTED_CLOSED_SHELL`).
     pub fn solid(&self) -> Option<Solid<'m>> {
         let rg = self.cx.ref_graph();
         for &r in rg.referrers(self.key()) {
             if let m::EntityKey::ClosedShell(cs) = r {
-                if let Some(msb) = closed_shell_to_solid(rg, cs) {
-                    return Some(Solid::from_id(self.cx, msb));
+                if let Some(which) = closed_shell_to_solid(rg, cs) {
+                    return Some(Solid { cx: self.cx, which });
                 }
             }
         }
@@ -1011,16 +1078,23 @@ impl<'m> Point<'m> {
 // Reference resolvers (hand-written for the spike)
 // ---------------------------------------------------------------------------
 
-/// The manifold solid whose outer shell is this closed shell — directly, or
-/// through an `ORIENTED_CLOSED_SHELL` wrapper. Reverse over [`RefGraph`].
-fn closed_shell_to_solid(rg: &RefGraph, cs: m::ClosedShellId) -> Option<m::ManifoldSolidBrepId> {
+/// The solid whose shell is this closed shell — a `MANIFOLD_SOLID_BREP` or a
+/// `BREP_WITH_VOIDS`, directly or through an `ORIENTED_CLOSED_SHELL` wrapper
+/// (the wrapper is how a `BREP_WITH_VOIDS` cavity references its shell). Reverse
+/// over [`RefGraph`].
+fn closed_shell_to_solid(rg: &RefGraph, cs: m::ClosedShellId) -> Option<SolidImpl> {
     for &r in rg.referrers(m::EntityKey::ClosedShell(cs)) {
         match r {
-            m::EntityKey::ManifoldSolidBrep(msb) => return Some(msb),
+            m::EntityKey::ManifoldSolidBrep(msb) => return Some(SolidImpl::Manifold(msb)),
+            m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
             m::EntityKey::OrientedClosedShell(ocs) => {
                 for &r2 in rg.referrers(m::EntityKey::OrientedClosedShell(ocs)) {
-                    if let m::EntityKey::ManifoldSolidBrep(msb) = r2 {
-                        return Some(msb);
+                    match r2 {
+                        m::EntityKey::ManifoldSolidBrep(msb) => {
+                            return Some(SolidImpl::Manifold(msb));
+                        }
+                        m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
+                        _ => {}
                     }
                 }
             }

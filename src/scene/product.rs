@@ -1208,6 +1208,7 @@ impl<'m> MappedInstance<'m> {
             .flatten()
             .filter_map(|it| match it {
                 m::RepresentationItemRef::ManifoldSolidBrep(id) => Some(Solid::from_id(cx, *id)),
+                m::RepresentationItemRef::BrepWithVoids(id) => Some(Solid::from_void_id(cx, *id)),
                 _ => None,
             })
             .collect()
@@ -1412,8 +1413,12 @@ fn collect_solids_from_repr<'m>(
         return;
     }
     for it in items {
-        if let m::RepresentationItemRef::ManifoldSolidBrep(sid) = it {
-            out.push(Solid::from_id(cx, *sid));
+        match it {
+            m::RepresentationItemRef::ManifoldSolidBrep(sid) => out.push(Solid::from_id(cx, *sid)),
+            m::RepresentationItemRef::BrepWithVoids(sid) => {
+                out.push(Solid::from_void_id(cx, *sid));
+            }
+            _ => {}
         }
     }
     // Hop across plain shape-equivalence relationships to the other endpoint.
