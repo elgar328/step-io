@@ -58,7 +58,7 @@ fn mesh_round_trips_with_solid_back_link() {
     let body = b.solid(part, "plate body", vec![face]).expect("solid");
 
     let input = quad_mesh();
-    b.mesh(part, "plate mesh", &input, Some(body))
+    b.mesh(part, "plate mesh", &input, Some(body.into()))
         .expect("mesh");
     let text = b.finish().expect("finish");
 
@@ -91,6 +91,50 @@ fn mesh_round_trips_with_solid_back_link() {
     let solids: Vec<_> = scene.all_solids().collect();
     assert_eq!(solids.len(), 1);
     assert_eq!(linked.key(), solids[0].key());
+}
+
+#[test]
+fn mesh_links_back_to_void_solid() {
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("hollow").expect("part");
+
+    // Minimal void solid: one-face outer shell + one-face void shell.
+    let mut tri = |z: f64| {
+        let v0 = b.vertex([0.0, 0.0, z]).expect("v0");
+        let v1 = b.vertex([1.0, 0.0, z]).expect("v1");
+        let v2 = b.vertex([1.0, 1.0, z]).expect("v2");
+        let e0 = b.edge(v0, v1, CurveInput::Line).expect("e0");
+        let e1 = b.edge(v1, v2, CurveInput::Line).expect("e1");
+        let e2 = b.edge(v2, v0, CurveInput::Line).expect("e2");
+        b.face(
+            SurfaceInput::Plane(frame([0.0, 0.0, z], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
+            true,
+            vec![FaceBoundInput::outer(vec![
+                (e0, true),
+                (e1, true),
+                (e2, true),
+            ])],
+        )
+        .expect("face")
+    };
+    let outer = tri(0.0);
+    let cavity = tri(0.5);
+    let body = b
+        .solid_with_voids(part, "hollow body", vec![outer], vec![vec![cavity]])
+        .expect("void solid");
+
+    b.mesh(part, "hollow mesh", &quad_mesh(), Some(body.into()))
+        .expect("mesh");
+    let text = b.finish().expect("finish");
+
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+
+    let scene = model.scene();
+    let groups: Vec<_> = scene.all_mesh_groups().collect();
+    assert_eq!(groups.len(), 1);
+    let linked = groups[0].solid().expect("solid back-link");
+    assert!(matches!(linked.key(), step_io::EntityKey::BrepWithVoids(_)));
 }
 
 #[test]

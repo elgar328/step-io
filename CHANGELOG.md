@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `StepBuilder::solid_with_voids()` authors a solid with internal cavities
+  (`BREP_WITH_VOIDS`). Void solids surface through the read side too:
+  `Scene::all_solids()`, `Face::solid()`, and `ProductDef::solids()` include
+  them, and `Solid::voids()` returns the faces of each cavity shell.
+  `StyleTarget::VoidSolid` colours, layers, and hides a void solid.
+
+### Changed
+
+- `StepBuilder::mesh()` takes `Option<SolidRef>` for the linked solid (was
+  `Option<ManifoldSolidBrepId>`), so a display mesh can link to a plain solid or
+  a `BREP_WITH_VOIDS`. The id types convert with `Into`; pass `Some(id.into())`.
+
 ## [0.2.2] - 2026-07-06
 
 ### Added

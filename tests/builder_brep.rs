@@ -3,8 +3,9 @@
 //! through the Scene.
 
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
+use step_io::generated::model::AdvancedFaceId;
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
-use step_io::{StepBuilder, read};
+use step_io::{EntityKey, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -12,6 +13,93 @@ fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
         axis,
         ref_dir,
     }
+}
+
+/// The 6 planar faces of an axis-aligned box (min corner + edge length),
+/// closed into a shell by the caller. Corner index = x + 2y + 4z.
+fn box_faces(b: &mut StepBuilder, min: [f64; 3], size: f64) -> Vec<AdvancedFaceId> {
+    let mut v = Vec::new();
+    for z in 0..2 {
+        for y in 0..2 {
+            for x in 0..2 {
+                v.push(
+                    b.vertex([
+                        min[0] + f64::from(x) * size,
+                        min[1] + f64::from(y) * size,
+                        min[2] + f64::from(z) * size,
+                    ])
+                    .expect("vertex"),
+                );
+            }
+        }
+    }
+    let pairs = [
+        (0, 1),
+        (2, 3),
+        (4, 5),
+        (6, 7),
+        (0, 2),
+        (1, 3),
+        (4, 6),
+        (5, 7),
+        (0, 4),
+        (1, 5),
+        (2, 6),
+        (3, 7),
+    ];
+    let mut e = std::collections::HashMap::new();
+    for (a_ix, b_ix) in pairs {
+        let id = b.edge(v[a_ix], v[b_ix], CurveInput::Line).expect("edge");
+        e.insert((a_ix, b_ix), id);
+    }
+    let edge = |a_ix: usize, b_ix: usize| {
+        e.get(&(a_ix, b_ix))
+            .map(|id| (*id, true))
+            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, false)))
+            .expect("edge exists")
+    };
+    let [x0, y0, z0] = min;
+    let faces_spec: [([usize; 4], Frame); 6] = [
+        (
+            [0, 2, 3, 1],
+            frame([x0, y0, z0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0]),
+        ),
+        (
+            [4, 5, 7, 6],
+            frame([x0, y0, z0 + size], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]),
+        ),
+        (
+            [0, 1, 5, 4],
+            frame([x0, y0, z0], [0.0, -1.0, 0.0], [1.0, 0.0, 0.0]),
+        ),
+        (
+            [2, 6, 7, 3],
+            frame([x0, y0 + size, z0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]),
+        ),
+        (
+            [0, 4, 6, 2],
+            frame([x0, y0, z0], [-1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+        ),
+        (
+            [1, 3, 7, 5],
+            frame([x0 + size, y0, z0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+        ),
+    ];
+    let mut faces = Vec::new();
+    for (loop_ixs, f) in faces_spec {
+        let edges = (0..4)
+            .map(|i| edge(loop_ixs[i], loop_ixs[(i + 1) % 4]))
+            .collect();
+        faces.push(
+            b.face(
+                SurfaceInput::Plane(f),
+                true,
+                vec![FaceBoundInput::outer(edges)],
+            )
+            .expect("face"),
+        );
+    }
+    faces
 }
 
 #[test]
@@ -267,4 +355,100 @@ fn empty_bounds_and_faces_are_rejected() {
             ..
         }
     ));
+}
+
+#[test]
+fn void_solid_round_trips_and_reads_back() {
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("hollow block").expect("part");
+
+    // Outer 10-unit box with a 4-unit cubic cavity centred inside it.
+    let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0);
+    let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0);
+    b.solid_with_voids(part, "hollow body", outer, vec![cavity])
+        .expect("void solid");
+
+    let text = b.finish().expect("finish");
+    assert!(
+        text.contains("BREP_WITH_VOIDS"),
+        "output should carry a BREP_WITH_VOIDS"
+    );
+
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+
+    // Promotion: a void solid still writes an ABSR, not a plain SR.
+    assert_eq!(
+        model.advanced_brep_shape_representation_arena.items.len(),
+        1
+    );
+    assert_eq!(model.shape_representation_arena.items.len(), 0);
+
+    let scene = model.scene();
+    let solids: Vec<_> = scene.all_solids().collect();
+    assert_eq!(solids.len(), 1, "the void solid surfaces in all_solids");
+    let solid = solids[0];
+    assert!(matches!(solid.key(), EntityKey::BrepWithVoids(_)));
+
+    // Outer shell = 6 faces; one cavity, also 6 faces.
+    assert_eq!(solid.faces().count(), 6);
+    let voids = solid.voids();
+    assert_eq!(voids.len(), 1);
+    assert_eq!(voids[0].len(), 6);
+
+    // Every face round-trips back to this solid.
+    for face in solid.faces() {
+        assert_eq!(face.solid().expect("owning solid").key(), solid.key());
+    }
+    for face in &voids[0] {
+        assert_eq!(face.solid().expect("owning solid").key(), solid.key());
+    }
+
+    // The part's definition surfaces the void solid too.
+    let def = scene
+        .all_product_definitions()
+        .next()
+        .expect("a product definition");
+    let product_solids: Vec<_> = def.solids().collect();
+    assert_eq!(product_solids.len(), 1);
+    assert!(matches!(
+        product_solids[0].key(),
+        EntityKey::BrepWithVoids(_)
+    ));
+}
+
+#[test]
+fn manifold_and_void_solids_coexist_in_all_solids() {
+    let mut b = StepBuilder::new().expect("builder");
+    let solid_part = b.part("solid block").expect("part");
+    let plain = box_faces(&mut b, [0.0, 0.0, 0.0], 5.0);
+    b.solid(solid_part, "plain body", plain).expect("solid");
+
+    let void_part = b.part("hollow block").expect("part");
+    let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0);
+    let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0);
+    b.solid_with_voids(void_part, "hollow body", outer, vec![cavity])
+        .expect("void solid");
+
+    let text = b.finish().expect("finish");
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+
+    let scene = model.scene();
+    let solids: Vec<_> = scene.all_solids().collect();
+    assert_eq!(solids.len(), 2, "both solids surface");
+    assert_eq!(
+        solids
+            .iter()
+            .filter(|s| matches!(s.key(), EntityKey::ManifoldSolidBrep(_)))
+            .count(),
+        1
+    );
+    assert_eq!(
+        solids
+            .iter()
+            .filter(|s| matches!(s.key(), EntityKey::BrepWithVoids(_)))
+            .count(),
+        1
+    );
 }

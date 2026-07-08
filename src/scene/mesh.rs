@@ -343,10 +343,13 @@ impl<'m> MeshGroup<'m> {
                     .get(i.0)
                     .geometric_link
                     .as_ref()?;
-                let m::ManifoldSolidBrepRef::ManifoldSolidBrep(id) = link else {
-                    return None;
-                };
-                Some(Solid::from_id(cx, *id))
+                match link {
+                    m::ManifoldSolidBrepRef::ManifoldSolidBrep(id) => Some(Solid::from_id(cx, *id)),
+                    m::ManifoldSolidBrepRef::BrepWithVoids(id) => {
+                        Some(Solid::from_void_id(cx, *id))
+                    }
+                    m::ManifoldSolidBrepRef::Complex(_) => None,
+                }
             }
             GroupImpl::Shell(i) => {
                 let link = cx
@@ -359,13 +362,22 @@ impl<'m> MeshGroup<'m> {
                     return None;
                 };
                 let rg = cx.ref_graph();
+                let outer_is = |outer: &m::ClosedShellRef| matches!(outer, m::ClosedShellRef::ClosedShell(s) if s == shell_id);
                 for r in rg.referrers(m::EntityKey::ClosedShell(*shell_id)) {
-                    let m::EntityKey::ManifoldSolidBrep(sid) = r else {
-                        continue;
-                    };
-                    let brep = cx.model.manifold_solid_brep_arena.get(sid.0);
-                    if matches!(&brep.outer, m::ClosedShellRef::ClosedShell(s) if s == shell_id) {
-                        return Some(Solid::from_id(cx, *sid));
+                    match r {
+                        m::EntityKey::ManifoldSolidBrep(sid) => {
+                            let brep = cx.model.manifold_solid_brep_arena.get(sid.0);
+                            if outer_is(&brep.outer) {
+                                return Some(Solid::from_id(cx, *sid));
+                            }
+                        }
+                        m::EntityKey::BrepWithVoids(sid) => {
+                            let brep = cx.model.brep_with_voids_arena.get(sid.0);
+                            if outer_is(&brep.outer) {
+                                return Some(Solid::from_void_id(cx, *sid));
+                            }
+                        }
+                        _ => {}
                     }
                 }
                 None

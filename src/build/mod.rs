@@ -101,7 +101,7 @@
 //!     points: kernel.mesh_points,
 //!     triangles: kernel.mesh_triangles,
 //!     normals: MeshNormalsInput::None,
-//! }, Some(body)).unwrap();
+//! }, Some(body.into())).unwrap();
 //!
 //! // Presentation: colour/transparency, layers, default visibility.
 //! b.style(StyleTarget::Solid(body), Rgb { red: 0.8, green: 0.2, blue: 0.1 }, None).unwrap();
@@ -403,12 +403,36 @@ pub struct MeshInput {
     pub normals: MeshNormalsInput,
 }
 
-/// What a [`StepBuilder::style`] call colours: a whole solid or one face —
-/// the two targets the read-side `Scene` resolves styles for.
+/// What a [`StepBuilder::style`] call colours: a whole solid (with or without
+/// voids) or one face — the targets the read-side `Scene` resolves styles for.
 #[derive(Debug, Clone, Copy)]
 pub enum StyleTarget {
     Face(m::AdvancedFaceId),
     Solid(m::ManifoldSolidBrepId),
+    /// A solid with internal voids ([`StepBuilder::solid_with_voids`]).
+    VoidSolid(m::BrepWithVoidsId),
+}
+
+/// Which solid a display mesh tessellates ([`StepBuilder::mesh`]): a plain
+/// [`solid`](StepBuilder::solid) or one with voids
+/// ([`solid_with_voids`](StepBuilder::solid_with_voids)). The id types convert
+/// with [`Into`], so `Some(body.into())` works for either.
+#[derive(Debug, Clone, Copy)]
+pub enum SolidRef {
+    Solid(m::ManifoldSolidBrepId),
+    VoidSolid(m::BrepWithVoidsId),
+}
+
+impl From<m::ManifoldSolidBrepId> for SolidRef {
+    fn from(id: m::ManifoldSolidBrepId) -> Self {
+        SolidRef::Solid(id)
+    }
+}
+
+impl From<m::BrepWithVoidsId> for SolidRef {
+    fn from(id: m::BrepWithVoidsId) -> Self {
+        SolidRef::VoidSolid(id)
+    }
 }
 
 /// Handle for a vertex created by [`StepBuilder::vertex`] — an index into
@@ -650,6 +674,7 @@ impl StepBuilder {
         let item = match target {
             StyleTarget::Face(f) => m::StyledItemTargetRef::AdvancedFace(f),
             StyleTarget::Solid(s) => m::StyledItemTargetRef::ManifoldSolidBrep(s),
+            StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
             String::new(),
@@ -678,6 +703,7 @@ impl StepBuilder {
             .map(|t| match t {
                 StyleTarget::Face(f) => m::LayeredItemRef::AdvancedFace(f),
                 StyleTarget::Solid(s) => m::LayeredItemRef::ManifoldSolidBrep(s),
+                StyleTarget::VoidSolid(s) => m::LayeredItemRef::BrepWithVoids(s),
             })
             .collect();
         self.author
@@ -702,6 +728,7 @@ impl StepBuilder {
         let item = match target {
             StyleTarget::Face(f) => m::StyledItemTargetRef::AdvancedFace(f),
             StyleTarget::Solid(s) => m::StyledItemTargetRef::ManifoldSolidBrep(s),
+            StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
             String::new(),
@@ -1138,6 +1165,66 @@ impl StepBuilder {
         Ok(solid)
     }
 
+    /// Close `outer_faces` into the outer shell and each inner face group into
+    /// a void shell, then add a solid with internal voids (`BREP_WITH_VOIDS`)
+    /// to `part` — a cavity-bearing body such as a hollow casting. Void shells
+    /// are wrapped as reversed [`ORIENTED_CLOSED_SHELL`](m::OrientedClosedShell)
+    /// per the STEP convention. The solid lands in the part's shape
+    /// representation on [`finish`](Self::finish) (as an
+    /// `ADVANCED_BREP_SHAPE_REPRESENTATION`, like [`solid`](Self::solid)).
+    ///
+    /// `voids` must be non-empty (a solid with no voids is a plain
+    /// [`solid`](Self::solid)); each inner group is one closed cavity shell.
+    ///
+    /// # Errors
+    /// Empty `voids`, or empty face lists, fail validation with
+    /// [`AuthorError`] (the strict `CLOSED_SHELL` / `BREP_WITH_VOIDS`
+    /// cardinality checks). An id that did not come from this builder fails the
+    /// same way; beyond that the wiring is fixed, so an error indicates a bug
+    /// in the builder itself.
+    pub fn solid_with_voids(
+        &mut self,
+        part: Part,
+        name: &str,
+        outer_faces: Vec<m::AdvancedFaceId>,
+        voids: Vec<Vec<m::AdvancedFaceId>>,
+    ) -> Result<m::BrepWithVoidsId, AuthorError> {
+        let outer = self.author.add_closed_shell(
+            String::new(),
+            outer_faces
+                .into_iter()
+                .map(m::FaceRef::AdvancedFace)
+                .collect(),
+        )?;
+        let mut void_refs = Vec::with_capacity(voids.len());
+        for void_faces in voids {
+            let shell = self.author.add_closed_shell(
+                String::new(),
+                void_faces
+                    .into_iter()
+                    .map(m::FaceRef::AdvancedFace)
+                    .collect(),
+            )?;
+            // Void shells face inward: the STEP convention is a reversed
+            // orientation relative to the closed shell's own normals.
+            let oriented = self.author.add_oriented_closed_shell(
+                String::new(),
+                m::ClosedShellRef::ClosedShell(shell),
+                false,
+            )?;
+            void_refs.push(m::OrientedClosedShellRef::OrientedClosedShell(oriented));
+        }
+        let solid = self.author.add_brep_with_voids(
+            name.to_owned(),
+            m::ClosedShellRef::ClosedShell(outer),
+            void_refs,
+        )?;
+        self.parts[part.0]
+            .items
+            .push(m::RepresentationItemRef::BrepWithVoids(solid));
+        Ok(solid)
+    }
+
     /// Add one part: the full product chain (product → formation →
     /// definition → definition shape) plus its origin placement. Shape items
     /// collected for the part are bound into its shape representation by
@@ -1213,7 +1300,7 @@ impl StepBuilder {
         part: Part,
         name: &str,
         input: &MeshInput,
-        of_solid: Option<m::ManifoldSolidBrepId>,
+        of_solid: Option<SolidRef>,
     ) -> Result<m::TessellatedSolidId, AuthorError> {
         let a = &mut self.author;
         let npoints = i64::try_from(input.points.len()).unwrap_or(i64::MAX);
@@ -1251,7 +1338,10 @@ impl StepBuilder {
             vec![m::TessellatedStructuredItemRef::ComplexTriangulatedFace(
                 face,
             )],
-            of_solid.map(m::ManifoldSolidBrepRef::ManifoldSolidBrep),
+            of_solid.map(|s| match s {
+                SolidRef::Solid(id) => m::ManifoldSolidBrepRef::ManifoldSolidBrep(id),
+                SolidRef::VoidSolid(id) => m::ManifoldSolidBrepRef::BrepWithVoids(id),
+            }),
         )?;
         self.parts[part.0].meshes.push(solid);
         Ok(solid)
@@ -1464,10 +1554,13 @@ impl StepBuilder {
         for part in &self.parts {
             let mut items = vec![m::RepresentationItemRef::Axis2Placement3d(part.origin)];
             items.extend(part.items.iter().cloned());
-            let has_solid = part
-                .items
-                .iter()
-                .any(|i| matches!(i, m::RepresentationItemRef::ManifoldSolidBrep(_)));
+            let has_solid = part.items.iter().any(|i| {
+                matches!(
+                    i,
+                    m::RepresentationItemRef::ManifoldSolidBrep(_)
+                        | m::RepresentationItemRef::BrepWithVoids(_)
+                )
+            });
             let (rep, rep_or_ref) = if has_solid {
                 let id = a.add_advanced_brep_shape_representation(
                     String::new(),
