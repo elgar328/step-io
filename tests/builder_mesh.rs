@@ -4,7 +4,7 @@
 //! group linked back to the b-rep solid it tessellates.
 
 use step_io::build::{
-    CurveInput, FaceBoundInput, Frame, MeshInput, MeshNormalsInput, SurfaceInput,
+    CurveInput, FaceBoundInput, Frame, MeshInput, MeshNormalsInput, SurfaceInput, VoidShellNormals,
 };
 use step_io::scene::mesh::MeshNormals;
 use step_io::{StepBuilder, read};
@@ -120,7 +120,13 @@ fn mesh_links_back_to_void_solid() {
     let outer = tri(0.0);
     let cavity = tri(0.5);
     let body = b
-        .solid_with_voids(part, "hollow body", vec![outer], vec![vec![cavity]])
+        .solid_with_voids(
+            part,
+            "hollow body",
+            vec![outer],
+            vec![vec![cavity]],
+            VoidShellNormals::AwayFromMaterial,
+        )
         .expect("void solid");
 
     b.mesh(part, "hollow mesh", &quad_mesh(), Some(body.into()))

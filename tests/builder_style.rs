@@ -2,7 +2,9 @@
 //! read back through the Scene's presentation accessors on solids and faces.
 
 use step_io::build::Rgb;
-use step_io::build::{CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput};
+use step_io::build::{
+    CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput, VoidShellNormals,
+};
 use step_io::{StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
@@ -131,8 +133,14 @@ fn void_body(
     };
     let outer = tri(0.0);
     let cavity = tri(0.5);
-    b.solid_with_voids(part, "hollow body", vec![outer], vec![vec![cavity]])
-        .expect("void solid")
+    b.solid_with_voids(
+        part,
+        "hollow body",
+        vec![outer],
+        vec![vec![cavity]],
+        VoidShellNormals::AwayFromMaterial,
+    )
+    .expect("void solid")
 }
 
 #[test]
