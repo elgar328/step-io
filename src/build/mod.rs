@@ -435,6 +435,24 @@ impl From<m::BrepWithVoidsId> for SolidRef {
     }
 }
 
+/// Which way the face normals of the void shells passed to
+/// [`StepBuilder::solid_with_voids`] point. The caller declares this so
+/// step-io can orient each cavity's `ORIENTED_CLOSED_SHELL` correctly without
+/// evaluating geometry. See that method for how to choose.
+#[derive(Debug, Clone, Copy)]
+pub enum VoidShellNormals {
+    /// Normals point away from the solid material — for a cavity, into the
+    /// empty hole. This is the same rule the outer shell follows, the
+    /// validator- and mass-property-friendly orientation, and what most
+    /// kernels emit for a cavity (a reversed shell). Kept as authored,
+    /// written as `ORIENTED_CLOSED_SHELL(..., .T.)`. The right choice when unsure.
+    AwayFromMaterial,
+    /// Normals point into the solid material — a cavity wound like an ordinary
+    /// outward-facing solid box dropped into the hole. step-io reverses it,
+    /// written as `ORIENTED_CLOSED_SHELL(..., .F.)`.
+    TowardMaterial,
+}
+
 /// Handle for a vertex created by [`StepBuilder::vertex`] — an index into
 /// the builder that created it (a different builder's handle panics or
 /// targets the wrong vertex). The builder keeps the vertex position so
@@ -1165,16 +1183,41 @@ impl StepBuilder {
         Ok(solid)
     }
 
-    /// Close `outer_faces` into the outer shell and each inner face group into
-    /// a void shell, then add a solid with internal voids (`BREP_WITH_VOIDS`)
-    /// to `part` — a cavity-bearing body such as a hollow casting. Void shells
-    /// are wrapped as reversed [`ORIENTED_CLOSED_SHELL`](m::OrientedClosedShell)
-    /// per the STEP convention. The solid lands in the part's shape
-    /// representation on [`finish`](Self::finish) (as an
-    /// `ADVANCED_BREP_SHAPE_REPRESENTATION`, like [`solid`](Self::solid)).
+    /// Close `outer_faces` into the outer shell and each group in `voids` into
+    /// an internal cavity shell, then add a solid with internal voids
+    /// (`BREP_WITH_VOIDS`) to `part` — a cavity-bearing body such as a hollow
+    /// casting. The solid lands in the part's shape representation on
+    /// [`finish`](Self::finish) (as an `ADVANCED_BREP_SHAPE_REPRESENTATION`,
+    /// like [`solid`](Self::solid)).
     ///
     /// `voids` must be non-empty (a solid with no voids is a plain
     /// [`solid`](Self::solid)); each inner group is one closed cavity shell.
+    ///
+    /// # Void shell orientation (`normals`)
+    ///
+    /// STEP orients every bounding shell so its face normals point away from
+    /// the solid material: outward into free space for the outer shell, and
+    /// into the empty cavity for a void. Each void group is wrapped in an
+    /// [`ORIENTED_CLOSED_SHELL`](m::OrientedClosedShell); `normals` tells
+    /// step-io whether the faces you pass already follow that rule or must be
+    /// flipped to it.
+    ///
+    /// - [`AwayFromMaterial`](VoidShellNormals::AwayFromMaterial): the faces
+    ///   already point out of the solid (into the cavity) — the same rule your
+    ///   outer shell follows. Natural, and what most kernels produce when they
+    ///   emit a cavity as a reversed shell; kept as authored (`.T.`). Use this
+    ///   if your kernel orients cavities consistently with the outer shell.
+    ///   When in doubt, this is the right choice.
+    /// - [`TowardMaterial`](VoidShellNormals::TowardMaterial): the faces point
+    ///   into the material — you built the cavity like an ordinary
+    ///   outward-facing box (normals facing outward from the cavity volume,
+    ///   toward the surrounding solid). step-io reverses them (`.F.`).
+    ///
+    /// Quick test: look along a cavity wall's normal. Into the empty hole →
+    /// `AwayFromMaterial`; into the surrounding solid → `TowardMaterial`.
+    /// step-io does not evaluate geometry — it trusts this declaration, and the
+    /// wrong value inverts the void (validators and mass-property sign
+    /// conventions will reject it).
     ///
     /// # Errors
     /// Empty `voids`, or empty face lists, fail validation with
@@ -1188,6 +1231,7 @@ impl StepBuilder {
         name: &str,
         outer_faces: Vec<m::AdvancedFaceId>,
         voids: Vec<Vec<m::AdvancedFaceId>>,
+        normals: VoidShellNormals,
     ) -> Result<m::BrepWithVoidsId, AuthorError> {
         let outer = self.author.add_closed_shell(
             String::new(),
@@ -1196,6 +1240,12 @@ impl StepBuilder {
                 .map(m::FaceRef::AdvancedFace)
                 .collect(),
         )?;
+        // `.T.` keeps the faces as authored, `.F.` reverses them; see
+        // `conditional_reverse` in the schema.
+        let orientation = match normals {
+            VoidShellNormals::AwayFromMaterial => true, // .T. — as authored (natural)
+            VoidShellNormals::TowardMaterial => false,  // .F. — topology_reversed
+        };
         let mut void_refs = Vec::with_capacity(voids.len());
         for void_faces in voids {
             let shell = self.author.add_closed_shell(
@@ -1205,12 +1255,10 @@ impl StepBuilder {
                     .map(m::FaceRef::AdvancedFace)
                     .collect(),
             )?;
-            // Void shells face inward: the STEP convention is a reversed
-            // orientation relative to the closed shell's own normals.
             let oriented = self.author.add_oriented_closed_shell(
                 String::new(),
                 m::ClosedShellRef::ClosedShell(shell),
-                false,
+                orientation,
             )?;
             void_refs.push(m::OrientedClosedShellRef::OrientedClosedShell(oriented));
         }

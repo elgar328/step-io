@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `StepBuilder::solid_with_voids()` now takes a `VoidShellNormals` argument
+  declaring which way the void faces' normals point: `AwayFromMaterial` keeps
+  them as authored (`ORIENTED_CLOSED_SHELL(..., .T.)`), `TowardMaterial`
+  reverses them (`.F.`). This lets kernels pass cavity shells in their native
+  orientation instead of the fixed reversal 0.2.3 applied.
+
 ## [0.2.3] - 2026-07-09
 
 ### Added

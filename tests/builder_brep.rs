@@ -2,7 +2,7 @@
 //! cylinder (circles + cylindrical surface, shared/reused edges), read back
 //! through the Scene.
 
-use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
+use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput, VoidShellNormals};
 use step_io::generated::model::AdvancedFaceId;
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
 use step_io::{EntityKey, StepBuilder, read};
@@ -16,8 +16,11 @@ fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
 }
 
 /// The 6 planar faces of an axis-aligned box (min corner + edge length),
-/// closed into a shell by the caller. Corner index = x + 2y + 4z.
-fn box_faces(b: &mut StepBuilder, min: [f64; 3], size: f64) -> Vec<AdvancedFaceId> {
+/// closed into a shell by the caller. Corner index = x + 2y + 4z. With
+/// `inward`, the normals point toward the box centre (a reversed shell, as a
+/// kernel would hand back a cavity): each plane axis is negated and its loop
+/// winding reversed to match.
+fn box_faces(b: &mut StepBuilder, min: [f64; 3], size: f64, inward: bool) -> Vec<AdvancedFaceId> {
     let mut v = Vec::new();
     for z in 0..2 {
         for y in 0..2 {
@@ -87,9 +90,17 @@ fn box_faces(b: &mut StepBuilder, min: [f64; 3], size: f64) -> Vec<AdvancedFaceI
     ];
     let mut faces = Vec::new();
     for (loop_ixs, f) in faces_spec {
-        let edges = (0..4)
-            .map(|i| edge(loop_ixs[i], loop_ixs[(i + 1) % 4]))
-            .collect();
+        let f = if inward {
+            frame(f.origin, [-f.axis[0], -f.axis[1], -f.axis[2]], f.ref_dir)
+        } else {
+            f
+        };
+        let order = if inward {
+            [loop_ixs[3], loop_ixs[2], loop_ixs[1], loop_ixs[0]]
+        } else {
+            loop_ixs
+        };
+        let edges = (0..4).map(|i| edge(order[i], order[(i + 1) % 4])).collect();
         faces.push(
             b.face(
                 SurfaceInput::Plane(f),
@@ -362,16 +373,31 @@ fn void_solid_round_trips_and_reads_back() {
     let mut b = StepBuilder::new().expect("builder");
     let part = b.part("hollow block").expect("part");
 
-    // Outer 10-unit box with a 4-unit cubic cavity centred inside it.
-    let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0);
-    let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0);
-    b.solid_with_voids(part, "hollow body", outer, vec![cavity])
-        .expect("void solid");
+    // Outer 10-unit box with a 4-unit cubic cavity centred inside it. The
+    // cavity is built as an ordinary outward box (normals toward the
+    // surrounding material), so it is declared `TowardMaterial` and step-io
+    // reverses it into the void.
+    let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0, false);
+    let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0, false);
+    b.solid_with_voids(
+        part,
+        "hollow body",
+        outer,
+        vec![cavity],
+        VoidShellNormals::TowardMaterial,
+    )
+    .expect("void solid");
 
     let text = b.finish().expect("finish");
     assert!(
         text.contains("BREP_WITH_VOIDS"),
         "output should carry a BREP_WITH_VOIDS"
+    );
+    // TowardMaterial faces are reversed into the void: the oriented shell is `.F.`.
+    assert!(
+        text.lines()
+            .any(|l| l.contains("ORIENTED_CLOSED_SHELL") && l.contains(".F.")),
+        "TowardMaterial should reverse the void shell (.F.)"
     );
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
@@ -418,17 +444,66 @@ fn void_solid_round_trips_and_reads_back() {
 }
 
 #[test]
+fn void_shell_away_from_material_emits_t() {
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("hollow block").expect("part");
+
+    // The cavity is authored the way a kernel hands one back: a reversed shell
+    // whose normals point into the void (away from the material), so it is
+    // declared `AwayFromMaterial` and step-io keeps it as authored.
+    let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0, false);
+    let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0, true);
+    b.solid_with_voids(
+        part,
+        "hollow body",
+        outer,
+        vec![cavity],
+        VoidShellNormals::AwayFromMaterial,
+    )
+    .expect("void solid");
+
+    let text = b.finish().expect("finish");
+    // As-authored: the oriented shell is `.T.`, and no void shell is reversed.
+    assert!(
+        text.lines()
+            .any(|l| l.contains("ORIENTED_CLOSED_SHELL") && l.contains(".T.")),
+        "AwayFromMaterial should keep the void shell as authored (.T.)"
+    );
+    assert!(
+        !text
+            .lines()
+            .any(|l| l.contains("ORIENTED_CLOSED_SHELL") && l.contains(".F.")),
+        "no void shell should be reversed"
+    );
+
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let solid = scene.all_solids().next().expect("the void solid");
+    assert!(matches!(solid.key(), EntityKey::BrepWithVoids(_)));
+    let voids = solid.voids();
+    assert_eq!(voids.len(), 1);
+    assert_eq!(voids[0].len(), 6);
+}
+
+#[test]
 fn manifold_and_void_solids_coexist_in_all_solids() {
     let mut b = StepBuilder::new().expect("builder");
     let solid_part = b.part("solid block").expect("part");
-    let plain = box_faces(&mut b, [0.0, 0.0, 0.0], 5.0);
+    let plain = box_faces(&mut b, [0.0, 0.0, 0.0], 5.0, false);
     b.solid(solid_part, "plain body", plain).expect("solid");
 
     let void_part = b.part("hollow block").expect("part");
-    let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0);
-    let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0);
-    b.solid_with_voids(void_part, "hollow body", outer, vec![cavity])
-        .expect("void solid");
+    let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0, false);
+    let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0, false);
+    b.solid_with_voids(
+        void_part,
+        "hollow body",
+        outer,
+        vec![cavity],
+        VoidShellNormals::TowardMaterial,
+    )
+    .expect("void solid");
 
     let text = b.finish().expect("finish");
     let (model, report) = read(text.as_bytes()).expect("re-read");
