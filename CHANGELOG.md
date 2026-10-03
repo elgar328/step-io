@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- A straight edge (`CurveInput::Line`) is written with a `VECTOR` magnitude of
+  1 instead of the edge's length. The magnitude is only the line's parameter
+  scale — the edge is bounded by its vertices — so readers see the same shape,
+  and the value no longer carries the rounding of a length computed from two
+  `f64` points. `ProfileInput::Line` already wrote 1.
+
 ## [0.2.4] - 2026-07-09
 
 ### Changed

@@ -252,7 +252,10 @@ pub enum SurfaceInput {
 /// rational/non-rational split.
 #[derive(Debug, Clone)]
 pub enum CurveInput {
-    /// Straight segment — computed from the two vertex positions.
+    /// Straight segment — its direction computed from the two vertex positions.
+    /// Written as a `LINE` through the start vertex whose `VECTOR` has magnitude
+    /// 1: the magnitude is only the parameter scale, and the edge is bounded by
+    /// its vertices, not by a parameter range.
     Line,
     /// Circle in the frame's XY plane with the given radius; with equal
     /// end vertices this is a full circle, otherwise an arc.
@@ -961,8 +964,8 @@ impl StepBuilder {
     /// Add an edge between two vertices over the given curve. A straight
     /// edge derives its line from the vertex positions (a zero-length
     /// segment gets a placeholder direction — degenerate geometry is the
-    /// caller's responsibility); a circle with `from == to` is a closed
-    /// full-circle edge.
+    /// caller's responsibility), written with a unit-magnitude `VECTOR`; a
+    /// circle with `from == to` is a closed full-circle edge.
     ///
     /// # Errors
     /// Propagates [`AuthorError`] from the strict constructors; the wiring
@@ -984,17 +987,7 @@ impl StepBuilder {
                 } else {
                     [delta[0] / len, delta[1] / len, delta[2] / len]
                 };
-                let a = &mut self.author;
-                let pnt = a.add_cartesian_point(String::new(), start.to_vec())?;
-                let orientation = a.add_direction(String::new(), dir.to_vec())?;
-                let vector =
-                    a.add_vector(String::new(), m::DirectionRef::Direction(orientation), len)?;
-                let line = a.add_line(
-                    String::new(),
-                    m::CartesianPointRef::CartesianPoint(pnt),
-                    m::VectorRef::Vector(vector),
-                )?;
-                m::CurveRef::Line(line)
+                self.profile_geometry(&ProfileInput::Line(start, dir))?
             }
             CurveInput::Circle(frame, radius) => {
                 let position = self.placement(&frame)?;
