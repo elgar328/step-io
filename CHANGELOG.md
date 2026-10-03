@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CurveInput::LineAlong(direction)` authors a straight edge along a unit
+  direction the caller already holds, written bit for bit, so a kernel that
+  knows the exact direction keeps it instead of the one two rounded vertex
+  positions imply. A direction pointing from the end vertex back to the start
+  is negated so the line runs with the edge.
+
 ### Changed
 
 - A straight edge (`CurveInput::Line`) is written with a `VECTOR` magnitude of

@@ -67,3 +67,56 @@ fn a_derived_line_has_unit_magnitude_and_the_vertices_bound_it() {
         panic!("the edge's geometry is the LINE")
     };
 }
+
+/// A tilted edge and an exact unit direction for it: `(3, 4, 12) / 13`, each
+/// component the nearest `f64`, and an end point `1.3` along it in `f64`.
+fn tilted() -> ([f64; 3], [f64; 3], [f64; 3]) {
+    let dir = [3.0 / 13.0, 4.0 / 13.0, 12.0 / 13.0];
+    let from = [0.1, 0.7, 0.3];
+    let to = [
+        from[0] + 1.3 * dir[0],
+        from[1] + 1.3 * dir[1],
+        from[2] + 1.3 * dir[2],
+    ];
+    (from, to, dir)
+}
+
+/// `CurveInput::LineAlong` writes the caller's direction bit for bit, with a
+/// unit magnitude — on an edge where the direction the two rounded vertex
+/// positions imply has different bits, so the two roads are told apart here.
+#[test]
+fn a_line_along_a_given_direction_keeps_its_bits() {
+    let (from, to, dir) = tilted();
+    let derived = line_of(&one_edge(from, to, CurveInput::Line)).0;
+    assert_ne!(
+        bits(derived),
+        bits(dir),
+        "the fixture must be one where the vertex-derived direction differs"
+    );
+
+    let (written, magnitude) = line_of(&one_edge(from, to, CurveInput::LineAlong(dir)));
+    assert_eq!(bits(written), bits(dir));
+    assert_eq!(magnitude.to_bits(), 1.0_f64.to_bits());
+}
+
+/// A direction handed in pointing from the end vertex back to the start is
+/// negated so the line runs with the edge — only the sign changes. A zero
+/// component negates to `-0.0`, which the writer prints as `0.`, so it reads
+/// back as `+0.0`; the comparison folds the two zeros.
+#[test]
+fn a_line_along_a_reversed_direction_runs_with_the_edge() {
+    let unsigned_zero = |v: [f64; 3]| bits(v.map(|c| c + 0.0));
+    let (from, to, dir) = tilted();
+    let reversed = dir.map(|c| -c);
+    let written = line_of(&one_edge(from, to, CurveInput::LineAlong(reversed))).0;
+    assert_eq!(bits(written), bits(dir));
+
+    let up = [0.0, 0.0, 1.0];
+    let written = line_of(&one_edge(
+        [1.0, 2.0, 3.0],
+        [1.0, 2.0, 5.5],
+        CurveInput::LineAlong(up.map(|c| -c)),
+    ))
+    .0;
+    assert_eq!(unsigned_zero(written), unsigned_zero(up));
+}
