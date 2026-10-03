@@ -429,7 +429,11 @@ fn polyline_becomes_degree_one_bspline() {
     assert!(approx(&n.knots, &[0., 0., 1., 2., 2.]));
     assert!(approx(&cp_flat(&n), &[0., 0., 0., 1., 2., 0., 2., 2., 0.]));
     assert!(approx(&n.weights, &[1.; 3]));
-    assert!(scene.warnings().is_empty());
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
 }
 
 #[test]
@@ -445,7 +449,11 @@ fn complex_quasi_uniform_marker_implies_knots() {
     // degree 3 with 4 CPs → a single clamped span.
     assert!(approx(&n.knots, &[0., 0., 0., 0., 1., 1., 1., 1.]));
     assert!(approx(&n.weights, &[1., 0.9, 1.1, 1.]));
-    assert!(scene.warnings().is_empty());
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
 }
 
 // Trimmed curves over B-spline bases. #110 is the full unit circle written as

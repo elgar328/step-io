@@ -66,6 +66,10 @@
 //! std::fs::write("plate.step", b.finish().unwrap()).unwrap();
 //! ```
 //!
+//! A kernel that already holds an edge's exact direction passes it as
+//! [`CurveInput::LineAlong`] instead, and the file keeps those bits rather than
+//! the direction two rounded vertex positions imply.
+//!
 //! The full tour — assembly, display mesh, presentation, metadata, header:
 //!
 //! ```no_run
@@ -252,8 +256,20 @@ pub enum SurfaceInput {
 /// rational/non-rational split.
 #[derive(Debug, Clone)]
 pub enum CurveInput {
-    /// Straight segment — computed from the two vertex positions.
+    /// Straight segment — its direction computed from the two vertex positions.
+    /// Written as a `LINE` through the start vertex whose `VECTOR` has magnitude
+    /// 1: the magnitude is only the parameter scale, and the edge is bounded by
+    /// its vertices, not by a parameter range.
     Line,
+    /// Straight segment along a unit `direction` the caller already holds,
+    /// written bit for bit — so a kernel that rounded the exact direction once,
+    /// from its own definition, keeps it instead of the one two rounded vertex
+    /// positions imply. A direction pointing from the end vertex back to the
+    /// start is negated (exactly) so the line runs with the edge. Unit length
+    /// and being parallel to the edge are the caller's to keep: a direction off
+    /// the edge writes a line the end vertex does not lie on. Same unit
+    /// `VECTOR` magnitude as [`CurveInput::Line`].
+    LineAlong([f64; 3]),
     /// Circle in the frame's XY plane with the given radius; with equal
     /// end vertices this is a full circle, otherwise an arc.
     Circle(Frame, f64),
@@ -961,8 +977,9 @@ impl StepBuilder {
     /// Add an edge between two vertices over the given curve. A straight
     /// edge derives its line from the vertex positions (a zero-length
     /// segment gets a placeholder direction — degenerate geometry is the
-    /// caller's responsibility); a circle with `from == to` is a closed
-    /// full-circle edge.
+    /// caller's responsibility) or takes the caller's exact direction
+    /// ([`CurveInput::LineAlong`]), written with a unit-magnitude `VECTOR`; a
+    /// circle with `from == to` is a closed full-circle edge.
     ///
     /// # Errors
     /// Propagates [`AuthorError`] from the strict constructors; the wiring
@@ -984,17 +1001,13 @@ impl StepBuilder {
                 } else {
                     [delta[0] / len, delta[1] / len, delta[2] / len]
                 };
-                let a = &mut self.author;
-                let pnt = a.add_cartesian_point(String::new(), start.to_vec())?;
-                let orientation = a.add_direction(String::new(), dir.to_vec())?;
-                let vector =
-                    a.add_vector(String::new(), m::DirectionRef::Direction(orientation), len)?;
-                let line = a.add_line(
-                    String::new(),
-                    m::CartesianPointRef::CartesianPoint(pnt),
-                    m::VectorRef::Vector(vector),
-                )?;
-                m::CurveRef::Line(line)
+                self.profile_geometry(&ProfileInput::Line(start, dir))?
+            }
+            CurveInput::LineAlong(dir) => {
+                let delta = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
+                let along = dir[0] * delta[0] + dir[1] * delta[1] + dir[2] * delta[2];
+                let dir = if along < 0.0 { dir.map(|c| -c) } else { dir };
+                self.profile_geometry(&ProfileInput::Line(start, dir))?
             }
             CurveInput::Circle(frame, radius) => {
                 let position = self.placement(&frame)?;

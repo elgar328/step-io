@@ -80,8 +80,12 @@ fn read_tolerates_sparse_header() {
     let h = model.header();
     assert_eq!(h.file_name, "");
     assert_eq!(h.time_stamp, "");
-    assert!(h.authors.is_empty());
-    assert!(h.organizations.is_empty());
+    assert!(h.authors.is_empty(), "authors: {:?}", h.authors);
+    assert!(
+        h.organizations.is_empty(),
+        "organizations: {:?}",
+        h.organizations
+    );
     assert_eq!(h.preprocessor_version, "");
     assert_eq!(h.schema.family, ApFamily::Ap214);
 }

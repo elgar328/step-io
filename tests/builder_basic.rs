@@ -43,7 +43,11 @@ fn builder_with_no_parts_still_emits_a_valid_file() {
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert!(model.product_arena.items.is_empty());
+    assert!(
+        model.product_arena.items.is_empty(),
+        "products: {:?}",
+        model.product_arena.items
+    );
     // The unit context survives as a root: units still readable.
     assert!(model.scene().units().length.is_some());
 }

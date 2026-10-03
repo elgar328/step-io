@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-10-03
+
+### Added
+
+- `CurveInput::LineAlong(direction)` authors a straight edge along a unit
+  direction the caller already holds, written bit for bit, so a kernel that
+  knows the exact direction keeps it instead of the one two rounded vertex
+  positions imply. A direction pointing from the end vertex back to the start
+  is negated so the line runs with the edge.
+
+### Changed
+
+- A straight edge (`CurveInput::Line`) is written with a `VECTOR` magnitude of
+  1 instead of the edge's length. The magnitude is only the line's parameter
+  scale — the edge is bounded by its vertices — so readers see the same shape,
+  and the value no longer carries the rounding of a length computed from two
+  `f64` points. `ProfileInput::Line` already wrote 1.
+
 ## [0.2.4] - 2026-07-09
 
 ### Changed
@@ -111,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   coverage matrix ([`docs/entities.md`](docs/entities.md)) lists exactly what is
   read and written.
 
-[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/elgar328/step-io/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/elgar328/step-io/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/elgar328/step-io/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/elgar328/step-io/compare/v0.2.1...v0.2.2
