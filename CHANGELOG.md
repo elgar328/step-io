@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation and the crate description present step-io as STEP I/O for
+  3D CAD applications rather than for CAD kernels.
+
 ## [0.2.5] - 2026-10-03
 
 ### Added

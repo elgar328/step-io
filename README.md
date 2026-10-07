@@ -5,7 +5,7 @@
 [![CI](https://github.com/elgar328/step-io/actions/workflows/ci.yml/badge.svg)](https://github.com/elgar328/step-io/actions/workflows/ci.yml)
 [![license](https://img.shields.io/crates/l/step-io.svg)](#license)
 
-Lean STEP (ISO 10303) I/O for 3D CAD kernels — reads every mainstream AP,
+Lean STEP (ISO 10303) I/O for 3D CAD applications — reads every mainstream AP,
 writes only modern AP242.
 
 > ⚠️ **Experimental** — early stage; expect breaking API changes at any time.
@@ -15,16 +15,17 @@ writes only modern AP242.
 - **Reads everything, writes AP242** — any mainstream AP comes in, legacy
   included; only AP242 edition 2 (IS) goes out.
 - **Lean** — one universal schema model instead of a per-schema
-  implementation; entities that never appear in real STEP files are pruned
-  out.
+  implementation; the supported entity set is curated to what real STEP
+  files actually use.
 - **Heals non-standard input** — what can be fixed is normalized; what
   cannot is dropped with a reason, never silently.
 - **Ergonomic API** — `scene()` navigates what you read with lightweight
-  handles; `StepBuilder` writes new files the way kernels hold data.
+  handles; `StepBuilder` writes new files element by element, the way CAD
+  data is held.
 
 ## Quickstart
 
-Reading STEP into a kernel or viewer:
+Reading STEP into a CAD application or viewer:
 
 ```rust,no_run
 let source = std::fs::read("model.step").unwrap();
@@ -44,7 +45,7 @@ for solid in model.scene().all_solids() {
 }
 ```
 
-Writing STEP from a kernel:
+Writing STEP from a CAD application:
 
 ```rust,no_run
 let mut b = step_io::StepBuilder::new().unwrap();
@@ -78,14 +79,14 @@ units, and the provenance report.
 
 ## Design
 
-step-io exists to sit between a 3D CAD kernel and the STEP files it
-exchanges.
+step-io sits between 3D CAD applications and the STEP files they
+exchange.
 
 Most STEP libraries carry per-schema entity and read/write code, so each
 supported schema adds source and binary size. step-io instead merges the
 mainstream APs into one *universal* schema and reads them all through a
-single pipeline. Entities that never appear in practice are left out, judged
-against 50,000+ real-world files — the [entity coverage
+single pipeline. The supported entity set is curated, guided by what
+50,000+ real-world files contain — the [entity coverage
 matrix](docs/entities.md) lists exactly what is read and written.
 
 Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
