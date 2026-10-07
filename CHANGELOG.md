@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `StepBuilder` writes `APPLICATION_PROTOCOL_DEFINITION` with year 2020 (AP242
+  edition 2) instead of 2011. Readers ignore the value; only the output text
+  changes.
 - Documentation and the crate description present step-io as STEP I/O for
   3D CAD applications rather than for CAD kernels.
 

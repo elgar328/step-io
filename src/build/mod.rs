@@ -548,7 +548,7 @@ impl StepBuilder {
         a.add_application_protocol_definition(
             "international standard".to_owned(),
             "ap242_managed_model_based_3d_engineering_mim_lf".to_owned(),
-            2011,
+            2020,
             m::ApplicationContextRef::ApplicationContext(ac),
         )?;
         let product_context = a.add_product_context(
