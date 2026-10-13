@@ -80,9 +80,7 @@ pub fn apply(map: &mut BTreeMap<u64, RawEntity>, norm: &mut Vec<&'static str>) {
                         norm.push("entity: surface_style_rendering.rendering_method<-default");
                     }
                 }
-                if let Some(a) = attributes.get_mut(1)
-                    && matches!(a, Attribute::Unset)
-                {
+                if let Some(a @ Attribute::Unset) = attributes.get_mut(1) {
                     let cid = alloc_id(&mut next_id);
                     synth.push((
                         cid,

@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation and the crate description present step-io as STEP I/O for
   3D CAD applications rather than for CAD kernels.
 
+### Fixed
+
+- step-io builds on Rust 1.85, the minimum supported Rust version it declares.
+  Versions 0.1.0 through 0.2.5 used a Rust 1.88 feature and did not build on
+  1.85.
+
 ## [0.2.5] - 2026-10-03
 
 ### Added

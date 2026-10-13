@@ -34,9 +34,17 @@
    cargo test --workspace
    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
    ```
+   - Then check the minimum supported Rust version, as CI's `msrv` job does.
+     The gates above update `Cargo.lock` to the new version, and this check
+     needs that, so it runs after them:
+     ```sh
+     rustup toolchain install 1.85 --profile minimal   # once
+     cargo +1.85 check --locked -p step-io --all-targets
+     ```
 
 5. **Commit on `dev`**
-   - Commit the CHANGELOG and version bump together, e.g. `release: vX.Y.Z`.
+   - Commit `CHANGELOG.md`, `Cargo.toml`, and `Cargo.lock` together, e.g.
+     `release: vX.Y.Z`.
 
 6. **Squash merge into `main`**
    ```sh
@@ -68,8 +76,12 @@
     git checkout dev
     git merge main
     ```
-    - Bump `version` in `Cargo.toml` to the next `X.Y.Z-dev`.
-    - Commit: `chore: start next development cycle (X.Y.Z-dev)`.
+    - Bump `version` in `Cargo.toml` to the next `X.Y.Z-dev`, and run any
+      `cargo check` so `Cargo.lock` picks up the new version.
+    - Commit `Cargo.toml` and `Cargo.lock`:
+      `chore: start next development cycle (X.Y.Z-dev)`. CI's `msrv` job
+      builds with `--locked`, so a bump without the updated `Cargo.lock` fails
+      it.
 
 ## Versioning (SemVer)
 

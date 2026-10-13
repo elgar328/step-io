@@ -21,3 +21,11 @@ jobs:
       - run: cargo doc --no-deps
         env:
           RUSTDOCFLAGS: "-D warnings"
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.85
+      - uses: Swatinem/rust-cache@v2
+      # step-io only: codegen is a dev-time generator outside the MSRV.
+      - run: cargo check --locked -p step-io --all-targets
