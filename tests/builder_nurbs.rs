@@ -6,7 +6,7 @@
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
 use step_io::build::{NurbsCurve, NurbsSurface};
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
-use step_io::{StepBuilder, read};
+use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -75,8 +75,8 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
     }
     let edge = |a_ix: usize, b_ix: usize| {
         e.get(&(a_ix, b_ix))
-            .map(|id| (*id, true))
-            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, false)))
+            .map(|id| (*id, Orientation::Forward))
+            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, Orientation::Reversed)))
             .expect("edge exists")
     };
 
@@ -110,7 +110,7 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
         faces.push(
             b.face(
                 SurfaceInput::Plane(f),
-                true,
+                Orientation::Forward,
                 vec![FaceBoundInput::outer(edges)],
             )
             .expect("face"),
@@ -124,7 +124,7 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
     faces.push(
         b.face(
             SurfaceInput::Nurbs(top_patch),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(edges)],
         )
         .expect("nurbs face"),
@@ -169,7 +169,7 @@ fn non_rational_nurbs_round_trips_identically() {
     let mut nurbs_edges = 0;
     for face in &faces {
         for bound in face.bounds() {
-            for (edge, _forward) in bound.oriented_edges() {
+            for (edge, _orientation) in bound.oriented_edges() {
                 if matches!(edge.curve().kind(), CurveKind::BSplineWithKnots(_)) {
                     nurbs_edges += 1;
                     assert_eq!(edge.curve().to_nurbs(), Some(line.clone()));
@@ -227,11 +227,11 @@ fn rational_nurbs_curve_round_trips_via_complex() {
     let face = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (spoke_in, true),
-                (rim, true),
-                (spoke_out, true),
+                (spoke_in, Orientation::Forward),
+                (rim, Orientation::Forward),
+                (spoke_out, Orientation::Forward),
             ])],
         )
         .expect("pie face");
@@ -246,7 +246,7 @@ fn rational_nurbs_curve_round_trips_via_complex() {
     let faces: Vec<_> = solids[0].faces().collect();
     let mut rational_edges = 0;
     for bound in faces[0].bounds() {
-        for (edge, _forward) in bound.oriented_edges() {
+        for (edge, _orientation) in bound.oriented_edges() {
             if edge.curve().to_nurbs() == Some(arc.clone()) {
                 rational_edges += 1;
             }
@@ -276,8 +276,8 @@ fn analytic_surface_kinds_round_trip() {
         faces.push(
             b.face(
                 surface,
-                true,
-                vec![FaceBoundInput::outer(vec![(rim, true)])],
+                Orientation::Forward,
+                vec![FaceBoundInput::outer(vec![(rim, Orientation::Forward)])],
             )
             .expect("face"),
         );

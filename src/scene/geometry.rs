@@ -10,6 +10,7 @@
 // pure noise, so allow the pedantic lint module-wide.
 #![allow(clippy::must_use_candidate)]
 
+use crate::Orientation;
 use crate::RefGraph;
 use crate::StepModel;
 use crate::scene::{Ctx, Scene};
@@ -267,8 +268,11 @@ impl<'m> Face<'m> {
         self.parts().0
     }
 
-    pub fn same_sense(&self) -> bool {
-        self.parts().3
+    /// Whether this face's normal is its surface's normal
+    /// ([`Forward`](Orientation::Forward)) or against it — the face's
+    /// `same_sense` flag.
+    pub fn orientation(&self) -> Orientation {
+        Orientation::from_flag(self.parts().3)
     }
 
     /// The underlying (unbounded) surface this face sits on.
@@ -611,16 +615,16 @@ impl<'m> Bound<'m> {
         }
     }
 
-    /// Whether this loop runs in its stated sense with respect to the face —
-    /// the `FACE_BOUND` `orientation` flag; `false` means the loop is used
-    /// reversed. One of the three orientation layers a kernel composes:
-    /// [`Face::same_sense`] (surface normal), this flag (whole loop), and the
-    /// per-edge flag of [`Bound::oriented_edges`].
-    pub fn orientation(&self) -> bool {
-        match self.which {
+    /// Whether the face uses this loop as it runs
+    /// ([`Forward`](Orientation::Forward)) or reversed — the `FACE_BOUND`
+    /// `orientation` flag. One of the three orientation layers a kernel
+    /// composes: [`Face::orientation`] (surface normal), this (whole loop),
+    /// and the per-edge orientation of [`Bound::oriented_edges`].
+    pub fn orientation(&self) -> Orientation {
+        Orientation::from_flag(match self.which {
             BoundImpl::Inner(i) => self.cx.model.face_bound_arena.get(i.0).orientation,
             BoundImpl::Outer(i) => self.cx.model.face_outer_bound_arena.get(i.0).orientation,
-        }
+        })
     }
 
     /// Edges of this boundary loop (only `EDGE_LOOP` loops carry edges),
@@ -631,17 +635,21 @@ impl<'m> Bound<'m> {
     }
 
     /// Edges of this boundary loop with each `ORIENTED_EDGE`'s orientation:
-    /// `true` means the edge is traversed in its own start → end direction at
-    /// this position in the loop, `false` reversed — what a kernel needs to
-    /// assemble the loop into a wire without end-matching heuristics.
-    pub fn oriented_edges(&self) -> impl Iterator<Item = (Edge<'m>, bool)> + 'm {
+    /// [`Forward`](Orientation::Forward) means the edge is traversed in its
+    /// own start → end direction at this position in the loop,
+    /// [`Reversed`](Orientation::Reversed) end → start — what a kernel needs
+    /// to assemble the loop into a wire without end-matching heuristics.
+    pub fn oriented_edges(&self) -> impl Iterator<Item = (Edge<'m>, Orientation)> + 'm {
         let cx = self.cx;
         resolve_edge_loop(cx.model, self.loop_ref())
             .into_iter()
             .flat_map(|el| el.edge_list.iter())
             .filter_map(move |oer| {
                 let oe = resolve_oriented_edge(cx.model, oer)?;
-                Some((Edge::from_edge_ref(cx, &oe.edge_element)?, oe.orientation))
+                Some((
+                    Edge::from_edge_ref(cx, &oe.edge_element)?,
+                    Orientation::from_flag(oe.orientation),
+                ))
             })
     }
 }

@@ -46,7 +46,7 @@
 //!         let _surface = face.surface().kind(); // analytic form; `Other` beyond the set
 //!         let _patch = face.to_nurbs(); // the NURBS view, on demand
 //!         for bound in face.bounds() {
-//!             for (edge, _forward) in bound.oriented_edges() {
+//!             for (edge, _orientation) in bound.oriented_edges() {
 //!                 let _curve = edge.curve().kind();
 //!                 let _ends = (edge.start(), edge.end());
 //!             }

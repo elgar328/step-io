@@ -5,7 +5,7 @@ use step_io::build::Rgb;
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput, VoidShellNormals,
 };
-use step_io::{StepBuilder, read};
+use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -32,11 +32,11 @@ fn plate(
     let face = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (e1, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (e1, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face");
@@ -122,11 +122,11 @@ fn void_body(
         let e2 = b.edge(v2, v0, CurveInput::Line).expect("e2");
         b.face(
             SurfaceInput::Plane(frame([0.0, 0.0, z], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (e1, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (e1, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face")

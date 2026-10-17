@@ -38,6 +38,7 @@
 //! The minimal flow — a planar part handed over from a kernel:
 //!
 //! ```no_run
+//! use step_io::Orientation;
 //! use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
 //!
 //! # struct KernelEdge { start: usize, end: usize }
@@ -56,8 +57,8 @@
 //! let fs: Vec<_> = kernel.faces.iter()
 //!     .map(|f| {
 //!         let plane = Frame { origin: f.origin, axis: f.normal, ref_dir: f.x_dir };
-//!         let bound = f.bound.iter().map(|&i| (es[i], true)).collect();
-//!         b.face(SurfaceInput::Plane(plane), true, vec![FaceBoundInput::outer(bound)])
+//!         let bound = f.bound.iter().map(|&i| (es[i], Orientation::Forward)).collect();
+//!         b.face(SurfaceInput::Plane(plane), Orientation::Forward, vec![FaceBoundInput::outer(bound)])
 //!             .unwrap()
 //!     })
 //!     .collect();
@@ -133,6 +134,7 @@
 
 // Shared with the read side (`scene`): the NURBS forms `to_nurbs()` returns are
 // exactly what the builder accepts, and colours round-trip as the same type.
+use crate::Orientation;
 use crate::generated::author::{Ap242Author, AuthorError};
 use crate::generated::model as m;
 use crate::header::FileHeader;
@@ -293,34 +295,34 @@ pub enum ProfileInput {
     Nurbs(NurbsCurve),
 }
 
-/// One face bound for [`StepBuilder::face`]: the loop's edges with their
-/// per-edge direction, whether this is the outer bound, and the bound's own
-/// orientation flag.
+/// One face bound for [`StepBuilder::face`]: the loop's edges, each with the
+/// [`Orientation`] in which the loop runs along it, whether this is the outer
+/// bound, and the [`Orientation`] in which the face uses the whole loop.
 #[derive(Debug, Clone)]
 pub struct FaceBoundInput {
-    pub edges: Vec<(m::EdgeCurveId, bool)>,
+    pub edges: Vec<(m::EdgeCurveId, Orientation)>,
     pub outer: bool,
-    pub orientation: bool,
+    pub orientation: Orientation,
 }
 
 impl FaceBoundInput {
-    /// The customary outer bound (orientation `true`).
+    /// The customary outer bound (loop used [`Forward`](Orientation::Forward)).
     #[must_use]
-    pub fn outer(edges: Vec<(m::EdgeCurveId, bool)>) -> Self {
+    pub fn outer(edges: Vec<(m::EdgeCurveId, Orientation)>) -> Self {
         Self {
             edges,
             outer: true,
-            orientation: true,
+            orientation: Orientation::Forward,
         }
     }
 
-    /// An inner (hole) bound (orientation `true`).
+    /// An inner (hole) bound (loop used [`Forward`](Orientation::Forward)).
     #[must_use]
-    pub fn inner(edges: Vec<(m::EdgeCurveId, bool)>) -> Self {
+    pub fn inner(edges: Vec<(m::EdgeCurveId, Orientation)>) -> Self {
         Self {
             edges,
             outer: false,
-            orientation: true,
+            orientation: Orientation::Forward,
         }
     }
 }
@@ -1125,7 +1127,9 @@ impl StepBuilder {
         })
     }
 
-    /// Add a face over an analytic surface, bounded by the given loops.
+    /// Add a face over an analytic surface, bounded by the given loops;
+    /// `orientation` says whether the face's normal is its surface's normal
+    /// ([`Forward`](Orientation::Forward)) or against it.
     ///
     /// # Errors
     /// An id that did not come from this builder (another builder's, or out
@@ -1134,18 +1138,18 @@ impl StepBuilder {
     pub fn face(
         &mut self,
         surface: SurfaceInput,
-        same_sense: bool,
+        orientation: Orientation,
         bounds: Vec<FaceBoundInput>,
     ) -> Result<m::AdvancedFaceId, AuthorError> {
         let face_geometry = self.surface_geometry(surface)?;
         let mut face_bounds = Vec::with_capacity(bounds.len());
         for bound in bounds {
             let mut edge_list = Vec::with_capacity(bound.edges.len());
-            for (edge, forward) in bound.edges {
+            for (edge, along) in bound.edges {
                 let oe = self.author.add_oriented_edge(
                     String::new(),
                     m::EdgeRef::EdgeCurve(edge),
-                    forward,
+                    along.flag(),
                 )?;
                 edge_list.push(m::OrientedEdgeRef::OrientedEdge(oe));
             }
@@ -1154,19 +1158,23 @@ impl StepBuilder {
                 m::FaceBoundRef::FaceOuterBound(self.author.add_face_outer_bound(
                     String::new(),
                     m::LoopRef::EdgeLoop(el),
-                    bound.orientation,
+                    bound.orientation.flag(),
                 )?)
             } else {
                 m::FaceBoundRef::FaceBound(self.author.add_face_bound(
                     String::new(),
                     m::LoopRef::EdgeLoop(el),
-                    bound.orientation,
+                    bound.orientation.flag(),
                 )?)
             };
             face_bounds.push(fb);
         }
-        self.author
-            .add_advanced_face(String::new(), face_bounds, face_geometry, same_sense)
+        self.author.add_advanced_face(
+            String::new(),
+            face_bounds,
+            face_geometry,
+            orientation.flag(),
+        )
     }
 
     /// Close the faces into a shell and add the solid to `part`; the solid

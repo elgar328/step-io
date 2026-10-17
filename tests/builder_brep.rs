@@ -5,7 +5,7 @@
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput, VoidShellNormals};
 use step_io::generated::model::AdvancedFaceId;
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
-use step_io::{EntityKey, StepBuilder, read};
+use step_io::{EntityKey, Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -57,8 +57,8 @@ fn box_faces(b: &mut StepBuilder, min: [f64; 3], size: f64, inward: bool) -> Vec
     }
     let edge = |a_ix: usize, b_ix: usize| {
         e.get(&(a_ix, b_ix))
-            .map(|id| (*id, true))
-            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, false)))
+            .map(|id| (*id, Orientation::Forward))
+            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, Orientation::Reversed)))
             .expect("edge exists")
     };
     let [x0, y0, z0] = min;
@@ -104,7 +104,7 @@ fn box_faces(b: &mut StepBuilder, min: [f64; 3], size: f64, inward: bool) -> Vec
         faces.push(
             b.face(
                 SurfaceInput::Plane(f),
-                true,
+                Orientation::Forward,
                 vec![FaceBoundInput::outer(edges)],
             )
             .expect("face"),
@@ -154,8 +154,8 @@ fn cube_round_trips_and_reads_back() {
     }
     let edge = |a_ix: usize, b_ix: usize| {
         e.get(&(a_ix, b_ix))
-            .map(|id| (*id, true))
-            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, false)))
+            .map(|id| (*id, Orientation::Forward))
+            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, Orientation::Reversed)))
             .expect("edge exists")
     };
 
@@ -194,7 +194,7 @@ fn cube_round_trips_and_reads_back() {
         faces.push(
             b.face(
                 SurfaceInput::Plane(f),
-                true,
+                Orientation::Forward,
                 vec![FaceBoundInput::outer(edges)],
             )
             .expect("face"),
@@ -225,7 +225,7 @@ fn cube_round_trips_and_reads_back() {
         assert!(bounds[0].is_outer());
         let edges: Vec<_> = bounds[0].oriented_edges().collect();
         assert_eq!(edges.len(), 4);
-        for (edge, _forward) in edges {
+        for (edge, _orientation) in edges {
             assert!(matches!(edge.curve().kind(), CurveKind::Line(_)));
         }
     }
@@ -265,27 +265,27 @@ fn cylinder_round_trips_and_reads_back() {
     let lateral = b
         .face(
             SurfaceInput::Cylinder(frame([0.0; 3], z_dir, x_dir), radius),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (bottom, true),
-                (seam, true),
-                (top, false),
-                (seam, false),
+                (bottom, Orientation::Forward),
+                (seam, Orientation::Forward),
+                (top, Orientation::Reversed),
+                (seam, Orientation::Reversed),
             ])],
         )
         .expect("lateral face");
     let bottom_cap = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, -1.0], x_dir)),
-            true,
-            vec![FaceBoundInput::outer(vec![(bottom, false)])],
+            Orientation::Forward,
+            vec![FaceBoundInput::outer(vec![(bottom, Orientation::Reversed)])],
         )
         .expect("bottom cap");
     let top_cap = b
         .face(
             SurfaceInput::Plane(frame([0.0, 0.0, height], z_dir, x_dir)),
-            true,
-            vec![FaceBoundInput::outer(vec![(top, true)])],
+            Orientation::Forward,
+            vec![FaceBoundInput::outer(vec![(top, Orientation::Forward)])],
         )
         .expect("top cap");
     b.solid(part, "pin body", vec![lateral, bottom_cap, top_cap])
@@ -310,7 +310,7 @@ fn cylinder_round_trips_and_reads_back() {
             other => panic!("unexpected surface kind: {other:?}"),
         }
         for bound in face.bounds() {
-            for (edge, _forward) in bound.oriented_edges() {
+            for (edge, _orientation) in bound.oriented_edges() {
                 assert!(matches!(
                     edge.curve().kind(),
                     CurveKind::Line(_) | CurveKind::Circle(_)
@@ -335,6 +335,89 @@ fn cylinder_round_trips_and_reads_back() {
 }
 
 #[test]
+fn orientations_read_back_as_authored() {
+    use Orientation::{Forward, Reversed};
+
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("plate").expect("part");
+    // A square plate with a square hole. Some edges are drawn against their
+    // loop's direction, so the loop runs along them reversed.
+    let outer = [
+        ([0.0, 0.0], [10.0, 0.0], Forward),
+        ([10.0, 10.0], [10.0, 0.0], Reversed),
+        ([10.0, 10.0], [0.0, 10.0], Forward),
+        ([0.0, 0.0], [0.0, 10.0], Reversed),
+    ];
+    let hole = [
+        ([3.0, 3.0], [7.0, 3.0], Forward),
+        ([7.0, 3.0], [7.0, 7.0], Forward),
+        ([3.0, 7.0], [7.0, 7.0], Reversed),
+        ([3.0, 3.0], [3.0, 7.0], Reversed),
+    ];
+    let mut vertices = std::collections::HashMap::new();
+    let mut author = |edges: &[([f64; 2], [f64; 2], Orientation)]| {
+        edges
+            .iter()
+            .map(|&(from, to, orientation)| {
+                let mut vertex = |[x, y]: [f64; 2]| {
+                    *vertices
+                        .entry((x.to_bits(), y.to_bits()))
+                        .or_insert_with(|| b.vertex([x, y, 0.0]).expect("vertex"))
+                };
+                let (from, to) = (vertex(from), vertex(to));
+                let edge = b.edge(from, to, CurveInput::Line).expect("edge");
+                (edge, orientation)
+            })
+            .collect::<Vec<_>>()
+    };
+    let outer_bound = FaceBoundInput::outer(author(&outer));
+    let mut inner_bound = FaceBoundInput::inner(author(&hole));
+    inner_bound.orientation = Reversed;
+    let face = b
+        .face(
+            SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
+            Reversed,
+            vec![outer_bound, inner_bound],
+        )
+        .expect("face");
+    b.solid(part, "plate", vec![face]).expect("solid");
+
+    let text = b.finish().expect("finish");
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+
+    let scene = model.scene();
+    let solid = scene.all_solids().next().expect("solid");
+    let face = solid.faces().next().expect("face");
+    assert_eq!(face.orientation(), Reversed);
+    let bounds: Vec<_> = face.bounds().collect();
+    assert_eq!(bounds.len(), 2);
+    let (outer_read, inner_read) = if bounds[0].is_outer() {
+        (bounds[0], bounds[1])
+    } else {
+        (bounds[1], bounds[0])
+    };
+    assert_eq!(outer_read.orientation(), Forward);
+    assert_eq!(inner_read.orientation(), Reversed);
+    // Each edge read back: its two end points (in its own start → end
+    // direction) and the orientation the loop runs along it.
+    let as_read = |bound: step_io::scene::geometry::Bound<'_>| {
+        bound
+            .oriented_edges()
+            .map(|(edge, orientation)| {
+                let xy = |v: Option<step_io::scene::geometry::Vertex<'_>>| {
+                    let [x, y, _] = v.expect("vertex").point().expect("point").xyz();
+                    [x, y]
+                };
+                (xy(edge.start()), xy(edge.end()), orientation)
+            })
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(as_read(outer_read), outer);
+    assert_eq!(as_read(inner_read), hole);
+}
+
+#[test]
 fn empty_bounds_and_faces_are_rejected() {
     let mut b = StepBuilder::new().expect("builder");
     let part = b.part("plate").expect("part");
@@ -342,7 +425,7 @@ fn empty_bounds_and_faces_are_rejected() {
     let err = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![],
         )
         .expect_err("a face without bounds is schema-invalid");

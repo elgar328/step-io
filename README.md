@@ -36,7 +36,7 @@ for solid in model.scene().all_solids() {
     for face in solid.faces() {
         let surface = face.surface().kind(); // Plane, Cylindrical, …
         for bound in face.bounds() {
-            for (edge, forward) in bound.oriented_edges() {
+            for (edge, orientation) in bound.oriented_edges() {
                 let curve = edge.curve().kind(); // Line, Circle, …
                 let ends = (edge.start(), edge.end()); // bounding vertices
             }
@@ -59,7 +59,7 @@ let es: Vec<_> = kernel.edges.iter()
     .map(|e| b.edge(vs[e.start], vs[e.end], curve_of(e)).unwrap())
     .collect();
 let fs: Vec<_> = kernel.faces.iter()
-    .map(|f| b.face(surface_of(f), f.same_sense, loops_of(f, &es)).unwrap())
+    .map(|f| b.face(surface_of(f), f.orientation, loops_of(f, &es)).unwrap())
     .collect();
 b.solid(part, "wheel body", fs).unwrap();
 

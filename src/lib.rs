@@ -105,9 +105,10 @@
 //! Part 21 header — see the [`build`] module docs.
 //!
 //! ```no_run
+//! # use step_io::Orientation;
 //! # use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
 //! # struct KernelEdge { start: usize, end: usize }
-//! # struct KernelFace { same_sense: bool }
+//! # struct KernelFace { orientation: Orientation }
 //! # struct Kernel { points: Vec<[f64; 3]>, edges: Vec<KernelEdge>, faces: Vec<KernelFace> }
 //! # let kernel = Kernel { points: vec![], edges: vec![], faces: vec![] };
 //! # fn curve_of(_: &KernelEdge) -> CurveInput { CurveInput::Line }
@@ -136,7 +137,7 @@
 //!     .map(|e| b.edge(vs[e.start], vs[e.end], curve_of(e)).unwrap())
 //!     .collect();
 //! let fs: Vec<_> = kernel.faces.iter()
-//!     .map(|f| b.face(surface_of(f), f.same_sense, loops_of(f, &es)).unwrap())
+//!     .map(|f| b.face(surface_of(f), f.orientation, loops_of(f, &es)).unwrap())
 //!     .collect();
 //! b.solid(wheel, "wheel body", fs).unwrap();
 //!
@@ -151,6 +152,7 @@ pub mod build;
 pub mod emit;
 pub mod generated;
 pub mod header;
+mod orientation;
 pub mod parser;
 pub mod reader;
 pub mod refgraph;
@@ -161,6 +163,7 @@ pub use emit::write;
 pub use generated::author::{Ap242Author, AuthorError};
 pub use generated::model::{EntityKey, StepModel};
 pub use header::FileHeader;
+pub use orientation::Orientation;
 pub use reader::{DropKind, DropReason, Report, read};
 
 // Internal round-trip oracle — kept callable for the external verification

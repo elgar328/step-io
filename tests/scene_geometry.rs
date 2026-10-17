@@ -4,8 +4,8 @@
 //! reference-resolvable (read does not enforce topological closure), so this is a
 //! deliberately minimal solid: one planar face, one outer bound, one edge.
 
-use step_io::read;
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
+use step_io::{Orientation, read};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
 FILE_NAME('','',(''),(''),'','','');\n\
@@ -396,14 +396,14 @@ fn bounds_expose_the_orientation_layers() {
     let bound = face.bounds().next().expect("bound");
 
     // The whole-loop flag (.F. here) and the outer/inner distinction.
-    assert!(!bound.orientation());
+    assert_eq!(bound.orientation(), Orientation::Reversed);
     assert!(!bound.is_outer());
 
     // Per-edge orientation is preserved in loop order (edge identity via key).
     let oriented: Vec<_> = bound.oriented_edges().collect();
     assert_eq!(oriented.len(), 2);
-    assert!(oriented[0].1, "first oriented edge is forward");
-    assert!(!oriented[1].1, "second oriented edge is reversed");
+    assert_eq!(oriented[0].1, Orientation::Forward, "first oriented edge");
+    assert_eq!(oriented[1].1, Orientation::Reversed, "second oriented edge");
 
     // edges() is the same walk without the flag.
     let plain: Vec<_> = bound.edges().map(|e| e.key()).collect();

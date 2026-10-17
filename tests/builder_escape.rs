@@ -6,7 +6,7 @@
 
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
 use step_io::generated::model as m;
-use step_io::{StepBuilder, read};
+use step_io::{Orientation, StepBuilder, read};
 
 #[test]
 fn low_level_layer_on_builder_face_round_trips() {
@@ -26,11 +26,11 @@ fn low_level_layer_on_builder_face_round_trips() {
                 axis: [0.0, 0.0, 1.0],
                 ref_dir: [1.0, 0.0, 0.0],
             }),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (e1, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (e1, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face");

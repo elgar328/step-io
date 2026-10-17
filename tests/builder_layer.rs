@@ -3,7 +3,7 @@
 
 use step_io::build::Rgb;
 use step_io::build::{CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput};
-use step_io::{StepBuilder, read};
+use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -33,11 +33,11 @@ fn three_face_plate(
         faces.push(
             b.face(
                 SurfaceInput::Plane(frame([base, 0.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-                true,
+                Orientation::Forward,
                 vec![FaceBoundInput::outer(vec![
-                    (e0, true),
-                    (e1, true),
-                    (e2, true),
+                    (e0, Orientation::Forward),
+                    (e1, Orientation::Forward),
+                    (e2, Orientation::Forward),
                 ])],
             )
             .expect("face"),

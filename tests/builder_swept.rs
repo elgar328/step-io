@@ -4,7 +4,7 @@
 use step_io::build::{CurveInput, FaceBoundInput, Frame, ProfileInput, SurfaceInput};
 use step_io::generated::model as m;
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
-use step_io::{StepBuilder, read};
+use step_io::{Orientation, StepBuilder, read};
 
 const Z: [f64; 3] = [0.0, 0.0, 1.0];
 const X: [f64; 3] = [1.0, 0.0, 0.0];
@@ -30,8 +30,8 @@ fn ellipse_edge_round_trips() {
     let face = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3])),
-            true,
-            vec![FaceBoundInput::outer(vec![(rim, true)])],
+            Orientation::Forward,
+            vec![FaceBoundInput::outer(vec![(rim, Orientation::Forward)])],
         )
         .expect("face");
     b.solid(part, "plate", vec![face]).expect("solid");
@@ -63,12 +63,12 @@ fn cylinder_topology(b: &mut StepBuilder, lateral_surface: SurfaceInput, r: f64,
     let lateral = b
         .face(
             lateral_surface,
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (bottom, true),
-                (seam, true),
-                (top, false),
-                (seam, false),
+                (bottom, Orientation::Forward),
+                (seam, Orientation::Forward),
+                (top, Orientation::Reversed),
+                (seam, Orientation::Reversed),
             ])],
         )
         .expect("lateral");
@@ -150,11 +150,11 @@ fn polyline_edge_round_trips() {
     let face = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (bend, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (bend, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face");

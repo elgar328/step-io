@@ -7,8 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Orientation` (`Forward` or `Reversed`) says which way a face, a face's
+  boundary loop, or an edge in a loop is used. Reading and authoring both use
+  it, so an orientation read from a file can be passed straight to
+  `StepBuilder`.
+
 ### Changed
 
+- `StepBuilder::face` takes an `Orientation` instead of the `same_sense`
+  boolean, and `FaceBoundInput` takes `(EdgeCurveId, Orientation)` pairs and
+  an `Orientation` for its `orientation` field instead of booleans. The file
+  written is unchanged. Replace `true` with `Orientation::Forward` and `false`
+  with `Orientation::Reversed`.
+- `Face::same_sense()` is replaced by `Face::orientation()`, and
+  `Bound::orientation()` and `Bound::oriented_edges()` return `Orientation`
+  instead of `bool`. `Edge::same_sense()`, which relates an edge to its curve,
+  stays a `bool`.
 - `StepBuilder` writes `APPLICATION_PROTOCOL_DEFINITION` with year 2020 (AP242
   edition 2) instead of 2011. Readers ignore the value; only the output text
   changes.
