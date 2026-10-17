@@ -436,30 +436,12 @@ impl<'m> ProductDef<'m> {
     /// equivalence bridge is followed to collect those solids too.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
-        let rg = cx.ref_graph();
-        let me = self.key();
         let mut out: Vec<Solid<'m>> = Vec::new();
         // Shared across every representation reached: guards relationship cycles
         // and keeps a shape-equivalence bridge from re-collecting a rep.
         let mut visited: HashSet<m::EntityKey> = HashSet::new();
-        for r in rg.referrers(me) {
-            let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
-                continue;
-            };
-            let pds = cx.model.product_definition_shape_arena.get(pds_id.0);
-            if !cdef_is(&pds.definition, me) {
-                continue;
-            }
-            for s in rg.referrers(m::EntityKey::ProductDefinitionShape(*pds_id)) {
-                let m::EntityKey::ShapeDefinitionRepresentation(sdr_id) = s else {
-                    continue;
-                };
-                let sdr = cx.model.shape_definition_representation_arena.get(sdr_id.0);
-                if matches!(&sdr.definition, m::RepresentedDefinitionRef::ProductDefinitionShape(p) if *p == *pds_id)
-                {
-                    collect_solids_from_repr(cx, &sdr.used_representation, &mut out, &mut visited);
-                }
-            }
+        for rep in def_shape_reps(cx, self.key()) {
+            collect_solids_from_repr(cx, rep, &mut out, &mut visited);
         }
         // A brep shared by two representations could be collected twice.
         let mut seen: HashSet<m::EntityKey> = HashSet::new();
@@ -984,8 +966,10 @@ pub struct Placement {
     pub ref_direction: [f64; 3],
 }
 
-/// An item-defined transformation as two frames: the relative transform maps
-/// `from` (`transform_item_1`) to `to` (`transform_item_2`) — the faithful
+/// A placement as two frames: `from` is a frame in the representation being
+/// placed (a component's shape, a mapped item's source) and `to` the frame it
+/// lands on in the placing representation (the assembly's shape, the mapping
+/// target). The relative transform maps `from` to `to` — the faithful
 /// two-frame form; [`Transform::matrix`] composes them on demand.
 #[derive(Clone, Copy, Debug)]
 pub struct Transform {
@@ -1097,6 +1081,14 @@ impl<'m> Occurrence<'m> {
     /// two `AXIS2_PLACEMENT_3D` frames). A transform item that is not an
     /// `AXIS2_PLACEMENT_3D` is reported via [`Scene::warnings`](crate::scene::Scene)
     /// and yields `None` rather than a silently wrong frame.
+    ///
+    /// `from` is the frame in the component's shape and `to` the frame in the
+    /// assembly's: usually `transform_item_1` and `transform_item_2`, swapped
+    /// when the relationship names the assembly's representation as `rep_1`
+    /// (as some exporters write it). The order is decided by matching `rep_1`
+    /// and `rep_2` against both definitions' shape representations; a
+    /// relationship matching neither order is read component-first and
+    /// reported via [`Scene::warnings`](crate::scene::Scene).
     pub fn transform(&self) -> Option<Transform> {
         let cx = self.cx;
         let rg = cx.ref_graph();
@@ -1122,14 +1114,52 @@ impl<'m> Occurrence<'m> {
                 {
                     continue;
                 }
-                if let Some(idt) = idt_of_cdsr(cx, &cdsr.representation_relation) {
-                    let from = resolve_placement(cx, &idt.transform_item_1)?;
-                    let to = resolve_placement(cx, &idt.transform_item_2)?;
+                if let Some((idt, reps)) = idt_of_cdsr(cx, &cdsr.representation_relation) {
+                    let (from, to) = if self.assembly_rep_first(reps) {
+                        (&idt.transform_item_2, &idt.transform_item_1)
+                    } else {
+                        (&idt.transform_item_1, &idt.transform_item_2)
+                    };
+                    let from = resolve_placement(cx, from)?;
+                    let to = resolve_placement(cx, to)?;
                     return Some(Transform { from, to });
                 }
             }
         }
         None
+    }
+
+    /// Whether the placement relationship's reps `(rep_1, rep_2)` are the
+    /// assembly's and the component's shape representations, in that order. An
+    /// order that matches neither way is reported and read component-first.
+    fn assembly_rep_first(&self, reps: Option<(m::EntityKey, m::EntityKey)>) -> bool {
+        let cx = self.cx;
+        let shape_reps = |r: &m::ProductDefinitionOrReferenceRef| -> Vec<m::EntityKey> {
+            pdor_to_def(cx, r)
+                .map(|d| {
+                    def_shape_reps(cx, d.key())
+                        .iter()
+                        .map(|rep| rep.entity_key())
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        if let Some((rep_1, rep_2)) = reps {
+            let component = shape_reps(&self.raw().related_product_definition);
+            let assembly = shape_reps(&self.raw().relating_product_definition);
+            if component.contains(&rep_1) && assembly.contains(&rep_2) {
+                return false;
+            }
+            if assembly.contains(&rep_1) && component.contains(&rep_2) {
+                return true;
+            }
+        }
+        cx.warn(
+            "NAUO placement: REPRESENTATION_RELATIONSHIP reps do not match the component's \
+             and the assembly's shape representations; read as rep_1 = component"
+                .to_owned(),
+        );
+        false
     }
 }
 
@@ -1262,30 +1292,35 @@ fn rep_items<'m>(cx: Ctx<'m>, r: &m::RepresentationRef) -> Option<&'m [m::Repres
 /// The item-defined transformation behind a context-dependent shape
 /// representation: its `representation_relation` is the complex
 /// `(…, REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION, …)` whose operator is an
-/// `ITEM_DEFINED_TRANSFORMATION`.
+/// `ITEM_DEFINED_TRANSFORMATION`. Returned with the relationship's
+/// `(rep_1, rep_2)`.
 fn idt_of_cdsr<'m>(
     cx: Ctx<'m>,
     rr: &m::ShapeRepresentationRelationshipRef,
-) -> Option<&'m m::ItemDefinedTransformation> {
+) -> Option<(
+    &'m m::ItemDefinedTransformation,
+    Option<(m::EntityKey, m::EntityKey)>,
+)> {
     let m::ShapeRepresentationRelationshipRef::Complex(cuid) = rr else {
         return None;
     };
-    let op = cx
-        .model
-        .complex_unit_arena
-        .get(cuid.0)
-        .parts
-        .iter()
-        .find_map(|p| match p {
-            m::UnitPart::RepresentationRelationshipWithTransformation {
-                transformation_operator,
-            } => Some(transformation_operator),
-            _ => None,
-        })?;
+    let parts = &cx.model.complex_unit_arena.get(cuid.0).parts;
+    let op = parts.iter().find_map(|p| match p {
+        m::UnitPart::RepresentationRelationshipWithTransformation {
+            transformation_operator,
+        } => Some(transformation_operator),
+        _ => None,
+    })?;
     let m::TransformationRef::ItemDefinedTransformation(id) = op else {
         return None;
     };
-    Some(cx.model.item_defined_transformation_arena.get(id.0))
+    let reps = parts.iter().find_map(|p| match p {
+        m::UnitPart::RepresentationRelationship { rep_1, rep_2, .. } => {
+            Some((rep_1.entity_key(), rep_2.entity_key()))
+        }
+        _ => None,
+    });
+    Some((cx.model.item_defined_transformation_arena.get(id.0), reps))
 }
 
 /// Resolve a transform item to a [`Placement`]. Only `AXIS2_PLACEMENT_3D` is a
@@ -1380,6 +1415,34 @@ fn cdef_is(cd: &m::CharacterizedDefinitionRef, key: m::EntityKey) -> bool {
         }
         _ => false,
     }
+}
+
+/// The shape representations of a definition (reverse: each
+/// `PRODUCT_DEFINITION_SHAPE` of the definition → each
+/// `SHAPE_DEFINITION_REPRESENTATION` of that shape → its `used_representation`).
+fn def_shape_reps(cx: Ctx<'_>, def: m::EntityKey) -> Vec<&m::RepresentationRef> {
+    let rg = cx.ref_graph();
+    let mut out = Vec::new();
+    for r in rg.referrers(def) {
+        let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
+            continue;
+        };
+        let pds = cx.model.product_definition_shape_arena.get(pds_id.0);
+        if !cdef_is(&pds.definition, def) {
+            continue;
+        }
+        for s in rg.referrers(m::EntityKey::ProductDefinitionShape(*pds_id)) {
+            let m::EntityKey::ShapeDefinitionRepresentation(sdr_id) = s else {
+                continue;
+            };
+            let sdr = cx.model.shape_definition_representation_arena.get(sdr_id.0);
+            if matches!(&sdr.definition, m::RepresentedDefinitionRef::ProductDefinitionShape(p) if *p == *pds_id)
+            {
+                out.push(&sdr.used_representation);
+            }
+        }
+    }
+    out
 }
 
 /// Push every `MANIFOLD_SOLID_BREP` reachable from a representation's `items`,

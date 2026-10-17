@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - step-io builds on Rust 1.85, the minimum supported Rust version it declares.
   Versions 0.1.0 through 0.2.5 used a Rust 1.88 feature and did not build on
   1.85.
+- `Occurrence::transform()` places components correctly in assemblies whose
+  placement relationship lists the assembly's representation first, as
+  SolidWorks writes them. It used to return the inverse placement there.
+  `from` is now always the frame in the component and `to` the frame in the
+  assembly. A placement whose order cannot be decided is read component-first
+  and reported in `Scene::warnings`.
 
 ## [0.2.5] - 2026-10-03
 

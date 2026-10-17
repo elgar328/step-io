@@ -42,9 +42,11 @@ const ASSEMBLY: &str = "\
 #56=CARTESIAN_POINT('',(0.,0.,0.));\n\
 #57=AXIS2_PLACEMENT_3D('',#56,$,$);\n\
 #58=ITEM_DEFINED_TRANSFORMATION('','',#57,#55);\n\
-#59=( REPRESENTATION_RELATIONSHIP('','',#41,#51) \
+#59=( REPRESENTATION_RELATIONSHIP('','',#51,#41) \
 REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION(#58) SHAPE_REPRESENTATION_RELATIONSHIP() );\n\
-#60=CONTEXT_DEPENDENT_SHAPE_REPRESENTATION(#59,#50);\n";
+#60=CONTEXT_DEPENDENT_SHAPE_REPRESENTATION(#59,#50);\n\
+#61=PRODUCT_DEFINITION_SHAPE('','',#22);\n\
+#62=SHAPE_DEFINITION_REPRESENTATION(#61,#51);\n";
 
 fn approx(a: [f64; 3], b: [f64; 3]) -> bool {
     a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-9)
@@ -196,12 +198,12 @@ fn reads_occurrence_placement_transform() {
         "occurrence places the Part"
     );
 
-    // The placement: transform_item_2 (`to`) carries the component position.
+    // The placement: `to` is the component's position in the assembly.
     let t = occ.transform().expect("a placement transform");
     assert!(approx(t.to.origin, [10.0, 20.0, 30.0]));
     assert!(approx(t.to.axis, [0.0, 0.0, 1.0]));
     assert!(approx(t.to.ref_direction, [1.0, 0.0, 0.0]));
-    // transform_item_1 (`from`) — origin at 0 with omitted axes => STEP defaults.
+    // `from` is the component's own frame — origin at 0 with omitted axes => STEP defaults.
     assert!(approx(t.from.origin, [0.0, 0.0, 0.0]));
     assert!(approx(t.from.axis, [0.0, 0.0, 1.0]));
     assert!(approx(t.from.ref_direction, [1.0, 0.0, 0.0]));
@@ -211,6 +213,118 @@ fn reads_occurrence_placement_transform() {
         scene.warnings().is_empty(),
         "unexpected warnings: {:?}",
         scene.warnings()
+    );
+}
+
+/// A one-level assembly whose part is placed at (10,20,30), turned 90° about z.
+/// `#41` is the assembly's representation, `#51` the part's; `#55` is the
+/// turned frame and `#57` the identity. `links` holds the definitions'
+/// `SHAPE_DEFINITION_REPRESENTATION`s, `rel` the `ITEM_DEFINED_TRANSFORMATION`
+/// `#58` and the placement relationship `#59`, so callers choose the order.
+fn turned_placement(links: &str, rel: &str) -> String {
+    format!(
+        "{HEADER}\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#4=REPRESENTATION_CONTEXT('','3D');\n\
+#10=PRODUCT('asm','Assembly','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#20=PRODUCT('part','Part','',(#2));\n\
+#21=PRODUCT_DEFINITION_FORMATION('1','',#20);\n\
+#22=PRODUCT_DEFINITION('design','',#21,#3);\n\
+#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);\n\
+#40=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+#41=SHAPE_REPRESENTATION('',(),#4);\n\
+#50=PRODUCT_DEFINITION_SHAPE('','',#30);\n\
+#51=SHAPE_REPRESENTATION('',(),#4);\n\
+#52=CARTESIAN_POINT('',(10.,20.,30.));\n\
+#53=DIRECTION('',(0.,0.,1.));\n\
+#54=DIRECTION('',(0.,1.,0.));\n\
+#55=AXIS2_PLACEMENT_3D('',#52,#53,#54);\n\
+#56=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#57=AXIS2_PLACEMENT_3D('',#56,$,$);\n\
+#60=CONTEXT_DEPENDENT_SHAPE_REPRESENTATION(#59,#50);\n\
+#61=PRODUCT_DEFINITION_SHAPE('','',#22);\n\
+{links}{rel}{FOOTER}"
+    )
+}
+
+const BOTH_LINKED: &str = "#42=SHAPE_DEFINITION_REPRESENTATION(#40,#41);\n\
+#62=SHAPE_DEFINITION_REPRESENTATION(#61,#51);\n";
+
+/// The usual order: the part's representation and frame first.
+const PART_FIRST: &str = "#58=ITEM_DEFINED_TRANSFORMATION('','',#57,#55);\n\
+#59=( REPRESENTATION_RELATIONSHIP('','',#51,#41) \
+REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION(#58) SHAPE_REPRESENTATION_RELATIONSHIP() );\n";
+
+/// The assembly's representation and frame first, as some exporters write it.
+const ASSEMBLY_FIRST: &str = "#58=ITEM_DEFINED_TRANSFORMATION('','',#55,#57);\n\
+#59=( REPRESENTATION_RELATIONSHIP('','',#41,#51) \
+REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION(#58) SHAPE_REPRESENTATION_RELATIONSHIP() );\n";
+
+fn apply(m: &[[f64; 4]; 4], p: [f64; 3]) -> [f64; 3] {
+    let row = |i: usize| m[i][0] * p[0] + m[i][1] * p[1] + m[i][2] * p[2] + m[i][3];
+    [row(0), row(1), row(2)]
+}
+
+#[test]
+fn reads_placement_in_either_relationship_order() {
+    let mut matrices = Vec::new();
+    for rel in [PART_FIRST, ASSEMBLY_FIRST] {
+        let src = turned_placement(BOTH_LINKED, rel);
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let asm = def_for_product(&scene, "Assembly");
+        let occ = asm.occurrences().next().expect("one occurrence");
+
+        // `from` is the part's frame and `to` its place in the assembly,
+        // whichever order the relationship lists them in.
+        let t = occ.transform().expect("a placement transform");
+        assert!(approx(t.from.origin, [0.0, 0.0, 0.0]), "rel: {rel}");
+        assert!(approx(t.to.origin, [10.0, 20.0, 30.0]), "rel: {rel}");
+        assert!(approx(t.to.ref_direction, [0.0, 1.0, 0.0]), "rel: {rel}");
+
+        // The origin pins the translation; the x axis tells R from its inverse.
+        let m = t.matrix().expect("a matrix");
+        assert!(
+            approx(apply(&m, [0.0, 0.0, 0.0]), [10.0, 20.0, 30.0]),
+            "rel: {rel}"
+        );
+        assert!(
+            approx(apply(&m, [1.0, 0.0, 0.0]), [10.0, 21.0, 30.0]),
+            "rel: {rel}"
+        );
+        assert!(
+            scene.warnings().is_empty(),
+            "unexpected warnings: {:?}",
+            scene.warnings()
+        );
+        matrices.push(m);
+    }
+    assert_eq!(matrices[0], matrices[1]);
+}
+
+#[test]
+fn warns_when_placement_reps_match_no_shape_definition() {
+    // Neither definition links its shape, so the order cannot be decided: read
+    // component-first and say so.
+    let src = turned_placement("", PART_FIRST);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let occ = asm.occurrences().next().expect("one occurrence");
+
+    let t = occ.transform().expect("a placement transform");
+    assert!(approx(t.from.origin, [0.0, 0.0, 0.0]));
+    assert!(approx(t.to.origin, [10.0, 20.0, 30.0]));
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "warnings: {warnings:?}");
+    assert!(
+        warnings[0].starts_with("NAUO placement:"),
+        "{}",
+        warnings[0]
     );
 }
 
