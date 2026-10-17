@@ -48,19 +48,10 @@ fn string_select(m: &StringSelectValue) -> String {
         None => step_str(&m.value),
     }
 }
-/// Part 21 string literal: single-quoted, inner `'` doubled to `''` (matches
-/// step-io `writer/lexical.rs::format_string`). Non-ASCII passes through raw.
+/// Part 21 string literal, quotes included, in plain ASCII — see
+/// `crate::parser::string::encode`.
 fn step_str(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 2);
-    out.push('\'');
-    for ch in s.chars() {
-        if ch == '\'' {
-            out.push('\'');
-        }
-        out.push(ch);
-    }
-    out.push('\'');
-    out
+    crate::parser::string::encode(s)
 }
 
 pub struct Writer<'a> {

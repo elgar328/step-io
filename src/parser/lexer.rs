@@ -284,9 +284,9 @@ pub enum TokenKind {
     Integer(i64),
 
     /// String literal enclosed in single quotes. Outer quotes are stripped
-    /// and the `''` escape is decoded to a single `'`. Part 21 wide-char
-    /// escapes (`\X\HH`, `\X2\…\X0\`, `\X4\…\X0\`) remain raw — decoding
-    /// those is deferred to a later stage.
+    /// and the `''` escape is decoded to a single `'`. The backslash escapes
+    /// (`\X\HH`, `\X2\…\X0\`, `\X4\…\X0\`, …) and line breaks stay as
+    /// written; the parser decodes them into [`Attribute::String`](crate::parser::Attribute::String).
     #[regex(
         r"'([^']|'')*'",
         |lex| {

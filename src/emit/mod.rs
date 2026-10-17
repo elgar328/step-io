@@ -75,20 +75,10 @@ fn stamp_apd(model: &mut StepModel, apd: &ApdInfo) {
     }
 }
 
-/// Part 21 string literal for the HEADER section — same convention as the
-/// generated DATA writer's `step_str` (inner `'` doubled, non-ASCII passes
-/// through raw).
+/// Part 21 string literal for the HEADER section, written like the DATA
+/// section's strings (plain ASCII, see `crate::parser::string::encode`).
 fn header_str(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 2);
-    out.push('\'');
-    for ch in s.chars() {
-        if ch == '\'' {
-            out.push('\'');
-        }
-        out.push(ch);
-    }
-    out.push('\'');
-    out
+    crate::parser::string::encode(s)
 }
 
 /// A HEADER string list; an empty list renders as the customary `('')`.

@@ -71,3 +71,41 @@ fn header_strings_are_escaped() {
         .expect("FILE_NAME line");
     assert!(line.starts_with("FILE_NAME('','',"), "blank stamp: {line}");
 }
+
+#[test]
+fn non_ascii_and_backslashes_round_trip_through_plain_ascii() {
+    let file_name = "부품 ①.step";
+    let description = "it's a \\ test 😀\nsecond line";
+    let author = "홍길동";
+    let part_name = r"C:\parts\받침대";
+
+    let mut b = StepBuilder::new().expect("builder");
+    b.header(&HeaderInput {
+        file_name: Some(file_name.to_owned()),
+        description: Some(description.to_owned()),
+        authors: vec![author.to_owned()],
+        timestamp: Some("2026-01-01T00:00:00Z".to_owned()),
+        ..Default::default()
+    });
+    b.part(part_name).expect("part");
+    let text = b.finish().expect("finish");
+    assert!(text.is_ascii(), "non-ASCII output:\n{text}");
+    assert!(
+        text.contains(r"'\X2\BD80D488\X0\ \X2\2460\X0\.step'"),
+        "file name: {text}"
+    );
+    assert!(
+        text.contains(r"'C:\\parts\\\X2\BC1BCE68B300\X0\'"),
+        "part: {text}"
+    );
+
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let header = model.header();
+    assert_eq!(header.file_name, file_name);
+    assert_eq!(header.description, description);
+    assert_eq!(header.authors, [author]);
+    let scene = model.scene();
+    let names: Vec<_> = scene.all_products().map(|p| p.name().to_owned()).collect();
+    assert_eq!(names, [part_name]);
+}

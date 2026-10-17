@@ -521,9 +521,17 @@ impl<'src> Parser<'src> {
                 Ok(Attribute::Real(v))
             }
             TokenKind::String(ref s) => {
-                let s = s.clone();
-                self.next_token()?;
-                Ok(Attribute::String(s))
+                let decoded = super::string::decode(s);
+                let span = self.next_token()?.span;
+                if decoded.malformed {
+                    self.warnings
+                        .push(ParseWarning::MalformedStringEscape { span });
+                }
+                if decoded.lowercase_hex {
+                    self.warnings
+                        .push(ParseWarning::LowercaseHexEscape { span });
+                }
+                Ok(Attribute::String(decoded.text))
             }
             TokenKind::Enum(ref s) => {
                 let s = s.clone();
@@ -1170,5 +1178,89 @@ mod tests {
                 .iter()
                 .any(|w| matches!(w, ParseWarning::EmptyAttribute { .. }))
         );
+    }
+
+    /// A file whose strings use escapes, with `FILE_NAME` broken across two
+    /// lines the way some writers wrap long strings.
+    fn escaped_strings_file(data: &str) -> String {
+        format!(
+            "ISO-10303-21;\n\
+             HEADER;\n\
+             FILE_DESCRIPTION(('Volumenk\\S\\vrper'),'2;1');\n\
+             FILE_NAME(\n'E:\\\\models\\\\1000\n28_part.stp','',(''),(''),'','','');\n\
+             FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF'));\n\
+             ENDSEC;\n\
+             DATA;\n\
+             {data}\
+             ENDSEC;\n\
+             END-ISO-10303-21;\n"
+        )
+    }
+
+    fn string_attr(graph: &Graph, id: u64) -> &str {
+        let RawEntity::Simple { attributes, .. } = &graph.entities[&id] else {
+            panic!("expected Simple entity");
+        };
+        let Attribute::String(s) = &attributes[0] else {
+            panic!("expected a string attribute");
+        };
+        s
+    }
+
+    fn header_string(graph: &Graph, name: &str) -> String {
+        let entity = graph
+            .header
+            .iter()
+            .find(|e| matches!(e, RawEntity::Simple { name: n, .. } if n == name))
+            .expect("header entity");
+        let RawEntity::Simple { attributes, .. } = entity else {
+            unreachable!()
+        };
+        match &attributes[0] {
+            Attribute::String(s) => s.clone(),
+            Attribute::List(items) => match &items[0] {
+                Attribute::String(s) => s.clone(),
+                other => panic!("expected a string, got {other:?}"),
+            },
+            other => panic!("expected a string, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn strings_are_decoded_in_header_and_data() {
+        let src =
+            escaped_strings_file("#1 = PRODUCT('\\X2\\D55CAE00\\X0\\ \\X\\B1 it''s','',$,());\n");
+        let graph = parse(&src).expect("parse");
+        assert_eq!(header_string(&graph, "FILE_DESCRIPTION"), "Volumenkörper");
+        assert_eq!(
+            header_string(&graph, "FILE_NAME"),
+            r"E:\models\100028_part.stp"
+        );
+        assert_eq!(string_attr(&graph, 1), "한글 ± it's");
+        assert!(graph.warnings.is_empty(), "warnings: {:?}", graph.warnings);
+    }
+
+    #[test]
+    fn undecodable_escapes_are_kept_with_a_warning() {
+        let src = escaped_strings_file("#1 = PRODUCT('NAUO8\\Redondeo1','',$,());\n");
+        let graph = parse(&src).expect("parse");
+        assert_eq!(string_attr(&graph, 1), r"NAUO8\Redondeo1");
+        assert!(matches!(
+            graph.warnings[..],
+            [ParseWarning::MalformedStringEscape { .. }]
+        ));
+    }
+
+    #[test]
+    fn lower_case_hex_is_decoded_with_a_warning() {
+        let src =
+            escaped_strings_file("#1 = PRODUCT('\\X2\\c5d0\\X0\\\\X2\\c5d0\\X0\\','',$,());\n");
+        let graph = parse(&src).expect("parse");
+        assert_eq!(string_attr(&graph, 1), "에에");
+        // One warning per string, however many runs it holds.
+        assert!(matches!(
+            graph.warnings[..],
+            [ParseWarning::LowercaseHexEscape { .. }]
+        ));
     }
 }

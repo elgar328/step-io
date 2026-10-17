@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   boundary loop, or an edge in a loop is used. Reading and authoring both use
   it, so an orientation read from a file can be passed straight to
   `StepBuilder`.
+- `ParseWarning::MalformedStringEscape` reports a string escape that cannot be
+  decoded and was kept as written, and `ParseWarning::LowercaseHexEscape` a
+  hex escape written with lower-case digits, which is decoded all the same.
 
 ### Changed
 
@@ -25,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Bound::orientation()` and `Bound::oriented_edges()` return `Orientation`
   instead of `bool`. `Edge::same_sense()`, which relates an edge to its curve,
   stays a `bool`.
+- Strings are decoded when read: `\X2\…\X0\`, `\X4\…\X0\`, `\X\HH`,
+  `\S\` and `\\` become the characters they stand for, and the line breaks
+  writers insert into long strings are dropped. `parse()` and `read()` return
+  the decoded text, so code that decoded these escapes itself should stop
+  doing so.
+- Strings are written in plain ASCII: characters outside it become `\X2\` or
+  `\X4\` escapes and `\` becomes `\\`, as Part 21 requires. A string with
+  only printable ASCII and no backslash is written as before.
+- `ParseWarning` is `#[non_exhaustive]`, so matching on it needs a wildcard
+  arm.
 - `StepBuilder` writes `APPLICATION_PROTOCOL_DEFINITION` with year 2020 (AP242
   edition 2) instead of 2011. Readers ignore the value; only the output text
   changes.

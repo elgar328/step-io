@@ -9,9 +9,9 @@ use crate::parser::lexer::{LexError, Span};
 pub enum Attribute {
     Integer(i64),
     Real(f64),
-    /// String with outer quotes stripped. The `''` escape is decoded to a
-    /// single `'` by the lexer. Wide-char escapes (`\X\HH`, `\X2\...\X0\`)
-    /// are **not** decoded — that step is deferred to a later stage.
+    /// A string's value: quotes stripped and every escape decoded (`''`,
+    /// `\\`, `\X\HH`, `\X2\…\X0\`, `\X4\…\X0\`, `\S\`), with the line
+    /// breaks writers insert into long strings dropped.
     String(String),
     /// Enumeration value without the surrounding dots (e.g. `.T.` → `"T"`).
     Enum(String),
@@ -110,6 +110,7 @@ pub struct Graph {
 /// IR itself never carries the non-standard form — input is normalised
 /// to a spec-conformant shape before it reaches [`Graph`].
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum ParseWarning {
     /// A HEADER entity is missing its terminating `;`. The next keyword
     /// is treated as the start of the next entity; the IR shows no trace.
@@ -127,6 +128,14 @@ pub enum ParseWarning {
         section: String,
         span: super::lexer::Span,
     },
+    /// A string holds an escape that cannot be decoded — a lone `\`, an
+    /// unterminated or broken `\X2\` / `\X4\` run, a `\P?\` code page other
+    /// than `A`, or an unknown directive. It is kept as written, so the value
+    /// holds the backslash as a character (and writes back as `\\`).
+    MalformedStringEscape { span: super::lexer::Span },
+    /// A string's hex escape uses lower-case digits (`\X2\c5d0\X0\`), which
+    /// Part 21 does not allow. It is decoded all the same.
+    LowercaseHexEscape { span: super::lexer::Span },
 }
 
 impl Graph {

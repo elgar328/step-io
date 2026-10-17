@@ -13,6 +13,7 @@ pub mod entity;
 pub mod lexer;
 pub mod p21;
 pub mod schema;
+pub(crate) mod string;
 
 pub use entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
 pub use lexer::{LexError, LexErrorKind, Lexer, Span, Token, TokenKind, tokenize};
