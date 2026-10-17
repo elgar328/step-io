@@ -10,14 +10,31 @@
 
 ## Release Checklist
 
-1. **Update CHANGELOG.md**
-   - Move `[Unreleased]` items into a new `[X.Y.Z] - YYYY-MM-DD` section.
-   - Add/refresh the comparison links at the bottom of the file.
-   - Ensure every user-facing change is documented.
+Replace `X.Y.Z` with the new version and `PREV` with the previous one
+throughout.
 
-2. **Finalize version**
+0. **Prepare**
+   - On `dev`, with a clean working tree.
+   - Local `dev` and `main` match `origin` (`git fetch`, then
+     `git status` on each).
+   - CI is green on `dev`.
+   - Choose the version (see [Versioning](#versioning-semver)): while the
+     version is `0.x.y`, a breaking change bumps the minor version
+     (`0.2.5` → `0.3.0`); anything else bumps the patch (`0.2.5` → `0.2.6`).
+
+1. **Update CHANGELOG.md**
+   - Move the `[Unreleased]` items into a new `## [X.Y.Z] - YYYY-MM-DD`
+     section, and leave an empty `## [Unreleased]` above it.
+   - Ensure every user-facing change is documented.
+   - Update the links at the bottom of the file:
+     ```
+     [Unreleased]: https://github.com/elgar328/step-io/compare/vX.Y.Z...HEAD
+     [X.Y.Z]: https://github.com/elgar328/step-io/compare/vPREV...vX.Y.Z
+     ```
+
+2. **Finalize the version**
    - Remove the `-dev` suffix from `version` in `Cargo.toml`
-     (e.g., `X.Y.Z-dev` → `X.Y.Z`).
+     (`X.Y.Z-dev` → `X.Y.Z`).
 
 3. **Sync the generated code**
    - The `src/generated/` tree is committed, so the published crate must match
@@ -42,46 +59,75 @@
      cargo +1.85 check --locked -p step-io --all-targets
      ```
 
-5. **Commit on `dev`**
-   - Commit `CHANGELOG.md`, `Cargo.toml`, and `Cargo.lock` together, e.g.
+5. **Commit and push `dev`**
+   - Commit `CHANGELOG.md`, `Cargo.toml`, and `Cargo.lock` together:
      `release: vX.Y.Z`.
+   - Check the package as it will be published (this needs the clean tree
+     the commit leaves). Only `step-io` is published; `codegen` is a
+     workspace-internal generator (`publish = false`):
+     ```sh
+     cargo publish -p step-io --dry-run
+     ```
+   - Push, and wait for CI to pass:
+     ```sh
+     git push origin dev
+     # The run for the commit just pushed; if none is listed yet, wait a
+     # moment and ask again.
+     run=$(gh run list --commit "$(git rev-parse HEAD)" --json databaseId -q '.[0].databaseId')
+     gh run watch "$run" --exit-status
+     ```
+     Pick the run by its commit: the latest run on `dev` may still be the
+     previous commit's, already green. Without `--exit-status`, `gh run watch`
+     exits 0 even when the run fails.
+   - If CI fails, fix it on `dev` and go back to step 3. Nothing has reached
+     `main` or a tag yet, so there is nothing to undo.
 
 6. **Squash merge into `main`**
    ```sh
    git checkout main
    git merge --squash dev
    git commit -m "Release X.Y.Z"
+   git diff dev main   # must print nothing
    ```
 
-7. **Tag**
+7. **Tag and push**
    ```sh
    git tag vX.Y.Z
+   git push origin main vX.Y.Z
    ```
 
-8. **Push**
+8. **Publish to crates.io**
    ```sh
-   git push origin main --tags
-   ```
-
-9. **Publish to crates.io**
-   - Only `step-io` is published; `codegen` is a workspace-internal generator
-     (`publish = false`).
-   ```sh
-   cargo publish -p step-io --dry-run
    cargo publish -p step-io
    ```
+   - Check that [crates.io](https://crates.io/crates/step-io) shows the new
+     version, and, a few minutes later, that
+     [docs.rs](https://docs.rs/step-io) has built its documentation.
 
-10. **Return to `dev` and start the next cycle**
-    ```sh
-    git checkout dev
-    git merge main
-    ```
-    - Bump `version` in `Cargo.toml` to the next `X.Y.Z-dev`, and run any
-      `cargo check` so `Cargo.lock` picks up the new version.
-    - Commit `Cargo.toml` and `Cargo.lock`:
-      `chore: start next development cycle (X.Y.Z-dev)`. CI's `msrv` job
-      builds with `--locked`, so a bump without the updated `Cargo.lock` fails
-      it.
+9. **Return to `dev` and start the next cycle**
+   ```sh
+   git checkout dev
+   git merge main --no-edit
+   ```
+   - Bump `version` in `Cargo.toml` to the next patch with `-dev`
+     (`X.Y.Z` → `X.Y.(Z+1)-dev`); the next release may still choose a minor
+     bump in step 0. Run any `cargo check` so `Cargo.lock` picks up the new
+     version.
+   - Commit `Cargo.toml` and `Cargo.lock`:
+     `chore: start next development cycle (X.Y.(Z+1)-dev)`. CI's `msrv` job
+     builds with `--locked`, so a bump without the updated `Cargo.lock` fails
+     it.
+   - Push: `git push origin dev`.
+
+### If a published release is broken
+
+A version on crates.io cannot be replaced or deleted. Yank it, so that new
+projects no longer resolve to it, then release the fix as a new patch
+version:
+
+```sh
+cargo yank step-io --version X.Y.Z
+```
 
 ## Versioning (SemVer)
 
