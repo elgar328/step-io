@@ -138,6 +138,33 @@ pub enum ParseWarning {
     LowercaseHexEscape { span: super::lexer::Span },
 }
 
+impl std::fmt::Display for ParseWarning {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (span, what) = match self {
+            Self::MissingHeaderSemicolon { entity_name, span } => (
+                span,
+                format!("HEADER entity {entity_name} has no terminating ';'"),
+            ),
+            Self::EmptyAttribute { span } => (span, "blank attribute read as $".to_owned()),
+            Self::Ed3SectionDiscarded { section, span } => {
+                (span, format!("{section} section skipped (not supported)"))
+            }
+            Self::MalformedStringEscape { span } => (
+                span,
+                "string escape could not be decoded; kept as written".to_owned(),
+            ),
+            Self::LowercaseHexEscape { span } => {
+                (span, "string escape uses lower-case hex digits".to_owned())
+            }
+        };
+        write!(
+            f,
+            "warning at line {}, column {}: {what}",
+            span.line, span.column
+        )
+    }
+}
+
 impl Graph {
     /// Look up an entity by its `#N` identifier.
     #[must_use]
@@ -358,5 +385,46 @@ mod tests {
         };
         assert_eq!(graph.get(1), Some(&entity));
         assert_eq!(graph.get(999), None);
+    }
+
+    #[test]
+    fn parse_warnings_print_as_one_line() {
+        let span = Span {
+            start: 0,
+            end: 1,
+            line: 12,
+            column: 5,
+        };
+        let cases = [
+            (
+                ParseWarning::MissingHeaderSemicolon {
+                    entity_name: "FILE_NAME".into(),
+                    span,
+                },
+                "warning at line 12, column 5: HEADER entity FILE_NAME has no terminating ';'",
+            ),
+            (
+                ParseWarning::EmptyAttribute { span },
+                "warning at line 12, column 5: blank attribute read as $",
+            ),
+            (
+                ParseWarning::Ed3SectionDiscarded {
+                    section: "ANCHOR".into(),
+                    span,
+                },
+                "warning at line 12, column 5: ANCHOR section skipped (not supported)",
+            ),
+            (
+                ParseWarning::MalformedStringEscape { span },
+                "warning at line 12, column 5: string escape could not be decoded; kept as written",
+            ),
+            (
+                ParseWarning::LowercaseHexEscape { span },
+                "warning at line 12, column 5: string escape uses lower-case hex digits",
+            ),
+        ];
+        for (warning, want) in cases {
+            assert_eq!(warning.to_string(), want);
+        }
     }
 }

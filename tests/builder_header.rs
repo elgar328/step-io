@@ -101,6 +101,11 @@ fn non_ascii_and_backslashes_round_trip_through_plain_ascii() {
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    assert!(
+        report.parse_warnings.is_empty(),
+        "{:?}",
+        report.parse_warnings
+    );
     let header = model.header();
     assert_eq!(header.file_name, file_name);
     assert_eq!(header.description, description);

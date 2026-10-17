@@ -6,13 +6,14 @@
 //! in between lives here:
 //! non-standard input is healed in place where a safe rewrite exists, and
 //! dropped with a [`DropReason`] where none does. The [`Report`] accounts
-//! for everything that came in — kept, normalized, or dropped and why.
+//! for everything that came in — kept, normalized, or dropped and why — and
+//! carries what the parser repaired on the way in.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::generated::model::StepModel;
 use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
-use crate::parser::{Attribute, Error, RawEntity, parse_bytes};
+use crate::parser::{Attribute, Error, ParseWarning, RawEntity, parse_bytes};
 
 mod entity_normalize;
 
@@ -48,9 +49,11 @@ pub struct DropReason {
 /// Input-to-model provenance. Every input entity plus every synthetic entity
 /// added by normalization is either kept (`validated`) or dropped with a reason
 /// (`drops`): `validated + sum(drops) == n_in + n_synth`. `norm` = rewrite (fix)
-/// notes from the pre-read normalize pass. The source header (including the
-/// identified schema) lives on the model: [`StepModel::header`].
+/// notes from the pre-read normalize pass; `parse_warnings` = what the parser
+/// repaired before that. The source header (including the identified schema)
+/// lives on the model: [`StepModel::header`].
 #[derive(Clone, Debug, Default)]
+#[non_exhaustive]
 pub struct Report {
     /// Input entity count (data section, before normalization).
     pub n_in: usize,
@@ -64,6 +67,10 @@ pub struct Report {
     pub dropped: Vec<(u64, DropReason)>,
     /// Non-standard rewrite notes (kept entities, fixed in place).
     pub norm: Vec<&'static str>,
+    /// What the parser repaired or skipped on the way in (blank attribute
+    /// slots, an undecodable string escape, …) — fixed at the syntax level,
+    /// before normalization. Each prints as a one-line message.
+    pub parse_warnings: Vec<ParseWarning>,
 }
 
 /// Collect every entity id referenced (transitively) by an attribute.
@@ -282,6 +289,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
     const MAX_ITERS: usize = 3;
 
     let g = parse_bytes(src)?;
+    let parse_warnings = g.warnings;
     let n_in = g.entities.len();
     let header = crate::header::from_raw(&g.header, g.schema);
     let raw: BTreeMap<u64, RawEntity> = g.entities;
@@ -352,6 +360,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
             validated,
             dropped,
             norm,
+            parse_warnings,
         },
     ))
 }

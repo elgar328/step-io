@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ParseWarning::MalformedStringEscape` reports a string escape that cannot be
   decoded and was kept as written, and `ParseWarning::LowercaseHexEscape` a
   hex escape written with lower-case digits, which is decoded all the same.
+  Both arrive in `Report::parse_warnings` and `Graph::warnings`.
+- `Report::parse_warnings` lists what the parser repaired or skipped while
+  reading, such as a blank attribute or an undecodable string escape. `read()`
+  used to discard these.
+- `ParseWarning` implements `Display`, printing a one-line message with the
+  line and column, and is re-exported as `step_io::ParseWarning`.
 
 ### Changed
 
@@ -38,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only printable ASCII and no backslash is written as before.
 - `ParseWarning` is `#[non_exhaustive]`, so matching on it needs a wildcard
   arm.
+- `Report` is `#[non_exhaustive]`. Its fields read as before, but it can no
+  longer be built with a struct literal outside step-io.
 - `StepBuilder` writes `APPLICATION_PROTOCOL_DEFINITION` with year 2020 (AP242
   edition 2) instead of 2011. Readers ignore the value; only the output text
   changes.

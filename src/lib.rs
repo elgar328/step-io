@@ -39,9 +39,9 @@
 //!
 //! Reading gives the result and the report together: [`read`] returns the
 //! [`StepModel`] plus a [`Report`] of what was kept, normalized, or dropped
-//! and why. Messy files are common in the wild — non-standard content is
-//! healed or dropped rather than failing the import, and the report is the
-//! record of what happened on the way in.
+//! and why, and what the parser repaired. Messy files are common in the
+//! wild — non-standard content is healed or dropped rather than failing the
+//! import, and the report is the record of what happened on the way in.
 //!
 //! The model is raw and complete: one public arena per entity type,
 //! schema-faithful. Everything the reader kept is directly accessible.
@@ -62,7 +62,12 @@
 //! use step_io::scene::geometry::SurfaceKind;
 //!
 //! let source = std::fs::read("part.step").unwrap();
-//! let (model, _report) = step_io::read(&source).unwrap(); // report: kept / normalized / dropped
+//! let (model, report) = step_io::read(&source).unwrap();
+//! // What the parser repaired on the way in; the rest of `report` accounts
+//! // for what was kept, normalized, or dropped.
+//! for w in &report.parse_warnings {
+//!     eprintln!("step-io: {w}");
+//! }
 //! let scene = model.scene();
 //!
 //! // Geometry comes in its stored analytic form first; NURBS only on demand.
@@ -170,7 +175,7 @@ pub use reader::{DropKind, DropReason, Report, read};
 // harness, but not part of the supported API surface.
 #[doc(hidden)]
 pub use emit::dump_universal;
-pub use parser::{ApFamily, Error, LexError, LexErrorKind, SchemaId, Stage};
+pub use parser::{ApFamily, Error, LexError, LexErrorKind, ParseWarning, SchemaId, Stage};
 pub use refgraph::RefGraph;
 
 /// Crate-wide result alias: the only fallible public entry point ([`read`])

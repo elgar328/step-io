@@ -4,7 +4,7 @@
 //! (off-kind scalar, short arity, non-list vec, dangling/wrong-type ref) — they
 //! are adversarial byte inputs, not valid-CAD fixtures.
 
-use step_io::{DropKind, Report, read};
+use step_io::{DropKind, ParseWarning, Report, read};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\n\
 FILE_DESCRIPTION(('probe'),'2;1');\n\
@@ -98,4 +98,28 @@ fn valid_body_keeps_all() {
     let r = read_body("#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=DIRECTION('',(1.,0.,0.));\n");
     assert_eq!(r.dropped.len(), 0);
     assert_eq!(r.validated, 2);
+    assert!(r.parse_warnings.is_empty(), "{:?}", r.parse_warnings);
+}
+
+/// A repair the parser makes reaches the caller of `read()`, with a message
+/// that says where and what.
+#[test]
+fn parser_repairs_are_reported() {
+    let r = read_body("#1=CARTESIAN_POINT('NAUO8\\Redondeo1',(0.,0.,0.));\n");
+    assert_eq!(r.validated, 1, "the entity is kept");
+    assert!(
+        matches!(
+            r.parse_warnings[..],
+            [ParseWarning::MalformedStringEscape { .. }]
+        ),
+        "{:?}",
+        r.parse_warnings
+    );
+    // The body starts on line 8, after the seven header lines; the string is
+    // the token at column 20.
+    let message = r.parse_warnings[0].to_string();
+    assert_eq!(
+        message,
+        "warning at line 8, column 20: string escape could not be decoded; kept as written"
+    );
 }
