@@ -12,10 +12,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::generated::model::StepModel;
-use crate::generated::read::{RefSlot, complex_ref_slots, in_subset, read as gen_read, ref_slots};
+use crate::generated::read::{RefSlot, complex_ref_slots, read as gen_read, ref_slots};
 use crate::parser::{Attribute, Error, ParseWarning, RawEntity, parse_bytes};
 
 mod entity_normalize;
+pub(crate) mod index;
+
+use index::{EntityIndex, Member};
 
 /// Why an entity was dropped before it could enter the model.
 /// `NonstandardValue` = one of the entity's own attribute *values* is nonstandard
@@ -83,23 +86,23 @@ fn collect_refs(a: &Attribute, out: &mut Vec<u64>) {
     }
 }
 
-fn entity_refs(ent: &RawEntity) -> Vec<u64> {
-    let mut out = Vec::new();
+/// Fill `out` with every entity id `ent` references (cleared first).
+fn entity_refs(ent: &RawEntity, out: &mut Vec<u64>) {
+    out.clear();
     match ent {
         RawEntity::Simple { attributes, .. } => {
             for a in attributes {
-                collect_refs(a, &mut out);
+                collect_refs(a, out);
             }
         }
         RawEntity::Complex { parts, .. } => {
             for p in parts {
                 for a in &p.attributes {
-                    collect_refs(a, &mut out);
+                    collect_refs(a, out);
                 }
             }
         }
     }
-    out
 }
 
 fn ent_name(e: &RawEntity) -> String {
@@ -117,14 +120,29 @@ fn ent_name(e: &RawEntity) -> String {
 /// in-closure target whose type the slot's SELECT does not admit? Returns the
 /// first `<ENT>: '<slot>' references <TYPE>` label. Out-of-closure / dangling
 /// targets are NOT flagged here — those are cascade/unimplemented.
-fn nonstd_ref(ent: &RawEntity, graph: &BTreeMap<u64, RawEntity>) -> Option<String> {
-    match ent {
-        RawEntity::Simple {
-            name, attributes, ..
-        } => check_ref_slots(name, attributes, ref_slots(name), graph),
-        RawEntity::Complex { parts, .. } => parts.iter().find_map(|p| {
-            check_ref_slots(&p.name, &p.attributes, complex_ref_slots(&p.name), graph)
+fn nonstd_ref(
+    ent: &RawEntity,
+    member: Member,
+    index: &EntityIndex<'_>,
+    buf: &mut Vec<u64>,
+) -> Option<String> {
+    match (ent, member) {
+        (
+            RawEntity::Simple {
+                name, attributes, ..
+            },
+            Member::Simple(ix),
+        ) => check_ref_slots(name, attributes, ref_slots(ix), index, buf),
+        (RawEntity::Complex { parts, .. }, _) => parts.iter().find_map(|p| {
+            check_ref_slots(
+                &p.name,
+                &p.attributes,
+                complex_ref_slots(&p.name),
+                index,
+                buf,
+            )
         }),
+        _ => None,
     }
 }
 
@@ -132,28 +150,27 @@ fn check_ref_slots(
     ename: &str,
     attrs: &[Attribute],
     slots: &[RefSlot],
-    graph: &BTreeMap<u64, RawEntity>,
+    index: &EntityIndex<'_>,
+    buf: &mut Vec<u64>,
 ) -> Option<String> {
     for rs in slots {
         let Some(a) = attrs.get(rs.idx) else { continue };
-        let mut targets: Vec<u64> = Vec::new();
-        collect_refs(a, &mut targets);
-        for r in targets {
-            let Some(target) = graph.get(&r) else {
+        buf.clear();
+        collect_refs(a, buf);
+        for &r in buf.iter() {
+            let Some(tp) = index.pos(r) else {
                 continue;
             };
-            if !in_subset(target) {
-                continue; // out-of-closure: cascade / unimplemented handles it
-            }
-            let admitted = match target {
-                RawEntity::Complex { .. } => rs.complex_ok,
-                RawEntity::Simple { name, .. } => rs.allowed.contains(&name.as_str()),
+            let admitted = match index.member(tp) {
+                Member::Out => continue, // out-of-closure: cascade / unimplemented handles it
+                Member::Complex => rs.complex_ok,
+                Member::Simple(t) => rs.allowed.binary_search(&t).is_ok(),
             };
             if !admitted {
                 return Some(format!(
                     "{ename}: '{}' references {}",
                     rs.name,
-                    ent_name(target)
+                    ent_name(index.entity(tp))
                 ));
             }
         }
@@ -164,68 +181,76 @@ fn check_ref_slots(
 /// Filter a normalized graph to the closure subset, recording WHY each entity is
 /// dropped. An entity survives iff it is a closure type, all its transitive refs
 /// stay kept, and no ref slot holds a type the slot does not admit (fixpoint).
+/// Returns the kept flags (by index position) and how many are set.
 ///
 /// `known_bad` = entities the generated read already failed on (own-attr); they
 /// are pre-dropped roots here so their referrers cascade. Their drop reason is
 /// owned by the caller's read-failure accumulator, so they are NOT re-recorded
 /// in `dropped` (avoids double-counting in the provenance accounting).
 fn drop_pass(
-    graph: &BTreeMap<u64, RawEntity>,
+    index: &EntityIndex<'_>,
     known_bad: &BTreeSet<u64>,
-) -> (BTreeSet<u64>, Vec<(u64, DropReason)>) {
+) -> (Vec<bool>, usize, Vec<(u64, DropReason)>) {
+    let n = index.len();
     let mut dropped: Vec<(u64, DropReason)> = Vec::new();
-    let mut keep: BTreeSet<u64> = BTreeSet::new();
+    let mut keep = vec![false; n];
     let mut root_of: BTreeMap<u64, String> = BTreeMap::new();
-    for (&id, e) in graph {
+    for (pos, kept) in keep.iter_mut().enumerate() {
+        let id = index.id(pos);
         if known_bad.contains(&id) {
             // Dropped by read (reason owned by read_fail); seed root_of so its
             // referrers get a cascade label, but do not re-record the drop.
             root_of.insert(id, "unclassified".to_string());
-        } else if in_subset(e) {
-            keep.insert(id);
+        } else if index.member(pos) != Member::Out {
+            *kept = true;
         } else {
-            let n = ent_name(e);
-            root_of.insert(id, n.clone());
+            let name = ent_name(index.entity(pos));
+            root_of.insert(id, name.clone());
             dropped.push((
                 id,
                 DropReason {
                     kind: DropKind::Unimplemented,
-                    key: n,
+                    key: name,
                 },
             ));
         }
     }
+    let mut refs: Vec<u64> = Vec::new();
+    let mut buf: Vec<u64> = Vec::new();
     loop {
         let mut removed = false;
-        let snapshot: Vec<u64> = keep.iter().copied().collect();
-        for id in snapshot {
-            let ent = &graph[&id];
-            let mut cascaded = false;
-            for r in entity_refs(ent) {
-                if !keep.contains(&r) {
-                    keep.remove(&id);
-                    let root = root_of
-                        .get(&r)
-                        .cloned()
-                        .unwrap_or_else(|| "dangling".to_string());
-                    dropped.push((
-                        id,
-                        DropReason {
-                            kind: DropKind::Cascade,
-                            key: format!("via-{root}"),
-                        },
-                    ));
-                    root_of.insert(id, root);
-                    removed = true;
-                    cascaded = true;
-                    break;
-                }
-            }
-            if cascaded {
+        // In id order; an entity only ever drops itself, so checking its flag
+        // at its turn is the same as snapshotting the kept set up front.
+        for pos in 0..n {
+            if !keep[pos] {
                 continue;
             }
-            if let Some(reason) = nonstd_ref(ent, graph) {
-                keep.remove(&id);
+            let id = index.id(pos);
+            let ent = index.entity(pos);
+            entity_refs(ent, &mut refs);
+            let missing = refs
+                .iter()
+                .copied()
+                .find(|&r| !index.pos(r).is_some_and(|p| keep[p]));
+            if let Some(r) = missing {
+                keep[pos] = false;
+                let root = root_of
+                    .get(&r)
+                    .cloned()
+                    .unwrap_or_else(|| "dangling".to_string());
+                dropped.push((
+                    id,
+                    DropReason {
+                        kind: DropKind::Cascade,
+                        key: format!("via-{root}"),
+                    },
+                ));
+                root_of.insert(id, root);
+                removed = true;
+                continue;
+            }
+            if let Some(reason) = nonstd_ref(ent, index.member(pos), index, &mut buf) {
+                keep[pos] = false;
                 root_of.insert(id, reason.clone());
                 dropped.push((
                     id,
@@ -241,9 +266,8 @@ fn drop_pass(
             break;
         }
     }
-    // Return the kept-id set (not a cloned entity map): the reader borrows the
-    // entities from the full graph, so no RawEntity is cloned here.
-    (keep, dropped)
+    let kept = keep.iter().filter(|&&k| k).count();
+    (keep, kept, dropped)
 }
 
 /// Full pre-read normalization: `entity_normalize` (per-entity, add-only synthetic
@@ -306,15 +330,16 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
     let mut dropped: Vec<(u64, DropReason)> = Vec::new();
     let mut validated = 0usize;
     let mut converged = false;
+    let index = EntityIndex::new(&normalized);
     for _ in 0..MAX_ITERS {
-        let (kept, kept_dropped) = drop_pass(&normalized, &known_bad);
+        let (kept, n_kept, kept_dropped) = drop_pass(&index, &known_bad);
         // No catch_unwind belt: the generated read is structurally panic-free
         // (codegen emits no panic!/expect/unwrap/raw indexing — gated by grep), so
         // it returns per-entity drops instead of unwinding.
-        let (m, _idmap, read_drops) = gen_read(&normalized, &kept);
+        let (m, _idmap, read_drops) = gen_read(&index, &kept);
         model = m;
         dropped = kept_dropped;
-        validated = kept.len();
+        validated = n_kept;
         if read_drops.is_empty() {
             converged = true;
             break;

@@ -461,7 +461,7 @@ fn has_ref(k: &Kind) -> bool {
 pub fn emit_read(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
     s.push_str(&format!(
-        "use std::collections::{{BTreeMap, BTreeSet}};\nuse {crate_path}::parser::{{Attribute, RawEntity, RawEntityPart}};\nuse super::model::*;\n\n"
+        "use {crate_path}::parser::{{Attribute, RawEntity, RawEntityPart}};\nuse {crate_path}::reader::index::{{EntityIndex, IdMap, Member}};\nuse super::model::*;\n\n"
     ));
 
     // scalar readers (fallible)
@@ -541,6 +541,26 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         simple_names.join(", ")
     )
     .unwrap();
+    // The same names sorted, each with its SIMPLE_NAMES index: a type name
+    // resolves to that index once, and the tables below are keyed by it.
+    let mut by_name: Vec<(&str, usize)> = ir
+        .simples
+        .iter()
+        .enumerate()
+        .map(|(i, se)| (se.name.as_str(), i))
+        .collect();
+    by_name.sort_unstable();
+    let by_name: Vec<String> = by_name
+        .iter()
+        .map(|(n, i)| format!("(\"{n}\", {i})"))
+        .collect();
+    writeln!(
+        s,
+        "const SIMPLE_INDEX: &[(&str, u16)] = &[{}];",
+        by_name.join(", ")
+    )
+    .unwrap();
+    s.push_str("pub fn simple_index(name: &str) -> Option<u16> {\n    SIMPLE_INDEX.binary_search_by(|(n, _)| (*n).cmp(name)).ok().map(|i| SIMPLE_INDEX[i].1)\n}\n\n");
 
     // ---- dispatch table for complex part-bag ----
     if ir.has_part_bag {
@@ -556,34 +576,43 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         s.push_str("pub const COMPLEX_PART_NAMES: &[&str] = &[];\npub fn is_complex_unit(_parts: &[RawEntityPart]) -> bool { false }\n\n");
     }
 
-    // subset membership predicate used by the round-trip filter.
-    s.push_str("pub fn in_subset(ent: &RawEntity) -> bool {\n    match ent {\n        RawEntity::Simple { name, .. } => SIMPLE_NAMES.contains(&name.as_str()),\n        RawEntity::Complex { parts, .. } => is_complex_unit(parts),\n    }\n}\n\n");
-
     // ---- per-slot ref allow-list (nonstandard-ref detection) ----
     // For each ref slot of each entity/part: the standard target types this slot
-    // admits (`allowed` = the ref-enum's simple arms as UPPER wire names, plus
-    // `complex_ok` for a part-bag target). A ref whose target type is in the
-    // closure but not in this list sits in a slot that does not admit it = a
-    // schema-violating (nonstandard) reference.
-    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [&'static str], pub complex_ok: bool, pub is_vec: bool }\n\n");
-    let rust_to_name: std::collections::HashMap<&str, &str> = ir
+    // admits (`allowed` = the ref-enum's simple arms as sorted SIMPLE_NAMES
+    // indices, plus `complex_ok` for a part-bag target). A ref whose target type
+    // is in the closure but not in this list sits in a slot that does not admit
+    // it = a schema-violating (nonstandard) reference.
+    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [u16], pub complex_ok: bool, pub is_vec: bool }\n\n");
+    let rust_to_index: std::collections::HashMap<&str, usize> = ir
         .simples
         .iter()
-        .map(|se| (se.rust.as_str(), se.name.as_str()))
+        .enumerate()
+        .map(|(i, se)| (se.rust.as_str(), i))
         .collect();
+    // Simple entities are keyed by their SIMPLE_NAMES index; complex parts
+    // (rare) by name.
     emit_ref_slot_table(
         &mut s,
         "ref_slots",
+        "ix: u16",
+        "ix",
         ir,
-        &rust_to_name,
-        ir.simples.iter().map(|se| (&se.name, &se.fields)),
+        &rust_to_index,
+        ir.simples
+            .iter()
+            .enumerate()
+            .map(|(i, se)| (i.to_string(), &se.fields)),
     );
     emit_ref_slot_table(
         &mut s,
         "complex_ref_slots",
+        "n: &str",
+        "n",
         ir,
-        &rust_to_name,
-        ir.parts.iter().map(|p| (&p.name, &p.fields)),
+        &rust_to_index,
+        ir.parts
+            .iter()
+            .map(|p| (format!("\"{}\"", p.name), &p.fields)),
     );
 
     // ---- build_* fns (pass1, fallible) ----
@@ -593,17 +622,17 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
 
     // ---- read() ----
     s.push_str(
-        "pub fn read(graph: &BTreeMap<u64, RawEntity>, kept: &BTreeSet<u64>) -> (StepModel, BTreeMap<u64, EntityKey>, Vec<(u64, String)>) {\n",
+        "pub fn read<'a>(index: &'a EntityIndex<'a>, kept: &[bool]) -> (StepModel, IdMap<'a>, Vec<(u64, String)>) {\n",
     );
     s.push_str("    let mut model = StepModel::default();\n");
-    s.push_str("    let mut idmap: BTreeMap<u64, EntityKey> = BTreeMap::new();\n");
+    s.push_str("    let mut idmap = IdMap::new(index);\n");
     s.push_str("    let mut read_drops: Vec<(u64, String)> = Vec::new();\n");
     // pending lists for pass 2
     for se in &ir.simples {
         if se.fields.iter().any(|f| has_ref(&f.kind)) {
             writeln!(
                 s,
-                "    let mut pending_{}: Vec<({}Id, u64)> = Vec::new();",
+                "    let mut pending_{}: Vec<({}Id, u64, &[Attribute])> = Vec::new();",
                 arena_field(&se.rust),
                 se.rust
             )
@@ -611,20 +640,20 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         }
     }
     if ir.has_part_bag {
-        s.push_str("    let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();\n");
+        s.push_str("    let mut pending_complex: Vec<(ComplexUnitId, u64, &[RawEntityPart])> = Vec::new();\n");
     }
 
-    // Iterate the full graph but build only kept entities (no clone: the kept
-    // set is borrowed from drop_pass, entities are borrowed from `graph`).
-    s.push_str("    for (&id, ent) in graph {\n        if !kept.contains(&id) { continue; }\n        match ent {\n");
-    // simple dispatch arms (exact name match) — pass1 build is fallible; an
+    // Walk the index in id order but build only kept entities (no clone: the
+    // kept flags come from drop_pass, entities are borrowed from the graph).
+    s.push_str("    for pos in 0..index.len() {\n        if !kept[pos] { continue; }\n        let id = index.id(pos);\n        match (index.entity(pos), index.member(pos)) {\n");
+    // simple dispatch arms (by type index) — pass1 build is fallible; an
     // unreadable own-attr drops just this entity (no panic, surfaced as reason).
-    for se in &ir.simples {
+    for (ix, se) in ir.simples.iter().enumerate() {
         let af = arena_field(&se.rust);
         let has_r = se.fields.iter().any(|f| has_ref(&f.kind));
         writeln!(
             s,
-            "            RawEntity::Simple {{ name, attributes, .. }} if name == \"{}\" => {{",
+            "            (RawEntity::Simple {{ attributes, .. }}, Member::Simple({ix})) => {{ // {}",
             se.name
         )
         .unwrap();
@@ -643,7 +672,11 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         )
         .unwrap();
         if has_r {
-            writeln!(s, "                        pending_{af}.push((aid, id));").unwrap();
+            writeln!(
+                s,
+                "                        pending_{af}.push((aid, id, attributes));"
+            )
+            .unwrap();
         }
         s.push_str("                    }\n");
         s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
@@ -652,12 +685,12 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     }
     // complex dispatch
     if ir.has_part_bag {
-        s.push_str("            RawEntity::Complex { parts, .. } if is_complex_unit(parts) => {\n");
+        s.push_str("            (RawEntity::Complex { parts, .. }, Member::Complex) => {\n");
         s.push_str("                match read_complex_parts_norefs(parts) {\n");
         s.push_str("                    Ok(bag) => {\n");
         s.push_str("                        let aid = ComplexUnitId(model.complex_unit_arena.push(ComplexUnit { parts: bag }));\n");
         s.push_str("                        idmap.insert(id, EntityKey::ComplexUnit(aid));\n");
-        s.push_str("                        pending_complex.push((aid, id));\n");
+        s.push_str("                        pending_complex.push((aid, id, parts));\n");
         s.push_str("                    }\n");
         s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
         s.push_str("                }\n");
@@ -671,24 +704,18 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
             continue;
         }
         let af = arena_field(&se.rust);
-        writeln!(s, "    for (aid, raw) in pending_{af} {{").unwrap();
+        writeln!(s, "    for (aid, raw, attributes) in pending_{af} {{").unwrap();
         writeln!(
             s,
-            "        if let Some(RawEntity::Simple {{ attributes, .. }}) = graph.get(&raw) {{"
+            "        if let Err(e) = resolve_{af}(&mut model, aid, attributes, &idmap) {{ read_drops.push((raw, e)); }}"
         )
         .unwrap();
-        writeln!(
-            s,
-            "            if let Err(e) = resolve_{af}(&mut model, aid, attributes, &idmap) {{ read_drops.push((raw, e)); }}"
-        )
-        .unwrap();
-        s.push_str("        }\n    }\n");
+        s.push_str("    }\n");
     }
     if ir.has_part_bag {
-        s.push_str("    for (aid, raw) in pending_complex {\n");
-        s.push_str("        if let Some(RawEntity::Complex { parts, .. }) = graph.get(&raw) {\n");
+        s.push_str("    for (aid, raw, parts) in pending_complex {\n");
         s.push_str(
-            "            if let Err(e) = resolve_complex(&mut model, aid, parts, &idmap) { read_drops.push((raw, e)); }\n        }\n    }\n",
+            "        if let Err(e) = resolve_complex(&mut model, aid, parts, &idmap) { read_drops.push((raw, e)); }\n    }\n",
         );
     }
     s.push_str("    (model, idmap, read_drops)\n}\n\n");
@@ -850,7 +877,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     let af = arena_field(&se.rust);
     writeln!(
         s,
-        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &BTreeMap<u64, EntityKey>) -> Result<(), String> {{",
+        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &IdMap) -> Result<(), String> {{",
         se.rust
     )
     .unwrap();
@@ -1011,7 +1038,7 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     );
 
     // pass2: patch ref part attrs
-    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &BTreeMap<u64, EntityKey>) -> Result<(), String> {\n");
+    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &IdMap) -> Result<(), String> {\n");
     s.push_str("    let bag = &mut model.complex_unit_arena.items[aid.0];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
@@ -1850,19 +1877,22 @@ fn scalar_wire_of(ir: &ModelIr, k: &Kind) -> Option<String> {
     }
 }
 
-/// Emit a `fn {fname}(n: &str) -> &'static [RefSlot]` table: one RefSlot per ref
-/// slot (`Ref` / `Vec<Ref>`), carrying the slot index, the admitted target type
-/// UPPER names (the ref-enum's simple arms), complex-target flag, and vec flag.
-/// Non-ref slots are omitted.
+/// Emit a `fn {fname}({param}) -> &'static [RefSlot]` table: one RefSlot per ref
+/// slot (`Ref` / `Vec<Ref>`), carrying the slot index, the admitted target types'
+/// SIMPLE_NAMES indices (the ref-enum's simple arms), complex-target flag, and
+/// vec flag. Non-ref slots are omitted. `ents` yields each entity's match
+/// pattern (a SIMPLE_NAMES index or a quoted part name) with its fields.
 fn emit_ref_slot_table<'a>(
     s: &mut String,
     fname: &str,
+    param: &str,
+    scrutinee: &str,
     ir: &ModelIr,
-    rust_to_name: &std::collections::HashMap<&str, &str>,
-    ents: impl Iterator<Item = (&'a String, &'a Vec<Field>)>,
+    rust_to_index: &std::collections::HashMap<&str, usize>,
+    ents: impl Iterator<Item = (String, &'a Vec<Field>)>,
 ) {
-    writeln!(s, "pub fn {fname}(n: &str) -> &'static [RefSlot] {{").unwrap();
-    s.push_str("    match n {\n");
+    writeln!(s, "pub fn {fname}({param}) -> &'static [RefSlot] {{").unwrap();
+    writeln!(s, "    match {scrutinee} {{").unwrap();
     for (name, fields) in ents {
         let slots: Vec<String> = fields
             .iter()
@@ -1877,12 +1907,14 @@ fn emit_ref_slot_table<'a>(
                     _ => return None,
                 };
                 let re = ir.ref_enums.get(target)?;
-                let allowed: Vec<String> = re
+                let mut allowed: Vec<usize> = re
                     .simple_arms
                     .iter()
-                    .filter_map(|(_, rust)| rust_to_name.get(rust.as_str()))
-                    .map(|n| format!("\"{n}\""))
+                    .filter_map(|(_, rust)| rust_to_index.get(rust.as_str()).copied())
                     .collect();
+                allowed.sort_unstable();
+                allowed.dedup();
+                let allowed: Vec<String> = allowed.iter().map(usize::to_string).collect();
                 Some(format!(
                     "RefSlot{{idx:{idx},name:\"{}\",allowed:&[{}],complex_ok:{},is_vec:{is_vec}}}",
                     f.name,
@@ -1892,7 +1924,7 @@ fn emit_ref_slot_table<'a>(
             })
             .collect();
         if !slots.is_empty() {
-            writeln!(s, "        \"{}\" => &[{}],", name, slots.join(",")).unwrap();
+            writeln!(s, "        {} => &[{}],", name, slots.join(",")).unwrap();
         }
     }
     s.push_str("        _ => &[],\n    }\n}\n\n");
