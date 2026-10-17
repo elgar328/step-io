@@ -13,35 +13,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   boundary loop, or an edge in a loop is used. Reading and authoring both use
   it, so an orientation read from a file can be passed straight to
   `StepBuilder`.
-- `ParseWarning::MalformedStringEscape` reports a string escape that cannot be
-  decoded and was kept as written, and `ParseWarning::LowercaseHexEscape` a
-  hex escape written with lower-case digits, which is decoded all the same.
-  Both arrive in `Report::parse_warnings` and `Graph::warnings`.
 - `Report::parse_warnings` lists what the parser repaired or skipped while
   reading, such as a blank attribute or an undecodable string escape. `read()`
   used to discard these.
 - `ParseWarning` implements `Display`, printing a one-line message with the
   line and column, and is re-exported as `step_io::ParseWarning`.
+- `ParseWarning` gains two warnings for strings: `MalformedStringEscape`, for
+  an escape that cannot be decoded and is kept as written, and
+  `LowercaseHexEscape`, for a hex escape with lower-case digits, which is
+  decoded all the same.
 
 ### Changed
 
 - `StepBuilder::face` takes an `Orientation` instead of the `same_sense`
-  boolean, and `FaceBoundInput` takes `(EdgeCurveId, Orientation)` pairs and
-  an `Orientation` for its `orientation` field instead of booleans. The file
-  written is unchanged. Replace `true` with `Orientation::Forward` and `false`
-  with `Orientation::Reversed`.
+  boolean, and `FaceBoundInput` holds an `Orientation` in each edge pair and
+  in its `orientation` field instead of a boolean. The file written is
+  unchanged. Replace `true` with `Orientation::Forward` and `false` with
+  `Orientation::Reversed`.
 - `Face::same_sense()` is replaced by `Face::orientation()`, and
   `Bound::orientation()` and `Bound::oriented_edges()` return `Orientation`
   instead of `bool`. `Edge::same_sense()`, which relates an edge to its curve,
   stays a `bool`.
 - Strings are decoded when read: `\X2\…\X0\`, `\X4\…\X0\`, `\X\HH`,
-  `\S\` and `\\` become the characters they stand for, and the line breaks
-  writers insert into long strings are dropped. `parse()` and `read()` return
-  the decoded text, so code that decoded these escapes itself should stop
-  doing so.
-- Strings are written in plain ASCII: characters outside it become `\X2\` or
-  `\X4\` escapes and `\` becomes `\\`, as Part 21 requires. A string with
-  only printable ASCII and no backslash is written as before.
+  `\S\` and `\\` become the characters they stand for, and line breaks that
+  writers insert to wrap long strings are dropped. `parse()` and `read()`
+  return the decoded text, so code that decoded these escapes itself should
+  stop doing so.
+- Strings are written in plain ASCII, as Part 21 requires: every character
+  other than printable ASCII becomes a `\X2\` or `\X4\` escape, and `\`
+  becomes `\\`. A string of printable ASCII with no backslash is written as
+  before.
 - `ParseWarning` is `#[non_exhaustive]`, so matching on it needs a wildcard
   arm.
 - `Report` is `#[non_exhaustive]`. Its fields read as before, but it can no
